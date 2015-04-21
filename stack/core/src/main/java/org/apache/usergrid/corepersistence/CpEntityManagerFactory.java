@@ -15,24 +15,16 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.google.common.base.*;
-import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.TypeLiteral;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -41,11 +33,19 @@ import org.springframework.context.ApplicationContextAware;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.corepersistence.index.AsyncIndexService;
-import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.corepersistence.index.AsyncReIndexService;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
-import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.AbstractEntity;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityFactory;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
@@ -59,7 +59,6 @@ import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -67,17 +66,27 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
+
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+
 import rx.Observable;
 
-import java.util.*;
-
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
-import static org.apache.usergrid.persistence.Schema.*;
+
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
 /**
@@ -113,7 +122,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private Injector injector;
     private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
-    private final AsyncIndexService indexService;
+    private final AsyncReIndexService indexService;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector) {
@@ -125,7 +134,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
-        this.indexService = injector.getInstance( AsyncIndexService.class );
+        this.indexService = injector.getInstance( AsyncReIndexService.class );
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
@@ -307,14 +316,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         migrateAppInfo(applicationId,CpNamingUtils.DELETED_APPLICATION_INFO,CpNamingUtils.APPLICATION_INFO)
             .toBlocking().lastOrDefault(null);
 
-        this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
-            @Override
-            public void onProgress(EntityRef entity) {
-                logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
-            }
-        });
+        throw new UnsupportedOperationException( "Implement index rebuild" );
 
-        return managementEm.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO,applicationId));
+//        return managementEm.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO,applicationId));
     }
 
     @Override
@@ -661,44 +665,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public void rebuildAllIndexes( ProgressObserver po ) throws Exception {
-
-        logger.info("\n\nRebuilding all indexes\n");
-
-        rebuildInternalIndexes( po );
-
-        Map<String, UUID> appMap = getApplications();
-
-        logger.info("About to rebuild indexes for {} applications", appMap.keySet().size());
-
-        for ( UUID appUuid : appMap.values() ) {
-            try {
-                rebuildApplicationIndexes(appUuid, po);
-            } catch ( Exception e) {
-                logger.error("Error rebuilding index for app " + appUuid + " continuing...", e );
-            }
-        }
-    }
-
-
-    @Override
-    public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
-
-        // TODO: remove this after appinfo migration done
-        rebuildApplicationIndexes( CpNamingUtils.SYSTEM_APP_ID, po);
-        rebuildApplicationIndexes( CpNamingUtils.MANAGEMENT_APPLICATION_ID, po );
-    }
-
-
-    @Override
-    public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
-
-        EntityManager em = getEntityManager( appId );
-        em.reindex( po );
-
-        logger.info("\n\nRebuilt index for applicationId {} \n", appId);
-    }
-
 
 
     @Override
@@ -716,18 +682,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
     @Override
-    public void rebuildCollectionIndex(
-        UUID appId, String collectionName, boolean reverse, ProgressObserver po ) throws Exception  {
+    public ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection )   {
 
-        EntityManager em = getEntityManager( appId );
-
-        //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        Application app = em.getApplication();
-
-        em.reindexCollection(po, collectionName, reverse);
-
-        logger.info("\n\nRebuilt index for application {} id {} collection {}\n",
-            new Object[]{app.getName(), appId, collectionName});
+        throw new UnsupportedOperationException( "Implement me" );
+//
+//        EntityManager em = getEntityManager( appId );
+//
+//        //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
+//        Application app = em.getApplication();
+//
+//        em.reindexCollection(po, collectionName, reverse);
+//
+//        logger.info("\n\nRebuilt index for application {} id {} collection {}\n",
+//            new Object[]{app.getName(), appId, collectionName});
     }
 
     @Override

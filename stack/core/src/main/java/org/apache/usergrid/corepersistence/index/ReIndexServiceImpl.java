@@ -20,8 +20,10 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -37,11 +39,16 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import rx.Observable;
 import rx.observables.ConnectableObservable;
 
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
 
+
+@Singleton
 public class ReIndexServiceImpl implements ReIndexService {
 
     private static final MapScope RESUME_MAP_SCOPTE =
@@ -51,48 +58,52 @@ public class ReIndexServiceImpl implements ReIndexService {
     private static final int INDEX_TTL = 60 * 60 * 24 * 10;
 
 
+    private final AllApplicationsObservable allApplicationsObservable;
     private final AllEntityIdsObservable allEntityIdsObservable;
     private final QueryFig queryFig;
     private final RxTaskScheduler rxTaskScheduler;
     private final MapManager mapManager;
+    private final AsyncReIndexService indexService;
 
 
+    @Inject
     public ReIndexServiceImpl( final AllEntityIdsObservable allEntityIdsObservable,
-                               final MapManagerFactory mapManagerFactory, final QueryFig queryFig,
-                               final RxTaskScheduler rxTaskScheduler ) {
+                               final MapManagerFactory mapManagerFactory,
+                               final AllApplicationsObservable allApplicationsObservable, final QueryFig queryFig,
+                               final RxTaskScheduler rxTaskScheduler, final AsyncReIndexService indexService ) {
         this.allEntityIdsObservable = allEntityIdsObservable;
+        this.allApplicationsObservable = allApplicationsObservable;
         this.queryFig = queryFig;
         this.rxTaskScheduler = rxTaskScheduler;
+        this.indexService = indexService;
 
         this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPTE );
     }
 
 
-    @Override
-    public IndexResponse reIndex( final Observable<ApplicationScope> applicationScopes, final Optional<String> cursor,
-                                  final Optional<Long> startTimestamp, final IndexAction indexAction ) {
 
+    @Override
+    public IndexResponse rebuildIndex( final Optional<UUID> appId, final Optional<String> collection,
+                                       final Optional<String> collectionName, final Optional<String> cursor,
+                                       final Optional<Long> startTimestamp ) {
 
         //load our last emitted Scope if a cursor is present
         if ( cursor.isPresent() ) {
             throw new UnsupportedOperationException( "Build this" );
         }
 
+
+        final Observable<ApplicationScope>  applicationScopes = appId.isPresent()? Observable.just( getApplicationScope(appId.get()) ) : allApplicationsObservable.getData();
+
         final String newCursor = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 
         //create an observable that loads each entity and indexes it, start it running with publish
         final ConnectableObservable<EdgeScope> runningReIndex =
-            allEntityIdsObservable.getEdgesToEntities( applicationScopes, startTimestamp )
+            allEntityIdsObservable.getEdgesToEntities( applicationScopes, collectionName, startTimestamp )
 
                 //for each edge, create our scope and index on it
-                .doOnNext( edge -> indexAction
-                    .index( new EntityIdScope( edge.getApplicationScope(), edge.getEdge().getTargetNode() ) ) )
+                .doOnNext( edge -> indexService.index( new EntityIdScope( edge.getApplicationScope(), edge.getEdge().getTargetNode() ) ) ).publish();
 
-                .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).publish();
-
-
-        //count our longs
-        final Observable<Long> indexedCount = runningReIndex.countLong();
 
 
         //start our sampler and state persistence
@@ -107,7 +118,11 @@ public class ReIndexServiceImpl implements ReIndexService {
             } ).subscribe();
 
 
-        return new IndexResponse( newCursor, indexedCount );
+        //start pushing to both
+        runningReIndex.connect();
+
+
+        return new IndexResponse( newCursor, runningReIndex );
     }
 }
 

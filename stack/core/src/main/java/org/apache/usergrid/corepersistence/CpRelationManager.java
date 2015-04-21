@@ -30,8 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import org.apache.usergrid.corepersistence.index.AsyncIndexService;
-import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.corepersistence.index.AsyncReIndexService;
 import org.apache.usergrid.corepersistence.results.CollectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ConnectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ElasticSearchQueryExecutor;
@@ -43,7 +42,6 @@ import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.RelationManager;
@@ -80,7 +78,6 @@ import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 
 import rx.Observable;
-import rx.functions.Action1;
 import rx.functions.Func1;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionEdge;
@@ -121,13 +118,13 @@ public class CpRelationManager implements RelationManager {
 
     private final ApplicationScope applicationScope;
 
-    private final AsyncIndexService indexService;
+    private final AsyncReIndexService indexService;
 
     private MetricsFactory metricsFactory;
     private Timer updateCollectionTimer;
 
 
-    public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache, final AsyncIndexService indexService, final EntityManager em, final UUID applicationId, final EntityRef headEntity) {
+    public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache, final AsyncReIndexService indexService, final EntityManager em, final UUID applicationId, final EntityRef headEntity) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );

@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.google.common.base.Optional;
+
+import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import rx.Observable;
@@ -163,12 +165,6 @@ public interface EntityManagerFactory {
 
     public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
 
-    public void rebuildAllIndexes( ProgressObserver po ) throws Exception;
-
-    public void rebuildInternalIndexes( ProgressObserver po ) throws Exception;
-
-    public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception;
-
 
     /**
      * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph
@@ -178,8 +174,7 @@ public interface EntityManagerFactory {
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    void rebuildCollectionIndex(
-        UUID appId, String collection, boolean reverse, ProgressObserver po) throws Exception;
+    ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection );
 
     /**
      * Add a new index to the application for scale

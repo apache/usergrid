@@ -205,9 +205,7 @@ public class CpNamingUtils {
     public static ApplicationScope getApplicationScope( UUID applicationId ) {
 
         // We can always generate a scope, it doesn't matter if  the application exists yet or not.
-        final ApplicationScopeImpl scope = new ApplicationScopeImpl( generateApplicationId( applicationId ) );
-
-        return scope;
+        return  new ApplicationScopeImpl( generateApplicationId( applicationId ) );
     }
 
 
@@ -228,6 +226,8 @@ public class CpNamingUtils {
     public static Id getManagementApplicationId(){
         return  generateApplicationId( MANAGEMENT_APPLICATION_ID );
     }
+
+
 
     /**
      * Get the map scope for the applicationId to store entity uuid to type mapping

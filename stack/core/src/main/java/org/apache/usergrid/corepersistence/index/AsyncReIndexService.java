@@ -20,21 +20,14 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.google.common.base.Optional;
-
-import rx.Observable;
 
 
 /**
  * Low level queue service for indexing entities
  */
-public interface AsyncIndexService extends ReIndexService.IndexAction {
+public interface AsyncReIndexService extends ReIndexAction {
 
 
     /**

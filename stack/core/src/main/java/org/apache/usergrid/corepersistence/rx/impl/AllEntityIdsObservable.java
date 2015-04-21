@@ -43,9 +43,10 @@ public interface AllEntityIdsObservable {
     /**
      * Get all edges that represent edges to entities in the system
      * @param appScopes
-     * @param startTime The time to
+     * @param edgeType The edge type to use (if specified)
+     * @param startTime The time to start with
      * @return
      */
-    Observable<EdgeScope> getEdgesToEntities(final Observable<ApplicationScope> appScopes, final Optional<Long> startTime);
+    Observable<EdgeScope> getEdgesToEntities(final Observable<ApplicationScope> appScopes, final Optional<String> edgeType, final Optional<Long> startTime);
 
 }

@@ -52,6 +52,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 
 @NotThreadSafe
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
@@ -175,12 +177,13 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         // restore the app
         emf.restoreApplication(deletedAppId);
-        emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
-            @Override
-            public void onProgress(EntityRef entity) {
-                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid());
-            }
-        });
+        fail( "Implement index rebuild" );
+//        emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
+//            @Override
+//            public void onProgress(EntityRef entity) {
+//                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid());
+//            }
+//        });
         this.app.refreshIndex();
 
         // test to see that app now works and is happy

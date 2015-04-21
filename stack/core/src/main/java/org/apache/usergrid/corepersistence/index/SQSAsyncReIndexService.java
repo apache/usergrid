@@ -34,7 +34,6 @@ import org.apache.usergrid.persistence.collection.serialization.impl.migration.E
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
@@ -51,10 +50,10 @@ import com.google.inject.Singleton;
 
 
 @Singleton
-public class SQSAsyncIndexService implements AsyncIndexService {
+public class SQSAsyncReIndexService implements AsyncReIndexService {
 
 
-    private static final Logger logger = LoggerFactory.getLogger( SQSAsyncIndexService.class );
+    private static final Logger logger = LoggerFactory.getLogger( SQSAsyncReIndexService.class );
 
     /** Hacky, copied from CPEntityManager b/c we can't access it here */
     public static final UUID MANAGEMENT_APPLICATION_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-11ddb1de66c8" );
@@ -90,18 +89,18 @@ public class SQSAsyncIndexService implements AsyncIndexService {
 
 
     @Inject
-    public SQSAsyncIndexService( final QueueManagerFactory queueManagerFactory, final QueryFig queryFig,
-                                 final MetricsFactory metricsFactory ) {
+    public SQSAsyncReIndexService( final QueueManagerFactory queueManagerFactory, final QueryFig queryFig,
+                                   final MetricsFactory metricsFactory ) {
         final QueueScope queueScope = new QueueScopeImpl( QUEUE_NAME );
 
         this.queue = queueManagerFactory.getQueueManager( queueScope );
         this.queryFig = queryFig;
 
-        this.writeTimer = metricsFactory.getTimer( SQSAsyncIndexService.class, "write.timer" );
-        this.writeMeter = metricsFactory.getMeter( SQSAsyncIndexService.class, "write.meter" );
+        this.writeTimer = metricsFactory.getTimer( SQSAsyncReIndexService.class, "write.timer" );
+        this.writeMeter = metricsFactory.getMeter( SQSAsyncReIndexService.class, "write.meter" );
 
-        this.readTimer = metricsFactory.getTimer( SQSAsyncIndexService.class, "read.timer" );
-        this.readMeter = metricsFactory.getMeter( SQSAsyncIndexService.class, "read.meter" );
+        this.readTimer = metricsFactory.getTimer( SQSAsyncReIndexService.class, "read.timer" );
+        this.readMeter = metricsFactory.getMeter( SQSAsyncReIndexService.class, "read.meter" );
 
         this.mapper = new ObjectMapper( SMILE_FACTORY );
         //pretty print, disabling for speed
@@ -265,6 +264,6 @@ public class SQSAsyncIndexService implements AsyncIndexService {
 
     @Override
     public void queueEntityIndexUpdate( final ApplicationScope applicationScope,  final Entity entity) {
-           throw new UnsupportedOperationException( "Implement me" );
+        throw new UnsupportedOperationException( "Implement index rebuild" );
     }
 }

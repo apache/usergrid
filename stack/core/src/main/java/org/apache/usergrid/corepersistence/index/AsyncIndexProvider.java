@@ -35,7 +35,7 @@ import com.google.inject.Singleton;
  * A provider to allow users to configure their queue impl via properties
  */
 @Singleton
-public class AsyncIndexProvider implements Provider<AsyncIndexService> {
+public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
 
     private final QueryFig queryFig;
 
@@ -46,7 +46,7 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
     private final AllEntityIdsObservable allEntitiesObservable;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
-    private AsyncIndexService asyncIndexService;
+    private AsyncReIndexService asyncIndexService;
 
 
     @Inject
@@ -67,7 +67,7 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
 
     @Override
     @Singleton
-    public AsyncIndexService get() {
+    public AsyncReIndexService get() {
         if ( asyncIndexService == null ) {
             asyncIndexService = getIndexService();
         }
@@ -77,17 +77,17 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
     }
 
 
-    private AsyncIndexService getIndexService() {
+    private AsyncReIndexService getIndexService() {
         final String value = queryFig.getQueueImplementation();
 
         final Implementations impl = Implementations.valueOf( value );
 
         switch ( impl ) {
             case LOCAL:
-                return new InMemoryAsyncIndexService( indexService, rxTaskScheduler,
+                return new InMemoryAsyncReIndexService( indexService, rxTaskScheduler,
                     entityCollectionManagerFactory );
             case SQS:
-                return new SQSAsyncIndexService( queueManagerFactory, queryFig, metricsFactory );
+                return new SQSAsyncReIndexService( queueManagerFactory, queryFig, metricsFactory );
             default:
                 throw new IllegalArgumentException( "Configuration value of " + getErrorValues() + " are allowed" );
         }
