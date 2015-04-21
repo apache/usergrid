@@ -20,13 +20,13 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
+import rx.observables.ConnectableObservable;
 
 
 /**
@@ -41,11 +41,11 @@ public interface IndexService {
      * @param applicationScope The scope of the entity
      * @param entity The entity
      *
-     * @return An observable with the count of every batch executed to index the entity.  Note that this a cold observable
-     * and must be subscribed to in order to perform the operation.  This also makes no assumptions on scheduling.  It is up to the caller
+     * @return A ConnectableObservable with every edge in the batch to index the entity.  Note that this a cold observable
+     * and must be subscribed to, then "connect" in order to perform the operation.  This also makes no assumptions on scheduling.  It is up to the caller
      * to assign the correct scheduler to the observable
      */
-    Observable<Long> indexEntity( final ApplicationScope applicationScope, final Entity entity );
+    Observable<IndexOperationMessage> indexEntity( final ApplicationScope applicationScope, final Entity entity );
 
 
 

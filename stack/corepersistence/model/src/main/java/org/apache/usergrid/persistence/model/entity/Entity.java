@@ -69,7 +69,7 @@ public class Entity extends EntityObject {
         this.id = id;
     }
 
-    protected Entity(Id id, UUID version){
+    public Entity(Id id, UUID version){
         this(id);
         this.version = version;
     }

@@ -20,8 +20,11 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -38,6 +41,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
 
+import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -55,26 +59,30 @@ import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 @Singleton
 public class IndexServiceImpl implements IndexService {
 
+
+    private static final Logger logger = LoggerFactory.getLogger( IndexServiceImpl.class );
+
     private final GraphManagerFactory graphManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
+    private final Timer indexTimer;
 
 
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
-                             final EdgesObservable edgesObservable, IndexFig indexFig ) {
+                             final EdgesObservable edgesObservable, final IndexFig indexFig, final MetricsFactory metricsFactory ) {
         this.graphManagerFactory = graphManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
+        this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.process");
     }
 
 
     @Override
-    public Observable<Long> indexEntity( final ApplicationScope applicationScope, final Entity entity ) {
-
-
+    public Observable<IndexOperationMessage> indexEntity( final ApplicationScope applicationScope,
+                                                          final Entity entity ) {
         //bootstrap the lower modules from their caches
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
         final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
@@ -91,30 +99,37 @@ public class IndexServiceImpl implements IndexService {
 
 
         //we might or might not need to index from target-> source
-
-
         final Observable<IndexEdge> targetSizes = getIndexEdgesToTarget( gm, entityId );
 
 
-        //start the observable via publish
-        final ConnectableObservable<IndexOperationMessage> observable =
-            //try to send a whole batch if we can
-            Observable.merge( sourceEdgesToIndex, targetSizes ).buffer( indexFig.getIndexBatchSize() )
+        //merge the edges together
+        final Observable<IndexEdge> observable = Observable.merge( sourceEdgesToIndex, targetSizes);
+        //do our observable for batching
+        //try to send a whole batch if we can
 
-                //map into batches based on our buffer size
-                .flatMap( buffer -> Observable.from( buffer ).collect( () -> ei.createBatch(),
-                    ( batch, indexEdge ) -> batch.index( indexEdge, entity ) )
+
+        //do our observable for batching
+        //try to send a whole batch if we can
+        final Observable<IndexOperationMessage>  batches =  observable.buffer( indexFig.getIndexBatchSize() )
+
+            //map into batches based on our buffer size
+            .flatMap( buffer -> Observable.from( buffer )
+                //collect results into a single batch
+                .collect( () -> ei.createBatch(), ( batch, indexEdge ) -> {
+                    logger.debug( "adding edge {} to batch for entity {}", indexEdge, entity );
+                    batch.index( indexEdge, entity );
+                } )
                     //return the future from the batch execution
-                    .flatMap( batch -> Observable.from( batch.execute() ) ) ).publish();
+                .flatMap( batch -> Observable.from( batch.execute() ) ) );
 
-
-
-        return observable.countLong();
+        return ObservableTimer.time( batches, indexTimer );
     }
 
 
+
+
     /**
-     * Get index edgs to the target
+     * Get index edges to the target
      *
      * @param graphManager The graph manager
      * @param entityId The entitie's id
@@ -147,6 +162,10 @@ public class IndexServiceImpl implements IndexService {
          *
          * we're indexing from target->source here
          */
-        return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection ).map( edge -> generateScopeToTarget( edge ) );
+        return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection )
+                              .map( edge -> generateScopeToTarget( edge ) );
     }
+
+
+
 }
