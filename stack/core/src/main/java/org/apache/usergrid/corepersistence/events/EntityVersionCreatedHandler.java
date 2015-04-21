@@ -41,15 +41,11 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
     private static final Logger logger = LoggerFactory.getLogger(EntityVersionCreatedHandler.class );
 
 
-    private final EntityManagerFactory emf;
-    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
 
     @Inject
-    public EntityVersionCreatedHandler( final EntityManagerFactory emf,
-                                        final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
-        this.emf = emf;
-        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+    public EntityVersionCreatedHandler(  ) {
+
     }
 
 

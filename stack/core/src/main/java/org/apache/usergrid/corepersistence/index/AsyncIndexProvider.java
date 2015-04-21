@@ -17,15 +17,13 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.guice;
+package org.apache.usergrid.corepersistence.index;
 
 
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.impl.BufferQueue;
-import org.apache.usergrid.persistence.index.impl.BufferQueueInMemoryImpl;
-import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
@@ -37,51 +35,59 @@ import com.google.inject.Singleton;
  * A provider to allow users to configure their queue impl via properties
  */
 @Singleton
-public class QueueProvider implements Provider<BufferQueue> {
+public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
 
-    private final IndexFig indexFig;
+    private final QueryFig queryFig;
 
     private final QueueManagerFactory queueManagerFactory;
-    private final MapManagerFactory mapManagerFactory;
     private final MetricsFactory metricsFactory;
+    private final IndexService indexService;
+    private final RxTaskScheduler rxTaskScheduler;
+    private final AllEntityIdsObservable allEntitiesObservable;
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
-    private BufferQueue bufferQueue;
+    private AsyncReIndexService asyncIndexService;
 
 
     @Inject
-    public QueueProvider( final IndexFig indexFig, final QueueManagerFactory queueManagerFactory,
-                          final MapManagerFactory mapManagerFactory, final MetricsFactory metricsFactory ) {
-        this.indexFig = indexFig;
-
-
+    public AsyncIndexProvider( final QueryFig queryFig, final QueueManagerFactory queueManagerFactory,
+                               final MetricsFactory metricsFactory, final IndexService indexService,
+                               final RxTaskScheduler rxTaskScheduler,
+                               final AllEntityIdsObservable allEntitiesObservable,
+                               final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
+        this.queryFig = queryFig;
         this.queueManagerFactory = queueManagerFactory;
-        this.mapManagerFactory = mapManagerFactory;
         this.metricsFactory = metricsFactory;
+        this.indexService = indexService;
+        this.rxTaskScheduler = rxTaskScheduler;
+        this.allEntitiesObservable = allEntitiesObservable;
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
     }
 
 
     @Override
     @Singleton
-    public BufferQueue get() {
-        if ( bufferQueue == null ) {
-            bufferQueue = getQueue();
+    public AsyncReIndexService get() {
+        if ( asyncIndexService == null ) {
+            asyncIndexService = getIndexService();
         }
 
 
-        return bufferQueue;
+        return asyncIndexService;
     }
 
 
-    private BufferQueue getQueue() {
-        final String value = indexFig.getQueueImplementation();
+    private AsyncReIndexService getIndexService() {
+        final String value = queryFig.getQueueImplementation();
 
         final Implementations impl = Implementations.valueOf( value );
 
         switch ( impl ) {
             case LOCAL:
-                return new BufferQueueInMemoryImpl( indexFig );
+                return new InMemoryAsyncReIndexService( indexService, rxTaskScheduler,
+                    entityCollectionManagerFactory );
             case SQS:
-                return new BufferQueueSQSImpl( queueManagerFactory, indexFig, mapManagerFactory, metricsFactory );
+                return new SQSAsyncReIndexService( queueManagerFactory, queryFig, metricsFactory );
             default:
                 throw new IllegalArgumentException( "Configuration value of " + getErrorValues() + " are allowed" );
         }

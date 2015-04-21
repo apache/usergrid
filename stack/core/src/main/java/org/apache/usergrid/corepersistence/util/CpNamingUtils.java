@@ -73,13 +73,6 @@ public class CpNamingUtils {
     public static String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
 
 
-    /**
-     * Create an Id object from the entity ref
-     */
-    public static Id createId( final EntityRef entityRef ) {
-        return new SimpleId( entityRef.getUuid(), entityRef.getType() );
-    }
-
 
     /**
      * Generate a standard edge name for our graph using the connection name. To be used only for searching.  DO NOT use
@@ -157,7 +150,7 @@ public class CpNamingUtils {
      */
     public static SearchEdge createCollectionSearchEdge( final Id sourceId, final String connectionType ) {
         return new SearchEdgeImpl( sourceId, getEdgeTypeFromCollectionName( connectionType ),
-            SearchEdge.NodeType.SOURCE );
+            SearchEdge.NodeType.TARGET );
     }
 
 
@@ -181,7 +174,7 @@ public class CpNamingUtils {
      */
     public static SearchEdge createConnectionSearchEdge( final Id sourceId, final String connectionType ) {
         return new SearchEdgeImpl( sourceId, getEdgeTypeFromConnectionType( connectionType ),
-            SearchEdge.NodeType.SOURCE );
+            SearchEdge.NodeType.TARGET );
     }
 
 
@@ -212,9 +205,7 @@ public class CpNamingUtils {
     public static ApplicationScope getApplicationScope( UUID applicationId ) {
 
         // We can always generate a scope, it doesn't matter if  the application exists yet or not.
-        final ApplicationScopeImpl scope = new ApplicationScopeImpl( generateApplicationId( applicationId ) );
-
-        return scope;
+        return  new ApplicationScopeImpl( generateApplicationId( applicationId ) );
     }
 
 
@@ -226,6 +217,16 @@ public class CpNamingUtils {
     public static Id generateApplicationId( UUID applicationId ) {
         return new SimpleId( applicationId, Application.ENTITY_TYPE );
     }
+
+
+    /**
+     * Generate an application scope for the management application
+     * @return
+     */
+    public static Id getManagementApplicationId(){
+        return  generateApplicationId( MANAGEMENT_APPLICATION_ID );
+    }
+
 
 
     /**

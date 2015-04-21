@@ -28,8 +28,8 @@ import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.corepersistence.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.ManagerCache;
+import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
@@ -51,6 +51,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
     public void getAllApplications() throws Exception {
 
         final Application createdApplication = app.getEntityManager().getApplication();
+
 
         AllApplicationsObservable applicationObservable =SpringResource.getInstance().getBean(Injector.class).getInstance(AllApplicationsObservable.class);
 

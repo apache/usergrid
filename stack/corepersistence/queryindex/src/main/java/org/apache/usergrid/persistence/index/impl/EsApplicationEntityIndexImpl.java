@@ -23,7 +23,6 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -66,14 +65,11 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
 
@@ -90,12 +86,12 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
 
     private final ApplicationScope applicationScope;
-    private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
+    private final IndexIdentifier indexIdentifier;
     private final Timer searchTimer;
     private final Timer cursorTimer;
     private final MapManager mapManager;
     private final AliasedEntityIndex entityIndex;
-    private final IndexBufferProducer indexBatchBufferProducer;
+    private final IndexBufferConsumer indexBatchBufferProducer;
     private final IndexFig indexFig;
     private final EsProvider esProvider;
     private final IndexAlias alias;
@@ -104,15 +100,16 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     private final SearchRequestBuilderStrategy searchRequest;
     private FailureMonitor failureMonitor;
     private final int cursorTimeout;
+    private final long queryTimeout;
 
 
     @Inject
     public EsApplicationEntityIndexImpl(  ApplicationScope appScope, final AliasedEntityIndex entityIndex,
-                                         final IndexFig config, final IndexBufferProducer indexBatchBufferProducer,
+                                         final IndexFig config, final IndexBufferConsumer indexBatchBufferProducer,
                                          final EsProvider provider,
                                          final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
                                          final IndexFig indexFig,
-                                         final FailureMonitorImpl.IndexIdentifier indexIdentifier ) {
+                                         final IndexIdentifier indexIdentifier ) {
         this.entityIndex = entityIndex;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.indexFig = indexFig;
@@ -127,6 +124,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         this.searchTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.timer" );
         this.cursorTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.cursor.timer" );
         this.cursorTimeout = config.getQueryCursorTimeout();
+        this.queryTimeout = config.getWriteTimeout();
 
         this.deleteApplicationTimer =
                 metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "delete.application" );
@@ -176,7 +174,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         try {
             //Added For Graphite Metrics
             Timer.Context timeSearch = searchTimer.time();
-            searchResponse = srb.execute().actionGet();
+            searchResponse = srb.execute().actionGet(queryTimeout);
             timeSearch.stop();
         }
         catch ( Throwable t ) {

@@ -44,18 +44,18 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final ApplicationScope applicationScope;
 
     private final IndexAlias alias;
-    private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
+    private final IndexIdentifier indexIdentifier;
 
-    private final IndexBufferProducer indexBatchBufferProducer;
+    private final IndexBufferConsumer indexBatchBufferProducer;
 
     private final AliasedEntityIndex entityIndex;
-    private IndexIdentifierImpl.IndexOperationMessage container;
+    private IndexOperationMessage container;
 
 
     public EsEntityIndexBatchImpl( final ApplicationScope applicationScope,
-                                   final IndexBufferProducer indexBatchBufferProducer,
+                                   final IndexBufferConsumer indexBatchBufferProducer,
                                    final AliasedEntityIndex entityIndex,
-                                   FailureMonitorImpl.IndexIdentifier indexIdentifier ) {
+                                   IndexIdentifier indexIdentifier ) {
 
         this.applicationScope = applicationScope;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
@@ -63,7 +63,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.indexIdentifier = indexIdentifier;
         this.alias = indexIdentifier.getAlias();
         //constrained
-        this.container = new IndexIdentifierImpl.IndexOperationMessage();
+        this.container = new IndexOperationMessage();
     }
 
 
@@ -126,8 +126,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public BetterFuture execute() {
-        IndexIdentifierImpl.IndexOperationMessage tempContainer = container;
-        container = new IndexIdentifierImpl.IndexOperationMessage();
+        IndexOperationMessage tempContainer = container;
+        container = new IndexOperationMessage();
 
         /**
          * No-op, just disregard it

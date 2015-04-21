@@ -31,6 +31,7 @@ import com.google.common.base.Optional;
 
 
 
+import static org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID;
 
 /**
  * Internal results class, should not be returned as results to a user.

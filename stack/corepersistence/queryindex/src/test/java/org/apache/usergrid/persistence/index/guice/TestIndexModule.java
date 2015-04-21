@@ -19,27 +19,17 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
-import com.google.inject.Inject;
-import com.google.inject.TypeLiteral;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.impl.IndexBufferProducer;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.impl.IndexCache;
-import org.apache.usergrid.persistence.index.impl.EsProvider;
-import org.apache.usergrid.persistence.index.migration.LegacyIndexIdentifier;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
-import rx.Observable;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
-import java.util.UUID;
+import com.google.inject.Inject;
+import com.google.inject.TypeLiteral;
+
+import rx.Observable;
 
 
 public class TestIndexModule extends TestModule {

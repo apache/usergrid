@@ -20,7 +20,6 @@
 package org.apache.usergrid.corepersistence.rx.impl;
 
 
-import org.apache.usergrid.corepersistence.AllApplicationsObservable;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -41,17 +40,14 @@ public class AllEntitiesInSystemImpl extends AbstractGraphVisitorImpl<EntityIdSc
 
     @Inject
     public AllEntitiesInSystemImpl( final AllApplicationsObservable applicationObservable,
-                                    final GraphManagerFactory graphManagerFactory,
-                                    final TargetIdObservable targetIdObservable ) {
-        super( applicationObservable, graphManagerFactory, targetIdObservable );
+                                    final AllEntityIdsObservable allEntityIdsObservable) {
+        super( applicationObservable, allEntityIdsObservable );
     }
 
 
     @Override
-    protected EntityIdScope generateData( final ApplicationScope applicationScope, final Id nodeId ) {
-
-        final EntityIdScope idScope = new EntityIdScope( applicationScope, nodeId );
-
-        return idScope;
+    protected EntityIdScope generateData( final EntityIdScope entityIdScope ) {
+        return entityIdScope;
     }
+
 }
