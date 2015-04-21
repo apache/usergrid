@@ -157,12 +157,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
         CandidateResults results = cursor.isPresent()
             ? entityIndex.search( indexScope, types, queryToExecute, query.getLimit() , cursor.get())
             : entityIndex.search( indexScope, types, queryToExecute, query.getLimit());
-        //set offset into query
-        if(results.getOffset().isPresent()) {
-            query.setOffset(results.getOffset().get());
-        }else{
-            query.clearOffset();
-        }
+
         return results;
     }
 
@@ -187,7 +182,13 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
         //signal for post processing
         resultsLoader.postProcess();
 
-        results.setCursor( query.getOffsetCursor() );
+        //set offset into query
+        if(crs.getOffset().isPresent()) {
+            query.setOffset(crs.getOffset().get());
+        }else{
+            query.clearOffset();
+        }
+        results.setCursorFromOffset( query.getOffset() );
 
         //ugly and tight coupling, but we don't have a choice until we finish some refactoring
         results.setQueryExecutor( this );
