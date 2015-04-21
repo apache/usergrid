@@ -16,23 +16,14 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.corepersistence.index.AsyncReIndexService;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -71,22 +62,24 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
-
-import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.TypeLiteral;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import rx.Observable;
 
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static org.apache.usergrid.persistence.Schema.*;
 
 
 /**
@@ -682,7 +675,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
     @Override
-    public ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection )   {
+    public ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection, boolean reverse, ProgressObserver progressObserver )   {
 
         throw new UnsupportedOperationException( "Implement me" );
 //
@@ -735,5 +728,20 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public Health getIndexHealth() {
         return entityIndex.getIndexHealth();
+    }
+
+    @Override
+    public void rebuildAllIndexes(ProgressObserver progressObserver) {
+        throw new UnsupportedOperationException("Implement index rebuild");
+    }
+
+    @Override
+    public void rebuildApplicationIndexes(UUID appUUID, ProgressObserver progressObserver) {
+        throw new UnsupportedOperationException("Implement index rebuild");
+    }
+
+    @Override
+    public void rebuildInternalIndexes(ProgressObserver progressObserver) {
+        throw new UnsupportedOperationException( "Implement index rebuild" );
     }
 }

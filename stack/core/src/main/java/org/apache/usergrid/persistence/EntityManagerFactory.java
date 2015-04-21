@@ -17,15 +17,14 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.Map;
-import java.util.UUID;
-
 import com.google.common.base.Optional;
-
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import rx.Observable;
+
+import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -174,7 +173,7 @@ public interface EntityManagerFactory {
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection );
+    ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection, boolean reverse, ProgressObserver progressObserver);
 
     /**
      * Add a new index to the application for scale
@@ -188,6 +187,12 @@ public interface EntityManagerFactory {
     public Health getEntityStoreHealth();
 
     public Health getIndexHealth();
+
+    void rebuildAllIndexes(ProgressObserver progressObserver);
+
+    void rebuildApplicationIndexes(UUID appUUID, ProgressObserver progressObserver);
+
+    void rebuildInternalIndexes(ProgressObserver progressObserver);
 
     public interface ProgressObserver {
 

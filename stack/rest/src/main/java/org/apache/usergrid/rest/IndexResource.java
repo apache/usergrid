@@ -20,6 +20,7 @@
 
 package org.apache.usergrid.rest;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -36,7 +37,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -167,11 +167,12 @@ public class IndexResource extends AbstractContextResource {
     public JSONWithPadding rebuildIndexes(
         @Context UriInfo ui,
         @PathParam( "applicationId" ) final String applicationIdStr,
-        @PathParam( "collectionName" ) final String collectionName,
+        @PathParam( "collectionName" ) final String collectionNameStr,
         @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback) throws Exception {
 
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        final Optional<UUID> appId = Optional.fromNullable(UUIDUtils.tryExtractUUID( applicationIdStr ));
+        final Optional<String> collectionName = Optional.fromNullable(collectionNameStr);
         ApiResponse response = createApiResponse();
         response.setAction( "rebuild indexes" );
 
@@ -282,8 +283,8 @@ public class IndexResource extends AbstractContextResource {
     }
 
     private void rebuildCollection(
-        final UUID applicationId,
-        final String collectionName,
+        final Optional<UUID> applicationId,
+        final Optional<String> collectionName,
         final boolean reverse) throws Exception {
 
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
