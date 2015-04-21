@@ -51,8 +51,6 @@ public enum QueuesCF implements CFEnum {
 
     CONSUMERS( "MQ_Consumers", "BytesType" ),
 
-    CONSUMER_QUEUE_MESSAGES_PROPERTIES( "Consumer_Queue_Messages_Properties", "BytesType" ),
-
     COUNTERS( "MQ_Counters", "BytesType", COUNTERTYPE.getClassName() ),
 
     PROPERTY_INDEX( "MQ_Property_Index",
@@ -66,9 +64,6 @@ public enum QueuesCF implements CFEnum {
                     "t=>TimeUUIDType,s=>UTF8Type,u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true)," +
                     "I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true)," +
                     "T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))" ),;
-
-    public final static String STATIC_MESSAGES_KEYSPACE = "Usergrid_Messages";
-    public final static String APPLICATION_MESSAGES_KEYSPACE_SUFFIX = "_messages";
 
     private final String cf;
     private final String comparator;
