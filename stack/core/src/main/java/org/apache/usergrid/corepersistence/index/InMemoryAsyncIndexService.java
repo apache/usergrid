@@ -20,10 +20,19 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -33,16 +42,18 @@ import rx.Observable;
 @Singleton
 public class InMemoryAsyncIndexService implements AsyncIndexService {
 
+    private static final Logger log = LoggerFactory.getLogger(InMemoryAsyncIndexService.class);
     private final IndexService indexService;
     private final RxTaskScheduler rxTaskScheduler;
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
 
     @Inject
-    public InMemoryAsyncIndexService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler ) {
+    public InMemoryAsyncIndexService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler,
+                                      final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
         this.indexService = indexService;
-
-
         this.rxTaskScheduler = rxTaskScheduler;
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
     }
 
 
@@ -53,7 +64,29 @@ public class InMemoryAsyncIndexService implements AsyncIndexService {
         //only process the same version, otherwise ignore
 
         Observable.just( toIndex ).doOnNext( entity -> {
+            log.debug( "Indexing entity {} in app scope {} ", entity, applicationScope );
             indexService.indexEntity( applicationScope, entity );
         } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+    }
+
+
+
+    @Override
+    public void index( final EntityIdScope entityIdScope ) {
+
+        final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
+
+        final Id entityId = entityIdScope.getId();
+
+        final Entity
+            entity = entityCollectionManagerFactory.createCollectionManager( applicationScope ).load(
+            entityId ).toBlocking().lastOrDefault( null );
+
+
+        if(entity == null){
+            log.warn( "Could not find entity with id {} in app scope {} ", entityId, applicationScope );
+        }
+
+        indexService.indexEntity(applicationScope, entity  );
     }
 }

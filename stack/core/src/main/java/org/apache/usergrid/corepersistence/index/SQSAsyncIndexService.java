@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -233,6 +234,12 @@ public class SQSAsyncIndexService implements AsyncIndexService {
     }
 
 
+    @Override
+    public void index( final EntityIdScope entityIdScope ) {
+
+    }
+
+
     /**
      * The message that subclasses our IndexOperationMessage.  holds a pointer to the original message
      */
@@ -258,6 +265,6 @@ public class SQSAsyncIndexService implements AsyncIndexService {
 
     @Override
     public void queueEntityIndexUpdate( final ApplicationScope applicationScope,  final Entity entity) {
-
+           throw new UnsupportedOperationException( "Implement me" );
     }
 }

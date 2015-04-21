@@ -23,8 +23,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
@@ -103,7 +101,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
 
         //Remove all double indexes
-        final Observable<IndexEdge> sourceScopes = edgesObservable.edgesFromSource( gm, entityId ).map(
+        final Observable<IndexEdge> sourceScopes = edgesObservable.edgesFromSourceAscending( gm, entityId ).map(
                     edge -> generateScopeToTarget( edge ) );
 
 

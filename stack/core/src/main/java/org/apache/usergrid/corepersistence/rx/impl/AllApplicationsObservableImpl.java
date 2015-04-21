@@ -23,13 +23,11 @@ package org.apache.usergrid.corepersistence.rx.impl;
 import java.util.Arrays;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -40,6 +38,7 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.inject.Inject;
 

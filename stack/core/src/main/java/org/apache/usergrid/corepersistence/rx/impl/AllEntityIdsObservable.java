@@ -17,33 +17,35 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.corepersistence.rx.impl;
 
 
-import java.util.UUID;
+import  com.google.common.base.Optional;
 
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.google.common.base.Optional;
 
 import rx.Observable;
 
 
 /**
- * Low level queue service for indexing entities
+ * An implementation that will provide all entityId scopes in the system
  */
-public interface AsyncIndexService extends ReIndexService.IndexAction {
-
+public interface AllEntityIdsObservable {
 
     /**
-     * Queue an entity to be indexed.  This will start processing immediately. For implementations that are realtime (akka, in memory)
-     * We will return a distributed future.  For SQS impls, this will return immediately, and the result will not be available.
-     * After SQS is removed, the tests should be enhanced to ensure that we're processing our queues correctly.
-     * @param applicationScope
-     * @param entity The entity to index
+     * Return an observable of scopes from the given appScopes
+     * @param appScopes
+     * @return An observable of entityId scopes
      */
-    void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity);
+    Observable<EntityIdScope> getEntities( final Observable<ApplicationScope> appScopes );
+
+    /**
+     * Get all edges that represent edges to entities in the system
+     * @param appScopes
+     * @param startTime The time to
+     * @return
+     */
+    Observable<EdgeScope> getEdgesToEntities(final Observable<ApplicationScope> appScopes, final Optional<Long> startTime);
 
 }

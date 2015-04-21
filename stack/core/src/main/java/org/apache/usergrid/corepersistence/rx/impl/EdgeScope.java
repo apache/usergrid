@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,22 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.scope;
+
+package org.apache.usergrid.corepersistence.rx.impl;
 
 
 import java.io.Serializable;
 
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 
 
 /**
- * A scope used for organizations
+ * Get the scope for the edge
  */
-public interface ApplicationScope extends Serializable {
+public final class EdgeScope implements Serializable {
+    private final ApplicationScope applicationScope;
+    private final Edge edge;
 
-    /**
-     * Get an Application scope
-     */
-    Id getApplication();
 
+    public EdgeScope( final ApplicationScope applicationScope, final Edge edge ) {
+        this.applicationScope = applicationScope;
+        this.edge = edge;
+    }
+
+
+    public ApplicationScope getApplicationScope() {
+        return applicationScope;
+    }
+
+
+    public Edge getEdge() {
+        return edge;
+    }
 }

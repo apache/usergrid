@@ -22,6 +22,9 @@ package org.apache.usergrid.persistence.graph.serialization;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
+
 import rx.Observable;
 
 /**
@@ -35,7 +38,18 @@ public interface EdgesObservable {
      * @param sourceNode
      * @return
      */
-    Observable<Edge> edgesFromSource( final GraphManager gm, final Id sourceNode);
+    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode );
+
+
+    /**
+     * Return an observable of all edges from a source node.  Ordered ascending, from the startTimestamp if specified
+     * @param gm
+     * @param sourceNode
+     * @param startTimestamp
+     * @return
+     */
+    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode,
+                                               final Optional<Long> startTimestamp );
 
     /**
      * Get all edges from the source node with the target type

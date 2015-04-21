@@ -73,13 +73,6 @@ public class CpNamingUtils {
     public static String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
 
 
-    /**
-     * Create an Id object from the entity ref
-     */
-    public static Id createId( final EntityRef entityRef ) {
-        return new SimpleId( entityRef.getUuid(), entityRef.getType() );
-    }
-
 
     /**
      * Generate a standard edge name for our graph using the connection name. To be used only for searching.  DO NOT use
@@ -227,6 +220,14 @@ public class CpNamingUtils {
         return new SimpleId( applicationId, Application.ENTITY_TYPE );
     }
 
+
+    /**
+     * Generate an application scope for the management application
+     * @return
+     */
+    public static Id getManagementApplicationId(){
+        return  generateApplicationId( MANAGEMENT_APPLICATION_ID );
+    }
 
     /**
      * Get the map scope for the applicationId to store entity uuid to type mapping
