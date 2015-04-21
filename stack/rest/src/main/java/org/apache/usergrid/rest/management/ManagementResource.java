@@ -17,28 +17,33 @@
 package org.apache.usergrid.rest.management;
 
 
-import java.net.URLEncoder;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.api.view.Viewable;
+import org.apache.amber.oauth2.common.error.OAuthError;
+import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
+import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
+import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.exceptions.RedirectionException;
+import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
+import org.apache.usergrid.rest.management.users.UsersResource;
+import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,33 +51,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import org.apache.amber.oauth2.common.error.OAuthError;
-import org.apache.amber.oauth2.common.exception.OAuthProblemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
-import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.codec.Base64;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URLEncoder;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
-import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
-import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-import org.apache.usergrid.rest.management.users.UsersResource;
-import org.apache.usergrid.security.oauth.AccessInfo;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-
-import com.sun.jersey.api.view.Viewable;
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
+import static javax.servlet.http.HttpServletResponse.*;
+import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -573,7 +564,12 @@ public class ManagementResource extends AbstractContextResource {
                 String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
 
                 JsonNode orgsNode = userNode.get( "organizations" );
-                final Iterator<String> fieldNames = orgsNode.getFieldNames();
+                Iterator<String> fieldNames = orgsNode.getFieldNames();
+                if (!fieldNames.hasNext()) {
+                    // no organizations for user exist in response from central Usergrid SSO
+                    // so create user's personal organization and use username as organization name
+                    fieldNames = Collections.singletonList( username ).iterator();
+                }
 
                 // create user and any organizations that user is supposed to have
 
