@@ -41,7 +41,6 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.idString;
 /**
  * Represent the properties required to build an index request
  */
-@JsonTypeInfo( use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class" )
 public class IndexRequest implements BatchRequest {
 
     public String writeAlias;

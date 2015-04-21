@@ -19,17 +19,25 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.springframework.context.ApplicationContext;
+
+import org.apache.usergrid.persistence.PersistenceModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 
 public class TestIndexModule extends TestModule {
 
+
     @Override
     protected void configure() {
 
+
+        //TODO, refactor to guice to get rid of this
+        final ApplicationContext singleton = ConcurrentProcessSingleton.getInstance().getSpringResource().getAppContext();
+
         //this will break, we need to untagle this and move to guice in core completely
-        install( new CoreModule( ));
+        install( new CoreModule() );
+        install( new PersistenceModule( singleton ) );
     }
-
-
 }

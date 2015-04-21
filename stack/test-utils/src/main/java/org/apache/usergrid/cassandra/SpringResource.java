@@ -17,12 +17,9 @@
 package org.apache.usergrid.cassandra;
 
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.safehaus.guicyfig.EnvironResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -91,6 +88,14 @@ public class SpringResource {
         return applicationContext.getBean( name, requiredType );
     }
 
+
+    /**
+     * Use this with care.  You should use getBean in most situations
+     * @return
+     */
+    public ApplicationContext getAppContext(){
+        return applicationContext;
+    }
 
     /**
      * Gets a bean from the application context.
