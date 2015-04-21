@@ -528,6 +528,9 @@ public class Query {
     }
 
     public void setOffsetFromCursor(String cursor) {
+        if(cursor == null || cursor.length() == 0){
+            return;
+        }
         byte[] bytes = Base64.decodeBase64(cursor);
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         Integer number = INTEGER_SERIALIZER.fromByteBuffer(buffer);

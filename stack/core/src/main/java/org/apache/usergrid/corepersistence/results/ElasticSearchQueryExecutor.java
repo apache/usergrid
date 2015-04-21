@@ -23,16 +23,13 @@ package org.apache.usergrid.corepersistence.results;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
 
 import com.google.common.base.Optional;
 
@@ -118,7 +115,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
             // need to query for more
             // ask for just what we need to satisfy, don't want to exceed limit
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setOffsetFromCursor(results.getCursor());
             query.setLimit( originalLimit - results.size() );
 
             logger.warn( "Satisfy query limit {}, new limit {} query count {}", new Object[] {
@@ -128,7 +125,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
         //now set our cursor if we have one for the next iteration
         if ( results.hasCursor() ) {
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setOffsetFromCursor(results.getCursor());
             moreToLoad = true;
         }
 
@@ -157,15 +154,14 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
         final Optional<Integer> cursor = query.getOffset();
         final String queryToExecute = query.getQl().or("select *");
 
-        if(cursor.isPresent()){
-            //since query is a nasty stateful builder object, we have to default to select * if a query is issued
-            //from legacy code with no QL set.  An empty query is functionally equivalent to select all with default
-            //sort ordering
-
-            return  entityIndex.search( indexScope, types, queryToExecute, query.getLimit() , cursor.get());
+        CandidateResults results = cursor.isPresent()
+            ? entityIndex.search( indexScope, types, queryToExecute, query.getLimit() , cursor.get())
+            : entityIndex.search( indexScope, types, queryToExecute, query.getLimit());
+        //set offset into query
+        if(results.getOffset().isPresent()) {
+            query.setOffset(results.getOffset().get());
         }
-
-        return entityIndex.search( indexScope, types, queryToExecute, query.getLimit());
+        return results;
     }
 
 
@@ -184,7 +180,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
             this.resultsLoaderFactory.getLoader( applicationScope, indexScope, query.getResultsLevel() );
 
         //load the results
-        final Results results = resultsLoader.loadResults( crs );
+        final Results results = resultsLoader.loadResults(crs);
 
         //signal for post processing
         resultsLoader.postProcess();
