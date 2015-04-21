@@ -43,7 +43,6 @@ public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
     private final MetricsFactory metricsFactory;
     private final IndexService indexService;
     private final RxTaskScheduler rxTaskScheduler;
-    private final AllEntityIdsObservable allEntitiesObservable;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
     private AsyncReIndexService asyncIndexService;
@@ -53,14 +52,12 @@ public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
     public AsyncIndexProvider( final QueryFig queryFig, final QueueManagerFactory queueManagerFactory,
                                final MetricsFactory metricsFactory, final IndexService indexService,
                                final RxTaskScheduler rxTaskScheduler,
-                               final AllEntityIdsObservable allEntitiesObservable,
                                final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
         this.queryFig = queryFig;
         this.queueManagerFactory = queueManagerFactory;
         this.metricsFactory = metricsFactory;
         this.indexService = indexService;
         this.rxTaskScheduler = rxTaskScheduler;
-        this.allEntitiesObservable = allEntitiesObservable;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
     }
 
@@ -85,7 +82,7 @@ public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
         switch ( impl ) {
             case LOCAL:
                 return new InMemoryAsyncReIndexService( indexService, rxTaskScheduler,
-                    entityCollectionManagerFactory );
+                    entityCollectionManagerFactory, metricsFactory );
             case SQS:
                 return new SQSAsyncReIndexService( queueManagerFactory, queryFig, metricsFactory );
             default:

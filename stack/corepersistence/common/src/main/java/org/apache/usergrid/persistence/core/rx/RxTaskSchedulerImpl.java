@@ -100,8 +100,11 @@ public class RxTaskSchedulerImpl implements RxTaskScheduler {
         public Thread newThread( final Runnable r ) {
             final long newValue = threadCounter.incrementAndGet();
 
-            Thread t = new Thread( r, poolName + "-" + newValue );
+            final String threadName = poolName + "-" + newValue;
 
+            Thread t = new Thread( r, threadName  );
+
+            //set it to be a daemon thread so it doesn't block shutdown
             t.setDaemon( true );
 
             return t;
