@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.corepersistence.index;
 
 
@@ -36,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 
 
 /**
- * Validates the Rx scheduler works as expected with publish
+ * Test to test some assumptions about RX behaviors
  */
 public class PublishRxTest {
 
@@ -57,7 +56,6 @@ public class PublishRxTest {
         assertTrue( "publish1 behaves as expected", completed );
 
         final boolean completedSubscription = connectedObservable.isUnsubscribed();
-        ;
 
         assertTrue( "Subscription complete", completedSubscription );
     }
