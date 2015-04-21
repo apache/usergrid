@@ -153,7 +153,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     }
 
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                                    final int limit, final int from ) {
+                                    final int limit, final int offset ) {
 
         IndexValidationUtils.validateSearchEdge( searchEdge );
         Preconditions.checkNotNull( searchTypes, "searchTypes cannot be null" );
@@ -165,7 +165,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build( query );
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, from );
+        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -186,34 +186,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         }
         failureMonitor.success();
 
-        return parseResults( searchResponse, searchEdge, searchTypes, parsedQuery, limit, from );
-    }
-
-
-    public CandidateResults getNextPage( final String cursor ) {
-        Preconditions.checkNotNull(cursor, "cursor is a required argument");
-
-        String userCursorString = cursor;
-
-        //sanitiztion, we  probably shouldn't do this here, but in the caller
-        if ( userCursorString.startsWith( "\"" ) ) {
-            userCursorString = userCursorString.substring( 1 );
-        }
-        if ( userCursorString.endsWith( "\"" ) ) {
-            userCursorString = userCursorString.substring( 0, userCursorString.length() - 1 );
-        }
-
-        //now get the cursor from the map  and validate
-        final String queryStateString = mapManager.getString( userCursorString );
-
-
-        if(queryStateString == null){
-            throw new QueryException( String.format("Could not find a cursor for the value '%s' ", userCursorString ));
-        }
-
-        //parse the query state
-        final QueryState queryState = QueryState.fromSerialized( queryStateString );
-        return search(queryState.searchEdge,queryState.searchTypes,queryState.ql,queryState.limit,queryState.from);
+        return parseResults( searchResponse, parsedQuery, limit, offset );
     }
 
 
@@ -271,8 +244,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     /**
      * Parse the results and return the canddiate results
      */
-    private CandidateResults parseResults( final SearchResponse searchResponse, final SearchEdge searchEdge,
-                                           final SearchTypes searchTypes, final ParsedQuery query,
+    private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
                                            final int limit, final int from ) {
 
         final SearchHits searchHits = searchResponse.getHits();
@@ -295,106 +267,11 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         // >= seems odd.  However if we get an overflow, we need to account for it.
         if (  length >= limit ) {
 
-            final String cursor = candidateResults.initializeCursor();
-
-            //now set this into our map module
-            final int minutes = indexFig.getQueryCursorTimeout();
-            //just truncate it, we'll never hit a long value anyway
-
-            final int storageSeconds = ( int ) TimeUnit.MINUTES.toSeconds( minutes );
-
-            final QueryState state = new QueryState( query.getOriginalQuery(), searchEdge, searchTypes, limit, from );
-
-            final String queryStateSerialized = state.serialize();
-
-            mapManager.putString(cursor, queryStateSerialized, storageSeconds);
+            candidateResults.initializeCursor(from);
 
         }
 
         return candidateResults;
     }
 
-
-    /**
-     * Class to encapsulate our serialized state
-     */
-    private static final class QueryState implements Serializable{
-
-
-        private static final JsonFactory SMILE_FACTORY = new JsonFactory();
-
-        private static final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
-
-        /**
-         * Our reserved character for constructing our storage string
-         */
-        private static final String STORAGE_DELIM = "_ugdelim_";
-
-        private final String ql;
-
-        private final SearchEdge searchEdge;
-        private final SearchTypes searchTypes;
-        private final int limit;
-        private final int from;
-
-
-        private QueryState( final String ql,final SearchEdge searchEdge, final  SearchTypes searchTypes, final int limit, final int from ) {
-            this.ql = ql;
-            this.searchEdge = searchEdge;
-            this.searchTypes = searchTypes;
-            this.limit = limit;
-            this.from = from;
-        }
-
-
-        /**
-         * Factory to create an instance of our state from the serialized string
-         */
-        public static QueryState fromSerialized( final String input ) {
-
-            final String[] parts = input.split(STORAGE_DELIM);
-
-            Preconditions.checkArgument(parts != null && parts.length == 7,
-                "there must be 5 parts to the serialized query state");
-            try {
-
-                String edgeName = parts[1];
-                Id edgeId = MAPPER.readValue(parts[2],SimpleId.class);
-                SearchEdge.NodeType nodeType = SearchEdge.NodeType.valueOf(parts[3]);
-
-                String[] searchTypes = MAPPER.readValue(parts[4],String[].class);
-                SearchTypes types = searchTypes.length == 0 ? SearchTypes.allTypes() : SearchTypes.fromTypes(searchTypes);
-                return new QueryState(parts[0], new SearchEdgeImpl(edgeId,edgeName,nodeType),types , Integer.parseInt(parts[5]), Integer.parseInt(parts[6]));
-            } catch (Exception jpe) {
-                throw new RuntimeException(jpe);
-            }
-        }
-
-
-        public String serialize() {
-            try {
-
-                StringBuilder storageString = new StringBuilder();
-
-                storageString.append(ql).append(STORAGE_DELIM);
-
-                String edge =searchEdge.getEdgeName();
-                storageString.append(edge).append(STORAGE_DELIM);
-                String nodeid = MAPPER.writeValueAsString(searchEdge.getNodeId());
-                storageString.append(nodeid).append(STORAGE_DELIM);
-                String nodeType = searchEdge.getNodeType().name();
-                storageString.append(nodeType).append(STORAGE_DELIM);
-                String types = MAPPER.writeValueAsString(searchTypes.getTypes());
-                storageString.append(types).append(STORAGE_DELIM);
-
-                storageString.append(limit).append(STORAGE_DELIM);
-
-                storageString.append(from+limit);
-
-                return storageString.toString();
-            }catch (Exception jpe){
-                throw new RuntimeException(jpe);
-            }
-        }
-    }
 }
