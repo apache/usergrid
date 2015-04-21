@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.base.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -699,23 +700,21 @@ public class EntityIndexTest extends BaseIT {
         final int expectedPages = size / limit;
 
 
-        String cursor = null;
+        Optional<Integer> offset = Optional.absent();
         UUID lastId = null;
         final String query = "select * where mytype='"+myType+"' order by ordinal asc";
         int i ;
         for ( i=0; i < expectedPages; i++ ) {
-            //**
-
-            final CandidateResults results = cursor == null
-                ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit, i* limit )
-                : entityIndex.getNextPage(cursor);
+            final CandidateResults results = !offset.isPresent()
+                ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit )
+                : entityIndex.search(indexEdge, SearchTypes.allTypes(), query, limit, i * limit);
 
             assertEquals(limit, results.size());
 
             int ordinal = 0;//i == 0 ? 0 : 1;
             assertNotEquals("Scroll matches last item from previous page",lastId, results.get(ordinal).getId().getUuid());
             lastId = results.get(limit -1).getId().getUuid();
-            cursor = results.getCursor();
+            offset = results.getOffset();
             assertEquals("Failed on page "+i ,results.get( ordinal ).getId(), entityIds.get( i*limit ) );
         }
 
@@ -723,7 +722,7 @@ public class EntityIndexTest extends BaseIT {
         final CandidateResults results = entityIndex.search(indexEdge, SearchTypes.allTypes(), query, limit, i * limit);
 
         assertEquals( 0, results.size() );
-        assertNull( results.getCursor() );
+        assertFalse(results.hasOffset());
     }
 
 

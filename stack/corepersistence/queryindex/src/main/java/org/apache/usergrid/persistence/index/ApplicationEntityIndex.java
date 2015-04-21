@@ -45,16 +45,7 @@ public interface ApplicationEntityIndex {
                              final int limit );
 
     CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                             final int limit, final int from );
-
-    /**
-     * Get next page of results from a previous cursor.  Note that limit used here should be the same limit as the initial
-     * Cursor.  Failure to do so can result in strange cursor behavior on the response.
-     *
-     * @param cursor The cursor from the original search
-     * @return The next page of candidate results
-     */
-    CandidateResults getNextPage( final String cursor);
+                             final int limit, final int offset );
 
     /**
      * delete all application records
