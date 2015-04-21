@@ -81,14 +81,14 @@ public class IndexIT extends AbstractCoreIT {
             i++;
         }
 
-        query = Query.fromQL( "order by name" ).withCursor( r.getCursor() );
+        query = Query.fromQL( "order by name" ).withOffsetFromCursor(r.getCursor());
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
 
-        query = Query.fromQL( "order by name" ).withCursor( r.getCursor() );
+        query = Query.fromQL( "order by name" ).withOffsetFromCursor(r.getCursor());
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -106,7 +106,7 @@ public class IndexIT extends AbstractCoreIT {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
 
-        query = Query.fromQL( "order by name desc" ).withCursor( r.getCursor() );
+        query = Query.fromQL( "order by name desc" ).withOffsetFromCursor(r.getCursor());
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         // LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
         for ( Entity entity : r.getEntities() ) {
@@ -114,7 +114,7 @@ public class IndexIT extends AbstractCoreIT {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
 
-        query = Query.fromQL( "order by name desc" ).withCursor( r.getCursor() );
+        query = Query.fromQL( "order by name desc" ).withOffsetFromCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         for ( Entity entity : r.getEntities() ) {
             i--;
