@@ -45,10 +45,11 @@ public interface EdgesObservable {
      * Return an observable of all edges from a source node.  Ordered ascending, from the startTimestamp if specified
      * @param gm
      * @param sourceNode
-     * @param startTimestamp
+     * @param edgeType The edge type if specified.  Otherwise all types will be used
+     * @param startTimestamp The start timestamp if specfiied, otherwise Long.MIN will be used
      * @return
      */
-    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode,
+    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode,final Optional<String> edgeType,
                                                final Optional<Long> startTimestamp );
 
     /**

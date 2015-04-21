@@ -20,10 +20,12 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
+import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
@@ -31,6 +33,7 @@ import com.google.common.base.Optional;
 
 import rx.Observable;
 import rx.Observer;
+import rx.observables.ConnectableObservable;
 
 
 /**
@@ -40,14 +43,14 @@ public interface ReIndexService {
 
 
     /**
-     * Reindex all applications using the cursor provided
-     *
-     * @param startTimestamp The timestamp to start seeking from
-     *
-     * @return a cursor that can be used to resume the operation on the next run
+     * Perform an index rebuild
+     * @param appId
+     * @param collection
+     * @return
      */
-    IndexResponse reIndex( final rx.Observable<ApplicationScope> applicationScopes, final Optional<String> cursor,
-                    final Optional<Long> startTimestamp, final IndexAction indexAction );
+    IndexResponse rebuildIndex( final Optional<UUID> appId, final Optional<String> collection, final Optional<String> collectionName, final Optional<String> cursor,
+                        final Optional<Long> startTimestamp );
+
 
 
     /**
@@ -55,10 +58,10 @@ public interface ReIndexService {
      */
     class IndexResponse {
         final String cursor;
-        final Observable<Long> indexedEdgecount;
+        final ConnectableObservable<EdgeScope> indexedEdgecount;
 
 
-        public IndexResponse( final String cursor, final Observable<Long> indexedEdgecount ) {
+        public IndexResponse( final String cursor, final ConnectableObservable<EdgeScope> indexedEdgecount ) {
             this.cursor = cursor;
             this.indexedEdgecount = indexedEdgecount;
         }
@@ -74,23 +77,13 @@ public interface ReIndexService {
 
 
         /**
-         * Return the observable long count of all edges indexed
+         * Return the observable of all edges to be indexed.
+         *
+         * Note that after subscribing "connect" will need to be called to ensure that processing begins
          * @return
          */
-        public Observable<Long> getCount() {
+        public ConnectableObservable<EdgeScope> getCount() {
             return indexedEdgecount;
         }
-    }
-
-
-
-
-    /**
-     * Callback to perform an index operation based on an scope during bulk re-index operations
-     */
-    @FunctionalInterface
-    interface IndexAction {
-
-        void index( final EntityIdScope entityIdScope );
     }
 }

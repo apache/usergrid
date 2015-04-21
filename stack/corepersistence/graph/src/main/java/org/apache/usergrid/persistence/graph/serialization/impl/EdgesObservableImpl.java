@@ -71,10 +71,12 @@ public class EdgesObservableImpl implements EdgesObservable {
 
 
     @Override
-    public Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode,
+    public Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode, final Optional<String> edgeTypeInput,
                                                       final Optional<Long> startTimestamp ) {
 
-        final Observable<String> edgeTypes =
+
+
+        final Observable<String> edgeTypes = edgeTypeInput.isPresent()? Observable.just( edgeTypeInput.get() ):
                   gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( sourceNode, null, null ) );
 
 

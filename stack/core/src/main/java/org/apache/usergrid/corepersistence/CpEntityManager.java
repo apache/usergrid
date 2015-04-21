@@ -37,8 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import org.apache.usergrid.corepersistence.index.AsyncIndexService;
-import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.corepersistence.index.AsyncReIndexService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -49,7 +48,6 @@ import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.Query;
@@ -68,7 +66,6 @@ import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.FieldSet;
-import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -81,7 +78,6 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -179,7 +175,7 @@ public class CpEntityManager implements EntityManager {
 
     private final CounterUtils counterUtils;
 
-    private final AsyncIndexService indexService;
+    private final AsyncReIndexService indexService;
 
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
@@ -219,7 +215,7 @@ public class CpEntityManager implements EntityManager {
      * @param metricsFactory
      * @param applicationId
      */
-    public CpEntityManager(final CassandraService cass, final CounterUtils counterUtils, final AsyncIndexService indexService, final ManagerCache managerCache, final MetricsFactory metricsFactory, final UUID applicationId ) {
+    public CpEntityManager(final CassandraService cass, final CounterUtils counterUtils, final AsyncReIndexService indexService, final ManagerCache managerCache, final MetricsFactory metricsFactory, final UUID applicationId ) {
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
@@ -804,8 +800,8 @@ public class CpEntityManager implements EntityManager {
 
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
-        Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields( Inflector.getInstance().singularize( collectionType ),
-            Arrays.<Field>asList( uniqueLookupRepairField ) );
+        Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
+            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ) );
 
         if(fieldSetObservable == null){
             logger.debug( "Couldn't return the observable based on unique entities." );
@@ -1736,7 +1732,7 @@ public class CpEntityManager implements EntityManager {
         long timestamp = cass.createTimestamp();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be);
         CassandraPersistenceUtils.addDeleteToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES,
-                getRolePermissionsKey( roleName ), permission, timestamp );
+            getRolePermissionsKey( roleName ), permission, timestamp );
         //Adding graphite metrics
         Timer.Context timeRevokeRolePermission = entRevokeRolePermissionsTimer.time();
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
@@ -1747,8 +1743,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getRolePermissions( String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
-        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ),
-                ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ) );
+        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
+            getRolePermissionsKey( roleName ) );
     }
 
 //TODO: does this need graphite monitoring
@@ -1830,8 +1826,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getGroupRolePermissions( UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
-        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ),
-                ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( groupId, roleName ) );
+        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
+            getRolePermissionsKey( groupId, roleName ) );
     }
 
 
@@ -1840,7 +1836,7 @@ public class CpEntityManager implements EntityManager {
         roleName = roleName.toLowerCase();
         removeFromDictionary( new SimpleEntityRef( Group.ENTITY_TYPE, groupId ), DICTIONARY_ROLENAMES, roleName );
         cass.deleteRow( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
-                SimpleRoleRef.getIdForGroupIdAndRoleName( groupId, roleName ) );
+            SimpleRoleRef.getIdForGroupIdAndRoleName( groupId, roleName ) );
     }
 
 
@@ -1931,7 +1927,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public EntityRef getGroupRoleRef( UUID groupId, String roleName ) throws Exception {
         Results results = this.searchCollection( new SimpleEntityRef( Group.ENTITY_TYPE, groupId ),
-                Schema.defaultCollectionName( Role.ENTITY_TYPE ), Query.fromQL( "roleName = '" + roleName + "'" ) );
+            Schema.defaultCollectionName( Role.ENTITY_TYPE ), Query.fromQL( "roleName = '" + roleName + "'" ) );
         Iterator<Entity> iterator = results.iterator();
         EntityRef roleRef = null;
         while ( iterator.hasNext() ) {
@@ -2830,64 +2826,7 @@ public class CpEntityManager implements EntityManager {
 
 
 
-    /**
-     * Completely reindex the named collection in the application associated with this EntityManager.
-     */
-    @Override
-    public void reindexCollection(
-        final EntityManagerFactory.ProgressObserver po, String collectionName, boolean reverse) throws Exception {
 
-        CpWalker walker = new CpWalker( );
-
-        walker.walkCollections( this, getApplication(), collectionName, reverse, new CpVisitor() {
-
-                @Override
-                public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
-
-                    try {
-                        em.update( entity );
-                        po.onProgress( entity );
-                    }
-                    catch ( WriteOptimisticVerifyException wo ) {
-                        // swallow this, it just means this was already updated, which accomplishes our task
-                        logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.",
-                            entity.getName(), collName );
-                    }
-                    catch ( Exception ex ) {
-                        logger.error( "Error repersisting entity", ex );
-                    }
-                }
-            } );
-    }
-
-
-    /**
-     * Completely reindex the application associated with this EntityManager.
-     */
-    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception {
-
-        CpWalker walker = new CpWalker( );
-
-        walker.walkCollections( this, getApplication(), null, false, new CpVisitor() {
-
-            @Override
-            public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
-
-            try {
-                em.update( entity );
-                po.onProgress( entity );
-            }
-            catch ( WriteOptimisticVerifyException wo ) {
-                //swallow this, it just means this was already updated, which accomplishes our task.
-                logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.",
-                    entity.getName(), collName );
-            }
-            catch ( Exception ex ) {
-                logger.error( "Error repersisting entity", ex );
-            }
-            }
-        } );
-    }
 
 }
 

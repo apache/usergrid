@@ -213,11 +213,12 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
-            // do it forwards
-            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", false, po );
-
-            // and backwards, just to make sure both cases are covered
-            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", true, po );
+           fail( "Implement index rebuild" );
+//            // do it forwards
+//            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", false, po );
+//
+//            // and backwards, just to make sure both cases are covered
+//            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", true, po );
 
             reporter.report();
             registry.remove( meterName );
@@ -354,9 +355,10 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
-            setup.getEmf().rebuildInternalIndexes( po );
-
-            setup.getEmf().rebuildApplicationIndexes( em.getApplicationId(), po );
+            fail( "Implement index rebuild" );
+//            setup.getEmf().rebuildInternalIndexes( po );
+//
+//            setup.getEmf().rebuildApplicationIndexes( em.getApplicationId(), po );
 
             reporter.report();
             registry.remove( meterName );
