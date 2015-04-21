@@ -57,8 +57,6 @@ public class Query {
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
     private static final IntegerSerializer INTEGER_SERIALIZER = IntegerSerializer.get();
 
-
-
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
     }
@@ -324,7 +322,7 @@ public class Query {
 
     public static Query fromUUID( UUID uuid ) {
         Query q = new Query();
-        q.addIdentifier( Identifier.fromUUID( uuid ) );
+        q.addIdentifier( Identifier.fromUUID(uuid) );
         return q;
     }
 
@@ -529,14 +527,18 @@ public class Query {
 
     public void setOffsetFromCursor(String cursor) {
         if(cursor == null || cursor.length() == 0){
-            return;
+            clearOffset();
+        }else {
+            byte[] bytes = Base64.decodeBase64(cursor);
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            Integer number  = INTEGER_SERIALIZER.fromByteBuffer(buffer);
+            setOffset(number);
         }
-        byte[] bytes = Base64.decodeBase64(cursor);
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        Integer number = INTEGER_SERIALIZER.fromByteBuffer(buffer);
-        setOffset(number);
     }
 
+    public void clearOffset() {
+        this.offset = Optional.absent();
+    }
 
     public void setOffset( int offset ) {
         this.offset = Optional.of(offset);

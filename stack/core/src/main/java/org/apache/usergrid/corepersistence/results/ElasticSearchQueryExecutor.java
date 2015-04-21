@@ -160,6 +160,8 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
         //set offset into query
         if(results.getOffset().isPresent()) {
             query.setOffset(results.getOffset().get());
+        }else{
+            query.clearOffset();
         }
         return results;
     }
