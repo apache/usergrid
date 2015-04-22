@@ -53,6 +53,10 @@ public class SearchTypes {
         return typeNames;
     }
 
+    public String[] getTypes(){
+        return types;
+    }
+
 
     /**
      * Create a search that will search on the specified types

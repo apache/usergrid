@@ -144,7 +144,7 @@ public class ImportServiceImpl implements ImportService {
             final Entity appInfo = getApplicationInfoEntity(rootEm, applicationId);
 
             Query query = Query.fromQLNullSafe( ql );
-            query.setCursor( cursor );
+            query.setOffsetFromCursor( cursor );
 
             //set our entity type
             query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
@@ -205,7 +205,7 @@ public class ImportServiceImpl implements ImportService {
             final Import importEntity = getImport( applicationId, importId );
 
             Query query = Query.fromQLNullSafe( ql );
-            query.setCursor( cursor );
+            query.setOffsetFromCursor( cursor );
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setResultsLevel( Level.ALL_PROPERTIES );
 
@@ -264,7 +264,7 @@ public class ImportServiceImpl implements ImportService {
             final FileImport importEntity = getFileImport(applicationId, importId, fileImportId);
 
             Query query = Query.fromQLNullSafe( ql );
-            query.setCursor( cursor );
+            query.setOffsetFromCursor( cursor );
             query.setConnectionType( FileImportTracker.ERRORS_CONNECTION_NAME );
             query.setResultsLevel( Level.ALL_PROPERTIES );
 

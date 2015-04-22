@@ -835,14 +835,14 @@ public class CollectionIT extends AbstractCoreIT {
 
 
         query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
-                     .withCursor( r.getCursor() );
+                     .withOffsetFromCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 1, r.size() );
         assertNotNull( r.getCursor() );
         assertEquals( entity1, r.getEntities().get( 0 ) );
 
         query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
-                     .withCursor( r.getCursor() );
+                     .withOffsetFromCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
         assertNull( r.getCursor() );
@@ -983,7 +983,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         // try the next page, set our cursor, it should be the last 5 entities
         query = new Query();
-        query.setCursor( r.getCursor() );
+        query.setOffsetFromCursor( r.getCursor() );
 
         r = em.searchCollection( em.getApplicationRef(), "objects", query );
 
@@ -1036,7 +1036,7 @@ public class CollectionIT extends AbstractCoreIT {
                 assertEquals( entityIds.get( i * pageSize + j ), r.getEntities().get( j ).getUuid() );
             }
 
-            query.setCursor( r.getCursor() );
+            query.setOffsetFromCursor( r.getCursor() );
         }
 
         //check our last search
@@ -1094,7 +1094,7 @@ public class CollectionIT extends AbstractCoreIT {
                 assertEquals( entityId, r.getEntities().get( j ).getUuid() );
             }
 
-            query.setCursor( r.getCursor() );
+            query.setOffsetFromCursor( r.getCursor() );
         }
 
         r = em.searchCollection( em.getApplicationRef(), "pages", query );
@@ -1147,7 +1147,7 @@ public class CollectionIT extends AbstractCoreIT {
                 assertEquals( expectedId, r.getEntities().get( j ).getUuid() );
             }
 
-            query.setCursor( r.getCursor() );
+            query.setOffsetFromCursor( r.getCursor() );
         }
 
         r = em.searchCollection( em.getApplicationRef(), "pages", query );

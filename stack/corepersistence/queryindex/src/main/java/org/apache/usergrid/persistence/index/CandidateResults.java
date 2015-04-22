@@ -27,13 +27,8 @@ package org.apache.usergrid.persistence.index;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import com.google.common.base.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import static org.apache.usergrid.persistence.core.util.StringUtils.sanitizeUUID;
 
 
 /**
@@ -42,44 +37,39 @@ import static org.apache.usergrid.persistence.core.util.StringUtils.sanitizeUUID
  */
 public class CandidateResults implements Iterable<CandidateResult> {
 
-    private static final Logger log = LoggerFactory.getLogger( CandidateResults.class );
-
-    private String cursor = null;
+    private Optional<Integer> offset = null;
 
 
     private final List<CandidateResult> candidates;
     private final Collection<SelectFieldMapping> getFieldMappings;
-    private final String esCursor;
 
 
     public CandidateResults( List<CandidateResult> candidates,
-                             final Collection<SelectFieldMapping> getFieldMappings,
-                             final String esCursor
+                             final Collection<SelectFieldMapping> getFieldMappings
     ) {
         this.candidates = candidates;
         this.getFieldMappings = getFieldMappings;
-        this.esCursor = esCursor;
+        offset = Optional.absent();
     }
 
 
-    public String initializeCursor(){
-        cursor = sanitizeUUID( UUIDGenerator.newTimeUUID() );
-        return cursor;
+    public void initializeCursor(int offset){
+        this.offset = Optional.of(offset);
     }
 
 
-    public boolean hasCursor() {
-        return cursor != null;
+    public boolean hasOffset() {
+        return offset.isPresent();
     }
 
 
-    public String getCursor() {
-        return cursor;
+    public Optional<Integer> getOffset() {
+        return offset;
     }
 
 
-    public void setCursor(String cursor) {
-        this.cursor = cursor;
+    public void setOffset(int offset) {
+        this.offset = Optional.of(offset);
     }
 
 
@@ -105,7 +95,7 @@ public class CandidateResults implements Iterable<CandidateResult> {
      * @return
      */
     public CandidateResult get(int index){
-        return candidates.get( index );
+        return candidates.get(index);
     }
 
     @Override
@@ -113,7 +103,4 @@ public class CandidateResults implements Iterable<CandidateResult> {
         return candidates.iterator();
     }
 
-    public String getEsCursor() {
-        return esCursor;
-    }
 }
