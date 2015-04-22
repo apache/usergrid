@@ -61,8 +61,15 @@ public class MetricsFactory {
                 .filter( MetricFilter.ALL )
                 .build( graphite );
 
-        if (metricsHost != badHost) {
-            graphiteReporter.start( 30, TimeUnit.SECONDS );
+        if ( !metricsHost.equalsIgnoreCase( badHost )) {
+
+            if ( "true".equalsIgnoreCase( properties.getProperty( "usergrid.test" ) ) ) {
+                // run at higher frequency for testing, we can't wait 30 seconds to start
+                graphiteReporter.start( 200, TimeUnit.MILLISECONDS );
+
+            } else {
+                graphiteReporter.start( 30, TimeUnit.SECONDS );
+            }
             LOG.info("MetricsService: Reporter started.");
         } else {
             LOG.warn( "MetricsService: Reporter not started." );

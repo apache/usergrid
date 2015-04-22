@@ -640,7 +640,6 @@ public class ManagementResource extends AbstractContextResource {
 
         } catch (Exception e) {
             timerContext.stop();
-            timerContext.close();
             logger.debug("Error validating external token", e);
             throw e;
         }
@@ -648,7 +647,6 @@ public class ManagementResource extends AbstractContextResource {
         final Response response = Response.status( SC_OK ).type( jsonMediaType( callback ) ).entity( accessInfo ).build();
 
         timerContext.stop();
-        timerContext.close();
 
         return response;
     }
