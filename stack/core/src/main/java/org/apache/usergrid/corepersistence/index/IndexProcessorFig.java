@@ -27,43 +27,37 @@ import org.safehaus.guicyfig.Key;
 /**
  * Application id cache fig
  */
-public interface QueryFig extends GuicyFig {
+public interface IndexProcessorFig extends GuicyFig {
 
 
     /**
      * Amount of time in milliseconds to wait when ES rejects our request before retrying.  Provides simple
      * backpressure
      */
-    public static final String FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.rejected_retry_wait";
+    String FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.rejected_retry_wait";
 
     /**
      * The number of worker threads to consume from the queue
      */
-    public static final String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
-
-    /**
-     * The queue implementation to use.  Values come from <class>QueueProvider.Implementations</class>
-     */
-    public static final String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
+    String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
 
 
     /**
      * The queue implementation to use.  Values come from <class>QueueProvider.Implementations</class>
      */
-    public static final String ELASTICSEARCH_QUEUE_OFFER_TIMEOUT = "elasticsearch.queue.offer_timeout";
+    String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
+
+
+    /**
+     * The queue implementation to use.  Values come from <class>QueueProvider.Implementations</class>
+     */
+    String ELASTICSEARCH_QUEUE_OFFER_TIMEOUT = "elasticsearch.queue.offer_timeout";
 
     /**
      * Amount of time to wait when reading from the queue
      */
-    public static final String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
+    String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
 
-    /**
-     * Amount of time to wait when reading from the queue in milliseconds
-     */
-    public static final String INDEX_QUEUE_TRANSACTION_TIMEOUT = "elasticsearch.queue_transaction_timeout";
-
-
-    String INDEX_QUEUE_SIZE = "elasticsearch.queue_size";
 
 
     @Default( "1000" )
@@ -75,24 +69,13 @@ public interface QueryFig extends GuicyFig {
     @Key( INDEX_QUEUE_READ_TIMEOUT )
     int getIndexQueueTimeout();
 
-    @Default( "2" )
+    @Default( "1" )
     @Key( ELASTICSEARCH_WORKER_COUNT )
     int getWorkerCount();
 
     @Default( "LOCAL" )
     @Key( ELASTICSEARCH_QUEUE_IMPL )
     String getQueueImplementation();
-
-    @Default( "1000" )
-    @Key( ELASTICSEARCH_QUEUE_OFFER_TIMEOUT )
-    long getQueueOfferTimeout();
-
-    /**
-     * size of the buffer to build up before you send results
-     */
-    @Default( "1000" )
-    @Key( INDEX_QUEUE_SIZE )
-    int getIndexQueueSize();
 
 
     @Default("30000")

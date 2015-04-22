@@ -25,14 +25,12 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -40,24 +38,21 @@ import rx.Observable;
 
 
 @Singleton
-public class InMemoryAsyncReIndexService implements AsyncReIndexService {
+public class InMemoryAsyncIndexService implements AsyncIndexService {
 
-    private static final Logger log = LoggerFactory.getLogger( InMemoryAsyncReIndexService.class );
+    private static final Logger log = LoggerFactory.getLogger( InMemoryAsyncIndexService.class );
+
     private final IndexService indexService;
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final Timer timer;
 
 
     @Inject
-    public InMemoryAsyncReIndexService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler,
-                                        final EntityCollectionManagerFactory entityCollectionManagerFactory, final
-                                        MetricsFactory metricsFactory ) {
+    public InMemoryAsyncIndexService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler,
+                                      final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
         this.indexService = indexService;
         this.rxTaskScheduler = rxTaskScheduler;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-
-        timer = metricsFactory.getTimer( InMemoryAsyncReIndexService.class, "IndexTimer" );
     }
 
 
@@ -72,18 +67,8 @@ public class InMemoryAsyncReIndexService implements AsyncReIndexService {
 
         final Observable<IndexOperationMessage> edgeObservable = indexService.indexEntity( applicationScope, entity );
 
-
-
+        //start it in the background on an i/o thread
         edgeObservable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
-
-         //now start it
-//        final Timer.Context time = timer.time();
-//
-//        edgeObservable.connect();
-//
-//        time.stop();
-
-
     }
 
 
@@ -94,15 +79,10 @@ public class InMemoryAsyncReIndexService implements AsyncReIndexService {
 
         final Id entityId = entityIdScope.getId();
 
-        final Entity entity =
-            entityCollectionManagerFactory.createCollectionManager( applicationScope ).load( entityId ).toBlocking()
-                                          .lastOrDefault( null );
-
-
-        if ( entity == null ) {
-            log.warn( "Could not find entity with id {} in app scope {} ", entityId, applicationScope );
-        }
-
-        indexService.indexEntity( applicationScope, entity );
+        //load the entity
+        entityCollectionManagerFactory.createCollectionManager( applicationScope ).load( entityId )
+            //perform indexing on the task scheduler and start it
+            .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) )
+            .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
     }
 }

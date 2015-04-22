@@ -41,9 +41,9 @@ public interface IndexService {
      * @param applicationScope The scope of the entity
      * @param entity The entity
      *
-     * @return A ConnectableObservable with every edge in the batch to index the entity.  Note that this a cold observable
-     * and must be subscribed to, then "connect" in order to perform the operation.  This also makes no assumptions on scheduling.  It is up to the caller
-     * to assign the correct scheduler to the observable
+     * @return An Observable with executed batch future as an observable.  Note that this a cold observable
+     * and must be subscribed to in order to perform the index operations.  This also makes no assumptions on scheduling.  It is up to the caller
+     * to assign the correct scheduler to the observable based on their threading needs
      */
     Observable<IndexOperationMessage> indexEntity( final ApplicationScope applicationScope, final Entity entity );
 

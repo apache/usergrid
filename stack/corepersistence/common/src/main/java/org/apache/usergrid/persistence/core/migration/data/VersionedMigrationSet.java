@@ -83,35 +83,46 @@ public class VersionedMigrationSet<T extends VersionedData> {
     /**
      * Get the migration relationship based on our current version. This will return a range that includes the current
      * system version as the source, and the highest version we can roll to in the to field
-     * @param currentVersion
+     *
      * @return The MigrationRelationship.  Note the from and the to could be the same version in a current system.
      */
-    public MigrationRelationship<T> getMigrationRelationship( final int currentVersion ){
+    public MigrationRelationship<T> getMigrationRelationship( final int currentVersion ) {
 
         final MigrationRelationship<T> relationship = cacheVersion.get( currentVersion );
 
-        if(relationship != null){
+        if ( relationship != null ) {
             return relationship;
         }
 
-        //not there, find it.  Not the most efficient, but it happens once per version, which rarely changes, so not a big deal
+        //not there, find it.  Not the most efficient, but it happens once per version, which rarely changes, so not
+        // a big deal
 
+        int lastSpan = Integer.MAX_VALUE;
+        MigrationRelationship<T> toUse = null;
 
-        for(MigrationRelationship<T> current: orderedVersions){
+        for ( MigrationRelationship<T> current : orderedVersions ) {
 
             //not our instance, the from is too high
             //our from is this instance, so we support this tuple.  Our future is >= as well, so we can perform this I/O
-            if ( current.correctRelationship( currentVersion )) {
-                cacheVersion.put( currentVersion, current );
-                return current;
-            }
 
+            final int newSpan = current.getSpan( currentVersion );
+
+            if ( newSpan < lastSpan ) {
+                lastSpan = newSpan;
+                toUse = current;
+            }
         }
 
         //if we get here, something is wrong
-        throw new IllegalArgumentException( "Could not find a migration version for version " + currentVersion + " min found was " + orderedVersions.get( orderedVersions.size()-1 ) );
+        if ( lastSpan == Integer.MAX_VALUE ) {
+            throw new IllegalArgumentException(
+                "Could not find a migration version for version " + currentVersion + " min found was " + orderedVersions
+                    .get( orderedVersions.size() - 1 ) );
+        }
 
 
+        cacheVersion.put( currentVersion, toUse );
+        return toUse;
     }
 
 

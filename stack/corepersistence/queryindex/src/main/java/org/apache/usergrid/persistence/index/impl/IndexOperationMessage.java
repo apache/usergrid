@@ -60,19 +60,11 @@ public class IndexOperationMessage implements Serializable {
     }
 
 
-    public void addAllIndexRequest( final Set<IndexRequest> indexRequests ) {
-        this.indexRequests.addAll( indexRequests );
-    }
-
 
     public void addDeIndexRequest( final DeIndexRequest deIndexRequest ) {
         this.deIndexRequests.add( deIndexRequest );
     }
 
-
-    public void addAllDeIndexRequest( final Set<DeIndexRequest> deIndexRequests ) {
-        this.deIndexRequests.addAll( deIndexRequests );
-    }
 
 
     public Set<IndexRequest> getIndexRequests() {
