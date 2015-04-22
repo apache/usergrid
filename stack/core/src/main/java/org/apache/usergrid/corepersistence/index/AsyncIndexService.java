@@ -27,7 +27,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 /**
  * Low level queue service for indexing entities
  */
-public interface AsyncReIndexService extends ReIndexAction {
+public interface AsyncIndexService extends ReIndexAction {
 
 
     /**

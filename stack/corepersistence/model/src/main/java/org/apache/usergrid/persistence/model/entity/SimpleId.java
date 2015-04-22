@@ -25,16 +25,29 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.model.util.Verify;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 
 
 /** @author tnine */
+@JsonTypeInfo( use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class" )
 public class SimpleId implements Id, Serializable {
 
 
-    private final UUID uuid;
-    private final String type;
+    private UUID uuid;
+    private String type;
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public SimpleId(){
+
+    }
+
+
 
     public SimpleId( final UUID uuid, final String type ) {
         Preconditions.checkNotNull( uuid, "uuid is required" );
@@ -64,6 +77,26 @@ public class SimpleId implements Id, Serializable {
     @Override
     public String getType() {
         return type;
+    }
+
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setType( final String type ) {
+        this.type = type;
+    }
+
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setUuid( final UUID uuid ) {
+        this.uuid = uuid;
     }
 
 

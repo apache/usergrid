@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +47,7 @@ public class SerializableMapper {
 
     static{
         MAPPER.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
+        SMILE_FACTORY.delegateToTextual( true );
     }
 
     /**
@@ -66,9 +68,9 @@ public class SerializableMapper {
 
     /**
      * Write the value as a string
+     * @param <T>
      * @param serialized
      * @param clazz
-     * @param <T>
      * @return
      */
     public static <T extends Serializable> T fromString(final String serialized, final Class<T> clazz){

@@ -99,8 +99,7 @@ public class CpNamingUtils {
      * Get the index scope for the edge from the source
      */
     public static IndexEdge generateScopeFromSource( final Edge edge ) {
-        return new IndexEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE,
-            edge.getTimestamp() );
+        return new IndexEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE, edge.getTimestamp() );
     }
 
 
@@ -108,8 +107,7 @@ public class CpNamingUtils {
      * Get the index scope for the edge from the source
      */
     public static IndexEdge generateScopeToTarget( final Edge edge ) {
-        return new IndexEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.TARGET,
-            edge.getTimestamp() );
+        return new IndexEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.TARGET, edge.getTimestamp() );
     }
 
 
@@ -122,6 +120,8 @@ public class CpNamingUtils {
 
 
     /**
+     *
+     * TODO move sourceId to ApplicationScope
      *
      * @param sourceId
      * @param collectionName

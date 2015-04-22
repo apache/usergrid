@@ -99,7 +99,7 @@ public class IndexServiceImpl implements IndexService {
 
 
         //we might or might not need to index from target-> source
-        final Observable<IndexEdge> targetSizes = getIndexEdgesToTarget( gm, entityId );
+        final Observable<IndexEdge> targetSizes = getIndexEdgesAsTarget( gm, entityId );
 
 
         //merge the edges together
@@ -129,12 +129,13 @@ public class IndexServiceImpl implements IndexService {
 
 
     /**
-     * Get index edges to the target
+     * Get index edges to the target.  Used in only certain entity types, such as roles, users, groups etc
+     * where we doubly index on both directions of the edge
      *
      * @param graphManager The graph manager
-     * @param entityId The entitie's id
+     * @param entityId The entity's id
      */
-    private Observable<IndexEdge> getIndexEdgesToTarget( final GraphManager graphManager, final Id entityId ) {
+    private Observable<IndexEdge> getIndexEdgesAsTarget( final GraphManager graphManager, final Id entityId ) {
 
         final String collectionName = InflectionUtils.pluralize( entityId.getType() );
 

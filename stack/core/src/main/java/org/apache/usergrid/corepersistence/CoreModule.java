@@ -22,10 +22,10 @@ import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
 import org.apache.usergrid.corepersistence.index.AsyncIndexProvider;
-import org.apache.usergrid.corepersistence.index.AsyncReIndexService;
+import org.apache.usergrid.corepersistence.index.AsyncIndexService;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
-import org.apache.usergrid.corepersistence.index.QueryFig;
+import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
@@ -151,9 +151,9 @@ public class CoreModule  extends AbstractModule {
         bind( IndexService.class ).to( IndexServiceImpl.class );
         //bind the queue provider
 
-        bind( AsyncReIndexService.class).toProvider( AsyncIndexProvider.class );
+        bind( AsyncIndexService.class).toProvider( AsyncIndexProvider.class );
 
-        install( new GuicyFigModule( QueryFig.class ) );
+        install( new GuicyFigModule( IndexProcessorFig.class ) );
 
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );

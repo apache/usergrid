@@ -20,7 +20,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -35,9 +34,9 @@ import com.google.inject.Singleton;
  * A provider to allow users to configure their queue impl via properties
  */
 @Singleton
-public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
+public class AsyncIndexProvider implements Provider<AsyncIndexService> {
 
-    private final QueryFig queryFig;
+    private final IndexProcessorFig indexProcessorFig;
 
     private final QueueManagerFactory queueManagerFactory;
     private final MetricsFactory metricsFactory;
@@ -45,15 +44,15 @@ public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
-    private AsyncReIndexService asyncIndexService;
+    private AsyncIndexService asyncIndexService;
 
 
     @Inject
-    public AsyncIndexProvider( final QueryFig queryFig, final QueueManagerFactory queueManagerFactory,
+    public AsyncIndexProvider( final IndexProcessorFig indexProcessorFig, final QueueManagerFactory queueManagerFactory,
                                final MetricsFactory metricsFactory, final IndexService indexService,
                                final RxTaskScheduler rxTaskScheduler,
                                final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
-        this.queryFig = queryFig;
+        this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
         this.metricsFactory = metricsFactory;
         this.indexService = indexService;
@@ -64,7 +63,7 @@ public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
 
     @Override
     @Singleton
-    public AsyncReIndexService get() {
+    public AsyncIndexService get() {
         if ( asyncIndexService == null ) {
             asyncIndexService = getIndexService();
         }
@@ -74,17 +73,18 @@ public class AsyncIndexProvider implements Provider<AsyncReIndexService> {
     }
 
 
-    private AsyncReIndexService getIndexService() {
-        final String value = queryFig.getQueueImplementation();
+    private AsyncIndexService getIndexService() {
+        final String value = indexProcessorFig.getQueueImplementation();
 
         final Implementations impl = Implementations.valueOf( value );
 
         switch ( impl ) {
             case LOCAL:
-                return new InMemoryAsyncReIndexService( indexService, rxTaskScheduler,
-                    entityCollectionManagerFactory, metricsFactory );
+                return new InMemoryAsyncIndexService( indexService, rxTaskScheduler,
+                    entityCollectionManagerFactory );
             case SQS:
-                return new SQSAsyncReIndexService( queueManagerFactory, queryFig, metricsFactory );
+                return new SQSAsyncIndexService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
+                    entityCollectionManagerFactory, rxTaskScheduler );
             default:
                 throw new IllegalArgumentException( "Configuration value of " + getErrorValues() + " are allowed" );
         }
