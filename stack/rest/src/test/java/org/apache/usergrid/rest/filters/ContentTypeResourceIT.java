@@ -127,7 +127,7 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      * Tests that application/x-www-url-form-encoded works correctly
      */
     @Test
-    @Ignore("This will only pass in tomcat, and shouldn't pass in grizzly")
+    @Ignore("This will only pass in tomcat")
     public void formEncodedUrlContentType() throws Exception {
         String orgName = clientSetup.getOrganizationName().toLowerCase();
         String appName = clientSetup.getAppName().toLowerCase();
