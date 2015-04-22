@@ -25,13 +25,12 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.model.util.Verify;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 
 
 /** @author tnine */
-@JsonTypeInfo( use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class" )
 public class SimpleId implements Id, Serializable {
 
 
@@ -65,7 +64,6 @@ public class SimpleId implements Id, Serializable {
     public SimpleId( final String type ){
        this(UUIDGenerator.newTimeUUID(), type);
     }
-
 
 
     @Override

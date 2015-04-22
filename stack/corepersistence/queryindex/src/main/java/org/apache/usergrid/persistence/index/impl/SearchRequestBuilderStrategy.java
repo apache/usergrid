@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.Set;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolFilterBuilder;
@@ -81,14 +82,14 @@ public class SearchRequestBuilderStrategy {
      * Get the search request builder
      */
     public SearchRequestBuilder getBuilder( final SearchEdge searchEdge, final SearchTypes searchTypes,
-                                            final ParsedQuery query, final int limit ) {
+                                            final ParsedQuery query, final int limit, final int from) {
 
         Preconditions
                 .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
 
         SearchRequestBuilder srb =
-                esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE )
-                          .setScroll( cursorTimeout + "m" );
+                esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE ).setSearchType(SearchType.QUERY_THEN_FETCH);
+
 
         final QueryVisitor visitor = visitParsedQuery( query );
 
@@ -101,7 +102,7 @@ public class SearchRequestBuilderStrategy {
         srb.setPostFilter( createFilterBuilder( searchEdge, visitor, searchTypes ) );
 
 
-        srb = srb.setFrom( 0 ).setSize( limit );
+        srb = srb.setFrom( from ).setSize( limit );
 
 
         //if we have a geo field, sort by closest to farthest by default

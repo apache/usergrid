@@ -25,6 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
@@ -38,6 +42,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +121,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         this.esProvider = provider;
 
         mapManager = mapManagerFactory.createMapManager( mapScope );
-        this.searchTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.timer" );
+        this.searchTimer = metricsFactory.getTimer(EsApplicationEntityIndexImpl.class, "search.timer");
         this.cursorTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.cursor.timer" );
         this.cursorTimeout = config.getQueryCursorTimeout();
         this.queryTimeout = config.getWriteTimeout();
@@ -139,12 +144,16 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         return batch;
     }
 
-
     @Override
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit ) {
+        return search(searchEdge, searchTypes, query, limit, 0);
+    }
 
-        IndexValidationUtils.validateSearchEdge( searchEdge );
+    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                                    final int limit, final int offset ) {
+
+        IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull( searchTypes, "searchTypes cannot be null" );
         Preconditions.checkNotNull( query, "query cannot be null" );
         Preconditions.checkArgument( limit > 0, "limit must be > 0" );
@@ -154,7 +163,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build( query );
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit );
+        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -175,64 +184,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         }
         failureMonitor.success();
 
-        return parseResults( searchResponse, parsedQuery, limit );
-    }
-
-
-    public CandidateResults getNextPage( final String cursor ) {
-        Preconditions.checkNotNull( cursor, "cursor is a required argument" );
-
-        SearchResponse searchResponse;
-
-        String userCursorString = cursor;
-
-        //sanitiztion, we  probably shouldn't do this here, but in the caller
-        if ( userCursorString.startsWith( "\"" ) ) {
-            userCursorString = userCursorString.substring( 1 );
-        }
-        if ( userCursorString.endsWith( "\"" ) ) {
-            userCursorString = userCursorString.substring( 0, userCursorString.length() - 1 );
-        }
-
-        //now get the cursor from the map  and validate
-        final String queryStateString = mapManager.getString( userCursorString );
-
-
-        if(queryStateString == null){
-            throw new QueryException( String.format("Could not find a cursor for the value '%s' ", userCursorString ));
-        }
-
-
-
-        //parse the query state
-        final QueryState queryState = QueryState.fromSerialized( queryStateString );
-
-        //parse the query so we can get select terms
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( queryState.ql);
-
-
-        logger.debug( "Executing query with cursor: {} ", queryState.esCursor );
-
-
-        SearchScrollRequestBuilder ssrb =
-                esProvider.getClient().prepareSearchScroll( queryState.esCursor ).setScroll( cursorTimeout + "m" );
-
-        try {
-            //Added For Graphite Metrics
-            Timer.Context timeSearchCursor = cursorTimer.time();
-            searchResponse = ssrb.execute().actionGet();
-            timeSearchCursor.stop();
-        }
-        catch ( Throwable t ) {
-            logger.error( "Unable to communicate with elasticsearch", t );
-            failureMonitor.fail( "Unable to execute batch", t );
-            throw t;
-        }
-
-
-        failureMonitor.success();
-
-        return parseResults( searchResponse, parsedQuery, queryState.limit );
+        return parseResults(searchResponse, parsedQuery, limit, offset);
     }
 
 
@@ -291,15 +243,14 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
      * Parse the results and return the canddiate results
      */
     private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
-                                           final int limit ) {
+                                           final int limit, final int from ) {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
-        final int length = hits.length;
 
-        logger.debug( "   Hit count: {} Total hits: {}", length, searchHits.getTotalHits() );
+        logger.debug( "   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits() );
 
-        List<CandidateResult> candidates = new ArrayList<>( length );
+        List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
         for ( SearchHit hit : hits ) {
 
@@ -308,82 +259,16 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             candidates.add( candidateResult );
         }
 
-        final String esScrollCursor = searchResponse.getScrollId();
-        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings(),esScrollCursor);
+        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings());
 
         // >= seems odd.  However if we get an overflow, we need to account for it.
-        if ( esScrollCursor != null && length >= limit ) {
-            final String cursor = candidateResults.initializeCursor();
+        if (  hits.length >= limit ) {
 
-            //now set this into our map module
-            final int minutes = indexFig.getQueryCursorTimeout();
-            //just truncate it, we'll never hit a long value anyway
+            candidateResults.initializeCursor(from+limit);
 
-            final int storageSeconds = ( int ) TimeUnit.MINUTES.toSeconds( minutes );
-
-            final QueryState state = new QueryState( query.getOriginalQuery(), limit, esScrollCursor );
-
-            final String queryStateSerialized = state.serialize();
-
-            mapManager.putString (cursor , queryStateSerialized, storageSeconds );
-
-            logger.debug( " User cursor = {},  Cursor = {} ", cursor, esScrollCursor );
         }
 
         return candidateResults;
     }
 
-
-    /**
-     * Class to encapsulate our serialized state
-     */
-    private static final class QueryState implements Serializable{
-
-        /**
-         * Our reserved character for constructing our storage string
-         */
-        private static final String STORAGE_DELIM = "_ugdelim_";
-
-        private final String ql;
-
-        private final int limit;
-
-        private final String esCursor;
-
-
-        private QueryState( final String ql, final int limit, final String esCursor ) {
-            this.ql = ql;
-            this.limit = limit;
-            this.esCursor = esCursor;
-        }
-
-
-        /**
-         * Factory to create an instance of our state from the serialized string
-         */
-        public static QueryState fromSerialized( final String input ) {
-
-            final String[] parts = input.split( STORAGE_DELIM );
-
-            Preconditions.checkArgument( parts != null && parts.length == 3,
-                    "there must be 3 parts to the serialized query state" );
-
-
-            return new QueryState( parts[0], Integer.parseInt( parts[1] ), parts[2] );
-        }
-
-
-        public String serialize() {
-
-            StringBuilder storageString = new StringBuilder();
-
-            storageString.append( ql ).append( STORAGE_DELIM );
-
-            storageString.append( limit ).append( STORAGE_DELIM );
-
-            storageString.append( esCursor );
-
-            return storageString.toString();
-        }
-    }
 }
