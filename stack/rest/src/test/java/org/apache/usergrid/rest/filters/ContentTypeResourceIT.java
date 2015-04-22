@@ -52,7 +52,6 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void correctHeaders() throws Exception {
-        refreshIndex();
         Entity testEntity=new Entity().chainPut("name", "Solitaire1");
         WebResource.Builder builder = app().collection("games")
             .getResource(true, getAdminToken())
@@ -75,11 +74,10 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void textPlainContentType() throws Exception {
-        refreshIndex();
         String json = JsonUtils.mapToFormattedJsonString(hashMap("name", "Solitaire2"));
         WebResource.Builder builder = app().collection("games").getResource(true, getAdminToken())
             .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON);
+            .type(MediaType.TEXT_PLAIN_TYPE);
 
         ClientResponse clientResponse = builder.post(ClientResponse.class, json);
 
@@ -162,7 +160,6 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void missingAcceptAndContent() throws Exception {
-        refreshIndex();
         WebResource builder = app()
             .collection("games")
             .getResource(true, getAdminToken());
