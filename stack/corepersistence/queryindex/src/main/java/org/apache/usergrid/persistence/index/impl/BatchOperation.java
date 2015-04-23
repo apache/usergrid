@@ -29,7 +29,7 @@ import org.elasticsearch.client.Client;
 /**
  * A batch request we can serialize and construct on receive
  */
-public interface BatchRequest extends Serializable {
+public interface BatchOperation extends Serializable {
 
 
     /**
@@ -37,5 +37,5 @@ public interface BatchRequest extends Serializable {
      * @param client
      * @param bulkRequest
      */
-    public void doOperation(final Client client, final BulkRequestBuilder bulkRequest );
+    void doOperation( final Client client, final BulkRequestBuilder bulkRequest );
 }

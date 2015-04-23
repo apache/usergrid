@@ -104,7 +104,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         final String entityId = entityData.get( IndexingUtils.ENTITY_ID_FIELDNAME ).toString();
 
         //add a tracer record
-        IndexRequest indexRequest = new IndexRequest( alias.getWriteAlias(), docId, entityData );
+        IndexOperation indexRequest = new IndexOperation( alias.getWriteAlias(), docId, entityData );
 
         //save the item
         IndexOperationMessage message = new IndexOperationMessage();
@@ -155,8 +155,8 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         } ).doOnCompleted(() -> {
             //clean up our data
             String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
-            DeIndexRequest deIndexRequest =
-                new DeIndexRequest(aliases, appScope, edge, entity.getId(), entity.getVersion());
+            DeIndexOperation deIndexRequest =
+                new DeIndexOperation(aliases, appScope, edge, entity.getId(), entity.getVersion());
 
             //delete the item
             IndexOperationMessage indexOperationMessage =
