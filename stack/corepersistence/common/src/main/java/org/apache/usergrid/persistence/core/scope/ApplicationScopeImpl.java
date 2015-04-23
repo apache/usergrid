@@ -31,8 +31,17 @@ import com.google.common.base.Preconditions;
  */
 public class ApplicationScopeImpl implements ApplicationScope {
 
-    protected final Id application;
+    protected Id application;
 
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public ApplicationScopeImpl(){
+
+    }
 
     public ApplicationScopeImpl( final Id application ) {
         Preconditions.checkNotNull(application, "application id is required");
@@ -43,6 +52,16 @@ public class ApplicationScopeImpl implements ApplicationScope {
     @Override
     public Id getApplication() {
         return this.application;
+    }
+
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setApplication( final Id application ) {
+        this.application = application;
     }
 
 

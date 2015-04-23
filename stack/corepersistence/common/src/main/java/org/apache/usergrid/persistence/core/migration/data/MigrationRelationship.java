@@ -59,13 +59,19 @@ public class MigrationRelationship<T extends VersionedData> {
 
 
     /**
-     * Return true if this is the migration relationship we should use.  The version matches the from
-     * and is <= the to
-     * @param currentVersion
-     * @return
+     * Return true if this is the migration relationship we should use.  The version matches the from and is <= the to
+     *
+     * @return The span.  Minimum span should be used.  Integer.MAX_VALUE means this span is unsupported.
      */
-    public boolean correctRelationship(final int currentVersion){
-        return currentVersion == fromVersion && currentVersion <= toVersion;
+    public int getSpan( final int currentVersion ) {
+
+        //current version is in our range, find it's delta from our min version
+        if ( currentVersion >= fromVersion && currentVersion <= toVersion ) {
+            //we return the fromVersion we're closest to.  Distance from 0 is what matters, so
+            return Math.abs( fromVersion - currentVersion );
+        }
+
+        return Integer.MAX_VALUE;
     }
 
 
@@ -96,5 +102,16 @@ public class MigrationRelationship<T extends VersionedData> {
         int result = from.hashCode();
         result = 31 * result + to.hashCode();
         return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return "MigrationRelationship{" +
+            "from=" + from +
+            ", to=" + to +
+            ", fromVersion=" + fromVersion +
+            ", toVersion=" + toVersion +
+            '}';
     }
 }

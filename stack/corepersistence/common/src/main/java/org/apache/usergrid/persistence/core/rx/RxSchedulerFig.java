@@ -35,14 +35,14 @@ public interface RxSchedulerFig extends GuicyFig {
      * Amount of time in milliseconds to wait when ES rejects our request before retrying.  Provides simple
      * backpressure
      */
-    public static final String IO_SCHEDULER_THREADS = "scheduler.io.threads";
+    String IO_SCHEDULER_THREADS = "scheduler.io.threads";
 
 
     /**
      * Amount of time in milliseconds to wait when ES rejects our request before retrying.  Provides simple
      * backpressure
      */
-    public static final String IO_SCHEDULER_NAME = "scheduler.io.poolName";
+    String IO_SCHEDULER_NAME = "scheduler.io.poolName";
 
 
 

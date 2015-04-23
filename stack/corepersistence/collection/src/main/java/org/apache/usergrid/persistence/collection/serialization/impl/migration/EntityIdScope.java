@@ -20,17 +20,31 @@
 package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
 
+import java.io.Serializable;
+
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 
 /**
  * Tuple containing collectionscope and entityid
  */
-public class EntityIdScope{
-    private final Id id;
-    private final ApplicationScope applicationScope;
+public class EntityIdScope implements Serializable {
+    private Id id;
+    private ApplicationScope applicationScope;
 
-    public EntityIdScope(ApplicationScope applicationScope, Id id){
+
+    /**
+     * DO NOT DELETE!!  Required for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public EntityIdScope() {
+    }
+
+
+    public EntityIdScope( ApplicationScope applicationScope, Id id ) {
         this.id = id;
         this.applicationScope = applicationScope;
     }
@@ -43,5 +57,23 @@ public class EntityIdScope{
 
     public ApplicationScope getApplicationScope() {
         return applicationScope;
+    }
+
+
+    /**
+     * DO NOT DELETE!!  Required for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setApplicationScope( final ApplicationScope applicationScope ) {
+        this.applicationScope = applicationScope;
+    }
+
+
+    /**
+     * DO NOT DELETE!!  Required for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setId( final Id id ) {
+        this.id = id;
     }
 }
