@@ -39,6 +39,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -89,37 +91,37 @@ public class ApplicationObservable {
         //we have app infos.  For each of these app infos, we have to load the application itself
         Observable<Id> appIds = gm.loadEdgesFromSource(
                 new SimpleSearchByEdgeType( rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                        null ) ).flatMap( new Func1<Edge, Observable<Id>>() {
+                        Optional.<Edge>absent() ) ).flatMap( new Func1<Edge, Observable<Id>>() {
             @Override
             public Observable<Id> call( final Edge edge ) {
                 //get the app info and load it
                 final Id appInfo = edge.getTargetNode();
 
                 return collectionManager.load( appInfo )
-                        //filter out null entities
-                        .filter( new Func1<Entity, Boolean>() {
-                            @Override
-                            public Boolean call( final Entity entity ) {
-                                if ( entity == null ) {
-                                    logger.warn( "Encountered a null application info for id {}", appInfo );
-                                    return false;
-                                }
-
-                                return true;
+                    //filter out null entities
+                    .filter( new Func1<Entity, Boolean>() {
+                        @Override
+                        public Boolean call( final Entity entity ) {
+                            if ( entity == null ) {
+                                logger.warn( "Encountered a null application info for id {}", appInfo );
+                                return false;
                             }
-                        } )
-                                //get the id from the entity
-                        .map( new Func1<org.apache.usergrid.persistence.model.entity.Entity, Id>() {
+
+                            return true;
+                        }
+                    } )
+                        //get the id from the entity
+                    .map( new Func1<org.apache.usergrid.persistence.model.entity.Entity, Id>() {
 
 
-                            @Override
-                            public Id call( final org.apache.usergrid.persistence.model.entity.Entity entity ) {
+                        @Override
+                        public Id call( final org.apache.usergrid.persistence.model.entity.Entity entity ) {
 
-                                final UUID uuid = ( UUID ) entity.getField( "applicationUuid" ).getValue();
+                            final UUID uuid = ( UUID ) entity.getField( "applicationUuid" ).getValue();
 
-                                return CpNamingUtils.generateApplicationId( uuid );
-                            }
-                        } );
+                            return CpNamingUtils.generateApplicationId( uuid );
+                        }
+                    } );
             }
         } );
 

@@ -164,6 +164,9 @@ public class CoreApplication implements Application, TestRule {
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
 
+//        //wait for the index before proceeding
+//        em.refreshIndex();
+
     }
 
     protected void before( Description description ) throws Exception {

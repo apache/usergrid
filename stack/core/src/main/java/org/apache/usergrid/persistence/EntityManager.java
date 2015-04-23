@@ -17,6 +17,11 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.corepersistence.ManagerCache;
+import org.apache.usergrid.persistence.cassandra.CounterUtils;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.query.Query;
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -698,7 +703,7 @@ public interface EntityManager {
     */
     void deleteIndex();
 
-    public void init( EntityManagerFactory emf, UUID applicationId);
+    public void init( final CassandraService cassandraService, final CounterUtils counterUtils, final MetricsFactory metricsFactory, final GraphManagerFactory graphManagerFactory, final EntityCollectionManagerFactory entityCollectionManagerFactory, final ManagerCache managerCache, UUID applicationId);
 
     /** For testing purposes */
     public void flushManagerCaches();

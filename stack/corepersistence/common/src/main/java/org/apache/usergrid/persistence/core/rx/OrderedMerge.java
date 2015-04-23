@@ -94,20 +94,20 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
             innerObservers[i] = inner;
         }
-
-        /**
-         * Once we're set up, begin the subscription to sub observables
-         */
-        for ( int i = 0; i < observables.length; i++ ) {
-            //subscribe after setting them up
-            //add our subscription to the composite for future cancellation
-            Subscription subscription = observables[i].subscribe( innerObservers[i] );
-
-            csub.add( subscription );
-
-            //add the internal composite subscription
-            outerOperation.add( csub );
-        }
+// TODO, if this merge makes it into 2.0-dev remove this and use 2.0 -dev
+//        /**
+//         * Once we're set up, begin the subscription to sub observables
+//         */
+//        for ( int i = 0; i < observables.length; i++ ) {
+//            //subscribe after setting them up
+//            //add our subscription to the composite for future cancellation
+//            Subscription subscription = observables[i].subscribe( innerObservers[i] );
+//
+//            csub.add( subscription );
+//
+//            //add the internal composite subscription
+//            outerOperation.add( csub );
+//        }
     }
 
 

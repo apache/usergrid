@@ -44,6 +44,7 @@ import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
@@ -57,6 +58,7 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.OrganizationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -99,12 +101,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final OrgApplicationCache orgApplicationCache;
 
 
-    private ManagerCache managerCache;
-    private DataMigrationManager dataMigrationManager;
+    private final ManagerCache managerCache;
+    private final DataMigrationManager dataMigrationManager;
+    private final GraphManagerFactory graphManagerFactory;
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
-    private CassandraService cassandraService;
-    private CounterUtils counterUtils;
-    private Injector injector;
+    private final CassandraService cassandraService;
+    private final CounterUtils counterUtils;
+    private final Injector injector;
     private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
@@ -115,7 +119,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
+        this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
+        this.entityCollectionManagerFactory = injector.getInstance( EntityCollectionManagerFactory.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
+
 
         this.orgApplicationCache = new OrgApplicationCacheImpl( this );
     }
@@ -172,7 +179,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
 
         EntityManager em = new CpEntityManager();
-        em.init( this, applicationId );
+        em.init( cassandraService, counterUtils, metricsFactory, graphManagerFactory, entityCollectionManagerFactory, managerCache, applicationId );
 
         return em;
     }
@@ -427,7 +434,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType(
                 fromEntityId, edgeType, Long.MAX_VALUE,
-                SearchByEdgeType.Order.DESCENDING, null ));
+                SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ));
 
         Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {

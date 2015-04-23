@@ -843,6 +843,14 @@ public class Query {
     }
 
 
+    /**
+     * Return true if there is no query language to execute
+     * @return
+     */
+    public boolean isGraphQuery(){
+        return rootOperand == null && ql == null;
+    }
+
     @JsonIgnore
     public Operand getRootOperand() {
         if ( rootOperand == null ) { // attempt deserialization

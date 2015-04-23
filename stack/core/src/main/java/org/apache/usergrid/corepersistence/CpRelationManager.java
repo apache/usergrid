@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import org.apache.usergrid.corepersistence.results.CollectionGraphQueryExecutor;
+import org.apache.usergrid.corepersistence.results.ConnectionGraphQueryExecutor;
 import org.apache.usergrid.corepersistence.results.ConnectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ElasticSearchQueryExecutor;
 import org.apache.usergrid.corepersistence.results.QueryExecutor;
@@ -61,6 +63,8 @@ import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -71,6 +75,7 @@ import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
@@ -106,6 +111,7 @@ import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -167,9 +173,9 @@ public class CpRelationManager implements RelationManager {
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
 
-    private CpEntityManagerFactory emf;
-
     private ManagerCache managerCache;
+    private EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private GraphManagerFactory graphManagerFactory;
 
     private EntityManager em;
 
@@ -196,15 +202,16 @@ public class CpRelationManager implements RelationManager {
 
 
     public CpRelationManager init(
-        EntityManager em,
-            CpEntityManagerFactory emf,
+            EntityManager em,
             UUID applicationId,
             EntityRef headEntity,
             IndexBucketLocator indexBucketLocator,
-            MetricsFactory metricsFactory) {
+            MetricsFactory metricsFactory,
+            ManagerCache managerCache,
+            EntityCollectionManagerFactory entityCollectionManagerFactory,
+            GraphManagerFactory graphManagerFactory ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
-        Assert.notNull( emf, "Entity manager factory cannot be null" );
         Assert.notNull( applicationId, "Application Id cannot be null" );
         Assert.notNull( headEntity, "Head entity cannot be null" );
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
@@ -213,10 +220,9 @@ public class CpRelationManager implements RelationManager {
         //Assert.notNull( indexBucketLocator, "indexBucketLocator cannot be null" );
 
         this.em = em;
-        this.emf = emf;
         this.applicationId = applicationId;
         this.headEntity = headEntity;
-        this.managerCache = emf.getManagerCache();
+        this.managerCache = managerCache;
         this.applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
@@ -232,6 +238,8 @@ public class CpRelationManager implements RelationManager {
         // load the Core Persistence version of the head entity as well
         this.headEntityScope = getCollectionScopeNameFromEntityType(
                 applicationScope.getApplication(), headEntity.getType());
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.graphManagerFactory = graphManagerFactory;
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}",
@@ -331,7 +339,7 @@ public class CpRelationManager implements RelationManager {
                   public Observable<Edge> call( final String edgeType ) {
                       return gm.loadEdgesToTarget(
                           new SimpleSearchByEdgeType( cpHeadEntity.getId(), edgeType, Long.MAX_VALUE,
-                              SearchByEdgeType.Order.DESCENDING, null ) );
+                              SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
 
                   }
               } );
@@ -400,7 +408,7 @@ public class CpRelationManager implements RelationManager {
                     public Observable<Edge> call( final String etype ) {
                         return gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
                             cpHeadEntity.getId(), etype, Long.MAX_VALUE,
-                            SearchByEdgeType.Order.DESCENDING, null ) );
+                            SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
                     }
                 } )
 
@@ -516,7 +524,7 @@ public class CpRelationManager implements RelationManager {
             CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
             System.currentTimeMillis(),
             SearchByEdgeType.Order.DESCENDING,
-            null ) ); // last
+            Optional.<Edge>absent() ) ); // last
 
         Iterator<Edge> iterator = edgesToTarget.toBlockingObservable().getIterator();
         int count = 0;
@@ -541,7 +549,7 @@ public class CpRelationManager implements RelationManager {
             CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
             System.currentTimeMillis(),
             SearchByEdgeType.Order.DESCENDING,
-            null ) ); // last
+            Optional.<Edge>absent() ) ); // last
 
         int count = edgesFromSource.take( 2 ).count().toBlocking().last();
 
@@ -927,6 +935,21 @@ public class CpRelationManager implements RelationManager {
                     + "' of " + headEntity.getType() + ":" + headEntity .getUuid() );
         }
 
+        query.setEntityType( collection.getType() );
+        query = adjustQuery( query );
+
+        /**
+         * It's a graph query, execute the graph query executor.
+         *
+         * TODO refactor all of this away into commands
+         */
+        if(query.isGraphQuery()){
+            final QueryExecutor executor = new CollectionGraphQueryExecutor( this.entityCollectionManagerFactory,graphManagerFactory, applicationScope, headEntity, query.getCursor(), collName, query.getLimit() );
+            return executor.next();
+        }
+
+
+
         final IndexScope indexScope = new IndexScopeImpl(
             cpHeadEntity.getId(),
             CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
@@ -938,9 +961,6 @@ public class CpRelationManager implements RelationManager {
         logger.debug( "Searching scope {}:{}",
 
             indexScope.getOwner().toString(), indexScope.getName() );
-
-        query.setEntityType( collection.getType() );
-        query = adjustQuery( query );
 
 
         final CollectionResultsLoaderFactoryImpl resultsLoaderFactory = new CollectionResultsLoaderFactoryImpl( managerCache );
@@ -1362,6 +1382,21 @@ public class CpRelationManager implements RelationManager {
 
         headEntity = em.validate( headEntity );
 
+
+        query = adjustQuery( query );
+
+
+        /**
+         * It's a graph query, execute the graph query executor.
+         *
+         * TODO refactor all of this away into commands
+         */
+        if(query.isGraphQuery()){
+            final QueryExecutor executor = new ConnectionGraphQueryExecutor( this.entityCollectionManagerFactory,graphManagerFactory, applicationScope, headEntity, query.getCursor(), connection, query.getLimit() );
+            return executor.next();
+        }
+
+
         final IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(),
                 CpNamingUtils.getConnectionScopeName( connection ) );
 
@@ -1373,7 +1408,6 @@ public class CpRelationManager implements RelationManager {
                         indexScope.getOwner().toString(), indexScope.getName(), searchTypes
                 } );
 
-        query = adjustQuery( query );
 
         final ConnectionResultsLoaderFactoryImpl resultsLoaderFactory = new ConnectionResultsLoaderFactoryImpl( managerCache,
             headEntity, connection );
@@ -1381,9 +1415,6 @@ public class CpRelationManager implements RelationManager {
         final QueryExecutor executor = new ElasticSearchQueryExecutor(resultsLoaderFactory, ei, applicationScope, indexScope, searchTypes, query);
 
         return executor.next();
-//        CandidateResults crs = ei.search( indexScope, searchTypes, query );
-
-//        return buildConnectionResults( indexScope, query, crs, connection );
     }
 
 
@@ -1455,7 +1486,7 @@ public class CpRelationManager implements RelationManager {
 
     private CpRelationManager getRelationManager( EntityRef headEntity ) {
         CpRelationManager rmi = new CpRelationManager();
-        rmi.init( em, emf, applicationId, headEntity, null, metricsFactory);
+        rmi.init( em, applicationId, headEntity, null, metricsFactory, managerCache, entityCollectionManagerFactory, graphManagerFactory);
         return rmi;
     }
 

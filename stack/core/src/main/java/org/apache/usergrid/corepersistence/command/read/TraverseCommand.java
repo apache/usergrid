@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,38 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.entity;
+
+package org.apache.usergrid.corepersistence.command.read;
 
 
-import java.io.Serializable;
-import java.util.UUID;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * Interface for creating identifiers for an entity. The implementation should implement
- * the equals and hasCode methods
- * @author tnine */
-@JsonDeserialize(as = SimpleId.class)
-public interface Id extends Comparable<Id>, Serializable {
-
-    /**
-     * Get the uuid for this id
-     * @return
-     */
-    UUID getUuid();
-
-    /**
-     * Get the unique type for this id
-     * @return
-     */
-    String getType();
-
-
-    //Application -> Class "Application"
-
-    //DynamicEntity -> DynamicEntity
-
-
-}
+ * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of ids, and emits
+ * an observable of ids
+ */
+public interface TraverseCommand extends Command<Id> {}
