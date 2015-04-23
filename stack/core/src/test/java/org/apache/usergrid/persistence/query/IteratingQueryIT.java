@@ -661,7 +661,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         int matchMax = queryLimit - 1;
@@ -719,9 +719,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 100;
+        int size = 10;
+        int queryLimit = 5;
+        int startValue = 5;
 
         long start = System.currentTimeMillis();
 
@@ -779,9 +779,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 50;
-        int startValue = 100;
+        int size = 20;
+        int queryLimit = 5;
+        int startValue = 10;
 
         long start = System.currentTimeMillis();
 
@@ -839,9 +839,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 100;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 10;
 
         long start = System.currentTimeMillis();
 
@@ -898,9 +898,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 99;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 9;
 
         long start = System.currentTimeMillis();
 
@@ -957,10 +957,10 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 50;
-        int endValue = 150;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 5;
+        int endValue = 15;
 
         long start = System.currentTimeMillis();
 
@@ -1020,10 +1020,10 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 50;
-        int endValue = 150;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 5;
+        int endValue = 15;
 
         long start = System.currentTimeMillis();
 
@@ -1088,7 +1088,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 300;
+        int size = 30;
 
         long start = System.currentTimeMillis();
 
@@ -1109,7 +1109,7 @@ public class IteratingQueryIT {
         Thread.sleep(500);
 
         Query query = new Query();
-        query.setLimit( 100 );
+        query.setLimit( 10 );
 
         int count = 0;
 
@@ -1142,7 +1142,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1249,7 +1249,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1361,7 +1361,7 @@ public class IteratingQueryIT {
         /**
          * Leave this as a large size.  We have to write over 1k to reproduce this issue
          */
-        int size = 200;
+        int size = 20;
 
         long start = System.currentTimeMillis();
 
@@ -1381,7 +1381,7 @@ public class IteratingQueryIT {
         LOG.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL("select * where NOT boolean = false order by index asc");
-        query.setLimit( 20 );
+        query.setLimit( 2 );
 
         int index = 0;
         int count = 0;

@@ -84,6 +84,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BackgroundTask.cs" />
     <Compile Include="Client\EntityResponse.cs" />
     <Compile Include="Client\IUsergridClient.cs" />
     <Compile Include="Client\PushClient.cs" />

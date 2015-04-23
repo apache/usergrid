@@ -86,7 +86,7 @@ namespace Usergrid.Notifications.Client
         }
 
 
-        public async Task<bool> SendRaw(String message)
+        public async Task<bool> SendRaw(JObject message)
         {
             if (DeviceId == null)
             {
@@ -95,7 +95,7 @@ namespace Usergrid.Notifications.Client
             var jsonObject = new JObject();
             var payloads = new JObject();
             var payload = new JObject();
-            payload.Add("raw", new JValue(message));
+            payload.Add("raw", message);
             payloads.Add(Notifier, payload);
             jsonObject.Add("payloads", payloads);
             jsonObject.Add("debug", true);
@@ -107,6 +107,8 @@ namespace Usergrid.Notifications.Client
         {
             channel = await PushNotificationChannelManager.CreatePushNotificationChannelForApplicationAsync().AsTask<PushNotificationChannel>();
             channel.PushNotificationReceived += channel_PushNotificationReceived;
+            ExampleBackgroundTask.Register();
+
             if (settings.Values[DEVICE_KEY] == null)
             {
                 Guid uuid = await registerDevice(true);
@@ -134,7 +136,11 @@ namespace Usergrid.Notifications.Client
 
         void channel_PushNotificationReceived(PushNotificationChannel sender, PushNotificationReceivedEventArgs args)
         {
-            throw new NotImplementedException();
+            var test = "test";
+            if (args.NotificationType == PushNotificationType.Raw)
+            {
+
+            }
         }
 
        
