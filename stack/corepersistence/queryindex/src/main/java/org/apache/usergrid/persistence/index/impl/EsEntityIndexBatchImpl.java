@@ -81,7 +81,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
         //add app id for indexing
-        container.addIndexRequest( new IndexRequest( writeAlias, applicationScope, indexEdge, entity ) );
+        container.addIndexRequest( new IndexOperation( writeAlias, applicationScope, indexEdge, entity ) );
         return this;
     }
 
@@ -105,7 +105,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
 
-        container.addDeIndexRequest( new DeIndexRequest( indexes, applicationScope, searchEdge, id, version ) );
+        container.addDeIndexRequest( new DeIndexOperation( indexes, applicationScope, searchEdge, id, version ) );
 
         return this;
     }

@@ -61,23 +61,27 @@ public interface IndexFig extends GuicyFig {
     String INDEX_WRITE_CONSISTENCY_LEVEL = "elasticsearch.write_consistency_level";
 
     /**
+     * The number of worker threads to flush collapsed batches
+     */
+    String INDEX_FLUSH_WORKER_COUNT = "index.flush.workers";
+
+    /**
      * the number of times we can fail before we refresh the client
      */
     String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
 
-
-
-
     String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
+
+
 
 
     /**
      * Timeout calls to elasticsearch.
      * @return
      */
-    public static final String ELASTICSEARCH_QUERY_TIMEOUT = "elasticsearch.query.timeout";
+    String ELASTICSEARCH_QUERY_TIMEOUT = "elasticsearch.query.timeout";
 
-    public static final String ELASTICSEARCH_WRITE_TIMEOUT= "elasticsearch.write.timeout";
+    String ELASTICSEARCH_WRITE_TIMEOUT= "elasticsearch.write.timeout";
 
     /**
      * The client type to use.  Valid values are NODE or TRANSPORT
@@ -156,6 +160,10 @@ public interface IndexFig extends GuicyFig {
     @Key( INDEX_BUFFER_SIZE )
     int getIndexBufferSize();
 
+    @Default("10")
+    @Key(INDEX_FLUSH_WORKER_COUNT)
+    int getIndexFlushWorkerCount();
+
 
 
     /**
@@ -184,7 +192,7 @@ public interface IndexFig extends GuicyFig {
     @Key("elasticsearch.refresh_sleep_ms")
     @Default("200")
     long refreshSleep();
-    
+
     @Default( "5000" )
     @Key( ELASTICSEARCH_QUERY_TIMEOUT )
     long getQueryTimeout();
