@@ -1,4 +1,5 @@
-﻿/*
+﻿using Newtonsoft.Json.Linq;
+/*
  *
  *  * Licensed to the Apache Software Foundation (ASF) under one or more
  *  *  contributor license agreements.  The ASF licenses this file to You
@@ -44,7 +45,7 @@ namespace Usergrid.Notifications
         {
             this.InitializeComponent();
             //TODO: change me to your server
-            serverUrl = "http://server/";
+            serverUrl = "http://yoururl/";
             //TODO: change me to your org
             org = "test-organization";
             //TODO: change me to your app
@@ -52,9 +53,9 @@ namespace Usergrid.Notifications
             //TODO: change me to your notifier name
             notifier = "windows";
             //TODO: change me to your user
-            user = "test";
+            user = "mobileuser";
             //TODO: change me to your password
-            password = "test";
+            password = "password";
             this.NavigationCacheMode = NavigationCacheMode.Required;
             usergrid = new Client.Usergrid(serverUrl, org, app, user, password, notifier);
 
@@ -126,7 +127,10 @@ namespace Usergrid.Notifications
             Result.Text = "Sending....";
 
             var message = this.pushText.Text;
-            if (await usergrid.Push.SendRaw(message))
+
+            JObject obj = new JObject();
+            obj.Add("message", message);
+            if (await usergrid.Push.SendRaw(obj))
             {
                 Result.Text = "It did! :)";
             }
