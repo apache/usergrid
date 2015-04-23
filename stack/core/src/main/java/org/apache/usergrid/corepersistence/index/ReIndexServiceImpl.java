@@ -60,20 +60,20 @@ public class ReIndexServiceImpl implements ReIndexService {
 
     private final AllApplicationsObservable allApplicationsObservable;
     private final AllEntityIdsObservable allEntityIdsObservable;
-    private final QueryFig queryFig;
+    private final IndexProcessorFig indexProcessorFig;
     private final RxTaskScheduler rxTaskScheduler;
     private final MapManager mapManager;
-    private final AsyncReIndexService indexService;
+    private final AsyncIndexService indexService;
 
 
     @Inject
     public ReIndexServiceImpl( final AllEntityIdsObservable allEntityIdsObservable,
                                final MapManagerFactory mapManagerFactory,
-                               final AllApplicationsObservable allApplicationsObservable, final QueryFig queryFig,
-                               final RxTaskScheduler rxTaskScheduler, final AsyncReIndexService indexService ) {
+                               final AllApplicationsObservable allApplicationsObservable, final IndexProcessorFig indexProcessorFig,
+                               final RxTaskScheduler rxTaskScheduler, final AsyncIndexService indexService ) {
         this.allEntityIdsObservable = allEntityIdsObservable;
         this.allApplicationsObservable = allApplicationsObservable;
-        this.queryFig = queryFig;
+        this.indexProcessorFig = indexProcessorFig;
         this.rxTaskScheduler = rxTaskScheduler;
         this.indexService = indexService;
 
@@ -108,7 +108,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         //start our sampler and state persistence
         //take a sample every sample interval to allow us to resume state with minimal loss
-        runningReIndex.sample( queryFig.getReIndexSampleInterval(), TimeUnit.MILLISECONDS,
+        runningReIndex.sample( indexProcessorFig.getReIndexSampleInterval(), TimeUnit.MILLISECONDS,
             rxTaskScheduler.getAsyncIOScheduler() )
             .doOnNext( edge -> {
 

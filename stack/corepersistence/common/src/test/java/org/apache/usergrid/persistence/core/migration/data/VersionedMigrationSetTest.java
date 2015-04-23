@@ -114,17 +114,13 @@ public class VersionedMigrationSetTest {
                 new MigrationRelationship<>( new TestVersionImpl( 4 ), new TestVersionImpl( 6 ) );
 
 
-        final MigrationRelationship<TestVersionImpl> relationship5_6 =
-                new MigrationRelationship<>( new TestVersionImpl( 5 ), new TestVersionImpl( 6 ) );
-
-
         final MigrationRelationship<TestVersionImpl> current =
                 new MigrationRelationship<>( new TestVersionImpl( 6 ), new TestVersionImpl( 6 ) );
 
 
         final VersionedMigrationSet<TestVersionImpl> set =
                 new VersionedMigrationSet<>( relationship1_3, relationship2_3, relationship3_6, relationship4_6,
-                        relationship5_6, current );
+                        current );
 
 
         try {
@@ -156,7 +152,7 @@ public class VersionedMigrationSetTest {
 
         migrationRelationship = set.getMigrationRelationship( 5 );
 
-        assertEquals( relationship5_6, migrationRelationship );
+        assertEquals( relationship4_6, migrationRelationship );
 
         migrationRelationship = set.getMigrationRelationship( 6 );
 

@@ -22,11 +22,14 @@ package org.apache.usergrid.persistence.model.entity;
 import java.io.Serializable;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 
 /**
  * Interface for creating identifiers for an entity. The implementation should implement
  * the equals and hasCode methods
  * @author tnine */
+@JsonDeserialize(as = SimpleId.class)
 public interface Id extends Comparable<Id>, Serializable {
 
     /**

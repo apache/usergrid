@@ -49,7 +49,6 @@ public class MetricsFactoryImpl implements MetricsFactory {
     private MetricRegistry registry;
     private GraphiteReporter graphiteReporter;
     private JmxReporter jmxReporter;
-    private ConcurrentHashMap<String, Metric> hashMap;
     private static final Logger LOG = LoggerFactory.getLogger( MetricsFactoryImpl.class );
 
 
@@ -68,7 +67,6 @@ public class MetricsFactoryImpl implements MetricsFactory {
         else {
             LOG.warn( "MetricsService:Logger not started." );
         }
-        hashMap = new ConcurrentHashMap<String, Metric>();
 
         jmxReporter = JmxReporter.forRegistry( registry ).build();
         jmxReporter.start();
@@ -83,25 +81,25 @@ public class MetricsFactoryImpl implements MetricsFactory {
 
     @Override
     public Timer getTimer( Class<?> klass, String name ) {
-        return getMetric( Timer.class, klass, name );
+        return getRegistry().timer( MetricRegistry.name( klass, name ) );
     }
 
 
     @Override
     public Histogram getHistogram( Class<?> klass, String name ) {
-        return getMetric( Histogram.class, klass, name );
+        return getRegistry().histogram( MetricRegistry.name( klass, name ) );
     }
 
 
     @Override
     public Counter getCounter( Class<?> klass, String name ) {
-        return getMetric( Counter.class, klass, name );
+        return getRegistry().counter( MetricRegistry.name( klass, name ) );
     }
 
 
     @Override
     public Meter getMeter( Class<?> klass, String name ) {
-        return getMetric( Meter.class, klass, name );
+        return getRegistry().meter( MetricRegistry.name( klass, name ) );
     }
 
 
@@ -112,38 +110,4 @@ public class MetricsFactoryImpl implements MetricsFactory {
     }
 
 
-    private <T> T getMetric( Class<T> metricClass, Class<?> klass, String name ) {
-        String key = metricClass.getName() + klass.getName() + name;
-        Metric metric = hashMap.get( key );
-        if ( metric == null ) {
-            if ( metricClass == Histogram.class ) {
-                metric = this.getRegistry().histogram( MetricRegistry.name( klass, name ) );
-            }
-            if ( metricClass == Timer.class ) {
-                metric = this.getRegistry().timer( MetricRegistry.name( klass, name ) );
-            }
-            if ( metricClass == Meter.class ) {
-                metric = this.getRegistry().meter( MetricRegistry.name( klass, name ) );
-            }
-            if ( metricClass == Counter.class ) {
-                metric = this.getRegistry().counter( MetricRegistry.name( klass, name ) );
-            }
-
-
-            hashMap.put( key, metric );
-        }
-        return ( T ) metric;
-    }
-
-
-    /**
-     *
-     * @param metricClass
-     * @param klass
-     * @param name
-     * @return
-     */
-    private String getKey( Class<?> metricClass, Class<?> klass, String name ) {
-        return metricClass.getName() + klass.getName() + name;
-    }
 }

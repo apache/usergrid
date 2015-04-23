@@ -20,146 +20,87 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import org.apache.usergrid.corepersistence.TestIndexModule;
-import org.apache.usergrid.persistence.index.impl.EsRunner;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.corepersistence.TestIndexModule;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.CandidateResults;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.index.impl.EsRunner;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.junit.Assert.assertTrue;
+import rx.Observable;
+import rx.schedulers.Schedulers;
+
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 
-@RunWith(EsRunner.class)
-@UseModules({ TestIndexModule.class })
+@RunWith( EsRunner.class )
+@UseModules( { TestIndexModule.class } )
 @NotThreadSafe
-public class SQSAsyncIndexServiceTest {
+public class SQSAsyncIndexServiceTest extends AsyncIndexServiceTest {
 
-
-    @Inject
-    @Rule
-    public MigrationManagerRule migrationManagerRule;
 
 
     @Rule
     public NoAWSCredsRule noAwsCredsRule = new NoAWSCredsRule();
 
+
+
     @Inject
     public QueueManagerFactory queueManagerFactory;
 
     @Inject
-    public QueryFig queryFig;
+    public IndexProcessorFig indexProcessorFig;
 
 
     @Inject
     public MetricsFactory metricsFactory;
 
+    @Inject
+    public IndexService indexService;
 
-    private SQSAsyncReIndexService bufferQueueSQS;
+    @Inject
+    public RxTaskScheduler rxTaskScheduler;
 
-    @Before
-    public void setup(){
-        bufferQueueSQS = new SQSAsyncReIndexService( queueManagerFactory, queryFig, metricsFactory );
+
+    @Override
+    protected AsyncIndexService getAsyncIndexService() {
+        return  new SQSAsyncIndexService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
+                    entityCollectionManagerFactory, rxTaskScheduler );
     }
 
-
-
-
-    @Test
-    public void testMessageIndexing(){
-
-        fail("fix me");
-//        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"));
-//        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-//        assumeTrue( ugProvider.getCredentials().getAWSAccessKeyId() != null );
-//        assumeTrue( ugProvider.getCredentials().getAWSSecretKey() != null );
-//
-//        final Map<String, Object> request1Data  = new HashMap<String, Object>() {{put("test", "testval1");}};
-//        final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", "testDoc1",request1Data );
-//
-//
-//        final Map<String, Object> request2Data  = new HashMap<String, Object>() {{put("test", "testval2");}};
-//        final IndexRequest indexRequest2 =  new IndexRequest( "testAlias2", "testDoc2",request2Data );
-//
-//
-//        //de-index request
-//        final DeIndexRequest
-//            deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new SearchEdgeImpl(new SimpleId("testId3"),"name3",
-//
-//
-//                SearchEdge.NodeType.SOURCE ),  new SimpleId("id3"), UUID.randomUUID() );
-//
-//        final DeIndexRequest deIndexRequest2 = new DeIndexRequest( new String[]{"index2.1", "index2.1"}, applicationScope,  new SearchEdgeImpl(new SimpleId("testId4"),"name4",
-//                SearchEdge.NodeType.SOURCE ),  new SimpleId("id4"), UUID.randomUUID()  );
-//
-//
-//
-//
-//        IndexOperationMessage indexOperationMessage = new IndexOperationMessage();
-//        indexOperationMessage.addIndexRequest( indexRequest1);
-//        indexOperationMessage.addIndexRequest( indexRequest2);
-//
-//        indexOperationMessage.addDeIndexRequest( deIndexRequest1 );
-//        indexOperationMessage.addDeIndexRequest( deIndexRequest2 );
-//
-//        bufferQueueSQS.offer( indexOperationMessage );
-//
-//        //wait for it to send to SQS
-//        indexOperationMessage.getFuture().get();
-//
-//        //now get it back
-//
-//        final List<IndexOperationMessage> ops = getResults( 20, TimeUnit.SECONDS );
-//
-//        assertTrue(ops.size() > 0);
-//
-//        final IndexOperationMessage returnedOperation = ops.get( 0 );
-//
-//         //get the operations out
-//
-//        final Set<IndexRequest> indexRequestSet = returnedOperation.getIndexRequests();
-//
-//        assertTrue(indexRequestSet.contains(indexRequest1));
-//        assertTrue(indexRequestSet.contains(indexRequest2));
-//
-//
-//        final Set<DeIndexRequest> deIndexRequests = returnedOperation.getDeIndexRequests();
-//
-//        assertTrue( deIndexRequests.contains( deIndexRequest1 ) );
-//        assertTrue( deIndexRequests.contains( deIndexRequest2 ) );
-//
-//
-//
-//        //now ack the message
-//
-//        bufferQueueSQS.ack( ops );
-
-    }
-
-//    private List<IndexOperationMessage> getResults(final long timeout, final TimeUnit timeUnit){
-//        final long endTime = System.currentTimeMillis() + timeUnit.toMillis( timeout );
-//
-//        List<IndexOperationMessage> ops;
-//
-//        do{
-//            ops = bufferQueueSQS.take( 10,  20, TimeUnit.SECONDS );
-//        }while((ops == null || ops.size() == 0 ) &&  System.currentTimeMillis() < endTime);
-//
-//        return ops;
-//    }
 
 
 
