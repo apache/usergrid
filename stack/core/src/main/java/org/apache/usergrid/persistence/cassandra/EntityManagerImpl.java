@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 
+import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 
@@ -69,6 +70,8 @@ import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
@@ -78,6 +81,7 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -193,6 +197,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Resource
     private EntityManagerFactoryImpl emf;
+
     @Resource
     private QueueManagerFactoryImpl qmf;
     @Resource
@@ -212,10 +217,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Override
-    public void init(EntityManagerFactory emf, UUID applicationId) {
-        init( (EntityManagerFactoryImpl)emf, null, null, applicationId, false);
-    }
 
 
     public EntityManager init(
@@ -523,7 +524,7 @@ public class EntityManagerImpl implements EntityManager {
          */
 
         Set<UUID> ownerEntityIds = getUUIDsForUniqueProperty(
-            new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), entityType, propertyName, propertyValue );
+            new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ), entityType, propertyName, propertyValue );
 
         //if there are no entities for this property, we know it's unique.  If there are,
         // we have to make sure the one we were passed is in the set.  otherwise it belongs
@@ -651,7 +652,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception {
-        return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, aliases );
+        return getAlias( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ), aliasType, aliases );
     }
 
 
@@ -1249,9 +1250,9 @@ public class EntityManagerImpl implements EntityManager {
 
         HColumn<ByteBuffer, ByteBuffer> result =
                 cass.getColumn( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
-                        key( entity.getUuid(), dictionaryName ),
-                        entityHasDictionary ? bytebuffer( elementName ) : DynamicComposite.toByteBuffer( elementName ),
-                        be, be );
+                    key( entity.getUuid(), dictionaryName ),
+                    entityHasDictionary ? bytebuffer( elementName ) : DynamicComposite.toByteBuffer( elementName ), be,
+                    be );
         if ( result != null ) {
             if ( entityHasDictionary && coTypeIsBasic ) {
                 value = object( dictionaryCoType, result.getValue() );
@@ -1295,7 +1296,7 @@ public class EntityManagerImpl implements EntityManager {
 
         ColumnSlice<ByteBuffer, ByteBuffer> results =
                 cass.getColumns( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
-                        key( entity.getUuid(), dictionaryName ), columnNames, be, be );
+                    key( entity.getUuid(), dictionaryName ), columnNames, be, be );
         if ( results != null ) {
             values = new HashMap<String, Object>();
             for ( HColumn<ByteBuffer, ByteBuffer> result : results.getColumns() ) {
@@ -1352,7 +1353,7 @@ public class EntityManagerImpl implements EntityManager {
 
         List<HColumn<ByteBuffer, ByteBuffer>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
-                        key( entity.getUuid(), dictionaryName ), be, be );
+                    key( entity.getUuid(), dictionaryName ), be, be );
         for ( HColumn<ByteBuffer, ByteBuffer> result : results ) {
             Object name = null;
             if ( entityHasDictionary ) {
@@ -2296,7 +2297,7 @@ public class EntityManagerImpl implements EntityManager {
         Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ),
                 be );
         addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ), permission,
-                ByteBuffer.allocate( 0 ), timestamp );
+            ByteBuffer.allocate( 0 ), timestamp );
         batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
@@ -2377,7 +2378,7 @@ public class EntityManagerImpl implements EntityManager {
         Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ),
                 be );
         addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( groupId, roleName ),
-                permission, ByteBuffer.allocate( 0 ), timestamp );
+            permission, ByteBuffer.allocate( 0 ), timestamp );
         batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
@@ -2390,7 +2391,7 @@ public class EntityManagerImpl implements EntityManager {
         Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ),
                 be );
         CassandraPersistenceUtils.addDeleteToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES,
-                getRolePermissionsKey( groupId, roleName ), permission, timestamp );
+            getRolePermissionsKey( groupId, roleName ), permission, timestamp );
         batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
@@ -2422,7 +2423,7 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public Map<String, Role> getUserRolesWithTitles( UUID userId ) throws Exception {
         return getRolesWithTitles(
-                ( Set<String> ) cast( getDictionaryAsSet( userRef( userId ), DICTIONARY_ROLENAMES ) ) );
+            ( Set<String> ) cast( getDictionaryAsSet( userRef( userId ), DICTIONARY_ROLENAMES ) ) );
     }
 
 
@@ -2534,7 +2535,7 @@ public class EntityManagerImpl implements EntityManager {
             Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ),
                     be );
             counterUtils.batchIncrementAggregateCounters( m, applicationId, userId, groupId, null, category, counters,
-                    timestamp );
+                timestamp );
 
             batchExecute( m, CassandraService.RETRY_COUNT );
         }
@@ -2724,7 +2725,7 @@ public class EntityManagerImpl implements EntityManager {
     public Results getConnectingEntities( EntityRef entityRef, String connectionType,
             String connectedEntityType, Level resultsLevel ) throws Exception {
 
-        return getConnectingEntities( entityRef, connectionType, connectedEntityType, resultsLevel, 0);
+        return getConnectingEntities( entityRef, connectionType, connectedEntityType, resultsLevel, 0 );
     }
 
 
@@ -2897,6 +2898,16 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public void deleteIndex() {
         //no op
+    }
+
+
+    @Override
+    public void init( final CassandraService cassandraService, final CounterUtils counterUtils,
+                      final MetricsFactory metricsFactory, final GraphManagerFactory graphManagerFactory,
+                      final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                      final ManagerCache managerCache, final UUID applicationId ) {
+        throw new UnsupportedOperationException( "Removed anyway" );
+
     }
 
 

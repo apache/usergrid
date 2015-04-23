@@ -18,6 +18,7 @@ package org.apache.usergrid.persistence.collection.serialization.impl;/*
  */
 
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,8 +33,7 @@ public class EntitySetImpl implements EntitySet {
     private final Map<Id, MvccEntity> entities;
 
 
-    public EntitySetImpl(
-                          final int expectedSize ) {
+    public EntitySetImpl(final int expectedSize ) {
         this.entities = new HashMap<>( expectedSize );
     }
 
@@ -47,6 +47,12 @@ public class EntitySetImpl implements EntitySet {
     public MvccEntity getEntity( final Id entityId ) {
         return entities.get( entityId );
     }
+
+    public Collection<MvccEntity> getEntities(){
+        return entities.values();
+    }
+
+
 
 
     @Override

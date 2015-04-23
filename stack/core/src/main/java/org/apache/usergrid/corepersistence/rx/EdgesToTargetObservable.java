@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -56,7 +58,7 @@ public class EdgesToTargetObservable {
                 logger.debug( "Loading edges of edgeType {} to {}", edgeType, targetNode);
 
                 return gm.loadEdgesToTarget( new SimpleSearchByEdgeType( targetNode, edgeType, Long.MAX_VALUE,
-                        SearchByEdgeType.Order.DESCENDING, null ) );
+                        SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent()  ) );
             }
         } );
     }

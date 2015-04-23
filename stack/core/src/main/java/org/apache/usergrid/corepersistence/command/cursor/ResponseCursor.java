@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,38 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.entity;
+
+package org.apache.usergrid.corepersistence.command.cursor;
 
 
 import java.io.Serializable;
-import java.util.UUID;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
- * Interface for creating identifiers for an entity. The implementation should implement
- * the equals and hasCode methods
- * @author tnine */
-@JsonDeserialize(as = SimpleId.class)
-public interface Id extends Comparable<Id>, Serializable {
+ * A cursor used in rendering a response
+ */
+public class ResponseCursor {
+
+
 
     /**
-     * Get the uuid for this id
-     * @return
+     * We use a map b/c some indexes might be skipped
      */
-    UUID getUuid();
+    private Map<Integer, ? super Serializable> cursors = new HashMap<>();
 
     /**
-     * Get the unique type for this id
-     * @return
+     * Set the possible cursor value into the index. DOES NOT parse the cursor.  This is intentional for performance
      */
-    String getType();
+    public <T extends Serializable> void setCursor( final int id, final T cursor ) {
+        cursors.put( id, cursor );
+    }
 
 
-    //Application -> Class "Application"
+    private void ensureCapacity() {
 
-    //DynamicEntity -> DynamicEntity
+    }
 
 
+    public String encodeAsString() {
+        return null;
+    }
 }

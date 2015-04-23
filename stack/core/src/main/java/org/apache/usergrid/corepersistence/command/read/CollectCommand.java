@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,38 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.entity;
 
-
-import java.io.Serializable;
-import java.util.UUID;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+package org.apache.usergrid.corepersistence.command.read;
 
 
 /**
- * Interface for creating identifiers for an entity. The implementation should implement
- * the equals and hasCode methods
- * @author tnine */
-@JsonDeserialize(as = SimpleId.class)
-public interface Id extends Comparable<Id>, Serializable {
+ * A command that is used to reduce our stream of results into a final output
+ * @param <T>
+ */
+public interface CollectCommand<T> extends Command<T>{
 
     /**
-     * Get the uuid for this id
-     * @return
+     * Set the prefered result size for the command
+     * @param resultSize
      */
-    UUID getUuid();
-
-    /**
-     * Get the unique type for this id
-     * @return
-     */
-    String getType();
-
-
-    //Application -> Class "Application"
-
-    //DynamicEntity -> DynamicEntity
+    void setLimit( final int resultSize );
 
 
 }

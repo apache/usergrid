@@ -34,6 +34,8 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import com.codahale.metrics.Meter;
+
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
@@ -86,6 +88,7 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
@@ -178,8 +181,6 @@ public class CpEntityManager implements EntityManager {
     private UUID applicationId;
     private Application application;
 
-    private CpEntityManagerFactory emf;
-
     private ManagerCache managerCache;
 
     private ApplicationScope applicationScope;
@@ -187,6 +188,10 @@ public class CpEntityManager implements EntityManager {
     private CassandraService cass;
 
     private CounterUtils counterUtils;
+
+
+    private EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private GraphManagerFactory graphManagerFactory;
 
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
@@ -220,22 +225,24 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public void init( EntityManagerFactory emf, UUID applicationId ) {
+    public void init( final CassandraService cassandraService, final CounterUtils counterUtils, final MetricsFactory metricsFactory, final GraphManagerFactory graphManagerFactory, final EntityCollectionManagerFactory entityCollectionManagerFactory, final ManagerCache managerCache, UUID applicationId ) {
 
-        Preconditions.checkNotNull( emf, "emf must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
 
-        this.emf = ( CpEntityManagerFactory ) emf;
-        this.managerCache = this.emf.getManagerCache();
+        this.managerCache = managerCache;
         this.applicationId = applicationId;
 
         applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
-        this.cass = this.emf.getCassandraService();
-        this.counterUtils = this.emf.getCounterUtils();
+        this.cass = cassandraService;
+        this.counterUtils =  counterUtils;
 
         //Timer Setup
-        this.metricsFactory = this.emf.getMetricsFactory();
+        this.metricsFactory = metricsFactory;
+
+        this.graphManagerFactory = graphManagerFactory;
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+
         this.aggCounterTimer =this.metricsFactory.getTimer( CpEntityManager.class,
             "cp.entity.get.aggregate.counters.timer" );
         this.entCreateTimer =this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.create.timer" );
@@ -766,7 +773,7 @@ public class CpEntityManager implements EntityManager {
     public RelationManager getRelationManager( EntityRef entityRef ) {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
         CpRelationManager rmi = new CpRelationManager();
-        rmi.init( this, emf, applicationId, entityRef, null, metricsFactory );
+        rmi.init( this,  applicationId, entityRef, null, metricsFactory, managerCache, entityCollectionManagerFactory, graphManagerFactory );
         return rmi;
     }
 
@@ -2885,7 +2892,7 @@ public class CpEntityManager implements EntityManager {
     public void refreshIndex() {
 
         // refresh factory indexes
-        emf.refreshIndex();
+
 
         // refresh this Entity Manager's application's index
         EntityIndex ei = managerCache.getEntityIndex( getApplicationScope() );

@@ -48,7 +48,6 @@ public class CollectionResultsLoaderFactoryImpl implements ResultsLoaderFactory 
             verifier = new CollectionRefsVerifier();
         }
         else if ( resultsLevel == Query.Level.IDS ) {
-//            verifier = new RefsVerifier();
             verifier = new IdsVerifier();
         }
         else {

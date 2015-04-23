@@ -60,6 +60,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -166,7 +167,7 @@ public class GraphManagerShardConsistencyIT {
             public Observable<Edge> doSearch( final GraphManager manager ) {
                 return manager.loadEdgesFromSource(
                         new SimpleSearchByEdgeType( sourceId, edgeType, Long.MAX_VALUE,
-                                SearchByEdgeType.Order.DESCENDING, null ) );
+                                SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
             }
         };
 
