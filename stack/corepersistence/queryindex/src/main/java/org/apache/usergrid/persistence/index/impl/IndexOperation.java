@@ -20,55 +20,54 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.Arrays;
-import java.util.UUID;
-
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
-import org.elasticsearch.client.Client;
+import java.util.Map;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.model.entity.Entity;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.client.Client;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.idString;
 
 
 /**
  * Represent the properties required to build an index request
  */
-@JsonTypeInfo( use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class" )
-public class DeIndexRequest implements BatchRequest {
+public class IndexOperation implements BatchOperation {
 
-    private String[] indexes;
-    private String documentId;
+    public String writeAlias;
+    public String documentId;
 
+    public Map<String, Object> data;
 
-    public DeIndexRequest() {
+    public IndexOperation( final String writeAlias, final ApplicationScope applicationScope, IndexEdge indexEdge,
+                           Entity entity ) {
+        this(writeAlias,IndexingUtils.createIndexDocId(applicationScope, entity,indexEdge), EntityToMapConverter.convert(applicationScope,indexEdge, entity));
 
     }
 
+    public IndexOperation( final String writeAlias, String documentId, Map<String, Object> data ) {
+        this.writeAlias = writeAlias;
+        this.data = data;
+        this.documentId = documentId;
+    }
 
-    public DeIndexRequest( String[] indexes, ApplicationScope applicationScope, SearchEdge searchEdge, Id id,
-                           UUID version ) {
-        this.indexes = indexes;
-        this.documentId = createIndexDocId( applicationScope, id, version, searchEdge );
+    /**
+     * DO NOT DELETE!  Required for Jackson
+     */
+    public IndexOperation() {
     }
 
 
-    @Override
     public void doOperation( final Client client, final BulkRequestBuilder bulkRequest ) {
+        IndexRequestBuilder builder = client.prepareIndex( writeAlias, IndexingUtils.ES_ENTITY_TYPE, documentId ).setSource( data );
 
 
-        for ( final String index : indexes ) {
-            final DeleteRequestBuilder builder =
-                    client.prepareDelete( index, IndexingUtils.ES_ENTITY_TYPE, documentId );
-            bulkRequest.add( builder );
-        }
+        bulkRequest.add( builder );
     }
-
 
 
 
@@ -81,13 +80,16 @@ public class DeIndexRequest implements BatchRequest {
             return false;
         }
 
-        final DeIndexRequest that = ( DeIndexRequest ) o;
+        final IndexOperation that = ( IndexOperation ) o;
 
+        if ( !data.equals( that.data ) ) {
+            return false;
+        }
         if ( !documentId.equals( that.documentId ) ) {
             return false;
         }
 
-        if ( !Arrays.equals( indexes, that.indexes ) ) {
+        if ( !writeAlias.equals( that.writeAlias ) ) {
             return false;
         }
 
@@ -97,8 +99,9 @@ public class DeIndexRequest implements BatchRequest {
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode( indexes );
+        int result = writeAlias.hashCode();
         result = 31 * result + documentId.hashCode();
+        result = 31 * result + data.hashCode();
         return result;
     }
 }
