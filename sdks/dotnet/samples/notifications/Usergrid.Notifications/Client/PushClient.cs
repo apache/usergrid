@@ -86,7 +86,7 @@ namespace Usergrid.Notifications.Client
         }
 
 
-        public async Task<bool> SendRaw(JObject message)
+        public async Task<bool> SendRaw(string message)
         {
             if (DeviceId == null)
             {

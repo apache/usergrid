@@ -21,10 +21,9 @@
 package org.apache.usergrid.services.notifications.wns;
 
 import ar.com.fernandospr.wns.WnsService;
-import ar.com.fernandospr.wns.model.WnsBadge;
-import ar.com.fernandospr.wns.model.WnsRaw;
-import ar.com.fernandospr.wns.model.WnsToast;
+import ar.com.fernandospr.wns.model.*;
 import ar.com.fernandospr.wns.model.builders.WnsBadgeBuilder;
+import ar.com.fernandospr.wns.model.builders.WnsRawBuilder;
 import ar.com.fernandospr.wns.model.builders.WnsToastBuilder;
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.usergrid.persistence.EntityManager;
@@ -64,9 +63,9 @@ public class WNSAdapter implements ProviderAdapter {
         WnsToast toast = new WnsToastBuilder().bindingTemplateToastText01("test").build();
         try{
             //this fails every time due to jax error which is ok
-            service.pushToast("s-1-15-2-2411381248-444863693-3819932088-4077691928-1194867744-112853457-373132695",toast);
+            service.pushToast("s-1-15-2-2411381248-444863693-3819932088-4077691928-1194867744-112853457-373132695", toast);
         }catch (ClientHandlerException e){
-            LOG.info("Windows Phone notifier added: "+e.toString());
+            LOG.info("Windows Phone notifier added: " + e.toString());
         }
     }
 
@@ -89,12 +88,23 @@ public class WNSAdapter implements ProviderAdapter {
                         }
                         service.pushBadge(providerId, badge);
                         break;
-                    case "raw" :
-                        WnsRaw raw = new WnsRaw();
-                        raw.stream = toBytes( translatedNotification.getMessage() ) ;
-                        service.pushRaw(providerId, raw);
+                    case "raw":
+                        Object message = translatedNotification.getMessage();
+                        if(message instanceof String) {
+                            WnsRaw raw = new WnsRawBuilder().stream(((String) message).getBytes()).build();
+                            WnsNotificationRequestOptional opt = new WnsNotificationRequestOptional();
+                            opt.cachePolicy = "cache";
+                            opt.requestForStatus = "true";
+                            WnsNotificationResponse response = service.pushRaw(providerId, opt, raw);
+                            if (!response.notificationStatus.equals("received")) { // https://msdn.microsoft.com/en-us/library/windows/apps/hh465435.aspx#pncodes_x_wns_notification
+                                throw new Exception(String.format("Notification failed status:%s, devicesStatus:%s, description:%s, debug flag:%s", response.notificationStatus, response.deviceConnectionStatus, response.errorDescription, response.debugTrace));
+                            }
+                        }else{
+                            throw new IllegalArgumentException("You must send a string in the raw body. instead got this: " + message.getClass().getName());
+                        }
                         break;
-                    default : throw new IllegalArgumentException(translatedNotification.getType()+" does not match a valid notification type (toast,badge).");
+                    default:
+                        throw new IllegalArgumentException(translatedNotification.getType() + " does not match a valid notification type (toast,badge).");
                 }
             }
             tracker.completed();
@@ -104,35 +114,7 @@ public class WNSAdapter implements ProviderAdapter {
         }
     }
 
-    private byte[] toBytes(Object message) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        try {
-            if(message instanceof Serializable) {
-                out = new ObjectOutputStream(bos);
-                out.writeObject(message);
-                byte[] yourBytes = bos.toByteArray();
-                return yourBytes;
-            }else{
-                throw new RuntimeException("message is not serializable");
-            }
-        }catch (IOException e){
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-            try {
-                bos.close();
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-        }
-    }
+
     @Override
     public void doneSendingNotifications() throws Exception {
 

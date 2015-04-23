@@ -45,7 +45,7 @@ namespace Usergrid.Notifications
         {
             this.InitializeComponent();
             //TODO: change me to your server
-            serverUrl = "http://yoururl/";
+            serverUrl = "http://10.0.1.20:8080/";
             //TODO: change me to your org
             org = "test-organization";
             //TODO: change me to your app
@@ -55,7 +55,7 @@ namespace Usergrid.Notifications
             //TODO: change me to your user
             user = "mobileuser";
             //TODO: change me to your password
-            password = "password";
+            password = "P@ssw0rd1";
             this.NavigationCacheMode = NavigationCacheMode.Required;
             usergrid = new Client.Usergrid(serverUrl, org, app, user, password, notifier);
 
@@ -130,7 +130,7 @@ namespace Usergrid.Notifications
 
             JObject obj = new JObject();
             obj.Add("message", message);
-            if (await usergrid.Push.SendRaw(obj))
+            if (await usergrid.Push.SendRaw(message))
             {
                 Result.Text = "It did! :)";
             }
