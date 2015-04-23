@@ -45,6 +45,14 @@
           <m3:Rotation Preference="portrait" />
         </m3:InitialRotationPreference>
       </m3:VisualElements>
+      <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="Usergrid.Notifications.ExampleBackgroundTask">
+          <BackgroundTasks>
+            <Task Type="pushNotification" />
+          </BackgroundTasks>
+        </Extension>
+       
+      </Extensions>
     </Application>
   </Applications>
   <Capabilities>
