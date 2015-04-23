@@ -34,8 +34,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * Container for index operations.
  */
 public class IndexOperationMessage implements Serializable {
-    private final Set<IndexRequest> indexRequests;
-    private final Set<DeIndexRequest> deIndexRequests;
+    private final Set<IndexOperation> indexRequests;
+    private final Set<DeIndexOperation> deIndexRequests;
 
 
 
@@ -46,33 +46,28 @@ public class IndexOperationMessage implements Serializable {
         final IndexOperationMessage parent = this;
         this.indexRequests = new HashSet<>();
         this.deIndexRequests = new HashSet<>();
-        this.containerFuture = new BetterFuture<>( new Callable<IndexOperationMessage>() {
-            @Override
-            public IndexOperationMessage call() throws Exception {
-                return parent;
-            }
-        } );
+        this.containerFuture = new BetterFuture<>( () -> parent );
     }
 
 
-    public void addIndexRequest( final IndexRequest indexRequest ) {
+    public void addIndexRequest( final IndexOperation indexRequest ) {
         indexRequests.add( indexRequest );
     }
 
 
 
-    public void addDeIndexRequest( final DeIndexRequest deIndexRequest ) {
+    public void addDeIndexRequest( final DeIndexOperation deIndexRequest ) {
         this.deIndexRequests.add( deIndexRequest );
     }
 
 
 
-    public Set<IndexRequest> getIndexRequests() {
+    public Set<IndexOperation> getIndexRequests() {
         return indexRequests;
     }
 
 
-    public Set<DeIndexRequest> getDeIndexRequests() {
+    public Set<DeIndexOperation> getDeIndexRequests() {
         return deIndexRequests;
     }
 

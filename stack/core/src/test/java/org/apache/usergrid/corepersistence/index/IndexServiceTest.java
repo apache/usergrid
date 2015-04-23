@@ -20,9 +20,9 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +46,7 @@ import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
-import org.apache.usergrid.persistence.index.impl.IndexRequest;
+import org.apache.usergrid.persistence.index.impl.IndexOperation;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -117,10 +117,10 @@ public class IndexServiceTest {
         //real users should never call to blocking, we're not sure what we'll get
         final IndexOperationMessage results = indexed.toBlocking().last();
 
-        final Set<IndexRequest> indexRequests = results.getIndexRequests();
+        final Set<IndexOperation> indexRequests = results.getIndexRequests();
 
         //ensure our value made it to the index request
-        final IndexRequest indexRequest = indexRequests.iterator().next();
+        final IndexOperation indexRequest = indexRequests.iterator().next();
 
         assertNotNull( indexRequest );
     }
@@ -175,9 +175,6 @@ public class IndexServiceTest {
 
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
-        final CountDownLatch latch = new CountDownLatch( 1 );
-
-
         //query until it's available
         final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
@@ -186,7 +183,6 @@ public class IndexServiceTest {
 
         assertEquals( testEntity.getId(), collectionResults.get( 0 ).getId() );
 
-        latch.await();
 
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
 
@@ -235,14 +231,23 @@ public class IndexServiceTest {
          * Write 10k edges 10 at a time in parallel
          */
 
-        final int edgeCount = 2000;
+//        final int edgeCount = indexFig.getIndexBatchSize()*2;
+        final int edgeCount = 2;
 
-        final Edge connectionSearch = Observable.range( 0, edgeCount ).flatMap( integer -> {
+        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
             final Id connectingId = createId( "connecting" );
             final Edge edge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
 
             return graphManager.writeEdge( edge ).subscribeOn( Schedulers.io() );
-        }, 10 ).toBlocking().last();
+        }, 20).toList().toBlocking().last();
+
+
+        assertEquals( "All edges saved", edgeCount, connectionSearchEdges.size() );
+
+        //get the first and last edge
+        final Edge connectionSearch = connectionSearchEdges.get( 0 );
+
+        final Edge lastSearch = connectionSearchEdges.get( edgeCount-1 );
 
 
         //now index
@@ -258,8 +263,6 @@ public class IndexServiceTest {
 
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
-        final CountDownLatch latch = new CountDownLatch( 1 );
-
 
         //query until it's available
         final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
@@ -269,7 +272,6 @@ public class IndexServiceTest {
 
         assertEquals( testEntity.getId(), collectionResults.get( 0 ).getId() );
 
-        latch.await();
 
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
 
@@ -281,6 +283,18 @@ public class IndexServiceTest {
         assertEquals( 1, connectionResults.size() );
 
         assertEquals( testEntity.getId(), connectionResults.get( 0 ).getId() );
+
+
+        final SearchEdge lastConnectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( lastSearch );
+
+
+        //query until it's available
+        final CandidateResults lastConnectionResults = getResults( applicationEntityIndex, lastConnectionSearchEdge,
+            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+
+        assertEquals( 1, lastConnectionResults.size() );
+
+        assertEquals( testEntity.getId(), lastConnectionResults.get( 0 ).getId() );
     }
 
 
@@ -291,7 +305,7 @@ public class IndexServiceTest {
 
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                applicationEntityIndex.search( searchEdge, searchTypes, "select *", 100 );
+                applicationEntityIndex.search( searchEdge, searchTypes, ql , count );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;
