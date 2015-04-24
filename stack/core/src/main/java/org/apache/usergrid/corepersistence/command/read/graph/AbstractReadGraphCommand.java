@@ -56,7 +56,7 @@ public abstract class AbstractReadGraphCommand extends AbstractCommand<Id, Edge>
 
 
     @Override
-    public Observable<Id> call( final Observable<? extends Id> observable ) {
+    public Observable<Id> call( final Observable<Id> observable ) {
 
         //get the graph manager
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );

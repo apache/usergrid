@@ -89,8 +89,6 @@ public interface IndexFig extends GuicyFig {
     String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
 
 
-    String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
-
 
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
