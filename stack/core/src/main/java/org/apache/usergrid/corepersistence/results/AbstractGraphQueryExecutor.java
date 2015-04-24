@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.results;
 
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -78,7 +79,7 @@ public abstract class AbstractGraphQueryExecutor implements QueryExecutor {
 
         //hasn't been set up yet, run through our first setup
         if ( observableIterator == null ) {
-            //assign them to an interator.  this now uses an internal buffer with backpressure, so we won't load all
+            //assign them to an iterator.  this now uses an internal buffer with backpressure, so we won't load all
             // results
             //set up our command builder
             final CommandBuilder commandBuilder = new CommandBuilder( applicationScope, sourceId, requestCursor, limit );
@@ -91,6 +92,11 @@ public abstract class AbstractGraphQueryExecutor implements QueryExecutor {
                 commandBuilder.build( new EntityLoadCommand( entityCollectionManagerFactory, applicationScope ) );
 
             this.observableIterator = resultsObservable.toBlocking().getIterator();
+
+            if(!observableIterator.hasNext()){
+                //no results, generate an empty one
+                this.observableIterator = Collections.singleton(new Results()).iterator();
+            }
         }
 
 
