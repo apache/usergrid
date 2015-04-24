@@ -302,7 +302,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL("sort by  created" );
+        Query query = Query.fromQL("order by  created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -371,7 +371,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where intersect = true sort by created asc" );
+        Query query = Query.fromQL( "select * where intersect = true order by created asc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -441,7 +441,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true sort by  created" );
+        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true order by  created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -498,7 +498,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true sort by  created" );
+        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true order by  created" );
         query.setLimit( queryLimit );
 
         start = System.currentTimeMillis();
@@ -742,7 +742,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -797,12 +797,13 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        this.app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -818,7 +819,7 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-                assertEquals( expected.get( size - delta - count - 1 ), results.getEntities().get( i ).getName() );
+                assertEquals( expected.get( size - count - 1   ), results.getEntities().get( i ).getName() );
                 count++;
             }
 
@@ -862,7 +863,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -921,7 +922,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
