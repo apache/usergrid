@@ -17,18 +17,21 @@
  */
 package org.apache.usergrid.persistence.collection.impl;
 
+
 import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.collection.CollectionScope;
+
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Entity;
+
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 
@@ -39,12 +42,12 @@ public class EntityVersionCreatedTask implements Task<Void> {
     private static final Logger logger = LoggerFactory.getLogger( EntityVersionCreatedTask.class );
 
     private Set<EntityVersionCreated> listeners;
-    private final CollectionScope collectionScope;
+    private final ApplicationScope collectionScope;
     private final Entity entity;
 
 
     @Inject
-    public EntityVersionCreatedTask( @Assisted final CollectionScope collectionScope,
+    public EntityVersionCreatedTask( @Assisted final ApplicationScope collectionScope,
                                      final Set<EntityVersionCreated> listeners,
                                      @Assisted final Entity entity ) {
 
@@ -64,7 +67,7 @@ public class EntityVersionCreatedTask implements Task<Void> {
     @Override
     public Void rejected() {
 
-        // Our task was rejected meaning our queue was full.  
+        // Our task was rejected meaning our queue was full.
         // We need this operation to run, so we'll run it in our current thread
         try {
             call();
@@ -76,7 +79,7 @@ public class EntityVersionCreatedTask implements Task<Void> {
         return null;
     }
 
-    
+
     @Override
     public Void call() throws Exception {
 
@@ -100,22 +103,12 @@ public class EntityVersionCreatedTask implements Task<Void> {
 
         logger.debug( "Started firing {} listeners", listenerSize );
 
-        //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
-        Observable.from(listeners).parallel( 
-            new Func1<Observable<EntityVersionCreated>, Observable<EntityVersionCreated>>() {
 
-                @Override
-                public Observable<EntityVersionCreated> call(
-                    final Observable<EntityVersionCreated> entityVersionCreatedObservable ) {
+        Observable.from( listeners )
+                  .flatMap( currentListener -> Observable.just( currentListener ).doOnNext( listener -> {
+                      listener.versionCreated( collectionScope, entity );
+                  } ).subscribeOn( Schedulers.io() ), 10 ).toBlocking().last();
 
-                    return entityVersionCreatedObservable.doOnNext( new Action1<EntityVersionCreated>() {
-                        @Override
-                        public void call( final EntityVersionCreated listener ) {
-                            listener.versionCreated(collectionScope,entity);
-                        }
-                    } );
-                }
-            }, Schedulers.io() ).toBlocking().last();
 
         logger.debug( "Finished firing {} listeners", listenerSize );
     }

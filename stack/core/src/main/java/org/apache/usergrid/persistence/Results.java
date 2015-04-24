@@ -17,24 +17,19 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.Base64;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.*;
+import com.google.common.base.Optional;
+import com.netflix.astyanax.serializers.IntegerSerializer;
+import org.apache.commons.codec.binary.*;
 import org.apache.usergrid.corepersistence.results.QueryExecutor;
-import org.apache.usergrid.persistence.cassandra.QueryProcessor;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.persistence.query.ir.SearchVisitor;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.StringUtils;
 
@@ -49,6 +44,7 @@ import static org.apache.usergrid.utils.ConversionUtils.bytes;
 
 @XmlRootElement
 public class Results implements Iterable<Entity> {
+    private static final IntegerSerializer INTEGER_SERIALIZER = IntegerSerializer.get();
 
 
     Level level = Level.IDS;
@@ -176,7 +172,7 @@ public class Results implements Iterable<Entity> {
             refs.add( ref( type, u ) );
         }
         Results r = new Results();
-        r.setRefs( refs );
+        r.setRefs(refs);
         return r;
     }
 
@@ -201,14 +197,14 @@ public class Results implements Iterable<Entity> {
 
     public static Results fromEntities( List<? extends Entity> l ) {
         Results r = new Results();
-        r.setEntities( l );
+        r.setEntities(l);
         return r;
     }
 
 
     public static Results fromEntity( Entity e ) {
         Results r = new Results();
-        r.setEntity( e );
+        r.setEntity(e);
         return r;
     }
 
@@ -218,14 +214,14 @@ public class Results implements Iterable<Entity> {
             return fromEntity( ( Entity ) ref );
         }
         Results r = new Results();
-        r.setRef( ref );
+        r.setRef(ref);
         return r;
     }
 
 
     public static Results fromData( Object obj ) {
         Results r = new Results();
-        r.setData( obj );
+        r.setData(obj);
         return r;
     }
 
@@ -234,14 +230,14 @@ public class Results implements Iterable<Entity> {
         Results r = new Results();
         List<AggregateCounterSet> l = new ArrayList<AggregateCounterSet>();
         l.add( counters );
-        r.setCounters( l );
+        r.setCounters(l);
         return r;
     }
 
 
     public static Results fromCounters( List<AggregateCounterSet> counters ) {
         Results r = new Results();
-        r.setCounters( counters );
+        r.setCounters(counters);
         return r;
     }
 
@@ -249,7 +245,7 @@ public class Results implements Iterable<Entity> {
     @SuppressWarnings("unchecked")
     public static Results fromConnections( List<? extends ConnectionRef> connections ) {
         Results r = new Results();
-        r.setConnections( ( List<ConnectionRef> ) connections, true );
+        r.setConnections((List<ConnectionRef>) connections, true);
         return r;
     }
 
@@ -257,7 +253,7 @@ public class Results implements Iterable<Entity> {
     @SuppressWarnings("unchecked")
     public static Results fromConnections( List<? extends ConnectionRef> connections, boolean forward ) {
         Results r = new Results();
-        r.setConnections( ( List<ConnectionRef> ) connections, forward );
+        r.setConnections((List<ConnectionRef>) connections, forward);
         return r;
     }
 
@@ -430,7 +426,7 @@ public class Results implements Iterable<Entity> {
         }
         if ( ref != null ) {
             refs = new ArrayList<EntityRef>();
-            refs.add( ref );
+            refs.add(ref);
             return refs;
         }
         return new ArrayList<EntityRef>();
@@ -633,7 +629,7 @@ public class Results implements Iterable<Entity> {
         if ( types != null ) {
             return types;
         }
-        getEntityRefsByType( "entity" );
+        getEntityRefsByType("entity");
         if ( entitiesByType != null ) {
             types = entitiesByType.keySet();
         }
@@ -898,7 +894,7 @@ public class Results implements Iterable<Entity> {
 
 
     public Results findForProperty( String propertyName, Object propertyValue ) {
-        return findForProperty( propertyName, propertyValue, 1 );
+        return findForProperty(propertyName, propertyValue, 1);
     }
 
 
@@ -919,7 +915,7 @@ public class Results implements Iterable<Entity> {
                 }
             }
         }
-        return Results.fromEntities( found );
+        return Results.fromEntities(found);
     }
 
 
@@ -1173,6 +1169,27 @@ public class Results implements Iterable<Entity> {
         return cursor;
     }
 
+    public Optional<Integer> getOffsetFromCursor() {
+        Optional<Integer> offset = Optional.absent();
+        if(cursor != null && cursor.length() > 0){
+            byte[] bytes = org.apache.commons.codec.binary.Base64.decodeBase64(cursor);
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            Integer number  = INTEGER_SERIALIZER.fromByteBuffer(buffer);
+            offset = Optional.of(number);
+        }
+        return offset;
+    }
+
+    public void setCursorFromOffset(Optional<Integer> offset) {
+
+        if(offset.isPresent()){
+            ByteBuffer buffer = INTEGER_SERIALIZER.toByteBuffer(offset.get());
+            cursor = org.apache.commons.codec.binary.Base64.encodeBase64String(buffer.array());
+        }else{
+            cursor = null;
+        }
+    }
+
 
     public boolean hasCursor() {
         return cursor != null && cursor.length() > 0;
@@ -1180,6 +1197,7 @@ public class Results implements Iterable<Entity> {
 
 
     public void setCursor( String cursor ) {
+
         this.cursor = cursor;
     }
 

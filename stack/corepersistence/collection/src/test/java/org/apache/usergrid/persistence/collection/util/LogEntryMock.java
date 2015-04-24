@@ -29,19 +29,17 @@ import java.util.UUID;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.when;
 
@@ -61,18 +59,14 @@ public class LogEntryMock {
      * Create a mock list of versions of the specified size
      *
      * @param entityId The entity Id to use
-     * @param size The size to use
+     * @param versions The versions to use
      */
-    private LogEntryMock(final Id entityId, final int size ) {
+    private LogEntryMock(final Id entityId, final List<UUID> versions ) {
 
         this.entityId = entityId;
 
-        for ( int i = 0; i < size; i++ ) {
-
-            final UUID version = UUIDGenerator.newTimeUUID();
-
-            entries.put( version,
-                    new MvccLogEntryImpl( entityId, version, Stage.ACTIVE, MvccLogEntry.State.COMPLETE ) );
+        for ( UUID version: versions) {
+            entries.put( version, new MvccLogEntryImpl( entityId, version, Stage.ACTIVE, MvccLogEntry.State.COMPLETE ) );
         }
     }
 
@@ -83,7 +77,7 @@ public class LogEntryMock {
      * @param scope
      * @throws ConnectionException
      */
-    private void initMock(  final MvccLogEntrySerializationStrategy logEntrySerializationStrategy, final  CollectionScope scope )
+    private void initMock(  final MvccLogEntrySerializationStrategy logEntrySerializationStrategy, final ApplicationScope scope )
 
             throws ConnectionException {
 
@@ -112,28 +106,43 @@ public class LogEntryMock {
 
 
     /**
-     * Get the entries (ordered from high to low) this mock contains
+     * Get the entry at the specified index from high to low
+     * @param index
      * @return
      */
-    public Collection<MvccLogEntry> getEntries(){
-        return entries.values();
+    public MvccLogEntry getEntryAtIndex(final int index){
+
+        final Iterator<MvccLogEntry> itr = entries.values().iterator();
+
+        for(int i = 0; i < index; i ++){
+           itr.next();
+        }
+
+        return itr.next();
     }
+
 
     /**
      *
      * @param logEntrySerializationStrategy The mock to use
      * @param scope The scope to use
      * @param entityId The entityId to use
-     * @param size The number of entries to mock
+     * @param versions The versions to mock
      * @throws ConnectionException
      */
-    public static LogEntryMock createLogEntryMock(final MvccLogEntrySerializationStrategy logEntrySerializationStrategy, final  CollectionScope scope,final Id entityId, final int size )
+    public static LogEntryMock createLogEntryMock(final MvccLogEntrySerializationStrategy logEntrySerializationStrategy, final  ApplicationScope scope,final Id entityId, final List<UUID> versions )
 
             throws ConnectionException {
-        LogEntryMock mock = new LogEntryMock( entityId, size );
+
+        LogEntryMock mock = new LogEntryMock( entityId, versions );
         mock.initMock( logEntrySerializationStrategy, scope );
 
         return mock;
+    }
+
+
+    public Collection<MvccLogEntry> getEntries() {
+        return entries.values();
     }
 
 

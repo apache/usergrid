@@ -109,7 +109,7 @@
       <jersey-version>1.18.1</jersey-version>
       <junit-version>4.12</junit-version>
       <log4j-version>1.2.16</log4j-version>
-      <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
+      <org.springframework.version>3.2.13.RELEASE</org.springframework.version>
       <shiro-version>1.2.3</shiro-version>
       <slf4j-version>1.6.1</slf4j-version>
       <snakeyaml-version>1.8</snakeyaml-version>
@@ -216,7 +216,9 @@
     https://issues.apache.org/jira/browse/USERGRID-224
     <module>launcher</module>
     -->
-    <module>mongo-emulator</module>
+    <!--
+    Not supported in 2.0 ATM.  We will re-visit after our refactor work
+    <module>mongo-emulator</module>-->
     <!--
     Re-enable when query-validator updated to work with Core Persistence.
     https://issues.apache.org/jira/browse/USERGRID-221
@@ -961,11 +963,13 @@
         <version>1.6.0</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.mongodb</groupId>
-        <artifactId>mongo-java-driver</artifactId>
-        <version>2.9.0</version>
-      </dependency>
+
+      <!--not supported in 2.0, see above
+      <dependency>-->
+        <!--<groupId>org.mongodb</groupId>-->
+        <!--<artifactId>mongo-java-driver</artifactId>-->
+        <!--<version>2.9.0</version>-->
+      <!--</dependency>-->
 
       <dependency>
         <groupId>org.python</groupId>
@@ -1462,6 +1466,8 @@
                           <forkCount>${usergrid.it.forkCount}</forkCount>
                           <reuseForks>${usergrid.it.reuseForks}</reuseForks>
                           <threadCount>${usergrid.it.forkCount}</threadCount>
+                          <!-- see this page for documentation on classloading issues http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
+                          <useSystemClassLoader>false</useSystemClassLoader>
                           <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
                           <testFailureIgnore>false</testFailureIgnore>
                       </configuration>
@@ -1472,7 +1478,7 @@
                       <dependencies>
                           <dependency>
                               <groupId>org.apache.maven.surefire</groupId>
-                              <artifactId>surefire-junit47</artifactId>
+                              <artifactId>${surefire.plugin.artifactName}</artifactId>
                               <version>${surefire.plugin.version}</version>
 
                               <!--<exclusions>-->
@@ -1561,8 +1567,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <optimize>true</optimize>
           <showDeprecation>true</showDeprecation>
           <debug>true</debug>
@@ -1584,7 +1590,7 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>1.7.0</version>
+                  <version>1.8.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.0,)</version>

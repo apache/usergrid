@@ -21,16 +21,24 @@ package org.apache.usergrid.corepersistence.util;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.impl.IndexEdgeImpl;
+import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.utils.UUIDUtils;
 
 
 /**
@@ -38,36 +46,26 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
  */
 public class CpNamingUtils {
 
-    /**
-         * TODO: Why do we have 3?  Can we merge this into a single management app?  It would make administration much
-         * easier and cleaner on the ES side
-         *
-         */
-
-    /**
-     * Edge types for collection suffix
-     */
+    /** Edge types for collection suffix */
     public static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
 
-    /**
-     * Edge types for connection suffix
-     */
+    /** Edge types for connection suffix */
     public static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
-    /** The System Application where we store app and org metadata */
-    public static final UUID SYSTEM_APP_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
-    /** App where we store management info */
-    public static final  UUID MANAGEMENT_APPLICATION_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
-    /** TODO Do we need this in two-dot-o? */
-    public static final  UUID DEFAULT_APPLICATION_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
-    /**
-     * The app infos entity object type. This holds the app name, appId, and org name
-     */
-    public static final String APPINFOS = "appinfos";
 
-    public static final String DELETED_APPINFOS = "deleted_appinfos";
+    /** App where we store management info */
+    public static final UUID MANAGEMENT_APPLICATION_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-11ddb1de66c8" );
+
+    /** Old and deprecated SYSTEM_APP */
+    public static final UUID SYSTEM_APP_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-10ddb1de66c3" );
+
+    /**
+     * Information about applications is stored in the management app using these types
+     */
+    public static final String APPLICATION_INFO = "application_info";
+    public static final String APPLICATION_INFOS = "application_infos";
+
+    public static final String DELETED_APPLICATION_INFO = "deleted_application_info";
+    public static final String DELETED_APPLICATION_INFOS = "deleted_application_infos";
 
     /**
      * The name of the map that holds our entity id->type mapping
@@ -75,101 +73,146 @@ public class CpNamingUtils {
     public static String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
 
 
-    /**
-     * Generate a collection scope for a collection within the application's Id for the given type
-     * @param applicationId The applicationId that owns this entity
-     * @param type The type in the collection
-     * @return The collectionScope
-     */
-    public static CollectionScope getCollectionScopeNameFromEntityType(final Id applicationId, final String type){
-       return  new CollectionScopeImpl( applicationId, applicationId, getCollectionScopeNameFromEntityType( type ) );
-    }
 
     /**
-     * Get the collection name from the entity/id type
-     * @param type
+     * Generate a standard edge name for our graph using the connection name. To be used only for searching.  DO NOT use
+     * for creation.  Use the createConnectionEdge instead.
+     *
+     * @param connectionType The type of connection made
+     */
+    public static String getEdgeTypeFromConnectionType( String connectionType ) {
+        return ( EDGE_CONN_SUFFIX + "|" + connectionType ).toLowerCase();
+    }
+
+
+    /**
+     * Generate a standard edges from for a collection
+     *
+     * To be used only for searching DO NOT use for creation. Use the createCollectionEdge instead.
+     */
+    public static String getEdgeTypeFromCollectionName( String collectionName ) {
+        return ( EDGE_COLL_SUFFIX + "|" + collectionName ).toLowerCase();
+    }
+
+
+    /**
+     * Get the index scope for the edge from the source
+     */
+    public static IndexEdge generateScopeFromSource( final Edge edge ) {
+        return new IndexEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE, edge.getTimestamp() );
+    }
+
+
+    /**
+     * Get the index scope for the edge from the source
+     */
+    public static IndexEdge generateScopeToTarget( final Edge edge ) {
+        return new IndexEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.TARGET, edge.getTimestamp() );
+    }
+
+
+    /**
+     * Create the search edge from the source
+     */
+    public static SearchEdge createSearchEdgeFromSource( final Edge edge ) {
+        return new SearchEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE );
+    }
+
+
+    /**
+     *
+     * TODO move sourceId to ApplicationScope
+     *
+     * @param sourceId
+     * @param collectionName
+     * @param entityId
      * @return
      */
-    public static String getCollectionScopeNameFromEntityType( String type ) {
-        String csn = EDGE_COLL_SUFFIX + Schema.defaultCollectionName( type );
-        return csn.toLowerCase();
+    public static Edge createCollectionEdge( final Id sourceId, final String collectionName, final Id entityId ) {
+        final String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
+
+        final UUID entityIdUUID = entityId.getUuid();
+
+        //if they don't use a time based uuid (such as in devices) we need to create a timestamp from "now" since
+        // this is when the entity
+        //will be added to the collection
+        final UUID timeStampUuid = UUIDUtils.isTimeBased( entityIdUUID ) ? entityIdUUID : UUIDUtils.newTimeUUID();
+
+        long uuidTimestamp = UUIDUtils.getUUIDLong( timeStampUuid );
+
+        // create graph edge connection from head entity to member entity
+        return new SimpleEdge( sourceId, edgeType, entityId, uuidTimestamp );
     }
 
 
-    public static String getCollectionScopeNameFromCollectionName( String name ) {
-        String csn = EDGE_COLL_SUFFIX + name;
-        return csn.toLowerCase();
+    /**
+     * Create a connection searchEdge
+     */
+    public static SearchEdge createCollectionSearchEdge( final Id sourceId, final String connectionType ) {
+        return new SearchEdgeImpl( sourceId, getEdgeTypeFromCollectionName( connectionType ),
+            SearchEdge.NodeType.TARGET );
     }
 
 
-    public static String getConnectionScopeName( String connectionType ) {
-        String csn = EDGE_CONN_SUFFIX + connectionType ;
-        return csn.toLowerCase();
+    /**
+     * Create a new connection edge from the source node with the given connection type and target id
+     */
+    public static Edge createConnectionEdge( final Id sourceEntityId, final String connectionType,
+                                             final Id targetEntityId ) {
+        final String edgeType = getEdgeTypeFromConnectionType( connectionType );
+
+        // create graph edge connection from head entity to member entity
+        return new SimpleEdge( sourceEntityId, edgeType, targetEntityId, System.currentTimeMillis() );
     }
 
 
-    public static boolean isCollectionEdgeType( String type ) {
-        return type.startsWith( EDGE_COLL_SUFFIX );
+    /**
+     * Create a connection searchEdge
+     *
+     * @param sourceId The source id in the connection
+     * @param connectionType The type of the connection to create a search for
+     */
+    public static SearchEdge createConnectionSearchEdge( final Id sourceId, final String connectionType ) {
+        return new SearchEdgeImpl( sourceId, getEdgeTypeFromConnectionType( connectionType ),
+            SearchEdge.NodeType.TARGET );
     }
 
 
-    public static boolean isConnectionEdgeType( String type ) {
-        return type.startsWith( EDGE_CONN_SUFFIX );
-    }
+    /**
+     * search for all versions of a connection between 2 entities in teh graph
+     *
+     * @param sourceId The source id of the edge
+     * @param connectionType The connection type used in the edge
+     * @param targetId The target id
+     *
+     * @return A search by edge command to search the graph
+     */
+    public static SearchByEdge createConnectionSearchByEdge( final Id sourceId, final String connectionType,
+                                                             final Id targetId ) {
 
+        final String edgeType = getEdgeTypeFromConnectionType( connectionType );
 
-    static public String  getConnectionType( String edgeType ) {
-        String[] parts = edgeType.split( "\\|" );
-        return parts[1];
-    }
-
-
-    static public String getCollectionName( String edgeType ) {
-        String[] parts = edgeType.split( "\\|" );
-        return parts[1];
-    }
-
-
-    public static String getEdgeTypeFromConnectionType( String connectionType ) {
-
-        if ( connectionType != null ) {
-            String csn = EDGE_CONN_SUFFIX + "|" + connectionType;
-            return csn;
-        }
-
-        return null;
-    }
-
-
-    public static String getEdgeTypeFromCollectionName( String collectionName ) {
-
-        if ( collectionName != null ) {
-            String csn = EDGE_COLL_SUFFIX + "|" + collectionName;
-            return csn;
-        }
-
-
-        return null;
+        return new SimpleSearchByEdge( sourceId, edgeType, targetId, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+            null );
     }
 
 
     /**
      * Get the application scope from the given uuid
+     *
      * @param applicationId The applicationId
      */
     public static ApplicationScope getApplicationScope( UUID applicationId ) {
 
         // We can always generate a scope, it doesn't matter if  the application exists yet or not.
-        final ApplicationScopeImpl scope = new ApplicationScopeImpl( generateApplicationId( applicationId ) );
-
-        return scope;
+        return  new ApplicationScopeImpl( generateApplicationId( applicationId ) );
     }
 
 
     /**
      * Generate an applicationId from the given UUID
-     * @param applicationId  the applicationId
      *
+     * @param applicationId the applicationId
      */
     public static Id generateApplicationId( UUID applicationId ) {
         return new SimpleId( applicationId, Application.ENTITY_TYPE );
@@ -177,12 +220,62 @@ public class CpNamingUtils {
 
 
     /**
-     * Get the map scope for the applicationId to store entity uuid to type mapping
-     *
-     * @param applicationId
+     * Generate an application scope for the management application
      * @return
      */
-    public static MapScope getEntityTypeMapScope( final Id applicationId ){
-        return new MapScopeImpl(applicationId, CpNamingUtils.TYPES_BY_UUID_MAP );
+    public static Id getManagementApplicationId(){
+        return  generateApplicationId( MANAGEMENT_APPLICATION_ID );
+    }
+
+
+
+    /**
+     * Get the map scope for the applicationId to store entity uuid to type mapping
+     */
+    public static MapScope getEntityTypeMapScope( final Id applicationId ) {
+        return new MapScopeImpl( applicationId, CpNamingUtils.TYPES_BY_UUID_MAP );
+    }
+
+
+    /**
+     * Generate either the collection name or connection name from the edgeName
+     */
+    public static String getNameFromEdgeType( final String edgeName ) {
+
+
+        if ( isCollectionEdgeType( edgeName ) ) {
+            return getCollectionScopeNameFromCollectionName( getCollectionName( edgeName ) );
+        }
+
+        return getConnectionScopeName( getConnectionType( edgeName ) );
+    }
+
+
+    private static boolean isCollectionEdgeType( String type ) {
+        return type.startsWith( EDGE_COLL_SUFFIX );
+    }
+
+
+    private static String getConnectionType( String edgeType ) {
+        String[] parts = edgeType.split( "\\|" );
+        return parts[1];
+    }
+
+
+    private static String getCollectionName( String edgeType ) {
+        String[] parts = edgeType.split( "\\|" );
+        return parts[1];
+    }
+
+
+    private static String getCollectionScopeNameFromCollectionName( String name ) {
+        String csn = EDGE_COLL_SUFFIX + name;
+        return csn.toLowerCase();
+    }
+
+
+    private static String getConnectionScopeName( String connectionType ) {
+        String csn = EDGE_CONN_SUFFIX + connectionType;
+        return csn.toLowerCase();
     }
 }

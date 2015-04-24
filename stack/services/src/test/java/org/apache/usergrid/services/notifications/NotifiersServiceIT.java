@@ -16,33 +16,28 @@
  */
 package org.apache.usergrid.services.notifications;
 
-import org.apache.commons.io.IOUtils;
 
-import org.apache.usergrid.persistence.queue.NoAWSCredsRule;
-import org.apache.usergrid.services.notifications.apns.MockSuccessfulProviderAdapter;
-import org.apache.usergrid.persistence.entities.Notifier;
+import java.io.InputStream;
+import java.lang.reflect.Field;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.services.notifications.ConnectionException;
-import org.apache.usergrid.services.notifications.NotificationsService;
 
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.net.SocketException;
+import org.apache.commons.io.IOUtils;
+
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
+import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.services.AbstractServiceIT;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertArrayEquals;
-
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class NotifiersServiceIT extends AbstractServiceIT {

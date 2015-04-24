@@ -17,8 +17,27 @@
 package org.apache.usergrid.rest.management;
 
 
-import java.net.URLEncoder;
-import java.util.Map;
+import com.sun.jersey.api.view.Viewable;
+import org.apache.amber.oauth2.common.error.OAuthError;
+import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+import org.apache.amber.oauth2.common.message.types.GrantType;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.codec.Base64;
+import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
+import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
+import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.exceptions.RedirectionException;
+import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
+import org.apache.usergrid.rest.management.users.UsersResource;
+import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -33,39 +52,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.net.URLEncoder;
+import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
-import org.apache.amber.oauth2.common.error.OAuthError;
-import org.apache.amber.oauth2.common.exception.OAuthProblemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
-import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.codec.Base64;
-
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
-import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
-import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-import org.apache.usergrid.rest.management.users.UsersResource;
-import org.apache.usergrid.security.oauth.AccessInfo;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-
-import com.sun.jersey.api.view.Viewable;
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
+import static javax.servlet.http.HttpServletResponse.*;
+import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -83,14 +74,14 @@ public class ManagementResource extends AbstractContextResource {
 
     /*-
      * New endpoints:
-     * 
+     *
      * /management/organizations/<organization-name>/applications
      * /management/organizations/<organization-name>/users
      * /management/organizations/<organization-name>/keys
      *
      * /management/users/<user-name>/login
      * /management/users/<user-name>/password
-     * 
+     *
      */
 
     private static final Logger logger = LoggerFactory.getLogger( ManagementResource.class );
@@ -191,7 +182,7 @@ public class ManagementResource extends AbstractContextResource {
                         String[] values = Base64.decodeToString( token ).split( ":" );
 
                         if ( values.length >= 2 ) {
-                            client_id = values[0].toLowerCase();
+                            client_id = values[0];
                             client_secret = values[1];
                         }
                     }

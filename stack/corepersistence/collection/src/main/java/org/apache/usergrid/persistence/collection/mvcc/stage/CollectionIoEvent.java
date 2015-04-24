@@ -18,9 +18,10 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage;
 
+
 import java.io.Serializable;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
 /**
@@ -28,18 +29,18 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
  */
 public class CollectionIoEvent<T> implements Serializable {
 
-    private CollectionScope context;
+    private ApplicationScope context;
 
     private T event;
 
 
-    public CollectionIoEvent( final CollectionScope context, final T event ) {
+    public CollectionIoEvent( final ApplicationScope context, final T event ) {
         this.context = context;
         this.event = event;
     }
 
 
-    public CollectionScope getEntityCollection() {
+    public ApplicationScope getEntityCollection() {
         return context;
     }
 

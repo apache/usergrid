@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import static org.apache.usergrid.services.ServiceInfo.normalizeServicePattern;
 import static org.apache.usergrid.utils.ListUtils.dequeueCopy;

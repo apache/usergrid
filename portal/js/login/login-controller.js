@@ -25,7 +25,7 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
   $scope.activation = {};
   $scope.requiresDeveloperKey=$scope.options.client.requiresDeveloperKey||false;
   if(!$scope.requiresDeveloperKey && $scope.options.client.apiKey){
-    ug.setClientProperty('developerkey', $scope.options.client.apiKey);    
+    ug.setClientProperty('developerkey', $scope.options.client.apiKey);
   }
   $rootScope.gotoForgotPasswordPage = function(){
     $location.path("/forgot-password");
@@ -48,11 +48,20 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
     ug.orgLogin(username, password);
 
   }
-  $scope.$on('loginFailed',function(){
+  $scope.$on('loginFailed',function(event, err, data){
     $scope.loading = false;
     //let the user know the login was not valid
     ug.setClientProperty('developerkey', null);
-    $scope.loginMessage = "Error: the username / password combination was not valid";
+    var errorMessage="An error occurred while attempting to authenticate";
+    if (data instanceof XMLHttpRequestProgressEvent){
+      $scope.loginMessage = "Error: An error occurred while connecting to "+Usergrid.overrideUrl;
+    }else if(status == 400){
+      $scope.loginMessage = "Error: the username / password combination was not valid";
+    } else {
+      $scope.loginMessage = "Error: "+((data.error_description.length>1)?data.error_description:errorMessage);
+    }
+      console.log("LOGIN RESPONSE", err, data);
+
     $scope.applyScope();
   });
 

@@ -59,7 +59,7 @@ public class CredExport extends ToolBase {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */

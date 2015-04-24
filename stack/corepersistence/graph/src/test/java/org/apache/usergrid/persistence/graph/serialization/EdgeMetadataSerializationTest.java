@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -44,7 +45,7 @@ import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.serializers.StringSerializer;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchIdType;
 import static org.junit.Assert.assertEquals;
@@ -98,9 +99,9 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id sourceId = edge1.getSourceNode();
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target2" ) );
+        final Edge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target2" ) );
 
-        final Edge edge3 = createEdge( sourceId, "edge2", createId( "target3" ) );
+        final Edge edge3 = createEdge( sourceId, "edge2", IdGenerator.createId( "target3" ) );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -132,9 +133,9 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id targetId = edge1.getTargetNode();
 
-        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId );
+        final Edge edge2 = createEdge( IdGenerator.createId( "source" ), "edge", targetId );
 
-        final Edge edge3 = createEdge( createId( "source2" ), "edge2", targetId );
+        final Edge edge3 = createEdge( IdGenerator.createId( "source2" ), "edge2", targetId );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -166,12 +167,12 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id sourceId = edge1.getSourceNode();
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final Edge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target" ) );
 
-        final Edge edge3 = createEdge( sourceId, "edge", createId( "target2" ) );
+        final Edge edge3 = createEdge( sourceId, "edge", IdGenerator.createId( "target2" ) );
 
         //shouldn't be returned
-        final Edge edge4 = createEdge( sourceId, "edge2", createId( "target3" ) );
+        final Edge edge4 = createEdge( sourceId, "edge2", IdGenerator.createId( "target3" ) );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -212,12 +213,12 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id targetId = edge1.getTargetNode();
 
-        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId );
+        final Edge edge2 = createEdge( IdGenerator.createId( "source" ), "edge", targetId );
 
-        final Edge edge3 = createEdge( createId( "source2" ), "edge", targetId );
+        final Edge edge3 = createEdge( IdGenerator.createId( "source2" ), "edge", targetId );
 
         //shouldn't be returned
-        final Edge edge4 = createEdge( createId( "source3" ), "edge2", targetId );
+        final Edge edge4 = createEdge( IdGenerator.createId( "source3" ), "edge2", targetId );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -259,9 +260,9 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id sourceId = edge1.getSourceNode();
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target2" ), timestamp + 1 );
+        final Edge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target2" ), timestamp + 1 );
 
-        final Edge edge3 = createEdge( sourceId, "edge2", createId( "target3" ), timestamp + 2 );
+        final Edge edge3 = createEdge( sourceId, "edge2", IdGenerator.createId( "target3" ), timestamp + 2 );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -312,9 +313,9 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id targetId = edge1.getTargetNode();
 
-        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId );
+        final Edge edge2 = createEdge( IdGenerator.createId( "source" ), "edge", targetId );
 
-        final Edge edge3 = createEdge( createId( "source2" ), "edge2", targetId );
+        final Edge edge3 = createEdge( IdGenerator.createId( "source2" ), "edge2", targetId );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -368,9 +369,9 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id sourceId = edge1.getSourceNode();
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp + 1 );
+        final Edge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target" ), timestamp + 1 );
 
-        final Edge edge3 = createEdge( sourceId, "edge", createId( "target2" ), timestamp + 2 );
+        final Edge edge3 = createEdge( sourceId, "edge", IdGenerator.createId( "target2" ), timestamp + 2 );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -425,9 +426,9 @@ public abstract class EdgeMetadataSerializationTest {
 
         final Id targetId = edge1.getTargetNode();
 
-        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId, timestamp + 1 );
+        final Edge edge2 = createEdge( IdGenerator.createId( "source" ), "edge", targetId, timestamp + 1 );
 
-        final Edge edge3 = createEdge( createId( "source2" ), "edge", targetId, timestamp + 2 );
+        final Edge edge3 = createEdge( IdGenerator.createId( "source2" ), "edge", targetId, timestamp + 2 );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();

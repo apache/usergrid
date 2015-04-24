@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -29,20 +28,17 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.safehaus.guicyfig.Bypass;
-import org.safehaus.guicyfig.Env;
-import org.safehaus.guicyfig.Option;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -82,25 +78,22 @@ public class MvccLESSTransientTest {
     public void setTimeout() {
         originalTimeout = serializationFig.getTimeout();
         //set the bypass options
-        SetConfigTestBypass.setValueByPass( serializationFig,"getTimeout", "1"  );
+        SetConfigTestBypass.setValueByPass( serializationFig, "getTimeout", "1" );
     }
+
 
     @After
-    public void resetTimeout(){
-        SetConfigTestBypass.setValueByPass( serializationFig,"getTimeout", originalTimeout + ""  );
+    public void resetTimeout() {
+        SetConfigTestBypass.setValueByPass( serializationFig, "getTimeout", originalTimeout + "" );
     }
-
-
 
 
     @Test
     public void transientTimeout() throws ConnectionException, InterruptedException {
-        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
-        final String name = "test";
 
 
-        CollectionScope context = new CollectionScopeImpl( organizationId, applicationId, name );
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
         final Id id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
@@ -115,7 +108,7 @@ public class MvccLESSTransientTest {
             Thread.sleep( 1000 );
 
             MvccLogEntry returned =
-                    logEntryStrategy.load( context, Collections.singleton( id ), version ).getMaxVersion( id );
+                logEntryStrategy.load( context, Collections.singleton( id ), version ).getMaxVersion( id );
 
 
             if ( stage.isTransient() ) {

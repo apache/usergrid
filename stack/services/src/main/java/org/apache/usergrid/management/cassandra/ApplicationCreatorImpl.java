@@ -60,12 +60,12 @@ public class ApplicationCreatorImpl implements ApplicationCreator {
     public ApplicationInfo createSampleFor( OrganizationInfo organizationInfo ) throws ApplicationCreationException {
 
         Preconditions.checkArgument( organizationInfo != null, "OrganizationInfo was null" );
-        Preconditions.checkArgument( organizationInfo.getUuid() != null, "OrganizationInfo had no UUID" );
+        Preconditions.checkArgument(organizationInfo.getUuid() != null, "OrganizationInfo had no UUID");
 
         logger.info( "create sample app {} in: {}", sampleAppName, organizationInfo.getName() );
-        UUID appId = null;
+        ApplicationInfo info;
         try {
-            appId = managementService.createApplication( organizationInfo.getUuid(), sampleAppName ).getId();
+            info = managementService.createApplication( organizationInfo.getUuid(), sampleAppName );
         }
         catch ( Exception ex ) {
             throw new ApplicationCreationException(
@@ -74,7 +74,7 @@ public class ApplicationCreatorImpl implements ApplicationCreator {
         }
         logger.info( "granting permissions for: {} in: {}", sampleAppName, organizationInfo.getName() );
         // grant access to all default collections with groups
-        EntityManager em = entityManagerFactory.getEntityManager( appId );
+        EntityManager em = entityManagerFactory.getEntityManager( info.getId() );
         try {
             em.grantRolePermissions( "guest", Arrays.asList( "get,post,put,delete:/**" ) );
             em.grantRolePermissions( "default", Arrays.asList( "get,put,post,delete:/**" ) );
@@ -85,7 +85,9 @@ public class ApplicationCreatorImpl implements ApplicationCreator {
         }
         // re-load the applicationinfo so the correct name is set
         try {
-            return managementService.getApplicationInfo( appId );
+            ApplicationInfo returnInfo = managementService.getApplicationInfo(info.getId());
+            returnInfo = returnInfo!=null ? returnInfo :  new ApplicationInfo(info.getId(), info.getName());
+            return returnInfo;
         }
         catch ( Exception ex ) {
             throw new ApplicationCreationException( "Could not load new Application.", ex );

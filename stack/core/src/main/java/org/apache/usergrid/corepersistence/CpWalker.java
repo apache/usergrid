@@ -38,6 +38,8 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getNameFromEdgeType;
+
 
 /**
  * Takes a visitor to all collections and entities.
@@ -103,56 +105,39 @@ public class CpWalker {
             edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
         }
 
-        Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
-            new SimpleSearchEdgeType( applicationId, edgeType, null ) );
+        Observable<Edge> edges = gm.getEdgeTypesFromSource(
+                    new SimpleSearchEdgeType( applicationId, edgeType, null ) ).flatMap( emittedEdgeType -> {
 
-        edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
-            @Override
-            public Observable<Edge> call( final String edgeType ) {
+            logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
 
-                logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
+            return gm.loadEdgesFromSource(
+                new SimpleSearchByEdgeType( applicationId, emittedEdgeType, Long.MAX_VALUE, order, Optional.absent() ) );
+        } ).flatMap( edge -> {
+            //run each edge through it's own scheduler, up to 100 at a time
+            return Observable.just( edge ).doOnNext( edgeValue -> {
+                logger.info( "Re-indexing edge {}", edgeValue );
 
-                return gm.loadEdgesFromSource(  new SimpleSearchByEdgeType(
-                    applicationId, edgeType, Long.MAX_VALUE, order ,  Optional.<Edge>absent() ) );
+                EntityRef targetNodeEntityRef =
+                    new SimpleEntityRef( edgeValue.getTargetNode().getType(), edgeValue.getTargetNode().getUuid() );
 
-            }
-
-        } ).parallel( new Func1<Observable<Edge>, Observable<Edge>>() {
-
-            @Override
-            public Observable<Edge> call( final Observable<Edge> edgeObservable ) { // process edges in parallel
-                return edgeObservable.doOnNext( new Action1<Edge>() { // visit and update then entity
-
-                    @Override
-                    public void call( Edge edge ) {
-
-                        logger.info( "Re-indexing edge {}", edge );
-
-                        EntityRef targetNodeEntityRef = new SimpleEntityRef(
-                            edge.getTargetNode().getType(),
-                            edge.getTargetNode().getUuid() );
-
-                        Entity entity;
-                        try {
-                            entity = em.get( targetNodeEntityRef );
-                        }
-                        catch ( Exception ex ) {
-                            logger.error( "Error getting sourceEntity {}:{}, continuing",
-                                targetNodeEntityRef.getType(),
-                                targetNodeEntityRef.getUuid() );
-                            return;
-                        }
-                        if(entity == null){
-                            return;
-                        }
-                        String collName = CpNamingUtils.getCollectionName( edge.getType() );
-                        visitor.visitCollectionEntry( em, collName, entity );
-                    }
-                } );
-            }
-        }, Schedulers.io() )
+                Entity entity;
+                try {
+                    entity = em.get( targetNodeEntityRef );
+                }
+                catch ( Exception ex ) {
+                    logger.error( "Error getting sourceEntity {}:{}, continuing", targetNodeEntityRef.getType(),
+                        targetNodeEntityRef.getUuid() );
+                    return;
+                }
+                if ( entity == null ) {
+                    return;
+                }
+                String collName = getNameFromEdgeType( edgeValue.getType() );
+                visitor.visitCollectionEntry( em, collName, entity );
+            } ).subscribeOn( Schedulers.io() );
+        }, 100 );
 
         // wait for it to complete
-        .toBlocking().lastOrDefault( null ); // end foreach on edges
+        edges.toBlocking().lastOrDefault( null ); // end foreach on edges
     }
 }

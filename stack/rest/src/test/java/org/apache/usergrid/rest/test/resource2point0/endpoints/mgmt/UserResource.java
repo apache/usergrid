@@ -62,6 +62,14 @@ public class UserResource extends NamedResource {
         return new OrgResource( context, this );
     }
 
+    public RevokeTokensResource revokeTokens() {
+        return new RevokeTokensResource( context, this );
+    }
+
+    public RevokeTokenResource revokeToken() {
+        return new RevokeTokenResource( context, this );
+    }
+
     public Entity get() {
         WebResource resource = getResource( true );
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )

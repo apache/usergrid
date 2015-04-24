@@ -27,8 +27,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -47,6 +45,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -71,7 +70,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
     @Inject
-    public EdgeMetaRepairImpl( @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization, final Keyspace keyspace,
+    public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization, final Keyspace keyspace,
                                final GraphFig graphFig, final EdgeSerialization storageEdgeSerialization ) {
 
 
@@ -176,6 +175,8 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                          * Sum up the total number of edges we had, then execute the mutation if we have
                          * anything to do
                          */
+
+
                         return MathObservable.sumInteger( Observable.merge( checks ) )
                                              .doOnNext( new Action1<Integer>() {
                                                             @Override
@@ -188,7 +189,12 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                                                 + "Mutation has {} rows to mutate ",
                                                                         edgeType, batch.getRowCount() );
 
-                                                                HystrixCassandra.async( batch );
+                                                                try {
+                                                                    batch.execute();
+                                                                }
+                                                                catch ( ConnectionException e ) {
+                                                                    throw new RuntimeException( "Unable to connect to casandra", e );
+                                                                }
                                                             }
                                                         }
 
@@ -219,7 +225,12 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
                 LOG.debug( "Type {} has no subtypes in use as of maxTimestamp {}.  Deleting type.", edgeType,
                         maxTimestamp );
-                HystrixCassandra.async( serialization.removeEdgeType( scope, node, edgeType, maxTimestamp ) );
+                try {
+                    serialization.removeEdgeType( scope, node, edgeType, maxTimestamp ).execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to casandra", e );
+                }
             }
         } );
     }

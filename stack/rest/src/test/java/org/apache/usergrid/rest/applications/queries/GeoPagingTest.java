@@ -17,21 +17,27 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import org.apache.usergrid.persistence.geo.model.Point;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.utils.MapUtils;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -120,11 +126,14 @@ public class GeoPagingTest extends AbstractRestIT {
   @Test
   public void testFarAwayLocationFromCenter() throws IOException {
     String collectionType = "testFarAwayLocation" + UUIDUtils.newTimeUUID();
-    Point center = new Point(37.776753, -122.407846);
+
+      final double lat = 37.776753;
+      final double lon =  -122.407846;
+
     QueryParameters queryClose = new QueryParameters();
-    queryClose.setQuery("select * where location within 20000 of " + String.valueOf(center.getLat()) + ", " + String.valueOf(center.getLon()) + "");
+    queryClose.setQuery("select * where location within 20000 of " + String.valueOf(lat) + ", " + String.valueOf(lon) + "");
     QueryParameters queryFar = new QueryParameters();
-    queryFar.setQuery("select * where location within " + Integer.MAX_VALUE + " of " + String.valueOf(center.getLat()) + ", " + String.valueOf(center.getLon()) + "");
+    queryFar.setQuery("select * where location within " + Integer.MAX_VALUE + " of " + String.valueOf(lat) + ", " + String.valueOf(lon) + "");
     // 1. Create 2 entities
     Entity props = new Entity();
     props.put("name", "usergrid");
@@ -208,12 +217,13 @@ public class GeoPagingTest extends AbstractRestIT {
   @Test
   public void testFarAwayLocationWithOneResultCloser() throws IOException {
     String collectionType = "testFarAwayLocationWithOneResultCloser" + UUIDUtils.newTimeUUID();
-    Point center = new Point(-33.746369, 150.952183);
+    final double lat = -33.746369;
+      final double lon =  150.952183;
 
     QueryParameters queryClose = new QueryParameters();
-    queryClose.setQuery("select * where location within 10000 of " + String.valueOf(center.getLat()) + ", " + String.valueOf(center.getLon()) + "");
+    queryClose.setQuery("select * where location within 10000 of " + String.valueOf(lat) + ", " + String.valueOf(lon) + "");
     QueryParameters queryFar = new QueryParameters();
-    queryFar.setQuery("select * where location within " + Integer.MAX_VALUE + " of " + String.valueOf(center.getLat()) + ", " + String.valueOf(center.getLon()) + "");
+    queryFar.setQuery("select * where location within " + Integer.MAX_VALUE + " of " + String.valueOf(lat) + ", " + String.valueOf(lon) + "");
     // 1. Create 2 entities
     Entity props = new Entity();
     props.put("name", "usergrid");
@@ -270,19 +280,19 @@ public class GeoPagingTest extends AbstractRestIT {
 
     this.refreshIndex();
     // 2. Create a list of geo points
-    List<Point> points = new ArrayList<Point>();
-    points.add(new Point(33.746369, -89));//Woodland, MS
-    points.add(new Point(33.746369, -91));//Beulah, MS
-    points.add(new Point(-1.000000, 102.000000));//Somewhere in Indonesia
-    points.add(new Point(-90.000000, 90.000000));//Antarctica
-    points.add(new Point(90, 90));//Santa's house
+    List<double[]> points = new ArrayList<>();
+    points.add(new double []{33.746369, -89});//Woodland, MS
+    points.add(new double []{33.746369, -91});//Beulah, MS
+    points.add(new double []{-1.000000, 102.000000});//Somewhere in Indonesia
+    points.add(new double []{-90.000000, 90.000000});//Antarctica
+    points.add(new double []{90, 90});//Santa's house
 
     // 3. Test each to ensure it is not within 10000 meters of our users
-    Iterator<Point> pointIterator = points.iterator();
-    for (Point p = pointIterator.next(); pointIterator.hasNext(); p = pointIterator.next()) {
+    Iterator<double[]> pointIterator = points.iterator();
+    for ( double[] p = pointIterator.next(); pointIterator.hasNext(); p = pointIterator.next()) {
 
-      Point center = new Point(p.getLat(), p.getLon());
-      String query = "select * where location within 10000 of " + center.getLat() + ", " + center.getLon();//locationQuery( 10000 ,center );
+
+      String query = "select * where location within 10000 of " + p[0] + ", " + p[1];//locationQuery( 10000 ,center );
       QueryParameters params = new QueryParameters();
       params.setQuery(query);
       Collection collection = this.app().collection("users").get(params);

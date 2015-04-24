@@ -122,7 +122,7 @@ public class OpDelete extends OpCrud {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.mongo.protocol.OpCrud#doOp(org.apache.usergrid.mongo.
      * MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext,
      * org.jboss.netty.channel.MessageEvent)
@@ -185,7 +185,7 @@ public class OpDelete extends OpCrud {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#toString()
      */
     @Override

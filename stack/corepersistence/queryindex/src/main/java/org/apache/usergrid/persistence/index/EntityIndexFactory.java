@@ -25,8 +25,15 @@ import com.google.inject.assistedinject.Assisted;
 
 public interface EntityIndexFactory {
 
-    public EntityIndex createEntityIndex(
-        @Assisted ApplicationScope appScope);
+    /**
+     * Create an applicationEntity index for the provided scope
+     * @param appScope
+     * @return
+     */
+    ApplicationEntityIndex createApplicationEntityIndex( ApplicationScope appScope );
 
+    /**
+     * Invalidate the cache of our factory, and force the generation of new entity index instances
+     */
     void invalidate();
 }

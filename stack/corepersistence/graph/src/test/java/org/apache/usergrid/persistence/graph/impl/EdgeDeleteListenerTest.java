@@ -32,10 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -50,7 +50,6 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createGetByEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createMarkedEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdgeAndId;
@@ -73,7 +72,6 @@ public class EdgeDeleteListenerTest {
     public MigrationManagerRule migrationManagerRule;
 
     @Inject
-    @ProxyImpl
     protected EdgeMetadataSerialization edgeMetadataSerialization;
 
     @Inject
@@ -113,9 +111,9 @@ public class EdgeDeleteListenerTest {
 
         //write several versions to the commit log
 
-        final Id sourceId = createId( "source" );
+        final Id sourceId = IdGenerator.createId( "source" );
         final String edgeType = "test";
-        final Id targetId = createId( "target" );
+        final Id targetId = IdGenerator.createId( "target" );
 
 
         final long edgeTimestamp = 1000l;
@@ -206,9 +204,9 @@ public class EdgeDeleteListenerTest {
 
         //write several versions to the commit log
 
-        final Id sourceId = createId( "source" );
+        final Id sourceId = IdGenerator.createId( "source" );
         final String edgeType = "test";
-        final Id targetId = createId( "target" );
+        final Id targetId = IdGenerator.createId( "target" );
 
 
         final long timestamp = 1000l;

@@ -33,10 +33,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * Tests paging with respect to entities. Also tests cursors and queries with respect to paging.
@@ -69,6 +66,7 @@ public class PagingResourceIT extends AbstractRestIT {
         deleteByPage(deletePageSize,totalNumOfPages,collectionName,queryParameters);
 
 
+        Thread.sleep(2000);
         //verifies that we can't get anymore entities from the collection
         Collection getCollection = this.app().collection( collectionName ).get();
 
@@ -97,7 +95,10 @@ public class PagingResourceIT extends AbstractRestIT {
 
             this.refreshIndex();
 
-            assertEquals( "Entities should have been deleted", deletePageSize, response.getEntityCount() );
+            assertEquals("Entities should have been deleted", deletePageSize,response.getEntityCount() );
+            try{Thread.sleep(100);}catch (InterruptedException ie){
+
+            }
         }
     }
 
@@ -210,10 +211,10 @@ public class PagingResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        Collection colConnection =  this.app().collection( collectionName ).entity( connectedEntity ).connection( "likes" ).get();
-        assertNotNull( colConnection );
+        Collection colConnection =  this.app().collection( collectionName ).entity(connectedEntity).connection("likes").get();
+        assertNotNull(colConnection);
         assertNotNull( colConnection.getCursor() );
-        pageAndVerifyEntities( collectionName,null,numOfPages,numOfEntities );
+        pageAndVerifyEntities(collectionName, null, numOfPages, numOfEntities);
 
     }
 

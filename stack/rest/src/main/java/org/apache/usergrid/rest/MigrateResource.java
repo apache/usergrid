@@ -20,6 +20,7 @@ package org.apache.usergrid.rest;
 
 
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -33,40 +34,48 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
+import com.google.inject.Injector;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 
 @Component
 @Scope( "singleton" )
 @Produces( {
-        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript"
+    MediaType.APPLICATION_JSON,
+    "application/javascript",
+    "application/x-javascript",
+    "text/ecmascript",
+    "application/ecmascript",
+    "text/jscript"
 } )
 public class MigrateResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( MigrateResource.class );
 
-
     public MigrateResource() {
         logger.info( "SystemResource initialized" );
     }
 
-
+    @Autowired
+    private Injector guiceInjector;
 
     @RequireSystemAccess
     @PUT
     @Path( "run" )
     public JSONWithPadding migrateData( @Context UriInfo ui,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "Migrate Data" );
@@ -77,13 +86,23 @@ public class MigrateResource extends AbstractContextResource {
 
             @Override
             public void run() {
-                logger.info( "Rebuilding all indexes" );
+
+                logger.info( "Migrating Schema" );
 
                 try {
-                    emf.migrateData();
+                    getMigrationManager().migrate();
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to rebuild indexes", e );
+                    logger.error( "Unable to migrate data", e );
+                }
+
+                logger.info( "Migrating Data" );
+
+                try {
+                    getDataMigrationManager().migrate();
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to migrate data", e );
                 }
             }
         };
@@ -91,7 +110,6 @@ public class MigrateResource extends AbstractContextResource {
         migrate.setName( "Index migrate data formats" );
         migrate.setDaemon( true );
         migrate.start();
-
 
         response.setSuccess();
 
@@ -102,23 +120,30 @@ public class MigrateResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "set" )
-    public JSONWithPadding setMigrationVersion( @Context UriInfo ui, Map<String, Object> json,
-                                                @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-            throws Exception {
+    public JSONWithPadding setMigrationVersion(
+        @Context UriInfo ui, Map<String, Object> json,
+        @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+        throws Exception {
 
-        logger.debug( "newOrganization" );
+        logger.debug( "setMigrationVersion" );
 
         Preconditions.checkNotNull( json, "You must provide a json body" );
+        Preconditions.checkArgument( json.keySet().size() > 0, "You must specify at least one module and version" );
 
-        String version = ( String ) json.get( "version" );
+        /**
+         *  Set the migration version for the plugins specified
+         */
+        for ( final String key : json.keySet() ) {
+            String version = ( String ) json.get( key );
 
-        Preconditions.checkArgument( version != null && version.length() > 0,
-                "You must specify a version field in your json" );
+            Preconditions.checkArgument( version != null && version.length() > 0,
+                "You must specify a version field per module name" );
 
 
-        int intVersion = Integer.parseInt( version );
+            int intVersion = Integer.parseInt( version );
 
-        emf.setMigrationVersion( intVersion );
+            getDataMigrationManager().resetToVersion( key, intVersion );
+        }
 
 
         return migrateStatus( ui, callback );
@@ -128,38 +153,65 @@ public class MigrateResource extends AbstractContextResource {
     @RequireSystemAccess
     @GET
     @Path( "status" )
-    public JSONWithPadding migrateStatus( @Context UriInfo ui,
-                                          @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
+    public JSONWithPadding migrateStatus(
+        @Context UriInfo ui,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "Migrate Schema indexes" );
 
         ObjectNode node = JsonNodeFactory.instance.objectNode();
-        node.put( "currentVersion", emf.getMigrateDataVersion() );
-        node.put( "lastMessage", emf.getMigrateDataStatus() );
-        response.setProperty( "status", node );
+
+
+
+        final DataMigrationManager dataMigrationManager = getDataMigrationManager();
+
+        final Set<String> plugins = dataMigrationManager.getPluginNames();
+
+        for(final String pluginName: plugins){
+            node.put( pluginName, dataMigrationManager.getCurrentVersion( pluginName ) );
+        }
+
+        response.setData( node );
 
         response.setSuccess();
 
         return new JSONWithPadding( response, callback );
     }
 
+
     @RequireSystemAccess
-       @GET
-       @Path( "count" )
-       public JSONWithPadding migrateCount( @Context UriInfo ui,
-                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-               throws Exception {
+    @GET
+    @Path( "count" )
+    public JSONWithPadding migrateCount(
+        @Context UriInfo ui,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
 
-           ApiResponse response = createApiResponse();
-           response.setAction( "Current entity count in system" );
+        ApiResponse response = createApiResponse();
+        response.setAction( "Current entity count in system" );
 
-           response.setProperty( "count", emf.performEntityCount()  );
+        response.setProperty( "count", emf.performEntityCount() );
 
-           response.setSuccess();
+        response.setSuccess();
 
-           return new JSONWithPadding( response, callback );
-       }
+        return new JSONWithPadding( response, callback );
+    }
 
+
+    /**
+     * Get the schema migration manager
+     */
+    private MigrationManager getMigrationManager() {
+        return guiceInjector.getInstance( MigrationManager.class );
+    }
+
+    /**
+     * Get the Data migration manager
+     */
+    private DataMigrationManager getDataMigrationManager() {
+        return guiceInjector.getInstance( DataMigrationManager.class );
+    }
 }
+

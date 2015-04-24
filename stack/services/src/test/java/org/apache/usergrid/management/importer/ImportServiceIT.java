@@ -40,7 +40,7 @@ import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.services.notifications.QueueListener;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;

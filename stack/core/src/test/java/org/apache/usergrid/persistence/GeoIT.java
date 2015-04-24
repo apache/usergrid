@@ -28,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.persistence.geo.model.Point;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.field.value.Location;
 import org.apache.usergrid.utils.MapUtils;
 
@@ -97,7 +95,7 @@ public class GeoIT extends AbstractCoreIT {
         }};
         Entity user = em.create("user", properties);
         assertNotNull(user);
-        em.refreshIndex();
+        app.refreshIndex();
 
         //2. Query with a globally large distance to verify location
         Query query = Query.fromQL("select * where location within " + Integer.MAX_VALUE + " of 0, 0");
@@ -107,7 +105,7 @@ public class GeoIT extends AbstractCoreIT {
         //3. Remove the entity's location
         properties.remove("location");
         em.updateProperties(user, properties);
-        em.refreshIndex();
+        app.refreshIndex();
 
         //4. Repeat the query, expecting no results
         listResults = em.searchCollection(em.getApplicationRef(), "users", query);
@@ -141,12 +139,13 @@ public class GeoIT extends AbstractCoreIT {
         }};
         Entity user = em.create("user", properties);
         assertNotNull(user);
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Point center = new Point(37.776753, -122.407846);
+        final double lat = 37.776753;
+        final double lon = -122.407846;
         //2. Query from a point near the entity's location
         Query query = Query.fromQL("select * where location within 100 of "
-            + center.getLat() + "," + center.getLon());
+            + lat + "," + lon);
         Results listResults = em.searchCollection(em.getApplicationRef(), "users", query);
         assertEquals(1, listResults.size());
 
@@ -193,14 +192,15 @@ public class GeoIT extends AbstractCoreIT {
 
         Entity user = em.create("user", userProperties);
         assertNotNull(user);
+        app.refreshIndex();
 
         //3. Create a connection between the user and the entity
         em.createConnection(user, "likes", restaurant);
 
-        em.refreshIndex();
+        app.refreshIndex();
         //4. Test that the user is within 2000m of the entity
         Results emSearchResults = em.searchConnectedEntities(user,
-            Query.fromQL("location within 2000 of "
+            Query.fromQL("location within 5000 of "
                 + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude")
                 + ", " + ((LinkedHashMap<String, Object>)
                         userProperties.get("location")).get("longitude")).setConnectionType("likes"));
@@ -234,7 +234,7 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(entity);
             LOG.debug("Entity {} created", entity.getProperty("name"));
         }
-        em.refreshIndex();
+        app.refreshIndex();
         //2. validate the size of the result
         Query query = new Query();
         Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
@@ -262,9 +262,10 @@ public class GeoIT extends AbstractCoreIT {
         EntityManager em = loadGeolocationTestEntities();
         //2. Query the collection from a point more than 10000m from the locations
         // and ensure that no entities are returned when restricted to a 10000m radius
-        Point center = new Point(37.776753, -122.407846);
+        final double lat = 37.776753;
+        final double lon = -122.407846;
         Query query = Query.fromQL("select * where location within " + NEARBY_RADIUS + " of "
-            + center.getLat() + "," + center.getLon());
+            + lat + "," + lon);
         Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
 
         assertEquals("Results within " + NEARBY_RADIUS + "m from center", 0, listResults.size());
@@ -272,7 +273,7 @@ public class GeoIT extends AbstractCoreIT {
         // and ensure that all entities are returned when the distance is set to the
         // circumference of the earth
         Query query2 = Query.fromQL("select * where location within " + CIRCUMFERENCE_OF_THE_EARTH + " of "
-            + center.getLat() + "," + center.getLon());
+            + lat + "," + lon);
         listResults = em.searchCollection(em.getApplicationRef(), "stores", query2);
 
         assertEquals("Results within " + CIRCUMFERENCE_OF_THE_EARTH
@@ -291,27 +292,28 @@ public class GeoIT extends AbstractCoreIT {
      *    circumference of the earth
      */
     public void testGeoFromNearbyLocation() throws Exception {
-        LOG.info("GeoIT.testGeoFromNearbyLocation");
+        LOG.info( "GeoIT.testGeoFromNearbyLocation" );
         //1. create entities with geo
         EntityManager em = loadGeolocationTestEntities();
 
-        Point center = new Point(-33.746369, 150.952185);
+        final double lat = -33.746369;
+        final double lon = 150.952185;
 
         //2. Query the collection from a point less than 10000m from the locations
         // and ensure that one entity is returned when restricted to a 10000m radius
         Query query = Query.fromQL("select * where location within " + NEARBY_RADIUS + " of "
-            + center.getLat() + "," + center.getLon());
+            + lat + "," + lon);
         Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
-        assertEquals("Results within " + NEARBY_RADIUS + "m from center", 1, listResults.size());
+        assertEquals( "Results within " + NEARBY_RADIUS + "m from center", 1, listResults.size() );
 
         //3. Query the collection from a point less than 10000m from the locations
         // and ensure that all entities are returned when the distance is set to the
         // circumference of the earth
-        query = Query.fromQL("select * where location within " + CIRCUMFERENCE_OF_THE_EARTH + " of "
-            + center.getLat() + "," + center.getLon());
+        query = Query.fromQL(
+            "select * where location within " + CIRCUMFERENCE_OF_THE_EARTH + " of " + lat + "," + lon );
         listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
-        assertEquals("Results within " + CIRCUMFERENCE_OF_THE_EARTH
-                + "m from center", LOCATION_PROPERTIES.size(), listResults.size());
+        assertEquals( "Results within " + CIRCUMFERENCE_OF_THE_EARTH + "m from center", LOCATION_PROPERTIES.size(),
+            listResults.size() );
     }
 
     /**
@@ -331,26 +333,29 @@ public class GeoIT extends AbstractCoreIT {
         //1 Create entities with geo
         EntityManager em = loadGeolocationTestEntities();
         //2 Create a list of points from different geographic areas
-        List<Point> points = new ArrayList<Point>();
-        points.add(new Point(-90.000000, 90.000000));//Antarctica
-        points.add(new Point(90, 90));//Santa's house
-        points.add(new Point(33.746369, -89));//Woodland, MS
-        points.add(new Point(34.35, 58.22)); //Buenos Aires
-        points.add(new Point(39.55, 116.25));//Beijing, China
-        points.add(new Point(44.52, 20.32)); //Belgrade, Serbia
-        points.add(new Point(-1.000000, 102.000000));//Somewhere in Indonesia
-        for (Point center : points) {
+        List<double[]> points = new ArrayList<>();
+        points.add(new double[]{-90.000000, 90.000000});//Antarctica
+        points.add(new double[]{90, 90});;//Santa's house
+        points.add( new double[]{ 33.746369, -89});;//Woodland, MS
+        points.add( new double[] { 34.35, 58.22 } );; //Buenos Aires
+        points.add( new double[] { 39.55, 116.25 } );;//Beijing, China
+        points.add( new double[]{ 44.52, 20.32});; //Belgrade, Serbia
+        points.add( new double[] { -1.000000, 102.000000 } );;//Somewhere in Indonesia
+        for (double[] center : points) {
             //3 Query the collection from each point
             //  and ensure that no entities are returned when restricted to a 10000m radius
+            final double lat = center[0];
+            final double lon = center[1];
+
             Query query = Query.fromQL("select * where location within 10000 of "
-                + center.getLat() + "," + center.getLon());
+                + lat + "," + lon);
             Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
             assertEquals("Results less than 10000m away from center", 0, listResults.size());
             //4 Query the collection from each point
             //  and ensure that all entities are returned when the distance is set to the
             //  circumference of the earth
             Query query2 = Query.fromQL("select * where location within 40000000 of "
-                + center.getLat() + "," + center.getLon());
+                + lat + "," + lon);
             listResults = em.searchCollection(em.getApplicationRef(), "stores", query2);
             assertEquals("Results from center point to ridiculously far",
                     LOCATION_PROPERTIES.size(), listResults.size());
@@ -363,7 +368,7 @@ public class GeoIT extends AbstractCoreIT {
 
 
         EntityManager em = app.getEntityManager();
-        assertNotNull(em);
+        assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
@@ -391,13 +396,13 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Query query = new Query();
-        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
+         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
         // just to be save
-        query.addFilter("location within 50000000 of -90, -180");
-        query.setLimit(100);
+        Query query = Query.fromQL("location within 50000000 of -90, -180" );
+
+        query.setLimit( 100 );
 
         int count = 0;
         Results results;
@@ -411,12 +416,12 @@ public class GeoIT extends AbstractCoreIT {
             }
 
             // set for the next "page"
-            query.setCursor(results.getCursor());
+            query.setOffsetFromCursor(results.getCursor());
         }
         while (results.getCursor() != null);
 
         // check we got back all 500 entities
-        assertEquals(numEntities, count);
+        assertEquals( numEntities, count );
     }
 
 
@@ -438,13 +443,12 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Query query = new Query();
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
-        // just to be save
-        query.addFilter("location within 50000000 of 0, 0");
-        query.setLimit(100);
+                // just to be save
+        Query query = Query.fromQL("location within 50000000 of 0, 0" );
+        query.setLimit( 100 );
 
         int count = 0;
         Results results;
@@ -458,7 +462,7 @@ public class GeoIT extends AbstractCoreIT {
             }
 
             // set for the next "page"
-            query.setCursor(results.getCursor());
+            query.setOffsetFromCursor(results.getCursor());
         }
         while (results.getCursor() != null);
 
@@ -499,12 +503,12 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Query query = new Query();
-        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
+         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
         // just to be save
-        query.addFilter("location within 50000000 of -90, -180");
+        Query query = Query.fromQL( "location within 50000000 of -90, -180" );
+
         query.setLimit(100);
 
         int count = 0;
@@ -517,7 +521,7 @@ public class GeoIT extends AbstractCoreIT {
                 count++;
             }
         }
-        while (query.getCursor() != null);
+        while (query.getOffset().isPresent());
 
         // check we got back all 500 entities
         assertEquals(numEntities, count);
@@ -528,7 +532,7 @@ public class GeoIT extends AbstractCoreIT {
     public void testGeoWithIntersection() throws Exception {
 
         EntityManager em = app.getEntityManager();
-        assertNotNull(em);
+        assertNotNull( em );
 
         int size = 100;
         int min = 50;
@@ -549,7 +553,7 @@ public class GeoIT extends AbstractCoreIT {
             created.add(e);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         int startDelta = size - min;
 
@@ -573,7 +577,7 @@ public class GeoIT extends AbstractCoreIT {
                 count++;
             }
 
-            query.setCursor(r.getCursor());
+            query.setOffsetFromCursor(r.getCursor());
         }
         while (r.hasCursor());
 
@@ -614,7 +618,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         //do a direct geo iterator test.  We need to make sure that we short circuit on the correct tile.
 
@@ -642,9 +646,7 @@ public class GeoIT extends AbstractCoreIT {
             long startTime = System.currentTimeMillis();
 
             //now test at the EM level, there should be 0 results.
-            Query query = new Query();
-
-            query.addFilter("location within 1000 of 48.38626, 9.94175"); // lat, lon
+            Query query = Query.fromQL( "location within 1000 of 48.38626, 9.94175");
             query.setLimit(limit);
 
             Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
@@ -678,7 +680,7 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(entity);
         }
         //3. refresh the index
-        em.refreshIndex();
+        app.refreshIndex();
         //4. return the entity manager
         return em;
     }
@@ -697,7 +699,7 @@ public class GeoIT extends AbstractCoreIT {
         latlong.put("longitude", longitude);
 
         em.setProperty(entity, "location", latlong);
-        em.refreshIndex();
+        app.refreshIndex();
     }
 
 

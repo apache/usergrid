@@ -19,6 +19,8 @@ package org.apache.usergrid.services;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ import org.apache.usergrid.services.simple.SimpleService;
 
 import static org.apache.usergrid.TestHelper.uniqueApp;
 import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -42,7 +45,10 @@ public class ServiceFactoryIT extends AbstractServiceIT {
     public void testPackagePrefixes() throws Exception {
         logger.info( "test package prefixes" );
 
-        UUID applicationId = setup.getEmf().createApplication(uniqueOrg(), uniqueApp() );
+        Entity appInfo = setup.getEmf().createApplicationV2(uniqueOrg(), uniqueApp());
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+
         ServiceManager sm = setup.getSmf().getServiceManager( applicationId );
         Service service = sm.getService( "simple" );
         assertEquals( "/simple", service.getServiceType() );

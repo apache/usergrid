@@ -29,4 +29,5 @@ public interface UniqueValueSet extends Iterable<UniqueValue> {
      * @return
      */
     public UniqueValue getValue(final String fieldName);
+
 }

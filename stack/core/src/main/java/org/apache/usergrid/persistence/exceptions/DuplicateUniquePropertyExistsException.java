@@ -29,7 +29,7 @@ public class DuplicateUniquePropertyExistsException extends PersistenceException
 
 
     public DuplicateUniquePropertyExistsException( String entityType, String propertyName, Object propertyValue ) {
-        super( "Entity " + entityType + " requires that property named " + propertyName + " be unique, value of "
+        super( "Entity \"" + entityType + "\" requires that property named \"" + propertyName + "\" be unique, value of "
                 + propertyValue + " exists" );
         this.entityType = entityType;
         this.propertyName = propertyName;

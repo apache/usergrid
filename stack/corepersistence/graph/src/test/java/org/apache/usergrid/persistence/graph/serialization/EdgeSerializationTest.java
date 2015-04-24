@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -54,7 +55,7 @@ import com.netflix.astyanax.serializers.StringSerializer;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createGetByEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createMarkedEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdgeAndId;
@@ -226,7 +227,7 @@ public abstract class EdgeSerializationTest {
         final MarkedEdge edgev2 = createEdge( sourceId, "edge1", targetId, timestamp + 1 );
 
         //we shouldn't get this one back
-        final MarkedEdge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
+        final MarkedEdge diffTarget = createEdge( sourceId, "edge1", IdGenerator.createId( "newTarget" ) );
 
         assertTrue( "Edge version 1 has lower time uuid",
                 Long.compare( edgev1.getTimestamp(), edgev2.getTimestamp() ) < 0 );
@@ -275,7 +276,7 @@ public abstract class EdgeSerializationTest {
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target2" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target2" ) );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -329,7 +330,7 @@ public abstract class EdgeSerializationTest {
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp + 1 );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target" ), timestamp + 1 );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -390,7 +391,7 @@ public abstract class EdgeSerializationTest {
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target" ), timestamp );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -498,7 +499,7 @@ public abstract class EdgeSerializationTest {
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp + 1 );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", IdGenerator.createId( "target" ), timestamp + 1 );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -654,7 +655,7 @@ public abstract class EdgeSerializationTest {
 
         int size = graphFig.getScanPageSize() * 2;
 
-        final Id sourceId = createId( "source" );
+        final Id sourceId = IdGenerator.createId( "source" );
         final String type = "edge";
 
         Set<Edge> edges = new HashSet<Edge>( size );
@@ -663,7 +664,7 @@ public abstract class EdgeSerializationTest {
         long timestamp = 0;
 
         for ( int i = 0; i < size; i++ ) {
-            final MarkedEdge edge = createEdge( sourceId, type, createId( "target" ), timestamp );
+            final MarkedEdge edge = createEdge( sourceId, type, IdGenerator.createId( "target" ), timestamp );
 
             serialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
             edges.add( edge );
@@ -693,9 +694,9 @@ public abstract class EdgeSerializationTest {
     public void testIteratorPaging() throws ConnectionException {
 
 
-        final Id sourceId = createId( "source" );
+        final Id sourceId = IdGenerator.createId( "source" );
         final String edgeType = "edge";
-        final Id targetId = createId( "target" );
+        final Id targetId = IdGenerator.createId( "target" );
 
 
         int writeCount = graphFig.getScanPageSize() * 3;

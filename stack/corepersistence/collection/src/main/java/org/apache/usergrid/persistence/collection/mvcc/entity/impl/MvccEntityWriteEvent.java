@@ -21,8 +21,8 @@ package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
 /**
@@ -30,7 +30,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
  */
 public class MvccEntityWriteEvent extends MvccEntityEvent {
 
-    public MvccEntityWriteEvent( final CollectionScope collectionScope, final UUID version, final MvccEntity entity ) {
-        super( collectionScope, version, entity );
+    public MvccEntityWriteEvent( final ApplicationScope applicationScope, final UUID version, final MvccEntity entity ) {
+        super( applicationScope, version, entity );
     }
 }
