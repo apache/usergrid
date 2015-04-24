@@ -737,6 +737,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        this.app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -758,7 +759,7 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-                assertEquals( expected.get( size - delta - count ), results.getEntities().get( i ).getName() );
+                assertEquals( expected.get( size  - count -1 ), results.getEntities().get( i ).getName() );
                 count++;
             }
 
@@ -766,7 +767,7 @@ public class IteratingQueryIT {
         }
         while ( results.hasCursor() );
 
-        assertEquals( expected.size() - delta + 1, count );
+        assertEquals( expected.size() - delta, count );
 
         stop = System.currentTimeMillis();
         LOG.info( "Query took {} ms to return {} entities", stop - start, count );
