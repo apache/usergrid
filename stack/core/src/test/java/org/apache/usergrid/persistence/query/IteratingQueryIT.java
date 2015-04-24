@@ -111,6 +111,7 @@ public class IteratingQueryIT {
     @Test
     public void singleOrderByBoundRangeScanAscCollection() throws Exception {
         singleOrderByBoundRangeScanAsc( new CollectionIoHelper( app ) );
+
     }
 
 
@@ -549,6 +550,7 @@ public class IteratingQueryIT {
                 expectedResults.add( name );
             }
         }
+        app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -620,6 +622,7 @@ public class IteratingQueryIT {
             }
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
@@ -685,6 +688,7 @@ public class IteratingQueryIT {
             }
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
@@ -860,6 +864,7 @@ public class IteratingQueryIT {
             expected.add( name );
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
@@ -918,6 +923,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -946,7 +952,7 @@ public class IteratingQueryIT {
         }
         while ( results.hasCursor() );
 
-        assertEquals( expected.size() - startValue - 1, count );
+        assertEquals( expected.size() - startValue , count );
 
         stop = System.currentTimeMillis();
         LOG.info( "Query took {} ms to return {} entities", stop - start, count );
@@ -979,6 +985,7 @@ public class IteratingQueryIT {
             expected.add( name );
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
@@ -1009,7 +1016,7 @@ public class IteratingQueryIT {
         }
         while ( results.hasCursor() );
 
-        assertEquals( expected.size() - startValue - delta + 1, count );
+        assertEquals( expected.size() - startValue - delta +1 , count );
 
         stop = System.currentTimeMillis();
         LOG.info( "Query took {} ms to return {} entities", stop - start, count );
@@ -1041,6 +1048,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -1097,15 +1105,15 @@ public class IteratingQueryIT {
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
-
             io.writeEntity( entity );
         }
 
+        this.app.refreshIndex();
+
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        LOG.info("Writes took {} ms", stop - start );
 
-        app.refreshIndex();
 
         Query query = new Query();
         query.setLimit( 10 );
@@ -1122,7 +1130,7 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-                assertEquals( String.valueOf( count ), results.getEntities().get( i ).getName() );
+                assertEquals( String.valueOf( size - count -1 ), results.getEntities().get( i ).getName() );
                 count++;
             }
 
@@ -1374,6 +1382,7 @@ public class IteratingQueryIT {
 
             io.writeEntity( entity );
         }
+        this.app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
