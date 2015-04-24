@@ -22,6 +22,8 @@ package org.apache.usergrid.corepersistence.command.read.graph;
 
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 
+import com.google.inject.Inject;
+
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getConnectionScopeName;
 
 
@@ -36,6 +38,7 @@ public class ReadGraphConnectionCommand extends AbstractReadGraphCommand {
     /**
      * Create a new instance of our command
      */
+    @Inject
     public ReadGraphConnectionCommand( final GraphManagerFactory graphManagerFactory, final String connectionName ) {
         super( graphManagerFactory );
         this.connectionName = connectionName;

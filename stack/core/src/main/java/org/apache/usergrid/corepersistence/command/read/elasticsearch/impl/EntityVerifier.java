@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.command.read.elasticsearch.impl;
 
 
 import java.util.ArrayList;

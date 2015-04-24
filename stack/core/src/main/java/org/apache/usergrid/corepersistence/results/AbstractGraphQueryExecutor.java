@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.usergrid.corepersistence.command.CommandBuilder;
-import org.apache.usergrid.corepersistence.command.read.entity.EntityLoadCommand;
+import org.apache.usergrid.corepersistence.command.read.entity.EntityLoadCollector;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -89,7 +89,7 @@ public abstract class AbstractGraphQueryExecutor implements QueryExecutor {
 
             //construct our results to be observed later. This is a cold observable
             final Observable<Results> resultsObservable =
-                commandBuilder.build( new EntityLoadCommand( entityCollectionManagerFactory, applicationScope ) );
+                commandBuilder.build( new EntityLoadCollector( entityCollectionManagerFactory, applicationScope ) );
 
             this.observableIterator = resultsObservable.toBlocking().getIterator();
 
