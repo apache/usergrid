@@ -165,7 +165,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            entityIndex.refreshAsync().toBlocking().last();
+//            entityIndex.refreshAsync();
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating management application", ex);
@@ -259,7 +259,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId);
         appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
-        entityIndex.refreshAsync().toBlocking().last();
+     //   entityIndex.refreshAsync();//.toBlocking().last();
 
 
         // create application info entity in the management app
