@@ -282,7 +282,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         long start = System.currentTimeMillis();
@@ -336,7 +336,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 700;
+        int size = 70;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -366,14 +366,12 @@ public class IteratingQueryIT {
             }
         }
         app.refreshIndex();
-        Thread.sleep(500);
-
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where intersect = true sort by  created" );
+        Query query = Query.fromQL( "select * where intersect = true sort by created asc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -387,7 +385,7 @@ public class IteratingQueryIT {
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ ) {
+            for ( int i = 0 ; i< results.size(); i++) {
                 assertEquals( expected.get( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -406,7 +404,7 @@ public class IteratingQueryIT {
 
     protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception {
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -477,7 +475,7 @@ public class IteratingQueryIT {
     protected void singleOrderByNoIntersection( IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -521,7 +519,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -591,7 +589,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -691,7 +689,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where searched = true sort by  created" );
+        Query query = Query.fromQL( "select * where searched = true order by created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -1106,7 +1104,6 @@ public class IteratingQueryIT {
         LOG.info( "Writes took {} ms", stop - start );
 
         app.refreshIndex();
-        Thread.sleep(500);
 
         Query query = new Query();
         query.setLimit( 10 );

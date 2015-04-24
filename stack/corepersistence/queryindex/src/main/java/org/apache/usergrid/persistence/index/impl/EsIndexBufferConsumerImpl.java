@@ -125,7 +125,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private void startSubscription() {
 
 
-        final Observable<IndexOperationMessage> observable = Observable.create( bufferProducer );
+        final Observable<IndexOperationMessage> observable = Observable.create(bufferProducer);
 
         //buffer on our new thread with a timeout
         observable.buffer( indexFig.getIndexBufferSize(), indexFig.getIndexBufferTimeout(), TimeUnit.MILLISECONDS,
@@ -189,11 +189,23 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         //now that we've processed them all, ack the futures after our last batch comes through
         final Observable<IndexOperationMessage> processedIndexOperations =
-            requests.last().flatMap( lastRequest -> Observable.from( batches ) );
+            requests.lastOrDefault(null).flatMap( lastRequest ->{
+                if(lastRequest!=null){
+                    return Observable.from( batches ) ;
+                }else{
+                    return Observable.empty();
+                }
+            });
 
         //subscribe to the operations that generate requests on a new thread so that we can execute them quickly
         //mark this as done
-        return processedIndexOperations.doOnNext( processedIndexOp -> processedIndexOp.done() ).doOnError( t -> log.error( "Unable to ack futures", t ) );
+        return processedIndexOperations.doOnNext( processedIndexOp ->
+            {
+                processedIndexOp.done();
+            }
+        ).doOnError(t -> {
+            log.error("Unable to ack futures", t);
+        });
     }
 
 
