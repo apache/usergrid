@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,25 +17,20 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
-
-
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.SearchEdge;
+package org.apache.usergrid.corepersistence.command.read;
 
 
 /**
- * Factory for creating results
+ * A command that is used to reduce our stream of results into a final output
+ * @param <T>
  */
-public interface ResultsLoaderFactory {
+public interface Collector<T> extends Command<T>{
 
     /**
-     * Get the loader for results
-     * @param applicationScope The application scope used to load results
-     * @param indexScope The index scope used in the search
-     * @param
+     * Set the prefered result size for the command
+     * @param limit
      */
-    ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge indexScope,
-                             final Query.Level resultsLevel );
+    void setLimit( final int limit );
+
+
 }

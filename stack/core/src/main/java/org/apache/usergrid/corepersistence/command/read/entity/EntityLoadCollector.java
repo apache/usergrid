@@ -24,7 +24,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.usergrid.corepersistence.command.read.AbstractCommand;
-import org.apache.usergrid.corepersistence.command.read.CollectCommand;
+import org.apache.usergrid.corepersistence.command.read.Collector;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Results;
@@ -44,7 +44,7 @@ import rx.Observable;
  *
  * TODO refactor this into a common command that both ES search and graphSearch can use for repair and verification
  */
-public class EntityLoadCommand extends AbstractCommand<Results, Serializable> implements CollectCommand<Results> {
+public class EntityLoadCollector extends AbstractCommand<Results, Serializable> implements Collector<Results> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
@@ -53,8 +53,8 @@ public class EntityLoadCommand extends AbstractCommand<Results, Serializable> im
     private int resultSize;
 
 
-    public EntityLoadCommand( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                              final ApplicationScope applicationScope ) {
+    public EntityLoadCollector( final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                final ApplicationScope applicationScope ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.applicationScope = applicationScope;
     }
@@ -82,25 +82,29 @@ public class EntityLoadCommand extends AbstractCommand<Results, Serializable> im
             bufferedIds -> Observable.just( bufferedIds ).flatMap( ids -> entityCollectionManager.load( ids ) ) );
 
 
-        return entitySetObservable
+        final Observable<Results> resultsObservable =  entitySetObservable
 
             .flatMap( entitySet -> {
 
-                //get our entites and filter missing ones, then collect them into a results object
-                final Observable<MvccEntity> mvccEntityObservable = Observable.from( entitySet.getEntities() );
+            //get our entites and filter missing ones, then collect them into a results object
+            final Observable<MvccEntity> mvccEntityObservable = Observable.from( entitySet.getEntities() );
 
-                //convert them to our old entity model, then filter nulls, meaning they weren't found
-                return mvccEntityObservable.map( mvccEntity -> mapEntity( mvccEntity ) ).filter(
-                    entity -> entity == null )
+            //convert them to our old entity model, then filter nulls, meaning they weren't found
+            return mvccEntityObservable.map( mvccEntity -> mapEntity( mvccEntity ) ).filter( entity -> entity == null )
 
-                    //convert them to a list, then map them into results
-                    .toList().map( entities -> {
-                        final Results results = Results.fromEntities( entities );
-                        results.setCursor( generateCursor() );
+                //convert them to a list, then map them into results
+                .toList().map( entities -> {
+                    final Results results = Results.fromEntities( entities );
+                    results.setCursor( generateCursor() );
 
-                        return results;
-                    } );
-            } );
+                    return results;
+                } )
+                //if no results are present, return an empty results
+                .singleOrDefault( new Results(  ) );
+        } );
+
+
+        return resultsObservable;
     }
 
                 /**
@@ -128,7 +132,7 @@ public class EntityLoadCommand extends AbstractCommand<Results, Serializable> im
 
 
     @Override
-    public void setLimit( final int resultSize ) {
-        this.resultSize = resultSize;
+    public void setLimit( final int limit ) {
+        this.resultSize = limit;
     }
 }

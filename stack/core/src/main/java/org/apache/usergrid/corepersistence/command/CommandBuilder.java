@@ -22,7 +22,7 @@ package org.apache.usergrid.corepersistence.command;
 
 import org.apache.usergrid.corepersistence.command.cursor.RequestCursor;
 import org.apache.usergrid.corepersistence.command.cursor.ResponseCursor;
-import org.apache.usergrid.corepersistence.command.read.CollectCommand;
+import org.apache.usergrid.corepersistence.command.read.Collector;
 import org.apache.usergrid.corepersistence.command.read.Command;
 import org.apache.usergrid.corepersistence.command.read.TraverseCommand;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -87,12 +87,12 @@ public class CommandBuilder {
     /**
      * Build the final collection step, and
      */
-    public <T> Observable<T> build( final CollectCommand<T> collectCommand ) {
-        setState( collectCommand );
+    public <T> Observable<T> build( final Collector<T> collector ) {
+        setState( collector );
 
-        collectCommand.setLimit( limit );
+        collector.setLimit( limit );
 
-        return currentObservable.compose( collectCommand );
+        return currentObservable.compose( collector );
     }
 
 

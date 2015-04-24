@@ -17,36 +17,30 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.command.read.elasticsearch.impl;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public interface ResultsVerifier {
+public class IdsVerifier extends VersionVerifier {
 
-    /**
-     * Load all the candidate ides for verification
-     * @param ids The Id's to load
-     * @param ecm The entity collection manager
-     */
-    public void loadResults(Collection<Id> ids, EntityCollectionManager ecm);
+    @Override
+    public Results getResults( final Collection<Id> ids ) {
 
-    /**
-     * Return true if the candidate result is a valid result that should be retained. If it should
-     * not it should also be removed from the list of possible return values in this loader
-     * @param candidateResult
-     */
-    public boolean isValid(CandidateResult candidateResult);
+        final List<UUID> returnIds = new ArrayList<>( ids.size() );
+
+        for ( final Id id : ids ) {
+            returnIds.add( id.getUuid() );
+        }
 
 
-    /**
-     * Load the result set with the given ids
-     * @return
-     */
-    public Results getResults(Collection<Id> ids);
+        return Results.fromIdList( returnIds );
+    }
 }

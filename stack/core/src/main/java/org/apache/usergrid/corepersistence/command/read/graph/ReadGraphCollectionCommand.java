@@ -22,6 +22,8 @@ package org.apache.usergrid.corepersistence.command.read.graph;
 
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 
+import com.google.inject.Inject;
+
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromCollectionName;
 
 
@@ -36,6 +38,7 @@ public class ReadGraphCollectionCommand extends AbstractReadGraphCommand {
     /**
      * Create a new instance of our command
      */
+    @Inject
     public ReadGraphCollectionCommand( final GraphManagerFactory graphManagerFactory, final String collectionName ) {
         super( graphManagerFactory );
         this.collectionName = collectionName;
