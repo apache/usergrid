@@ -42,13 +42,13 @@ public class CollectionGraphQueryExecutor extends AbstractGraphQueryExecutor {
     public CollectionGraphQueryExecutor( final EntityCollectionManagerFactory entityCollectionManagerFactory,
                                          final GraphManagerFactory graphManagerFactory,
                                          final ApplicationScope applicationScope, final EntityRef source,
-                                         final String cursor, final String connectionName, final int limit ) {
+                                         final String cursor, final String collectionName, final int limit ) {
 
         super( entityCollectionManagerFactory, applicationScope, source, cursor, limit );
         this.graphManagerFactory = graphManagerFactory;
 
-        Preconditions.checkNotNull( connectionName, "connectionName is required on the query" );
-        this.collectionName = connectionName;
+        Preconditions.checkNotNull( collectionName, "collectionName is required on the query" );
+        this.collectionName = collectionName;
     }
 
 

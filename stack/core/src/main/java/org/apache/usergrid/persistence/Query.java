@@ -500,6 +500,9 @@ public class Query {
     }
 
     public String getOffsetCursor() {
+
+        //TODO refactor cursor logic for encapsulation at level using it
+
         String cursor = "";
         if(offset.isPresent()){
             ByteBuffer buffer = INTEGER_SERIALIZER.toByteBuffer(offset.get());
@@ -871,7 +874,7 @@ public class Query {
      * Return true if no query is present and we should perform a graph search
      * @return
      */
-    public boolean graphSearch(){
+    public boolean isGraphSearch(){
         return ql == null;
     }
 

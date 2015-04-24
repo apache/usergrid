@@ -40,6 +40,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 import rx.Observable;
@@ -91,8 +92,8 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
 
         //we have app infos.  For each of these app infos, we have to load the application itself
         Observable<ApplicationScope> appIds = gm.loadEdgesFromSource(
-                new SimpleSearchByEdgeType( rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                        null ) ).flatMap( new Func1<Edge, Observable<ApplicationScope>>() {
+            new SimpleSearchByEdgeType( rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                Optional.absent() ) ).flatMap( new Func1<Edge, Observable<ApplicationScope>>() {
             @Override
             public Observable<ApplicationScope> call( final Edge edge ) {
 
@@ -118,7 +119,7 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
                         @Override
                         public ApplicationScope call( final Entity entity ) {
                             final UUID uuid = UUIDUtils.tryExtractUUID(
-                                entity.getField( Schema.PROPERTY_APPLICATION_ID ).getValue().toString());
+                                entity.getField( Schema.PROPERTY_APPLICATION_ID ).getValue().toString() );
                             return getApplicationScope( uuid );
                         }
                     } );

@@ -50,6 +50,7 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -61,6 +62,7 @@ import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsExcept
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
@@ -116,6 +118,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final ApplicationIdCache applicationIdCache;
 
     private ManagerCache managerCache;
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final GraphManagerFactory graphManagerFactory;
 
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
@@ -125,7 +129,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final AsyncIndexService indexService;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
-                                   final Injector injector) {
+                                   final Injector injector ) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
@@ -137,6 +141,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.indexService = injector.getInstance( AsyncIndexService.class );
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
+        this.entityCollectionManagerFactory = injector.getInstance( EntityCollectionManagerFactory.class );
+        this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
+
 
     }
 
@@ -192,8 +199,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory, applicationId,
-            entityCollectionManagerFactory, graphManagerFactory );
+        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory,
+            entityCollectionManagerFactory, graphManagerFactory,  applicationId );
         return em;
     }
 

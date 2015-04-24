@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.index.AsyncIndexService;
+import org.apache.usergrid.corepersistence.results.CollectionGraphQueryExecutor;
 import org.apache.usergrid.corepersistence.results.CollectionResultsLoaderFactoryImpl;
+import org.apache.usergrid.corepersistence.results.ConnectionGraphQueryExecutor;
 import org.apache.usergrid.corepersistence.results.ConnectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ElasticSearchQueryExecutor;
 import org.apache.usergrid.corepersistence.results.QueryExecutor;
@@ -51,7 +53,6 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -635,6 +636,21 @@ public class CpRelationManager implements RelationManager {
         }
 
 
+
+        query.setEntityType( collection.getType() );
+        query = adjustQuery( query );
+
+
+        if ( query.isGraphSearch() ) {
+            QueryExecutor executor =
+                new CollectionGraphQueryExecutor( entityCollectionManagerFactory, graphManagerFactory, applicationScope,
+                    headEntity, query.getOffsetCursor(), collName, query.getLimit() );
+
+            return executor.next();
+        }
+
+
+
         final SearchEdge searchEdge = createCollectionSearchEdge( cpHeadEntity.getId(), collName );
 
         final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
@@ -642,12 +658,6 @@ public class CpRelationManager implements RelationManager {
         final SearchTypes types = SearchTypes.fromTypes( collection.getType() );
 
         logger.debug( "Searching scope {}", searchEdge );
-
-        query.setEntityType( collection.getType() );
-        query = adjustQuery( query );
-
-
-
 
         final CollectionResultsLoaderFactoryImpl resultsLoaderFactory =
             new CollectionResultsLoaderFactoryImpl( managerCache );
@@ -908,6 +918,16 @@ public class CpRelationManager implements RelationManager {
         logger.debug( "Searching {}", indexScope );
 
         query = adjustQuery( query );
+
+
+
+        if ( query.isGraphSearch() ) {
+            QueryExecutor executor =
+                new ConnectionGraphQueryExecutor( entityCollectionManagerFactory, graphManagerFactory, applicationScope,
+                    headEntity, query.getOffsetCursor(), connection, query.getLimit() );
+
+            return executor.next();
+        }
 
         final ConnectionResultsLoaderFactoryImpl resultsLoaderFactory =
             new ConnectionResultsLoaderFactoryImpl( managerCache, headEntity, connection );

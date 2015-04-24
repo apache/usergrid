@@ -21,7 +21,6 @@ package org.apache.usergrid.corepersistence.command.read.entity;
 
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.usergrid.corepersistence.command.read.AbstractCommand;
@@ -29,7 +28,6 @@ import org.apache.usergrid.corepersistence.command.read.CollectCommand;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntitySet;
@@ -39,10 +37,6 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
-import rx.functions.Func1;
-import rx.observables.GroupedObservable;
-
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 
 
 /**
@@ -73,7 +67,7 @@ public class EntityLoadCommand extends AbstractCommand<Results, Serializable> im
 
 
     @Override
-    public Observable<Results> call( final Observable<? extends Id> observable ) {
+    public Observable<Results> call( final Observable<Id> observable ) {
 
 
         /**
@@ -81,90 +75,39 @@ public class EntityLoadCommand extends AbstractCommand<Results, Serializable> im
          * objects
          */
 
+        final EntityCollectionManager entityCollectionManager =
+            entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        return observable.buffer( resultSize ).flatMap( new Func1<List<? extends Id>, Observable<Results>>() {
-            @Override
-            public Observable<Results> call( final List<? extends Id> ids ) {
-
-                return Observable.from( ids )
-                    //group them by type so we can load them, in 2.0 dev this step will be removed
-                    .groupBy( new Func1<Id, String>() {
-                        @Override
-                        public String call( final Id id ) {
-                            return id.getType();
-                        }
-                    } )
-
-                        //take all our groups and load them as id sets
-
-                    .flatMap( new Func1<GroupedObservable<String, Id>, Observable<EntitySet>>() {
-                        @Override
-                        public Observable<EntitySet> call(
-                            final GroupedObservable<String, Id> stringIdGroupedObservable ) {
+        final Observable<EntitySet> entitySetObservable = observable.buffer( resultSize ).flatMap(
+            bufferedIds -> Observable.just( bufferedIds ).flatMap( ids -> entityCollectionManager.load( ids ) ) );
 
 
-                            final String entityType = stringIdGroupedObservable.getKey();
+        return entitySetObservable
 
-                            final CollectionScope collectionScope =
-                                getCollectionScopeNameFromEntityType( applicationScope.getApplication(), entityType );
+            .flatMap( entitySet -> {
 
+                //get our entites and filter missing ones, then collect them into a results object
+                final Observable<MvccEntity> mvccEntityObservable = Observable.from( entitySet.getEntities() );
 
-                            return stringIdGroupedObservable.toList()
-                                                            .flatMap( new Func1<List<Id>, Observable<EntitySet>>() {
-                                                                @Override
-                                                                public Observable<EntitySet> call(
-                                                                    final List<Id> ids ) {
+                //convert them to our old entity model, then filter nulls, meaning they weren't found
+                return mvccEntityObservable.map( mvccEntity -> mapEntity( mvccEntity ) ).filter(
+                    entity -> entity == null )
 
-                                                                    final EntityCollectionManager ecm =
-                                                                        entityCollectionManagerFactory
-                                                                            .createCollectionManager( collectionScope );
-                                                                    return ecm.load( ids );
-                                                                }
-                                                            } );
-                        }
-                    } )
-                        //emit our groups of entities as a stream of entities
-                    .flatMap( new Func1<EntitySet, Observable<org.apache.usergrid.persistence.Entity>>() {
-                        @Override
-                        public Observable<org.apache.usergrid.persistence.Entity> call( final EntitySet entitySet ) {
-                            //emit our entities, and filter out deleted entites
-                            return Observable.from( entitySet.getEntities() ).map(
-                                new Func1<MvccEntity, org.apache.usergrid.persistence.Entity>() {
+                    //convert them to a list, then map them into results
+                    .toList().map( entities -> {
+                        final Results results = Results.fromEntities( entities );
+                        results.setCursor( generateCursor() );
 
-                                    @Override
-                                    public org.apache.usergrid.persistence.Entity call( final MvccEntity mvccEntity ) {
-                                        return mapEntity( mvccEntity );
-                                    }
-                                } )
-                                //filter null entities
-                                .filter( new Func1<org.apache.usergrid.persistence.Entity, Boolean>() {
-                                    @Override
-                                    public Boolean call( final org.apache.usergrid.persistence.Entity entity ) {
-                                        return entity == null;
-                                    }
-                                } );
-                        }
-                    } )
-
-                        //convert them to a list, then map them into results
-                    .toList().map( new Func1<List<org.apache.usergrid.persistence.Entity>, Results>() {
-                        @Override
-                        public Results call( final List<org.apache.usergrid.persistence.Entity> entities ) {
-                            final Results results = Results.fromEntities( entities );
-                            results.setCursor( generateCursor() );
-
-                            return results;
-                        }
+                        return results;
                     } );
-            }
-        } );
+            } );
     }
 
+                /**
+                 * Map a new cp entity to an old entity.  May be null if not present
+                 */
 
 
-    /**
-     * Map a new cp entity to an old entity.  May be null if not present
-     */
     private org.apache.usergrid.persistence.Entity mapEntity( final MvccEntity mvccEntity ) {
         if ( !mvccEntity.getEntity().isPresent() ) {
             return null;
