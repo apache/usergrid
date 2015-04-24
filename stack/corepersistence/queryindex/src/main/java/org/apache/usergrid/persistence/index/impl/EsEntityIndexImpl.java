@@ -351,15 +351,15 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             }
             catch ( Exception e ) {
                 logger.error( "Unable to execute operation, retrying", e );
+                try {
+                    Thread.sleep( WAIT_TIME );
+                } catch ( InterruptedException ie ) {
+                    //swallow it
+                }
             }
 
 
-            try {
-                Thread.sleep( WAIT_TIME );
-            }
-            catch ( InterruptedException e ) {
-                //swallow it
-            }
+
         }
     }
 

@@ -689,7 +689,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = Query.fromQL( "select * where searched = true sort by  created" );
+        Query query = Query.fromQL( "select * where searched = true order by created" );
         query.setLimit( queryLimit );
 
         int count = 0;
