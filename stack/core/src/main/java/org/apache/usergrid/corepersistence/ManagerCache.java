@@ -20,11 +20,10 @@
 package org.apache.usergrid.corepersistence;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 
@@ -33,36 +32,40 @@ import org.apache.usergrid.persistence.map.MapScope;
  * The cache of the manager
  */
 public interface ManagerCache {
+
     /**
      * Get the entity collection manager for the specified scope
      * @param scope
      * @return
      */
-    EntityCollectionManager getEntityCollectionManager( CollectionScope scope );
+    EntityCollectionManager getEntityCollectionManager( ApplicationScope scope );
 
     /**
      * Get the entity index for the specified app scope
+     *
      * @param appScope
      * @return
      */
-    EntityIndex getEntityIndex( ApplicationScope appScope );
+    ApplicationEntityIndex getEntityIndex( ApplicationScope appScope );
 
     /**
      * Get the graph manager for the graph scope
+     *
      * @param appScope
      * @return
      */
-    GraphManager getGraphManager( ApplicationScope appScope );
+    GraphManager getGraphManager(ApplicationScope appScope);
 
     /**
      * Get the map manager for the map scope
+     *
      * @param mapScope
      * @return
      */
-    MapManager getMapManager( MapScope mapScope );
+    MapManager getMapManager(MapScope mapScope);
 
     /**
-     * Invalidate all cache entries
+     * invalidate the cache
      */
     void invalidate();
 

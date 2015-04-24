@@ -22,6 +22,9 @@ package org.apache.usergrid.persistence.index;/*
 
 import java.util.Arrays;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.impl.IndexingUtils;
+
 
 /**
  * Class to encapsulate search types
@@ -29,7 +32,7 @@ import java.util.Arrays;
 
 public class SearchTypes {
 
-    private static final SearchTypes ALL_TYPES = new SearchTypes(  );
+    private static final SearchTypes ALL_TYPES = new SearchTypes();
 
     private final String[] types;
 
@@ -37,15 +40,26 @@ public class SearchTypes {
     private SearchTypes( final String... types ) {this.types = types;}
 
 
-    public String[] getTypeNames() {
+    /**
+     * Generate our types to search on
+     * @param applicationScope
+     * @return
+     */
+    public String[] getTypeNames( ApplicationScope applicationScope ) {
+        String[] typeNames = new String[types.length];
+        for ( int i = 0; i < types.length; i++ ) {
+            typeNames[i] = IndexingUtils.getType( applicationScope, types[i] );
+        }
+        return typeNames;
+    }
+
+    public String[] getTypes(){
         return types;
     }
 
 
     /**
      * Create a search that will search on the specified types
-     * @param types
-     * @return
      */
     public static SearchTypes fromTypes( final String... types ) {
         return new SearchTypes( types );
@@ -54,22 +68,19 @@ public class SearchTypes {
 
     /**
      * Get a search that will search all types in the specified context
-     * @return
      */
-    public static SearchTypes allTypes(){
+    public static SearchTypes allTypes() {
         return ALL_TYPES;
     }
 
 
     /**
-     * Create a search type from a potentially nullable set of string.  If they are null, or empty, then allTypes is returned
-     * otherwise the type will be returned
-     * @param types
-     * @return
+     * Create a search type from a potentially nullable set of string.  If they are null, or empty, then allTypes is
+     * returned otherwise the type will be returned
      */
-    public static SearchTypes fromNullableTypes(final String... types){
+    public static SearchTypes fromNullableTypes( final String... types ) {
 
-        if(isEmpty(types) ){
+        if ( isEmpty( types ) ) {
             return allTypes();
         }
 
@@ -79,22 +90,21 @@ public class SearchTypes {
 
     /**
      * Return true if the array is empty, or it's elements contain a null
-     * @param input
-     * @return
      */
-    private static boolean isEmpty(final String[] input){
-        if(input == null || input.length == 0){
+    private static boolean isEmpty( final String[] input ) {
+        if ( input == null || input.length == 0 ) {
             return true;
         }
 
-        for(int i = 0; i < input.length; i ++){
-            if(input[i] == null){
+        for ( int i = 0; i < input.length; i++ ) {
+            if ( input[i] == null ) {
                 return true;
             }
         }
 
         return false;
     }
+
 
     @Override
     public boolean equals( final Object o ) {

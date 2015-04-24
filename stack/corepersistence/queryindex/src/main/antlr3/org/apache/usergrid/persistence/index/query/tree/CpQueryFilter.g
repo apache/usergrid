@@ -31,17 +31,19 @@ package org.apache.usergrid.persistence.index.query.tree;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.ParsedQuery;
+import org.apache.usergrid.persistence.index.query.SortPredicate;
 
 }
 
 
 @members {
-	Query query = new Query();
 
   private static final Logger logger = LoggerFactory
       .getLogger(CpQueryFilterLexer.class);
+
+   //the object that represents a parsed query
+   private ParsedQuery parsedQuery = new ParsedQuery();
 
 	@Override
 	public void emitErrorMessage(String msg) {
@@ -300,7 +302,7 @@ order
   : (property direction?){
 		String property = $property.text; 
 		String direction = $direction.text;
-		query.addSort(new SortPredicate(property, direction));
+		parsedQuery.addSort(new SortPredicate(property, direction));
     
   };
 
@@ -311,7 +313,7 @@ order
 select_subject
   : ID {
 
-  query.addSelect($ID.text);
+  parsedQuery.addSelect($ID.text);
 
 };
 
@@ -320,7 +322,7 @@ select_subject
 select_assign
   : target=ID ':' source=ID {
 
-  query.addSelect($target.text, $source.text);
+  parsedQuery.addSelect($target.text, $source.text);
 
 };
 
@@ -329,14 +331,14 @@ select_expr
    
 //end select clauses
 
-ql returns [Query query]
+ql returns [ParsedQuery parsedQuery]
   : ('select'! select_expr!)? ('where'!? expression)? ('order by'! order! (','! order!)*)? {
 
   if($expression.tree instanceof Operand){
-    query.setRootOperand((Operand)$expression.tree);
+    parsedQuery.setRootOperand((Operand)$expression.tree);
   }
   
-  retval.query = query;
+  retval.parsedQuery = parsedQuery;
 
 
 };

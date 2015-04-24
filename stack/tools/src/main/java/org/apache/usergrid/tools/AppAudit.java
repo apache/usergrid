@@ -36,7 +36,6 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -82,7 +81,7 @@ public class AppAudit extends ToolBase {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */

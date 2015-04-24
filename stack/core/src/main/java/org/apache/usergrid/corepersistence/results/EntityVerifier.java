@@ -38,7 +38,7 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.uuid.UUIDComparator;

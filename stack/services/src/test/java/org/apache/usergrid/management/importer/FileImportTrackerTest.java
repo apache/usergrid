@@ -58,7 +58,7 @@ public class FileImportTrackerTest {
 
         final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
-        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
+        when( emf.getEntityManager( emf.getManagementAppId() ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
@@ -101,7 +101,7 @@ public class FileImportTrackerTest {
 
         final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
-        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
+        when( emf.getEntityManager( emf.getManagementAppId() ) ).thenReturn( em );
 
         // create tracker and call its entityWritten() and entityFailed() methods some number of times
 
@@ -171,7 +171,7 @@ public class FileImportTrackerTest {
 
         final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
-        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
+        when( emf.getEntityManager( emf.getManagementAppId() ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
@@ -218,7 +218,7 @@ public class FileImportTrackerTest {
 
         final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
-        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
+        when( emf.getEntityManager( emf.getManagementAppId() ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
@@ -333,7 +333,7 @@ public class FileImportTrackerTest {
 
         final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
-        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
+        when( emf.getEntityManager( emf.getManagementAppId() ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
@@ -368,7 +368,7 @@ public class FileImportTrackerTest {
 
         final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
-        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
+        when( emf.getEntityManager( emf.getManagementAppId() ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 

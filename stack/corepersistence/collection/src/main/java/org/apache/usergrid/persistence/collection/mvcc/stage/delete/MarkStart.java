@@ -24,16 +24,16 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -49,8 +49,8 @@ import rx.functions.Func1;
 
 
 /**
- * This is the first stage and should be invoked immediately when a write is started.  
- * It should persist the start of a new write in the data store for 
+ * This is the first stage and should be invoked immediately when a write is started.
+ * It should persist the start of a new write in the data store for
  * a checkpoint and recovery
  */
 @Singleton
@@ -67,7 +67,7 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
      * Create a new stage with the current context
      */
     @Inject
-    public MarkStart( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
+    public MarkStart(final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
 
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
@@ -86,12 +86,12 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
         final UUID version = uuidService.newTimeUUID();
 
 
-        final CollectionScope collectionScope = entityIoEvent.getEntityCollection();
+        final ApplicationScope applicationScope = entityIoEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE, MvccLogEntry.State.DELETED );
 
-        MutationBatch write = logStrategy.write( collectionScope, startEntry );
+        MutationBatch write = logStrategy.write( applicationScope, startEntry );
 
 
         try {
@@ -99,7 +99,7 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new CollectionRuntimeException( null, collectionScope, 
+            throw new CollectionRuntimeException( null, applicationScope,
                     "Failed to execute write asynchronously ", e );
         }
 
@@ -109,6 +109,6 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
             entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
 
 
-        return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
+        return new CollectionIoEvent<MvccEntity>( applicationScope, nextStage );
     }
 }

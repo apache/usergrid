@@ -18,6 +18,8 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.WebResource;
+import org.apache.usergrid.rest.test.resource.CollectionResource;
+import org.apache.usergrid.rest.test.resource.EntityResource;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
@@ -39,6 +41,7 @@ public class CollectionEndpoint extends NamedResource {
     private static final Logger logger = LoggerFactory.getLogger(CollectionEndpoint.class);
 
     protected List<String> acceptHeaders = new ArrayList<String> ();
+    private String matrix;
 
     public CollectionEndpoint(String name, ClientContext context, UrlResource parent) {
         super(name, context, parent);
@@ -340,5 +343,15 @@ public class CollectionEndpoint extends NamedResource {
         }
 
         return response;
+    }
+
+    public CollectionEndpoint matrix(QueryParameters parameters) {
+        this.matrix = getMatrixValue(parameters);
+        return this;
+    }
+
+    @Override
+    public String getMatrix(){
+        return matrix != null ? matrix : "";
     }
 }

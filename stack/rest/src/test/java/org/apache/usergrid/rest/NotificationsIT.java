@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.usergrid.rest.test.resource2point0.*;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,9 +39,9 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Test creating, sending and paging through Notifications via the REST API. 
+ * Test creating, sending and paging through Notifications via the REST API.
  */
-public class NotificationsIT extends AbstractRestIT {
+public class NotificationsIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
     private static final Logger logger = LoggerFactory.getLogger( NotificationsIT.class );
 
     private static final MetricRegistry registry = new MetricRegistry();
@@ -78,28 +80,25 @@ public class NotificationsIT extends AbstractRestIT {
         int numDevices = 10;
         int numNotifications = 100; // to send to each device
 
-        token = userToken( "ed@anuff.com", "sesame" );
+        User user = new User("ed","ed", "ed@anuff.com", "sesame" );
+        Entity entity = this.app().collection("users").post(user);
+        Token token = this.app().token().post(new Token("ed", "sesame"));
 
         // create notifier
-        Map<String, Object> notifier = new HashMap<String, Object>() {{
-            put("name", "mynotifier");
-            put("provider", "noop");
-        }};
-        JsonNode notifierNode = mapper.readTree(resource().path( orgapp + "/notifier")
-            .queryParam( "access_token", token )
-            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON )
-            .post(String.class, notifier ) );
+        Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
+
+        Entity notifierNode =this.app().collection("notifier").post(notifier);
 
         //logger.debug("Notifier is: " + notifierNode.toString());
-        assertEquals( "noop", notifierNode.withArray("entities").get(0).get("provider").asText()); 
-        
-        refreshIndex( org, app );
+        assertEquals("noop", notifierNode.getResponse().getEntities().get(0).get("provider").toString());
+
+        this.refreshIndex();
 
         // create devices
         int devicesCount = 0;
         List<String> deviceIds = new ArrayList();
         for (int i=0; i<numDevices; i++) {
-          
+
             final int deviceNum = i;
             Map<String, Object> device = new HashMap<String, Object>() {{
                 put("name", "device" + deviceNum);
@@ -110,24 +109,21 @@ public class NotificationsIT extends AbstractRestIT {
                 put("mynotifier.notifier.id", "pushtoken" + deviceNum);
             }};
 
-            JsonNode deviceNode = mapper.readTree(resource().path( orgapp + "/devices")
-                .queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON )
-                .post(String.class, device ) );
+            Entity deviceNode = this.app().collection( "devices").post(new Entity(device));
 
             //logger.debug("Device is: " + deviceNode.toString());
-            assertEquals( "device"+i, deviceNode.withArray("entities").get(0).get("name").asText()); 
+            assertEquals("device" + i, deviceNode.getResponse().getEntities().get(0).get("name").toString());
 
-            deviceIds.add(deviceNode.withArray("entities").get(0).get("uuid").asText());
+            deviceIds.add(deviceNode.getResponse().getEntities().get(0).get("uuid").toString());
             devicesCount++;
         }
 
-        refreshIndex( org, app );
+        refreshIndex();
 
         String postMeterName = getClass().getSimpleName() + ".postNotifications";
         Meter postMeter = registry.meter( postMeterName );
 
-        // send notifications 
+        // send notifications
         int notificationCount = 0;
         List<String> notificationUuids = new ArrayList<String>();
 
@@ -143,17 +139,14 @@ public class NotificationsIT extends AbstractRestIT {
                     }});
                 }};
 
-                JsonNode notificationNode = mapper.readTree(resource().path( orgapp + "/notifications")
-                    .queryParam( "access_token", token )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON )
-                    .post( String.class, notification ) );
+                Entity notificationNode = this.app().collection( "notifications")
+                    .post(new Entity(notification));
 
                 postMeter.mark();
 
-                Thread.sleep( writeDelayMs );
 
                 //logger.debug("Notification is: " + notificationNode.toString());
-                notificationUuids.add( notificationNode.withArray("entities").get(0).get("uuid").asText());
+                notificationUuids.add(notificationNode.getResponse().getEntities().get(0).get("uuid").toString());
             }
 
             notificationCount++;
@@ -164,7 +157,7 @@ public class NotificationsIT extends AbstractRestIT {
         }
         registry.remove( postMeterName );
 
-        refreshIndex( org, app );
+        refreshIndex( );
 
         logger.info("Waiting for all notifications to be sent");
         StopWatch sw = new StopWatch();
@@ -179,57 +172,53 @@ public class NotificationsIT extends AbstractRestIT {
             }
         }
         sw.stop();
-        int nc = numDevices * numNotifications; 
+        int nc = numDevices * numNotifications;
         logger.info("Processed {} notifications in {}ms", nc, sw.getTime());
         logger.info("Processing Notifications throughput = {} TPS", ((float)nc) / (sw.getTime()/1000));
 
-        logger.info( "Successfully Paged through {} notifications", 
+        logger.info( "Successfully Paged through {} notifications",
             pageThroughAllNotifications("FINISHED"));
     }
 
 
     private int pageThroughAllNotifications( String state ) throws IOException, InterruptedException {
 
-        JsonNode initialNode = mapper.readTree( resource().path(orgapp + "/notifications")
-                .queryParam("ql", "select * where state='" + state + "'")
-                .queryParam("access_token", token)
-                .accept(MediaType.APPLICATION_JSON)
-                .get(String.class));
+        Collection initialNode = this.app().collection("notifications").get(new QueryParameters().setQuery("select * where state='" + state + "'"));
 
-        int count = initialNode.get("count").asInt();
+        int count = initialNode.getNumOfEntities();
 
-        if (initialNode.get("cursor") != null) {
+        if (initialNode.getCursor() != null) {
 
-            String cursor = initialNode.get("cursor").asText();
-           
-            // since we have a cursor, we should have gotten the limit, which defaults to 10 
+            String cursor = initialNode.getCursor();
+
+            // since we have a cursor, we should have gotten the limit, which defaults to 10
             // or we should get back 0 which indicates no more data
             assertTrue( count == 10 || count == 0 );
 
             while (cursor != null) {
 
-                JsonNode anotherNode = mapper.readTree(resource().path(orgapp + "/notifications")
-                        .queryParam("ql", "select * where state='" + state + "'")
-                        .queryParam("access_token", token)
-                        .queryParam("cursor", cursor)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .get(String.class));
+                Collection anotherNode = this.app().collection("notifications").get(new QueryParameters().setQuery("select * where state='" + state + "'").setCursor(cursor));
 
-                int returnCount = anotherNode.get("count").asInt();
+
+                int returnCount = anotherNode.getNumOfEntities();
 
                 count += returnCount;
 
-                if (anotherNode.get("cursor") != null) {
+                if (anotherNode.getCursor() != null) {
 
-                    // since we have a cursor, we should have gotten the limit, which defaults to 10 
+                    // since we have a cursor, we should have gotten the limit, which defaults to 10
                     // or we should get back 0 which indicates no more data
                     assertTrue( returnCount == 10 || returnCount == 0 );
 
-                    cursor = anotherNode.get("cursor").asText();
+                    cursor = anotherNode.getCursor();
 
                     Thread.sleep( readDelayMs );
 
                 } else {
+                    cursor = null;
+                }
+
+                if(returnCount<=0){
                     cursor = null;
                 }
             }

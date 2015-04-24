@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 /**
  * An interface for execution of tasks
  */
-public interface TaskExecutor {
+public interface  TaskExecutor {
 
     /**
      * Submit the task asynchronously
@@ -37,5 +37,5 @@ public interface TaskExecutor {
      * Stop the task executor without waiting for scheduled threads to run
      */
     public void shutdown();
-    
+
 }

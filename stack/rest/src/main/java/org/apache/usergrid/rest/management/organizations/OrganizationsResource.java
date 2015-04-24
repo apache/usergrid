@@ -90,11 +90,11 @@ public class OrganizationsResource extends AbstractContextResource {
     public OrganizationResource getOrganizationByName( @Context UriInfo ui,
                                                        @PathParam( "organizationName" ) String organizationName )
             throws Exception {
-        OrganizationInfo organization = management.getOrganizationByName( organizationName );
+        OrganizationInfo organization = management.getOrganizationByName(organizationName);
         if ( organization == null ) {
             throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
-        return getSubResource( OrganizationResource.class ).init( organization );
+        return getSubResource( OrganizationResource.class ).init(organization);
     }
 
 
@@ -109,6 +109,9 @@ public class OrganizationsResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );
 
+        if(json==null){
+            throw new IllegalArgumentException("missing json post data");
+        }
         String organizationName = ( String ) json.remove( "organization" );
         String username = ( String ) json.remove( "username" );
         String name = ( String ) json.remove( "name" );
@@ -116,7 +119,7 @@ public class OrganizationsResource extends AbstractContextResource {
         String password = ( String ) json.remove( "password" );
         Map<String, Object> properties = ( Map<String, Object> ) json.remove( ORGANIZATION_PROPERTIES );
 
-        return newOrganization( ui, organizationName, username, name, email, password, json, properties, callback );
+        return newOrganization(ui, organizationName, username, name, email, password, json, properties, callback);
     }
 
 
@@ -153,7 +156,7 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> properties, String callback ) throws Exception {
 
-        Preconditions.checkArgument( 
+        Preconditions.checkArgument(
             StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
         logger.debug( "New organization: {}", organizationName );
@@ -181,18 +184,18 @@ public class OrganizationsResource extends AbstractContextResource {
 
     /*
      * @POST
-     * 
+     *
      * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
      * newOrganizationFromMultipart(@Context UriInfo ui,
-     * 
+     *
      * @FormDataParam("organization") String organization,
-     * 
+     *
      * @FormDataParam("username") String username,
-     * 
+     *
      * @FormDataParam("name") String name,
-     * 
+     *
      * @FormDataParam("email") String email,
-     * 
+     *
      * @FormDataParam("password") String password) throws Exception { return
      * newOrganizationFromForm(ui, organization, username, name, email,
      * password); }

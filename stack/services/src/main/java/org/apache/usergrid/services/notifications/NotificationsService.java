@@ -39,7 +39,7 @@ import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueScope;
@@ -176,7 +176,7 @@ public class NotificationsService extends AbstractCollectionService {
         for (int i = 0; i < parameters.size() - 1; i += 2) {
             String collection = pluralize(parameters.get(i).getName());
             ServiceParameter sp = parameters.get(i + 1);
-            org.apache.usergrid.persistence.index.query.Query query = sp.getQuery();
+            Query query = sp.getQuery();
             if (query == null) {
                 query = new Query();
                 if(collection.equals("devices") && sp.isName() && sp.getName().equals("notifications")) {

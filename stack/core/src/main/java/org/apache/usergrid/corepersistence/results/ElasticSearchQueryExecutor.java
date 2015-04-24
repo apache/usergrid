@@ -23,16 +23,15 @@ package org.apache.usergrid.corepersistence.results;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.Query;
+
+import com.google.common.base.Optional;
 
 
 public class ElasticSearchQueryExecutor implements QueryExecutor {
@@ -43,9 +42,9 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
     private final ApplicationScope applicationScope;
 
-    private final EntityIndex entityIndex;
+    private final ApplicationEntityIndex entityIndex;
 
-    private final IndexScope indexScope;
+    private final SearchEdge indexScope;
 
     private final SearchTypes types;
 
@@ -57,8 +56,8 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
     private boolean moreToLoad = true;
 
 
-    public ElasticSearchQueryExecutor( final ResultsLoaderFactory resultsLoaderFactory, final EntityIndex entityIndex,
-                                       final ApplicationScope applicationScope, final IndexScope indexScope,
+    public ElasticSearchQueryExecutor( final ResultsLoaderFactory resultsLoaderFactory, final ApplicationEntityIndex entityIndex,
+                                       final ApplicationScope applicationScope, final SearchEdge indexScope,
                                        final SearchTypes types, final Query query ) {
         this.resultsLoaderFactory = resultsLoaderFactory;
         this.applicationScope = applicationScope;
@@ -89,52 +88,55 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
         Results results = null;
         int queryCount = 0;
 
-        boolean satisfied = false;
+
+        CandidateResults crs = null;
+
+        while ( queryCount++ < maxQueries ) {
+
+            crs = getCandidateResults( query );
 
 
-        while ( !satisfied && queryCount++ < maxQueries ) {
-
-            CandidateResults crs = entityIndex.search( indexScope, types, query );
-
-            logger.debug( "Calling build results 1" );
+            logger.debug( "Calling build results with crs {}", crs );
             results = buildResults( indexScope, query, crs );
-
-            if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
-                satisfied = true;
-            }
 
             /**
              * In an edge case where we delete stale entities, we could potentially get less results than expected.
              * This will only occur once during the repair phase.
              * We need to ensure that we short circuit before we overflow the requested limit during a repair.
              */
-            else if ( results.size() > 0 ) { // got what we need
-                satisfied = true;
+            if ( crs.isEmpty() || !crs.hasOffset() || results.size() > 0 ) { // no results, no cursor, can't get more
+                break;
             }
+
+
             //we didn't load anything, but there was a cursor, this means a read repair occured.  We have to short
             //circuit to avoid over returning the result set
-            else if ( crs.hasCursor() ) {
-                satisfied = false;
 
-                // need to query for more
-                // ask for just what we need to satisfy, don't want to exceed limit
-                query.setCursor( results.getCursor() );
-                query.setLimit( originalLimit - results.size() );
 
-                logger.warn( "Satisfy query limit {}, new limit {} query count {}", new Object[] {
-                    originalLimit, query.getLimit(), queryCount
-                } );
-            }
+            // need to query for more
+            // ask for just what we need to satisfy, don't want to exceed limit
+            query.setOffsetFromCursor(results.getCursor());
+            query.setLimit( originalLimit - results.size() );
+
+            logger.warn( "Satisfy query limit {}, new limit {} query count {}", new Object[] {
+                originalLimit, query.getLimit(), queryCount
+            } );
         }
 
         //now set our cursor if we have one for the next iteration
         if ( results.hasCursor() ) {
-            query.setCursor( results.getCursor() );
+            query.setOffsetFromCursor(results.getCursor());
             moreToLoad = true;
         }
 
         else {
             moreToLoad = false;
+        }
+
+
+        //set our select subjects into our query if provided
+        if(crs != null){
+            query.setSelectSubjects( crs.getGetFieldMappings() );
         }
 
 
@@ -144,12 +146,29 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
 
     /**
+     * Get the candidates or load the cursor, whichever we require
+     * @param query
+     * @return
+     */
+    private CandidateResults getCandidateResults(final Query query){
+        final Optional<Integer> cursor = query.getOffset();
+        final String queryToExecute = query.getQl().or("select *");
+
+        CandidateResults results = cursor.isPresent()
+            ? entityIndex.search( indexScope, types, queryToExecute, query.getLimit() , cursor.get())
+            : entityIndex.search( indexScope, types, queryToExecute, query.getLimit());
+
+        return results;
+    }
+
+
+    /**
      * Build results from a set of candidates, and discard those that represent stale indexes.
      *
      * @param query Query that was executed
      * @param crs Candidates to be considered for results
      */
-    private Results buildResults( final IndexScope indexScope, final Query query, final CandidateResults crs ) {
+    private Results buildResults( final SearchEdge indexScope, final Query query, final CandidateResults crs ) {
 
         logger.debug( "buildResults()  from {} candidates", crs.size() );
 
@@ -158,13 +177,18 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
             this.resultsLoaderFactory.getLoader( applicationScope, indexScope, query.getResultsLevel() );
 
         //load the results
-        final Results results = resultsLoader.loadResults( crs );
+        final Results results = resultsLoader.loadResults(crs);
 
         //signal for post processing
         resultsLoader.postProcess();
 
-
-        results.setCursor( crs.getCursor() );
+        //set offset into query
+        if(crs.getOffset().isPresent()) {
+            query.setOffset(crs.getOffset().get());
+        }else{
+            query.clearOffset();
+        }
+        results.setCursorFromOffset( query.getOffset() );
 
         //ugly and tight coupling, but we don't have a choice until we finish some refactoring
         results.setQueryExecutor( this );

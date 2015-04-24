@@ -33,7 +33,7 @@ import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 
@@ -90,7 +90,7 @@ public class IntersectionTransitivePagingIT{
         io.doSetup();
 
 
-        int writeSize =200;
+        int writeSize = 10;
 
         List<UUID> expected = new ArrayList<UUID>(writeSize);
 
@@ -163,7 +163,7 @@ public class IntersectionTransitivePagingIT{
                         returnedUUID );
             }
 
-            query.setCursor( results.getCursor() );
+            query.setOffsetFromCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 

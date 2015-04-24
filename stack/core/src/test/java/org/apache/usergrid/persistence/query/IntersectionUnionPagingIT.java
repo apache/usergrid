@@ -34,7 +34,7 @@ import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -93,7 +93,7 @@ public class IntersectionUnionPagingIT {
     private Set<String> performSetup( final IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 200;
+        int size =10;
 
         long start = System.currentTimeMillis();
 
@@ -169,7 +169,7 @@ public class IntersectionUnionPagingIT {
                 newSets.remove( name );
             }
 
-            query.setCursor( results.getCursor() );
+            query.setOffsetFromCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 

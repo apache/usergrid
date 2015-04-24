@@ -21,7 +21,7 @@ package org.apache.usergrid.corepersistence.results;
 
 
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.CandidateResults;
 
 
 /**

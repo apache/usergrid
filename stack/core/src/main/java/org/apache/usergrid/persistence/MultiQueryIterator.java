@@ -17,10 +17,10 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import java.util.Iterator;
 import java.util.UUID;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 
 
 /**

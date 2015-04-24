@@ -21,14 +21,9 @@ package org.apache.usergrid.rest.management.organizations.applications.imports;
 
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -43,18 +38,14 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.FileImport;
-import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 

@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,10 +30,12 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -51,7 +52,7 @@ import static org.junit.Assert.assertNotNull;
 @UseModules(TestCollectionModule.class)
 @Ignore("Stress test should not be run in embedded mode")
 public class EntityCollectionManagerStressTest {
-    private static final Logger log = LoggerFactory.getLogger( 
+    private static final Logger log = LoggerFactory.getLogger(
             EntityCollectionManagerStressTest.class );
 
     @Inject
@@ -64,9 +65,8 @@ public class EntityCollectionManagerStressTest {
     @Test
     public void writeThousands() {
 
-        CollectionScope context = new CollectionScopeImpl(
-                new SimpleId("organization"), new SimpleId("test"), "test");
-        
+        ApplicationScope context = new ApplicationScopeImpl(new SimpleId("organization"));
+
         EntityCollectionManager manager = factory.createCollectionManager(context);
 
         int limit = 10000;

@@ -37,7 +37,7 @@ import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 
@@ -93,8 +93,7 @@ public class ImportConnectionsTest {
 
         final int connectionCount = 15;
 
-        EntityManager emMgmtApp = setup.getEmf()
-            .getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager emMgmtApp = setup.getEmf().getEntityManager(setup.getEmf().getManagementAppId());
 
         Import importEntity = new Import();
         importEntity = emMgmtApp.create( importEntity );
@@ -134,7 +133,7 @@ public class ImportConnectionsTest {
 
         try {
             EntityManager emMgmtApp = setup.getEmf()
-                .getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+                .getEntityManager(setup.getEmf().getManagementAppId() );
 
             Results entities = emMgmtApp.getConnectedEntities(
                 importRoot, "includes", null, Query.Level.ALL_PROPERTIES );
@@ -158,7 +157,7 @@ public class ImportConnectionsTest {
 
         try {
             EntityManager emMgmtApp = setup.getEmf()
-                .getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+                .getEntityManager(setup.getEmf().getManagementAppId() );
 
             Query query = Query.fromQL("select *");
             query.setEntityType("file_import");

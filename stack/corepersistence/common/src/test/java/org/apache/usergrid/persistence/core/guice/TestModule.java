@@ -34,11 +34,10 @@ public abstract class TestModule extends AbstractModule {
        * bootstrap more than once per JVM
        * --------------------------------------------------------------------
        */
-
         try {
             //load up the properties
-            ConfigurationManager.getDeploymentContext().setDeploymentEnvironment( "UNIT" );
-            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
+            ConfigurationManager.getDeploymentContext().setDeploymentEnvironment("UNIT");
+            ConfigurationManager.loadCascadedPropertiesFromResources("usergrid");
 
         }
         catch ( IOException e ) {

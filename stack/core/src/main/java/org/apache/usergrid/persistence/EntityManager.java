@@ -17,28 +17,22 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.persistence.cassandra.CounterUtils;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.query.Query;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import me.prettyprint.hector.api.mutation.Mutator;
 
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
-import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+import me.prettyprint.hector.api.mutation.Mutator;
 
 
 /**
@@ -48,8 +42,6 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
 public interface EntityManager {
 
 //    public void setApplicationId( UUID applicationId );
-
-    public GeoIndexManager getGeoIndexManager();
 
     public EntityRef getApplicationRef();
 
@@ -97,6 +89,15 @@ public interface EntityManager {
     public Entity create( UUID importId, String entityType, Map<String, Object> properties )
             throws Exception;
 
+    /**
+     * Creates an entity of the specified type attached to the specified application.
+     * @param id
+     * @param properties
+     * @return
+     * @throws Exception
+     */
+    public Entity create(Id id, Map<String, Object> properties )
+        throws Exception;
     public void createApplicationCollection( String entityType ) throws Exception;
 
     public EntityRef getAlias( String aliasType, String alias ) throws Exception;
@@ -688,35 +689,9 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
-    /**
-     * Refresh the applications index -- use sparingly.
-     */
-    void refreshIndex();
-
-    /**
-     * Create the index, should ONLY ever be called the first time an application is created
-     */
-    void createIndex();
-
-    /**
-    * Create the index, should ONLY ever be called the first time an application is created
-    */
-    void deleteIndex();
-
-    public void init( final CassandraService cassandraService, final CounterUtils counterUtils, final MetricsFactory metricsFactory, final GraphManagerFactory graphManagerFactory, final EntityCollectionManagerFactory entityCollectionManagerFactory, final ManagerCache managerCache, UUID applicationId);
-
     /** For testing purposes */
     public void flushManagerCaches();
 
-    void reindexCollection(
-        EntityManagerFactory.ProgressObserver po, String collectionName, boolean reverse) throws Exception;
-
-    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
-
-    /**
-     * Get health status of application's index.
-     */
-    public Health getIndexHealth();
 
     public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
 }

@@ -32,6 +32,7 @@ import org.mockito.ArgumentCaptor;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
@@ -46,7 +47,7 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -140,7 +141,7 @@ public class NodeShardAllocationTest {
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
                         nodeShardCounterSerialization, timeService, graphFig, shardGroupCompaction );
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 
@@ -183,7 +184,7 @@ public class NodeShardAllocationTest {
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
                         nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 
@@ -231,7 +232,7 @@ public class NodeShardAllocationTest {
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
                         nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 
@@ -266,8 +267,8 @@ public class NodeShardAllocationTest {
          * Just use 2 edges.  It means that we won't generate a boatload of data and kill our test. We just want
          * to check that the one we want to return is correct
          */
-        SimpleMarkedEdge skipped = new SimpleMarkedEdge( nodeId, type, createId( subType ), 10000, false );
-        SimpleMarkedEdge keep = new SimpleMarkedEdge( nodeId, type, createId( subType ), 20000, false );
+        SimpleMarkedEdge skipped = new SimpleMarkedEdge( nodeId, type, IdGenerator.createId( subType ), 10000, false );
+        SimpleMarkedEdge keep = new SimpleMarkedEdge( nodeId, type, IdGenerator.createId( subType ), 20000, false );
 
         //allocate some extra to ensure we seek the right value
         List<MarkedEdge> edges = new ArrayList( numToIterate + 100 );
@@ -346,7 +347,7 @@ public class NodeShardAllocationTest {
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
                         nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 
@@ -365,9 +366,9 @@ public class NodeShardAllocationTest {
         final long shardCount = graphFig.getShardSize();
 
 
-        final SimpleMarkedEdge skippedEdge = new SimpleMarkedEdge( nodeId, type, createId( "subType" ), 10000l, false );
+        final SimpleMarkedEdge skippedEdge = new SimpleMarkedEdge( nodeId, type, IdGenerator.createId( "subType" ), 10000l, false );
         final SimpleMarkedEdge returnedEdge =
-                new SimpleMarkedEdge( nodeId, type, createId( "subType" ), 10005l, false );
+                new SimpleMarkedEdge( nodeId, type, IdGenerator.createId( "subType" ), 10005l, false );
 
         List<MarkedEdge> iteratedEdges = new ArrayList<>( ( int ) shardCount );
 
@@ -437,7 +438,7 @@ public class NodeShardAllocationTest {
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
                         nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 
@@ -467,7 +468,7 @@ public class NodeShardAllocationTest {
 
 
         final SimpleMarkedEdge returnedEdge =
-                new SimpleMarkedEdge( nodeId, type, createId( "subType" ), 10005l, false );
+                new SimpleMarkedEdge( nodeId, type, IdGenerator.createId( "subType" ), 10005l, false );
 
         final Iterator<MarkedEdge> edgeIterator = Collections.singleton( ( MarkedEdge ) returnedEdge ).iterator();
 
@@ -504,7 +505,7 @@ public class NodeShardAllocationTest {
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
                         nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 
@@ -644,7 +645,7 @@ public class NodeShardAllocationTest {
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
                         nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 

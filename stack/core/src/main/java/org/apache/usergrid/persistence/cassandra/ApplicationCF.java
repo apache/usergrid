@@ -27,17 +27,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 
 public enum ApplicationCF implements CFEnum {
 
-    /** This is where the entity objects are stored */
-    ENTITY_PROPERTIES( "Entity_Properties", "BytesType" ),
-
     /** each row models name:value pairs. {@see org.apache.usergrid.persistence.Schema} for the list of dictionary types */
     ENTITY_DICTIONARIES( "Entity_Dictionaries", "BytesType" ),
-
-    /**
-     * Rows that are full of UUIDs. Used when we want to have a row full of references to other entities. Mainly, this
-     * is for collections. Collections are represented by this CF.
-     */
-    ENTITY_ID_SETS( "Entity_Id_Sets", "UUIDType" ),
 
     /**
      * Typed vs. untyped dictionary. Dynamic entity dictionaries end up here. {@link
@@ -49,39 +40,11 @@ public enum ApplicationCF implements CFEnum {
                     "I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true)," +
                     "T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))" ),
 
-    /** No longer used? */
-    ENTITY_METADATA( "Entity_Metadata", "BytesType" ),
-
-    /** Contains all secondary indexes for entities */
-    ENTITY_INDEX( "Entity_Index",
-            "DynamicCompositeType(a=>AsciiType,b=>BytesType,i=>IntegerType,x=>LexicalUUIDType,l=>LongType," +
-                    "t=>TimeUUIDType,s=>UTF8Type,u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true)," +
-                    "I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true)," +
-                    "T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))" ),
-
-    /** Unique index for properties that must remain the same */
-    ENTITY_UNIQUE( "Entity_Unique", "UUIDType" ),
-
-    /** Contains all properties that have ever been indexed for an entity */
-    ENTITY_INDEX_ENTRIES( "Entity_Index_Entries",
-            "DynamicCompositeType(a=>AsciiType,b=>BytesType,i=>IntegerType,x=>LexicalUUIDType,l=>LongType," +
-                    "t=>TimeUUIDType,s=>UTF8Type,u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true)," +
-                    "I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true)," +
-                    "T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))" ),
-
-    /** All roles that exist within an application */
-    APPLICATION_ROLES( "Application_Roles", "BytesType" ),
-
     /** Application counters */
     APPLICATION_AGGREGATE_COUNTERS( "Application_Aggregate_Counters", "LongType", COUNTERTYPE.getClassName() ),
 
     /** Entity counters */
     ENTITY_COUNTERS( "Entity_Counters", "BytesType", COUNTERTYPE.getClassName() ),;
-    public final static String DEFAULT_DYNAMIC_COMPOSITE_ALIASES =
-            "(a=>AsciiType,b=>BytesType,i=>IntegerType,x=>LexicalUUIDType,l=>LongType,t=>TimeUUIDType,s=>UTF8Type," +
-                    "u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true)," +
-                    "I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true)," +
-                    "T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))";
 
     private final String cf;
     private final String comparator;

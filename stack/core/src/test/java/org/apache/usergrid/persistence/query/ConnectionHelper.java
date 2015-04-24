@@ -26,7 +26,7 @@ import java.util.Map;
 import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 
 /**
@@ -76,7 +76,7 @@ public class ConnectionHelper extends CollectionIoHelper {
     @Override
     public Results getResults( Query query ) throws Exception {
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
         query.setConnectionType( CONNECTION );
         query.setEntityType( "test" );
 

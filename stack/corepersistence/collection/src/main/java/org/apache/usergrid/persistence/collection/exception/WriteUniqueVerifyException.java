@@ -20,8 +20,8 @@ package org.apache.usergrid.persistence.collection.exception;
 
 import java.util.Map;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.field.Field;
 
 
@@ -31,8 +31,8 @@ import org.apache.usergrid.persistence.model.field.Field;
 public class WriteUniqueVerifyException extends CollectionRuntimeException {
     private Map<String, Field> violations;
 
-    
-    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope, Map<String, Field> violations ) {
+
+    public WriteUniqueVerifyException( MvccEntity entity, ApplicationScope scope, Map<String, Field> violations ) {
         super( entity, scope, "Error: one or more duplicate fields detected");
         this.violations = violations;
     }

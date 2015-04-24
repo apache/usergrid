@@ -25,7 +25,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;

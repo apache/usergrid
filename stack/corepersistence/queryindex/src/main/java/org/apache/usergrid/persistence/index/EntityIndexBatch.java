@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.index;/*
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -31,41 +31,46 @@ public interface EntityIndexBatch {
     /**
      * Create index for Entity
      *
-     * @param indexScope The scope for the index
+     * @param indexEdge  The edge to index the document into
      * @param entity     Entity to be indexed.
      */
-    public EntityIndexBatch index(final IndexScope indexScope, final Entity entity);
+    EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity );
 
     /**
      * Remove index of entity
      *
-     * @param scope  The scope for the entity
+     * @param searchEdge  The searchEdge for the entity
      * @param entity Entity to be removed from index.
      */
-    public EntityIndexBatch deindex(final IndexScope scope, final Entity entity);
+    EntityIndexBatch deindex( final SearchEdge searchEdge, final Entity entity );
 
     /**
      * Remove index of entity.
      *
-     * @param scope  The scope to use for removal
+     * @param searchEdge  The searchEdge to use for removal
      * @param result CandidateResult to be removed from index.
      */
-    public EntityIndexBatch deindex(final IndexScope scope, final CandidateResult result);
+    EntityIndexBatch deindex( final SearchEdge searchEdge, final CandidateResult result );
 
     /**
      * Remove index of entity.
      *
-     * @param scope   The scope to remove
+     * @param searchEdge   The searchEdge to remove
      * @param id      Id to be removed from index.
      * @param version Version to be removed from index.
      */
-    public EntityIndexBatch deindex(final IndexScope scope, final Id id, final UUID version);
+    EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version );
 
 
     /**
      * Execute the batch
      * @return future to guarantee execution
      */
-    public BetterFuture execute();
+    BetterFuture<IndexOperationMessage> execute();
 
+    /**
+     * Get the number of operations in the batch
+     * @return
+     */
+    int size();
 }

@@ -73,7 +73,7 @@ public class ImportJob extends OnlyOnceJob {
 
             // update import job record
             UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
-            EntityManager mgmtApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            EntityManager mgmtApp = emf.getEntityManager(emf.getManagementAppId());
             Import importEntity = mgmtApp.get(importId, Import.class);
             importEntity.setState(Import.State.FAILED);
             importEntity.setErrorMessage(t.getMessage());
@@ -104,7 +104,7 @@ public class ImportJob extends OnlyOnceJob {
     public void dead( final JobExecution execution ) throws Exception {
 
         // marks the job as failed as it will not be retried by the scheduler.
-        EntityManager rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId());
         Import importUG = importService.getImportEntity(execution);
         importUG.setErrorMessage("The Job has been tried maximum times but still failed");
         importUG.setState(Import.State.FAILED);

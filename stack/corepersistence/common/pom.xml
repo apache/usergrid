@@ -101,16 +101,23 @@
 
     <!-- RX java -->
 
+      <dependency>
+          <groupId>io.reactivex</groupId>
+          <artifactId>rxjava</artifactId>
+          <version>${rx.version}</version>
+      </dependency>
+
     <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
-      <version>${rx.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.rxjava</groupId>
+      <groupId>io.reactivex</groupId>
       <artifactId>rxjava-math</artifactId>
-      <version>${rx.version}</version>
+      <version>1.0.0</version>
     </dependency>
+
+      <dependency>
+          <groupId>io.reactivex</groupId>
+          <artifactId>rxjava-async-util</artifactId>
+          <version>0.21.0</version>
+      </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>

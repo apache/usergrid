@@ -33,10 +33,8 @@ import java.util.NoSuchElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
-
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ColumnList;
@@ -184,7 +182,13 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
                 keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKeySlice( rowKeys )
                         .withColumnRange( rangeBuilder.build() );
 
-        final Rows<R, C> result = HystrixCassandra.user( query ).getResult();
+        final Rows<R, C> result;
+        try {
+            result = query.execute().getResult();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to casandra", e );
+        }
 
 
         //now aggregate them together

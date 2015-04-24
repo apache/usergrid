@@ -18,9 +18,9 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.MvccEntity;
+
 import org.apache.usergrid.persistence.model.entity.Entity;
+
 
 
 public class EntityTooLargeException extends RuntimeException {
@@ -59,7 +59,7 @@ public class EntityTooLargeException extends RuntimeException {
 
     /**
      * Entity involved in operation.
-     * @return Entity or null if entity not instantiated yet in operation. 
+     * @return Entity or null if entity not instantiated yet in operation.
      */
     public Entity getEntity() {
         return entity;

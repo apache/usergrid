@@ -28,8 +28,8 @@ import java.util.UUID;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
@@ -63,7 +63,7 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // pick an arbitrary user, ensure it has 5 devices
         Results devices = em.getCollection( users.get( 10 ), "devices", null, 20, Level.IDS, false );
@@ -71,11 +71,9 @@ public class PathQueryIT extends AbstractCoreIT {
 
         int pageSize = 10; // shouldn't affect these tests
 
-        Query userQuery = new Query();
+        Query userQuery = Query.fromQL( "select * where index >= 2 AND index <= 13" );
         userQuery.setCollection( "users" );
         userQuery.setLimit( pageSize );
-        userQuery.addFilter( "index >= 2" );
-        userQuery.addFilter( "index <= 13" );
         int expectedUserQuerySize = 12;
 
         // query the users, ignoring page boundaries
@@ -89,10 +87,9 @@ public class PathQueryIT extends AbstractCoreIT {
         assertEquals( count, expectedUserQuerySize + 2 );
 
         // query devices as a sub-query of the users, ignoring page boundaries
-        Query deviceQuery = new Query();
+        Query deviceQuery = Query.fromQL( "select * where index >= 2 " );
         deviceQuery.setCollection( "devices" );
         deviceQuery.setLimit( pageSize );
-        deviceQuery.addFilter( "index >= 2" );
         int expectedDeviceQuerySize = 3;
 
         PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>(
@@ -135,7 +132,7 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // pick an arbitrary group, ensure it has 7 users
         Results ru = em.getCollection( groups.get( 2 ), "users", null, 20, Level.IDS, false );
@@ -152,7 +149,7 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // pick an arbitrary user, ensure it has 7 devices
         Results rd = em.getCollection( users.get( 6 ), "devices", null, 20, Level.IDS, false );
@@ -160,23 +157,19 @@ public class PathQueryIT extends AbstractCoreIT {
 
         int pageSize = 3; // ensure we're crossing page boundaries
 
-        Query groupQuery = new Query();
+        Query groupQuery = Query.fromQL( "select * where index <= 7 " );
         groupQuery.setCollection( "groups" );
         groupQuery.setLimit( pageSize );
-        groupQuery.addFilter( "index <= 7" );
         int expectedGroupQuerySize = 4;
 
-        Query userQuery = new Query();
+        Query userQuery = Query.fromQL( "select * where index >= 2 AND index <= 6" );
         userQuery.setCollection( "users" );
         userQuery.setLimit( pageSize );
-        userQuery.addFilter( "index >= 2" );
-        userQuery.addFilter( "index <= 6" );
         int expectedUserQuerySize = 5;
 
-        Query deviceQuery = new Query();
+        Query deviceQuery = Query.fromQL( "select * where index >= 4 " );
         deviceQuery.setCollection( "devices" );
         deviceQuery.setLimit( pageSize );
-        deviceQuery.addFilter( "index >= 4" );
         int expectedDeviceQuerySize = 3;
 
 

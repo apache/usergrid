@@ -53,6 +53,8 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
 
 
         try {
+            subscriber.onStart();
+
             //get our iterator and push data to the observer
             final Iterator<T> itr = getIterator();
 
