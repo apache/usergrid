@@ -80,22 +80,19 @@ public interface FilterFactory {
     /**
      * Generate a new instance of the command with the specified parameters
      */
-    QueryCollectionElasticSearchCollectorFilter queryCollectionElasticSearchCollector( final String collectionName, final String query,
-                                                                                       final Optional<String> cursor, final int limit );
+    QueryCollectionElasticSearchCollectorFilter queryCollectionElasticSearchCollector( final String collectionName, final String query);
 
 
     /**
      * Generate a new instance of the command with the specified parameters
      */
-    QueryConnectionElasticSearchCollectorFilter queryConnectionElasticSearchCollector( final String connectionName,final String query,
-                                                                                       final Optional<String> cursor, final int limit );
+    QueryConnectionElasticSearchCollectorFilter queryConnectionElasticSearchCollector( final String connectionName,final String query);
 
 
     /**
      * Generate a new instance of the command with the specified parameters
      */
-    QueryConnectionElasticSearchCollectorFilter queryConnectionElasticSearchCollector( final String connectionName, final String connectionEntityType, final String query,
-                                                                                       final Optional<String> cursor, final int limit );
+    QueryConnectionElasticSearchCollectorFilter queryConnectionElasticSearchCollector( final String connectionName, final String connectionEntityType, final String query );
 
 
     /**
