@@ -32,10 +32,10 @@ import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.index.AsyncIndexService;
 import org.apache.usergrid.corepersistence.results.CollectionGraphQueryExecutor;
-import org.apache.usergrid.corepersistence.command.read.elasticsearch.impl.CollectionResultsLoaderFactoryImpl;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl.CollectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ConnectionGraphQueryExecutor;
-import org.apache.usergrid.corepersistence.command.read.elasticsearch.impl.ConnectionResultsLoaderFactoryImpl;
-import org.apache.usergrid.corepersistence.command.read.elasticsearch.impl.ElasticSearchQueryExecutor;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl.ConnectionResultsLoaderFactoryImpl;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl.ElasticSearchQueryExecutor;
 import org.apache.usergrid.corepersistence.results.QueryExecutor;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
