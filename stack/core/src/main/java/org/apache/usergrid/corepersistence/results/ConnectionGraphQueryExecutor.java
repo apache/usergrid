@@ -20,8 +20,8 @@
 package org.apache.usergrid.corepersistence.results;
 
 
-import org.apache.usergrid.corepersistence.command.CommandBuilder;
-import org.apache.usergrid.corepersistence.command.read.graph.ReadGraphConnectionCommand;
+import org.apache.usergrid.corepersistence.pipeline.DataPipeline;
+import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphConnectionFilter;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -51,8 +51,8 @@ public class ConnectionGraphQueryExecutor extends AbstractGraphQueryExecutor {
 
 
     @Override
-    protected void addTraverseCommand( final CommandBuilder commandBuilder ) {
+    protected void addTraverseCommand( final DataPipeline dataPipeline ) {
      //set the traverse command from the source Id to the connect name
-        commandBuilder.withTraverseCommand( new ReadGraphConnectionCommand( graphManagerFactory, connectionName ) );
+        dataPipeline.withTraverseCommand( new ReadGraphConnectionFilter( graphManagerFactory, connectionName ) );
     }
 }

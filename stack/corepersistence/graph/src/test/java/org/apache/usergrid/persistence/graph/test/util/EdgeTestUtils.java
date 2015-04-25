@@ -37,6 +37,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
  * Simple class for edge testing generation
@@ -190,7 +192,8 @@ public class EdgeTestUtils {
      */
     public static SearchByEdge createGetByEdge( final Id sourceId, final String type, final Id targetId,
                                                 final long maxVersion, final Edge last ) {
-        return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, SearchByEdgeType.Order.DESCENDING, last );
+        return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional
+            .of( last ) );
     }
 
 //

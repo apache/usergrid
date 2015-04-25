@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.apache.usergrid.corepersistence.command.CommandBuilder;
-import org.apache.usergrid.corepersistence.command.read.entity.EntityLoadCollector;
+import org.apache.usergrid.corepersistence.pipeline.DataPipeline;
+import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityLoadCollectorFilter;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -82,14 +82,14 @@ public abstract class AbstractGraphQueryExecutor implements QueryExecutor {
             //assign them to an iterator.  this now uses an internal buffer with backpressure, so we won't load all
             // results
             //set up our command builder
-            final CommandBuilder commandBuilder = new CommandBuilder( applicationScope, sourceId, requestCursor, limit );
+            final DataPipeline dataPipeline = new DataPipeline( applicationScope, sourceId, requestCursor, limit );
 
 
-            addTraverseCommand( commandBuilder );
+            addTraverseCommand( dataPipeline );
 
             //construct our results to be observed later. This is a cold observable
             final Observable<Results> resultsObservable =
-                commandBuilder.build( new EntityLoadCollector( entityCollectionManagerFactory, applicationScope ) );
+                dataPipeline.build( new EntityLoadCollectorFilter( entityCollectionManagerFactory, applicationScope ) );
 
             this.observableIterator = resultsObservable.toBlocking().getIterator();
 
@@ -129,5 +129,5 @@ public abstract class AbstractGraphQueryExecutor implements QueryExecutor {
     /**
      * Add the traverse command to the graph
      */
-    protected abstract void addTraverseCommand( final CommandBuilder commandBuilder );
+    protected abstract void addTraverseCommand( final DataPipeline dataPipeline );
 }
