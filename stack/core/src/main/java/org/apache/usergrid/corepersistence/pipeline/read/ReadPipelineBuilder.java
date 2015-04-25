@@ -20,12 +20,8 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.google.common.base.Optional;
 
 import rx.Observable;
 
@@ -36,6 +32,20 @@ import rx.Observable;
  * Results are added by invoking execute.
  */
 public interface ReadPipelineBuilder {
+
+
+    /**
+     * Set the cursor
+     * @param cursor
+     */
+    ReadPipelineBuilder withCursor(final String cursor);
+
+    /**
+     * Set the limit of our page sizes
+     * @param limit
+     * @return
+     */
+    ReadPipelineBuilder withLimit(final int limit);
 
     /**
      * An operation to bridge 2.0-> 1.0.  Should be removed when everyone uses the pipeline
@@ -58,8 +68,7 @@ public interface ReadPipelineBuilder {
     /**
      * Get all entities with a query
      */
-    ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String query, final int limit,
-                                 final Optional<String> cursor );
+    ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String query);
 
     /**
      * Get an entity via the connection name and entity Id
@@ -79,15 +88,13 @@ public interface ReadPipelineBuilder {
     /**
      * Get all entities in a connection with a query
      */
-    ReadPipelineBuilder connectionWithQuery( final String connectionName, final String query, final int limit,
-                              final Optional<String> cursor );
+    ReadPipelineBuilder connectionWithQuery( final String connectionName, final String query );
 
 
     /**
      * Get all entities in a connection with a query
      */
-    ReadPipelineBuilder connectionWithQuery( final String connectionName, final String entityType, final String query, final int limit,
-                              final Optional<String> cursor );
+    ReadPipelineBuilder connectionWithQuery( final String connectionName, final String entityType, final String query);
 
 
 
@@ -98,5 +105,5 @@ public interface ReadPipelineBuilder {
      * Execute final construction of the pipeline and return the results
      * @return
      */
-    Observable<Results> execute();
+    Observable<Results> build();
 }

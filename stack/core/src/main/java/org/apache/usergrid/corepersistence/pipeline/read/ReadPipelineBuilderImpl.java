@@ -20,11 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import java.util.Collections;
-import java.util.UUID;
-
 import org.apache.usergrid.corepersistence.pipeline.DataPipeline;
-import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityLoadCollectorFilter;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -48,10 +44,13 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     private final DataPipeline pipeline;
 
     /**
-     * Our pointer to our collect filter. Set or cleared with each operation that's performed so the correct
-     * results are rendered
+     * Our pointer to our collect filter. Set or cleared with each operation that's performed so the correct results are
+     * rendered
      */
     private CollectorFilter<Results> collectorFilter;
+
+    private Optional<String> cursor;
+    private Optional<Integer> limit;
 
 
     @Inject
@@ -59,6 +58,27 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
                                     @Assisted final ApplicationScope applicationScope ) {
         this.filterFactory = filterFactory;
         this.pipeline = new DataPipeline( applicationScope );
+        this.cursor = Optional.absent();
+        //set the default limit
+        this.limit = Optional.absent();
+    }
+
+
+    @Override
+    public ReadPipelineBuilder withCursor( final String cursor ) {
+        this.cursor = Optional.fromNullable( cursor );
+        pipeline.setCursor( this.cursor );
+        return this;
+    }
+
+
+    @Override
+    public ReadPipelineBuilder withLimit( final int limit ) {
+        Preconditions.checkArgument( limit > 0, "You must set the limit > 0" );
+        this. limit = Optional.of( limit );
+        //set the default value
+        pipeline.setLimit( this.limit.or( 10 ) );
+        return this;
     }
 
 
@@ -97,11 +117,10 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
 
     @Override
-    public ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String query, final int limit,
-                                                       final Optional<String> cursor ) {
+    public ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String query ) {
 
         //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
-        collectorFilter = filterFactory.queryCollectionElasticSearchCollector( collectionName, query, cursor, limit );
+        collectorFilter = filterFactory.queryCollectionElasticSearchCollector( collectionName, query );
         return this;
     }
 
@@ -129,25 +148,23 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     @Override
     public ReadPipelineBuilder getConnection( final String connectionName, final String entityType ) {
         pipeline.withTraverseCommand( filterFactory.readGraphConnectionCommand( connectionName, entityType ) );
-              setEntityLoaderFilter();
+        setEntityLoaderFilter();
 
         return this;
     }
+
 
     /**
      *
      * @param connectionName
      * @param query
-     * @param limit
-     * @param cursor
      * @return
      */
     @Override
-    public ReadPipelineBuilder connectionWithQuery( final String connectionName, final String query, final int limit,
-                                                    final Optional<String> cursor ) {
+    public ReadPipelineBuilder connectionWithQuery( final String connectionName, final String query ) {
 
-         //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
-        collectorFilter = filterFactory.queryConnectionElasticSearchCollector( connectionName, query, cursor, limit );
+        //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
+        collectorFilter = filterFactory.queryConnectionElasticSearchCollector( connectionName, query );
 
         return this;
     }
@@ -155,26 +172,26 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
     @Override
     public ReadPipelineBuilder connectionWithQuery( final String connectionName, final String entityType,
-                                                    final String query, final int limit,
-                                                    final Optional<String> cursor ) {
+                                                    final String query ) {
 
-          //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
-        collectorFilter = filterFactory.queryConnectionElasticSearchCollector( connectionName, entityType, query, cursor, limit );
+        //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
+        collectorFilter =
+            filterFactory.queryConnectionElasticSearchCollector( connectionName, entityType, query);
         return this;
     }
 
 
-
-
     @Override
-    public Observable<Results> execute() {
-        Preconditions.checkNotNull(collectorFilter, "You have not specified an operation that creates a collection filter.  This is required for loading results");
+    public Observable<Results> build() {
+        Preconditions.checkNotNull( collectorFilter,
+            "You have not specified an operation that creates a collection filter.  This is required for loading "
+                + "results" );
 
         return pipeline.build( collectorFilter );
     }
 
-    private void setEntityLoaderFilter(){
+
+    private void setEntityLoaderFilter() {
         collectorFilter = filterFactory.entityLoadCollector();
     }
-
 }
