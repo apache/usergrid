@@ -6,47 +6,34 @@ Local storage configuration
 ---
 
 By default assets are stored in the temporary folder /tmp/usergrid
-to change this
-
-
-This is an alternative to the S3BinaryStore class in Usergrid.
-It has several advantages :
- - upload files up to 50GB
- - support of V4 signing process
- - lower network latency when a regionName is defined
-
-To use it add following dependency in stack/pom.xml
-
+This can be changed by editing this file /stack/rest/src/main/resources/usergrid-rest-context.xml and replacing {usergrid.temp.files} by the wanted destination
 ```xml
-      <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-s3</artifactId>
-        <version>1.9.31</version>
-      </dependency>
+<bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
+  <property name="reposLocation" value="${usergrid.temp.files}"/>
+</bean>
 ```
-and stack/services/pom.xml
-```xml
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-s3</artifactId>
-    </dependency>
-```
-then add the AwsSdkS3BinaryStore.java file in the /stack/services/src/main/java/org/apache/usergrid/services/assets/data/ folder.
 
-finaly define the new classpath in the /stack/rest/src/main/resources/usergrid-rest-context.xml file
+AwS S3 configuration
+---
+
+To use your AWS S3 storage you need to change the binaryStore classpath and add several constructor arguments in /stack/rest/src/main/resources/usergrid-rest-context.xml
+
+Some examples :
 ```xml
-    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
-        <constructor-arg name="accessId" value="x" />
-        <constructor-arg name="secretKey" value="xx" />
-        <constructor-arg name="bucketName" value="x" />
-        <constructor-arg name="regionName" value="eu-central-1" />
-    </bean>
+<bean id="binaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
+  <constructor-arg name="accessId" value="x" />
+  <constructor-arg name="secretKey" value="xx" />
+  <constructor-arg name="bucketName" value="x" />
+  <constructor-arg name="regionName" value="eu-central-1" />
+</bean>
 ```
 the regionName field is not mandatory, this code is also valid
 ```xml
-    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
-        <constructor-arg name="accessId" value="x" />
-        <constructor-arg name="secretKey" value="xx" />
-        <constructor-arg name="bucketName" value="x" />
-    </bean>
+<bean id="binaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
+  <constructor-arg name="accessId" value="x" />
+  <constructor-arg name="secretKey" value="xx" />
+  <constructor-arg name="bucketName" value="x" />
+</bean>
 ```
+
+The filesize is limited to 50GB but you need to keep in mind that the file has to be stored on the hard drive before being sended to Amazon.
