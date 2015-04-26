@@ -156,7 +156,7 @@
     </developer>
   </developers>
 
-  <modules>ht
+  <modules>
     <module>java-sdk-old</module>
     <module>config</module>
     <module>core</module>
