@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.index;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -126,6 +127,25 @@ public class IndexServiceImpl implements IndexService {
     }
 
 
+    @Override
+    public Observable<IndexOperationMessage> indexEdge( final ApplicationScope applicationScope, final Entity entity,
+                                                        final Edge edge ) {
+        throw new NotImplementedException( "Implement me" );
+    }
+
+
+    @Override
+    public Observable<IndexOperationMessage> deleteIndexEdge( final ApplicationScope applicationScope,
+                                                              final Edge edge ) {
+        throw new NotImplementedException( "Implement me" );
+    }
+
+
+    @Override
+    public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
+                                                                  final Id entityId ) {
+        throw new NotImplementedException( "Implement me" );
+    }
 
 
     /**
