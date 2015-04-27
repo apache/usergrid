@@ -26,7 +26,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -323,8 +323,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     public Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync() {
 
         refreshIndexMeter.mark();
-        BetterFuture future = producer.put(new IndexOperationMessage());
-        future.get();
+        Observable future = producer.put(new IndexOperationMessage());
+        future.toBlocking().last();
         return indexRefreshCommand.execute();
     }
 

@@ -33,7 +33,7 @@ import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexFig;
 
@@ -108,14 +108,14 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     }
 
 
-    public BetterFuture put( IndexOperationMessage message ) {
-        Preconditions.checkNotNull( message, "Message cannot be null" );
+    public Observable put( IndexOperationMessage message ) {
+        Preconditions.checkNotNull(message, "Message cannot be null");
         indexSizeCounter.inc( message.getDeIndexRequests().size() );
         indexSizeCounter.inc( message.getIndexRequests().size() );
         Timer.Context time = offerTimer.time();
         bufferProducer.send( message );
         time.stop();
-        return message.getFuture();
+        return message.observable();
     }
 
 
