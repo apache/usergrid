@@ -73,12 +73,8 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
         final Observable<IndexOperationMessage> edgeObservable = indexService.indexEntity( applicationScope, entity );
 
-        //start it in the background on an i/o thread
-        if(!resolveSynchronously){
-            edgeObservable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
-        }else {
-            edgeObservable.toBlocking().last();
-        }
+
+        run( edgeObservable );
     }
 
 
@@ -112,5 +108,14 @@ public class InMemoryAsyncEventService implements AsyncEventService {
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) )
             .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+    }
+
+    public void run( Observable<?> observable ){
+         //start it in the background on an i/o thread
+        if(!resolveSynchronously){
+            observable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+        }else {
+            observable.toBlocking().last();
+        }
     }
 }
