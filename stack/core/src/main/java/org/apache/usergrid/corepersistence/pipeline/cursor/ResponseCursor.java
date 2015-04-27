@@ -21,8 +21,15 @@ package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
 import java.io.Serializable;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.Base64Variant;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
 /**
@@ -31,26 +38,67 @@ import java.util.Map;
 public class ResponseCursor {
 
 
+    private static final ObjectMapper MAPPER = CursorSerializerUtil.getMapper();
+    private static final Base64Variant VARIANT = CursorSerializerUtil.getBase64();
 
     /**
      * We use a map b/c some indexes might be skipped
      */
-    private Map<Integer, ? super Serializable> cursors = new HashMap<>();
+    private Map<Integer, CursorEntry<?>> cursors = new HashMap<>();
+
 
     /**
      * Set the possible cursor value into the index. DOES NOT parse the cursor.  This is intentional for performance
      */
-    public <T extends Serializable> void setCursor( final int id, final T cursor ) {
-        cursors.put( id, cursor );
+    public <T extends Serializable> void setCursor( final int id, final T cursor,
+                                                    final CursorSerializer<T> serializer ) {
+
+        final CursorEntry<T> newEntry = new CursorEntry<>( cursor, serializer );
+        cursors.put( id, newEntry );
     }
 
 
-    private void ensureCapacity() {
-
-    }
-
-
+    /**
+     * now we're done, encode as a string
+     */
     public String encodeAsString() {
-        return null;
+        try {
+            final ObjectNode map = MAPPER.createObjectNode();
+
+            for ( Map.Entry<Integer, CursorEntry<?>> entry : cursors.entrySet() ) {
+
+                final CursorEntry cursorEntry = entry.getValue();
+
+                final JsonNode serialized = cursorEntry.serializer.toNode( MAPPER, cursorEntry.cursor );
+
+                map.put( entry.getKey().toString(), serialized );
+            }
+
+
+            final byte[] output = MAPPER.writeValueAsBytes(map);
+
+            //generate a base64 url save string
+            return Base64.getUrlEncoder().encodeToString( output );
+//            return MAPPER.writer( VARIANT ).writeValueAsString( map );
+
+        }
+        catch ( JsonProcessingException e ) {
+            throw new CursorParseException( "Unable to serialize cursor", e );
+        }
+    }
+
+
+    /**
+     * Interal pointer to the cursor and it's serialzed value
+     */
+    private static final class CursorEntry<T> {
+        private final T cursor;
+        private final CursorSerializer<T> serializer;
+
+
+        private CursorEntry( final T cursor, final CursorSerializer<T> serializer ) {
+            this.cursor = cursor;
+            this.serializer = serializer;
+        }
     }
 }

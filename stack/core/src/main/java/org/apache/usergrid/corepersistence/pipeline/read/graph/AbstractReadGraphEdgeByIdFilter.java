@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
+import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
+import org.apache.usergrid.corepersistence.pipeline.cursor.NoCursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.TraverseFilter;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -54,9 +56,8 @@ public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractFilter<Id,
 
 
     @Override
-    protected Class<Id> getCursorClass() {
-        //no op
-        return null;
+    protected CursorSerializer<Id> getCursorSerializer() {
+        return NoCursorSerializer.create();
     }
 
 

@@ -20,9 +20,16 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import java.io.Serializable;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.fasterxml.jackson.core.Base64Variant;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 
 /**
@@ -30,16 +37,70 @@ import com.google.common.base.Optional;
  */
 public class RequestCursor {
 
-    public RequestCursor(final Optional<String> cursor){
+    /**
+     * Aritrary number, just meant to keep us from having a DOS issue
+     */
+    private static final int MAX_SIZE = 1024;
 
+    private static final int MAX_CURSOR_COUNT = 100;
+
+    private static final ObjectMapper MAPPER = CursorSerializerUtil.getMapper();
+    private static final Base64Variant VARIANT = CursorSerializerUtil.getBase64();
+
+    private final Map<Integer, JsonNode> parsedCursor;
+
+
+    public RequestCursor( final Optional<String> cursor ) {
+        if ( cursor.isPresent() ) {
+            parsedCursor = fromCursor( cursor.get() );
+        }
+        else {
+            parsedCursor = Collections.EMPTY_MAP;
+        }
     }
 
 
     /**
      * Get the cursor with the specified id
      */
-    public <T extends Serializable> T getCursor( final int id, final Class<T> cursorType ) {
-        return null;
+    public <T> T getCursor( final int id, final CursorSerializer<T> serializer ) {
+
+        final JsonNode node = parsedCursor.get( id );
+
+        return serializer.fromJsonNode( node, MAPPER );
     }
 
+
+    /**
+     * Deserialize from the cursor as json nodes
+     */
+    private Map<Integer, JsonNode> fromCursor( final String cursor ) throws CursorParseException {
+        try {
+
+
+            Preconditions.checkArgument( cursor.length() <= MAX_SIZE, "Your cursor must be less than " + MAX_SIZE + " chars in length");
+
+            final byte[] data = Base64.getUrlDecoder().decode( cursor );
+
+            JsonNode jsonNode = MAPPER.readTree( data );
+
+
+            Preconditions
+                .checkArgument( jsonNode.size() <= MAX_CURSOR_COUNT, " You cannot have more than " + MAX_CURSOR_COUNT + " cursors" );
+
+
+            Map<Integer, JsonNode> cursors = new HashMap<>();
+
+            final Iterable<Map.Entry<String, JsonNode>> iterable = () -> jsonNode.fields();
+
+            for ( final Map.Entry<String, JsonNode> node : iterable ) {
+                cursors.put( Integer.parseInt( node.getKey() ), node.getValue() );
+            }
+
+            return cursors;
+        }
+        catch ( Exception e ) {
+            throw new CursorParseException( "Unable to serialize cursor", e );
+        }
+    }
 }

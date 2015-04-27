@@ -20,23 +20,30 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.Base64Variant;
+import com.fasterxml.jackson.core.Base64Variants;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 
 /**
- * Interface for cursor serialization
+ * A utility to serialize objects to/from cursors
  */
-public interface CursorSerializer<T> {
+public class CursorSerializerUtil {
 
-    /**
-     * convert from a JsonNode to a cursor of type T
-     */
-    T fromJsonNode( final JsonNode node, final ObjectMapper objectMapper );
+    private static final SmileFactory SMILE_FACTORY = new SmileFactory();
+
+    private static final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
+
+    private static final Base64Variant VARIANT = Base64Variants.MODIFIED_FOR_URL;
 
 
-    /**
-     * Convert the cursor to a jsonNode
-     */
-    JsonNode toNode( final ObjectMapper objectMapper, final T value );
+    public static ObjectMapper getMapper() {
+        return MAPPER;
+    }
+
+
+    public static Base64Variant getBase64() {
+        return VARIANT;
+    }
 }

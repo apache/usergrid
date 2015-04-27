@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
 
 
+import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.CollectorFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl.ElasticSearchQueryExecutor;
@@ -109,8 +110,8 @@ public abstract class AbstractQueryElasticSearchCollectorFilter extends Abstract
 
 
     @Override
-    protected Class<Integer> getCursorClass() {
-        return Integer.class;
+    protected CursorSerializer<Integer> getCursorSerializer() {
+        return ElasticsearchCursorSerializer.INSTANCE;
     }
 
 

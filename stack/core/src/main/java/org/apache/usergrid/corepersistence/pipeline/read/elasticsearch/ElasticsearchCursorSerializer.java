@@ -17,26 +17,26 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.cursor;
+package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 
 
 /**
- * Interface for cursor serialization
+ * ElasticSearch cursor serializer
  */
-public interface CursorSerializer<T> {
-
-    /**
-     * convert from a JsonNode to a cursor of type T
-     */
-    T fromJsonNode( final JsonNode node, final ObjectMapper objectMapper );
+public class ElasticsearchCursorSerializer extends AbstractCursorSerializer<Integer> {
 
 
-    /**
-     * Convert the cursor to a jsonNode
-     */
-    JsonNode toNode( final ObjectMapper objectMapper, final T value );
+    public static final ElasticsearchCursorSerializer INSTANCE = new ElasticsearchCursorSerializer();
+
+    @Override
+    protected Class<Integer> getType() {
+        return Integer.class;
+    }
+
+
 }
