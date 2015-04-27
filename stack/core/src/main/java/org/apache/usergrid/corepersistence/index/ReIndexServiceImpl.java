@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
@@ -63,14 +64,14 @@ public class ReIndexServiceImpl implements ReIndexService {
     private final IndexProcessorFig indexProcessorFig;
     private final RxTaskScheduler rxTaskScheduler;
     private final MapManager mapManager;
-    private final AsyncIndexService indexService;
+    private final AsyncEventService indexService;
 
 
     @Inject
     public ReIndexServiceImpl( final AllEntityIdsObservable allEntityIdsObservable,
                                final MapManagerFactory mapManagerFactory,
                                final AllApplicationsObservable allApplicationsObservable, final IndexProcessorFig indexProcessorFig,
-                               final RxTaskScheduler rxTaskScheduler, final AsyncIndexService indexService ) {
+                               final RxTaskScheduler rxTaskScheduler, final AsyncEventService indexService ) {
         this.allEntityIdsObservable = allEntityIdsObservable;
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;

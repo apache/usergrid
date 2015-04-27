@@ -17,9 +17,11 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -34,7 +36,7 @@ import com.google.inject.Singleton;
  * A provider to allow users to configure their queue impl via properties
  */
 @Singleton
-public class AsyncIndexProvider implements Provider<AsyncIndexService> {
+public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
     private final IndexProcessorFig indexProcessorFig;
 
@@ -44,7 +46,7 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
-    private AsyncIndexService asyncIndexService;
+    private AsyncEventService asyncEventService;
 
 
     @Inject
@@ -63,27 +65,27 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
 
     @Override
     @Singleton
-    public AsyncIndexService get() {
-        if ( asyncIndexService == null ) {
-            asyncIndexService = getIndexService();
+    public AsyncEventService get() {
+        if ( asyncEventService == null ) {
+            asyncEventService = getIndexService();
         }
 
 
-        return asyncIndexService;
+        return asyncEventService;
     }
 
 
-    private AsyncIndexService getIndexService() {
+    private AsyncEventService getIndexService() {
         final String value = indexProcessorFig.getQueueImplementation();
 
         final Implementations impl = Implementations.valueOf( value );
 
         switch ( impl ) {
             case LOCAL:
-                return new InMemoryAsyncIndexService( indexService, rxTaskScheduler,
+                return new InMemoryAsyncEventService( indexService, rxTaskScheduler,
                     entityCollectionManagerFactory, indexProcessorFig.resolveSynchronously());
             case SQS:
-                return new SQSAsyncIndexService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
+                return new SQSAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
                     entityCollectionManagerFactory, rxTaskScheduler );
             default:
                 throw new IllegalArgumentException( "Configuration value of " + getErrorValues() + " are allowed" );

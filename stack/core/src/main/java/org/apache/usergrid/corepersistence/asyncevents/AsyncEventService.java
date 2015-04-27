@@ -17,17 +17,20 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import org.apache.usergrid.corepersistence.index.ReIndexAction;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * Low level queue service for indexing entities
+ * Low level queue service for events in the entity.  These events are fire and forget, and will always be asynchronous
  */
-public interface AsyncIndexService extends ReIndexAction {
+public interface AsyncEventService extends ReIndexAction {
 
 
     /**
@@ -35,8 +38,34 @@ public interface AsyncIndexService extends ReIndexAction {
      * We will return a distributed future.  For SQS impls, this will return immediately, and the result will not be available.
      * After SQS is removed, the tests should be enhanced to ensure that we're processing our queues correctly.
      * @param applicationScope
-     * @param entity The entity to index
+     * @param entity The entity to index.  Should be fired when an entity is updated
      */
     void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity);
+
+
+    /**
+     * Fired when a new edge is added to an entity. Such as initial entity creation, adding to a collection, or creating a connection
+     *
+     * @param applicationScope
+     * @param entity
+     * @param newEdge
+     */
+    void queueNewEdge(final ApplicationScope applicationScope, final Entity entity, final Edge newEdge);
+
+    /**
+     * Queue the deletion of an edge
+     * @param applicationScope
+     * @param edge
+     */
+    void queueDeleteEdge(final ApplicationScope applicationScope, final Edge edge);
+
+    /**
+     * The entity has been deleted, queue it's cleanup
+     * @param applicationScope
+     * @param entityId
+     */
+    void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId);
+
+
 
 }

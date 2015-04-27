@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import java.io.IOException;
@@ -28,6 +28,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
@@ -35,8 +38,10 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueMessage;
@@ -56,10 +61,10 @@ import rx.schedulers.Schedulers;
 
 
 @Singleton
-public class SQSAsyncIndexService implements AsyncIndexService {
+public class SQSAsyncEventService implements AsyncEventService {
 
 
-    private static final Logger log = LoggerFactory.getLogger( SQSAsyncIndexService.class );
+    private static final Logger log = LoggerFactory.getLogger( SQSAsyncEventService.class );
 
     /**
      * Set our TTL to 1 month.  This is high, but in the event of a bug, we want these entries to get removed
@@ -93,8 +98,9 @@ public class SQSAsyncIndexService implements AsyncIndexService {
 
 
     @Inject
-    public SQSAsyncIndexService( final QueueManagerFactory queueManagerFactory, final IndexProcessorFig indexProcessorFig,
-                                 final MetricsFactory metricsFactory, final IndexService indexService,
+    public SQSAsyncEventService( final QueueManagerFactory queueManagerFactory,
+                                 final IndexProcessorFig indexProcessorFig, final MetricsFactory metricsFactory,
+                                 final IndexService indexService,
                                  final EntityCollectionManagerFactory entityCollectionManagerFactory,
                                  final RxTaskScheduler rxTaskScheduler ) {
 
@@ -106,14 +112,14 @@ public class SQSAsyncIndexService implements AsyncIndexService {
         this.queue = queueManagerFactory.getQueueManager( queueScope );
         this.indexProcessorFig = indexProcessorFig;
 
-        this.writeTimer = metricsFactory.getTimer( SQSAsyncIndexService.class, "write" );
-        this.readTimer = metricsFactory.getTimer( SQSAsyncIndexService.class, "read" );
-        this.messageProcessingTimer = metricsFactory.getTimer( SQSAsyncIndexService.class, "message.processing" );
-        this.indexErrorCounter = metricsFactory.getCounter( SQSAsyncIndexService.class, "error" );
+        this.writeTimer = metricsFactory.getTimer( SQSAsyncEventService.class, "write" );
+        this.readTimer = metricsFactory.getTimer( SQSAsyncEventService.class, "read" );
+        this.messageProcessingTimer = metricsFactory.getTimer( SQSAsyncEventService.class, "message.processing" );
+        this.indexErrorCounter = metricsFactory.getCounter( SQSAsyncEventService.class, "error" );
 
 
         //wire up the gauge of inflight messages
-        metricsFactory.addGauge( SQSAsyncIndexService.class, "inflight.meter", new Gauge<Long>() {
+        metricsFactory.addGauge( SQSAsyncEventService.class, "inflight.meter", new Gauge<Long>() {
             @Override
             public Long getValue() {
                 return inFlight.longValue();
@@ -193,6 +199,24 @@ public class SQSAsyncIndexService implements AsyncIndexService {
 
         //send it to SQS  for indexing
         index( entityIdScope );
+    }
+
+
+    @Override
+    public void queueNewEdge( final ApplicationScope applicationScope, final Entity entity, final Edge newEdge ) {
+       throw new NotImplementedException( "Implement me" );
+    }
+
+
+    @Override
+    public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
+        throw new NotImplementedException( "Implement me" );
+    }
+
+
+    @Override
+    public void queueEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
+        throw new NotImplementedException( "Implement me" );
     }
 
 

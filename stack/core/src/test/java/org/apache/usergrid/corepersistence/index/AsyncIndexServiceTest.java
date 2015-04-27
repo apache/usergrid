@@ -28,13 +28,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.corepersistence.TestIndexModule;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
@@ -43,7 +41,6 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
@@ -53,7 +50,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
 
@@ -89,18 +85,18 @@ public abstract class AsyncIndexServiceTest {
     public EntityIndexFactory entityIndexFactory;
 
 
-    private AsyncIndexService asyncIndexService;
+    private AsyncEventService asyncEventService;
 
 
     /**
      * Get the async index service
      */
-    protected abstract AsyncIndexService getAsyncIndexService();
+    protected abstract AsyncEventService getAsyncEventService();
 
 
     @Before
     public void setup() {
-        asyncIndexService = getAsyncIndexService();
+        asyncEventService = getAsyncEventService();
     }
 
 
@@ -141,7 +137,7 @@ public abstract class AsyncIndexServiceTest {
         }, 10 ).toBlocking().last();
 
 
-        asyncIndexService.queueEntityIndexUpdate( applicationScope, testEntity );
+        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity );
 
 
         //        Thread.sleep( 1000000000000l );
