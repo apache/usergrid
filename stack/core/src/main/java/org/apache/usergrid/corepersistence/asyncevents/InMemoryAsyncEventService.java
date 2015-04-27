@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.index.IndexService;
-import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
@@ -63,13 +62,13 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
 
     @Override
-    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity) {
+    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity ) {
 
         //process the entity immediately
         //only process the same version, otherwise ignore
 
 
-        log.debug( "Indexing entity {} in app scope {} ", entity, applicationScope );
+        log.debug( "Indexing  in app scope {} entity {}", entity, applicationScope );
 
         final Observable<IndexOperationMessage> edgeObservable = indexService.indexEntity( applicationScope, entity );
 
@@ -80,19 +79,36 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
     @Override
     public void queueNewEdge( final ApplicationScope applicationScope, final Entity entity, final Edge newEdge ) {
-        throw new NotImplementedException( "Implement me" );
+
+        log.debug( "Indexing  in app scope {} with entity {} and new edge {}",
+            new Object[] { entity, applicationScope, newEdge } );
+
+        final Observable<IndexOperationMessage> edgeObservable =  indexService.indexEdge( applicationScope, entity, newEdge );
+
+        run( edgeObservable );
     }
 
 
     @Override
     public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
-        throw new NotImplementedException( "Implement me" );
+        log.debug( "Deleting in app scope {} with edge {} }", applicationScope, edge );
+
+        final Observable<IndexOperationMessage> edgeObservable = indexService.deleteIndexEdge( applicationScope, edge );
+
+        run( edgeObservable );
     }
 
 
     @Override
     public void queueEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
-        throw new NotImplementedException( "Implement me" );
+        log.debug( "Deleting entity id from index in app scope {} with entityId {} }", applicationScope, entityId );
+
+        final Observable<IndexOperationMessage> edgeObservable =
+            indexService.deleteEntityIndexes( applicationScope, entityId );
+
+        //TODO chain graph operations here
+
+        run( edgeObservable );
     }
 
 
@@ -110,11 +126,13 @@ public class InMemoryAsyncEventService implements AsyncEventService {
             .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
     }
 
-    public void run( Observable<?> observable ){
-         //start it in the background on an i/o thread
-        if(!resolveSynchronously){
+
+    public void run( Observable<?> observable ) {
+        //start it in the background on an i/o thread
+        if ( !resolveSynchronously ) {
             observable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
-        }else {
+        }
+        else {
             observable.toBlocking().last();
         }
     }
