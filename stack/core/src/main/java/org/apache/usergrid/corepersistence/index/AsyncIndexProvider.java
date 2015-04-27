@@ -81,7 +81,7 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
         switch ( impl ) {
             case LOCAL:
                 return new InMemoryAsyncIndexService( indexService, rxTaskScheduler,
-                    entityCollectionManagerFactory );
+                    entityCollectionManagerFactory, indexProcessorFig.resolveSynchronously());
             case SQS:
                 return new SQSAsyncIndexService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
                     entityCollectionManagerFactory, rxTaskScheduler );
@@ -108,6 +108,7 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
      * Different implementations
      */
     public static enum Implementations {
+        TEST,
         LOCAL,
         SQS;
 

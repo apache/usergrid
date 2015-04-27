@@ -19,8 +19,6 @@ package org.apache.usergrid.persistence.core.future;
 
 import rx.Observable;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 
@@ -30,17 +28,12 @@ import java.util.concurrent.FutureTask;
 public class FutureObservable<T> {
 
     private final T returnVal;
-    private Throwable error;
     private final FutureTask<T> future;
 
 
     public FutureObservable(final T returnVal) {
         this.returnVal = returnVal;
         future = new FutureTask<T>( () -> returnVal );
-    }
-
-    public void setError( final Throwable t ) {
-        this.error = t;
     }
 
     public void done() {
