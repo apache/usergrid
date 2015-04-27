@@ -22,7 +22,10 @@ package org.apache.usergrid.persistence.graph;
 
 import java.io.Serializable;
 
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 /**
@@ -31,6 +34,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
  *
  * @author tnine
  */
+@JsonDeserialize(as = SimpleEdge.class)
 public interface Edge extends Serializable {
 
     /**

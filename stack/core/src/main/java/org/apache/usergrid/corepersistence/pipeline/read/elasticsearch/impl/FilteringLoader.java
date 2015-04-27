@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl;
 
 
 import java.util.Collection;
@@ -35,9 +35,11 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.index.CandidateResults;
@@ -52,7 +54,7 @@ public class FilteringLoader implements ResultsLoader {
 
     private static final Logger logger = LoggerFactory.getLogger( FilteringLoader.class );
 
-    private final ManagerCache managerCache;
+    private final EntityCollectionManager entityCollectionManager;
     private final ResultsVerifier resultsVerifier;
     private final ApplicationScope applicationScope;
     private final SearchEdge indexScope;
@@ -62,22 +64,20 @@ public class FilteringLoader implements ResultsLoader {
     /**
      * Create an instance of a filter loader
      *
-     * @param managerCache The manager cache to load
+     * @param entityCollectionManager The entityCollectionManagerFactory
      * @param resultsVerifier The verifier to verify the candidate results
      * @param applicationScope The application scope to perform the load
      * @param indexScope The index scope used in the search
      */
-    protected FilteringLoader( final ManagerCache managerCache, final ResultsVerifier resultsVerifier,
+    protected FilteringLoader( final  EntityCollectionManager entityCollectionManager, final ApplicationEntityIndex applicationEntityIndex,  final ResultsVerifier resultsVerifier,
                                final ApplicationScope applicationScope, final SearchEdge indexScope ) {
 
-        this.managerCache = managerCache;
+        this.entityCollectionManager = entityCollectionManager;
         this.resultsVerifier = resultsVerifier;
         this.applicationScope = applicationScope;
         this.indexScope = indexScope;
 
-        final ApplicationEntityIndex index = managerCache.getEntityIndex( applicationScope );
-
-        indexBatch = index.createBatch();
+        indexBatch = applicationEntityIndex.createBatch();
     }
 
 
@@ -182,17 +182,10 @@ public class FilteringLoader implements ResultsLoader {
 
         //now using the scope, load the collection
 
-        // Get the collection scope and batch load all the versions.  We put all entities in
-        // app/app for easy retrieval/ unless persistence changes, we never want to read from
-        // any scope other than the app, app, scope name scope
-        //            final CollectionScope collScope = new CollectionScopeImpl(
-        //                applicationScope.getApplication(), applicationScope.getApplication(), scopeName);
-
-        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( applicationScope );
 
 
         //load the results into the loader for this scope for validation
-        resultsVerifier.loadResults( idsToLoad, ecm );
+        resultsVerifier.loadResults( idsToLoad, entityCollectionManager );
 
         //now let the loader validate each candidate.  For instance, the "max" in this candidate
         //could still be a stale result, so it needs validated

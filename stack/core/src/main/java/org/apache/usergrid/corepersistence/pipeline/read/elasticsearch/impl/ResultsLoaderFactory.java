@@ -17,10 +17,9 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl;
 
 
-import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.SearchEdge;
@@ -29,32 +28,14 @@ import org.apache.usergrid.persistence.index.SearchEdge;
 /**
  * Factory for creating results
  */
-public class CollectionResultsLoaderFactoryImpl implements ResultsLoaderFactory {
+public interface ResultsLoaderFactory {
 
-    private final ManagerCache managerCache;
-
-
-    public CollectionResultsLoaderFactoryImpl( final ManagerCache managerCache ) {
-        this.managerCache = managerCache;
-    }
-
-
-    @Override
-    public ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge scope, final Query.Level resultsLevel ) {
-
-        ResultsVerifier verifier;
-
-        if ( resultsLevel == Query.Level.REFS ) {
-            verifier = new CollectionRefsVerifier();
-        }
-        else if ( resultsLevel == Query.Level.IDS ) {
-//            verifier = new RefsVerifier();
-            verifier = new IdsVerifier();
-        }
-        else {
-            verifier = new EntityVerifier(Query.MAX_LIMIT);
-        }
-
-        return new FilteringLoader( managerCache, verifier, applicationScope, scope );
-    }
+    /**
+     * Get the loader for results
+     * @param applicationScope The application scope used to load results
+     * @param indexScope The index scope used in the search
+     * @param
+     */
+    ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge indexScope,
+                             final Query.Level resultsLevel );
 }

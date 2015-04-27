@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl;
 
 
 import java.util.Iterator;
@@ -34,7 +34,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import com.google.common.base.Optional;
 
 
-public class ElasticSearchQueryExecutor implements QueryExecutor {
+public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<Results> {
 
     private static final Logger logger = LoggerFactory.getLogger( ElasticSearchQueryExecutor.class );
 
@@ -189,9 +189,6 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
             query.clearOffset();
         }
         results.setCursorFromOffset( query.getOffset() );
-
-        //ugly and tight coupling, but we don't have a choice until we finish some refactoring
-        results.setQueryExecutor( this );
 
         logger.debug( "Returning results size {}", results.size() );
 

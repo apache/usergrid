@@ -53,7 +53,7 @@ public class SimpleSearchByEdge implements SearchByEdge {
      * @param maxTimestamp The maximum timestamp to seek from
      * @param last The value to start seeking from.  Must be >= this value
      */
-    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp, final SearchByEdgeType.Order order, final Edge last ) {
+    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp, final SearchByEdgeType.Order order, final Optional<Edge> last ) {
 
         ValidationUtils.verifyIdentity(sourceNode);
         ValidationUtils.verifyIdentity(targetNode);
@@ -67,7 +67,7 @@ public class SimpleSearchByEdge implements SearchByEdge {
         this.type = type;
         this.maxTimestamp = maxTimestamp;
         this.order = order;
-        this.last = Optional.fromNullable(last);
+        this.last = last;
     }
 
 

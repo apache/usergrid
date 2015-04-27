@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,30 +17,29 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.io.Serializable;
 
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.model.entity.Id;
+import com.google.common.base.Optional;
 
 
-public class IdsVerifier extends VersionVerifier {
+/**
+ * A cursor that has been passed in with our request.  Adds utils for parsing values
+ */
+public class RequestCursor {
 
-    @Override
-    public Results getResults( final Collection<Id> ids ) {
+    public RequestCursor(final Optional<String> cursor){
 
-        final List<UUID> returnIds = new ArrayList<>( ids.size() );
-
-        for ( final Id id : ids ) {
-            returnIds.add( id.getUuid() );
-        }
-
-
-        return Results.fromIdList( returnIds );
     }
+
+
+    /**
+     * Get the cursor with the specified id
+     */
+    public <T extends Serializable> T getCursor( final int id, final Class<T> cursorType ) {
+        return null;
+    }
+
 }

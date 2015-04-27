@@ -21,7 +21,6 @@ package org.apache.usergrid.corepersistence.util;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
@@ -73,7 +72,6 @@ public class CpNamingUtils {
     public static String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
 
 
-
     /**
      * Generate a standard edge name for our graph using the connection name. To be used only for searching.  DO NOT use
      * for creation.  Use the createConnectionEdge instead.
@@ -99,7 +97,8 @@ public class CpNamingUtils {
      * Get the index scope for the edge from the source
      */
     public static IndexEdge generateScopeFromSource( final Edge edge ) {
-        return new IndexEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE, edge.getTimestamp() );
+        return new IndexEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE,
+            edge.getTimestamp() );
     }
 
 
@@ -107,7 +106,8 @@ public class CpNamingUtils {
      * Get the index scope for the edge from the source
      */
     public static IndexEdge generateScopeToTarget( final Edge edge ) {
-        return new IndexEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.TARGET, edge.getTimestamp() );
+        return new IndexEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.TARGET,
+            edge.getTimestamp() );
     }
 
 
@@ -120,13 +120,7 @@ public class CpNamingUtils {
 
 
     /**
-     *
      * TODO move sourceId to ApplicationScope
-     *
-     * @param sourceId
-     * @param collectionName
-     * @param entityId
-     * @return
      */
     public static Edge createCollectionEdge( final Id sourceId, final String collectionName, final Id entityId ) {
         final String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
@@ -205,7 +199,7 @@ public class CpNamingUtils {
     public static ApplicationScope getApplicationScope( UUID applicationId ) {
 
         // We can always generate a scope, it doesn't matter if  the application exists yet or not.
-        return  new ApplicationScopeImpl( generateApplicationId( applicationId ) );
+        return new ApplicationScopeImpl( generateApplicationId( applicationId ) );
     }
 
 
@@ -221,12 +215,10 @@ public class CpNamingUtils {
 
     /**
      * Generate an application scope for the management application
-     * @return
      */
-    public static Id getManagementApplicationId(){
-        return  generateApplicationId( MANAGEMENT_APPLICATION_ID );
+    public static Id getManagementApplicationId() {
+        return generateApplicationId( MANAGEMENT_APPLICATION_ID );
     }
-
 
 
     /**
@@ -244,10 +236,10 @@ public class CpNamingUtils {
 
 
         if ( isCollectionEdgeType( edgeName ) ) {
-            return getCollectionScopeNameFromCollectionName( getCollectionName( edgeName ) );
+            return getCollectionName( edgeName ) ;
         }
 
-        return getConnectionScopeName( getConnectionType( edgeName ) );
+        return getConnectionType( edgeName ) ;
     }
 
 
@@ -268,14 +260,4 @@ public class CpNamingUtils {
     }
 
 
-    private static String getCollectionScopeNameFromCollectionName( String name ) {
-        String csn = EDGE_COLL_SUFFIX + name;
-        return csn.toLowerCase();
-    }
-
-
-    private static String getConnectionScopeName( String connectionType ) {
-        String csn = EDGE_CONN_SUFFIX + connectionType;
-        return csn.toLowerCase();
-    }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.usergrid.corepersistence.migration;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -261,7 +262,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         Id rootAppId = systemAppScope.getApplication();
 
         final SimpleSearchByEdgeType simpleSearchByEdgeType =  new SimpleSearchByEdgeType(
-            rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null);
+            rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent());
 
         Observable<org.apache.usergrid.persistence.model.entity.Entity> entityObs =
             gm.loadEdgesFromSource( simpleSearchByEdgeType )
@@ -284,7 +285,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
 
         final SimpleSearchByEdgeType simpleSearchByEdgeType =  new SimpleSearchByEdgeType(
-            CpNamingUtils.generateApplicationId(CpNamingUtils.MANAGEMENT_APPLICATION_ID), edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null);
+            CpNamingUtils.generateApplicationId(CpNamingUtils.MANAGEMENT_APPLICATION_ID), edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+            Optional.absent());
         edgesObservable = edgesObservable !=null ? edgesObservable : gm.loadEdgesFromSource( simpleSearchByEdgeType );
         return edgesObservable;
     }

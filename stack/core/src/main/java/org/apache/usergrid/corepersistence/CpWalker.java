@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
+import com.google.common.base.Optional;
+
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -109,7 +111,7 @@ public class CpWalker {
             logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
 
             return gm.loadEdgesFromSource(
-                new SimpleSearchByEdgeType( applicationId, emittedEdgeType, Long.MAX_VALUE, order, null ) );
+                new SimpleSearchByEdgeType( applicationId, emittedEdgeType, Long.MAX_VALUE, order, Optional.absent() ) );
         } ).flatMap( edge -> {
             //run each edge through it's own scheduler, up to 100 at a time
             return Observable.just( edge ).doOnNext( edgeValue -> {
