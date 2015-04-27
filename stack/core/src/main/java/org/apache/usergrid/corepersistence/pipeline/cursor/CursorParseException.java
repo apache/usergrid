@@ -20,23 +20,11 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-
 /**
- * Interface for cursor serialization
+ * Thrown when we can't parse a cursor
  */
-public interface CursorSerializer<T> {
-
-    /**
-     * convert from a JsonNode to a cursor of type T
-     */
-    T fromJsonNode( final JsonNode node, final ObjectMapper objectMapper );
-
-
-    /**
-     * Convert the cursor to a jsonNode
-     */
-    JsonNode toNode( final ObjectMapper objectMapper, final T value );
+public class CursorParseException extends RuntimeException {
+    public CursorParseException( final String message, final Throwable cause ) {
+        super( message, cause );
+    }
 }

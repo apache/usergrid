@@ -22,6 +22,8 @@ package org.apache.usergrid.corepersistence.pipeline.read.entity;
 
 import java.io.Serializable;
 
+import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
+import org.apache.usergrid.corepersistence.pipeline.cursor.NoCursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.TraverseFilter;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -45,15 +47,16 @@ public class EntityIdFilter extends AbstractFilter<Id, Serializable> implements 
     public EntityIdFilter( @Assisted final Id entityId ) {this.entityId = entityId;}
 
 
-    @Override
-    protected Class<Serializable> getCursorClass() {
-        //no op
-        return null;
-    }
 
 
     @Override
     public Observable<Id> call( final Observable<Id> idObservable ) {
         return Observable.just( entityId );
+    }
+
+
+    @Override
+    protected CursorSerializer<Serializable> getCursorSerializer() {
+        return NoCursorSerializer.create();
     }
 }

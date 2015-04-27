@@ -26,17 +26,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Interface for cursor serialization
+ *
+ * TODO, the need for this seems to indicate an issue with our object composition.  Refactor this away
  */
-public interface CursorSerializer<T> {
+public class NoCursorSerializer<T> implements CursorSerializer<T> {
+
+    private static final NoCursorSerializer<Object> INSTANCE = new NoCursorSerializer<>();
+
+
+    @Override
+    public T fromJsonNode( final JsonNode node, final ObjectMapper objectMapper ) {
+        return null;
+    }
+
+
+    @Override
+    public JsonNode toNode( final ObjectMapper objectMapper, final T value ) {
+        return objectMapper.createObjectNode();
+    }
+
 
     /**
-     * convert from a JsonNode to a cursor of type T
+     * convenience for type casting
      */
-    T fromJsonNode( final JsonNode node, final ObjectMapper objectMapper );
-
-
-    /**
-     * Convert the cursor to a jsonNode
-     */
-    JsonNode toNode( final ObjectMapper objectMapper, final T value );
+    public static <T> NoCursorSerializer<T> create() {
+        return ( NoCursorSerializer<T> ) INSTANCE;
+    }
 }

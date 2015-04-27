@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.pipeline.read;
 
 import java.io.Serializable;
 
+import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.cursor.RequestCursor;
 import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -75,7 +76,7 @@ public abstract class AbstractFilter<T, C extends Serializable> implements Filte
      * Return the parsed value of the cursor from the last request, if it exists
      */
     protected Optional<C> getCursor() {
-        final C cursor = readCache.getCursor( id, getCursorClass() );
+        final C cursor = readCache.getCursor( id, getCursorSerializer() );
 
         return Optional.fromNullable( cursor );
     }
@@ -89,7 +90,7 @@ public abstract class AbstractFilter<T, C extends Serializable> implements Filte
      * @param newValue
      */
     protected void setCursor(final C newValue){
-        writeCache.setCursor( id, newValue );
+        writeCache.setCursor( id, newValue,  getCursorSerializer() );
     }
 
 
@@ -104,6 +105,6 @@ public abstract class AbstractFilter<T, C extends Serializable> implements Filte
     /**
      * Return the class to be used when parsing the cursor
      */
-    protected abstract Class<C> getCursorClass();
+    protected abstract CursorSerializer<C> getCursorSerializer();
 
 }

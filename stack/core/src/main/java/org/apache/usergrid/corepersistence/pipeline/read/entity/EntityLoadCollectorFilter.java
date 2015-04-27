@@ -23,6 +23,8 @@ package org.apache.usergrid.corepersistence.pipeline.read.entity;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
+import org.apache.usergrid.corepersistence.pipeline.cursor.NoCursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.CollectorFilter;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
@@ -60,9 +62,9 @@ public class EntityLoadCollectorFilter extends AbstractFilter<Results, Serializa
 
 
     @Override
-    protected Class<Serializable> getCursorClass() {
-        return null;
-    }
+      protected CursorSerializer<Serializable> getCursorSerializer() {
+          return NoCursorSerializer.create();
+      }
 
 
     @Override

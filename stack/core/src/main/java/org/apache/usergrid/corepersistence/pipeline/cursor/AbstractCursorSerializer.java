@@ -20,23 +20,43 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
- * Interface for cursor serialization
+ * Abstract serializer other serializers should inherit from makes serialization easier
  */
-public interface CursorSerializer<T> {
-
-    /**
-     * convert from a JsonNode to a cursor of type T
-     */
-    T fromJsonNode( final JsonNode node, final ObjectMapper objectMapper );
+public abstract class AbstractCursorSerializer<T> implements CursorSerializer<T> {
 
 
     /**
-     * Convert the cursor to a jsonNode
+     * Intentionally protected.  Subclasses should be singletons
      */
-    JsonNode toNode( final ObjectMapper objectMapper, final T value );
+    protected AbstractCursorSerializer() {
+
+    }
+
+
+    @Override
+    public T fromJsonNode( final JsonNode node, final ObjectMapper objectMapper ) {
+        try {
+            final Class<? extends T> classType = getType();
+
+            return objectMapper.treeToValue( node, classType );
+        }
+        catch ( JsonProcessingException e ) {
+            throw new CursorParseException( "Unable to deserialize value", e );
+        }
+    }
+
+
+    @Override
+    public JsonNode toNode( final ObjectMapper objectMapper, final T value ) {
+        return objectMapper.valueToTree( value );
+    }
+
+
+    protected abstract Class<? extends T> getType();
 }
