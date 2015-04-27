@@ -20,10 +20,11 @@ package org.apache.usergrid.persistence.index;/*
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import rx.Observable;
 
 
 public interface EntityIndexBatch {
@@ -66,7 +67,7 @@ public interface EntityIndexBatch {
      * Execute the batch
      * @return future to guarantee execution
      */
-    BetterFuture<IndexOperationMessage> execute();
+    Observable<IndexOperationMessage> execute();
 
     /**
      * Get the number of operations in the batch

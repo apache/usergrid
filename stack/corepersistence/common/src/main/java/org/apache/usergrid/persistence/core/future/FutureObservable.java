@@ -17,52 +17,37 @@
 package org.apache.usergrid.persistence.core.future;
 
 
+import rx.Observable;
+
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 
 /**
  * Future without the exception nastiness
  */
-public class BetterFuture<T> extends FutureTask<T> {
+public class FutureObservable<T> {
 
+    private final T returnVal;
     private Throwable error;
+    private final FutureTask<T> future;
 
 
-    public BetterFuture( Callable<T> callable ) {
-        super( callable );
+    public FutureObservable(final T returnVal) {
+        this.returnVal = returnVal;
+        future = new FutureTask<T>( () -> returnVal );
     }
-
 
     public void setError( final Throwable t ) {
         this.error = t;
     }
 
-
     public void done() {
-        run();
+        future.run();
     }
 
-
-    public T get() {
-
-        T returnValue = null;
-
-        try {
-            returnValue = super.get();
-        }
-        catch ( InterruptedException e ) {
-            //swallow
-        }
-        catch ( ExecutionException e ) {
-            //swallow
-        }
-
-        if ( error != null ) {
-           throw new RuntimeException( "Error in getting future", error );
-        }
-
-        return returnValue;
+    public Observable<T> observable() {
+        return !future.isDone() ? Observable.from(future) : Observable.just(returnVal);
     }
 }

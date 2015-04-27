@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
+import rx.Observable;
 
 
 /**
@@ -34,5 +34,5 @@ public interface IndexBufferConsumer {
      * @param message
      * @return
      */
-    BetterFuture put(IndexOperationMessage message);
+    Observable put(IndexOperationMessage message);
 }

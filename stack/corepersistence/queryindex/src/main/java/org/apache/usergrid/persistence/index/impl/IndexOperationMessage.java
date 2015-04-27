@@ -23,11 +23,11 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.future.FutureObservable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import rx.Observable;
 
 
 /**
@@ -39,14 +39,13 @@ public class IndexOperationMessage implements Serializable {
 
 
 
-    private final BetterFuture<IndexOperationMessage> containerFuture;
+    private final FutureObservable<IndexOperationMessage> containerFuture;
 
 
     public IndexOperationMessage() {
-        final IndexOperationMessage parent = this;
         this.indexRequests = new HashSet<>();
         this.deIndexRequests = new HashSet<>();
-        this.containerFuture = new BetterFuture<>( () -> parent );
+        this.containerFuture = new FutureObservable<>( this );
     }
 
 
@@ -81,8 +80,8 @@ public class IndexOperationMessage implements Serializable {
      * return the promise
      */
     @JsonIgnore
-    public BetterFuture<IndexOperationMessage> getFuture() {
-        return containerFuture;
+    public Observable<IndexOperationMessage> observable() {
+        return containerFuture.observable();
     }
 
 
@@ -117,10 +116,6 @@ public class IndexOperationMessage implements Serializable {
 
     public void done() {
         //if this has been serialized, it could be null. don't NPE if it is, there's nothing to ack
-        final BetterFuture<IndexOperationMessage> future = getFuture();
-
-        if(future != null ){
-            future.done();
-        }
+        containerFuture.done();
     }
 }
