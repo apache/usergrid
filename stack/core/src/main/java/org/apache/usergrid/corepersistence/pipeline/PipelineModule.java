@@ -20,7 +20,10 @@
 package org.apache.usergrid.corepersistence.pipeline;
 
 
+import org.apache.usergrid.corepersistence.pipeline.read.ReadFilterFactory;
+import org.apache.usergrid.corepersistence.pipeline.read.ReadFilterFactoryImpl;
 import org.apache.usergrid.corepersistence.pipeline.read.ReadPipelineBuilder;
+import org.apache.usergrid.corepersistence.pipeline.read.ReadPipelineBuilderImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -35,6 +38,18 @@ public class PipelineModule extends AbstractModule {
     protected void configure() {
         //Use Guice to create the builder since we don't really need to do anything
         //other than DI when creating the filters
-       install(new FactoryModuleBuilder().build( ReadPipelineBuilder.class ));
+       bind( ReadFilterFactory.class ).to( ReadFilterFactoryImpl.class );
+
+
+          //Use Guice to create the builder since we don't really need to do anything
+        //other than DI when creating the filters
+       install( new FactoryModuleBuilder().implement( ReadPipelineBuilder.class, ReadPipelineBuilderImpl.class )
+                                          .build( PipelineBuilderFactory.class ) );
+
+
+
+            //Use Guice to create the builder since we don't really need to do anything
+        //other than DI when creating the filters
+//       install( new FactoryModuleBuilder().build( ReadFilterFactory.class ) );
     }
 }

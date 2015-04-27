@@ -32,22 +32,18 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Optional;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 
 
 /**
  * Command for reading graph edges
  */
-public abstract class AbstractReadGraphFilter extends AbstractFilter<Id, Edge>
-    implements TraverseFilter {
+public abstract class AbstractReadGraphFilter extends AbstractFilter<Id, Edge> implements TraverseFilter {
 
     private final GraphManagerFactory graphManagerFactory;
 
 
     /**
      * Create a new instance of our command
-     * @param graphManagerFactory
      */
     public AbstractReadGraphFilter( final GraphManagerFactory graphManagerFactory ) {
         this.graphManagerFactory = graphManagerFactory;
@@ -67,20 +63,20 @@ public abstract class AbstractReadGraphFilter extends AbstractFilter<Id, Edge>
 
 
         //return all ids that are emitted from this edge
-        return observable.flatMap( new Func1<Id, Observable<Id>>() {
+        return observable.flatMap( id -> {
 
-            @Override
-            public Observable<Id> call( final Id id ) {
+            final SimpleSearchByEdgeType search =
+                new SimpleSearchByEdgeType( id, edgeName, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                    startFromCursor );
 
-                final SimpleSearchByEdgeType search = new SimpleSearchByEdgeType(id,edgeName, Long.MAX_VALUE,
-                    SearchByEdgeType.Order.DESCENDING, startFromCursor   );
-
-                /**
-                 * TODO, pass a message with pointers to our cursor values to be generated later
-                 */
-                return graphManager.loadEdgesFromSource( search ).doOnNext( edge -> setCursor( edge ) ).map(
-                    edge -> edge.getTargetNode() );
-            }
+            /**
+             * TODO, pass a message with pointers to our cursor values to be generated later
+             */
+            return graphManager.loadEdgesFromSource( search )
+                //set our cursor every edge we traverse
+                .doOnNext( edge -> setCursor( edge ) )
+                    //map our id from the target edge
+                .map( edge -> edge.getTargetNode() );
         } );
     }
 
@@ -91,10 +87,8 @@ public abstract class AbstractReadGraphFilter extends AbstractFilter<Id, Edge>
     }
 
 
-
     /**
      * Get the edge type name we should use when traversing
-     * @return
      */
     protected abstract String getEdgeTypeName();
 }

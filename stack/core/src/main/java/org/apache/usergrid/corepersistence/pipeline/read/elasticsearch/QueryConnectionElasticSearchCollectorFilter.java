@@ -25,7 +25,9 @@ import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl.Resu
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -41,19 +43,19 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConne
  */
 public class QueryConnectionElasticSearchCollectorFilter extends AbstractQueryElasticSearchCollectorFilter {
 
-    private final EntityCollectionManager entityCollectionManager;
-    private final ApplicationEntityIndex applicationEntityIndex;
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final EntityIndexFactory entityIndexFactory;
     private final String connectionName;
 
 
     @Inject
-    protected QueryConnectionElasticSearchCollectorFilter( final EntityCollectionManager entityCollectionManager,
-                                                           final ApplicationEntityIndex applicationEntityIndex,
-                                                           @Assisted final String connectionName,
-                                                           @Assisted final Query query ) {
-        super( applicationEntityIndex, query );
-        this.entityCollectionManager = entityCollectionManager;
-        this.applicationEntityIndex = applicationEntityIndex;
+    public QueryConnectionElasticSearchCollectorFilter(
+        final EntityCollectionManagerFactory entityCollectionManagerFactory,
+        final EntityIndexFactory entityIndexFactory, @Assisted final String connectionName,
+        @Assisted final Query query ) {
+        super( entityIndexFactory, query );
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.entityIndexFactory = entityIndexFactory;
         this.connectionName = connectionName;
     }
 
@@ -77,8 +79,13 @@ public class QueryConnectionElasticSearchCollectorFilter extends AbstractQueryEl
 
     @Override
     protected ResultsLoaderFactory getResultsLoaderFactory( final Id id ) {
+
+        final EntityCollectionManager entityCollectionManager =
+            entityCollectionManagerFactory.createCollectionManager( applicationScope );
+        final ApplicationEntityIndex entityIndex = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+
         final EntityRef entityRef = getRef( id );
-        return new ConnectionResultsLoaderFactoryImpl( entityCollectionManager, applicationEntityIndex, entityRef,
+        return new ConnectionResultsLoaderFactoryImpl( entityCollectionManager, entityIndex, entityRef,
             connectionName );
     }
 }

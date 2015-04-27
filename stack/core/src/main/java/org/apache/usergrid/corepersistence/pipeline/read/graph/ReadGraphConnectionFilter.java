@@ -25,7 +25,7 @@ import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getConnectionScopeName;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeTypeFromConnectionType;
 
 
 /**
@@ -48,6 +48,6 @@ public class ReadGraphConnectionFilter extends AbstractReadGraphFilter {
 
     @Override
     protected String getEdgeTypeName() {
-        return getConnectionScopeName( connectionName );
+        return getEdgeTypeFromConnectionType( connectionName );
     }
 }

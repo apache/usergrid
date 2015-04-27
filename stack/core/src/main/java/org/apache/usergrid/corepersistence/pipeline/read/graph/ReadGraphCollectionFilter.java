@@ -25,7 +25,7 @@ import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromCollectionName;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeTypeFromCollectionName;
 
 
 /**
@@ -48,6 +48,6 @@ public class ReadGraphCollectionFilter extends AbstractReadGraphFilter {
 
     @Override
     protected String getEdgeTypeName() {
-        return getCollectionScopeNameFromCollectionName( collectionName );
+        return getEdgeTypeFromCollectionName( collectionName );
     }
 }

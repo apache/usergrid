@@ -35,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.index.AsyncIndexService;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.persistence.AbstractEntity;
@@ -74,6 +75,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.amazonaws.services.elastictranscoder.model.Pipeline;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -118,8 +120,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final ApplicationIdCache applicationIdCache;
 
     private ManagerCache managerCache;
-    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final GraphManagerFactory graphManagerFactory;
 
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
@@ -127,6 +127,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
     private final AsyncIndexService indexService;
+    private final PipelineBuilderFactory pipelineBuilderFactory;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector ) {
@@ -139,10 +140,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncIndexService.class );
+        this.pipelineBuilderFactory = injector.getInstance( PipelineBuilderFactory.class );
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
-        this.entityCollectionManagerFactory = injector.getInstance( EntityCollectionManagerFactory.class );
-        this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
 
 
     }
@@ -199,8 +199,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory,
-            entityCollectionManagerFactory, graphManagerFactory,  applicationId );
+        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory, pipelineBuilderFactory,  applicationId );
         return em;
     }
 

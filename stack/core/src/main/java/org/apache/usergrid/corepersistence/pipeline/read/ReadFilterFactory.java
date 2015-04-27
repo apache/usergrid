@@ -37,7 +37,7 @@ import com.google.common.base.Optional;
 /**
  * A factory for generating read commands
  */
-public interface FilterFactory {
+public interface ReadFilterFactory {
 
 
     /**

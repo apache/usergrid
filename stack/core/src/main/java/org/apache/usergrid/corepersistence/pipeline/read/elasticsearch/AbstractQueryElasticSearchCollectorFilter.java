@@ -29,8 +29,8 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchType;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -54,14 +54,14 @@ public abstract class AbstractQueryElasticSearchCollectorFilter extends Abstract
     implements CollectorFilter<Results> {
 
 
-    protected final ApplicationEntityIndex entityIndex;
+    protected final EntityIndexFactory applicationEntityIndex;
     protected final Query query;
     private int limit;
 
 
     @Inject
-    protected AbstractQueryElasticSearchCollectorFilter( final ApplicationEntityIndex entityIndex, final Query query ) {
-        this.entityIndex = entityIndex;
+    protected AbstractQueryElasticSearchCollectorFilter( final EntityIndexFactory applicationEntityIndex, final Query query ) {
+        this.applicationEntityIndex = applicationEntityIndex;
         this.query = query;
     }
 
@@ -69,12 +69,18 @@ public abstract class AbstractQueryElasticSearchCollectorFilter extends Abstract
     @Override
     public Observable<Results> call( final Observable<Id> idObservable ) {
 
+
+        final ApplicationEntityIndex
+            entityIndex = applicationEntityIndex.createApplicationEntityIndex( applicationScope );
+
         return idObservable.flatMap( id -> {
 
             //TODO, refactor this logic to use Observables.  make this a TraverseFilter and load entities with the entity loader collector
             final ResultsLoaderFactory resultsLoaderFactory = getResultsLoaderFactory( id );
             final SearchEdge searchEdge = getSearchEdge( id );
             final SearchTypes searchTypes = getSearchTypes();
+
+
 
             final Iterable<Results> executor =
                 new ElasticSearchQueryExecutor( resultsLoaderFactory, entityIndex, applicationScope,

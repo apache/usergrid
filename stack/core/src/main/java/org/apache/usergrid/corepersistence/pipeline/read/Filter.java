@@ -37,12 +37,12 @@ public interface Filter<T> extends Observable.Transformer<Id, T> {
 
 
     /**
-     * Set the id of this command in it's execution environment
+     * Set the id of this filter in it's execution environment
      */
     void setId( final int id );
 
     /**
-     * Set the cursor cache into the command
+     * Set the cursor cache into the filter
      *
      * @param readCache Set the cache that was used in the request
      * @param writeCache Set the cache to be used when writing the results
@@ -50,7 +50,7 @@ public interface Filter<T> extends Observable.Transformer<Id, T> {
     void setCursorCaches( final RequestCursor readCache, final ResponseCursor writeCache );
 
     /**
-     * Set the application scope of the command
+     * Set the application scope of the filter
      * @param applicationScope
      */
     void setApplicationScope(final ApplicationScope applicationScope);
