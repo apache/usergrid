@@ -20,46 +20,22 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.UUID;
-
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.corepersistence.TestIndexModule;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.SQSAsyncEventService;
 import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
 
 import net.jcip.annotations.NotThreadSafe;
-
-import rx.Observable;
-import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
@@ -69,7 +45,7 @@ import static org.junit.Assert.fail;
 @RunWith( EsRunner.class )
 @UseModules( { TestIndexModule.class } )
 @NotThreadSafe
-public class SQSAsyncIndexServiceTest extends AsyncIndexServiceTest {
+public class SQSAsyncEventServiceTest extends AsyncIndexServiceTest {
 
 
 
@@ -96,8 +72,8 @@ public class SQSAsyncIndexServiceTest extends AsyncIndexServiceTest {
 
 
     @Override
-    protected AsyncIndexService getAsyncIndexService() {
-        return  new SQSAsyncIndexService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
+    protected AsyncEventService getAsyncEventService() {
+        return  new SQSAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
                     entityCollectionManagerFactory, rxTaskScheduler );
     }
 

@@ -17,16 +17,19 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -35,13 +38,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
-import rx.Observer;
 
 
 @Singleton
-public class InMemoryAsyncIndexService implements AsyncIndexService {
+public class InMemoryAsyncEventService implements AsyncEventService {
 
-    private static final Logger log = LoggerFactory.getLogger( InMemoryAsyncIndexService.class );
+    private static final Logger log = LoggerFactory.getLogger( InMemoryAsyncEventService.class );
 
     private final IndexService indexService;
     private final RxTaskScheduler rxTaskScheduler;
@@ -50,8 +52,9 @@ public class InMemoryAsyncIndexService implements AsyncIndexService {
 
 
     @Inject
-    public InMemoryAsyncIndexService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler,
-                                      final EntityCollectionManagerFactory entityCollectionManagerFactory, boolean resolveSynchronously ) {
+    public InMemoryAsyncEventService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler,
+                                      final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                      boolean resolveSynchronously ) {
         this.indexService = indexService;
         this.rxTaskScheduler = rxTaskScheduler;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
@@ -76,6 +79,24 @@ public class InMemoryAsyncIndexService implements AsyncIndexService {
         }else {
             edgeObservable.toBlocking().last();
         }
+    }
+
+
+    @Override
+    public void queueNewEdge( final ApplicationScope applicationScope, final Entity entity, final Edge newEdge ) {
+        throw new NotImplementedException( "Implement me" );
+    }
+
+
+    @Override
+    public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
+        throw new NotImplementedException( "Implement me" );
+    }
+
+
+    @Override
+    public void queueEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
+        throw new NotImplementedException( "Implement me" );
     }
 
 

@@ -21,8 +21,8 @@ import org.safehaus.guicyfig.GuicyFigModule;
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
-import org.apache.usergrid.corepersistence.index.AsyncIndexProvider;
-import org.apache.usergrid.corepersistence.index.AsyncIndexService;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
@@ -152,7 +152,7 @@ public class CoreModule  extends AbstractModule {
         bind( IndexService.class ).to( IndexServiceImpl.class );
         //bind the queue provider
 
-        bind( AsyncIndexService.class).toProvider( AsyncIndexProvider.class );
+        bind( AsyncEventService.class).toProvider( AsyncIndexProvider.class );
 
         install( new GuicyFigModule( IndexProcessorFig.class ) );
 
