@@ -83,4 +83,7 @@ public interface IndexProcessorFig extends GuicyFig {
     long getReIndexSampleInterval();
 
 
+    @Default("false")
+    @Key("elasticsearch.queue_impl.resolution")
+    boolean resolveSynchronously();
 }
