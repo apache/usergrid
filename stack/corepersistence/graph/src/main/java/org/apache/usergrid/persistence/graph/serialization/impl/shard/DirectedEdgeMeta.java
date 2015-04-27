@@ -337,7 +337,7 @@ public abstract class DirectedEdgeMeta {
                 final String targetType = types[1];
 
                 final SearchByIdType search =
-                        new SimpleSearchByIdType( sourceId, edgeType, maxValue, order, targetType,  null );
+                        new SimpleSearchByIdType( sourceId, edgeType, maxValue, order, targetType,  Optional.<Edge>absent() );
 
                 return serialization.getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, search, shards );
             }
