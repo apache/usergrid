@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 import java.util.Iterator;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +121,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
                 final SimpleSearchByEdge search =
                         new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                                edge.getTimestamp(), SearchByEdgeType.Order.DESCENDING, null );
+                                edge.getTimestamp(), SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() );
 
                 return serialization.getEdgeVersions( scope, search );
             }

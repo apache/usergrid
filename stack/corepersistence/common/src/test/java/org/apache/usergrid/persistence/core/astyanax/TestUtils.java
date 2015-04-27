@@ -58,7 +58,7 @@ public class TestUtils {
             keyspace.createKeyspace( options );
         }
         catch ( Throwable t ) {
-          log.error( "Error on creating keyspace, ignoring", t );
+          log.info( "Error on creating keyspace, ignoring", t );
         }
 
 
