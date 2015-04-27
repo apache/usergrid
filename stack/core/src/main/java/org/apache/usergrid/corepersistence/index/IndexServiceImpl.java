@@ -120,7 +120,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.index( indexEdge, entity );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> Observable.from( batch.execute() ) ) );
+                .flatMap( batch -> batch.execute() ) );
 
         return ObservableTimer.time( batches, indexTimer );
     }
