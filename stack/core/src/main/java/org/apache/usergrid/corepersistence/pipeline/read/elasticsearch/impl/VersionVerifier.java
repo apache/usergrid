@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl;
 
 
 import java.util.Collection;

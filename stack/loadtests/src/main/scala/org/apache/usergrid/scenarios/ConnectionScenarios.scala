@@ -40,7 +40,7 @@ import io.gatling.http.Predef._
 
    val postConnection = exec(
      http("Connect user with device")
-       .post("/${collectionName}/${entityId}/${connectionType}/${entityId}")
+       .post("/${connectionName}/${entityId}/${connectionType}/${entityId}")
        .headers(Headers.jsonAuthorized)
        .check(status.is(200))
    )

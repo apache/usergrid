@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.index.AsyncIndexService;
+import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -65,6 +66,7 @@ import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -78,6 +80,7 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -177,6 +180,8 @@ public class CpEntityManager implements EntityManager {
 
     private final AsyncIndexService indexService;
 
+    private PipelineBuilderFactory pipelineBuilderFactory;
+
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
     private Timer aggCounterTimer;
@@ -214,14 +219,20 @@ public class CpEntityManager implements EntityManager {
      * @param managerCache
      * @param metricsFactory
      * @param applicationId
+     * @param entityCollectionManagerFactory
+     * @param graphManagerFactory
      */
-    public CpEntityManager(final CassandraService cass, final CounterUtils counterUtils, final AsyncIndexService indexService, final ManagerCache managerCache, final MetricsFactory metricsFactory, final UUID applicationId ) {
+    public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncIndexService indexService, final ManagerCache managerCache,
+                            final MetricsFactory metricsFactory,final PipelineBuilderFactory pipelineBuilderFactory , final UUID applicationId ) {
+
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
         Preconditions.checkNotNull( managerCache, "managerCache must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
         Preconditions.checkNotNull( indexService, "indexService must not be null" );
+        Preconditions.checkNotNull( pipelineBuilderFactory, "pipelineBuilderFactory must not be null" );
+        this.pipelineBuilderFactory = pipelineBuilderFactory;
 
 
         this.managerCache = managerCache;
@@ -735,7 +746,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
 
         CpRelationManager relationManager =
-            new CpRelationManager( metricsFactory, managerCache, indexService, this, applicationId, entityRef );
+            new CpRelationManager( metricsFactory, managerCache, pipelineBuilderFactory, indexService, this, applicationId, entityRef );
         return relationManager;
     }
 
@@ -2816,7 +2827,6 @@ public class CpEntityManager implements EntityManager {
     public CassandraService getCass() {
         return cass;
     }
-
 
 
     @Override

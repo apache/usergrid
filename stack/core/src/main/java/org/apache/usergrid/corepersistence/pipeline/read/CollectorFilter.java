@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,29 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.corepersistence.results;
+
+package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+/**
+ * A command that is used to reduce our stream of results into a final output
+ * @param <T>
+ */
+public interface CollectorFilter<T> extends Filter<T> {
 
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.model.entity.Id;
+    /**
+     * Set the prefered result size for the command
+     * @param limit
+     */
+    void setLimit( final int limit );
 
 
-public class CollectionRefsVerifier extends VersionVerifier {
-
-
-
-    @Override
-    public Results getResults( final Collection<Id> ids ) {
-        List<EntityRef> refs = new ArrayList<EntityRef>(ids.size());
-        for ( Id id : ids ) {
-            refs.add( new SimpleEntityRef( id.getType(), id.getUuid() ) );
-        }
-        return Results.fromRefList( refs );
-    }
 }

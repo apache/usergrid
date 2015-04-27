@@ -182,23 +182,6 @@ public class Query {
     }
 
 
-    public static Query fromJsonString( String json ) throws QueryParseException {
-
-        Object o;
-        try {
-            o = mapper.readValue( json, Object.class );
-        } catch (IOException ex) {
-            throw new QueryParseException("Error parsing JSON query string " + json, ex);
-        }
-
-        if ( o instanceof Map ) {
-            @SuppressWarnings({ "unchecked", "rawtypes" }) Map<String, List<String>> params =
-                    ClassUtils.cast( MapUtils.toMapList( ( Map ) o ) );
-            return fromQueryParams( params );
-        }
-        return null;
-    }
-
 
     public static Query fromQueryParams( Map<String, List<String>> params )
             throws QueryParseException {
@@ -517,6 +500,9 @@ public class Query {
     }
 
     public String getOffsetCursor() {
+
+        //TODO refactor cursor logic for encapsulation at level using it
+
         String cursor = "";
         if(offset.isPresent()){
             ByteBuffer buffer = INTEGER_SERIALIZER.toByteBuffer(offset.get());
@@ -883,6 +869,14 @@ public class Query {
        return Optional.fromNullable( ql );
     }
 
+
+    /**
+     * Return true if no query is present and we should perform a graph search
+     * @return
+     */
+    public boolean isGraphSearch(){
+        return ql == null;
+    }
 
     public Query setQl( String ql ) {
         this.ql = ql;

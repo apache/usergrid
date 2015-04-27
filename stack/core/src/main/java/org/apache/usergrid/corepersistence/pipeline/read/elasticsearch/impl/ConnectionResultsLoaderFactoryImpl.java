@@ -17,13 +17,16 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.results;
+package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl;
 
 
-import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
 
 
@@ -32,21 +35,25 @@ import org.apache.usergrid.persistence.index.SearchEdge;
  */
 public class ConnectionResultsLoaderFactoryImpl implements ResultsLoaderFactory {
 
-    private final ManagerCache managerCache;
+    private final EntityCollectionManager entityCollectionManager;
+    private final ApplicationEntityIndex applicationEntityIndex;
     private final EntityRef ownerId;
     private final String connectionType;
 
 
-    public ConnectionResultsLoaderFactoryImpl( final ManagerCache managerCache, final EntityRef ownerId,
+    public ConnectionResultsLoaderFactoryImpl( final EntityCollectionManager entityCollectionManager,
+                                               final ApplicationEntityIndex applicationEntityIndex, final EntityRef ownerId,
                                                final String connectionType ) {
-        this.managerCache = managerCache;
+        this.entityCollectionManager = entityCollectionManager;
+        this.applicationEntityIndex = applicationEntityIndex;
         this.ownerId = ownerId;
         this.connectionType = connectionType;
     }
 
 
     @Override
-    public ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge scope, final Query.Level resultsLevel ) {
+    public ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge scope,
+                                    final Query.Level resultsLevel ) {
 
         ResultsVerifier verifier;
 
@@ -54,12 +61,13 @@ public class ConnectionResultsLoaderFactoryImpl implements ResultsLoaderFactory 
             verifier = new ConnectionRefsVerifier( ownerId, connectionType );
         }
         else if ( resultsLevel == Query.Level.IDS ) {
-            verifier = new ConnectionRefsVerifier( ownerId, connectionType );;
+            verifier = new ConnectionRefsVerifier( ownerId, connectionType );
+            ;
         }
         else {
-            verifier = new EntityVerifier(Query.MAX_LIMIT);
+            verifier = new EntityVerifier( Query.MAX_LIMIT );
         }
 
-        return new FilteringLoader( managerCache, verifier, applicationScope, scope );
+        return new FilteringLoader( entityCollectionManager, applicationEntityIndex, verifier, applicationScope, scope );
     }
 }

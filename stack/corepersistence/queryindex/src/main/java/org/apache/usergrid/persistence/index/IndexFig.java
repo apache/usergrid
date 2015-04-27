@@ -89,6 +89,7 @@ public interface IndexFig extends GuicyFig {
     String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
 
 
+
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();

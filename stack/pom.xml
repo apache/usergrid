@@ -121,12 +121,10 @@
       <!-- only use half the cores on the machine for testing -->
       <usergrid.it.parallel>methods</usergrid.it.parallel>
       <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
-
       <usergrid.it.forkCount>1</usergrid.it.forkCount>
       <usergrid.it.threads>8</usergrid.it.threads>
 
       <metrics.version>3.0.0</metrics.version>
-      <rx.version>1.0.8</rx.version>
         <surefire.plugin.artifactName>surefire-junit47</surefire.plugin.artifactName>
       <surefire.plugin.version>2.18.1</surefire.plugin.version>
       <powermock.version>1.6.1</powermock.version>
