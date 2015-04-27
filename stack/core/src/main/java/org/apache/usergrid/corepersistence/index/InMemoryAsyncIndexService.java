@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
+import rx.Observer;
 
 
 @Singleton
@@ -45,19 +46,21 @@ public class InMemoryAsyncIndexService implements AsyncIndexService {
     private final IndexService indexService;
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final boolean resolveSynchronously;
 
 
     @Inject
     public InMemoryAsyncIndexService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler,
-                                      final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
+                                      final EntityCollectionManagerFactory entityCollectionManagerFactory, boolean resolveSynchronously ) {
         this.indexService = indexService;
         this.rxTaskScheduler = rxTaskScheduler;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.resolveSynchronously = resolveSynchronously;
     }
 
 
     @Override
-    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity ) {
+    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity) {
 
         //process the entity immediately
         //only process the same version, otherwise ignore
@@ -68,7 +71,11 @@ public class InMemoryAsyncIndexService implements AsyncIndexService {
         final Observable<IndexOperationMessage> edgeObservable = indexService.indexEntity( applicationScope, entity );
 
         //start it in the background on an i/o thread
-        edgeObservable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+        if(!resolveSynchronously){
+            edgeObservable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+        }else {
+            edgeObservable.toBlocking().last();
+        }
     }
 
 

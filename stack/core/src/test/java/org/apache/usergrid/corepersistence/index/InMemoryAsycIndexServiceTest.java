@@ -54,7 +54,7 @@ public class InMemoryAsycIndexServiceTest extends AsyncIndexServiceTest {
 
     @Override
     protected AsyncIndexService getAsyncIndexService() {
-        return  new InMemoryAsyncIndexService( indexService, rxTaskScheduler, entityCollectionManagerFactory  );
+        return  new InMemoryAsyncIndexService( indexService, rxTaskScheduler, entityCollectionManagerFactory,false  );
     }
 
 

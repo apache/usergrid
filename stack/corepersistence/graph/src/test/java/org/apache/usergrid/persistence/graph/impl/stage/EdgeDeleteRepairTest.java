@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 
 import java.util.Iterator;
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -133,7 +135,7 @@ public class EdgeDeleteRepairTest {
 
 
         Iterator<MarkedEdge> itr = storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
 
         assertEquals( edge2, itr.next() );
         assertEquals( edge1, itr.next() );
@@ -144,7 +146,7 @@ public class EdgeDeleteRepairTest {
         assertEquals( edge1, deleted );
 
         itr = storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
 
         assertEquals( edge2, itr.next() );
         assertFalse( itr.hasNext() );
