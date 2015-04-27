@@ -40,7 +40,8 @@ public class ObservableQueryExecutor implements QueryExecutor {
 
 
     public ObservableQueryExecutor( final Observable<Results> resultsObservable ) {
-        this.resultsObservable = resultsObservable;
+        //in no values,  we must emit an empty results so add the default
+        this.resultsObservable = resultsObservable.defaultIfEmpty( new Results() );
     }
 
 

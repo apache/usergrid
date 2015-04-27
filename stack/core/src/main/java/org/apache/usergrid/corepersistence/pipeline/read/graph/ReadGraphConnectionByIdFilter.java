@@ -24,6 +24,7 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 
@@ -34,6 +35,7 @@ public class ReadGraphConnectionByIdFilter extends AbstractReadGraphEdgeByIdFilt
 
     private final String connectionName;
 
+    @Inject
     public ReadGraphConnectionByIdFilter( final GraphManagerFactory graphManagerFactory,
                                           @Assisted final String connectionName, @Assisted final Id targetId ) {
         super( graphManagerFactory, targetId );

@@ -43,8 +43,10 @@ public class ConcurrentProcessSingleton {
     public static final int LOCK_PORT = Integer.parseInt(
         System.getProperty( "test.lock.port", "10101" ) );
 
-    public static final boolean CLEAN_STORAGE =
-        Boolean.parseBoolean( System.getProperty( "test.clean.storage", "false" ) );
+//    public static final boolean CLEAN_STORAGE =
+//        Boolean.parseBoolean( System.getProperty( "test.clean.storage", "false" ) );
+
+    public static final boolean CLEAN_STORAGE = false;
 
 
     public static final long ONE_MINUTE = 60000;

@@ -54,6 +54,7 @@ public interface ReadPipelineBuilder {
      */
     ReadPipelineBuilder setStartId(final Id id);
 
+
     /**
      * Add a get entity to the pipeline
      */
@@ -92,7 +93,7 @@ public interface ReadPipelineBuilder {
 
 
     /**
-     * Get all entities in a connection with a query
+     * Get all entities in a connection with a query and a target entity type
      */
     ReadPipelineBuilder connectionWithQuery( final String connectionName, final String entityType, final String query);
 

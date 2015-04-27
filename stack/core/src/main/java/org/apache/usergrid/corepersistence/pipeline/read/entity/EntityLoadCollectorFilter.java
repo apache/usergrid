@@ -50,15 +50,12 @@ public class EntityLoadCollectorFilter extends AbstractFilter<Results, Serializa
     implements CollectorFilter<Results> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final ApplicationScope applicationScope;
     private int resultSize;
 
 
     @Inject
-    public EntityLoadCollectorFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                      final ApplicationScope applicationScope ) {
+    public EntityLoadCollectorFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.applicationScope = applicationScope;
     }
 
 
@@ -92,7 +89,7 @@ public class EntityLoadCollectorFilter extends AbstractFilter<Results, Serializa
             final Observable<MvccEntity> mvccEntityObservable = Observable.from( entitySet.getEntities() );
 
             //convert them to our old entity model, then filter nulls, meaning they weren't found
-            return mvccEntityObservable.map( mvccEntity -> mapEntity( mvccEntity ) ).filter( entity -> entity == null )
+            return mvccEntityObservable.map( mvccEntity -> mapEntity( mvccEntity ) ).filter( entity -> entity != null )
 
                 //convert them to a list, then map them into results
                 .toList().map( entities -> {
@@ -100,9 +97,7 @@ public class EntityLoadCollectorFilter extends AbstractFilter<Results, Serializa
                     results.setCursor( generateCursor() );
 
                     return results;
-                } )
-                //if no results are present, return an empty results
-                .singleOrDefault( new Results(  ) );
+                } );
         } );
 
 

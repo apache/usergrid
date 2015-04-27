@@ -109,9 +109,7 @@ public class CpRelationManager implements RelationManager {
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
     private ManagerCache managerCache;
-    private EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private GraphManagerFactory graphManagerFactory;
-    private PipelineBuilderFactory pipelineBuilderFactory;
+    private final PipelineBuilderFactory pipelineBuilderFactory;
 
     private EntityManager em;
 
@@ -130,8 +128,7 @@ public class CpRelationManager implements RelationManager {
 
 
     public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache,
-                              final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                              final GraphManagerFactory graphManagerFactory, final AsyncIndexService indexService,
+                              final PipelineBuilderFactory pipelineBuilderFactory, final AsyncIndexService indexService,
                               final EntityManager em, final UUID applicationId, final EntityRef headEntity ) {
 
 
@@ -148,9 +145,7 @@ public class CpRelationManager implements RelationManager {
         this.headEntity = headEntity;
         this.managerCache = managerCache;
         this.applicationScope = CpNamingUtils.getApplicationScope( applicationId );
-
-        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.graphManagerFactory = graphManagerFactory;
+        this.pipelineBuilderFactory = pipelineBuilderFactory;
 
         this.metricsFactory = metricsFactory;
         this.updateCollectionTimer =

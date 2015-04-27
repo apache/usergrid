@@ -31,6 +31,7 @@ import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
 import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
+import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
@@ -157,6 +158,9 @@ public class CoreModule  extends AbstractModule {
 
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
+
+        //install our pipeline modules
+        install(new PipelineModule());
 
     }
 

@@ -236,10 +236,10 @@ public class CpNamingUtils {
 
 
         if ( isCollectionEdgeType( edgeName ) ) {
-            return getCollectionScopeNameFromCollectionName( getCollectionName( edgeName ) );
+            return getCollectionName( edgeName ) ;
         }
 
-        return getConnectionScopeName( getConnectionType( edgeName ) );
+        return getConnectionType( edgeName ) ;
     }
 
 
@@ -260,20 +260,4 @@ public class CpNamingUtils {
     }
 
 
-    /**
-     * Only use when searching graph.  When searching ES use the <see>createCollectionSearchEdge</see>
-     */
-    public static String getCollectionScopeNameFromCollectionName( String name ) {
-        String csn = EDGE_COLL_SUFFIX + name;
-        return csn.toLowerCase();
-    }
-
-
-    /**
-     * Only use when searching graph.  When searching ES use the <see>createConnectionSearchByEdge</see>
-     */
-    public static String getConnectionScopeName( String connectionType ) {
-        String csn = EDGE_CONN_SUFFIX + connectionType;
-        return csn.toLowerCase();
-    }
 }

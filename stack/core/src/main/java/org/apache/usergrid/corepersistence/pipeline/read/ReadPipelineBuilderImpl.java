@@ -39,7 +39,7 @@ import rx.Observable;
 public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
 
-    private final FilterFactory filterFactory;
+    private final ReadFilterFactory readFilterFactory;
 
     private final DataPipeline pipeline;
 
@@ -54,11 +54,16 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
 
     @Inject
-    public ReadPipelineBuilderImpl( final FilterFactory filterFactory,
+    public ReadPipelineBuilderImpl( final ReadFilterFactory readFilterFactory,
                                     @Assisted final ApplicationScope applicationScope ) {
-        this.filterFactory = filterFactory;
+        this.readFilterFactory = readFilterFactory;
+
+        //set up our pipeline with our application scope
         this.pipeline = new DataPipeline( applicationScope );
+
+        //init our cursor to empty
         this.cursor = Optional.absent();
+
         //set the default limit
         this.limit = Optional.absent();
     }
@@ -84,7 +89,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
     @Override
     public ReadPipelineBuilder setStartId( final Id id ) {
-        pipeline.withTraverseCommand( filterFactory.getEntityIdFilter( id ) );
+        pipeline.withTraverseCommand( readFilterFactory.getEntityIdFilter( id ) );
 
         this.collectorFilter = null;
 
@@ -96,7 +101,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     @Override
     public ReadPipelineBuilder getEntityViaCollection( final String collectionName, final Id entityId ) {
 
-        pipeline.withTraverseCommand( filterFactory.readGraphCollectionByIdFilter( collectionName, entityId ) );
+        pipeline.withTraverseCommand( readFilterFactory.readGraphCollectionByIdFilter( collectionName, entityId ) );
 
         setEntityLoaderFilter();
 
@@ -108,7 +113,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     public ReadPipelineBuilder getCollection( final String collectionName ) {
 
 
-        pipeline.withTraverseCommand( filterFactory.readGraphCollectionCommand( collectionName ) );
+        pipeline.withTraverseCommand( readFilterFactory.readGraphCollectionCommand( collectionName ) );
 
         setEntityLoaderFilter();
 
@@ -120,7 +125,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     public ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String query ) {
 
         //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
-        collectorFilter = filterFactory.queryCollectionElasticSearchCollector( collectionName, query );
+        collectorFilter = readFilterFactory.queryCollectionElasticSearchCollector( collectionName, query );
         return this;
     }
 
@@ -128,7 +133,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     @Override
     public ReadPipelineBuilder getEntityViaConnection( final String connectionName, final Id entityId ) {
 
-        pipeline.withTraverseCommand( filterFactory.readGraphConnectionByIdFilter( connectionName, entityId ) );
+        pipeline.withTraverseCommand( readFilterFactory.readGraphConnectionByIdFilter( connectionName, entityId ) );
         setEntityLoaderFilter();
 
         return this;
@@ -138,7 +143,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     @Override
     public ReadPipelineBuilder getConnection( final String connectionName ) {
 
-        pipeline.withTraverseCommand( filterFactory.readGraphConnectionCommand( connectionName ) );
+        pipeline.withTraverseCommand( readFilterFactory.readGraphConnectionCommand( connectionName ) );
         setEntityLoaderFilter();
 
         return this;
@@ -147,7 +152,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
     @Override
     public ReadPipelineBuilder getConnection( final String connectionName, final String entityType ) {
-        pipeline.withTraverseCommand( filterFactory.readGraphConnectionCommand( connectionName, entityType ) );
+        pipeline.withTraverseCommand( readFilterFactory.readGraphConnectionCommand( connectionName, entityType ) );
         setEntityLoaderFilter();
 
         return this;
@@ -164,7 +169,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     public ReadPipelineBuilder connectionWithQuery( final String connectionName, final String query ) {
 
         //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
-        collectorFilter = filterFactory.queryConnectionElasticSearchCollector( connectionName, query );
+        collectorFilter = readFilterFactory.queryConnectionElasticSearchCollector( connectionName, query );
 
         return this;
     }
@@ -176,7 +181,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
         //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
         collectorFilter =
-            filterFactory.queryConnectionElasticSearchCollector( connectionName, entityType, query);
+            readFilterFactory.queryConnectionElasticSearchCollector( connectionName, entityType, query);
         return this;
     }
 
@@ -192,6 +197,6 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
 
     private void setEntityLoaderFilter() {
-        collectorFilter = filterFactory.entityLoadCollector();
+        collectorFilter = readFilterFactory.entityLoadCollector();
     }
 }

@@ -164,7 +164,7 @@ public class EdgeTestUtils {
      */
     public static SearchByIdType createSearchByEdgeAndId( final Id sourceId, final String type, final long maxVersion,
                                                           final String idType, final Edge last ) {
-        return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType, last );
+        return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType, Optional.of(last) );
     }
 
 

@@ -30,13 +30,12 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getConnectionScopeName;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeTypeFromConnectionType;
 
 
 /**
@@ -52,6 +51,7 @@ public class ReadGraphConnectionByTypeFilter extends AbstractFilter<Id, Edge> im
     /**
      * Create a new instance of our command
      */
+    @Inject
     public ReadGraphConnectionByTypeFilter( final GraphManagerFactory graphManagerFactory,
                                             @Assisted final String connectionName, @Assisted final String entityType ) {
         this.graphManagerFactory = graphManagerFactory;
@@ -69,7 +69,7 @@ public class ReadGraphConnectionByTypeFilter extends AbstractFilter<Id, Edge> im
         //set our our constant state
         final Optional<Edge> startFromCursor = getCursor();
 
-        final String edgeName = getConnectionScopeName( connectionName );
+        final String edgeName = getEdgeTypeFromConnectionType( connectionName );
 
 
         //return all ids that are emitted from this edge
