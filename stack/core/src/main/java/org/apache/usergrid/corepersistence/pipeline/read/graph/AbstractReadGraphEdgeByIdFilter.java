@@ -20,10 +20,8 @@
 package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
-import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.cursor.NoCursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.TraverseFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractPipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
@@ -41,7 +39,8 @@ import rx.Observable;
 /**
  * Filter should take and Id and a graph edge, and ensure the connection between the two exists
  */
-public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractFilter<Id, Id> implements TraverseFilter {
+public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractPipelineOperation<Id, Id> implements
+    Filter<Id, Id> {
 
     private final GraphManagerFactory graphManagerFactory;
     private final Id targetId;
@@ -56,15 +55,9 @@ public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractFilter<Id,
 
 
     @Override
-    protected CursorSerializer<Id> getCursorSerializer() {
-        return NoCursorSerializer.create();
-    }
-
-
-    @Override
     public Observable<Id> call( final Observable<Id> idObservable ) {
 
-        final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+        final GraphManager gm = graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
 
         return idObservable.flatMap( id -> {
             final String edgeTypeName = getEdgeName();

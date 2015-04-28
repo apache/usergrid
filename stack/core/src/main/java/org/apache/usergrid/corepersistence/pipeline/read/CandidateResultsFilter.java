@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
+import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -27,4 +28,4 @@ import org.apache.usergrid.persistence.model.entity.Id;
  * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of ids, and emits
  * an observable of ids
  */
-public interface TraverseFilter extends Filter<Id> {}
+public interface CandidateResultsFilter extends PipelineOperation<Id, CandidateResults> {}

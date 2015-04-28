@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
 
 /**
@@ -39,7 +40,6 @@ public class ResponseCursor {
 
 
     private static final ObjectMapper MAPPER = CursorSerializerUtil.getMapper();
-    private static final Base64Variant VARIANT = CursorSerializerUtil.getBase64();
 
     /**
      * We use a map b/c some indexes might be skipped
@@ -61,8 +61,14 @@ public class ResponseCursor {
     /**
      * now we're done, encode as a string
      */
-    public String encodeAsString() {
+    public Optional<String> encodeAsString() {
         try {
+
+            if(cursors.isEmpty()){
+                return Optional.absent();
+            }
+
+
             final ObjectNode map = MAPPER.createObjectNode();
 
             for ( Map.Entry<Integer, CursorEntry<?>> entry : cursors.entrySet() ) {
@@ -78,8 +84,9 @@ public class ResponseCursor {
             final byte[] output = MAPPER.writeValueAsBytes(map);
 
             //generate a base64 url save string
-            return Base64.getUrlEncoder().encodeToString( output );
-//            return MAPPER.writer( VARIANT ).writeValueAsString( map );
+            final String value = Base64.getUrlEncoder().encodeToString( output );
+
+            return Optional.of( value );
 
         }
         catch ( JsonProcessingException e ) {

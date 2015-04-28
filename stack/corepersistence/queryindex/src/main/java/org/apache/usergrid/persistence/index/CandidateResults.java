@@ -42,13 +42,14 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
     private final List<CandidateResult> candidates;
     private final Collection<SelectFieldMapping> getFieldMappings;
+    private final SearchEdge searchEdge;
 
 
-    public CandidateResults( List<CandidateResult> candidates,
-                             final Collection<SelectFieldMapping> getFieldMappings
-    ) {
+    public CandidateResults( List<CandidateResult> candidates, final Collection<SelectFieldMapping> getFieldMappings,
+                             final SearchEdge searchEdge ) {
         this.candidates = candidates;
         this.getFieldMappings = getFieldMappings;
+        this.searchEdge = searchEdge;
         offset = Optional.absent();
     }
 
@@ -87,6 +88,11 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
     public Collection<SelectFieldMapping> getGetFieldMappings() {
         return getFieldMappings;
+    }
+
+
+    public SearchEdge getSearchEdge() {
+        return searchEdge;
     }
 
 

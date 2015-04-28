@@ -143,7 +143,7 @@ public class GeoPagingTest extends BaseIT {
         final String query =  "select * where location within 1500000 of 37, -75" ;
 
         final CandidateResults
-                candidates = applicationEntityIndex.search( edge, SearchTypes.fromTypes( "cat" ), query, 100 );
+                candidates = applicationEntityIndex.search( edge, SearchTypes.fromTypes( "cat" ), query, 100, 0 );
 
         assertNotNull( candidates );
 

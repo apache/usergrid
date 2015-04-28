@@ -20,11 +20,25 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateResultsEntityResultsCollector;
+import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityLoadCollector;
 
 
 /**
- * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of ids, and emits
- * an observable of ids
+ * A factory for generating collectors
  */
-public interface Filter<T, R> extends PipelineOperation<T, R> {}
+public interface CollectorFactory {
+
+    /**
+     * Generate a new instance of the command with the specified parameters
+     */
+    EntityLoadCollector entityLoadCollector();
+
+    /**
+     * Get the collector for collection candidate results to entities
+     * @return
+     */
+    CandidateResultsEntityResultsCollector candidateResultsEntityResultsCollector();
+
+
+}

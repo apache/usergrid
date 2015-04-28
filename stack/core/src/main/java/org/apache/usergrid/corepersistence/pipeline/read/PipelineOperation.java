@@ -20,17 +20,19 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
+import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
+
+import rx.Observable;
+
+
 /**
- * A command that is used to reduce our stream of results into a final output
- * @param <T>
+ * Interface for filtering commands.  All filters must take an observable of Id's as an input.  Output is then determined by subclasses.
+  * This takes an input of Id, performs some operation, and emits values for further processing in the Observable
+  * pipeline
+ * @param <T> The input type
+ * @param <R>
  */
-public interface CollectorFilter<T> extends Filter<T> {
+public interface PipelineOperation< T, R> extends Observable.Transformer<T, R> {
 
-    /**
-     * Set the prefered result size for the command
-     * @param limit
-     */
-    void setLimit( final int limit );
-
-
+    void setContext(final PipelineContext pipelineContext);
 }

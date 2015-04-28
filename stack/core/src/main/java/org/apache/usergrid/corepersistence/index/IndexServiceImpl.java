@@ -33,9 +33,11 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.impl.IndexOperation;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -47,6 +49,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
+import rx.functions.Func1;
 import rx.observables.ConnectableObservable;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
@@ -68,6 +71,7 @@ public class IndexServiceImpl implements IndexService {
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final Timer indexTimer;
+    private final Timer addTimer;
 
 
     @Inject
@@ -77,7 +81,8 @@ public class IndexServiceImpl implements IndexService {
         this.entityIndexFactory = entityIndexFactory;
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
-        this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.process");
+        this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
+        this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
 
 
@@ -128,15 +133,43 @@ public class IndexServiceImpl implements IndexService {
 
 
     @Override
-    public Observable<IndexOperationMessage> indexEdge( final ApplicationScope applicationScope, final Entity entity,
-                                                        final Edge edge ) {
-        throw new NotImplementedException( "Implement me" );
+    public Observable<IndexOperationMessage> indexEdge( final ApplicationScope applicationScope, final Entity entity, final Edge edge ) {
+
+
+
+        final Observable<IndexOperationMessage> batches =  Observable.just( edge ).map( observableEdge -> {
+
+            //if the node is the
+            if ( edge.getTargetNode().equals( entity.getId() ) ) {
+                return generateScopeFromSource( edge );
+            }
+
+            return generateScopeToTarget( edge );
+        } ).flatMap( indexEdge -> {
+
+            final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+
+
+            final EntityIndexBatch batch = ei.createBatch();
+
+            batch.index( indexEdge, entity );
+
+            return batch.execute();
+        } );
+
+        return ObservableTimer.time( batches, addTimer  );
+
+
     }
 
 
     @Override
     public Observable<IndexOperationMessage> deleteIndexEdge( final ApplicationScope applicationScope,
                                                               final Edge edge ) {
+
+
+        //TODO, query ES and remove this edge
+
         throw new NotImplementedException( "Implement me" );
     }
 
@@ -144,6 +177,8 @@ public class IndexServiceImpl implements IndexService {
     @Override
     public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
                                                                   final Id entityId ) {
+
+        //TODO query ES and remove this entityId
         throw new NotImplementedException( "Implement me" );
     }
 
@@ -186,6 +221,8 @@ public class IndexServiceImpl implements IndexService {
         return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection )
                               .map( edge -> generateScopeToTarget( edge ) );
     }
+
+
 
 
 

@@ -20,11 +20,23 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.persistence.model.entity.Id;
+import java.util.List;
+
+import org.apache.usergrid.persistence.model.entity.Entity;
 
 
 /**
- * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of ids, and emits
- * an observable of ids
+ * An encapsulation of entities as a group of responses.  Ordered by the requesting filters.  Each set should be considered a "page" of results.
  */
-public interface Filter<T, R> extends PipelineOperation<T, R> {}
+public class ResultsPage {
+
+    private final List<Entity> entityList;
+
+
+    public ResultsPage( final List<Entity> entityList ) {this.entityList = entityList;}
+
+
+    public List<Entity> getEntityList() {
+        return entityList;
+    }
+}

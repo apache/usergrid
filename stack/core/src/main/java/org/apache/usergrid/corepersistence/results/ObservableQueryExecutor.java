@@ -20,17 +20,29 @@
 package org.apache.usergrid.corepersistence.results;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.usergrid.corepersistence.pipeline.PipelineResult;
+import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
+import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
 
 import rx.Observable;
 
 
 /**
- * Our proxy to allow us to subscribe to observable results, then return them as an interator.  A bridge for 2.0 -> 1.0
- * code
+ * Our proxy to allow us to subscribe to observable results, then return them as an iterator.  A bridge for 2.0 -> 1.0
+ * code.  This should not be used on any new code, and will eventually be deleted
  */
 public class ObservableQueryExecutor implements QueryExecutor {
 
@@ -39,9 +51,47 @@ public class ObservableQueryExecutor implements QueryExecutor {
     public Iterator<Results> iterator;
 
 
-    public ObservableQueryExecutor( final Observable<Results> resultsObservable ) {
-        //in no values,  we must emit an empty results so add the default
-        this.resultsObservable = resultsObservable.defaultIfEmpty( new Results() );
+    public ObservableQueryExecutor( final Observable<PipelineResult<ResultsPage>> resultsObservable ) {
+       //map to our old results objects, return a default empty if required
+        this.resultsObservable = resultsObservable.map( resultsPage -> createResults( resultsPage ) ).defaultIfEmpty( new Results() );
+    }
+
+
+
+    private org.apache.usergrid.persistence.Entity mapEntity( final Entity cpEntity ) {
+
+
+        final Id entityId = cpEntity.getId();
+
+        org.apache.usergrid.persistence.Entity entity =
+            EntityFactory.newEntity( entityId.getUuid(), entityId.getType() );
+
+        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
+        entity.addProperties( entityMap );
+
+        return entity;
+    }
+
+    private Results createResults( final PipelineResult<ResultsPage> pipelineResults ){
+
+        final ResultsPage resultsPage = pipelineResults.getResult();
+        final List<Entity> entityList = resultsPage.getEntityList();
+        final List<org.apache.usergrid.persistence.Entity> resultsEntities = new ArrayList<>( entityList.size() );
+
+
+        for(final Entity entity: entityList){
+            resultsEntities.add( mapEntity( entity ) );
+        }
+
+        final Results results = Results.fromEntities( resultsEntities );
+
+        if(pipelineResults.getCursor().isPresent()) {
+            results.setCursor( pipelineResults.getCursor().get() );
+        }
+
+        return results;
+
+
     }
 
 
@@ -74,4 +124,6 @@ public class ObservableQueryExecutor implements QueryExecutor {
 
         return next;
     }
+
+
 }

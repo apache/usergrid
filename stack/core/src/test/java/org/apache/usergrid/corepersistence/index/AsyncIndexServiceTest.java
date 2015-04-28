@@ -177,7 +177,7 @@ public abstract class AsyncIndexServiceTest {
 
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                applicationEntityIndex.search( searchEdge, searchTypes, "select *", 100 );
+                applicationEntityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

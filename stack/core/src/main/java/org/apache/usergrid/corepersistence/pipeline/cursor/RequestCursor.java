@@ -45,7 +45,6 @@ public class RequestCursor {
     private static final int MAX_CURSOR_COUNT = 100;
 
     private static final ObjectMapper MAPPER = CursorSerializerUtil.getMapper();
-    private static final Base64Variant VARIANT = CursorSerializerUtil.getBase64();
 
     private final Map<Integer, JsonNode> parsedCursor;
 
@@ -62,10 +61,16 @@ public class RequestCursor {
 
     /**
      * Get the cursor with the specified id
+     *
+     * May return null if not found
      */
     public <T> T getCursor( final int id, final CursorSerializer<T> serializer ) {
 
         final JsonNode node = parsedCursor.get( id );
+
+        if(node == null){
+            return null;
+        }
 
         return serializer.fromJsonNode( node, MAPPER );
     }

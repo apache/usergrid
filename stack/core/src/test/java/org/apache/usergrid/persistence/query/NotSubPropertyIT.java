@@ -163,7 +163,7 @@ public class NotSubPropertyIT {
                 assertEquals( "Not returned as excpected", expected, returned );
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 

@@ -20,12 +20,8 @@
 package org.apache.usergrid.corepersistence.pipeline.read.entity;
 
 
-import java.io.Serializable;
-
-import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.cursor.NoCursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.TraverseFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractPipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -38,7 +34,7 @@ import rx.Observable;
  * This command is a stopgap to make migrating 1.0 code easier.  Once full traversal has been implemented, this should
  * be removed
  */
-public class EntityIdFilter extends AbstractFilter<Id, Serializable> implements TraverseFilter {
+public class EntityIdFilter extends AbstractPipelineOperation<Id, Id> implements Filter<Id, Id> {
 
     private final Id entityId;
 
@@ -54,9 +50,4 @@ public class EntityIdFilter extends AbstractFilter<Id, Serializable> implements 
         return Observable.just( entityId );
     }
 
-
-    @Override
-    protected CursorSerializer<Serializable> getCursorSerializer() {
-        return NoCursorSerializer.create();
-    }
 }
