@@ -187,11 +187,11 @@ public interface IndexFig extends GuicyFig {
     String getClientType();
 
     @Key("elasticsearch.refresh_search_max")
-    @Default("10")
+    @Default("40")
     int maxRefreshSearches();
 
     @Key("elasticsearch.refresh_sleep_ms")
-    @Default("200")
+    @Default("250")
     long refreshSleep();
 
     @Default( "5000" )

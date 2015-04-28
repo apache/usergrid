@@ -125,19 +125,22 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
         //start our processing immediately
         final Observable<IndexRefreshCommandInfo> future = Async.toAsync( () -> {
-            IndexRefreshCommandInfo info;
             try {
+                boolean found = false;
                 for ( int i = 0; i < indexFig.maxRefreshSearches(); i++ ) {
                     final SearchResponse response = builder.execute().get();
 
-                    if ( response.getHits().totalHits() > 0 ) {
-                        return new IndexRefreshCommandInfo(true,System.currentTimeMillis() - start);
+                    if (response.getHits().totalHits() > 0) {
+                        found = true;
+                        break;
                     }
 
-                    Thread.sleep( indexFig.refreshSleep() );
+                    if (i % 4 == 0) {
+                        Thread.sleep(indexFig.refreshSleep());
+                    }
                 }
 
-                return new IndexRefreshCommandInfo(false,System.currentTimeMillis() - start);
+                return new IndexRefreshCommandInfo(found,System.currentTimeMillis() - start);
             }
             catch ( Exception ee ) {
                 logger.error( "Failed during refresh search for " + uuid, ee );
