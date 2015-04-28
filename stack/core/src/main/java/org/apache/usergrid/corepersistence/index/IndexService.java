@@ -21,9 +21,11 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
 import rx.observables.ConnectableObservable;
@@ -46,6 +48,37 @@ public interface IndexService {
      * to assign the correct scheduler to the observable based on their threading needs
      */
     Observable<IndexOperationMessage> indexEntity( final ApplicationScope applicationScope, final Entity entity );
+
+
+    /**
+     * Index the edge when an edge is created or destroyed
+     * @param applicationScope
+     * @param entity
+     * @param edge
+     * @return
+     */
+    Observable<IndexOperationMessage> indexEdge(final ApplicationScope applicationScope, final Entity entity, final Edge edge);
+
+
+    /**
+     * Delete an index edge from the specified scope
+     * @param applicationScope
+     * @param edge
+     * @return
+     */
+    Observable<IndexOperationMessage> deleteIndexEdge(final ApplicationScope applicationScope, final Edge edge);
+
+
+
+
+    /**
+     * Delete all indexes with the specified entityId
+     *
+     * @param applicationScope
+     * @param entityId
+     * @return
+     */
+    Observable<IndexOperationMessage> deleteEntityIndexes(final ApplicationScope applicationScope, final Id entityId);
 
 
 

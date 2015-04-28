@@ -85,6 +85,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
     @Override
     public Observable<IndexRefreshCommandInfo> execute() {
+        final long start = System.currentTimeMillis();
 
         Timer.Context refreshTimer = timer.time();
         //id to hunt for
@@ -124,7 +125,6 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
         //start our processing immediately
         final Observable<IndexRefreshCommandInfo> future = Async.toAsync( () -> {
-            long start = System.currentTimeMillis();
             IndexRefreshCommandInfo info;
             try {
                 for ( int i = 0; i < indexFig.maxRefreshSearches(); i++ ) {

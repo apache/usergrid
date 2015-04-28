@@ -37,7 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import org.apache.usergrid.corepersistence.index.AsyncIndexService;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -175,7 +176,9 @@ public class CpEntityManager implements EntityManager {
 
     private final CounterUtils counterUtils;
 
-    private final AsyncIndexService indexService;
+    private final AsyncEventService indexService;
+
+    private PipelineBuilderFactory pipelineBuilderFactory;
 
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
@@ -214,14 +217,20 @@ public class CpEntityManager implements EntityManager {
      * @param managerCache
      * @param metricsFactory
      * @param applicationId
+     * @param entityCollectionManagerFactory
+     * @param graphManagerFactory
      */
-    public CpEntityManager(final CassandraService cass, final CounterUtils counterUtils, final AsyncIndexService indexService, final ManagerCache managerCache, final MetricsFactory metricsFactory, final UUID applicationId ) {
+    public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
+                            final MetricsFactory metricsFactory,final PipelineBuilderFactory pipelineBuilderFactory , final UUID applicationId ) {
+
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
         Preconditions.checkNotNull( managerCache, "managerCache must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
         Preconditions.checkNotNull( indexService, "indexService must not be null" );
+        Preconditions.checkNotNull( pipelineBuilderFactory, "pipelineBuilderFactory must not be null" );
+        this.pipelineBuilderFactory = pipelineBuilderFactory;
 
 
         this.managerCache = managerCache;
@@ -735,7 +744,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
 
         CpRelationManager relationManager =
-            new CpRelationManager( metricsFactory, managerCache, indexService, this, applicationId, entityRef );
+            new CpRelationManager( metricsFactory, managerCache, pipelineBuilderFactory, indexService, this, applicationId, entityRef );
         return relationManager;
     }
 
@@ -2816,7 +2825,6 @@ public class CpEntityManager implements EntityManager {
     public CassandraService getCass() {
         return cass;
     }
-
 
 
     @Override

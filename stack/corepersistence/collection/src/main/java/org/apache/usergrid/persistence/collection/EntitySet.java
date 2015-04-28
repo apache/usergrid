@@ -18,6 +18,8 @@
  */
 package org.apache.usergrid.persistence.collection;
 
+import java.util.Collection;
+
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -31,17 +33,23 @@ public interface EntitySet {
      * @param entityId
      * @return
      */
-    public MvccEntity getEntity(Id entityId);
+    MvccEntity getEntity( Id entityId );
+
+    /**
+     * Get all entities in the set
+     * @return
+     */
+    Collection<MvccEntity> getEntities();
 
     /**
      * Get the number of entities in this set
      * @return
      */
-    public int size();
+    int size();
 
     /**
      * Return true if the set is empty
      * @return
      */
-    public boolean isEmpty();
+    boolean isEmpty();
 }

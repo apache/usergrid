@@ -65,7 +65,7 @@ public class EdgesObservableImpl implements EdgesObservable {
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                        null ) );
+                        Optional.<Edge>absent() ) );
         } );
     }
 
@@ -86,7 +86,7 @@ public class EdgesObservableImpl implements EdgesObservable {
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, startTimestamp.or( Long.MIN_VALUE ), SearchByEdgeType.Order.ASCENDING,
-                        null ) );
+                        Optional.<Edge>absent() ) );
         } );
     }
 
@@ -123,7 +123,7 @@ public class EdgesObservableImpl implements EdgesObservable {
 
             return gm.loadEdgesToTarget(
                 new SimpleSearchByEdgeType( targetNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                    null ) );
+                    Optional.<Edge>absent() ) );
         } );
     }
 }

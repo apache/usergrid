@@ -24,12 +24,12 @@ import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.corepersistence.TestIndexModule;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.InMemoryAsyncEventService;
 import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
 
@@ -53,8 +53,8 @@ public class InMemoryAsycIndexServiceTest extends AsyncIndexServiceTest {
 
 
     @Override
-    protected AsyncIndexService getAsyncIndexService() {
-        return  new InMemoryAsyncIndexService( indexService, rxTaskScheduler, entityCollectionManagerFactory  );
+    protected AsyncEventService getAsyncEventService() {
+        return  new InMemoryAsyncEventService( indexService, rxTaskScheduler, entityCollectionManagerFactory,false  );
     }
 
 

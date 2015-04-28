@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
@@ -39,6 +40,7 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.netflix.astyanax.MutationBatch;
 
 
@@ -272,7 +274,8 @@ public abstract class DirectedEdgeMeta {
                 final Id sourceId = nodes[0].id;
                 final String edgeType = types[0];
 
-                final SearchByEdgeType search = new SimpleSearchByEdgeType( sourceId, edgeType, maxValue, order, null);
+                final SearchByEdgeType search = new SimpleSearchByEdgeType( sourceId, edgeType, maxValue, order,
+                    Optional.<Edge>absent());
 
                 return serialization.getEdgesFromSource( edgeColumnFamilies, scope, search, shards );
             }
@@ -334,7 +337,7 @@ public abstract class DirectedEdgeMeta {
                 final String targetType = types[1];
 
                 final SearchByIdType search =
-                        new SimpleSearchByIdType( sourceId, edgeType, maxValue, order, targetType,  null );
+                        new SimpleSearchByIdType( sourceId, edgeType, maxValue, order, targetType,  Optional.<Edge>absent() );
 
                 return serialization.getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, search, shards );
             }
@@ -392,7 +395,7 @@ public abstract class DirectedEdgeMeta {
                 final Id targetId = nodes[0].id;
                 final String edgeType = types[0];
 
-                final SearchByEdgeType search = new SimpleSearchByEdgeType( targetId, edgeType, maxValue, order, null);
+                final SearchByEdgeType search = new SimpleSearchByEdgeType( targetId, edgeType, maxValue, order,  Optional.<Edge>absent());
 
                 return serialization.getEdgesToTarget( edgeColumnFamilies, scope, search, shards );
             }

@@ -482,12 +482,6 @@
       <version>${metrics.version}</version>
     </dependency>
 
-      <dependency>
-          <groupId>io.reactivex</groupId>
-          <artifactId>rxjava</artifactId>
-          <version>${rx.version}</version>
-      </dependency>
-
     <dependency>
       <groupId>com.clearspring.analytics</groupId>
       <artifactId>stream</artifactId>
