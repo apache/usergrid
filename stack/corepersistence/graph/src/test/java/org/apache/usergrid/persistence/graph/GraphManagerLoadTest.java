@@ -49,6 +49,7 @@ import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 import rx.Observable;
@@ -113,7 +114,8 @@ public class GraphManagerLoadTest {
 
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
-                 return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null) );
+                 return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional
+                                      .<Edge>absent()) );
             }
         };
 
@@ -140,7 +142,7 @@ public class GraphManagerLoadTest {
 
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
-                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
+                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
             }
         };
 

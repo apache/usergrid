@@ -90,10 +90,6 @@ public class EntityIndexTest extends BaseIT {
 
     @Inject
     @Rule
-    public MigrationManagerRule migrationManagerRule;
-
-    @Inject
-    @Rule
     public ElasticSearchRule elasticSearchRule;
 
 
@@ -111,7 +107,6 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0 );
 
-        ei.refreshAsync().toBlocking().last();
 
         testQueries( searchEdge, searchTypes, entityIndex );
     }
@@ -142,7 +137,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.index( indexEdge, entity1 );
-        batch.execute().get();
+        batch.execute().toBlocking().last();
 
 
         Entity entity2 = new Entity( entityType );
@@ -156,7 +151,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.index( indexEdge, entity2 );
-        batch.execute().get();
+        batch.execute().toBlocking().last();
 
         ei.refreshAsync().toBlocking().last();
 
@@ -214,7 +209,7 @@ public class EntityIndexTest extends BaseIT {
 
                     EntityIndexBatch batch = entityIndex.createBatch();
                     insertJsonBlob( sampleJson, batch, entityType, indexEdge, size, 0 );
-                    batch.execute().get();
+                    batch.execute().toBlocking().last();
                 }
                 catch ( Exception e ) {
                     synchronized ( failTime ) {
@@ -257,6 +252,7 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void testAddMultipleIndexes() throws IOException {
+
         Id appId = new SimpleId( "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
@@ -266,24 +262,23 @@ public class EntityIndexTest extends BaseIT {
 
         final String entityType = "thing";
         IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, 10 );
-        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        final SearchTypes searchTypes = SearchTypes.fromTypes(entityType);
 
-        insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0 );
+        insertJsonBlob(entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0);
 
-        ei.refreshAsync().toBlocking().last();
 
-        testQueries( searchEdge, searchTypes, entityIndex );
+        testQueries(searchEdge, searchTypes, entityIndex);
 
-        ei.addIndex( "v2", 1, 0, "one" );
+        ei.addIndex("v2", 1, 0, "one");
 
-        insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 100 );
-
-        ei.refreshAsync().toBlocking().last();
+        insertJsonBlob(entityIndex, entityType, searchEdge, "/sample-large.json", 101, 100);
 
         //Hilda Youn
         testQuery( searchEdge, searchTypes, entityIndex, "name = 'Hilda Young'", 1 );
 
         testQuery( searchEdge, searchTypes, entityIndex, "name = 'Lowe Kelley'", 1 );
+
+        log.info("hi");
     }
 
 
@@ -302,19 +297,17 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
 
-        ei.refreshAsync().toBlocking().last();
 
         ei.addIndex( "v2", 1, 0, "one" );
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
 
-        ei.refreshAsync().toBlocking().last();
         CandidateResults crs = testQuery( searchEdge, searchTypes, entityIndex, "name = 'Bowers Oneil'", 2 );
 
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex( searchEdge, crs.get( 0 ) );
         entityIndexBatch.deindex( searchEdge, crs.get( 1 ) );
-        entityIndexBatch.execute().get();
+        entityIndexBatch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         //Hilda Youn
@@ -329,8 +322,10 @@ public class EntityIndexTest extends BaseIT {
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
         EntityIndexBatch batch = entityIndex.createBatch();
         insertJsonBlob( sampleJson, batch, entityType, indexEdge, max, startIndex );
-        batch.execute().get();
-        ei.refreshAsync().toBlocking().last();
+        batch.execute().toBlocking().last();
+        IndexRefreshCommandImpl.IndexRefreshCommandInfo info =  ei.refreshAsync().toBlocking().last();
+        long time = info.getExecutionTime();
+        log.info("refresh took ms:"+time);
     }
 
 
@@ -356,8 +351,6 @@ public class EntityIndexTest extends BaseIT {
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
             entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
             batch.index( indexEdge, entity );
-            batch.execute().get();
-
 
             if ( ++count > max ) {
                 break;
@@ -394,7 +387,7 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
         entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
 
-        entityIndex.createBatch().index( searchEdge, entity ).execute().get();
+        entityIndex.createBatch().index( searchEdge, entity ).execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         CandidateResults candidateResults = entityIndex
@@ -402,8 +395,8 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
-        batch.deindex( searchEdge, entity ).execute().get();
-        batch.execute().get();
+        batch.deindex( searchEdge, entity ).execute().toBlocking().last();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         candidateResults = entityIndex
@@ -418,8 +411,7 @@ public class EntityIndexTest extends BaseIT {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        CandidateResults candidateResults = null;
-        candidateResults = entityIndex.search( scope, searchTypes, queryString, num + 1 );
+        CandidateResults candidateResults  = entityIndex.search( scope, searchTypes, queryString, num + 1 );
 
         timer.stop();
 
@@ -533,7 +525,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index( indexSCope, user );
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         final String query = "where username = 'edanuff'";
@@ -542,7 +534,7 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         // EntityRef
@@ -603,7 +595,7 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( fred, UUIDGenerator.newTimeUUID() );
         batch.index( indexScope, fred );
 
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         final SearchTypes searchTypes = SearchTypes.fromTypes( "user" );
@@ -626,14 +618,9 @@ public class EntityIndexTest extends BaseIT {
     @Test
     public void healthTest() {
         Id appId = new SimpleId( "entityindextest" );
-        Id ownerId = new SimpleId( "multivaluedtype" );
-        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
         assertNotEquals( "cluster should be ok", Health.RED, ei.getClusterHealth() );
         assertEquals( "index should be ready", Health.GREEN, ei.getIndexHealth() );
-        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
-
         ei.refreshAsync().toBlocking().last();
-
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
         assertNotEquals( "cluster should be ready now", Health.RED, ei.getClusterHealth() );
     }
@@ -689,7 +676,7 @@ public class EntityIndexTest extends BaseIT {
         }
 
 
-        batch.execute().get();
+        batch.execute().toBlocking().last();
 
         ei.refreshAsync().toBlocking().last();
 
@@ -756,7 +743,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index( indexSCope, user );
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         final String query = "where searchUUID = " + searchUUID;
@@ -795,7 +782,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index( indexSCope, user );
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         final String query = "where string = 'I am*'";
@@ -852,7 +839,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         batch.index( indexSCope, first );
         batch.index( indexSCope, second );
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
 
@@ -917,7 +904,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope2, second );
 
 
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
 
@@ -998,7 +985,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope2, second );
 
 
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
 
@@ -1108,7 +1095,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope2, second );
 
 
-        batch.execute().get();
+        batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
 

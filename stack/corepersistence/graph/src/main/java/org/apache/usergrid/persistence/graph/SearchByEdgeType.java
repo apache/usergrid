@@ -70,7 +70,7 @@ public interface SearchByEdgeType {
      * Options for ordering.  By default, we want to perform descending for common use cases and read speed.  This is our our data
      * is optimized in cassandra
      */
-    public enum Order {
+    enum Order {
         DESCENDING,
         ASCENDING
     }

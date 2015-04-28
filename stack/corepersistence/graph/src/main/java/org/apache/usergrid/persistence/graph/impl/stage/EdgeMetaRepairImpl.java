@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -297,7 +299,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesToTargetBySourceType( scope,
-                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, SearchByEdgeType.Order.DESCENDING, subType,   null ) );
+                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, SearchByEdgeType.Order.DESCENDING, subType,   Optional.<Edge>absent() ) );
                 }
             } );
         }
@@ -343,7 +345,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope,
-                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, SearchByEdgeType.Order.DESCENDING, subType, null ) );
+                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, SearchByEdgeType.Order.DESCENDING, subType, Optional.<Edge>absent() ) );
                 }
             } );
         }

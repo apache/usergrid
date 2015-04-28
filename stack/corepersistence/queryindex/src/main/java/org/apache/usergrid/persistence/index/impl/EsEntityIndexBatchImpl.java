@@ -24,7 +24,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import rx.Observable;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -125,7 +126,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     @Override
-    public BetterFuture execute() {
+    public Observable execute() {
         IndexOperationMessage tempContainer = container;
         container = new IndexOperationMessage();
 
@@ -134,7 +135,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
          */
         if ( tempContainer.isEmpty() ) {
             tempContainer.done();
-            return tempContainer.getFuture();
+            return tempContainer.observable();
         }
 
         return indexBatchBufferProducer.put( tempContainer );
