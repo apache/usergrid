@@ -170,7 +170,7 @@ public class ManagementResource extends AbstractContextResource {
                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, false );
+                callback, false, true );
     }
 
 
@@ -184,13 +184,13 @@ public class ManagementResource extends AbstractContextResource {
                                     @QueryParam( "client_secret" ) String client_secret, @QueryParam( "ttl" ) long ttl,
                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception {
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, true );
+                callback, false, false);
     }
 
 
-   private Response getAccessTokenInternal( UriInfo ui, String authorization, String grant_type, String username,
-                                             String password, String client_id, String client_secret, long ttl,
-                                             String callback, boolean loadAdminData ) throws Exception {
+   private Response getAccessTokenInternal(UriInfo ui, String authorization, String grant_type, String username,
+                                           String password, String client_id, String client_secret, long ttl,
+                                           String callback, boolean adminData, boolean me) throws Exception {
 
 
         UserInfo user = null;
@@ -206,9 +206,12 @@ public class ManagementResource extends AbstractContextResource {
 
             if ( user == null ) {
 
-                // make sure authentication is allowed considering
-                // external token validation configuration (UG Central SSO)
-                ensureAuthenticationAllowed( username, grant_type );
+                if ( !me ) { // if not lightweight-auth, i.e. /management/me then...
+
+                    // make sure authentication is allowed considering
+                    // external token validation configuration (UG Central SSO)
+                    ensureAuthenticationAllowed( username, grant_type );
+                }
 
                 if ( authorization != null ) {
                     String type = stringOrSubstringBeforeFirst( authorization, ' ' ).toUpperCase();
@@ -288,7 +291,7 @@ public class ManagementResource extends AbstractContextResource {
                     new AccessInfo().withExpiresIn( tokens.getMaxTokenAgeInSeconds( token ) ).withAccessToken( token )
                                     .withPasswordChanged( passwordChanged );
 
-            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, loadAdminData ) );
+            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, me ) );
 
             // increment counters for admin login
             management.countAdminUserAction( user, "login" );
@@ -320,7 +323,7 @@ public class ManagementResource extends AbstractContextResource {
         logger.info( "ManagementResource.getAccessTokenPost" );
 
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, true );
+                callback, false, false);
     }
 
 
@@ -338,7 +341,7 @@ public class ManagementResource extends AbstractContextResource {
                                              @FormParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, false );
+                callback, false, true );
     }
 
 
@@ -367,7 +370,7 @@ public class ManagementResource extends AbstractContextResource {
         }
 
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, true );
+                callback, false, false );
     }
 
 
@@ -395,7 +398,7 @@ public class ManagementResource extends AbstractContextResource {
         }
 
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, false );
+                callback, false, false );
     }
 
 
@@ -576,6 +579,7 @@ public class ManagementResource extends AbstractContextResource {
             if ( userId == null ) {
 
                 // create local user and and organizations they have on the central Usergrid instance
+                logger.info("User {} does not exist locally, creating", username );
 
                 String name  = userNode.get( "name" ).getTextValue();
                 String email = userNode.get( "email" ).getTextValue();
@@ -612,13 +616,18 @@ public class ManagementResource extends AbstractContextResource {
                                 ManagementResource.class, SSO_CREATED_LOCAL_ADMINS );
                         createdAdminsCounter.inc();
 
+                        logger.info( "Created user {} and org {}", username, orgName );
+
                     } else {
 
                         // already created user, so just create an org
                         final OrganizationInfo organization = management.createOrganization( orgName, userInfo, true );
 
+
                         management.activateOrganization( organization ); // redundant?
                         applicationCreator.createSampleFor( organization );
+
+                        logger.info( "Created user {}'s other org {}", username, orgName );
                     }
                 }
 
