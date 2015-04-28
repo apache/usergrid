@@ -83,7 +83,7 @@ public class RxTaskSchedulerImpl implements RxTaskScheduler {
 
         public MaxSizeThreadPool( final BlockingQueue<Runnable> queue, final int maxPoolSize ) {
 
-            super( 1, maxPoolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( ),  new RejectedHandler() );
+            super( maxPoolSize, maxPoolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( ),  new RejectedHandler() );
         }
     }
 
