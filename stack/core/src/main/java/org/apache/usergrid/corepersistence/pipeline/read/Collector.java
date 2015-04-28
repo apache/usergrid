@@ -20,11 +20,12 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.persistence.model.entity.Id;
-
-
 /**
- * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of ids, and emits
- * an observable of ids
+ * A command that is used to reduce our stream of results into a final output
+ * @param <T>
  */
-public interface Filter<T, R> extends PipelineOperation<T, R> {}
+public interface Collector<T, R> extends PipelineOperation<T, R> {
+
+
+
+}

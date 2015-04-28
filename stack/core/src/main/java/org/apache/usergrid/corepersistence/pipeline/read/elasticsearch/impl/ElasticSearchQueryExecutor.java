@@ -48,7 +48,13 @@ public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<R
 
     private final SearchTypes types;
 
-    private final Query query;
+    private final String query;
+
+    private final Optional<Integer> setOffsetFromCursor;
+
+    private final int limit;
+
+    private int offset;
 
 
     private Results currentResults;
@@ -56,18 +62,22 @@ public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<R
     private boolean moreToLoad = true;
 
 
+
+
     public ElasticSearchQueryExecutor( final ResultsLoaderFactory resultsLoaderFactory, final ApplicationEntityIndex entityIndex,
                                        final ApplicationScope applicationScope, final SearchEdge indexScope,
-                                       final SearchTypes types, final Query query ) {
+                                       final SearchTypes types, final String query, final Optional<Integer> setOffsetFromCursor, final int limit ) {
         this.resultsLoaderFactory = resultsLoaderFactory;
         this.applicationScope = applicationScope;
         this.entityIndex = entityIndex;
         this.indexScope = indexScope;
         this.types = types;
+        this.setOffsetFromCursor = setOffsetFromCursor;
 
         //we must deep copy the query passed.  Otherwise we will modify it's state with cursors.  Won't fix, not relevant
         //once we start subscribing to streams.
-        this.query = new Query(query);
+        this.query = query;
+        this.limit = limit;
     }
 
 
@@ -83,7 +93,6 @@ public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<R
 
         final int maxQueries = 10; // max re-queries to satisfy query limit
 
-        final int originalLimit = query.getLimit();
 
         Results results = null;
         int queryCount = 0;
@@ -91,13 +100,15 @@ public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<R
 
         CandidateResults crs = null;
 
+        int newLimit = limit;
+
         while ( queryCount++ < maxQueries ) {
 
-            crs = getCandidateResults( query );
+            crs = entityIndex.search( indexScope, types, query, newLimit , offset);
 
 
             logger.debug( "Calling build results with crs {}", crs );
-            results = buildResults( indexScope, query, crs );
+            results = buildResults( indexScope, crs );
 
             /**
              * In an edge case where we delete stale entities, we could potentially get less results than expected.
@@ -115,17 +126,15 @@ public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<R
 
             // need to query for more
             // ask for just what we need to satisfy, don't want to exceed limit
-            query.setOffsetFromCursor(results.getCursor());
-            query.setLimit( originalLimit - results.size() );
+            newLimit =  newLimit - results.size();
 
             logger.warn( "Satisfy query limit {}, new limit {} query count {}", new Object[] {
-                originalLimit, query.getLimit(), queryCount
+                limit, newLimit, queryCount
             } );
         }
 
         //now set our cursor if we have one for the next iteration
         if ( results.hasCursor() ) {
-            query.setOffsetFromCursor(results.getCursor());
             moreToLoad = true;
         }
 
@@ -133,48 +142,32 @@ public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<R
             moreToLoad = false;
         }
 
-
-        //set our select subjects into our query if provided
-        if(crs != null){
-            query.setSelectSubjects( crs.getGetFieldMappings() );
-        }
-
+//
+//        //set our select subjects into our query if provided
+//        if(crs != null){
+//            query.setSelectSubjects( crs.getGetFieldMappings() );
+//        }
+//
 
         //set our current results and the flag
         this.currentResults = results;
     }
 
 
-    /**
-     * Get the candidates or load the cursor, whichever we require
-     * @param query
-     * @return
-     */
-    private CandidateResults getCandidateResults(final Query query){
-        final Optional<Integer> cursor = query.getOffset();
-        final String queryToExecute = query.getQl().or("select *");
-
-        CandidateResults results = cursor.isPresent()
-            ? entityIndex.search( indexScope, types, queryToExecute, query.getLimit() , cursor.get())
-            : entityIndex.search( indexScope, types, queryToExecute, query.getLimit());
-
-        return results;
-    }
-
 
     /**
      * Build results from a set of candidates, and discard those that represent stale indexes.
      *
-     * @param query Query that was executed
+     * @param indexScope The index scope to execute the search on
      * @param crs Candidates to be considered for results
      */
-    private Results buildResults( final SearchEdge indexScope, final Query query, final CandidateResults crs ) {
+    private Results buildResults( final SearchEdge indexScope, final CandidateResults crs ) {
 
         logger.debug( "buildResults()  from {} candidates", crs.size() );
 
         //get an instance of our results loader
         final ResultsLoader resultsLoader =
-            this.resultsLoaderFactory.getLoader( applicationScope, indexScope, query.getResultsLevel() );
+            this.resultsLoaderFactory.getLoader( applicationScope, indexScope, Query.Level.ALL_PROPERTIES );
 
         //load the results
         final Results results = resultsLoader.loadResults(crs);
@@ -183,12 +176,6 @@ public class ElasticSearchQueryExecutor implements Iterable<Results>, Iterator<R
         resultsLoader.postProcess();
 
         //set offset into query
-        if(crs.getOffset().isPresent()) {
-            query.setOffset(crs.getOffset().get());
-        }else{
-            query.clearOffset();
-        }
-        results.setCursorFromOffset( query.getOffset() );
 
         logger.debug( "Returning results size {}", results.size() );
 

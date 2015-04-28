@@ -416,7 +416,7 @@ public class GeoIT extends AbstractCoreIT {
             }
 
             // set for the next "page"
-            query.setOffsetFromCursor(results.getCursor());
+            query.setCursor(results.getCursor());
         }
         while (results.getCursor() != null);
 
@@ -462,7 +462,7 @@ public class GeoIT extends AbstractCoreIT {
             }
 
             // set for the next "page"
-            query.setOffsetFromCursor(results.getCursor());
+            query.setCursor(results.getCursor());
         }
         while (results.getCursor() != null);
 
@@ -521,7 +521,7 @@ public class GeoIT extends AbstractCoreIT {
                 count++;
             }
         }
-        while (query.getOffset().isPresent());
+        while (query.getCursor().isPresent());
 
         // check we got back all 500 entities
         assertEquals(numEntities, count);
@@ -577,7 +577,7 @@ public class GeoIT extends AbstractCoreIT {
                 count++;
             }
 
-            query.setOffsetFromCursor(r.getCursor());
+            query.setCursor(r.getCursor());
         }
         while (r.hasCursor());
 

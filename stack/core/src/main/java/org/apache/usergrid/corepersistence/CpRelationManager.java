@@ -32,7 +32,9 @@ import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
+import org.apache.usergrid.corepersistence.pipeline.PipelineResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ReadPipelineBuilder;
+import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ObservableQueryExecutor;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -411,7 +413,7 @@ public class CpRelationManager implements RelationManager {
             logger.debug( "Wrote edge {}", edge );
         }
 
-        indexService.queueEntityIndexUpdate( applicationScope, memberEntity );
+        indexService.queueNewEdge( applicationScope, memberEntity, edge );
 
 
         if ( logger.isDebugEnabled() ) {
@@ -628,7 +630,7 @@ public class CpRelationManager implements RelationManager {
             pipelineBuilderFactory.createReadPipelineBuilder( applicationScope );
 
         //set our fields applicable to both operations
-        readPipelineBuilder.withCursor( query.getOffsetCursor() );
+        readPipelineBuilder.withCursor( query.getCursor() );
         readPipelineBuilder.withLimit( query.getLimit() );
 
         //TODO, this should be removed when the CP relation manager is removed
@@ -642,7 +644,7 @@ public class CpRelationManager implements RelationManager {
         }
 
 
-        final Observable<Results> resultsObservable = readPipelineBuilder.build();
+        final Observable<PipelineResult<ResultsPage>> resultsObservable = readPipelineBuilder.execute();
 
         return new ObservableQueryExecutor( resultsObservable ).next();
     }
@@ -896,7 +898,7 @@ public class CpRelationManager implements RelationManager {
             pipelineBuilderFactory.createReadPipelineBuilder( applicationScope );
 
         //set our fields applicable to both operations
-        readPipelineBuilder.withCursor( query.getOffsetCursor() );
+        readPipelineBuilder.withCursor( query.getCursor() );
         readPipelineBuilder.withLimit( query.getLimit() );
 
         //TODO, this should be removed when the CP relation manager is removed
@@ -905,15 +907,12 @@ public class CpRelationManager implements RelationManager {
         if ( query.isGraphSearch() ) {
             readPipelineBuilder.getConnection( connection );
         }
-        else if ( entityType != null ) {
-            readPipelineBuilder.connectionWithQuery( connection, query.getQl().get(), entityType );
-        }
         else {
-            readPipelineBuilder.connectionWithQuery( connection, query.getQl().get() );
+            readPipelineBuilder.connectionWithQuery( connection, Optional.fromNullable( entityType ), query.getQl().get() );
         }
 
 
-        final Observable<Results> resultsObservable = readPipelineBuilder.build();
+        final Observable<PipelineResult<ResultsPage>> resultsObservable = readPipelineBuilder.execute();
 
         return new ObservableQueryExecutor( resultsObservable ).next();
     }

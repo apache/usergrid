@@ -305,7 +305,7 @@ public class IndexServiceTest {
 
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                applicationEntityIndex.search( searchEdge, searchTypes, ql , count );
+                applicationEntityIndex.search( searchEdge, searchTypes, ql , count, 0 );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

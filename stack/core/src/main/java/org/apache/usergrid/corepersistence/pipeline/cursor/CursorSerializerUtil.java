@@ -35,15 +35,9 @@ public class CursorSerializerUtil {
 
     private static final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
 
-    private static final Base64Variant VARIANT = Base64Variants.MODIFIED_FOR_URL;
-
 
     public static ObjectMapper getMapper() {
         return MAPPER;
     }
 
-
-    public static Base64Variant getBase64() {
-        return VARIANT;
-    }
 }

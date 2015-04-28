@@ -66,13 +66,13 @@ public class CursorTest {
 
         responseCursor.setCursor(3, query2, ElasticsearchCursorSerializer.INSTANCE);
 
-        final String cursor = responseCursor.encodeAsString();
+        final Optional<String> cursor = responseCursor.encodeAsString();
 
 
 
         //now parse it
 
-        final RequestCursor requestCursor = new RequestCursor( Optional.of( cursor ) );
+        final RequestCursor requestCursor = new RequestCursor(  cursor  );
 
         //get everything else out.  We reversed the order for because we can, order shouldn't matter.
 

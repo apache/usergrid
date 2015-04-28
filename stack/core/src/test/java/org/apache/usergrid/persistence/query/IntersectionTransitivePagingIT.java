@@ -163,7 +163,7 @@ public class IntersectionTransitivePagingIT{
                         returnedUUID );
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 

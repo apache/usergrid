@@ -423,7 +423,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
             if ( results.hasCursor() ) {
                 logger.info( "Counted {} : query again with cursor", count);
-                q.setOffsetFromCursor( results.getCursor() );
+                q.setCursor( results.getCursor() );
                 results = em.searchCollection( em.getApplicationRef(), collectionName, q );
 
             } else {

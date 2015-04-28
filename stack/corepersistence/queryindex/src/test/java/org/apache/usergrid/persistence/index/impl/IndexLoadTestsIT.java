@@ -209,7 +209,7 @@ public class IndexLoadTestsIT extends BaseIT {
                             .search( searchEdge, SearchTypes.fromTypes( searchEdge.getEdgeName() ),
                                 "select * where " + FIELD_WORKER_INDEX + "  = " + workerIndex + " AND " + FIELD_ORDINAL
                                     + " = " + ordinal + " AND " + FIELD_UNIQUE_IDENTIFIER + " = '" + uniqueIdentifier
-                                    + "'" , 100 );
+                                    + "'" , 100 , 0);
 
                         queryTps.mark();
                         queryTimerContext.stop();

@@ -322,7 +322,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -391,7 +391,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -461,7 +461,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -575,7 +575,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -646,7 +646,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -767,7 +767,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.hasCursor() );
 
@@ -828,7 +828,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.hasCursor() );
 
@@ -888,7 +888,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.hasCursor() );
 
@@ -948,7 +948,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.hasCursor() );
 
@@ -1012,7 +1012,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.hasCursor() );
 
@@ -1076,7 +1076,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.hasCursor() );
 
@@ -1134,7 +1134,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -1240,7 +1240,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -1344,7 +1344,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 
@@ -1409,7 +1409,7 @@ public class IteratingQueryIT {
                 count++;
             }
 
-            query.setOffsetFromCursor( results.getCursor() );
+            query.setCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 

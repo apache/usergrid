@@ -20,15 +20,9 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
@@ -36,13 +30,11 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +49,6 @@ import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
-import org.apache.usergrid.persistence.index.exceptions.QueryException;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
@@ -144,12 +135,6 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         return batch;
     }
 
-    @Override
-    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                                    final int limit ) {
-        return search(searchEdge, searchTypes, query, limit, 0);
-    }
-
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit, final int offset ) {
 
@@ -184,7 +169,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         }
         failureMonitor.success();
 
-        return parseResults(searchResponse, parsedQuery, limit, offset);
+        return parseResults(searchResponse, parsedQuery, searchEdge, limit, offset);
     }
 
 
@@ -242,7 +227,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     /**
      * Parse the results and return the canddiate results
      */
-    private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
+    private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query, final SearchEdge searchEdge,
                                            final int limit, final int from ) {
 
         final SearchHits searchHits = searchResponse.getHits();
@@ -259,7 +244,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             candidates.add( candidateResult );
         }
 
-        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings());
+        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings(),
+            searchEdge );
 
         // >= seems odd.  However if we get an overflow, we need to account for it.
         if (  hits.length >= limit ) {

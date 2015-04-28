@@ -21,8 +21,8 @@ package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.TraverseFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractSeekingFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -42,7 +42,7 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeType
 /**
  * Command for reading graph edges on a connection
  */
-public class ReadGraphConnectionByTypeFilter extends AbstractFilter<Id, Edge> implements TraverseFilter {
+public class ReadGraphConnectionByTypeFilter extends AbstractSeekingFilter<Id, Id, Edge> implements Filter<Id, Id> {
 
     private final GraphManagerFactory graphManagerFactory;
     private final String connectionName;
@@ -54,7 +54,7 @@ public class ReadGraphConnectionByTypeFilter extends AbstractFilter<Id, Edge> im
      */
     @Inject
     public ReadGraphConnectionByTypeFilter( final GraphManagerFactory graphManagerFactory,
-                                            @Assisted final String connectionName, @Assisted final String entityType ) {
+                                            @Assisted("connectionName") final String connectionName, @Assisted("entityType") final String entityType ) {
         this.graphManagerFactory = graphManagerFactory;
         this.connectionName = connectionName;
         this.entityType = entityType;
@@ -65,16 +65,18 @@ public class ReadGraphConnectionByTypeFilter extends AbstractFilter<Id, Edge> im
     public Observable<Id> call( final Observable<Id> observable ) {
 
         //get the graph manager
-        final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+        final GraphManager graphManager = graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
 
-        //set our our constant state
-        final Optional<Edge> startFromCursor = getCursor();
+
 
         final String edgeName = getEdgeTypeFromConnectionType( connectionName );
 
 
         //return all ids that are emitted from this edge
         return observable.flatMap( id -> {
+
+              //set our our constant state
+            final Optional<Edge> startFromCursor = getSeekValue();
 
             final SimpleSearchByIdType search =
                 new SimpleSearchByIdType( id, edgeName, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,

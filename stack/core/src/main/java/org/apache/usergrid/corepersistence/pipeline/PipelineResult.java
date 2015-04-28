@@ -17,14 +17,41 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read;
+package org.apache.usergrid.corepersistence.pipeline;
 
 
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
+
+import com.google.common.base.Optional;
 
 
 /**
- * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of ids, and emits
- * an observable of ids
+ * Intermediate observable that will return results, as well as an optional cursor
+ * @param <R>
  */
-public interface Filter<T, R> extends PipelineOperation<T, R> {}
+public class PipelineResult<R> {
+
+
+    private final R result;
+
+    private final ResponseCursor responseCursor;
+
+
+    public PipelineResult( final R result, final ResponseCursor responseCursor ) {
+        this.result = result;
+        this.responseCursor = responseCursor;
+    }
+
+
+    /**
+     * If the user requests our cursor, return the cursor
+     * @return
+     */
+    public Optional<String> getCursor(){
+        return this.responseCursor.encodeAsString();
+    }
+
+    public R getResult(){
+        return result;
+    }
+}

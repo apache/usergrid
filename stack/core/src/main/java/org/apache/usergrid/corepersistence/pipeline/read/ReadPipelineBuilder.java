@@ -20,15 +20,21 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
+import org.apache.usergrid.corepersistence.pipeline.PipelineResult;
+import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
 
 import rx.Observable;
 
 
 /**
- * An instance of a pipeline builder for building commands.
- * Each invocation of the method will assemple the underlying pipe and updating it's state
+ * An instance of a pipeline builder for building commands on our read pipline
+ *
+ * Each invocation of the method will assemble the underlying pipe and updating it's state
+ *
  * Results are added by invoking execute.
  */
 public interface ReadPipelineBuilder {
@@ -38,14 +44,14 @@ public interface ReadPipelineBuilder {
      * Set the cursor
      * @param cursor
      */
-    ReadPipelineBuilder withCursor(final String cursor);
+    ReadPipelineBuilder withCursor(final Optional<String> cursor);
 
     /**
      * Set the limit of our page sizes
      * @param limit
      * @return
      */
-    ReadPipelineBuilder withLimit(final int limit);
+    ReadPipelineBuilder withLimit(final Optional<Integer> limit);
 
     /**
      * An operation to bridge 2.0-> 1.0.  Should be removed when everyone uses the pipeline
@@ -87,24 +93,14 @@ public interface ReadPipelineBuilder {
     ReadPipelineBuilder getConnection( final String connectionName, final String entityType );
 
     /**
-     * Get all entities in a connection with a query
-     */
-    ReadPipelineBuilder connectionWithQuery( final String connectionName, final String query );
-
-
-    /**
      * Get all entities in a connection with a query and a target entity type
      */
-    ReadPipelineBuilder connectionWithQuery( final String connectionName, final String entityType, final String query);
-
-
-
-
+    ReadPipelineBuilder connectionWithQuery( final String connectionName, final Optional<String> entityType, final String query);
 
 
     /**
-     * Execute final construction of the pipeline and return the results
+     * Load our entity results when our previous filter calls graph
      * @return
      */
-    Observable<Results> build();
+    Observable<PipelineResult<ResultsPage>> execute();
 }

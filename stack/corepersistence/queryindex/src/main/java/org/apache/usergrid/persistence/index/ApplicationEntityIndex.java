@@ -39,11 +39,9 @@ public interface ApplicationEntityIndex {
      * @param searchTypes The search types to search
      * @param query The query to execute
      * @param limit The limit of values to return
+     * @param offset The offset to query on
      * @return
      */
-    CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                             final int limit );
-
     CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                              final int limit, final int offset );
 

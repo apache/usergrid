@@ -21,8 +21,8 @@ package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.TraverseFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractSeekingFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -38,7 +38,7 @@ import rx.Observable;
 /**
  * Command for reading graph edges
  */
-public abstract class AbstractReadGraphFilter extends AbstractFilter<Id, Edge> implements TraverseFilter {
+public abstract class AbstractReadGraphFilter extends AbstractSeekingFilter<Id, Id, Edge> implements Filter<Id, Id> {
 
     private final GraphManagerFactory graphManagerFactory;
 
@@ -55,16 +55,18 @@ public abstract class AbstractReadGraphFilter extends AbstractFilter<Id, Edge> i
     public Observable<Id> call( final Observable<Id> observable ) {
 
         //get the graph manager
-        final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+        final GraphManager graphManager = graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
 
-        //set our our constant state
-        final Optional<Edge> startFromCursor = getCursor();
 
         final String edgeName = getEdgeTypeName();
 
 
         //return all ids that are emitted from this edge
         return observable.flatMap( id -> {
+
+                 //set our our constant state
+        final Optional<Edge> startFromCursor = getSeekValue();
+
 
             final SimpleSearchByEdgeType search =
                 new SimpleSearchByEdgeType( id, edgeName, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,

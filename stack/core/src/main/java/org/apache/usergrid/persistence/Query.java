@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +30,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import com.netflix.astyanax.serializers.IntegerSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +52,8 @@ import com.google.common.base.Optional;
 
 
 public class Query {
-    private static final Logger logger = LoggerFactory.getLogger( Query.class );
-    private static final IntegerSerializer INTEGER_SERIALIZER = IntegerSerializer.get();
+
+
 
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
@@ -70,7 +68,7 @@ public class Query {
     private String type;
     private Operand rootOperand;
     private UUID startResult;
-    private Optional<Integer> offset;
+    private Optional<String> cursor = Optional.absent();
     private int limit = 0;
 
     private boolean mergeSelectResults = false;
@@ -96,7 +94,6 @@ public class Query {
     List<Operand> filterClauses = new ArrayList<Operand>();
 
     public Query() {
-        offset = Optional.absent();
     }
 
 
@@ -112,7 +109,7 @@ public class Query {
         ql = q.ql;
         type = q.type;
         startResult = q.startResult;
-        offset = q.offset;
+        cursor = q.cursor;
         limit = q.limit;
         mergeSelectResults = q.mergeSelectResults;
         //level = q.level;
@@ -182,6 +179,23 @@ public class Query {
     }
 
 
+    public static Query fromJsonString( String json ) throws QueryParseException {
+
+        Object o;
+        try {
+            o = mapper.readValue( json, Object.class );
+        } catch (IOException ex) {
+            throw new QueryParseException("Error parsing JSON query string " + json, ex);
+        }
+
+        if ( o instanceof Map ) {
+            @SuppressWarnings({ "unchecked", "rawtypes" }) Map<String, List<String>> params =
+                    ClassUtils.cast( MapUtils.toMapList( ( Map ) o ) );
+            return fromQueryParams( params );
+        }
+        return null;
+    }
+
 
     public static Query fromQueryParams( Map<String, List<String>> params )
             throws QueryParseException {
@@ -190,13 +204,12 @@ public class Query {
         List<Identifier> identifiers = null;
         List<CounterFilterPredicate> counterFilters = null;
 
-        String ql = QueryUtils.queryStrFrom(params);
-        String type = ListUtils.first(params.get("type"));
-        Boolean reversed = ListUtils.firstBoolean(params.get("reversed"));
-        String connection = ListUtils.first(params.get("connectionType"));
-        UUID start = ListUtils.firstUuid(params.get("start"));
-        String cursor = ListUtils.first(params.get("cursor"));
-
+        String ql = QueryUtils.queryStrFrom( params );
+        String type = ListUtils.first( params.get( "type" ) );
+        Boolean reversed = ListUtils.firstBoolean( params.get( "reversed" ) );
+        String connection = ListUtils.first( params.get( "connectionType" ) );
+        UUID start = ListUtils.firstUuid( params.get( "start" ) );
+        String cursor = ListUtils.first( params.get( "cursor" ) );
         Integer limit = ListUtils.firstInteger( params.get( "limit" ) );
         List<String> permissions = params.get( "permission" );
         Long startTime = ListUtils.firstLong( params.get( "start_time" ) );
@@ -252,11 +265,9 @@ public class Query {
             q.setStartResult( start );
         }
 
-        if ( cursor != null) {
+        if ( cursor != null ) {
             q = newQueryIfNull( q );
-            q.setOffsetFromCursor(cursor);
-        }else{
-            q.offset = Optional.absent();
+            q.setCursor( cursor );
         }
 
         if ( limit != null ) {
@@ -305,7 +316,7 @@ public class Query {
 
     public static Query fromUUID( UUID uuid ) {
         Query q = new Query();
-        q.addIdentifier( Identifier.fromUUID(uuid) );
+        q.addIdentifier( Identifier.fromUUID( uuid ) );
         return q;
     }
 
@@ -495,68 +506,37 @@ public class Query {
     }
 
 
-    public Optional<Integer> getOffset() {
-        return offset;
-    }
-
-    public String getOffsetCursor() {
-
-        //TODO refactor cursor logic for encapsulation at level using it
-
-        String cursor = "";
-        if(offset.isPresent()){
-            ByteBuffer buffer = INTEGER_SERIALIZER.toByteBuffer(offset.get());
-            cursor = Base64.encodeBase64String(buffer.array());
-        }
+    public Optional<String> getCursor() {
         return cursor;
     }
 
-    public void setOffsetFromCursor(String cursor) {
-        if(cursor == null || cursor.length() == 0){
-            clearOffset();
-        }else {
-            byte[] bytes = Base64.decodeBase64(cursor);
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            Integer number  = INTEGER_SERIALIZER.fromByteBuffer(buffer);
-            setOffset(number);
-        }
-    }
 
-    public void clearOffset() {
-        this.offset = Optional.absent();
-    }
-
-    public void setOffset( int offset ) {
-        this.offset = Optional.of(offset);
+    public void setCursor( String cursor ) {
+        this.cursor = Optional.fromNullable( cursor );
     }
 
 
-    public Query withOffset( int offset ) {
-        setOffset(offset);
-        return this;
-    }
-
-    public Query withOffsetFromCursor( String cursor ) {
-        setOffsetFromCursor(cursor);
+    public Query withCursor( String cursor ) {
+        setCursor( cursor );
         return this;
     }
 
 
-    public int getLimit() {
+    public Optional<Integer> getLimit() {
         return getLimit( DEFAULT_LIMIT );
     }
 
 
-    public int getLimit( int defaultLimit ) {
+    public Optional<Integer> getLimit( int defaultLimit ) {
         if ( limit <= 0 ) {
             if ( defaultLimit > 0 ) {
-                return defaultLimit;
+                return Optional.of( defaultLimit);
             }
             else {
-                return DEFAULT_LIMIT;
+                return Optional.of( DEFAULT_LIMIT );
             }
         }
-        return limit;
+        return Optional.of( limit );
     }
 
 
