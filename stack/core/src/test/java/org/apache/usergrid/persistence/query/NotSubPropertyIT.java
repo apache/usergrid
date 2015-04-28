@@ -46,7 +46,7 @@ public class NotSubPropertyIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( IntersectionUnionPagingIT.class );
 
-    private static final String notQuery = "select * where NOT subArray.usageType = 'true1'";
+    private static final String notQuery = "select * where NOT subArray.usageType = 'true' order by created asc";
 
     private static final int PAGE_SIZE = 300;
 
@@ -113,7 +113,7 @@ public class NotSubPropertyIT {
                 Map<String, Object> subFields = new HashMap<String, Object>();
                 subFields.put( "startDate", 10000 );
                 subFields.put( "endDate", 20000 );
-                subFields.put( "usageType", usageType + j );
+                subFields.put( "usageType", usageType );
 
                 subArray.add( subFields );
             }
@@ -131,6 +131,8 @@ public class NotSubPropertyIT {
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
+
+        app.refreshIndex();
 
         return expected;
     }
