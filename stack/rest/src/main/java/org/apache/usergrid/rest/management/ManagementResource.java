@@ -604,7 +604,7 @@ public class ManagementResource extends AbstractContextResource {
 
                         // haven't created user yet so do that now
                         OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
-                                orgName, username, name, email, dummyPassword, true, true );
+                                orgName, username, name, email, dummyPassword, true, false );
 
                         management.activateOrganization( ownerOrgInfo.getOrganization() ); // redundant?
                         applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
@@ -718,11 +718,7 @@ public class ManagementResource extends AbstractContextResource {
             // when external tokens enabled then only superuser can obtain an access token
 
             final String superuserName = properties.getProperty( USERGRID_SYSADMIN_LOGIN_NAME );
-            final String superuserAllowedStr = properties.getProperty( USERGRID_SYSADMIN_LOGIN_ALLOWED );
-            final boolean superuserAllowed = !StringUtils.isEmpty( superuserAllowedStr )
-                    && superuserAllowedStr.trim().equalsIgnoreCase( "true" );
-
-            if ( superuserAllowed && !superuserName.equalsIgnoreCase( username )) {
+            if ( !username.equalsIgnoreCase( superuserName )) {
 
                 // this guy is not the superuser
                 throw new IllegalArgumentException( "Admin Users must login via " +
