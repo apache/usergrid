@@ -465,8 +465,8 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         assertEquals( 2, r.size() );
 
-        assertEquals( thing1.getUuid(), r.getEntities().get( 0 ).getUuid() );
-        assertEquals( thing2.getUuid(), r.getEntities().get( 1 ).getUuid() );
+        assertEquals( thing1.getUuid(), r.getEntities().get( 1 ).getUuid() );
+        assertEquals( thing2.getUuid(), r.getEntities().get( 0 ).getUuid() );
     }
 
 
