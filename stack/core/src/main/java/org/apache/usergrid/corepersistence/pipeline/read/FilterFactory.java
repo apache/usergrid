@@ -21,8 +21,8 @@ package org.apache.usergrid.corepersistence.pipeline.read;
 
 
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateResultsIdVerifyFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CollectionElasticSearchFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ConnectionElasticSearchFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchCollectionFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchConnectionFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityIdFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphCollectionByIdFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphCollectionFilter;
@@ -82,9 +82,10 @@ public interface FilterFactory {
      * @param query The query to use when querying the entities in the collection
      * @param collectionName The collection name to use when querying
      */
-    CollectionElasticSearchFilter collectionElasticSearchFilter( @Assisted( "query" ) final String query,
+    ElasticSearchCollectionFilter elasticSearchCollectionFilter( @Assisted( "query" ) final String query,
                                                                  @Assisted( "collectionName" )
-                                                                 final String collectionName );
+                                                                 final String collectionName,
+                                                                 @Assisted( "entityType" ) final String entityType );
 
 
     /**
@@ -93,9 +94,11 @@ public interface FilterFactory {
      * @param connectionName The type of connection to query
      * @param connectedEntityType The type of entity in the connection.  Leave absent to query all entity types
      */
-    ConnectionElasticSearchFilter connectionElasticSearchFilter( @Assisted( "query" ) final String query,
-                                                                 @Assisted( "connectionName" ) final String connectionName,
-                                                                 @Assisted("connectedEntityType") final Optional<String> connectedEntityType);
+    ElasticSearchConnectionFilter elasticSearchConnectionFilter( @Assisted( "query" ) final String query,
+                                                                 @Assisted( "connectionName" )
+                                                                 final String connectionName,
+                                                                 @Assisted( "connectedEntityType" )
+                                                                 final Optional<String> connectedEntityType );
 
 
     /**

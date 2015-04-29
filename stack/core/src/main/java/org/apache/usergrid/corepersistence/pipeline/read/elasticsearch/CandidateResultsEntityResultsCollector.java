@@ -69,7 +69,7 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
 
 
     @Override
-    public Observable<ResultsPage> call( final Observable<CandidateResults> observable ) {
+    public Observable<ResultsPage> call( final Observable<CandidateResults> candidateResultsObservable ) {
 
 
         /**
@@ -86,7 +86,7 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
         final ApplicationEntityIndex applicationIndex =
             entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
-        final Observable<ResultsPage> searchIdSetObservable = observable.flatMap( candidateResults -> {
+        final Observable<ResultsPage> searchIdSetObservable = candidateResultsObservable.flatMap( candidateResults -> {
             //flatten toa list of ids to load
             final Observable<List<Id>> candidateIds =
                 Observable.from( candidateResults ).map( candidate -> candidate.getId() ).toList();
@@ -103,6 +103,7 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
                 .map( entityCollector -> entityCollector.getResults() );
         } );
 
+        //if we filter all our results, we want to continue to try the next page
         return searchIdSetObservable;
     }
 

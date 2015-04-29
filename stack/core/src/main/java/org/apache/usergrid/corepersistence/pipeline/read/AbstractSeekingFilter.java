@@ -47,7 +47,6 @@ public abstract class AbstractSeekingFilter<T, R, C extends Serializable> extend
     protected Optional<C> getSeekValue() {
 
         if(cursorSeek == null) {
-
             final Optional<C> cursor = pipelineContext.getCursor( getCursorSerializer() );
             cursorSeek = new CursorSeek<>( cursor );
         }

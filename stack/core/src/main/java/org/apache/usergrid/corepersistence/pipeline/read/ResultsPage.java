@@ -39,4 +39,13 @@ public class ResultsPage {
     public List<Entity> getEntityList() {
         return entityList;
     }
+
+
+    /**
+     * Return true if the results page is empty
+     * @return
+     */
+    public boolean isEmpty(){
+        return entityList == null || entityList.isEmpty();
+    }
 }

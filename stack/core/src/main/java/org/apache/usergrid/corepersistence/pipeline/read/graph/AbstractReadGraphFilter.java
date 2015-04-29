@@ -55,7 +55,8 @@ public abstract class AbstractReadGraphFilter extends AbstractSeekingFilter<Id, 
     public Observable<Id> call( final Observable<Id> observable ) {
 
         //get the graph manager
-        final GraphManager graphManager = graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
+        final GraphManager graphManager =
+            graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
 
 
         final String edgeName = getEdgeTypeName();
@@ -64,8 +65,8 @@ public abstract class AbstractReadGraphFilter extends AbstractSeekingFilter<Id, 
         //return all ids that are emitted from this edge
         return observable.flatMap( id -> {
 
-                 //set our our constant state
-        final Optional<Edge> startFromCursor = getSeekValue();
+            //set our our constant state
+            final Optional<Edge> startFromCursor = getSeekValue();
 
 
             final SimpleSearchByEdgeType search =

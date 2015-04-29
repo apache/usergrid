@@ -43,7 +43,7 @@ import rx.Observable;
 
 import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeToTarget;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
 
 
 /**
@@ -102,7 +102,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         //Remove all double indexes
         final Observable<IndexEdge> sourceScopes = edgesObservable.edgesFromSourceAscending( gm, entityId ).map(
-                    edge -> generateScopeToTarget( edge ) );
+                    edge -> generateScopeFromTarget( edge ) );
 
 
         //create a stream of scopes

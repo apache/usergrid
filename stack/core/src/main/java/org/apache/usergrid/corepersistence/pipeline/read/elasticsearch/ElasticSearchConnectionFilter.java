@@ -33,7 +33,7 @@ import com.google.inject.assistedinject.Assisted;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionSearchEdge;
 
 
-public class ConnectionElasticSearchFilter extends AbstractElasticSearchFilter {
+public class ElasticSearchConnectionFilter extends AbstractElasticSearchFilter {
 
 
     private final String connectionName;
@@ -44,10 +44,11 @@ public class ConnectionElasticSearchFilter extends AbstractElasticSearchFilter {
      * Create a new instance of our command
      */
     @Inject
-    public ConnectionElasticSearchFilter( final EntityIndexFactory entityIndexFactory,
-                                          final MetricsFactory metricsFactory, @Assisted("query") final String query,
-                                          @Assisted("connectionName") final String connectionName,
-                                          @Assisted("connectedEntityType") final Optional<String> connectedEntityType ) {
+    public ElasticSearchConnectionFilter( final EntityIndexFactory entityIndexFactory,
+                                          final MetricsFactory metricsFactory, @Assisted( "query" ) final String query,
+                                          @Assisted( "connectionName" ) final String connectionName,
+                                          @Assisted( "connectedEntityType" )
+                                          final Optional<String> connectedEntityType ) {
         super( entityIndexFactory, metricsFactory, query );
 
         this.connectionName = connectionName;

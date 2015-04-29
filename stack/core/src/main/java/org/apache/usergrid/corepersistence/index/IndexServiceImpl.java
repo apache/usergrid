@@ -37,7 +37,6 @@ import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.impl.IndexOperation;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -53,7 +52,7 @@ import rx.functions.Func1;
 import rx.observables.ConnectableObservable;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeToTarget;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
 
@@ -139,18 +138,19 @@ public class IndexServiceImpl implements IndexService {
 
         final Observable<IndexOperationMessage> batches =  Observable.just( edge ).map( observableEdge -> {
 
-            //if the node is the
+            //if the node is the target node, generate our scope correctly
             if ( edge.getTargetNode().equals( entity.getId() ) ) {
                 return generateScopeFromSource( edge );
             }
 
-            return generateScopeToTarget( edge );
+            return generateScopeFromTarget( edge );
         } ).flatMap( indexEdge -> {
 
             final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
-
             final EntityIndexBatch batch = ei.createBatch();
+
+            logger.debug( "adding edge {} to batch for entity {}", indexEdge, entity );
 
             batch.index( indexEdge, entity );
 
@@ -219,7 +219,7 @@ public class IndexServiceImpl implements IndexService {
          * we're indexing from target->source here
          */
         return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection )
-                              .map( edge -> generateScopeToTarget( edge ) );
+                              .map( edge -> generateScopeFromTarget( edge ) );
     }
 
 

@@ -94,28 +94,37 @@ public class CpNamingUtils {
 
 
     /**
-     * Get the index scope for the edge from the source
+     * Get the index scope for the edge from the source to the target.  The entity being indexed
+     * is the target node
      */
     public static IndexEdge generateScopeFromSource( final Edge edge ) {
-        return new IndexEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE,
+        return new IndexEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.TARGET,
             edge.getTimestamp() );
     }
 
 
     /**
-     * Get the index scope for the edge from the source
+     * Get the index scope for the edge from the source.  The entity being indexed is the source node
      */
-    public static IndexEdge generateScopeToTarget( final Edge edge ) {
-        return new IndexEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.TARGET,
+    public static IndexEdge generateScopeFromTarget( final Edge edge ) {
+        return new IndexEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.SOURCE,
             edge.getTimestamp() );
     }
 
 
     /**
-     * Create the search edge from the source
+     * Create the search edge from the source.  The nodes being searched are Target nodes on the edges
      */
     public static SearchEdge createSearchEdgeFromSource( final Edge edge ) {
-        return new SearchEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.SOURCE );
+        return new SearchEdgeImpl( edge.getSourceNode(), edge.getType(), SearchEdge.NodeType.TARGET );
+    }
+
+
+    /**
+     * Create the search edge from the target.  The nodes being searched are source nodes on the edges
+     */
+    public static SearchEdge createSearchEdgeFromTarget( final Edge edge ) {
+        return new SearchEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.SOURCE );
     }
 
 

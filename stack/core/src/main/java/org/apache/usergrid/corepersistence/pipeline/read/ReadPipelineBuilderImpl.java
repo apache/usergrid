@@ -139,13 +139,13 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
 
     @Override
-    public ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String query ) {
+    public ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String entityType,  final String query ) {
         Preconditions.checkNotNull( collectionName, "collectionName must not be null" );
         Preconditions.checkNotNull( query, "query must not be null" );
 
         //TODO, this should really be 2 a TraverseFilter with an entityLoad collector
 
-        filters.add( filterFactory.collectionElasticSearchFilter( query, collectionName ) );
+        filters.add( filterFactory.elasticSearchCollectionFilter( query, collectionName, entityType ) );
 
         this.collectorState.setCandidateResultsEntityResultsCollector();
 
@@ -188,14 +188,14 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
 
     @Override
-    public ReadPipelineBuilder connectionWithQuery( final String connectionName, final Optional<String> entityType,
-                                                    final String query ) {
+    public ReadPipelineBuilder getConnectionWithQuery( final String connectionName, final Optional<String> entityType,
+                                                       final String query ) {
 
         Preconditions.checkNotNull( connectionName, "connectionName must not be null" );
         Preconditions.checkNotNull( connectionName, "entityType must not be null" );
         Preconditions.checkNotNull( query, "query must not be null" );
 
-        filters.add( filterFactory.connectionElasticSearchFilter( query, connectionName, entityType ) );
+        filters.add( filterFactory.elasticSearchConnectionFilter( query, connectionName, entityType ) );
         collectorState.setCandidateResultsEntityResultsCollector();
         return this;
     }

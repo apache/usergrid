@@ -626,6 +626,8 @@ public class CpRelationManager implements RelationManager {
         query.setEntityType( collection.getType() );
         query = adjustQuery( query );
 
+
+
         final ReadPipelineBuilder readPipelineBuilder =
             pipelineBuilderFactory.createReadPipelineBuilder( applicationScope );
 
@@ -640,7 +642,9 @@ public class CpRelationManager implements RelationManager {
             readPipelineBuilder.getCollection( collName );
         }
         else {
-            readPipelineBuilder.getCollectionWithQuery( collName, query.getQl().get() );
+            final String entityType = collection.getType();
+
+            readPipelineBuilder.getCollectionWithQuery( collName, entityType, query.getQl().get() );
         }
 
 
@@ -908,7 +912,8 @@ public class CpRelationManager implements RelationManager {
             readPipelineBuilder.getConnection( connection );
         }
         else {
-            readPipelineBuilder.connectionWithQuery( connection, Optional.fromNullable( entityType ), query.getQl().get() );
+            readPipelineBuilder.getConnectionWithQuery( connection, Optional.fromNullable( entityType ),
+                query.getQl().get() );
         }
 
 
