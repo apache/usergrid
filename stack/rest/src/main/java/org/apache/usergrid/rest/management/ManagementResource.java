@@ -606,7 +606,6 @@ public class ManagementResource extends AbstractContextResource {
                         OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
                                 orgName, username, name, email, dummyPassword, true, false );
 
-                        management.activateOrganization( ownerOrgInfo.getOrganization() ); // redundant?
                         applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
 
                         userId = ownerOrgInfo.getOwner().getUuid();
@@ -623,8 +622,6 @@ public class ManagementResource extends AbstractContextResource {
                         // already created user, so just create an org
                         final OrganizationInfo organization = management.createOrganization( orgName, userInfo, true );
 
-
-                        management.activateOrganization( organization ); // redundant?
                         applicationCreator.createSampleFor( organization );
 
                         logger.info( "Created user {}'s other org {}", username, orgName );
@@ -709,6 +706,10 @@ public class ManagementResource extends AbstractContextResource {
      * then only superusers should be allowed to login directly to this Usergrid instance.
      */
     private void ensureAuthenticationAllowed( String username, String grant_type ) {
+
+        if ( username == null || grant_type == null || !grant_type.equalsIgnoreCase( "password" )) {
+            return; // we only care about username/password auth
+        }
 
         final boolean externalTokensEnabled =
                 !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
