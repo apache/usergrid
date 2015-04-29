@@ -57,9 +57,10 @@ public class SimpleSearchByEdge implements SearchByEdge {
 
         ValidationUtils.verifyIdentity(sourceNode);
         ValidationUtils.verifyIdentity(targetNode);
-        ValidationUtils.verifyString( type, "type" );
-        GraphValidation.validateTimestamp( maxTimestamp, "maxTimestamp" );
+        ValidationUtils.verifyString(type, "type");
+        GraphValidation.validateTimestamp(maxTimestamp, "maxTimestamp");
         Preconditions.checkNotNull(order, "order must not be null");
+        Preconditions.checkNotNull(last, "last can never be null");
 
 
         this.sourceNode = sourceNode;

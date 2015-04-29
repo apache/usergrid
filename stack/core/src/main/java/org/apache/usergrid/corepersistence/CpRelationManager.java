@@ -171,7 +171,7 @@ public class CpRelationManager implements RelationManager {
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
         GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-        String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
+        String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName(collectionName);
 
         logger.debug( "getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", new Object[] {
             edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
@@ -207,7 +207,7 @@ public class CpRelationManager implements RelationManager {
 
 
     private Map<EntityRef, Set<String>> getContainers() {
-        return getContainers( -1, null, null );
+        return getContainers(-1, null, null);
     }
 
 
@@ -224,14 +224,14 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edges =
             gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeType, null ) )
-              .flatMap( new Func1<String, Observable<Edge>>() {
+              .flatMap(new Func1<String, Observable<Edge>>() {
                   @Override
-                  public Observable<Edge> call( final String edgeType ) {
+                  public Observable<Edge> call(final String edgeType) {
                       return gm.loadEdgesToTarget(
-                          new SimpleSearchByEdgeType( cpHeadEntity.getId(), edgeType, Long.MAX_VALUE,
-                              SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
+                          new SimpleSearchByEdgeType(cpHeadEntity.getId(), edgeType, Long.MAX_VALUE,
+                              SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
                   }
-              } );
+              });
 
         //if our limit is set, take them.  Note this logic is still borked, we can't possibly fit everything in memmory
         if ( limit > -1 ) {
@@ -259,7 +259,7 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
+        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType(connectionType);
 
         logger.debug( "isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
             edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
@@ -280,16 +280,16 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collName );
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(collName);
 
         logger.debug( "isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
             edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
         } );
 
-        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
         Observable<Edge> edges = gm.loadEdgeVersions(
             new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
-                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ) );
+                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
 
         return edges.toBlocking().firstOrDefault( null ) != null;
     }
@@ -413,7 +413,7 @@ public class CpRelationManager implements RelationManager {
             logger.debug( "Wrote edge {}", edge );
         }
 
-        indexService.queueNewEdge( applicationScope, memberEntity, edge );
+        indexService.queueNewEdge(applicationScope, memberEntity, edge);
 
 
         if ( logger.isDebugEnabled() ) {
@@ -629,11 +629,11 @@ public class CpRelationManager implements RelationManager {
 
 
         final ReadPipelineBuilder readPipelineBuilder =
-            pipelineBuilderFactory.createReadPipelineBuilder( applicationScope );
+            pipelineBuilderFactory.createReadPipelineBuilder(applicationScope);
 
         //set our fields applicable to both operations
-        readPipelineBuilder.withCursor( query.getCursor() );
-        readPipelineBuilder.withLimit( query.getLimit() );
+        readPipelineBuilder.withCursor(query.getCursor());
+        readPipelineBuilder.withLimit(query.getLimit());
 
         //TODO, this should be removed when the CP relation manager is removed
         readPipelineBuilder.setStartId( cpHeadEntity.getId() );
@@ -899,11 +899,11 @@ public class CpRelationManager implements RelationManager {
 
 
         final ReadPipelineBuilder readPipelineBuilder =
-            pipelineBuilderFactory.createReadPipelineBuilder( applicationScope );
+            pipelineBuilderFactory.createReadPipelineBuilder(applicationScope);
 
         //set our fields applicable to both operations
         readPipelineBuilder.withCursor( query.getCursor() );
-        readPipelineBuilder.withLimit( query.getLimit() );
+        readPipelineBuilder.withLimit(query.getLimit());
 
         //TODO, this should be removed when the CP relation manager is removed
         readPipelineBuilder.setStartId( cpHeadEntity.getId() );
