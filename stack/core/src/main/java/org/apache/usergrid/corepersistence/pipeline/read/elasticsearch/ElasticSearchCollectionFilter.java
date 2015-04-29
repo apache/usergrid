@@ -32,28 +32,34 @@ import com.google.inject.assistedinject.Assisted;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionSearchEdge;
 
 
-public class CollectionElasticSearchFilter extends AbstractElasticSearchFilter {
+public class ElasticSearchCollectionFilter extends AbstractElasticSearchFilter {
 
-    private  final String collectionName;
+    private final String collectionName;
+    private final String entityType;
 
     /**
      * Create a new instance of our command
+     *
+     * @param entityIndexFactory The entity index factory used to search
+     * @param  metricsFactory The metrics factory for metrics
+     * @param collectionName The name of the collection
+     * @param entityType The entity type
      */
     @Inject
-    public CollectionElasticSearchFilter( final EntityIndexFactory entityIndexFactory,
-                                          final MetricsFactory metricsFactory,
-                                          @Assisted("query")
-                                          final String query,
-                                          @Assisted("collectionName") final String collectionName ) {
+    public ElasticSearchCollectionFilter( final EntityIndexFactory entityIndexFactory,
+                                          final MetricsFactory metricsFactory, @Assisted( "query" ) final String query,
+                                          @Assisted( "collectionName" ) final String collectionName,
+                                          @Assisted( "entityType" ) final String entityType ) {
         super( entityIndexFactory, metricsFactory, query );
         this.collectionName = collectionName;
+        this.entityType = entityType;
     }
 
 
 
     @Override
     protected SearchTypes getSearchTypes() {
-        final SearchTypes types = SearchTypes.fromTypes( collectionName );
+        final SearchTypes types = SearchTypes.fromTypes( entityType );
 
         return types;
     }

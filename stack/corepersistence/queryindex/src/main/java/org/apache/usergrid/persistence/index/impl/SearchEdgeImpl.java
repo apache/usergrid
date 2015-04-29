@@ -23,8 +23,24 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * The edge to search on.  Can be either a source--> target edge or a target<-- source edge.  The entiies returned
+ * The edge to search on.  Can be either a source--> target edge or a target<-- source edge.  The entities returned
  * will be on the opposite side of the edge from the specified nodeId
+ *
+ * Example:  A users collection
+ *  Edge: applicationId (1) - "users" -> userId(2)
+ *
+ * nodeId = applicationId(1)
+ * name = "users"
+ * nodeType = NodeType.Target
+ *
+ *
+ * Example A users in a group (reverse indexing)
+ * Edge userId(3) - "groups" -> groupId(4)
+ *
+ * nodeId = groupId(3)
+ * name = "groups
+ * nodeType = NodeType.Source
+ *
  */
 public class SearchEdgeImpl implements SearchEdge {
     protected final Id nodeId;
@@ -32,6 +48,12 @@ public class SearchEdgeImpl implements SearchEdge {
     protected final NodeType nodeType;
 
 
+    /**
+     * Create a new search edge
+     * @param nodeId The node to use in the search
+     * @param name The name of the edge
+     * @param nodeType The type of node to search on.  Usually Target unless otherwise specified
+     */
     public SearchEdgeImpl( final Id nodeId, final String name, final NodeType nodeType ) {
         this.nodeId = nodeId;
         this.name = name;

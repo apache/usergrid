@@ -75,7 +75,7 @@ public interface ReadPipelineBuilder {
     /**
      * Get all entities with a query
      */
-    ReadPipelineBuilder getCollectionWithQuery( final String collectionName, final String query);
+    ReadPipelineBuilder getCollectionWithQuery( final String collectionName,final String entityType,  final String query);
 
     /**
      * Get an entity via the connection name and entity Id
@@ -95,7 +95,8 @@ public interface ReadPipelineBuilder {
     /**
      * Get all entities in a connection with a query and a target entity type
      */
-    ReadPipelineBuilder connectionWithQuery( final String connectionName, final Optional<String> entityType, final String query);
+    ReadPipelineBuilder getConnectionWithQuery( final String connectionName, final Optional<String> entityType,
+                                                final String query );
 
 
     /**
