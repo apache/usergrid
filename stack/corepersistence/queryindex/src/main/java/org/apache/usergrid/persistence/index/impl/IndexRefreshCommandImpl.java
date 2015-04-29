@@ -117,10 +117,10 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
          */
 
         final SearchRequestBuilder builder =
-            esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE )
+            esProvider.getClient().prepareSearch(alias.getReadAlias()).setTypes(IndexingUtils.ES_ENTITY_TYPE)
 
                 //set our filter for entityId fieldname
-        .setPostFilter( FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME, entityId ) );
+        .setPostFilter(FilterBuilders.termFilter(IndexingUtils.ENTITY_ID_FIELDNAME, entityId));
 
 
         //start our processing immediately
@@ -128,6 +128,8 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
             try {
                 boolean found = false;
                 for ( int i = 0; i < indexFig.maxRefreshSearches(); i++ ) {
+                    Thread.sleep(indexFig.refreshSleep());
+
                     final SearchResponse response = builder.execute().get();
 
                     if (response.getHits().totalHits() > 0) {
@@ -135,9 +137,6 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                         break;
                     }
 
-                    if (i % 4 == 0) {
-                        Thread.sleep(indexFig.refreshSleep());
-                    }
                 }
 
                 return new IndexRefreshCommandInfo(found,System.currentTimeMillis() - start);
