@@ -24,11 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractSeekingFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.CandidateResultsFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
@@ -44,8 +46,8 @@ import rx.Observable;
 /**
  * Command for reading graph edges
  */
-public abstract class AbstractElasticSearchFilter extends AbstractSeekingFilter<Id, CandidateResults, Integer>
-    implements CandidateResultsFilter {
+public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id, Candidate, Integer>
+    implements Filter<Id, Candidate> {
 
     private static final Logger log = LoggerFactory.getLogger( AbstractElasticSearchFilter.class );
 
@@ -66,7 +68,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractSeekingFilter<
 
 
     @Override
-    public Observable<CandidateResults> call( final Observable<Id> observable ) {
+    public Observable<FilterResult<Candidate>> call( final Observable<FilterResult<Id>> observable ) {
 
         //get the graph manager
         final ApplicationEntityIndex applicationEntityIndex =
@@ -80,12 +82,12 @@ public abstract class AbstractElasticSearchFilter extends AbstractSeekingFilter<
 
 
         //return all ids that are emitted from this edge
-        return observable.flatMap( id -> {
+        return observable.flatMap( idFilterResult -> {
 
-            final SearchEdge searchEdge = getSearchEdge( id );
+            final SearchEdge searchEdge = getSearchEdge( idFilterResult.getValue() );
 
 
-            final Observable<CandidateResults> candidates = Observable.create( subscriber -> {
+            final Observable<FilterResult<Candidate>> candidates = Observable.create( subscriber -> {
 
                 //our offset to our start value.  This will be set the first time we emit
                 //after we receive new ids, we want to reset this to 0
@@ -98,18 +100,13 @@ public abstract class AbstractElasticSearchFilter extends AbstractSeekingFilter<
 
                 subscriber.onStart();
 
-                //emit while we have values from ES
-                while ( true ) {
+                //emit while we have values from ES and someone is subscribed
+                while ( !subscriber.isUnsubscribed() ) {
 
 
                     try {
                         final CandidateResults candidateResults =
                             applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet );
-
-                        currentOffSet += candidateResults.size();
-
-                        //set the cursor for the next value
-                        setCursor( currentOffSet );
 
                         /**
                          * No candidates, we're done
@@ -119,7 +116,25 @@ public abstract class AbstractElasticSearchFilter extends AbstractSeekingFilter<
                             return;
                         }
 
-                        subscriber.onNext( candidateResults );
+
+                        for( CandidateResult candidateResult: candidateResults){
+
+                            //our subscriber unsubscribed, break out
+                            if(subscriber.isUnsubscribed()){
+                              return;
+                            }
+
+                            final Candidate candidate = new Candidate( candidateResult, searchEdge );
+
+                            final FilterResult<Candidate>
+                                result = createFilterResult( candidate, currentOffSet, idFilterResult.getPath() );
+
+                            subscriber.onNext( result );
+
+                            currentOffSet++;
+                        }
+
+
                     }
                     catch ( Throwable t ) {
 

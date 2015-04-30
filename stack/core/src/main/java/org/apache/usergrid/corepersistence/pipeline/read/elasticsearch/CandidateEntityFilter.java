@@ -27,9 +27,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractPipelineOperation;
-import org.apache.usergrid.corepersistence.pipeline.read.Collector;
-import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntitySet;
@@ -37,7 +38,6 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
@@ -45,31 +45,35 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.uuid.UUIDComparator;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 import rx.Observable;
 
 
 /**
- * Loads entities from an incoming CandidateResults object and return them as results
+ * Loads entities from an incoming CandidateResult emissions into entities, then streams them on
+ * performs internal buffering for efficiency.  Note that all entities may not be emitted if our load crosses page boundaries.  It is up to the
+ * collector to determine when to stop streaming entities.
  */
-public class CandidateResultsEntityResultsCollector extends AbstractPipelineOperation<CandidateResults, ResultsPage>
-    implements Collector<CandidateResults, ResultsPage> {
+public class CandidateEntityFilter extends AbstractFilter<Candidate, Entity>
+    implements Filter<Candidate, Entity> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
 
 
     @Inject
-    public CandidateResultsEntityResultsCollector( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                                   final EntityIndexFactory entityIndexFactory ) {
+    public CandidateEntityFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                  final EntityIndexFactory entityIndexFactory ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
     }
 
 
     @Override
-    public Observable<ResultsPage> call( final Observable<CandidateResults> candidateResultsObservable ) {
+       public Observable<FilterResult<Entity>> call(
+           final Observable<FilterResult<Candidate>> candidateResultsObservable ) {
 
 
         /**
@@ -86,43 +90,50 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
         final ApplicationEntityIndex applicationIndex =
             entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
-        final Observable<ResultsPage> searchIdSetObservable = candidateResultsObservable.flatMap( candidateResults -> {
-            //flatten toa list of ids to load
-            final Observable<List<Id>> candidateIds =
-                Observable.from( candidateResults ).map( candidate -> candidate.getId() ).toList();
+        //buffer them to get a page size we can make 1 network hop
+        final Observable<FilterResult<Entity>> searchIdSetObservable = candidateResultsObservable.buffer( pipelineContext.getLimit() )
 
-            //load the ids
-            final Observable<EntitySet> entitySetObservable =
-                candidateIds.flatMap( ids -> entityCollectionManager.load( ids ) );
+            //load them
+            .flatMap( candidateResults -> {
+                    //flatten toa list of ids to load
+                    final Observable<List<Id>> candidateIds =
+                        Observable.from( candidateResults ).map( filterResultCandidate -> filterResultCandidate.getValue().getCandidateResult().getId() ).toList();
 
-            //now we have a collection, validate our canidate set is correct.
+                    //load the ids
+                    final Observable<EntitySet> entitySetObservable =
+                        candidateIds.flatMap( ids -> entityCollectionManager.load( ids ) );
 
-            return entitySetObservable
-                .map( entitySet -> new EntityCollector( applicationIndex.createBatch(), entitySet, candidateResults ) )
-                .doOnNext( entityCollector -> entityCollector.merge() )
-                .map( entityCollector -> entityCollector.getResults() );
-        } );
+                    //now we have a collection, validate our canidate set is correct.
+
+                    return entitySetObservable.map(
+                        entitySet -> new EntityVerifier( applicationIndex.createBatch(), entitySet,
+                            candidateResults ) ).doOnNext( entityCollector -> entityCollector.merge() )
+                                              .flatMap(
+                                                  entityCollector -> Observable.from( entityCollector.getResults() ) );
+                } );
 
         //if we filter all our results, we want to continue to try the next page
         return searchIdSetObservable;
     }
 
 
+
+
     /**
      * Our collector to collect entities.  Not quite a true collector, but works within our operational flow as this state is mutable and difficult to represent functionally
      */
-    private static final class EntityCollector {
+    private static final class EntityVerifier {
 
-        private static final Logger logger = LoggerFactory.getLogger( EntityCollector.class );
-        private List<Entity> results = new ArrayList<>();
+        private static final Logger logger = LoggerFactory.getLogger( EntityVerifier.class );
+        private List<FilterResult<Entity>> results = new ArrayList<>();
 
         private final EntityIndexBatch batch;
-        private final CandidateResults candidateResults;
+        private final List<FilterResult<Candidate>> candidateResults;
         private final EntitySet entitySet;
 
 
-        public EntityCollector( final EntityIndexBatch batch, final EntitySet entitySet,
-                                final CandidateResults candidateResults ) {
+        public EntityVerifier( final EntityIndexBatch batch, final EntitySet entitySet,
+                               final List<FilterResult<Candidate>> candidateResults ) {
             this.batch = batch;
             this.entitySet = entitySet;
             this.candidateResults = candidateResults;
@@ -135,7 +146,7 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
          */
         public void merge() {
 
-            for ( final CandidateResult candidateResult : candidateResults ) {
+            for ( final FilterResult<Candidate> candidateResult : candidateResults ) {
                 validate( candidateResult );
             }
 
@@ -143,8 +154,8 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
         }
 
 
-        public ResultsPage getResults() {
-            return new ResultsPage( results );
+        public List<FilterResult<Entity>> getResults() {
+            return results;
         }
 
 
@@ -153,8 +164,11 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
         }
 
 
-        private void validate( final CandidateResult candidateResult ) {
+        private void validate( final FilterResult<Candidate> filterResult ) {
 
+            final Candidate candidate = filterResult.getValue();
+            final CandidateResult candidateResult = candidate.getCandidateResult();
+            final SearchEdge searchEdge = candidate.getSearchEdge();
             final Id candidateId = candidateResult.getId();
             final UUID candidateVersion = candidateResult.getVersion();
 
@@ -178,13 +192,14 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
 
 
             final UUID entityVersion = entity.getVersion();
+            final Id entityId = entity.getId();
+
+
+
 
 
             //entity is newer than ES version, could be an update or the entity is marked as deleted
-            if ( UUIDComparator.staticCompare( entityVersion, candidateVersion ) > 0) {
-
-                final Id entityId = entity.getId();
-                final SearchEdge searchEdge = candidateResults.getSearchEdge();
+            if ( UUIDComparator.staticCompare( entityVersion, candidateVersion ) > 0 || !entity.getEntity().isPresent()) {
 
                 logger.warn( "Deindexing stale entity on edge {} for entityId {} and version {}",
                     new Object[] { searchEdge, entityId, entityVersion } );
@@ -195,9 +210,6 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
             //ES is newer than cass, it means we haven't repaired the record in Cass, we don't want to
             //remove the ES record, since the read in cass should cause a read repair, just ignore
             if ( UUIDComparator.staticCompare( candidateVersion, entityVersion ) > 0 ) {
-
-                final Id entityId = entity.getId();
-                final SearchEdge searchEdge = candidateResults.getSearchEdge();
 
                 logger.warn(
                     "Found a newer version in ES over cassandra for edge {} for entityId {} and version {}.  Repair "
@@ -210,8 +222,13 @@ public class CandidateResultsEntityResultsCollector extends AbstractPipelineOper
 
             //they're the same add it
 
+            final Entity returnEntity = entity.getEntity().get();
 
-            results.add( entity.getEntity().get() );
+            final Optional<EdgePath> parent = filterResult.getPath();
+
+            final FilterResult<Entity> toReturn = new FilterResult<>( returnEntity, parent );
+
+            results.add( toReturn );
         }
     }
 }

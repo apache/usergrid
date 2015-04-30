@@ -24,11 +24,11 @@ package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 import org.junit.Test;
 
+import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticsearchCursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.graph.EdgeCursorSerializer;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
-import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 
 import com.google.common.base.Optional;
 
@@ -41,7 +41,10 @@ public class CursorTest {
     @Test
     public void testCursors(){
 
-        ResponseCursor responseCursor = new ResponseCursor();
+
+
+
+
 
 
         //test encoding edge
@@ -58,13 +61,18 @@ public class CursorTest {
         final Integer query2 = 20;
 
 
-        responseCursor.setCursor( 0, edge1, EdgeCursorSerializer.INSTANCE );
 
-        responseCursor.setCursor( 1, query1, ElasticsearchCursorSerializer.INSTANCE );
+        final EdgePath<Integer> filter3Path = new EdgePath<>( 3, query2, ElasticsearchCursorSerializer.INSTANCE, Optional.absent() );
 
-        responseCursor.setCursor(2, edge2, EdgeCursorSerializer.INSTANCE);
+        final EdgePath<Edge> filter2Path = new EdgePath<Edge>(2, edge2, EdgeCursorSerializer.INSTANCE, Optional.of( filter3Path ));
 
-        responseCursor.setCursor(3, query2, ElasticsearchCursorSerializer.INSTANCE);
+        final EdgePath<Integer> filter1Path = new EdgePath<>( 1, query1, ElasticsearchCursorSerializer.INSTANCE, Optional.of(filter2Path) );
+
+        final EdgePath<Edge> filter0Path = new EdgePath<>( 0, edge1, EdgeCursorSerializer.INSTANCE, Optional.of( filter1Path ) );
+
+
+
+        ResponseCursor responseCursor = new ResponseCursor( Optional.of(filter0Path) );
 
         final Optional<String> cursor = responseCursor.encodeAsString();
 

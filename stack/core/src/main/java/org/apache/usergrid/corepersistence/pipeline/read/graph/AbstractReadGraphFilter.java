@@ -21,8 +21,9 @@ package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractSeekingFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -38,7 +39,7 @@ import rx.Observable;
 /**
  * Command for reading graph edges
  */
-public abstract class AbstractReadGraphFilter extends AbstractSeekingFilter<Id, Id, Edge> implements Filter<Id, Id> {
+public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id, Edge> implements Filter<Id, Id> {
 
     private final GraphManagerFactory graphManagerFactory;
 
@@ -52,7 +53,8 @@ public abstract class AbstractReadGraphFilter extends AbstractSeekingFilter<Id, 
 
 
     @Override
-    public Observable<Id> call( final Observable<Id> observable ) {
+    public Observable<FilterResult<Id>> call( final Observable<FilterResult<Id>> previousIds ) {
+
 
         //get the graph manager
         final GraphManager graphManager =
@@ -63,10 +65,11 @@ public abstract class AbstractReadGraphFilter extends AbstractSeekingFilter<Id, 
 
 
         //return all ids that are emitted from this edge
-        return observable.flatMap( id -> {
+        return previousIds.flatMap( previousFilterValue -> {
 
             //set our our constant state
             final Optional<Edge> startFromCursor = getSeekValue();
+            final Id id = previousFilterValue.getValue();
 
 
             final SimpleSearchByEdgeType search =
@@ -78,9 +81,9 @@ public abstract class AbstractReadGraphFilter extends AbstractSeekingFilter<Id, 
              */
             return graphManager.loadEdgesFromSource( search )
                 //set our cursor every edge we traverse
-                .doOnNext( edge -> setCursor( edge ) )
+
                     //map our id from the target edge
-                .map( edge -> edge.getTargetNode() );
+                .map( edge -> createFilterResult( edge.getTargetNode(), edge, previousFilterValue.getPath() ) );
         } );
     }
 

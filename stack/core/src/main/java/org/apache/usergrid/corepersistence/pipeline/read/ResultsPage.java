@@ -22,18 +22,28 @@ package org.apache.usergrid.corepersistence.pipeline.read;
 
 import java.util.List;
 
+import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 
 /**
- * An encapsulation of entities as a group of responses.  Ordered by the requesting filters.  Each set should be considered a "page" of results.
+ * An encapsulation of entities as a group of responses.  Ordered by the requesting filters.  Each set should be
+ * considered a "page" of results.  A hold over from 1.0.  We shouldn't need this when we fully move away from the EM/RM
  */
 public class ResultsPage {
 
     private final List<Entity> entityList;
 
+    private final int limit;
 
-    public ResultsPage( final List<Entity> entityList ) {this.entityList = entityList;}
+    private final ResponseCursor responseCursor;
+
+
+    public ResultsPage( final List<Entity> entityList, final ResponseCursor responseCursor, final int limit ) {
+        this.entityList = entityList;
+        this.responseCursor = responseCursor;
+        this.limit = limit;
+    }
 
 
     public List<Entity> getEntityList() {
@@ -43,9 +53,15 @@ public class ResultsPage {
 
     /**
      * Return true if the results page is empty
-     * @return
      */
-    public boolean isEmpty(){
-        return entityList == null || entityList.isEmpty();
+    public boolean hasMoreResults() {
+        return entityList != null && entityList.size() == limit;
+    }
+
+
+
+
+    public ResponseCursor getResponseCursor() {
+        return responseCursor;
     }
 }

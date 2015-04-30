@@ -20,12 +20,10 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import java.io.Serializable;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.fasterxml.jackson.core.Base64Variant;
+import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,71 +39,72 @@ public class ResponseCursor {
 
     private static final ObjectMapper MAPPER = CursorSerializerUtil.getMapper();
 
+
     /**
-     * We use a map b/c some indexes might be skipped
+     * The pointer to the first edge path.  Evaluation is lazily performed in the case the caller does not care about
+     * the cursor.
      */
-    private Map<Integer, CursorEntry<?>> cursors = new HashMap<>();
+    private final Optional<EdgePath> edgePath;
+
+    private Optional<String> encodedValue = null;
+
+
+    public ResponseCursor( final Optional<EdgePath> edgePath ) {this.edgePath = edgePath;}
 
 
     /**
-     * Set the possible cursor value into the index. DOES NOT parse the cursor.  This is intentional for performance
-     */
-    public <T extends Serializable> void setCursor( final int id, final T cursor,
-                                                    final CursorSerializer<T> serializer ) {
-
-        final CursorEntry<T> newEntry = new CursorEntry<>( cursor, serializer );
-        cursors.put( id, newEntry );
-    }
-
-
-    /**
-     * now we're done, encode as a string
+     * Lazyily encoded deliberately.  If the user doesn't care about a cursor and is using streams, we dont' want to take the
+     * time to calculate it
      */
     public Optional<String> encodeAsString() {
+
+        //always return cached if we are called 2x
+        if ( encodedValue != null ) {
+            return encodedValue;
+        }
+
+        if ( !edgePath.isPresent() ) {
+            encodedValue = Optional.absent();
+            return encodedValue;
+        }
+
+
         try {
 
-            if(cursors.isEmpty()){
-                return Optional.absent();
-            }
-
+            //no edge path, short circuit
 
             final ObjectNode map = MAPPER.createObjectNode();
 
-            for ( Map.Entry<Integer, CursorEntry<?>> entry : cursors.entrySet() ) {
 
-                final CursorEntry cursorEntry = entry.getValue();
+            Optional<EdgePath> current = edgePath;
 
-                final JsonNode serialized = cursorEntry.serializer.toNode( MAPPER, cursorEntry.cursor );
 
-                map.put( entry.getKey().toString(), serialized );
+            //traverse each edge and add them to our json
+            do {
+
+                final EdgePath edgePath = current.get();
+                final Object cursorValue = edgePath.getCursorValue();
+                final CursorSerializer serializer = edgePath.getSerializer();
+                final int filterId = edgePath.getFilterId();
+
+                final JsonNode serialized = serializer.toNode( MAPPER, cursorValue );
+                map.put( String.valueOf( filterId ), serialized );
+
+                current = current.get().getPrevious();
             }
+            while ( current.isPresent() );
 
-
-            final byte[] output = MAPPER.writeValueAsBytes(map);
+            final byte[] output = MAPPER.writeValueAsBytes( map );
 
             //generate a base64 url save string
             final String value = Base64.getUrlEncoder().encodeToString( output );
 
-            return Optional.of( value );
-
+            encodedValue =  Optional.of( value );
         }
         catch ( JsonProcessingException e ) {
             throw new CursorParseException( "Unable to serialize cursor", e );
         }
-    }
 
-
-    /**
-     * Interal pointer to the cursor and it's serialzed value
-     */
-    private static final class CursorEntry<T> {
-        private final T cursor;
-        private final CursorSerializer<T> serializer;
-
-
-        private CursorEntry( final T cursor, final CursorSerializer<T> serializer ) {
-            this.cursor = cursor;
-            this.serializer = serializer;
-        }
+        return encodedValue;
     }
 }
