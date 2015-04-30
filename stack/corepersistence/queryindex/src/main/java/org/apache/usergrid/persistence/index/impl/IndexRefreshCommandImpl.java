@@ -23,9 +23,13 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.util.StringUtils;
+import org.elasticsearch.action.ShardOperationFailedException;
+import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.indices.IndexMissingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +53,7 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.util.async.Async;
 
 
@@ -84,7 +89,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
     @Override
-    public Observable<IndexRefreshCommandInfo> execute() {
+    public Observable<IndexRefreshCommandInfo> execute(String[] indexes) {
         final long start = System.currentTimeMillis();
 
         Timer.Context refreshTimer = timer.time();
@@ -108,9 +113,10 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         IndexOperation indexRequest = new IndexOperation( alias.getWriteAlias(), docId, entityData );
 
         //save the item
-        IndexOperationMessage message = new IndexOperationMessage();
+        final IndexOperationMessage message = new IndexOperationMessage();
         message.addIndexRequest( indexRequest );
-        producer.put( message );
+        final Observable addRecord = producer.put(message);
+        final Observable refresh = refresh(indexes);
 
         /**
          * We have to search.  Get by ID returns immediately, even if search isn't ready, therefore we have to search
@@ -125,18 +131,16 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
         //start our processing immediately
         final Observable<IndexRefreshCommandInfo> future = Async.toAsync( () -> {
+            final Observable combined =  Observable.concat(addRecord, refresh);
+            combined.toBlocking().lastOrDefault(null);
             try {
                 boolean found = false;
                 for ( int i = 0; i < indexFig.maxRefreshSearches(); i++ ) {
-                    Thread.sleep(indexFig.refreshSleep());
-
                     final SearchResponse response = builder.execute().get();
-
                     if (response.getHits().totalHits() > 0) {
                         found = true;
                         break;
                     }
-
                 }
 
                 return new IndexRefreshCommandInfo(found,System.currentTimeMillis() - start);
@@ -168,5 +172,35 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
             refreshTimer.stop();
         });
+    }
+
+    private Observable<Boolean> refresh(final String[] indexes) {
+
+        return Observable.create(subscriber -> {
+            try {
+
+                if (indexes.length == 0) {
+                    logger.debug("Not refreshing indexes. none found");
+                }
+                //Added For Graphite Metrics
+                RefreshResponse response = esProvider.getClient().admin().indices().prepareRefresh(indexes).execute().actionGet();
+                int failedShards = response.getFailedShards();
+                int successfulShards = response.getSuccessfulShards();
+                ShardOperationFailedException[] sfes = response.getShardFailures();
+                if (sfes != null) {
+                    for (ShardOperationFailedException sfe : sfes) {
+                        logger.error("Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason());
+                    }
+                }
+                logger.debug("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "), successfulShards, failedShards);
+
+            } catch (IndexMissingException e) {
+                logger.error("Unable to refresh index. Waiting before sleeping.", e);
+                throw e;
+            }
+            subscriber.onNext(true);
+            subscriber.onCompleted();
+        });
+
     }
 }
