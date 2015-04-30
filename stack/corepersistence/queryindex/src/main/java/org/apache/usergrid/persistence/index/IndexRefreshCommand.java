@@ -26,7 +26,7 @@ import rx.Observable;
  */
 public interface IndexRefreshCommand {
 
-    Observable<IndexRefreshCommandInfo> execute();
+    Observable<IndexRefreshCommandInfo> execute(String[] indexes);
 
     public static class IndexRefreshCommandInfo{
         private final boolean hasFinished;
