@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.usergrid.corepersistence.pipeline.Pipeline;
-import org.apache.usergrid.corepersistence.pipeline.PipelineResult;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateResultsEntityResultsCollector;
-import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityLoadCollector;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateEntityFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.graph.EntityLoadFilter;
+import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -52,6 +52,8 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
     private final ApplicationScope applicationScope;
 
+    private final CollectorFactory collectorFactory;
+
 
     /**
      * Our pointer to our collect filter. Set or cleared with each operation that's performed so the correct results are
@@ -70,6 +72,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
         this.filterFactory = filterFactory;
 
         this.applicationScope = applicationScope;
+        this.collectorFactory = collectorFactory;
 
         //init our cursor to empty
         this.cursor = Optional.absent();
@@ -78,7 +81,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
         this.limit = DEFAULT_LIMIT;
 
 
-        this.collectorState = new CollectorState( collectorFactory );
+        this.collectorState = new CollectorState( );
 
         this.filters = new ArrayList<>();
     }
@@ -120,7 +123,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
         filters.add( filterFactory.readGraphCollectionByIdFilter( collectionName, entityId ) );
 
-        this.collectorState.setEntityLoaderCollector();
+        this.collectorState.setIdEntityLoaderFilter();
 
         return this;
     }
@@ -132,7 +135,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
         filters.add( filterFactory.readGraphCollectionFilter( collectionName ) );
 
-        this.collectorState.setEntityLoaderCollector();
+        this.collectorState.setIdEntityLoaderFilter();
 
         return this;
     }
@@ -147,7 +150,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
         filters.add( filterFactory.elasticSearchCollectionFilter( query, collectionName, entityType ) );
 
-        this.collectorState.setCandidateResultsEntityResultsCollector();
+        this.collectorState.setCandidateEntityFilter();
 
         return this;
     }
@@ -159,7 +162,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
         ValidationUtils.verifyIdentity( entityId );
 
         filters.add( filterFactory.readGraphConnectionByIdFilter( connectionName, entityId ) );
-        collectorState.setEntityLoaderCollector();
+        collectorState.setIdEntityLoaderFilter();
 
         return this;
     }
@@ -169,7 +172,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
     public ReadPipelineBuilder getConnection( final String connectionName ) {
         Preconditions.checkNotNull( connectionName, "connectionName must not be null" );
         filters.add( filterFactory.readGraphConnectionFilter( connectionName ) );
-        collectorState.setEntityLoaderCollector();
+        collectorState.setIdEntityLoaderFilter();
 
         return this;
     }
@@ -182,7 +185,7 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
         filters.add( filterFactory.readGraphConnectionByTypeFilter( connectionName, entityType ) );
 
-        collectorState.setEntityLoaderCollector();
+        collectorState.setIdEntityLoaderFilter();
         return this;
     }
 
@@ -196,17 +199,25 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
         Preconditions.checkNotNull( query, "query must not be null" );
 
         filters.add( filterFactory.elasticSearchConnectionFilter( query, connectionName, entityType ) );
-        collectorState.setCandidateResultsEntityResultsCollector();
+        collectorState.setCandidateEntityFilter();
         return this;
     }
 
 
     @Override
-    public Observable<PipelineResult<ResultsPage>> execute() {
+    public Observable<ResultsPage> execute() {
 
         ValidationUtils.validateApplicationScope( applicationScope );
 
-        final Collector<?, ResultsPage> collector = collectorState.getCollector();
+
+        //add our last filter that will generate entities
+        final Filter<?, Entity> finalFilter = collectorState.getFinalFilter();
+
+        filters.add( finalFilter );
+
+
+        //execute our collector
+        final Collector<?, ResultsPage> collector = collectorFactory.getResultsPageCollector();
 
         Preconditions.checkNotNull( collector,
             "You have not specified an operation that creates a collection filter.  This is required for loading "
@@ -229,46 +240,52 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
      * A mutable state for our collectors.  Rather than create a new instance each time, we create a singleton
      * collector
      */
-    private static final class CollectorState {
-        private final CollectorFactory collectorFactory;
-
-        private EntityLoadCollector entityLoadCollector;
-
-        private CandidateResultsEntityResultsCollector candidateResultsEntityResultsCollector;
+    private final class CollectorState {
 
 
-        private Collector<?, ResultsPage> collector = null;
+        private EntityLoadFilter entityLoadCollector;
+
+        private CandidateEntityFilter candidateEntityFilter;
+
+        private Filter entityLoadFilter;
 
 
-        private CollectorState( final CollectorFactory collectorFactory ) {this.collectorFactory = collectorFactory;}
+
+        private CollectorState( ){}
 
 
-        public void setEntityLoaderCollector() {
+        /**
+         * Set our final filter to be a load entity by Id filter
+         */
+        public void setIdEntityLoaderFilter() {
             if ( entityLoadCollector == null ) {
-                entityLoadCollector = collectorFactory.entityLoadCollector();
+                entityLoadCollector = filterFactory.entityLoadFilter();
             }
 
 
-            collector = entityLoadCollector;
+            entityLoadFilter = entityLoadCollector;
         }
 
 
-        public void setCandidateResultsEntityResultsCollector() {
-            if ( candidateResultsEntityResultsCollector == null ) {
-                candidateResultsEntityResultsCollector = collectorFactory.candidateResultsEntityResultsCollector();
+        /**
+         * Set our final filter to be a load entity by candidate filter
+         */
+        public void setCandidateEntityFilter() {
+            if ( candidateEntityFilter == null ) {
+                candidateEntityFilter = filterFactory.candidateEntityFilter();
             }
 
-            collector = candidateResultsEntityResultsCollector;
+            entityLoadFilter = candidateEntityFilter;
         }
 
 
         public void clear() {
-            collector = null;
+            entityLoadFilter = null;
         }
 
 
-        public Collector<?, ResultsPage> getCollector() {
-            return collector;
+        public Filter<?, Entity> getFinalFilter() {
+            return entityLoadFilter;
         }
     }
 }

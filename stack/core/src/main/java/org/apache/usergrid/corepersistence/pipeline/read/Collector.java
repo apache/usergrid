@@ -20,11 +20,18 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
+import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
+
+
 /**
- * A command that is used to reduce our stream of results into a final output
- * @param <T>
+ * A command that is used to reduce our stream of results into a stream of final batch outputs.  When used
+ * no further transformation or encoding should occur.  Otherwise EdgePath data will be lost, and serialization cannot occur
+ * across requests
+ *
+ * @param <T>  The input type
+ * @param <R> The output type
  */
-public interface Collector<T, R> extends PipelineOperation<T, R> {
+public interface Collector<T, R> extends PipelineOperation<T,R> {
 
 
 

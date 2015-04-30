@@ -17,11 +17,12 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.entity;
+package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractPipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -34,7 +35,7 @@ import rx.Observable;
  * This command is a stopgap to make migrating 1.0 code easier.  Once full traversal has been implemented, this should
  * be removed
  */
-public class EntityIdFilter extends AbstractPipelineOperation<Id, Id> implements Filter<Id, Id> {
+public class EntityIdFilter extends AbstractFilter<Id, Id> implements Filter<Id, Id> {
 
     private final Id entityId;
 
@@ -44,10 +45,10 @@ public class EntityIdFilter extends AbstractPipelineOperation<Id, Id> implements
 
 
 
-
     @Override
-    public Observable<Id> call( final Observable<Id> idObservable ) {
-        return Observable.just( entityId );
-    }
+    public Observable<FilterResult<Id>> call( final Observable<FilterResult<Id>> filterValueObservable ) {
+        //ignore what our input was, and simply emit the id specified
+       return filterValueObservable.map( idFilterResult ->  new FilterResult( entityId, idFilterResult.getPath() ));
 
+    }
 }

@@ -32,7 +32,6 @@ import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
-import org.apache.usergrid.corepersistence.pipeline.PipelineResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ReadPipelineBuilder;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ObservableQueryExecutor;
@@ -648,7 +647,7 @@ public class CpRelationManager implements RelationManager {
         }
 
 
-        final Observable<PipelineResult<ResultsPage>> resultsObservable = readPipelineBuilder.execute();
+        final Observable<ResultsPage> resultsObservable = readPipelineBuilder.execute();
 
         return new ObservableQueryExecutor( resultsObservable ).next();
     }
@@ -917,7 +916,7 @@ public class CpRelationManager implements RelationManager {
         }
 
 
-        final Observable<PipelineResult<ResultsPage>> resultsObservable = readPipelineBuilder.execute();
+        final Observable<ResultsPage> resultsObservable = readPipelineBuilder.execute();
 
         return new ObservableQueryExecutor( resultsObservable ).next();
     }

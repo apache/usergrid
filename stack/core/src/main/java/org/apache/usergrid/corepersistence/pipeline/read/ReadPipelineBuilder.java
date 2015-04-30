@@ -20,9 +20,6 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.corepersistence.pipeline.PipelineResult;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -103,5 +100,5 @@ public interface ReadPipelineBuilder {
      * Load our entity results when our previous filter calls graph
      * @return
      */
-    Observable<PipelineResult<ResultsPage>> execute();
+    Observable<ResultsPage> execute();
 }

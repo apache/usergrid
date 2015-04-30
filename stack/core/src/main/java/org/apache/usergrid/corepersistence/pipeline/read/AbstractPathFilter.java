@@ -33,7 +33,7 @@ import com.google.common.base.Optional;
  * @param <R> The response type
  * @param <C> The cursor type
  */
-public abstract class AbstractSeekingFilter<T, R, C extends Serializable> extends AbstractPipelineOperation<T, R> implements Filter<T, R> {
+public abstract class AbstractPathFilter<T, R, C extends Serializable> extends AbstractFilter<T, R> implements Filter<T, R> {
 
 
 
@@ -58,10 +58,17 @@ public abstract class AbstractSeekingFilter<T, R, C extends Serializable> extend
 
     /**
      * Sets the cursor into our pipeline context
-     * @param newValue
      */
-    protected void setCursor(final C newValue){
-        pipelineContext.setCursorValue( newValue, getCursorSerializer() );
+    protected FilterResult<R> createFilterResult( final R emit, final C cursorValue, final Optional<EdgePath> parent ){
+
+
+        //create a current path, and append our parent path to it
+        final EdgePath<C> newEdgePath =
+            new EdgePath<>( pipelineContext.getId(), cursorValue, getCursorSerializer(), parent );
+
+        //emit our value with the parent path
+        return new FilterResult<>( emit, Optional.of( newEdgePath ) );
+
     }
 
 

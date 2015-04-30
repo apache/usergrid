@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.usergrid.corepersistence.pipeline.cursor.RequestCursor;
 import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
 import org.apache.usergrid.corepersistence.pipeline.read.Collector;
-import org.apache.usergrid.corepersistence.pipeline.read.PipelineOperation;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.base.Optional;
@@ -47,7 +46,6 @@ public class Pipeline<R> {
     private final List<PipelineOperation> idPipelineOperationList;
     private final Collector<?, R> collector;
     private final RequestCursor requestCursor;
-    private final ResponseCursor responseCursor;
 
     private final int limit;
 
@@ -69,7 +67,6 @@ public class Pipeline<R> {
         this.limit = limit;
 
         this.requestCursor = new RequestCursor( cursor );
-        this.responseCursor = new ResponseCursor();
     }
 
 
@@ -77,7 +74,7 @@ public class Pipeline<R> {
      * Execute the pipline construction, returning an observable of results
      * @return
      */
-    public Observable<PipelineResult<R>> execute(){
+    public Observable<R> execute(){
 
 
         Observable traverseObservable = Observable.just( applicationScope.getApplication() );
@@ -99,7 +96,7 @@ public class Pipeline<R> {
 
 
         //append the optional cursor into the response for the caller to use
-        return response.map( result -> new PipelineResult<>( result, responseCursor ) );
+        return response;
     }
 
 
@@ -111,7 +108,7 @@ public class Pipeline<R> {
     private void setState( final PipelineOperation pipelineOperation ) {
 
 
-        final PipelineContext context = new PipelineContext( applicationScope, requestCursor, responseCursor,
+        final PipelineContext context = new PipelineContext( applicationScope, requestCursor,
             limit, idCount );
 
         pipelineOperation.setContext( context );
