@@ -20,9 +20,12 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import com.amazonaws.services.elastictranscoder.model.TimeSpan;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
@@ -89,7 +92,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
     @Override
-    public Observable<IndexRefreshCommandInfo> execute(String[] indexes) {
+    public synchronized Observable<IndexRefreshCommandInfo> execute(String[] indexes) {
         final long start = System.currentTimeMillis();
 
         Timer.Context refreshTimer = timer.time();
@@ -130,51 +133,54 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
         //start our processing immediately
-        final Observable<IndexRefreshCommandInfo> future = Async.toAsync( () -> {
-            final Observable combined =  Observable.concat(addRecord, refresh);
-            combined.toBlocking().lastOrDefault(null);
-            try {
-                boolean found = false;
-                for ( int i = 0; i < indexFig.maxRefreshSearches(); i++ ) {
-                    final SearchResponse response = builder.execute().get();
-                    if (response.getHits().totalHits() > 0) {
-                        found = true;
-                        break;
+        final Observable<IndexRefreshCommandInfo> future = Async.toAsync(() -> {
+            final Observable<IndexRefreshCommandInfo> infoObservable = Observable
+                .range(0, indexFig.maxRefreshSearches())
+                .map(i ->
+                {
+                    try {
+                        return new IndexRefreshCommandInfo(builder.execute().get().getHits().totalHits() > 0, System.currentTimeMillis() - start);
+                    } catch (Exception ee) {
+                        logger.error("Failed during refresh search for " + uuid, ee);
+                        throw new RuntimeException("Failed during refresh search for " + uuid, ee);
                     }
+                })
+                .takeWhile(info -> info.hasFinished())
+                .takeLast( indexFig.refreshWaitTime(), TimeUnit.MILLISECONDS );
+
+            final Observable<Boolean> combined = Observable.concat(addRecord, refresh);
+            combined.toBlocking().last();
+
+            final IndexRefreshCommandInfo info = infoObservable.toBlocking().last();
+
+            return info;
+
+        },rxTaskScheduler.getAsyncIOScheduler()).call();
+
+
+            return future.doOnNext(found -> {
+                if (!found.hasFinished()) {
+                    logger.error("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
+                } else {
+                    logger.info("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
                 }
+            }).doOnCompleted(() -> {
+                //clean up our data
+                String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
+                DeIndexOperation deIndexRequest =
+                    new DeIndexOperation(aliases, appScope, edge, entity.getId(), entity.getVersion());
 
-                return new IndexRefreshCommandInfo(found,System.currentTimeMillis() - start);
-            }
-            catch ( Exception ee ) {
-                logger.error( "Failed during refresh search for " + uuid, ee );
-                throw new RuntimeException( "Failed during refresh search for " + uuid, ee );
-            }
-        }, rxTaskScheduler.getAsyncIOScheduler() ).call();
+                //delete the item
+                IndexOperationMessage indexOperationMessage =
+                    new IndexOperationMessage();
+                indexOperationMessage.addDeIndexRequest(deIndexRequest);
+                producer.put(indexOperationMessage);
 
+                refreshTimer.stop();
+            });
+        }
 
-        return future.doOnNext( found -> {
-            if ( !found.hasFinished() ) {
-                logger.error("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
-            }else{
-                logger.info("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
-            }
-        } ).doOnCompleted(() -> {
-            //clean up our data
-            String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
-            DeIndexOperation deIndexRequest =
-                new DeIndexOperation(aliases, appScope, edge, entity.getId(), entity.getVersion());
-
-            //delete the item
-            IndexOperationMessage indexOperationMessage =
-                new IndexOperationMessage();
-            indexOperationMessage.addDeIndexRequest( deIndexRequest );
-            producer.put( indexOperationMessage );
-
-            refreshTimer.stop();
-        });
-    }
-
-    private Observable<Boolean> refresh(final String[] indexes) {
+        private Observable<Boolean> refresh(final String[] indexes) {
 
         return Observable.create(subscriber -> {
             try {
