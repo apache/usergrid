@@ -284,7 +284,7 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void testDeleteWithAlias() throws IOException {
-        Id appId = new SimpleId( "application" );
+        Id appId = new SimpleId(UUID.randomUUID(), "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
