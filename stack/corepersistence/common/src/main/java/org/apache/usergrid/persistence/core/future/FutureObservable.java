@@ -27,13 +27,11 @@ import java.util.concurrent.FutureTask;
  */
 public class FutureObservable<T> {
 
-    private final T returnVal;
     private final FutureTask<T> future;
 
 
     public FutureObservable(final T returnVal) {
-        this.returnVal = returnVal;
-        future = new FutureTask<T>( () -> returnVal );
+        future = new FutureTask<>( () -> returnVal );
     }
 
     public void done() {
@@ -41,6 +39,6 @@ public class FutureObservable<T> {
     }
 
     public Observable<T> observable() {
-        return !future.isDone() ? Observable.from(future) : Observable.just(returnVal);
+        return  Observable.from(future);
     }
 }

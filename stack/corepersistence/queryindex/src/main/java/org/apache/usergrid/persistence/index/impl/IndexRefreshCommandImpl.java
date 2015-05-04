@@ -20,26 +20,21 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import com.amazonaws.services.elastictranscoder.model.TimeSpan;
-import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.indices.IndexMissingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -56,7 +51,6 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 
 import rx.Observable;
-import rx.Subscriber;
 import rx.util.async.Async;
 
 
@@ -72,13 +66,12 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
     private final IndexBufferConsumer producer;
     private final IndexFig indexFig;
     private final Timer timer;
-    private final RxTaskScheduler rxTaskScheduler;
+
 
     @Inject
     public IndexRefreshCommandImpl( IndexIdentifier indexIdentifier, EsProvider esProvider,
                                     IndexBufferConsumer producer, IndexFig indexFig, MetricsFactory metricsFactory,
-                                    final IndexCache indexCache, final RxTaskScheduler rxTaskScheduler ) {
-
+                                    final IndexCache indexCache ) {
 
 
         this.timer = metricsFactory.getTimer( IndexRefreshCommandImpl.class, "index.refresh.timer" );
@@ -87,17 +80,16 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         this.producer = producer;
         this.indexFig = indexFig;
         this.indexCache = indexCache;
-        this.rxTaskScheduler = rxTaskScheduler;
     }
 
 
     @Override
-    public synchronized Observable<IndexRefreshCommandInfo> execute(String[] indexes) {
+    public Observable<IndexRefreshCommandInfo> execute( String[] indexes ) {
 
 
         final long start = System.currentTimeMillis();
 
-        Timer.Context refreshTimer = timer.time();
+
         //id to hunt for
         final UUID uuid = UUIDUtils.newTimeUUID();
         final Entity entity = new Entity( new SimpleId( uuid, "ug_refresh_index_type" ) );
@@ -113,90 +105,96 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         //save the item
         final IndexOperationMessage message = new IndexOperationMessage();
         message.addIndexRequest( indexRequest );
-        final Observable addRecord = producer.put(message);
-        final Observable refresh = refresh(indexes);
+
+        //add the record to the index
+        final Observable<IndexOperationMessage> addRecord = producer.put( message );
+
+        //refresh the index
+        //        final Observable<Boolean> refresh = refresh( indexes );
 
         /**
          * We have to search.  Get by ID returns immediately, even if search isn't ready, therefore we have to search
          */
         //set our filter for entityId fieldname
-        final SearchRequestBuilder builder =
-            esProvider.getClient().prepareSearch(alias.getReadAlias()).setTypes(IndexingUtils.ES_ENTITY_TYPE)
-                .setPostFilter(FilterBuilders.termFilter(IndexingUtils.ENTITY_ID_FIELDNAME, entityId));
 
 
-        //start our processing immediately
-        final Observable<IndexRefreshCommandInfo> future = Async.toAsync(() -> {
-            final Observable<IndexRefreshCommandInfo> infoObservable = Observable
-                .range(0, indexFig.maxRefreshSearches())
-                .map(i ->
-                {
-                    try {
-                        return new IndexRefreshCommandInfo(builder.execute().get().getHits().totalHits() > 0, System.currentTimeMillis() - start);
-                    } catch (Exception ee) {
-                        logger.error("Failed during refresh search for " + uuid, ee);
-                        throw new RuntimeException("Failed during refresh search for " + uuid, ee);
-                    }
-                })
-                .takeWhile(info -> info.hasFinished())
-                .takeLast( indexFig.refreshWaitTime(), TimeUnit.MILLISECONDS);
-
-            final Observable<Boolean> combined = Observable.concat(addRecord, refresh);
-            combined.toBlocking().last();
-            final IndexRefreshCommandInfo info = infoObservable.toBlocking().last();
-            return info;
-        },rxTaskScheduler.getAsyncIOScheduler()).call();
-
-
-            return future.doOnNext(found -> {
-                if (!found.hasFinished()) {
-                    logger.error("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
-                } else {
-                    logger.info("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
-                }
-            }).doOnCompleted(() -> {
-                //clean up our data
-                String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
-                DeIndexOperation deIndexRequest =
-                    new DeIndexOperation(aliases, appScope, edge, entity.getId(), entity.getVersion());
-
-                //delete the item
-                IndexOperationMessage indexOperationMessage =
-                    new IndexOperationMessage();
-                indexOperationMessage.addDeIndexRequest(deIndexRequest);
-                producer.put(indexOperationMessage);
-
-                refreshTimer.stop();
-            });
-        }
-
-        private Observable<Boolean> refresh(final String[] indexes) {
-
-            return Observable.create(subscriber -> {
+        /**
+         * We want to search once we've added our record, then refreshed
+         */
+        final Observable<IndexRefreshCommandInfo> searchObservable =
+            Observable.range( 0, indexFig.maxRefreshSearches() ).map( i -> {
                 try {
 
-                    if (indexes.length == 0) {
-                        logger.debug("Not refreshing indexes. none found");
-                    }
-                    //Added For Graphite Metrics
-                    RefreshResponse response = esProvider.getClient().admin().indices().prepareRefresh(indexes).execute().actionGet();
-                    int failedShards = response.getFailedShards();
-                    int successfulShards = response.getSuccessfulShards();
-                    ShardOperationFailedException[] sfes = response.getShardFailures();
-                    if (sfes != null) {
-                        for (ShardOperationFailedException sfe : sfes) {
-                            logger.error("Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason());
-                        }
-                    }
-                    logger.debug("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "), successfulShards, failedShards);
+                    final SearchRequestBuilder builder = esProvider.getClient().prepareSearch( alias.getReadAlias() )
+                                                                   .setTypes( IndexingUtils.ES_ENTITY_TYPE )
+                                                                   .setPostFilter( FilterBuilders
+                                                                       .termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
+                                                                           entityId ) );
 
-                } catch (IndexMissingException e) {
-                    logger.error("Unable to refresh index. Waiting before sleeping.", e);
-                    throw e;
+
+                    return new IndexRefreshCommandInfo( builder.execute().get().getHits().totalHits() > 0,
+                        System.currentTimeMillis() - start );
                 }
-                subscriber.onNext(true);
-                subscriber.onCompleted();
-            });
+                catch ( Exception ee ) {
+                    logger.error( "Failed during refresh search for " + uuid, ee );
+                    throw new RuntimeException( "Failed during refresh search for " + uuid, ee );
+                }
+            } ).skipWhile( info -> !info.hasFinished() );
 
-        }
+
+        //chain it all together
+
+        //add the record, take it's last result.  On the last add, we then execute the refresh command
+
+        final Observable<IndexRefreshCommandInfo> refreshResults = addRecord
+
+            //after our add, run a refresh
+            .doOnNext( addResult -> {
+
+
+                if ( indexes.length == 0 ) {
+                    logger.debug( "Not refreshing indexes. none found" );
+                }
+                //Added For Graphite Metrics
+                RefreshResponse response =
+                    esProvider.getClient().admin().indices().prepareRefresh( indexes ).execute().actionGet();
+                int failedShards = response.getFailedShards();
+                int successfulShards = response.getSuccessfulShards();
+                ShardOperationFailedException[] sfes = response.getShardFailures();
+                if ( sfes != null ) {
+                    for ( ShardOperationFailedException sfe : sfes ) {
+                        logger.error( "Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason() );
+                    }
+                }
+                logger.debug( "Refreshed indexes: {},success:{} failed:{} ", StringUtils.join( indexes, ", " ),
+                    successfulShards, failedShards );
+            } )
+
+                //once the refresh is done execute the search
+            .flatMap( refreshCommandResult -> searchObservable )
+
+                //check when found
+            .doOnNext( found -> {
+                if ( !found.hasFinished() ) {
+                    logger.error( "Couldn't find record during refresh uuid: {} took ms:{} ", uuid,
+                        found.getExecutionTime() );
+                }
+                else {
+                    logger.info( "found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime() );
+                }
+            } ).doOnCompleted( () -> {
+                //clean up our data
+                String[] aliases = indexCache.getIndexes( alias, AliasedEntityIndex.AliasType.Read );
+                DeIndexOperation deIndexRequest =
+                    new DeIndexOperation( aliases, appScope, edge, entity.getId(), entity.getVersion() );
+
+                //delete the item
+                IndexOperationMessage indexOperationMessage = new IndexOperationMessage();
+                indexOperationMessage.addDeIndexRequest( deIndexRequest );
+                producer.put( indexOperationMessage );
+            } );
+
+
+        return Async.start( () -> 1 ).flatMap( intValue -> ObservableTimer.time( refreshResults, timer ) );
+    }
 }

@@ -363,6 +363,8 @@ public class CollectionIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
+//        Thread.sleep(500);
+
         final Query query = Query.fromQL( "nickname = 'ed'" );
 
         Results r = em.searchCollection( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ) );
