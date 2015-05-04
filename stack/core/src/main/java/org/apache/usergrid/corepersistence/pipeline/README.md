@@ -74,7 +74,7 @@ Consider the following example flow:
 	* Is used in all the submodules as a way to deal with cursors. 
 1. CursorSeek
 	* Protected internal class that lives in AbstractPathFilter
-	* Whats the deal with only seeking values on the first call? Is this not similar to pagination? 
+	* When resuming we use the RequestCursor to page for values. After use the cursor is no longer valid, and we only need to seek on the values that were returned from the cursor call. Any calls on the RequestCursor will be empty afterwards.
 1. Collector
 	* Extends generic PipelineOperation
 	* Primary used to interact with the collect module
