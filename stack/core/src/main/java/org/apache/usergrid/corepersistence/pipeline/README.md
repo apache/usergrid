@@ -45,8 +45,6 @@ Consider the following example flow:
 ###Indepth Cursor Module Explanation
  ![Top Level Pipeline Diagram](https://github.com/apache/incubator-usergrid/blob/c3897d3abac7226d9a93a831c020567abd00536c/stack/core/src/main/java/org/apache/usergrid/corepersistence/pipeline/cursor/CursorDiagram.jpg?raw=true =800x800 ) 
 
-The Cursor Module is made up of 7 classes.
-
 1. ResponseCursor 
 	* This is the cursor that gets returned in the response after the filter has run. 
 	* The flow defined by the Response cursor is as follows
