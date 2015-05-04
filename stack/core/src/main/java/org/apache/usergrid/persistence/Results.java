@@ -1293,7 +1293,7 @@ public class Results implements Iterable<Entity> {
     /** uses cursor to get next batch of Results (returns null if no cursor) */
     public Results getNextPageResults() throws Exception {
         if ( queryExecutor == null || !queryExecutor.hasNext() ) {
-            return null;
+            return new Results();
         }
 
 

@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.pipeline.read;
 
 
 import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
+import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
 
 
 /**
@@ -28,7 +29,7 @@ import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
  * @param <T> the input type
  * @param <R> The output Type
  */
-public abstract class AbstractPipelineOperation<T, R> implements PipelineOperation<T, R> {
+public abstract class AbstractFilter<T, R> implements Filter<T, R> {
 
 
     protected PipelineContext pipelineContext;

@@ -17,22 +17,30 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read;
+package org.apache.usergrid.corepersistence.pipeline.read.collect;
 
 
 import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
-
-import rx.Observable;
+import org.apache.usergrid.corepersistence.pipeline.read.Collector;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 
 
 /**
- * Interface for filtering commands.  All filters must take an observable of Id's as an input.  Output is then determined by subclasses.
-  * This takes an input of Id, performs some operation, and emits values for further processing in the Observable
-  * pipeline
- * @param <T> The input type
- * @param <R>
+ * Basic functionality for our commands to handle cursor IO
+ * @param <T> the input type
+ * @param <R> The output Type
  */
-public interface PipelineOperation< T, R> extends Observable.Transformer<T, R> {
+public abstract class AbstractCollector<T, R> implements Collector<T, R> {
 
-    void setContext(final PipelineContext pipelineContext);
+
+    protected PipelineContext pipelineContext;
+
+
+    @Override
+    public void setContext( final PipelineContext pipelineContext ) {
+        this.pipelineContext = pipelineContext;
+    }
+
+
+
 }

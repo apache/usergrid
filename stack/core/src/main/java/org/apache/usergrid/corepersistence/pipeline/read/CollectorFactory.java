@@ -20,8 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateResultsEntityResultsCollector;
-import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityLoadCollector;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
 
 
 /**
@@ -29,16 +28,11 @@ import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityLoadCollec
  */
 public interface CollectorFactory {
 
-    /**
-     * Generate a new instance of the command with the specified parameters
-     */
-    EntityLoadCollector entityLoadCollector();
 
     /**
-     * Get the collector for collection candidate results to entities
+     * Get the results page collector
      * @return
      */
-    CandidateResultsEntityResultsCollector candidateResultsEntityResultsCollector();
-
+   ResultsPageCollector getResultsPageCollector();
 
 }

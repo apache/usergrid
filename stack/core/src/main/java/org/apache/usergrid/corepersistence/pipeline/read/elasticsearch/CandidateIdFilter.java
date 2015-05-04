@@ -27,8 +27,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractPipelineOperation;
-import org.apache.usergrid.corepersistence.pipeline.read.PipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
+import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
@@ -36,7 +38,6 @@ import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
@@ -52,16 +53,16 @@ import rx.Observable;
  * Responsible for verifying candidate result versions, then emitting the Ids of these versions
  * Input is a batch of candidate results, output is a stream of validated Ids
  */
-public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<CandidateResults, Id>
-    implements PipelineOperation<CandidateResults, Id> {
+public class CandidateIdFilter extends AbstractFilter<Candidate, Id>
+    implements Filter<Candidate, Id> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
 
 
     @Inject
-    public CandidateResultsIdVerifyFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                           final EntityIndexFactory entityIndexFactory ) {
+    public CandidateIdFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                              final EntityIndexFactory entityIndexFactory ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
     }
@@ -69,7 +70,7 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
 
 
     @Override
-    public Observable<Id> call( final Observable<CandidateResults> observable ) {
+      public Observable<FilterResult<Id>> call( final Observable<FilterResult<Candidate>> filterResultObservable ) {
 
 
         /**
@@ -86,25 +87,30 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
         final ApplicationEntityIndex applicationIndex =
             entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
-        final Observable<Id> searchIdSetObservable = observable.flatMap( candidateResults -> {
-            //flatten toa list of ids to load
-            final Observable<List<Id>> candidateIds =
-                Observable.from( candidateResults ).map( candidate -> candidate.getId() ).toList();
+        final Observable<FilterResult<Id>> searchIdSetObservable = filterResultObservable.buffer( pipelineContext.getLimit() ).flatMap(
+            candidateResults -> {
+                //flatten toa list of ids to load
+                final Observable<List<Id>> candidateIds =
+                    Observable.from( candidateResults ).map( candidate -> candidate.getValue().getCandidateResult().getId() )
+                              .toList();
 
-            //load the ids
-            final Observable<VersionSet> versionSetObservable =
-                candidateIds.flatMap( ids -> entityCollectionManager.getLatestVersion( ids ) );
+                //load the ids
+                final Observable<VersionSet> versionSetObservable =
+                    candidateIds.flatMap( ids -> entityCollectionManager.getLatestVersion( ids ) );
 
-            //now we have a collection, validate our canidate set is correct.
+                //now we have a collection, validate our canidate set is correct.
 
-            return versionSetObservable
-                .map( entitySet -> new EntityCollector( applicationIndex.createBatch(), entitySet, candidateResults ) )
-                .doOnNext( entityCollector -> entityCollector.merge() )
-                .flatMap( entityCollector -> Observable.from(  entityCollector.collectResults() ) );
+                return versionSetObservable.map(
+                    entitySet -> new EntityCollector( applicationIndex.createBatch(), entitySet, candidateResults ) )
+                                           .doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
+                        entityCollector -> Observable.from( entityCollector.collectResults() ) );
         } );
 
         return searchIdSetObservable;
     }
+
+
+
 
 
     /**
@@ -113,15 +119,15 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
     private static final class EntityCollector {
 
         private static final Logger logger = LoggerFactory.getLogger( EntityCollector.class );
-        private List<Id> results = new ArrayList<>();
+        private List<FilterResult<Id>> results = new ArrayList<>();
 
         private final EntityIndexBatch batch;
-        private final CandidateResults candidateResults;
+        private final List<FilterResult<Candidate>> candidateResults;
         private final VersionSet versionSet;
 
 
         public EntityCollector( final EntityIndexBatch batch, final VersionSet versionSet,
-                                final CandidateResults candidateResults ) {
+                                final List<FilterResult<Candidate>> candidateResults ) {
             this.batch = batch;
             this.versionSet = versionSet;
             this.candidateResults = candidateResults;
@@ -134,7 +140,7 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
          */
         public void merge() {
 
-            for ( final CandidateResult candidateResult : candidateResults ) {
+            for ( final FilterResult<Candidate> candidateResult : candidateResults ) {
                 validate( candidateResult );
             }
 
@@ -142,16 +148,20 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
         }
 
 
-        public List<Id> collectResults() {
+        public List<FilterResult<Id>> collectResults() {
             return results;
         }
 
 
         /**
          * Validate each candidate results vs the data loaded from cass
-         * @param candidateResult
+         * @param filterCandidate
          */
-        private void validate( final CandidateResult candidateResult ) {
+        private void validate( final FilterResult<Candidate> filterCandidate ) {
+
+            final CandidateResult candidateResult = filterCandidate.getValue().getCandidateResult();
+
+            final SearchEdge searchEdge = filterCandidate.getValue().getSearchEdge();
 
             final MvccLogEntry logEntry = versionSet.getMaxVersion( candidateResult.getId() );
 
@@ -164,8 +174,6 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
             //entity is newer than ES version
             if ( UUIDComparator.staticCompare( entityVersion, candidateVersion ) > 0 ) {
 
-                final SearchEdge searchEdge = candidateResults.getSearchEdge();
-
                 logger.warn( "Deindexing stale entity on edge {} for entityId {} and version {}",
                     new Object[] { searchEdge, entityId, entityVersion } );
                 batch.deindex( searchEdge, entityId, entityVersion );
@@ -176,8 +184,6 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
             //remove the ES record, since the read in cass should cause a read repair, just ignore
             if ( UUIDComparator.staticCompare( candidateVersion, entityVersion ) > 0 ) {
 
-                final SearchEdge searchEdge = candidateResults.getSearchEdge();
-
                 logger.warn(
                     "Found a newer version in ES over cassandra for edge {} for entityId {} and version {}.  Repair "
                         + "should be run", new Object[] { searchEdge, entityId, entityVersion } );
@@ -185,7 +191,9 @@ public class CandidateResultsIdVerifyFilter extends AbstractPipelineOperation<Ca
 
             //they're the same add it
 
-            results.add( entityId );
+            final FilterResult<Id> result = new FilterResult<>( entityId, filterCandidate.getPath()  );
+
+            results.add( result );
         }
     }
 
