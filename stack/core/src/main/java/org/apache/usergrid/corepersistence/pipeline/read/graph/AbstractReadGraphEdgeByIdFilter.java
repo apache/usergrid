@@ -20,8 +20,9 @@
 package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractPipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
@@ -39,7 +40,7 @@ import rx.Observable;
 /**
  * Filter should take and Id and a graph edge, and ensure the connection between the two exists
  */
-public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractPipelineOperation<Id, Id> implements
+public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractFilter<Id, Id> implements
     Filter<Id, Id> {
 
     private final GraphManagerFactory graphManagerFactory;
@@ -55,12 +56,13 @@ public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractPipelineOp
 
 
     @Override
-    public Observable<Id> call( final Observable<Id> idObservable ) {
+    public Observable<FilterResult<Id>> call( final Observable<FilterResult<Id>> filterValueObservable ) {
 
         final GraphManager gm = graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
 
-        return idObservable.flatMap( id -> {
+        return filterValueObservable.flatMap( filterValue -> {
             final String edgeTypeName = getEdgeName();
+            final Id id = filterValue.getValue();
 
             //create our search
             final SearchByEdge searchByEdge =
@@ -68,7 +70,7 @@ public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractPipelineOp
                     Optional.absent() );
 
             //load the versions of the edge, take the first since that's all we need to validate existence, then emit the target node
-            return gm.loadEdgeVersions( searchByEdge ).take( 1 ).map( edge -> edge.getTargetNode() );
+            return gm.loadEdgeVersions( searchByEdge ).take( 1 ).map( edge -> edge.getTargetNode() ).map( targetId -> new FilterResult<>(targetId, filterValue.getPath()));
         } );
     }
 

@@ -169,7 +169,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         }
         failureMonitor.success();
 
-        return parseResults(searchResponse, parsedQuery, searchEdge, limit, offset);
+        return parseResults(searchResponse, parsedQuery, limit, offset);
     }
 
 
@@ -227,7 +227,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     /**
      * Parse the results and return the canddiate results
      */
-    private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query, final SearchEdge searchEdge,
+    private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
                                            final int limit, final int from ) {
 
         final SearchHits searchHits = searchResponse.getHits();
@@ -244,8 +244,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             candidates.add( candidateResult );
         }
 
-        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings(),
-            searchEdge );
+        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings());
 
         // >= seems odd.  However if we get an overflow, we need to account for it.
         if (  hits.length >= limit ) {

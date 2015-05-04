@@ -38,16 +38,13 @@ public class PipelineContext {
     private final int id;
     private final ApplicationScope applicationScope;
     private final RequestCursor requestCursor;
-    private final ResponseCursor responseCursor;
     private final int limit;
 
 
-    public PipelineContext( final ApplicationScope applicationScope, final RequestCursor requestCursor,
-                            final ResponseCursor responseCursor, final int limit, final int id ) {
+    public PipelineContext( final ApplicationScope applicationScope, final RequestCursor requestCursor, final int limit, final int id ) {
 
         this.applicationScope = applicationScope;
         this.requestCursor = requestCursor;
-        this.responseCursor = responseCursor;
         this.limit = limit;
         this.id = id;
     }
@@ -64,7 +61,7 @@ public class PipelineContext {
 
 
     /**
-     * Get our cursor value if present
+     * Get our cursor value if present from our pipline
      * @param serializer
      */
     public <T extends Serializable> Optional<T> getCursor( final CursorSerializer<T> serializer ) {
@@ -72,15 +69,6 @@ public class PipelineContext {
 
         return Optional.fromNullable( value );
     }
-
-
-    /**
-     * Set the cursor value into our resposne
-     */
-    public <T extends Serializable> void setCursorValue( final T value, final CursorSerializer<T> serializer ) {
-        responseCursor.setCursor( id, value, serializer );
-    }
-
 
     /**
      * Get the limit for this execution

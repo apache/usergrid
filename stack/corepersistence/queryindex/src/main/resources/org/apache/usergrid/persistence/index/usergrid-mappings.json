@@ -73,6 +73,9 @@
                     },
                     "string": {
                         "type": "string",
+                        "norms": {
+                            "enabled": false
+                        },
                         "fields": {
                             "exact": {
                                 "type": "string",
