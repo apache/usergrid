@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.usergrid.corepersistence.pipeline.cursor.RequestCursor;
 import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
 import org.apache.usergrid.corepersistence.pipeline.read.Collector;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.base.Optional;
@@ -77,7 +78,7 @@ public class Pipeline<R> {
     public Observable<R> execute(){
 
 
-        Observable traverseObservable = Observable.just( applicationScope.getApplication() );
+        Observable traverseObservable = Observable.just( new FilterResult<>( applicationScope.getApplication(), Optional.absent() ));
 
         //build our traversal commands
         for ( PipelineOperation pipelineOperation : idPipelineOperationList ) {

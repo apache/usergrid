@@ -26,9 +26,9 @@ import java.util.List;
 import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateEntityFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.graph.EntityLoadFilter;
-import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -211,9 +211,14 @@ public class ReadPipelineBuilderImpl implements ReadPipelineBuilder {
 
 
         //add our last filter that will generate entities
-        final Filter<?, Entity> finalFilter = collectorState.getFinalFilter();
+        final Filter<?, Entity> entityLoadFilter = collectorState.getFinalFilter();
 
-        filters.add( finalFilter );
+        filters.add( entityLoadFilter );
+
+        //add the filter that skips the first result on resume
+        final Filter<Entity, Entity>  cursorEntityFilter = filterFactory.entityFilter();
+
+        filters.add( cursorEntityFilter );
 
 
         //execute our collector
