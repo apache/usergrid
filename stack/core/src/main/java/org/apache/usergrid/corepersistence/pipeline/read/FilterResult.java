@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,25 +17,40 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl;
+package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.SearchEdge;
+import com.google.common.base.Optional;
 
 
 /**
- * Factory for creating results
+ * A bean that is passed between filters with immutable cursor state
+ * @param <T>
  */
-public interface ResultsLoaderFactory {
+public class FilterResult<T> {
+    private final T value;
+    private final Optional<EdgePath> path;
+
 
     /**
-     * Get the loader for results
-     * @param applicationScope The application scope used to load results
-     * @param indexScope The index scope used in the search
-     * @param
+     * Create a new immutable filtervalue
+     * @param value The value the filter emits
+     * @param path The path to this value, if created
      */
-    ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge indexScope,
-                             final Query.Level resultsLevel );
+    public FilterResult( final T value, final Optional<EdgePath> path ) {
+        this.value = value;
+        this.path = path;
+    }
+
+
+    public T getValue() {
+        return value;
+    }
+
+
+    public Optional<EdgePath> getPath() {
+        return path;
+    }
+
+
 }
