@@ -325,7 +325,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         refreshIndexMeter.mark();
         Observable future = producer.put(new IndexOperationMessage());
         future.toBlocking().last();
-        return indexRefreshCommand.execute();
+        return indexRefreshCommand.execute(getUniqueIndexes());
     }
 
 

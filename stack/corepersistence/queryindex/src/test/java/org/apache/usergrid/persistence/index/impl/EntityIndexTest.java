@@ -80,7 +80,7 @@ import static org.junit.Assert.fail;
 @UseModules( { TestIndexModule.class } )
 public class EntityIndexTest extends BaseIT {
 
-    private static final Logger log = LoggerFactory.getLogger( EntityIndexTest.class );
+    private static final Logger log = LoggerFactory.getLogger(EntityIndexTest.class);
 
     @Inject
     public EntityIndexFactory eif;
@@ -130,10 +130,10 @@ public class EntityIndexTest extends BaseIT {
 
 
         Entity entity1 = new Entity( entityType );
-        EntityUtils.setVersion( entity1, UUIDGenerator.newTimeUUID() );
+        EntityUtils.setVersion(entity1, UUIDGenerator.newTimeUUID());
         entity1.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
         entity1.setField( new StringField( "testfield", "test" ) );
-        entity1.setField( new IntegerField( "ordinal", 0 ) );
+        entity1.setField(new IntegerField("ordinal", 0));
 
 
         batch.index( indexEdge, entity1 );
@@ -166,14 +166,14 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( 2, candidateResults.size() );
         log.debug( "Query time {}ms", timer.getTime() );
 
-        final CandidateResult candidate1 = candidateResults.get( 0 );
+        final CandidateResult candidate1 = candidateResults.get(0);
 
         //check the id and version
         assertEquals( entity1.getId(), candidate1.getId() );
         assertEquals( entity1.getVersion(), candidate1.getVersion() );
 
 
-        final CandidateResult candidate2 = candidateResults.get( 1 );
+        final CandidateResult candidate2 = candidateResults.get(1);
 
         //check the id and version
         assertEquals( entity2.getId(), candidate2.getId() );
@@ -196,7 +196,7 @@ public class EntityIndexTest extends BaseIT {
 
         final CountDownLatch latch = new CountDownLatch( threads );
         final AtomicLong failTime = new AtomicLong( 0 );
-        InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
+        InputStream is = this.getClass().getResourceAsStream("/sample-large.json");
         ObjectMapper mapper = new ObjectMapper();
         final List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
         for ( int i = 0; i < threads; i++ ) {
@@ -284,7 +284,7 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void testDeleteWithAlias() throws IOException {
-        Id appId = new SimpleId( "application" );
+        Id appId = new SimpleId(UUID.randomUUID(), "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
@@ -298,9 +298,10 @@ public class EntityIndexTest extends BaseIT {
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
 
 
-        ei.addIndex( "v2", 1, 0, "one" );
+        ei.addIndex("v2", 1, 0, "one");
+        ei.refreshAsync().toBlocking().last();
 
-        insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
+        insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 1 );
 
         CandidateResults crs = testQuery( searchEdge, searchTypes, entityIndex, "name = 'Bowers Oneil'", 2 );
 
@@ -385,13 +386,13 @@ public class EntityIndexTest extends BaseIT {
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ) );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
+        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID()));
 
         entityIndex.createBatch().index( searchEdge, entity ).execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
         CandidateResults candidateResults = entityIndex
-            .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
+            .search(searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
@@ -400,7 +401,7 @@ public class EntityIndexTest extends BaseIT {
         ei.refreshAsync().toBlocking().last();
 
         candidateResults = entityIndex
-            .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
+            .search(searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
         assertEquals( 0, candidateResults.size() );
     }
 
@@ -411,7 +412,7 @@ public class EntityIndexTest extends BaseIT {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        CandidateResults candidateResults  = entityIndex.search( scope, searchTypes, queryString, num + 1, 0 );
+        CandidateResults candidateResults  = entityIndex.search( scope, searchTypes, queryString, num == 0 ?  1 : num  , 0 );
 
         timer.stop();
 
@@ -530,7 +531,7 @@ public class EntityIndexTest extends BaseIT {
 
         final String query = "where username = 'edanuff'";
 
-        CandidateResults r = entityIndex.search( indexSCope, SearchTypes.fromTypes( "edanuff" ), query, 10, 0 );
+        CandidateResults r = entityIndex.search( indexSCope, SearchTypes.fromTypes( "edanuff" ), query, 10, 0);
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
@@ -593,7 +594,7 @@ public class EntityIndexTest extends BaseIT {
         Entity fred = EntityIndexMapUtils.fromMap( fredMap );
         EntityUtils.setId( fred, new SimpleId( UUIDGenerator.newTimeUUID(), "user" ) );
         EntityUtils.setVersion( fred, UUIDGenerator.newTimeUUID() );
-        batch.index( indexScope, fred );
+        batch.index( indexScope, fred);
 
         batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
@@ -601,16 +602,16 @@ public class EntityIndexTest extends BaseIT {
         final SearchTypes searchTypes = SearchTypes.fromTypes( "user" );
 
 
-        CandidateResults r = entityIndex.search( indexScope, searchTypes, "where username = 'bill'", 10, 0 );
+        CandidateResults r = entityIndex.search( indexScope, searchTypes, "where username = 'bill'", 10, 0);
         assertEquals( bill.getId(), r.get( 0 ).getId() );
 
-        r = entityIndex.search( indexScope, searchTypes, "where username = 'fred'", 10, 0 );
+        r = entityIndex.search( indexScope, searchTypes, "where username = 'fred'", 10, 0);
         assertEquals( fred.getId(), r.get( 0 ).getId() );
 
-        r = entityIndex.search( indexScope, searchTypes, "where age = 41", 10, 0 );
+        r = entityIndex.search( indexScope, searchTypes, "where age = 41", 10, 0);
         assertEquals( fred.getId(), r.get( 0 ).getId() );
 
-        r = entityIndex.search( indexScope, searchTypes, "where age = 'thirtysomething'", 10, 0 );
+        r = entityIndex.search( indexScope, searchTypes, "where age = 'thirtysomething'", 10, 0);
         assertEquals( bill.getId(), r.get( 0 ).getId() );
     }
 
@@ -702,7 +703,7 @@ public class EntityIndexTest extends BaseIT {
             assertNotEquals("Scroll matches last item from previous page",lastId, results.get(ordinal).getId().getUuid());
             lastId = results.get(limit -1).getId().getUuid();
             offset = results.getOffset();
-            assertEquals("Failed on page "+i ,results.get( ordinal ).getId(), entityIds.get( i*limit ) );
+            assertEquals("Failed on page "+i, results.get( ordinal ).getId(), entityIds.get( i*limit ) );
         }
 
         //get our next page, we shouldn't get a cursor
@@ -749,7 +750,7 @@ public class EntityIndexTest extends BaseIT {
         final String query = "where searchUUID = " + searchUUID;
 
         final CandidateResults r =
-            entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10, 0 );
+            entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10, 0);
         assertEquals( user.getId(), r.get( 0 ).getId() );
     }
 
@@ -788,7 +789,7 @@ public class EntityIndexTest extends BaseIT {
         final String query = "where string = 'I am*'";
 
         final CandidateResults r =
-            entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10 , 0);
+            entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10, 0);
 
         assertEquals(user.getId(), r.get(0).getId() );
 
@@ -846,10 +847,10 @@ public class EntityIndexTest extends BaseIT {
         final String ascQuery = "order by string";
 
         final CandidateResults ascResults =
-            entityIndex.search( indexSCope, SearchTypes.fromTypes( first.getId().getType() ), ascQuery, 10 , 0);
+            entityIndex.search(indexSCope, SearchTypes.fromTypes( first.getId().getType() ), ascQuery, 10 , 0);
 
 
-        assertEquals( first.getId(), ascResults.get( 0 ).getId() );
+        assertEquals( first.getId(), ascResults.get( 0).getId() );
         assertEquals( second.getId(), ascResults.get( 1 ).getId() );
 
 
@@ -857,10 +858,10 @@ public class EntityIndexTest extends BaseIT {
         final String descQuery = "order by string desc";
 
         final CandidateResults descResults =
-            entityIndex.search( indexSCope, SearchTypes.fromTypes( first.getId().getType() ), descQuery, 10 , 0);
+            entityIndex.search(indexSCope, SearchTypes.fromTypes( first.getId().getType() ), descQuery, 10 , 0);
 
 
-        assertEquals( second.getId(), descResults.get( 0 ).getId() );
+        assertEquals( second.getId(), descResults.get( 0).getId() );
         assertEquals( first.getId(), descResults.get( 1 ).getId() );
     }
 
@@ -901,7 +902,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
-        batch.index( indexScope2, second );
+        batch.index( indexScope2, second);
 
 
         batch.execute().toBlocking().last();
@@ -911,7 +912,7 @@ public class EntityIndexTest extends BaseIT {
         final String singleMatchQuery = "string contains 'alpha' OR string contains 'foo'";
 
         final CandidateResults singleResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), singleMatchQuery, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), singleMatchQuery, 10, 0 );
 
 
         assertEquals( 1, singleResults.size() );
@@ -922,23 +923,23 @@ public class EntityIndexTest extends BaseIT {
         final String bothKeywordsMatch = "string contains 'alpha' OR string contains 'bravo'";
 
         final CandidateResults singleKeywordUnion =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), bothKeywordsMatch, 10 , 0);
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), bothKeywordsMatch, 10 , 0);
 
 
         assertEquals( 2, singleKeywordUnion.size() );
-        assertEquals( second.getId(), singleKeywordUnion.get( 0 ).getId() );
+        assertEquals( second.getId(), singleKeywordUnion.get( 0).getId() );
         assertEquals( first.getId(), singleKeywordUnion.get( 1 ).getId() );
 
 
         final String twoKeywordMatches = "string contains 'alpha' OR string contains 'long'";
 
         final CandidateResults towMatchResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), twoKeywordMatches, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), twoKeywordMatches, 10, 0 );
 
 
         assertEquals( 2, towMatchResults.size() );
-        assertEquals( second.getId(), towMatchResults.get( 0 ).getId() );
-        assertEquals( first.getId(), towMatchResults.get( 1 ).getId() );
+        assertEquals(second.getId(), towMatchResults.get( 0).getId() );
+        assertEquals(first.getId(), towMatchResults.get( 1 ).getId() );
     }
 
 
@@ -982,7 +983,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
-        batch.index( indexScope2, second );
+        batch.index( indexScope2, second);
 
 
         batch.execute().toBlocking().last();
@@ -992,18 +993,18 @@ public class EntityIndexTest extends BaseIT {
         final String notFirst = "NOT int = 1";
 
         final CandidateResults notFirstResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirst, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirst, 10, 0 );
 
 
         assertEquals( 1, notFirstResults.size() );
-        assertEquals( second.getId(), notFirstResults.get( 0 ).getId() );
+        assertEquals(second.getId(), notFirstResults.get( 0 ).getId() );
 
 
         //search in reversed
         final String notSecond = "NOT int = 2";
 
         final CandidateResults notSecondUnion =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecond, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecond, 10, 0 );
 
 
         assertEquals( 1, notSecondUnion.size() );
@@ -1013,18 +1014,18 @@ public class EntityIndexTest extends BaseIT {
         final String notBothReturn = "NOT int = 3";
 
         final CandidateResults notBothReturnResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notBothReturn, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notBothReturn, 10, 0 );
 
 
         assertEquals( 2, notBothReturnResults.size() );
-        assertEquals( second.getId(), notBothReturnResults.get( 0 ).getId() );
+        assertEquals( second.getId(), notBothReturnResults.get( 0).getId() );
         assertEquals( first.getId(), notBothReturnResults.get( 1 ).getId() );
 
 
         final String notFilterBoth = "(NOT int = 1) AND (NOT int = 2) ";
 
         final CandidateResults filterBoth =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFilterBoth, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFilterBoth, 10, 0 );
 
 
         assertEquals( 0, filterBoth.size() );
@@ -1032,22 +1033,22 @@ public class EntityIndexTest extends BaseIT {
         final String noMatchesAnd = "(NOT int = 3) AND (NOT int = 4)";
 
         final CandidateResults noMatchesAndResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesAnd, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesAnd, 10, 0 );
 
 
         assertEquals( 2, noMatchesAndResults.size() );
-        assertEquals( second.getId(), noMatchesAndResults.get( 0 ).getId() );
+        assertEquals( second.getId(), noMatchesAndResults.get( 0).getId() );
         assertEquals( first.getId(), noMatchesAndResults.get( 1 ).getId() );
 
 
         final String noMatchesOr = "(NOT int = 3) AND (NOT int = 4)";
 
         final CandidateResults noMatchesOrResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesOr, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesOr, 10, 0 );
 
 
         assertEquals( 2, noMatchesOrResults.size() );
-        assertEquals( second.getId(), noMatchesOrResults.get( 0 ).getId() );
+        assertEquals( second.getId(), noMatchesOrResults.get( 0).getId() );
         assertEquals( first.getId(), noMatchesOrResults.get( 1 ).getId() );
     }
 
@@ -1092,7 +1093,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
-        batch.index( indexScope2, second );
+        batch.index( indexScope2, second);
 
 
         batch.execute().toBlocking().last();
@@ -1102,38 +1103,38 @@ public class EntityIndexTest extends BaseIT {
         final String notFirst = "NOT string = 'I ate a sammich'";
 
         final CandidateResults notFirstResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirst, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirst, 10, 0 );
 
 
         assertEquals( 1, notFirstResults.size() );
-        assertEquals( second.getId(), notFirstResults.get( 0 ).getId() );
+        assertEquals(second.getId(), notFirstResults.get( 0 ).getId() );
 
 
         final String notFirstWildCard = "NOT string = 'I ate*'";
 
         final CandidateResults notFirstWildCardResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirstWildCard, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirstWildCard, 10, 0 );
 
 
         assertEquals( 1, notFirstWildCardResults.size() );
-        assertEquals( second.getId(), notFirstWildCardResults.get( 0 ).getId() );
+        assertEquals(second.getId(), notFirstWildCardResults.get( 0 ).getId() );
 
 
         final String notFirstContains = "NOT string contains 'sammich'";
 
         final CandidateResults notFirstContainsResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirstContains, 10 , 0);
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirstContains, 10 , 0);
 
 
         assertEquals( 1, notFirstContainsResults.size() );
-        assertEquals( second.getId(), notFirstContainsResults.get( 0 ).getId() );
+        assertEquals(second.getId(), notFirstContainsResults.get( 0 ).getId() );
 
 
         //search in reversed
         final String notSecond = "NOT string = 'I drank a beer'";
 
         final CandidateResults notSecondUnion =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecond, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecond, 10, 0 );
 
 
         assertEquals( 1, notSecondUnion.size() );
@@ -1143,7 +1144,7 @@ public class EntityIndexTest extends BaseIT {
         final String notSecondWildcard = "NOT string = 'I drank*'";
 
         final CandidateResults notSecondWildcardUnion =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecondWildcard, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecondWildcard, 10, 0 );
 
 
         assertEquals( 1, notSecondWildcardUnion.size() );
@@ -1153,7 +1154,7 @@ public class EntityIndexTest extends BaseIT {
         final String notSecondContains = "NOT string contains 'beer'";
 
         final CandidateResults notSecondContainsUnion =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecondContains, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecondContains, 10, 0 );
 
 
         assertEquals( 1, notSecondContainsUnion.size() );
@@ -1163,18 +1164,18 @@ public class EntityIndexTest extends BaseIT {
         final String notBothReturn = "NOT string = 'I'm a foodie'";
 
         final CandidateResults notBothReturnResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notBothReturn, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notBothReturn, 10, 0 );
 
 
         assertEquals( 2, notBothReturnResults.size() );
-        assertEquals( second.getId(), notBothReturnResults.get( 0 ).getId() );
+        assertEquals( second.getId(), notBothReturnResults.get( 0).getId() );
         assertEquals( first.getId(), notBothReturnResults.get( 1 ).getId() );
 
 
         final String notFilterBoth = "(NOT string = 'I ate a sammich') AND (NOT string = 'I drank a beer') ";
 
         final CandidateResults filterBoth =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFilterBoth, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFilterBoth, 10, 0 );
 
 
         assertEquals( 0, filterBoth.size() );
@@ -1182,7 +1183,7 @@ public class EntityIndexTest extends BaseIT {
         final String noMatchesAnd = "(NOT string = 'I ate*') AND (NOT string = 'I drank*')";
 
         final CandidateResults noMatchesAndResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesAnd, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesAnd, 10, 0 );
 
 
         assertEquals( 0, noMatchesAndResults.size() );
@@ -1190,7 +1191,7 @@ public class EntityIndexTest extends BaseIT {
         final String noMatchesContainsAnd = "(NOT string contains 'ate') AND (NOT string contains 'drank')";
 
         final CandidateResults noMatchesContainsAndResults = entityIndex
-            .search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesContainsAnd, 10, 0 );
+            .search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesContainsAnd, 10, 0 );
 
 
         assertEquals( 0, noMatchesContainsAndResults.size() );
@@ -1199,7 +1200,7 @@ public class EntityIndexTest extends BaseIT {
         final String noMatchesOr = "(NOT string = 'I ate*') AND (NOT string = 'I drank*')";
 
         final CandidateResults noMatchesOrResults =
-            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesOr, 10, 0 );
+            entityIndex.search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesOr, 10, 0 );
 
 
         assertEquals( 0, noMatchesOrResults.size() );
@@ -1207,7 +1208,7 @@ public class EntityIndexTest extends BaseIT {
         final String noMatchesContainsOr = "(NOT string contains 'ate') AND (NOT string contains 'drank')";
 
         final CandidateResults noMatchesContainsOrResults = entityIndex
-            .search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesContainsOr, 10, 0 );
+            .search(indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesContainsOr, 10, 0 );
 
 
         assertEquals( 0, noMatchesContainsOrResults.size() );
