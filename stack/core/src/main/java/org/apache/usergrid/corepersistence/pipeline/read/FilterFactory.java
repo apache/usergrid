@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
+import org.apache.usergrid.corepersistence.pipeline.read.collect.EntityFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.IdCursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateEntityFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateIdFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchCollectionFilter;
@@ -131,4 +133,11 @@ public interface FilterFactory {
      * @param entityId The entity id to emit
      */
     EntityIdFilter getEntityIdFilter( final Id entityId );
+
+
+    /**
+     * Create a new instance of our entity filter
+     * @return
+     */
+    EntityFilter entityFilter();
 }

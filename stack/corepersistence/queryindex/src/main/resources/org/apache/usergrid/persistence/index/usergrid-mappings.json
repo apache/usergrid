@@ -73,7 +73,6 @@
                     },
                     "string": {
                         "type": "string",
-                        "doc_values": true,
                         "norms": {
                             "enabled": false
                         },
