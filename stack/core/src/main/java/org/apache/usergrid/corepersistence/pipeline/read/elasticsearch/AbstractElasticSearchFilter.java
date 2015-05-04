@@ -108,20 +108,13 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
                         final CandidateResults candidateResults =
                             applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet );
 
-                        /**
-                         * No candidates, we're done
-                         */
-                        if ( candidateResults.size() == 0 ) {
-                            subscriber.onCompleted();
-                            return;
-                        }
 
 
                         for( CandidateResult candidateResult: candidateResults){
 
                             //our subscriber unsubscribed, break out
                             if(subscriber.isUnsubscribed()){
-                              return;
+                                return;
                             }
 
                             final Candidate candidate = new Candidate( candidateResult, searchEdge );
@@ -134,6 +127,13 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
                             currentOffSet++;
                         }
 
+                        /**
+                         * No candidates, we're done
+                         */
+                        if (candidateResults.size() < limit) {
+                            subscriber.onCompleted();
+                            return;
+                        }
 
                     }
                     catch ( Throwable t ) {
