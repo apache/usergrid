@@ -28,7 +28,7 @@ public interface IndexRefreshCommand {
 
     Observable<IndexRefreshCommandInfo> execute(String[] indexes);
 
-    public static class IndexRefreshCommandInfo{
+    class IndexRefreshCommandInfo{
         private final boolean hasFinished;
         private final long executionTime;
 

@@ -579,8 +579,6 @@ public class CpEntityManager implements EntityManager {
         // first, update entity index in its own collection scope
 
         updateEntityMeter.mark();
-        Timer.Context timer = updateEntityTimer.time();
-
 
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );

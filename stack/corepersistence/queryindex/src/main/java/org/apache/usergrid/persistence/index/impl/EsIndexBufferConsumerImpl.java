@@ -108,7 +108,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     }
 
 
-    public Observable put( IndexOperationMessage message ) {
+    public Observable<IndexOperationMessage>  put( IndexOperationMessage message ) {
         Preconditions.checkNotNull(message, "Message cannot be null");
         indexSizeCounter.inc( message.getDeIndexRequests().size() );
         indexSizeCounter.inc( message.getIndexRequests().size() );
@@ -129,7 +129,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         //buffer on our new thread with a timeout
         observable.buffer( indexFig.getIndexBufferSize(), indexFig.getIndexBufferTimeout(), TimeUnit.MILLISECONDS,
-            Schedulers.newThread() ).flatMap( indexOpBuffer -> {
+            Schedulers.io() ).flatMap( indexOpBuffer -> {
 
             //hand off to processor in new observable thread so we can continue to buffer faster
             return Observable.just( indexOpBuffer ).flatMap(
@@ -199,13 +199,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         //subscribe to the operations that generate requests on a new thread so that we can execute them quickly
         //mark this as done
-        return processedIndexOperations.doOnNext( processedIndexOp ->
-            {
-                processedIndexOp.done();
-            }
-        ).doOnError(t -> {
-            log.error("Unable to ack futures", t);
-        });
+        return processedIndexOperations.doOnNext( processedIndexOp -> processedIndexOp.done()
+        ).doOnError(t -> log.error("Unable to ack futures", t) );
     }
 
 

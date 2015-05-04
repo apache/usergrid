@@ -34,5 +34,5 @@ public interface IndexBufferConsumer {
      * @param message
      * @return
      */
-    Observable put(IndexOperationMessage message);
+    Observable<IndexOperationMessage>  put(IndexOperationMessage message);
 }
