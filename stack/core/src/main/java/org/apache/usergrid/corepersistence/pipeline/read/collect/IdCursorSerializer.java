@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,30 +17,25 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.impl;
+package org.apache.usergrid.corepersistence.pipeline.read.collect;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class IdsVerifier extends VersionVerifier {
+/**
+ * cursor serializer for Ids
+ */
+public class IdCursorSerializer extends AbstractCursorSerializer<Id> {
+
+
+    public static final IdCursorSerializer INSTANCE = new IdCursorSerializer();
 
     @Override
-    public Results getResults( final Collection<Id> ids ) {
-
-        final List<UUID> returnIds = new ArrayList<>( ids.size() );
-
-        for ( final Id id : ids ) {
-            returnIds.add( id.getUuid() );
-        }
-
-
-        return Results.fromIdList( returnIds );
+    protected Class<Id> getType() {
+        return Id.class;
     }
+
+
 }

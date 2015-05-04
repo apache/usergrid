@@ -21,8 +21,9 @@ package org.apache.usergrid.corepersistence.pipeline.read.graph;
 
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractSeekingFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -42,7 +43,7 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeType
 /**
  * Command for reading graph edges on a connection
  */
-public class ReadGraphConnectionByTypeFilter extends AbstractSeekingFilter<Id, Id, Edge> implements Filter<Id, Id> {
+public class ReadGraphConnectionByTypeFilter extends AbstractPathFilter<Id, Id, Edge> implements Filter<Id, Id> {
 
     private final GraphManagerFactory graphManagerFactory;
     private final String connectionName;
@@ -61,8 +62,9 @@ public class ReadGraphConnectionByTypeFilter extends AbstractSeekingFilter<Id, I
     }
 
 
+
     @Override
-    public Observable<Id> call( final Observable<Id> observable ) {
+    public Observable<FilterResult<Id>> call( final Observable<FilterResult<Id>> filterResultObservable ) {
 
         //get the graph manager
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
@@ -73,20 +75,18 @@ public class ReadGraphConnectionByTypeFilter extends AbstractSeekingFilter<Id, I
 
 
         //return all ids that are emitted from this edge
-        return observable.flatMap( id -> {
+        return filterResultObservable.flatMap( idFilterResult -> {
 
               //set our our constant state
             final Optional<Edge> startFromCursor = getSeekValue();
+            final Id id = idFilterResult.getValue();
 
             final SimpleSearchByIdType search =
                 new SimpleSearchByIdType( id, edgeName, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
                     entityType, startFromCursor );
 
-            /**
-             * TODO, pass a message with pointers to our cursor values to be generated later
-             */
-            return graphManager.loadEdgesFromSourceByType( search ).doOnNext( edge -> setCursor( edge ) ).map(
-                edge -> edge.getTargetNode() );
+            return graphManager.loadEdgesFromSourceByType( search ).map(
+                edge -> createFilterResult( edge.getTargetNode(), edge, idFilterResult.getPath() ));
         } );
     }
 
@@ -95,4 +95,6 @@ public class ReadGraphConnectionByTypeFilter extends AbstractSeekingFilter<Id, I
     protected CursorSerializer<Edge> getCursorSerializer() {
         return EdgeCursorSerializer.INSTANCE;
     }
+
+
 }

@@ -17,15 +17,23 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read;
+package org.apache.usergrid.corepersistence.pipeline;
 
 
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+
+import rx.Observable;
 
 
 /**
- * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of ids, and emits
- * an observable of ids
+ * Interface for filtering commands.  All filters must take an observable of Id's as an input.  Output is then determined by subclasses.
+  * This takes an input of Id, performs some operation, and emits values for further processing in the Observable
+  * pipeline
+ * @param <T> The input type of the filter value
+ * @param <R> The output type of the filter value
  */
-public interface CandidateResultsFilter extends PipelineOperation<Id, CandidateResults> {}
+public interface PipelineOperation<T, R> extends Observable.Transformer<FilterResult<T>, R> {
+
+    void setContext(final PipelineContext pipelineContext);
+}

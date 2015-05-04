@@ -20,10 +20,14 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateResultsIdVerifyFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.EntityFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.IdCursorSerializer;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateEntityFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateIdFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchCollectionFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchConnectionFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.entity.EntityIdFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.graph.EntityIdFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.graph.EntityLoadFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphCollectionByIdFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphCollectionFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphConnectionByIdFilter;
@@ -43,6 +47,7 @@ public interface FilterFactory {
 
     /**
      * Generate a new instance of the command with the specified parameters
+     *
      * @param collectionName The collection name to use when reading the graph
      */
     ReadGraphCollectionFilter readGraphCollectionFilter( final String collectionName );
@@ -57,12 +62,14 @@ public interface FilterFactory {
 
     /**
      * Generate a new instance of the command with the specified parameters
+     *
      * @param connectionName The connection name to use when traversing the graph
      */
     ReadGraphConnectionFilter readGraphConnectionFilter( final String connectionName );
 
     /**
      * Generate a new instance of the command with the specified parameters
+     *
      * @param connectionName The connection name to use when traversing the graph
      * @param entityType The entity type to use when traversing the graph
      */
@@ -72,13 +79,15 @@ public interface FilterFactory {
 
     /**
      * Read a connection directly between two identifiers
+     *
      * @param connectionName The connection name to use when traversing the graph
-     * @param targetId  The target Id to use when traversing the graph
+     * @param targetId The target Id to use when traversing the graph
      */
     ReadGraphConnectionByIdFilter readGraphConnectionByIdFilter( final String connectionName, final Id targetId );
 
     /**
      * Generate a new instance of the command with the specified parameters
+     *
      * @param query The query to use when querying the entities in the collection
      * @param collectionName The collection name to use when querying
      */
@@ -90,6 +99,7 @@ public interface FilterFactory {
 
     /**
      * Generate a new instance of the command with the specified parameters
+     *
      * @param query The query to use when querying the entities in the connection
      * @param connectionName The type of connection to query
      * @param connectedEntityType The type of entity in the connection.  Leave absent to query all entity types
@@ -102,14 +112,32 @@ public interface FilterFactory {
 
 
     /**
-     * Get a candidate ids verifier for collection results.  Should be inserted into pipelines where a query filter is an intermediate step,
-     * not a final filter before collectors
+     * Generate a new instance of the command with the specified parameters
      */
-    CandidateResultsIdVerifyFilter candidateResultsIdVerifyFilter();
+    EntityLoadFilter entityLoadFilter();
+
+    /**
+     * Get the collector for collection candidate results to entities
+     */
+    CandidateEntityFilter candidateEntityFilter();
+
+    /**
+     * Get a candidate ids verifier for collection results.  Should be inserted into pipelines where a query filter is
+     * an intermediate step, not a final filter before collectors
+     */
+    CandidateIdFilter candidateResultsIdVerifyFilter();
 
     /**
      * Get an entity id filter.  Used as a 1.0->2.0 bridge since we're not doing full traversals
+     *
      * @param entityId The entity id to emit
      */
     EntityIdFilter getEntityIdFilter( final Id entityId );
+
+
+    /**
+     * Create a new instance of our entity filter
+     * @return
+     */
+    EntityFilter entityFilter();
 }

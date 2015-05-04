@@ -26,12 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.usergrid.corepersistence.pipeline.PipelineResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -51,13 +49,17 @@ public class ObservableQueryExecutor implements QueryExecutor {
     public Iterator<Results> iterator;
 
 
-    public ObservableQueryExecutor( final Observable<PipelineResult<ResultsPage>> resultsObservable ) {
+    public ObservableQueryExecutor( final Observable<ResultsPage> resultsObservable) {
        //map to our old results objects, return a default empty if required
         this.resultsObservable = resultsObservable.map( resultsPage -> createResults( resultsPage ) ).defaultIfEmpty( new Results() );
     }
 
 
-
+    /**
+     *
+     * @param cpEntity
+     * @return
+     */
     private org.apache.usergrid.persistence.Entity mapEntity( final Entity cpEntity ) {
 
 
@@ -72,9 +74,8 @@ public class ObservableQueryExecutor implements QueryExecutor {
         return entity;
     }
 
-    private Results createResults( final PipelineResult<ResultsPage> pipelineResults ){
+    private Results createResults( final ResultsPage resultsPage ){
 
-        final ResultsPage resultsPage = pipelineResults.getResult();
         final List<Entity> entityList = resultsPage.getEntityList();
         final List<org.apache.usergrid.persistence.Entity> resultsEntities = new ArrayList<>( entityList.size() );
 
@@ -85,10 +86,15 @@ public class ObservableQueryExecutor implements QueryExecutor {
 
         final Results results = Results.fromEntities( resultsEntities );
 
-        if(pipelineResults.getCursor().isPresent()) {
-            results.setCursor( pipelineResults.getCursor().get() );
-        }
 
+        //add the cursor if our limit is the same
+        if(resultsPage.hasMoreResults()) {
+            final Optional<String> cursor = resultsPage.getResponseCursor().encodeAsString();
+
+            if ( cursor.isPresent() ) {
+                results.setCursor( cursor.get() );
+            }
+        }
         return results;
 
 
