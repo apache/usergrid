@@ -363,7 +363,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
-//        Thread.sleep(500);
+        Thread.sleep(1000); //TODO find why we have to wait.  This is a bug
 
         final Query query = Query.fromQL( "nickname = 'ed'" );
 
@@ -966,7 +966,7 @@ public class CollectionIT extends AbstractCoreIT {
         app.refreshIndex();
 
         // wait for indexes to be cleared
-        Thread.sleep( 500 );
+        Thread.sleep(1000); //TODO find why we have to wait.  This is a bug
 
         // now query with paging
         query = new Query();
