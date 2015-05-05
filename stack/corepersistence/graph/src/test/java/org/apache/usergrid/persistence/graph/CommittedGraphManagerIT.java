@@ -66,14 +66,14 @@ public class CommittedGraphManagerIT extends GraphManagerIT {
 
 
         @Override
-        public Observable<Edge> deleteEdge( final Edge edge ) {
-            return graphManager.deleteEdge( edge );
+        public Observable<Edge> markEdge( final Edge edge ) {
+            return graphManager.markEdge( edge );
         }
 
 
         @Override
-        public Observable<Id> deleteNode( final Id node, final long timestamp) {
-            return graphManager.deleteNode( node, timestamp );
+        public Observable<Id> markNode( final Id node, final long timestamp ) {
+            return graphManager.markNode( node, timestamp );
         }
 
 

@@ -46,11 +46,12 @@ public interface EntityCollectionManager {
 
 
     /**
-     * @param entityId MarkCommit the entity as deleted
+     * @param entityId MarkCommit the entity as deleted.  Will not actually remove it from cassandra.  This operation will
+     * also remove all unique properties for this entity
      *
      * @return The observable of the id after the operation has completed
      */
-    Observable<Id> delete( Id entityId );
+    Observable<Id> mark( Id entityId );
 
     /**
      * @param entityId The entity id to load.
@@ -95,6 +96,21 @@ public interface EntityCollectionManager {
      * @return An EntitySet with the latest data of every entity that could be located
      */
     Observable<EntitySet> load( Collection<Id> entityIds );
+
+    /**
+     * Get all versions of the log entry, from Max to min
+     * @param entityId
+     * @return An observable stream of mvccLog entries
+     */
+    Observable<MvccLogEntry> getVersions(final Id entityId);
+
+    /**
+     * Delete these versions from cassandra.  Must be atomic so that read log entries are only removed.  Entity data
+     * and log entry will be deleted
+     * @param entries
+     * @return Any observable of all successfully compacted log entries
+     */
+    Observable<MvccLogEntry> delete( final Collection<MvccLogEntry> entries );
 
 
     /**

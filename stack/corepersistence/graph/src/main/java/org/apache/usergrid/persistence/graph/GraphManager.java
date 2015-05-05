@@ -64,23 +64,23 @@ public interface GraphManager extends CPManager {
 
 
     /**
-     * @param edge The edge to delete
+     * @param edge Mark the edge as deleted in the graph
      *
      *
      * EdgeDelete the edge. Implementation should also delete the incoming (reversed) edge. Only deletes the specific version
      */
-    Observable<Edge> deleteEdge( Edge edge );
+    Observable<Edge> markEdge( Edge edge );
 
     /**
      *
-     * Remove the node from the graph.
+     * Mark the node as removed from the graph.
      *
      * @param node The node to remove
      * @param timestamp The timestamp to apply the delete operation.  Any edges connected to this node with a timestmap
      * <= the specified time will be removed from the graph
      * @return
      */
-    Observable<Id> deleteNode(Id node, long timestamp);
+    Observable<Id> markNode( Id node, long timestamp );
 
     /**
      * Get all versions of this edge where versions <= max version

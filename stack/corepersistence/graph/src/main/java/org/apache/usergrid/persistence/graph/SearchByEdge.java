@@ -59,6 +59,12 @@ public interface SearchByEdge {
     long getMaxTimestamp();
 
     /**
+     * Return true if we should filter edges marked for deletion
+     * @return
+     */
+    boolean filterMarked();
+
+    /**
      * The optional start parameter.  All edges emitted with be > the specified start edge.
      * This is useful for paging.  Simply use the last value returned in the previous call in the start parameter
      * @return

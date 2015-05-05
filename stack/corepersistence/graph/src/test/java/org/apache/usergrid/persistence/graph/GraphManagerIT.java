@@ -584,7 +584,7 @@ public abstract class GraphManagerIT {
 
 
         //now delete it
-        returned = gm.deleteEdge( edge ).toBlocking().last();
+        returned = gm.markEdge( edge ).toBlocking().last();
 
 
         //now test retrieval, should be null
@@ -645,7 +645,7 @@ public abstract class GraphManagerIT {
 
 
         //now delete it
-        gm.deleteEdge( edge ).toBlocking().last();
+        gm.markEdge( edge ).toBlocking().last();
 
         //now test retrieval, should be null
         edges = gm.loadEdgesToTarget( search );
@@ -1005,7 +1005,7 @@ public abstract class GraphManagerIT {
 
         System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
-        gm.deleteEdge( edge1 ).toBlocking().last();
+        gm.markEdge( edge1 ).toBlocking().last();
 
         System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
@@ -1025,7 +1025,7 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        gm.deleteEdge( edge2 ).toBlocking().last();
+        gm.markEdge( edge2 ).toBlocking().last();
 
         System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
@@ -1081,7 +1081,7 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        gm.deleteEdge( edge1 ).toBlocking().last();
+        gm.markEdge( edge1 ).toBlocking().last();
 
 
         edges = gm.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
@@ -1096,7 +1096,7 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        gm.deleteEdge( edge2 ).toBlocking().last();
+        gm.markEdge( edge2 ).toBlocking().last();
 
         edges = gm.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
 
@@ -1146,7 +1146,7 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        gm.deleteEdge( edge1 ).toBlocking().last();
+        gm.markEdge( edge1 ).toBlocking().last();
 
 
         edges = gm.loadEdgesFromSourceByType(
@@ -1171,7 +1171,7 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        gm.deleteEdge( edge2 ).toBlocking().last();
+        gm.markEdge( edge2 ).toBlocking().last();
 
 
         edges = gm.loadEdgesFromSourceByType(
@@ -1223,7 +1223,7 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        gm.deleteEdge( edge1 ).toBlocking().last();
+        gm.markEdge( edge1 ).toBlocking().last();
 
 
         edges = gm.loadEdgesToTargetByType(
@@ -1249,7 +1249,7 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        gm.deleteEdge( edge2 ).toBlocking().last();
+        gm.markEdge( edge2 ).toBlocking().last();
 
 
         edges = gm.loadEdgesToTargetByType(
@@ -1320,7 +1320,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //mark the source node
-        gm.deleteNode( sourceId, edge2.getTimestamp() ).toBlocking().last();
+        gm.markNode( sourceId, edge2.getTimestamp() ).toBlocking().last();
 
 
         //now re-read, nothing should be there since they're marked
@@ -1402,7 +1402,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //mark the source node
-        gm.deleteNode( targetId, edge2.getTimestamp() ).toBlocking().last();
+        gm.markNode( targetId, edge2.getTimestamp() ).toBlocking().last();
 
 
         //now re-read, nothing should be there since they're marked
@@ -1641,7 +1641,7 @@ public abstract class GraphManagerIT {
     public void invalidEdgeTypesDelete( ) {
         final GraphManager em = emf.createEdgeManager( scope );
 
-        em.deleteEdge( null );
+        em.markEdge( null );
     }
 }
 

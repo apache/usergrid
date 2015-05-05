@@ -71,6 +71,20 @@ public interface MvccLogEntrySerializationStrategy extends Migration, VersionedD
      */
     List<MvccLogEntry> load( ApplicationScope applicationScope, Id entityId, UUID version, int maxSize );
 
+
+
+    /**
+     * Load a list, from lowest to highest of the stage with versions <= version up to maxSize elements
+     *
+     * @param applicationScope The applicationScope to load the entity from
+     * @param entityId The entity id to load
+     * @param minVersion The min version to seek from.  Null is allowed
+     * @param maxSize The maximum size to return.  If you receive this size, there may be more versions to load.
+     *
+     * @return A list of entities up to max size ordered from max(UUID)=> min(UUID)
+     */
+    List<MvccLogEntry> loadReversed( ApplicationScope applicationScope, Id entityId, UUID minVersion, int maxSize );
+
     /**
      * MarkCommit the stage from the applicationScope with the given entityId and version
      *

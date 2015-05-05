@@ -528,7 +528,7 @@ public class CpRelationManager implements RelationManager {
 
         //run our delete
         final Edge collectionToItemEdge = createCollectionEdge( cpHeadEntity.getId(), collName, memberEntity.getId() );
-        gm.deleteEdge( collectionToItemEdge ).toBlocking().last();
+        gm.markEdge( collectionToItemEdge ).toBlocking().last();
 
 
         /**
@@ -782,7 +782,7 @@ public class CpRelationManager implements RelationManager {
 
         //delete all the edges
         final Edge lastEdge =
-            gm.loadEdgeVersions( search ).flatMap( returnedEdge -> gm.deleteEdge( returnedEdge ) ).toBlocking()
+            gm.loadEdgeVersions( search ).flatMap( returnedEdge -> gm.markEdge( returnedEdge ) ).toBlocking()
               .lastOrDefault( null );
 
         if ( lastEdge != null ) {

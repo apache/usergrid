@@ -91,8 +91,7 @@ public class EntityCollectionManagerIT {
     public void write() {
 
 
-        ApplicationScope context =
-                new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
@@ -113,8 +112,7 @@ public class EntityCollectionManagerIT {
     public void writeWithUniqueValues() {
 
 
-        ApplicationScope context =
-                new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
@@ -146,8 +144,7 @@ public class EntityCollectionManagerIT {
     public void writeAndLoad() {
 
 
-        ApplicationScope context =
-                new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
@@ -174,7 +171,7 @@ public class EntityCollectionManagerIT {
     public void writeLoadDelete() {
 
 
-        ApplicationScope context =   new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -185,30 +182,27 @@ public class EntityCollectionManagerIT {
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
-
-        UUID version = createReturned.getVersion();
-
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
-        manager.delete( createReturned.getId() ).toBlocking().last();
+        manager.mark( createReturned.getId() ).toBlocking().last();
 
         loadObservable = manager.load( createReturned.getId() );
 
         //load may return null, use last or default
         loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
-        assertNull("Entity was deleted", loadReturned);
+        assertNull( "Entity was deleted", loadReturned );
     }
 
 
     @Test
     public void writeLoadUpdateLoad() {
 
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         newEntity.setField( new IntegerField( "counter", 1 ) );
@@ -217,36 +211,36 @@ public class EntityCollectionManagerIT {
 
         Observable<Entity> observable = manager.write( newEntity );
 
-        Entity createReturned = observable.toBlocking().lastOrDefault(null);
+        Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
-        Observable<Entity> loadObservable = manager.load(createReturned.getId());
+        Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals("Field value correct", createReturned.getField("counter"), loadReturned.getField("counter"));
+        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
 
 
         //update the field to 2
         createReturned.setField( new IntegerField( "counter", 2 ) );
 
         //wait for the write to complete
-        manager.write( createReturned ).toBlocking().lastOrDefault(null);
+        manager.write( createReturned ).toBlocking().lastOrDefault( null );
 
 
         loadObservable = manager.load( createReturned.getId() );
 
-        loadReturned = loadObservable.toBlocking().lastOrDefault(null);
+        loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals("Field value correct", createReturned.getField("counter"), loadReturned.getField("counter"));
+        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
     }
 
 
@@ -254,30 +248,30 @@ public class EntityCollectionManagerIT {
     public void writeAndLoadScopeClosure() {
 
 
-        ApplicationScope collectionScope1 = new ApplicationScopeImpl(new SimpleId("organization"));
+        ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
-        EntityCollectionManager manager = factory.createCollectionManager(collectionScope1);
+        EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
 
-        Observable<Entity> observable = manager.write(newEntity);
+        Observable<Entity> observable = manager.write( newEntity );
 
         Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
 
-        assertNotNull("Id was assigned", createReturned.getId());
-        assertNotNull("Version was assigned", createReturned.getVersion());
+        assertNotNull( "Id was assigned", createReturned.getId() );
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
 
 
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
-        assertEquals("Same value", createReturned, loadReturned);
+        assertEquals( "Same value", createReturned, loadReturned );
 
 
-        ApplicationScope collectionScope2 = new ApplicationScopeImpl(new SimpleId("organization"));
+        ApplicationScope collectionScope2 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         //now make sure we can't load it from another scope, using the same org
 
@@ -286,9 +280,7 @@ public class EntityCollectionManagerIT {
 
         Entity loaded = manager2.load( createReturned.getId() ).toBlocking().lastOrDefault( null );
 
-        assertNull("CollectionScope works correctly", loaded);
-
-
+        assertNull( "CollectionScope works correctly", loaded );
     }
 
 
@@ -296,32 +288,30 @@ public class EntityCollectionManagerIT {
     public void writeAndGetField() {
 
 
-        ApplicationScope collectionScope1 = new ApplicationScopeImpl(new SimpleId("organization"));
+        ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         Field field = new StringField( "testField", "unique", true );
-        newEntity.setField(field);
+        newEntity.setField( field );
 
         EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
 
-        Observable<Entity> observable = manager.write(newEntity);
+        Observable<Entity> observable = manager.write( newEntity );
 
         Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
-        assertNotNull("Version was assigned", createReturned.getVersion());
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
 
         Id id = manager.getIdField( newEntity.getId().getType(), field ).toBlocking().lastOrDefault( null );
         assertNotNull( id );
         assertEquals( newEntity.getId(), id );
 
         Field fieldNull = new StringField( "testFieldNotThere", "uniquely", true );
-        id = manager.getIdField(  newEntity.getId().getType(), fieldNull ).toBlocking().lastOrDefault( null );
+        id = manager.getIdField( newEntity.getId().getType(), fieldNull ).toBlocking().lastOrDefault( null );
         assertNull( id );
     }
-
-
 
 
     @Test
@@ -331,10 +321,10 @@ public class EntityCollectionManagerIT {
         Entity origEntity = new Entity( new SimpleId( "testUpdate" ) );
         origEntity.setField( new StringField( "testField", "value" ) );
 
-        ApplicationScope context = new ApplicationScopeImpl(new SimpleId("organization"));
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
-        Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault(null);
+        Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault( null );
 
         // note its version
         UUID oldVersion = returned.getVersion();
@@ -345,7 +335,7 @@ public class EntityCollectionManagerIT {
         // partial update entity but we don't have version number
         Entity updateEntity = new Entity( origEntity.getId() );
         updateEntity.setField( new StringField( "addedField", "other value" ) );
-        manager.write( updateEntity ).toBlocking().lastOrDefault(null);
+        manager.write( updateEntity ).toBlocking().lastOrDefault( null );
 
         // get entity now, it must have a new version
         returned = manager.load( origEntity.getId() ).toBlocking().lastOrDefault( null );
@@ -354,14 +344,14 @@ public class EntityCollectionManagerIT {
         assertNotNull( "A new version must be assigned", newVersion );
 
         // new Version should be > old version
-        assertTrue(UUIDComparator.staticCompare(newVersion, oldVersion) > 0);
+        assertTrue( UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
     }
 
 
     @Test
     public void writeMultiget() {
 
-        final ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        final ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
         final int multigetSize = serializationFig.getMaxLoadSize();
@@ -381,10 +371,10 @@ public class EntityCollectionManagerIT {
 
         final EntitySet entitySet = manager.load( entityIds ).toBlocking().lastOrDefault( null );
 
-        assertNotNull(entitySet);
+        assertNotNull( entitySet );
 
         assertEquals( multigetSize, entitySet.size() );
-        assertFalse(entitySet.isEmpty());
+        assertFalse( entitySet.isEmpty() );
 
         /**
          * Validate every element exists
@@ -405,7 +395,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeMultigetRepair() {
 
-        final ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        final ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
         final int multigetSize = serializationFig.getMaxLoadSize();
@@ -444,7 +434,7 @@ public class EntityCollectionManagerIT {
 
             assertEquals( "Same entity returned", expected, returned.getEntity().get() );
 
-            assertTrue((Boolean) returned.getEntity().get().getField("updated").getValue());
+            assertTrue( ( Boolean ) returned.getEntity().get().getField( "updated" ).getValue() );
         }
     }
 
@@ -452,7 +442,7 @@ public class EntityCollectionManagerIT {
     @Test( expected = IllegalArgumentException.class )
     public void readTooLarge() {
 
-        final ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        final ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
         final int multigetSize = serializationFig.getMaxLoadSize() + 1;
@@ -474,7 +464,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void testGetVersion() {
 
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -495,7 +485,7 @@ public class EntityCollectionManagerIT {
 
 
         VersionSet results =
-                manager.getLatestVersion( Arrays.asList( created1.getId(), created2.getId() ) ).toBlocking().last();
+            manager.getLatestVersion( Arrays.asList( created1.getId(), created2.getId() ) ).toBlocking().last();
 
 
         final MvccLogEntry version1Log = results.getMaxVersion( created1.getId() );
@@ -515,7 +505,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void testVersionLogWrite() {
 
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -529,10 +519,10 @@ public class EntityCollectionManagerIT {
 
         final UUID v1Version = v1Created.getVersion();
 
-        final VersionSet resultsV1 = manager.getLatestVersion(Arrays.asList(v1Created.getId())).toBlocking().last();
+        final VersionSet resultsV1 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
 
 
-        final MvccLogEntry version1Log = resultsV1.getMaxVersion(v1Created.getId());
+        final MvccLogEntry version1Log = resultsV1.getMaxVersion( v1Created.getId() );
         assertEquals( v1Created.getId(), version1Log.getEntityId() );
         assertEquals( v1Version, version1Log.getVersion() );
         assertEquals( MvccLogEntry.State.COMPLETE, version1Log.getState() );
@@ -543,7 +533,7 @@ public class EntityCollectionManagerIT {
         final UUID v2Version = v2Created.getVersion();
 
 
-        assertTrue("Newer version in v2", UUIDComparator.staticCompare(v2Version, v1Version) > 0);
+        assertTrue( "Newer version in v2", UUIDComparator.staticCompare( v2Version, v1Version ) > 0 );
 
 
         final VersionSet resultsV2 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
@@ -560,7 +550,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void testVersionLogUpdate() {
 
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -608,7 +598,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void healthTest() {
 
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
@@ -632,7 +622,7 @@ public class EntityCollectionManagerIT {
         final Entity entity = EntityHelper.generateEntity( setSize );
 
         //now we have one massive, entity, save it and retrieve it.
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
@@ -652,20 +642,21 @@ public class EntityCollectionManagerIT {
         SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", currentMaxSize + "" );
     }
 
+
     @Test
     public void invalidNameRepair() throws ConnectionException {
 
         //write an entity with a unique field
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         //if we add a second field we get a second entity that is the exact same. Is this expected?
-        final IntegerField expectedInteger =  new IntegerField( "count", 5, true );
-       // final StringField expectedString = new StringField( "yes", "fred", true );
+        final IntegerField expectedInteger = new IntegerField( "count", 5, true );
+        // final StringField expectedString = new StringField( "yes", "fred", true );
 
         newEntity.setField( expectedInteger );
-       // newEntity.setField( expectedString );
+        // newEntity.setField( expectedString );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
@@ -677,23 +668,26 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Id was assigned", createReturned.getId() );
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
-        FieldSet
-            fieldResults = manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
+        FieldSet fieldResults =
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) )
+                   .toBlocking().last();
 
-        assertEquals(1,fieldResults.size());
+        assertEquals( 1, fieldResults.size() );
 
 
         //verify the entity is correct.
-        assertEquals( "Same value", createReturned, fieldResults.getEntity( expectedInteger ).getEntity().get()); //loadReturned );
+        assertEquals( "Same value", createReturned,
+            fieldResults.getEntity( expectedInteger ).getEntity().get() ); //loadReturned );
 
         //use the entity serializationStrategy to remove the entity data.
 
         //do a mark as one test, and a delete as another
-        entitySerializationStrategy.delete( context,createReturned.getId(),createReturned.getVersion() ).execute();
+        entitySerializationStrategy.delete( context, createReturned.getId(), createReturned.getVersion() ).execute();
 
         //try to load via the unique field, should have triggered repair
-        final FieldSet
-            results = manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
+        final FieldSet results =
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) )
+                   .toBlocking().last();
 
 
         //verify no entity returned
@@ -701,37 +695,104 @@ public class EntityCollectionManagerIT {
 
         //user the unique serialization to verify it's been deleted from cassandra
 
-        UniqueValueSet uniqueValues = uniqueValueSerializationStrategy.load( context,  newEntity.getId().getType(), createReturned.getFields() );
+        UniqueValueSet uniqueValues =
+            uniqueValueSerializationStrategy.load( context, newEntity.getId().getType(), createReturned.getFields() );
         assertFalse( uniqueValues.iterator().hasNext() );
-
     }
 
 
     @Test
     public void testGetIdField() throws Exception {
 
-        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
         // create an entity of type "item" with a unique_id field value = 1
 
         Entity entity1 = new Entity( new SimpleId( "item" ) );
-        entity1.setField( new StringField( "unique_id", "1", true ));
+        entity1.setField( new StringField( "unique_id", "1", true ) );
         manager.write( entity1 ).toBlocking().last();
 
-        final Observable<Id> idObs = manager.getIdField("item", new StringField("unique_id", "1"));
-        Id id = idObs.toBlocking().lastOrDefault(null);
-        assertEquals(entity1.getId(), id);
+        final Observable<Id> idObs = manager.getIdField( "item", new StringField( "unique_id", "1" ) );
+        Id id = idObs.toBlocking().lastOrDefault( null );
+        assertEquals( entity1.getId(), id );
 
         // create an entity of type "deleted_item" with a unique_id field value = 1
 
         Entity entity2 = new Entity( new SimpleId( "deleted_item" ) );
-        entity2.setField( new StringField( "unique_id", "1", true ));
+        entity2.setField( new StringField( "unique_id", "1", true ) );
         manager = factory.createCollectionManager( context );
         manager.write( entity2 ).toBlocking().last();
 
-        final Observable<Id> id2Obs = manager.getIdField("deleted_item", new StringField("unique_id", "1"));
-        Id id2 = id2Obs.toBlocking().lastOrDefault(null);
-        assertEquals(entity2.getId(), id2);
+        final Observable<Id> id2Obs = manager.getIdField( "deleted_item", new StringField( "unique_id", "1" ) );
+        Id id2 = id2Obs.toBlocking().lastOrDefault( null );
+        assertEquals( entity2.getId(), id2 );
+    }
+
+
+    @Test
+    public void writeGetVersionsDelete() {
+
+        ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        Entity entity = new Entity( new SimpleId( "test" ) );
+        entity.setField( new IntegerField( "counter", 0 ) );
+
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        Entity createReturned = manager.write( entity ).toBlocking().lastOrDefault( null );
+
+        assertNotNull( "Id was assigned", createReturned.getId() );
+
+        final int size = 200;
+
+        final Id entityId = createReturned.getId();
+
+        List<UUID> versions = new ArrayList<>( size );
+        versions.add( entity.getVersion() );
+
+        //write new versions
+        for ( int i = 1; i < size; i++ ) {
+            final Entity newEntity = new Entity( entityId );
+
+            final Entity returnedEntity = manager.write( newEntity ).toBlocking().last();
+
+            versions.add( returnedEntity.getVersion() );
+        }
+
+
+        //now get our values, and load the latest version
+
+        final Entity lastVersion = manager.load( entityId ).toBlocking().last();
+
+        //ensure the latest version is correct
+        assertEquals( versions.get( versions.size() - 1 ), lastVersion.getVersion() );
+
+
+        // now ensure all versions are correct
+        final List<MvccLogEntry> entries = manager.getVersions( entityId ).toList().toBlocking().last();
+
+
+        assertEquals( "Same size expected", versions.size(), entries.size() );
+
+        for ( int i = 0; i < versions.size(); i++ ) {
+            assertEquals( versions.get( i ), entries.get( i ).getVersion() );
+        }
+
+
+        //now get all the log versions, and delete them all we do it in 2+ batches to ensure we clean up as expected
+        manager.getVersions( entityId ).buffer( 100 ).flatMap( bufferList -> manager.delete( bufferList ) )
+               .toBlocking().last();
+
+
+        //now load them, there shouldn't be any versions
+        final List<MvccLogEntry> postDeleteEntries = manager.getVersions( entityId ).toList().toBlocking().last();
+
+        assertEquals( "All log entries should be removed", 0, postDeleteEntries.size() );
+
+        final Entity postDeleteLastVersion = manager.load( entityId ).toBlocking().lastOrDefault( null );
+
+        //ensure the latest version is correct
+        assertNull( "Last version was deleted", postDeleteLastVersion );
     }
 }
