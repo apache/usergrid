@@ -378,7 +378,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                     if (oldAppEntity != null) {
                         managementEm.delete(oldAppEntity);
                         applicationIdCache.evictAppId(oldAppEntity.getName());
-                        entityIndex.refreshAsync().toBlocking().last();
+                        entityIndex.refreshAsync().toBlocking().first();
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -649,7 +649,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // refresh special indexes without calling EntityManager refresh because stack overflow
         maybeCreateIndexes();
 
-        return entityIndex.refreshAsync().toBlocking().last();
+        return entityIndex.refreshAsync().toBlocking().first();
     }
 
     private void maybeCreateIndexes() {
