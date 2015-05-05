@@ -130,14 +130,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         IndexOperationMessage tempContainer = container;
         container = new IndexOperationMessage();
 
-        /**
-         * No-op, just disregard it
-         */
-        if ( tempContainer.isEmpty() ) {
-            tempContainer.done();
-            return tempContainer.observable();
-        }
-
         return indexBatchBufferProducer.put( tempContainer );
     }
 

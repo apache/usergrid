@@ -270,12 +270,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
          * Send the data through the buffer
          */
         public void send( final IndexOperationMessage indexOp ) {
-            //no-op
-            if ( indexOp.isEmpty() ) {
-                indexOp.done();
-                return;
-            }
-
             subscriber.onNext( indexOp );
         }
 
