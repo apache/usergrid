@@ -363,11 +363,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
-        Thread.sleep(1000); //TODO find why we have to wait.  This is a bug
-
         final Query query = Query.fromQL( "nickname = 'ed'" );
 
-        Results r = em.searchCollection( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ) );
+        Results r = em.searchCollectionConsistent( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ),1 );
 
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );

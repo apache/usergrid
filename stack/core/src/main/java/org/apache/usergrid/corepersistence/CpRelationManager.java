@@ -652,6 +652,29 @@ public class CpRelationManager implements RelationManager {
         return new ObservableQueryExecutor( resultsObservable ).next();
     }
 
+    @Override
+    public Results searchCollectionConsistent( String collName, Query query, int expectedResults ) throws Exception {
+        Results results;
+        long maxLength = 5000;
+        long sleepTime = 250;
+        boolean found;
+        long current = System.currentTimeMillis(), length = 0;
+        do {
+            results = searchCollection(collName, query);
+            length = System.currentTimeMillis() - current;
+            found = expectedResults == results.size();
+            if(found){
+                break;
+            }
+            Thread.sleep(sleepTime);
+        }while (!found && length <= maxLength);
+        if(logger.isInfoEnabled()){
+            logger.info(String.format("Consistent Search finished in %s,  results=%s, expected=%s...dumping stack",length, results.size(),expectedResults));
+            Thread.dumpStack();
+        }
+        return results;
+    }
+
 
     @Override
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {

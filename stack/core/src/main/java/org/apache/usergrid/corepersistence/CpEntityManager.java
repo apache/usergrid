@@ -420,10 +420,10 @@ public class CpEntityManager implements EntityManager {
         if(entity == null) {
             return null;
         }
-        Class clazz = Schema.getDefaultSchema().getEntityClass( entity.getId().getType() );
+        Class clazz = Schema.getDefaultSchema().getEntityClass(entity.getId().getType());
 
-        Entity oldFormatEntity = EntityFactory.newEntity(entity.getId().getUuid(),entity.getId().getType(),clazz);
-        oldFormatEntity.setProperties( CpEntityMapUtils.toMap( entity ) );
+        Entity oldFormatEntity = EntityFactory.newEntity(entity.getId().getUuid(), entity.getId().getType(), clazz);
+        oldFormatEntity.setProperties(CpEntityMapUtils.toMap(entity));
 
         return oldFormatEntity;
     }
@@ -654,7 +654,7 @@ public class CpEntityManager implements EntityManager {
         //        }
 
         org.apache.usergrid.persistence.model.entity.Entity entity =
-                load( entityId  );
+                load(entityId);
 
         if ( entity != null ) {
 
@@ -704,12 +704,11 @@ public class CpEntityManager implements EntityManager {
         return getRelationManager( entityRef ).searchCollection( collectionName, query );
     }
 
-    //
-    //    @Override
-    //    public void setApplicationId( UUID applicationId ) {
-    //        this.applicationId = applicationId;
-    //    }
+    @Override
+    public Results searchCollectionConsistent( EntityRef entityRef, String collectionName, Query query, int expectedResults) throws Exception {
 
+        return getRelationManager( entityRef ).searchCollectionConsistent(collectionName, query, expectedResults );
+    }
 
 
     @Override

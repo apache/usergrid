@@ -66,6 +66,16 @@ public interface RelationManager {
 
     public Results searchCollection( String collectionName, Query query ) throws Exception;
 
+    /**
+     * this loops for consistentcy and is dangerous to run often
+     * @param collectionName
+     * @param query
+     * @param expectedResults
+     * @return
+     * @throws Exception
+     */
+    public Results searchCollectionConsistent( String collectionName, Query query, int expectedResults ) throws Exception;
+
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception;
 
     public ConnectionRef createConnection( String connectionType, EntityRef connectedEntityRef ) throws Exception;
