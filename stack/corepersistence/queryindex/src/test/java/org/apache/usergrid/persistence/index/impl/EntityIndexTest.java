@@ -303,11 +303,10 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 1 );
 
-        CandidateResults crs = testQuery( searchEdge, searchTypes, entityIndex, "name = 'Bowers Oneil'", 2 );
+        CandidateResults crs = testQuery( searchEdge, searchTypes, entityIndex, "name = 'Bowers Oneil'", 1 );
 
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex( searchEdge, crs.get( 0 ) );
-        entityIndexBatch.deindex( searchEdge, crs.get( 1 ) );
         entityIndexBatch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().last();
 
