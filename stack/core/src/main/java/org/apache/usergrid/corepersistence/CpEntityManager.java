@@ -660,6 +660,10 @@ public class CpEntityManager implements EntityManager {
 
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
             // and finally...
+
+            //delete it asynchronously
+            indexService.queueEntityDelete( applicationScope, entityId );
+
             return ecm.delete( entityId );
         }
         else {
