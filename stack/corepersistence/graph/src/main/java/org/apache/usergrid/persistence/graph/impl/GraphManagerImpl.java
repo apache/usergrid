@@ -120,12 +120,9 @@ public class GraphManagerImpl implements GraphManager {
     @Inject
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              final EdgeSerialization storageEdgeSerialization,
-                             final NodeSerialization nodeSerialization,
-                             final GraphFig graphFig,
-                             final EdgeDeleteListener edgeDeleteListener,
-                             final NodeDeleteListener nodeDeleteListener,
-                             final ApplicationScope scope,
-                             MetricsFactory metricsFactory) {
+                             final NodeSerialization nodeSerialization, final GraphFig graphFig,
+                             final EdgeDeleteListener edgeDeleteListener, final NodeDeleteListener nodeDeleteListener,
+                             final ApplicationScope scope, MetricsFactory metricsFactory ) {
 
 
         ValidationUtils.validateApplicationScope( scope );
@@ -146,36 +143,34 @@ public class GraphManagerImpl implements GraphManager {
 
         this.edgeDeleteSubcriber = MetricSubscriber.INSTANCE;
         this.nodeDelete = MetricSubscriber.INSTANCE;
-        this.writeEdgeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "write.edge.meter");
-        this.writeEdgeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "write.edge.timer");
-        this.deleteEdgeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "delete.edge.meter");
-        this.deleteEdgeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "delete.edge.timer");
-        this.deleteNodeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "delete.node.meter");
-        this.deleteNodeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "delete.node.timer");
-        this.loadEdgesFromSourceMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.from.meter");
-        this.loadEdgesFromSourceTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.from.timer");
-        this.loadEdgesToTargetMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.to.meter");
-        this.loadEdgesToTargetTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.to.timer");
-        this.loadEdgesVersionsMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.versions.meter");
-        this.loadEdgesVersionsTimer = metricsFactory.getTimer(GraphManagerImpl.class,"load.versions.timer");
-        this.loadEdgesFromSourceByTypeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.from.type.meter");
-        this.loadEdgesFromSourceByTypeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.from.type.timer");
-        this.loadEdgesToTargetByTypeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.to.type.meter");
-        this.loadEdgesToTargetByTypeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.to.type.timer");
+        this.writeEdgeMeter = metricsFactory.getMeter( GraphManagerImpl.class, "write.edge.meter" );
+        this.writeEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "write.edge.timer" );
+        this.deleteEdgeMeter = metricsFactory.getMeter( GraphManagerImpl.class, "delete.edge.meter" );
+        this.deleteEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "delete.edge.timer" );
+        this.deleteNodeMeter = metricsFactory.getMeter( GraphManagerImpl.class, "delete.node.meter" );
+        this.deleteNodeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "delete.node.timer" );
+        this.loadEdgesFromSourceMeter = metricsFactory.getMeter( GraphManagerImpl.class, "load.from.meter" );
+        this.loadEdgesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.from.timer" );
+        this.loadEdgesToTargetMeter = metricsFactory.getMeter( GraphManagerImpl.class, "load.to.meter" );
+        this.loadEdgesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.to.timer" );
+        this.loadEdgesVersionsMeter = metricsFactory.getMeter( GraphManagerImpl.class, "load.versions.meter" );
+        this.loadEdgesVersionsTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.versions.timer" );
+        this.loadEdgesFromSourceByTypeMeter = metricsFactory.getMeter( GraphManagerImpl.class, "load.from.type.meter" );
+        this.loadEdgesFromSourceByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.from.type.timer" );
+        this.loadEdgesToTargetByTypeMeter = metricsFactory.getMeter( GraphManagerImpl.class, "load.to.type.meter" );
+        this.loadEdgesToTargetByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.to.type.timer" );
 
-        this.getEdgeTypesFromSourceTimer = metricsFactory.getTimer(GraphManagerImpl.class,"get.edge.from.timer");
-        this.getEdgeTypesFromSourceMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.edge.from.meter");
+        this.getEdgeTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.edge.from.timer" );
+        this.getEdgeTypesFromSourceMeter = metricsFactory.getMeter( GraphManagerImpl.class, "get.edge.from.meter" );
 
-        this.getIdTypesFromSourceTimer = metricsFactory.getTimer(GraphManagerImpl.class,"get.idtype.from.timer");
-        this.getIdTypesFromSourceMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.idtype.from.meter");
+        this.getIdTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.idtype.from.timer" );
+        this.getIdTypesFromSourceMeter = metricsFactory.getMeter( GraphManagerImpl.class, "get.idtype.from.meter" );
 
-        this.getEdgeTypesToTargetTimer = metricsFactory.getTimer(GraphManagerImpl.class,"get.edge.to.timer");
-        this.getEdgeTypesToTargetMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.edge.to.meter");
+        this.getEdgeTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.edge.to.timer" );
+        this.getEdgeTypesToTargetMeter = metricsFactory.getMeter( GraphManagerImpl.class, "get.edge.to.meter" );
 
-        this.getIdTypesToTargetTimer = metricsFactory.getTimer(GraphManagerImpl.class, "get.idtype.to.timer");
-        this.getIdTypesToTargetMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.idtype.to.meter");
-
-
+        this.getIdTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.idtype.to.timer" );
+        this.getIdTypesToTargetMeter = metricsFactory.getMeter( GraphManagerImpl.class, "get.idtype.to.meter" );
     }
 
 
@@ -209,41 +204,39 @@ public class GraphManagerImpl implements GraphManager {
 
                 return edge;
             }
-        } )
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).doOnEach( new Action1<Notification<? super Edge>>() {
+            @Override
+            public void call( Notification<? super Edge> notification ) {
+                meter.mark();
+            }
+        } ).doOnCompleted( new Action0() {
+            @Override
+            public void call() {
+                timer.stop();
+            }
+        } );
     }
 
 
     @Override
-    public Observable<Edge> deleteEdge( final Edge edge ) {
-        GraphValidation.validateEdge(edge);
+    public Observable<Edge> markEdge( final Edge edge ) {
+        GraphValidation.validateEdge( edge );
 
-        final MarkedEdge markedEdge = new SimpleMarkedEdge(edge, true);
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 
         final Timer.Context timer = deleteEdgeTimer.time();
         final Meter meter = deleteEdgeMeter;
-        return Observable.just(markedEdge).map(new Func1<MarkedEdge, Edge>() {
+        return Observable.just( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
             @Override
-            public Edge call(final MarkedEdge edge) {
+            public Edge call( final MarkedEdge edge ) {
 
                 final UUID timestamp = UUIDGenerator.newTimeUUID();
 
 
-                final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge(scope, edge, timestamp);
+                final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge, timestamp );
 
 
-                LOG.debug("Marking edge {} as deleted to commit log", edge);
+                LOG.debug( "Marking edge {} as deleted to commit log", edge );
                 try {
                     edgeMutation.execute();
                 }
@@ -254,73 +247,50 @@ public class GraphManagerImpl implements GraphManager {
 
                 //HystrixCassandra.async( edgeDeleteListener.receive( scope, markedEdge,
                 // timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
-                edgeDeleteListener.receive(scope, markedEdge, timestamp).subscribeOn(Schedulers.io())
-                    .subscribe(edgeDeleteSubcriber);
+                edgeDeleteListener.receive( scope, markedEdge, timestamp ).subscribeOn( Schedulers.io() )
+                                  .subscribe( edgeDeleteSubcriber );
 
 
                 return edge;
             }
-        })
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).doOnEach( notification -> {
+            meter.mark();
+        } ).doOnCompleted( () -> timer.stop() );
     }
 
 
     @Override
-    public Observable<Id> deleteNode( final Id node, final long timestamp ) {
+    public Observable<Id> markNode( final Id node, final long timestamp ) {
         final Timer.Context timer = deleteNodeTimer.time();
         final Meter meter = deleteNodeMeter;
-        return Observable.just( node ).map( new Func1<Id, Id>() {
-            @Override
-            public Id call( final Id id ) {
+        return Observable.just( node ).map( id -> {
 
-                //mark the node as deleted
+            //mark the node as deleted
 
 
-                final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
+            final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
 
-                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
-
-
-                LOG.debug( "Marking node {} as deleted to node mark", node );
-                try {
-                    nodeMutation.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to execute mutation", e );
-                }
+            final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
 
 
-                //HystrixCassandra.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn(
-                // Schedulers.io() ).subscribe( nodeDelete );
-                nodeDeleteListener.receive( scope, id, eventTimestamp ).subscribeOn( Schedulers.io() )
-                                  .subscribe( nodeDelete );
-
-                return id;
+            LOG.debug( "Marking node {} as deleted to node mark", node );
+            try {
+                nodeMutation.execute();
             }
-        } )
-            .doOnEach(new Action1<Notification<? super Id>>() {
-                @Override
-                public void call(Notification<? super Id> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to execute mutation", e );
+            }
+
+
+            //HystrixCassandra.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn(
+            // Schedulers.io() ).subscribe( nodeDelete );
+            nodeDeleteListener.receive( scope, id, eventTimestamp ).subscribeOn( Schedulers.io() )
+                              .subscribe( nodeDelete );
+
+            return id;
+        } ).doOnEach( notification -> {
+            meter.mark();
+        } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -333,20 +303,11 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return storageEdgeSerialization.getEdgeVersions( scope, searchByEdge );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(searchByEdge.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).buffer( graphFig.getScanPageSize() )
+                         .flatMap( new EdgeBufferFilter( searchByEdge.getMaxTimestamp(),  searchByEdge.filterMarked() ) )
+                         .cast( Edge.class ).doOnEach( notification -> {
+                meter.mark();
+            } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -359,20 +320,11 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return storageEdgeSerialization.getEdgesFromSource( scope, search );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).buffer( graphFig.getScanPageSize() )
+                         .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(),  search.filterMarked() ) ).cast( Edge.class )
+                         .doOnEach( notification -> {
+                             meter.mark();
+                         } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -385,20 +337,11 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return storageEdgeSerialization.getEdgesToTarget( scope, search );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).buffer( graphFig.getScanPageSize() )
+                         .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) ).cast( Edge.class )
+                         .doOnEach( notification -> {
+                             meter.mark();
+                         } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -411,21 +354,12 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
+        } ).buffer( graphFig.getScanPageSize() )
+                         .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(),  search.filterMarked() ) )
 
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+                         .cast( Edge.class ).doOnEach( notification -> {
+                meter.mark();
+            } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -438,20 +372,11 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).buffer( graphFig.getScanPageSize() )
+                         .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(),  search.filterMarked() ) ).cast( Edge.class )
+                         .doOnEach( notification -> {
+                             meter.mark();
+                         } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -464,19 +389,9 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
             }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
-                @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).doOnEach( notification -> {
+            meter.mark();
+        } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -489,19 +404,9 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
             }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
-                @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).doOnEach( notification -> {
+            meter.mark();
+        } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -514,19 +419,9 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
             }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
-                @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).doOnEach( notification -> {
+            meter.mark();
+        } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -539,19 +434,9 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
             }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
-                @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        } ).doOnEach( notification -> {
+            meter.mark();
+        } ).doOnCompleted( () -> timer.stop() );
     }
 
 
@@ -561,10 +446,12 @@ public class GraphManagerImpl implements GraphManager {
     private class EdgeBufferFilter implements Func1<List<MarkedEdge>, Observable<MarkedEdge>> {
 
         private final long maxVersion;
+        private final boolean filterMarked;
 
 
-        private EdgeBufferFilter( final long maxVersion ) {
+        private EdgeBufferFilter( final long maxVersion, final boolean filterMarked ) {
             this.maxVersion = maxVersion;
+            this.filterMarked = filterMarked;
         }
 
 
@@ -579,57 +466,36 @@ public class GraphManagerImpl implements GraphManager {
         public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
 
             final Map<Id, Long> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
-            return Observable.from( markedEdges ).filter( new EdgeFilter( this.maxVersion, markedVersions ) );
-        }
-    }
+            final long maxTimestamp = maxVersion;
+
+            return Observable.from( markedEdges ).filter( edge -> {
+                final long edgeTimestamp = edge.getTimestamp();
+
+                //our edge needs to not be deleted and have a version that's > max Version
+                if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp ) > 0 ) {
+                    return false;
+                }
 
 
-    /**
-     * Filter the returned values based on the max uuid and if it's been marked for deletion or not
-     */
-    private static class EdgeFilter implements Func1<MarkedEdge, Boolean> {
+                final Long sourceTimestamp = markedVersions.get( edge.getSourceNode() );
 
-        private final long maxTimestamp;
+                //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+                // so we need to discard it
+                if ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 ) {
+                    return false;
+                }
 
-        private final Map<Id, Long> markCache;
+                final Long targetTimestamp = markedVersions.get( edge.getTargetNode() );
 
-
-        private EdgeFilter( final long maxTimestamp, Map<Id, Long> markCache ) {
-            this.maxTimestamp = maxTimestamp;
-            this.markCache = markCache;
-        }
-
-
-        @Override
-        public Boolean call( final MarkedEdge edge ) {
+                //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+                // so we need to discard it
+                if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
+                    return false;
+                }
 
 
-            final long edgeTimestamp = edge.getTimestamp();
-
-            //our edge needs to not be deleted and have a version that's > max Version
-            if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp ) > 0 ) {
-                return false;
-            }
-
-
-            final Long sourceTimestamp = markCache.get( edge.getSourceNode() );
-
-            //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-            // so we need to discard it
-            if ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 ) {
-                return false;
-            }
-
-            final Long targetTimestamp = markCache.get( edge.getTargetNode() );
-
-            //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-            // so we need to discard it
-            if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
-                return false;
-            }
-
-
-            return true;
+                return true;
+            } );
         }
     }
 

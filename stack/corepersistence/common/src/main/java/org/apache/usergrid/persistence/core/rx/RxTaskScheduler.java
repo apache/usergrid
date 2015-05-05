@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.core.rx;
 
 
-import org.apache.usergrid.persistence.core.task.Task;
-
 import rx.Scheduler;
 
 

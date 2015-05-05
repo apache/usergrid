@@ -42,7 +42,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-import rx.functions.Func1;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -200,7 +199,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         final ApplicationScope systemAppScope = getApplicationScope(CpNamingUtils.SYSTEM_APP_ID );
         final EntityCollectionManager systemCollectionManager =
             entityCollectionManagerFactory.createCollectionManager( systemAppScope );
-        systemCollectionManager.delete(new SimpleId(uuid, "appinfos")).toBlocking().last();
+        systemCollectionManager.mark( new SimpleId( uuid, "appinfos" ) ).toBlocking().last();
     }
 
 

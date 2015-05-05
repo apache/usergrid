@@ -664,7 +664,7 @@ public class CpEntityManager implements EntityManager {
             //delete it asynchronously
             indexService.queueEntityDelete( applicationScope, entityId );
 
-            return ecm.delete( entityId );
+            return ecm.mark( entityId );
         }
         else {
             return Observable.empty();

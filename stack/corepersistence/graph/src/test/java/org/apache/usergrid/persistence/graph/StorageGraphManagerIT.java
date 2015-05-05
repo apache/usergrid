@@ -116,16 +116,16 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
 
         @Override
-        public Observable<Edge> deleteEdge( final Edge edge ) {
+        public Observable<Edge> markEdge( final Edge edge ) {
             waitForComplete();
-            return graphManager.deleteEdge( edge );
+            return graphManager.markEdge( edge );
         }
 
 
         @Override
-        public Observable<Id> deleteNode( final Id node, final long timestamp ) {
+        public Observable<Id> markNode( final Id node, final long timestamp ) {
             waitForComplete();
-            return graphManager.deleteNode( node, timestamp );
+            return graphManager.markNode( node, timestamp );
         }
 
 

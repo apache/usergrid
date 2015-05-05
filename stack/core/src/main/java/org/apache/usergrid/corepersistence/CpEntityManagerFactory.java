@@ -369,7 +369,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         final ApplicationEntityIndex aei = entityIndexFactory.createApplicationEntityIndex(applicationScope);
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
-        final Observable deleteNodeGraph = managementGraphManager.deleteNode(applicationId, Long.MAX_VALUE);
+        final Observable deleteNodeGraph = managementGraphManager.markNode( applicationId, Long.MAX_VALUE );
         final Observable deleteAppFromIndex = aei.deleteApplication();
 
         return Observable.concat(copyConnections, deleteNodeGraph, deleteAppFromIndex)
