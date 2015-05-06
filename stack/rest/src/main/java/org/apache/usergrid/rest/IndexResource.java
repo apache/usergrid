@@ -20,6 +20,7 @@
 
 package org.apache.usergrid.rest;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -297,8 +298,8 @@ public class IndexResource extends AbstractContextResource {
 
         logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
 
-        emf.rebuildCollectionIndex(applicationId, collectionName, reverse, po);
-        getEntityIndex().refreshAsync().toBlocking().last();
+        emf.rebuildCollectionIndex(Optional.of(applicationId),Optional.of(collectionName));
+        getEntityIndex().refreshAsync().toBlocking().first();
     }
 
 }

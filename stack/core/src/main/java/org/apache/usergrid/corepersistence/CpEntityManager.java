@@ -17,21 +17,7 @@ package org.apache.usergrid.corepersistence;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,6 +151,7 @@ public class CpEntityManager implements EntityManager {
     public static final long ONE_COUNT = 1L;
 
     private final UUID applicationId;
+    private final EntityManagerFig entityManagerFig;
     private Application application;
 
 
@@ -217,11 +204,11 @@ public class CpEntityManager implements EntityManager {
      * @param managerCache
      * @param metricsFactory
      * @param applicationId
-     * @param entityCollectionManagerFactory
-     * @param graphManagerFactory
      */
     public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
-                            final MetricsFactory metricsFactory,final PipelineBuilderFactory pipelineBuilderFactory , final UUID applicationId ) {
+                            final MetricsFactory metricsFactory, final EntityManagerFig entityManagerFig,
+                            final PipelineBuilderFactory pipelineBuilderFactory , final UUID applicationId ) {
+        this.entityManagerFig = entityManagerFig;
 
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
@@ -745,7 +732,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
 
         CpRelationManager relationManager =
-            new CpRelationManager( metricsFactory, managerCache, pipelineBuilderFactory, indexService, this, applicationId, entityRef );
+            new CpRelationManager( metricsFactory, managerCache, pipelineBuilderFactory, indexService, this, entityManagerFig, applicationId, entityRef );
         return relationManager;
     }
 
