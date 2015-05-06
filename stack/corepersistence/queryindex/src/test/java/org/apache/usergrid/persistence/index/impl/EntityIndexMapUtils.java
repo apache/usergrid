@@ -19,6 +19,15 @@
 
 package org.apache.usergrid.persistence.index.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.field.*;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.apache.usergrid.persistence.model.field.value.Location;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -30,34 +39,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.BooleanField;
-import org.apache.usergrid.persistence.model.field.ByteArrayField;
-import org.apache.usergrid.persistence.model.field.DoubleField;
-import org.apache.usergrid.persistence.model.field.EntityObjectField;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.FloatField;
-import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.field.ListField;
-import org.apache.usergrid.persistence.model.field.LocationField;
-import org.apache.usergrid.persistence.model.field.LongField;
-import org.apache.usergrid.persistence.model.field.SetField;
-import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.field.UUIDField;
-import org.apache.usergrid.persistence.model.field.value.EntityObject;
-import org.apache.usergrid.persistence.model.field.value.Location;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 
 /**
  * Test utility for creating entities from maps and vice versa.
  */
-class EntityIndexMapUtils {
+public class EntityIndexMapUtils {
 
-    static ObjectMapper objectMapper = new ObjectMapper(  );
+    public static ObjectMapper objectMapper = new ObjectMapper(  );
 
     public static Entity fromMap( Map<String, Object> item ) {
         return fromMap( null, item );
@@ -270,6 +258,10 @@ class EntityIndexMapUtils {
         }
 
         return entityMap;
+    }
+
+    public static Map<String, Object> toSourceMap(ApplicationScope applicationScope, IndexEdge indexEdge, Entity entity) {
+        return EntityToMapConverter.convert(applicationScope, indexEdge, entity);
     }
 
 
