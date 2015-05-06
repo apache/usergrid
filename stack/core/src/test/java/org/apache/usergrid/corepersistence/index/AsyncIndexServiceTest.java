@@ -150,7 +150,7 @@ public abstract class AsyncIndexServiceTest {
 
         //query until it's available
         final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
-            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+            SearchTypes.fromTypes( testEntity.getId().getType() ),  1, 100 );
 
         assertEquals( 1, collectionResults.size() );
 
@@ -162,7 +162,7 @@ public abstract class AsyncIndexServiceTest {
 
         //query until it's available
         final CandidateResults connectionResults = getResults( applicationEntityIndex, connectionSearchEdge,
-            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+            SearchTypes.fromTypes( testEntity.getId().getType() ), 1, 100 );
 
         assertEquals( 1, connectionResults.size() );
 
@@ -171,8 +171,7 @@ public abstract class AsyncIndexServiceTest {
 
 
     private CandidateResults getResults( final ApplicationEntityIndex applicationEntityIndex,
-                                         final SearchEdge searchEdge, final SearchTypes searchTypes, final String ql,
-                                         final int count, final int expectedSize, final int attempts ) {
+                                         final SearchEdge searchEdge, final SearchTypes searchTypes, final int expectedSize, final int attempts ) {
 
 
         for ( int i = 0; i < attempts; i++ ) {
@@ -191,7 +190,7 @@ public abstract class AsyncIndexServiceTest {
             }
         }
 
-        fail( "Could not find candidates of size " + expectedSize + "after " + attempts + " attempts" );
+        fail( "Could not find candidates of size " + expectedSize + " after " + attempts + " attempts" );
 
         //we'll never reach this, required for compile
         return null;
