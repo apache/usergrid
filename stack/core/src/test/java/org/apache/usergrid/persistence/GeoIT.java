@@ -372,7 +372,7 @@ public class GeoIT extends AbstractCoreIT {
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 500;
+        int numEntities = 50;
 
         float minLattitude = -90;
         float maxLattitude = 90;
@@ -402,7 +402,7 @@ public class GeoIT extends AbstractCoreIT {
         // just to be save
         Query query = Query.fromQL("location within 50000000 of -90, -180" );
 
-        query.setLimit( 100 );
+        query.setLimit( 10 );
 
         int count = 0;
         Results results;
@@ -433,7 +433,7 @@ public class GeoIT extends AbstractCoreIT {
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 500;
+        int numEntities = 10;
 
         for (int i = 0; i < numEntities; i++) {
             Map<String, Object> data = new HashMap<String, Object>(2);
@@ -448,7 +448,7 @@ public class GeoIT extends AbstractCoreIT {
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
                 // just to be save
         Query query = Query.fromQL("location within 50000000 of 0, 0" );
-        query.setLimit( 100 );
+        query.setLimit( 5 );
 
         int count = 0;
         Results results;
@@ -479,7 +479,7 @@ public class GeoIT extends AbstractCoreIT {
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 100;
+        int numEntities = 10;
 
         float minLattitude = -90;
         float maxLattitude = 90;
@@ -509,7 +509,7 @@ public class GeoIT extends AbstractCoreIT {
         // just to be save
         Query query = Query.fromQL( "location within 50000000 of -90, -180" );
 
-        query.setLimit(100);
+        query.setLimit(10);
 
         int count = 0;
 
@@ -534,9 +534,9 @@ public class GeoIT extends AbstractCoreIT {
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
-        int size = 100;
-        int min = 50;
-        int max = 90;
+        int size = 10;
+        int min = 5;
+        int max = 9;
 
         List<Entity> created = new ArrayList<Entity>(size);
 
@@ -593,7 +593,7 @@ public class GeoIT extends AbstractCoreIT {
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 250;
+        int numEntities = 25;
 
         float minLatitude = 48.32455f;
         float maxLatitude = 48.46481f;
@@ -609,7 +609,7 @@ public class GeoIT extends AbstractCoreIT {
             float longitude = minLongitude + longitudeDelta * i;
 
             Map<String, Float> location =
-                    MapUtils.hashMap("latitude", latitude).map("longitude", longitude);
+                MapUtils.hashMap("latitude", latitude).map("longitude", longitude);
 
             Map<String, Object> data = new HashMap<String, Object>(2);
             data.put("name", String.valueOf(i));
@@ -622,41 +622,23 @@ public class GeoIT extends AbstractCoreIT {
 
         //do a direct geo iterator test.  We need to make sure that we short circuit on the correct tile.
 
-        float latitude = 48.38626f;
-        float longitude = 9.94175f;
-        int distance = 1000;
+
         int limit = 8;
 
-        {
-            // QuerySlice slice = new QuerySlice( "location", 0 );
-            // GeoIterator itr = new GeoIterator( new CollectionGeoSearch(
-            //     em, setup.getIbl(), setup.getCassSvc(), em.getApplicationRef(), "stores" ),
-            //     limit, slice, "location", new Point( lattitude, longitude ), distance );
-            //
-            // // check we got back all 500 entities
-            // assertFalse( itr.hasNext() );
-            //
-            // List<String> cells = itr.getLastCellsSearched();
-            // assertEquals( 1, cells.size() );
-            // assertEquals( 4, cells.get( 0 ).length() );
 
-        }
+        long startTime = System.currentTimeMillis();
 
-        {
-            long startTime = System.currentTimeMillis();
+        //now test at the EM level, there should be 0 results.
+        Query query = Query.fromQL("location within 1000 of 48.38626, 9.94175");
+        query.setLimit(limit);
 
-            //now test at the EM level, there should be 0 results.
-            Query query = Query.fromQL( "location within 1000 of 48.38626, 9.94175");
-            query.setLimit(limit);
+        Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
-            Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
+        assertEquals(0, results.size());
 
-            assertEquals(0, results.size());
+        long endTime = System.currentTimeMillis();
 
-            long endTime = System.currentTimeMillis();
-
-            LOG.info("Runtime took {} milliseconds to search", endTime - startTime);
-        }
+        LOG.info("Runtime took {} milliseconds to search", endTime - startTime);
     }
 
 
