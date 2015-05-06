@@ -98,6 +98,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
     private final EntityIndexFactory entityIndexFactory;
+    private final EntityManagerFig entityManagerFig;
 
     private ApplicationContext applicationContext;
 
@@ -132,6 +133,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
+        this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
         this.entityIndex = injector.getInstance(EntityIndex.class);
         this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
@@ -196,7 +198,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory, pipelineBuilderFactory,  applicationId );
+        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory, entityManagerFig, pipelineBuilderFactory,  applicationId );
         return em;
     }
 

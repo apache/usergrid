@@ -159,6 +159,8 @@ public class CoreModule  extends AbstractModule {
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
 
+        install( new GuicyFigModule( EntityManagerFig.class ) );
+
         //install our pipeline modules
         install(new PipelineModule());
 

@@ -17,14 +17,7 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +97,7 @@ import static org.apache.usergrid.utils.MapUtils.addMapSet;
 public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
+    private final EntityManagerFig entityManagerFig;
 
     private ManagerCache managerCache;
     private final PipelineBuilderFactory pipelineBuilderFactory;
@@ -126,7 +120,7 @@ public class CpRelationManager implements RelationManager {
 
     public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache,
                               final PipelineBuilderFactory pipelineBuilderFactory, final AsyncEventService indexService,
-                              final EntityManager em, final UUID applicationId, final EntityRef headEntity ) {
+                              final EntityManager em, final EntityManagerFig entityManagerFig, final UUID applicationId, final EntityRef headEntity) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -134,6 +128,7 @@ public class CpRelationManager implements RelationManager {
         Assert.notNull( headEntity, "Head entity cannot be null" );
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
         Assert.notNull( indexService, "indexService cannot be null" );
+        this.entityManagerFig = entityManagerFig;
 
         // TODO: this assert should not be failing
         //Assert.notNull( indexBucketLocator, "indexBucketLocator cannot be null" );
@@ -655,8 +650,8 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Results searchCollectionConsistent( String collName, Query query, int expectedResults ) throws Exception {
         Results results;
-        long maxLength = 5000;
-        long sleepTime = 250;
+        long maxLength = entityManagerFig.pollForRecordsTimeout();
+        long sleepTime = entityManagerFig.sleep();
         boolean found;
         long current = System.currentTimeMillis(), length = 0;
         do {
