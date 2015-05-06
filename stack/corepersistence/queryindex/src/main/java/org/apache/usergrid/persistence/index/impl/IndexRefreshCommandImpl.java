@@ -84,7 +84,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
     @Override
-    public synchronized Observable<IndexRefreshCommandInfo> execute( String[] indexes ) {
+    public Observable<IndexRefreshCommandInfo> execute( String[] indexes ) {
 
         final long start = System.currentTimeMillis();
 
@@ -192,6 +192,6 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
             } );
 
 
-        return Async.start( () -> 1 ).flatMap( intValue -> ObservableTimer.time( refreshResults, timer ) );
+        return ObservableTimer.time( refreshResults, timer ) ;
     }
 }
