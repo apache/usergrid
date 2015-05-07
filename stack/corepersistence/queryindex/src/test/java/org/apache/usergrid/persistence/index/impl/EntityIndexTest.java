@@ -395,7 +395,7 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
-        batch.deindex( searchEdge, entity ).execute().toBlocking().last();
+        batch.deindex( searchEdge, entity );
         batch.execute().toBlocking().last();
         ei.refreshAsync().toBlocking().first();
 
