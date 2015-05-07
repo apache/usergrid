@@ -177,7 +177,7 @@ public class IndexServiceTest {
 
         //query until it's available
         final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
-            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+            SearchTypes.fromTypes( testEntity.getId().getType() ), 1);
 
         assertEquals( 1, collectionResults.size() );
 
@@ -189,7 +189,7 @@ public class IndexServiceTest {
 
         //query until it's available
         final CandidateResults connectionResults = getResults( applicationEntityIndex, connectionSearchEdge,
-            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+            SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
         assertEquals( 1, connectionResults.size() );
 
@@ -232,14 +232,14 @@ public class IndexServiceTest {
          */
 
 //        final int edgeCount = indexFig.getIndexBatchSize()*2;
-        final int edgeCount = 2;
+        final int edgeCount = 100;
 
         final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
             final Id connectingId = createId( "connecting" );
             final Edge edge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
 
             return graphManager.writeEdge( edge ).subscribeOn( Schedulers.io() );
-        }, 20).toList().toBlocking().last();
+        }).toList().toBlocking().last();
 
 
         assertEquals( "All edges saved", edgeCount, connectionSearchEdges.size() );
@@ -266,7 +266,7 @@ public class IndexServiceTest {
 
         //query until it's available
         final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
-            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+            SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
         assertEquals( 1, collectionResults.size() );
 
@@ -278,7 +278,7 @@ public class IndexServiceTest {
 
         //query until it's available
         final CandidateResults connectionResults = getResults( applicationEntityIndex, connectionSearchEdge,
-            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+            SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
         assertEquals( 1, connectionResults.size() );
 
@@ -290,7 +290,7 @@ public class IndexServiceTest {
 
         //query until it's available
         final CandidateResults lastConnectionResults = getResults( applicationEntityIndex, lastConnectionSearchEdge,
-            SearchTypes.fromTypes( testEntity.getId().getType() ), "select *", 100, 1, 100 );
+            SearchTypes.fromTypes( testEntity.getId().getType() ),  1 );
 
         assertEquals( 1, lastConnectionResults.size() );
 
@@ -299,13 +299,14 @@ public class IndexServiceTest {
 
 
     private CandidateResults getResults( final ApplicationEntityIndex applicationEntityIndex,
-                                         final SearchEdge searchEdge, final SearchTypes searchTypes, final String ql,
-                                         final int count, final int expectedSize, final int attempts ) {
+                                         final SearchEdge searchEdge, final SearchTypes searchTypes,
+                                         final int expectedSize ) {
+        final int attempts = 100;
 
-
+        String ql = "select *";
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                applicationEntityIndex.search( searchEdge, searchTypes, ql , count, 0 );
+                applicationEntityIndex.search( searchEdge, searchTypes, ql , 100, 0 );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;
