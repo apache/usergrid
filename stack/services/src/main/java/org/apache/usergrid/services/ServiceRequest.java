@@ -325,7 +325,7 @@ public class ServiceRequest {
                     }
                     has_prev_param = true;
                 }
-                int limit = p.getQuery().getLimit();
+                int limit = p.getQuery().getLimit().get();
                 if ( limit != Query.DEFAULT_LIMIT ) {
                     if ( has_prev_param ) {
                         sb.append( '&' );
