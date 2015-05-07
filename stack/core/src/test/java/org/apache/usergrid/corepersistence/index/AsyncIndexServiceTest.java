@@ -146,7 +146,6 @@ public abstract class AsyncIndexServiceTest {
 
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
-
         //query until it's available
         final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ),  1, 100 );
