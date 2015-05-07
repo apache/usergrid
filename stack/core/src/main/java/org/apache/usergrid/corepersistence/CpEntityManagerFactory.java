@@ -689,7 +689,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection )   {
-
         throw new UnsupportedOperationException( "Implement me" );
 //
 //        EntityManager em = getEntityManager( appId );

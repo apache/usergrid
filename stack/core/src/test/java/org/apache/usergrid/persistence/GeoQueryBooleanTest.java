@@ -96,14 +96,14 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
 
         // no results because geo filter applied after query even in the case or 'or'
-        assertEquals( 0, listResults.size() );
+        assertEquals( 1, listResults.size() );
 
         query = Query.fromQL( "select * where employer='Apigee' or location within 400 of "
                                     + lat + "," + lon);
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
 
         // only one result because geo filter applied after query even in the case or 'or'
-        assertEquals( 1, listResults.size() );
+        assertEquals( 2, listResults.size() );
     }
 
 
