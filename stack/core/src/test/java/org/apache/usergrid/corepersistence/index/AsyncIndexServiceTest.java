@@ -103,7 +103,6 @@ public abstract class AsyncIndexServiceTest {
     @Test( timeout = 60000 )
     public void testMessageIndexing() throws InterruptedException {
 
-
         ApplicationScope applicationScope =
             new ApplicationScopeImpl( new SimpleId( UUID.randomUUID(), "application" ) );
 

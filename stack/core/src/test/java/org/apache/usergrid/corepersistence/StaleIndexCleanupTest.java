@@ -135,18 +135,19 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     @Test
     public void testUpdateVersionMaxFirst() throws Exception {
 
+        String entityName =UUID.randomUUID()+  "thing";
         // turn off post processing stuff that cleans up stale entities
         System.setProperty( EVENTS_DISABLED, "true" );
 
         final EntityManager em = app.getEntityManager();
 
-        Entity thing = em.create( "thing", new HashMap<String, Object>() {{
+        Entity thing = em.create( entityName, new HashMap<String, Object>() {{
             put( "ordinal", 0 );
         }} );
-
+        UUID originalVersion = getCpEntity( thing ).getVersion();
         app.refreshIndex();
 
-        assertEquals( 1, queryCollectionCp( "things", "thing", "select *" ).size() );
+        assertEquals( 1, queryCollectionCp( entityName+"s", entityName, "select *" ).size() );
 
         em.updateProperties( thing, new HashMap<String, Object>() {{
             put( "ordinal", 1 );
@@ -158,7 +159,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         CandidateResults candidateResults = null;
 
 
-        candidateResults = queryCollectionCp("things", "thing", "select * order by ordinal desc");
+        candidateResults = queryCollectionCp(entityName+"s", entityName, "select * order by ordinal desc");
         if(candidateResults.size()!=2){
             Thread.sleep(200);
         }
@@ -169,17 +170,19 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         //now run enable events and ensure we clean up
         System.setProperty(EVENTS_DISABLED, "false");
 
-        Results results =  queryCollectionEm("things", "select * order by ordinal desc");
+        Results results =  queryCollectionEm(entityName+"s", "select * order by ordinal desc");
 
-        assertEquals( 1, results.size() );
-        assertEquals(1, results.getEntities().get( 0 ).getProperty( "ordinal" ));
+        assertEquals( 1, results.size());
+        assertEquals(1, results.getEntities().get(0).getProperty("ordinal"));
 
         app.refreshIndex();
 
         //ensure it's actually gone
-        candidateResults = queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
+        candidateResults = queryCollectionCp( entityName+"s", entityName, "select * order by ordinal desc" );
 
         assertEquals(1, candidateResults.size());
+
+        //TODO: will always fail because we don't cleanup
 
         assertEquals(newVersion, candidateResults.get(0).getVersion());
     }

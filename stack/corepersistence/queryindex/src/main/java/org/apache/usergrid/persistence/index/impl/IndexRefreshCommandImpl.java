@@ -121,23 +121,31 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
          * We want to search once we've added our record, then refreshed
          */
         final Observable<IndexRefreshCommandInfo> searchObservable =
-            Observable.range( 0, indexFig.maxRefreshSearches() ).map( i -> {
+            Observable.create(sub -> {
                 try {
+                    IndexRefreshCommandInfo info = null;
+                    for(int i = 0; i<indexFig.maxRefreshSearches();i++) {
+                        final SearchRequestBuilder builder = esProvider.getClient().prepareSearch(alias.getReadAlias())
+                            .setTypes(IndexingUtils.ES_ENTITY_TYPE)
+                            .setPostFilter(FilterBuilders
+                                .termFilter(IndexingUtils.ENTITY_ID_FIELDNAME,
+                                    entityId));
 
-                    final SearchRequestBuilder builder = esProvider.getClient().prepareSearch( alias.getReadAlias() )
-                                                                   .setTypes( IndexingUtils.ES_ENTITY_TYPE )
-                                                                   .setPostFilter( FilterBuilders
-                                                                       .termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
-                                                                           entityId ) );
-
-                    return new IndexRefreshCommandInfo( builder.execute().get().getHits().totalHits() > 0,
-                        System.currentTimeMillis() - start );
+                        info = new IndexRefreshCommandInfo(builder.execute().get().getHits().totalHits() > 0,
+                            System.currentTimeMillis() - start);
+                        if(info.hasFinished()){
+                            break;
+                        }else {
+                            Thread.sleep(50);
+                        }
+                    }
+                    sub.onNext(info);
+                    sub.onCompleted();
+                } catch (Exception ee) {
+                    logger.error("Failed during refresh search for " + uuid, ee);
+                    throw new RuntimeException("Failed during refresh search for " + uuid, ee);
                 }
-                catch ( Exception ee ) {
-                    logger.error( "Failed during refresh search for " + uuid, ee );
-                    throw new RuntimeException("Failed during refresh search for " + uuid, ee );
-                }
-            } ).skipWhile( info -> !info.hasFinished() );
+            });
 
 
         //chain it all together
