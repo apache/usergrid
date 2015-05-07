@@ -20,8 +20,10 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,11 +41,6 @@ import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -84,6 +81,9 @@ public abstract class AsyncIndexServiceTest {
     @Inject
     public EntityIndexFactory entityIndexFactory;
 
+    @Inject
+    public EntityIndex entityIndex;
+
 
     private AsyncEventService asyncEventService;
 
@@ -100,7 +100,7 @@ public abstract class AsyncIndexServiceTest {
     }
 
 
-    @Test( timeout = 60000 )
+    @Test( )
     public void testMessageIndexing() throws InterruptedException {
 
         ApplicationScope applicationScope =
@@ -113,9 +113,9 @@ public abstract class AsyncIndexServiceTest {
 
         //write the entity before indexing
         final EntityCollectionManager collectionManager =
-            entityCollectionManagerFactory.createCollectionManager( applicationScope );
+            entityCollectionManagerFactory.createCollectionManager(applicationScope);
 
-        collectionManager.write( testEntity ).toBlocking().last();
+        collectionManager.write(testEntity).toBlocking().last();
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -128,16 +128,19 @@ public abstract class AsyncIndexServiceTest {
         /**
          * Write 10k edges 10 at a time in parallel
          */
-        final Edge connectionSearch = Observable.range( 0, 10000 ).flatMap( integer -> {
-            final Id connectingId = createId( "connecting" );
-            final Edge edge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
 
-            return graphManager.writeEdge( edge ).subscribeOn( Schedulers.io() );
-        }, 10 ).toBlocking().last();
+
+        final List<Edge> connectionSearchEdges = Observable.range( 0, 500 ).flatMap(integer -> {
+            final Id connectingId = createId("connecting");
+            final Edge edge = CpNamingUtils.createConnectionEdge(connectingId, "likes", testEntity.getId());
+
+            return graphManager.writeEdge(edge).subscribeOn(Schedulers.io());
+        }).toList().toBlocking().last();
 
 
         asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity );
 
+        entityIndex.refreshAsync().toBlocking().last();
 
         //        Thread.sleep( 1000000000000l );
 
@@ -155,7 +158,7 @@ public abstract class AsyncIndexServiceTest {
         assertEquals( testEntity.getId(), collectionResults.get( 0 ).getId() );
 
 
-        final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
+        final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource(connectionSearchEdges.get(connectionSearchEdges.size()-1) );
 
 
         //query until it's available
