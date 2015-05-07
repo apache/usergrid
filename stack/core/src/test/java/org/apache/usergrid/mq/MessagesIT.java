@@ -20,6 +20,7 @@ package org.apache.usergrid.mq;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
+
 public class MessagesIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( MessagesIT.class );
 
@@ -46,6 +48,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
+    @Ignore
     @Test
     public void testMessages() throws Exception {
         LOG.info( "MessagesIT.testMessages" );
@@ -115,6 +118,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
+    @Ignore
     @Test
     public void testSubscriberSearch() throws Exception {
         QueueManager qm = app.getQm();
@@ -167,6 +171,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
+    @Ignore
     @Test
     public void testConsumer() throws Exception {
         LOG.info( "Creating messages" );
@@ -209,6 +214,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
+    @Ignore
     @Test
     public void testTransactions() throws Exception {
         QueueManager qm = app.getQm();

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.cassandra.exceptions.InvalidRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,11 +114,14 @@ public class MigrationManagerImpl implements MigrationManager {
             return;
         }
 
-        keyspace.createColumnFamily( columnFamily.getColumnFamily(), columnFamily.getOptions() );
+        try {
+            keyspace.createColumnFamily(columnFamily.getColumnFamily(), columnFamily.getOptions());
+            logger.info("Created column family {}", columnFamily.getColumnFamily().getName());
+            waitForMigration();
+        }catch (ConnectionException e){
+            logger.error("Failed to create column family "+columnFamily.getColumnFamily().getName(),e);
+        }
 
-        logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
-
-        waitForMigration();
     }
 
 
