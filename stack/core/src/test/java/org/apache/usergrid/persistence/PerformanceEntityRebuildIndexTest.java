@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.junit.After;
@@ -213,12 +214,10 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
-           fail( "Implement index rebuild" );
 //            // do it forwards
-//            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", false, po );
+            setup.getEmf().rebuildCollectionIndex(Optional.of(em.getApplicationId()), Optional.<String>of("catherders"));
 //
 //            // and backwards, just to make sure both cases are covered
-//            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", true, po );
 
             reporter.report();
             registry.remove( meterName );
@@ -282,7 +281,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                 entityMap.put("key", entityCount );
                 entity = em.create("testType", entityMap );
 
-                app.refreshIndex();
 
                 em.createConnection(entity, "herds", cat1);
                 em.createConnection(entity, "herds", cat2);
@@ -303,11 +301,12 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         logger.info("Created {} entities", entityCount);
         app.refreshIndex();
+        Thread.sleep(10000);
 
         // ----------------- test that we can read them, should work fine
 
         logger.debug("Read the data");
-        readData( em, "testTypes", entityCount, 3 );
+        readData( em, "testType", entityCount, 3 );
 
         // ----------------- delete the system and application indexes
 
@@ -402,7 +401,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         Query q = Query.fromQL("select * where key1=1000");
         q.setLimit(40);
-        Results results = em.searchCollection( em.getApplicationRef(), collectionName, q );
+        Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q,expectedEntities );
 
         int count = 0;
         while ( true ) {
