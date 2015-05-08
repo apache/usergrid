@@ -754,6 +754,7 @@ public class EntityCollectionManagerIT {
         //write new versions
         for ( int i = 1; i < size; i++ ) {
             final Entity newEntity = new Entity( entityId );
+            newEntity.setField( new IntegerField( "counter", i ) );
 
             final Entity returnedEntity = manager.write( newEntity ).toBlocking().last();
 
@@ -781,7 +782,7 @@ public class EntityCollectionManagerIT {
 
 
         //now get all the log versions, and delete them all we do it in 2+ batches to ensure we clean up as expected
-        manager.getVersions( entityId ).buffer( 100 ).flatMap( bufferList -> manager.delete( bufferList ) )
+        manager.getVersions( entityId ).toList().flatMap( bufferList -> manager.delete( bufferList ) )
                .toBlocking().last();
 
 
