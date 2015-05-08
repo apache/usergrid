@@ -444,7 +444,7 @@ public class GeoIT extends AbstractCoreIT {
         }
 
         app.refreshIndex();
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
                 // just to be save
@@ -459,7 +459,7 @@ public class GeoIT extends AbstractCoreIT {
 
             for (Entity entity : results.getEntities()) {
                 //TODO:can we assert order
-//                assertEquals(String.valueOf(count), entity.getName());
+                assertEquals(String.valueOf(count), entity.getName());
                 count++;
             }
 
