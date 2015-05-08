@@ -107,13 +107,8 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
-        return doWrite( applicationScope, entityId, version, new RowOp() {
-            @Override
-            public void doOp( final ColumnListMutation<Boolean> colMutation ) {
-                colMutation.putColumn( COL_VALUE,
-                        entitySerializer.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getVersion(), entity.getEntity() ) ) );
-            }
-        } );
+        return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE,
+                entitySerializer.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getVersion(), entity.getEntity() ) ) ) );
     }
 
 
@@ -135,8 +130,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
         final Id applicationId = applicationScope.getApplication();
-        final Id ownerId = applicationId;
-
 
         final List<ScopedRowKey<Id>> rowKeys = new ArrayList<>( entityIds.size() );
 
@@ -196,11 +189,8 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                             "An error occurred connecting to cassandra", e );
                     }
                 } ).subscribeOn( scheduler );
-            }, 10 )
-
-            .reduce( new EntitySetImpl( entityIds.size() ), ( entitySet, rows ) -> {
-                final Iterator<Row<ScopedRowKey<Id>, Boolean>> latestEntityColumns =
-                    rows.iterator();
+            }, 10 ).collect( () -> new EntitySetImpl( entityIds.size() ), ( ( entitySet, rows ) -> {
+                final Iterator<Row<ScopedRowKey<Id>, Boolean>> latestEntityColumns = rows.iterator();
 
                 while ( latestEntityColumns.hasNext() ) {
                     final Row<ScopedRowKey<Id>, Boolean> row = latestEntityColumns.next();
@@ -221,10 +211,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
                     entitySet.addEntity( parsedEntity );
                 }
-
-
-                return entitySet;
-            } ).toBlocking().last();
+               } ) ).toBlocking().last();
 
 
 
@@ -275,13 +262,8 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        return doWrite( applicationScope, entityId, version, new RowOp() {
-            @Override
-            public void doOp( final ColumnListMutation<Boolean> colMutation ) {
-                colMutation.putColumn( COL_VALUE, entitySerializer.toByteBuffer(
-                    new EntityWrapper( MvccEntity.Status.COMPLETE, version, Optional.<Entity>absent() ) ) );
-            }
-        } );
+        return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE, entitySerializer.toByteBuffer(
+            new EntityWrapper( MvccEntity.Status.COMPLETE, version, Optional.<Entity>absent() ) ) ) );
     }
 
 
@@ -292,12 +274,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        return doWrite( applicationScope, entityId, version, new RowOp() {
-            @Override
-            public void doOp( final ColumnListMutation<Boolean> colMutation ) {
-                colMutation.deleteColumn( Boolean.TRUE );
-            }
-        } );
+        return doWrite( applicationScope, entityId, version, colMutation -> colMutation.deleteColumn( Boolean.TRUE ) );
     }
 
 

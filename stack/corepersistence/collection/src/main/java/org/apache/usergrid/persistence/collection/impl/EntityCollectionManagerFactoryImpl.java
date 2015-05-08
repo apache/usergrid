@@ -92,10 +92,12 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 metricsFactory, serializationFig,
                                 rxTaskScheduler, scope );
 
+//  TODO temporarily removed  If we can avoid this, that would be great
+//                            final EntityCollectionManager proxy = new CachedEntityCollectionManager(entityCacheFig, target  );
+//
+//                            return proxy;
 
-                            final EntityCollectionManager proxy = new CachedEntityCollectionManager(entityCacheFig, target  );
-
-                            return proxy;
+                            return target;
                         }
                     } );
 

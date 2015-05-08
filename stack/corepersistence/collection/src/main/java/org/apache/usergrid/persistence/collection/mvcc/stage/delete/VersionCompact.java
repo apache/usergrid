@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
@@ -95,11 +96,15 @@ public class VersionCompact
 
 
                         //delete from our log
-                        mutationBatch.mergeShallow( logEntrySerializationStrategy.delete( scope, entityId, version ) );
+                        final MutationBatch logDelete = logEntrySerializationStrategy.delete( scope, entityId, version );
+
+                        mutationBatch.mergeShallow( logDelete );
 
                         //merge our entity delete in
-                        mutationBatch
-                            .mergeShallow( mvccEntitySerializationStrategy.delete( scope, entityId, version ) );
+
+                        final MutationBatch entityDelete =  mvccEntitySerializationStrategy.delete( scope, entityId, version );
+
+                        mutationBatch.mergeShallow( entityDelete );
 
 
 
