@@ -203,7 +203,7 @@ public class CandidateEntityFilter extends AbstractFilter<Candidate, Entity>
 
                 logger.warn( "Deindexing stale entity on edge {} for entityId {} and version {}",
                     new Object[] { searchEdge, entityId, entityVersion } );
-                batch.deindex( searchEdge, entityId, entityVersion );
+                batch.deindex( searchEdge, entityId, candidateVersion );
                 return;
             }
 
