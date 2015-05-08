@@ -674,7 +674,7 @@ public class CpRelationManager implements RelationManager {
     @Override
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
 
-        return createConnection( connection.getConnectionType(), connection.getConnectedEntity() );
+        return createConnection( connection.getConnectionType(), connection.getTargetRefs() );
     }
 
 
@@ -770,10 +770,10 @@ public class CpRelationManager implements RelationManager {
     public void deleteConnection( ConnectionRef connectionRef ) throws Exception {
 
         // First, clean up the dictionary records of the connection
-        EntityRef connectingEntityRef = connectionRef.getConnectingEntity();  // source
-        EntityRef connectedEntityRef = connectionRef.getConnectedEntity();  // target
+        EntityRef connectingEntityRef = connectionRef.getSourceRefs();  // source
+        EntityRef connectedEntityRef = connectionRef.getTargetRefs();  // target
 
-        String connectionType = connectionRef.getConnectedEntity().getConnectionType();
+        String connectionType = connectionRef.getTargetRefs().getConnectionType();
 
 
         if ( logger.isDebugEnabled() ) {
@@ -913,20 +913,29 @@ public class CpRelationManager implements RelationManager {
         query = adjustQuery( query );
 
         final String entityType = query.getEntityType();
+        //set startid -- graph | es query filter -- load entities filter (verifies exists) --> results page collector -> 1.0 results
 
+        //  startid -- graph edge load -- entity load (verify) from ids -> results page collector
+        // startid -- eq query candiddate -- entity load (verify) from canddiates -> results page collector
+
+        //startid -- graph edge load -- entity id verify --> filter to connection ref --> connection ref collector
+        //startid -- eq query candiddate -- candidate id verify --> filter to connection ref --> connection ref collector
 
         final ReadPipelineBuilder readPipelineBuilder =
             pipelineBuilderFactory.createReadPipelineBuilder(applicationScope);
+        //readPipelineBuilder.startId().load().collect()
 
         //set our fields applicable to both operations
-        readPipelineBuilder.withCursor( query.getCursor() );
-        readPipelineBuilder.withLimit(query.getLimit());
-
-        //TODO, this should be removed when the CP relation manager is removed
-        readPipelineBuilder.setStartId( cpHeadEntity.getId() );
+        readPipelineBuilder
+            .withCursor(query.getCursor())
+            .withLimit(query.getLimit())
+                //TODO, this should be removed when the CP relation manager is removed
+            .setStartId( cpHeadEntity.getId() );
 
         if ( query.isGraphSearch() ) {
-            readPipelineBuilder.getConnection( connection );
+           // if(query.getResultsLevel() == Level.ALL_PROPERTIES)
+           readPipelineBuilder.getConnection( connection );
+            //else
         }
         else {
             readPipelineBuilder.getConnectionWithQuery( connection, Optional.fromNullable( entityType ),

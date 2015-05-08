@@ -1442,8 +1442,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
 
-        return createConnection( connection.getConnectingEntity(), connection.getConnectionType(),
-            connection.getConnectedEntity() );
+        return createConnection( connection.getSourceRefs(), connection.getConnectionType(),
+            connection.getTargetRefs() );
     }
 
 
@@ -1501,7 +1501,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void deleteConnection( ConnectionRef connectionRef ) throws Exception {
 
-        EntityRef sourceEntity = connectionRef.getConnectedEntity();
+        EntityRef sourceEntity = connectionRef.getTargetRefs();
 
         getRelationManager( sourceEntity ).deleteConnection( connectionRef );
     }
