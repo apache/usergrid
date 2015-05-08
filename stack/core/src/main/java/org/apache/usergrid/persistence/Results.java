@@ -19,15 +19,12 @@ package org.apache.usergrid.persistence;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.Base64;
 import java.util.Map.Entry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.*;
 import com.google.common.base.Optional;
 import com.netflix.astyanax.serializers.IntegerSerializer;
-import org.apache.commons.codec.binary.*;
 import org.apache.usergrid.corepersistence.results.QueryExecutor;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.utils.MapUtils;
@@ -324,13 +321,13 @@ public class Results implements Iterable<Entity> {
             ids = new ArrayList<UUID>();
             for ( ConnectionRef connection : connections ) {
                 if ( forwardConnections ) {
-                    ConnectedEntityRef c = connection.getConnectedEntity();
+                    ConnectedEntityRef c = connection.getTargetRefs();
                     if ( c != null ) {
                         ids.add( c.getUuid() );
                     }
                 }
                 else {
-                    EntityRef c = connection.getConnectingEntity();
+                    EntityRef c = connection.getSourceRefs();
                     if ( c != null ) {
                         ids.add( c.getUuid() );
                     }
@@ -410,13 +407,13 @@ public class Results implements Iterable<Entity> {
             refs = new ArrayList<EntityRef>();
             for ( ConnectionRef connection : connections ) {
                 if ( forwardConnections ) {
-                    ConnectedEntityRef c = connection.getConnectedEntity();
+                    ConnectedEntityRef c = connection.getTargetRefs();
                     if ( c != null ) {
                         refs.add( c );
                     }
                 }
                 else {
-                    EntityRef c = connection.getConnectingEntity();
+                    EntityRef c = connection.getSourceRefs();
                     if ( c != null ) {
                         refs.add( c );
                     }
@@ -951,11 +948,11 @@ public class Results implements Iterable<Entity> {
         level = Level.REFS;
         for ( ConnectionRef connection : connections ) {
             if ( forwardConnections ) {
-                this.setMetadata( connection.getConnectedEntity().getUuid(), "connection",
+                this.setMetadata( connection.getTargetRefs().getUuid(), "connection",
                         connection.getConnectionType() );
             }
             else {
-                this.setMetadata( connection.getConnectingEntity().getUuid(), "connection",
+                this.setMetadata( connection.getSourceRefs().getUuid(), "connection",
                         connection.getConnectionType() );
             }
         }

@@ -515,7 +515,7 @@ public class ExportServiceImpl implements ExportService {
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {
-                jg.writeObject( connectionRef.getConnectedEntity().getUuid() );
+                jg.writeObject( connectionRef.getTargetRefs().getUuid() );
             }
 
             jg.writeEndArray();
