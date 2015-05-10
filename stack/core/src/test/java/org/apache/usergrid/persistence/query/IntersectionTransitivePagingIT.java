@@ -131,6 +131,7 @@ public class IntersectionTransitivePagingIT{
 
 
         }
+        this.app.refreshIndex();
 
         return expected;
     }
@@ -159,7 +160,7 @@ public class IntersectionTransitivePagingIT{
             for ( int i = 0; i < results.size(); i++, currentExpectedIndex++ ) {
                 final UUID returnedUUID = results.getEntities().get( i ).getUuid();
 
-                assertEquals( "Value should not be returned twice", expectedResults.get( currentExpectedIndex ),
+                assertEquals( "Value should not be returned twice", expectedResults.get( expectedResults.size() - 1 - currentExpectedIndex ),
                         returnedUUID );
             }
 

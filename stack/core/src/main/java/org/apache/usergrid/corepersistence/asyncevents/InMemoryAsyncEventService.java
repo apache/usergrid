@@ -130,7 +130,7 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     public void run( Observable<?> observable ) {
         //start it in the background on an i/o thread
         if ( !resolveSynchronously ) {
-            observable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+            observable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
         }
         else {
             observable.toBlocking().last();

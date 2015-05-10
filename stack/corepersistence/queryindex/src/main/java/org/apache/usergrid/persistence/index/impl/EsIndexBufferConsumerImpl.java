@@ -128,7 +128,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         final Observable<IndexOperationMessage> observable = Observable.create(bufferProducer);
 
         //buffer on our new thread with a timeout
-        observable.buffer( indexFig.getIndexBufferSize(), indexFig.getIndexBufferTimeout(), TimeUnit.MILLISECONDS,
+        observable.buffer( indexFig.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, indexFig.getIndexBufferSize(),
             Schedulers.io() ).flatMap( indexOpBuffer -> {
 
             //hand off to processor in new observable thread so we can continue to buffer faster

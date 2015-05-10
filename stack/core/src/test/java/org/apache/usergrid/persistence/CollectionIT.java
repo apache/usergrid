@@ -330,44 +330,43 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testGroups() throws Exception {
-        LOG.debug( "testGroups" );
+        LOG.debug("testGroups");
 
         EntityManager em = app.getEntityManager();
-        assertNotNull( em );
+        assertNotNull(em);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "username", "edanuff" );
-        properties.put( "email", "ed@anuff.com" );
+        properties.put("email", "ed@anuff.com");
 
         Entity user1 = em.create( "user", properties );
         assertNotNull( user1 );
 
         properties = new LinkedHashMap<String, Object>();
-        properties.put( "username", "djacobs" );
-        properties.put( "email", "djacobs@gmail.com" );
+        properties.put("username", "djacobs");
+        properties.put("email", "djacobs@gmail.com");
 
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
         properties = new LinkedHashMap<String, Object>();
-        properties.put( "path", "group1" );
+        properties.put("path", "group1");
         Entity group = em.create( "group", properties );
-        assertNotNull( group );
+        assertNotNull(group);
 
         em.addToCollection( group, "users", user1 );
         em.addToCollection( group, "users", user2 );
 
         properties = new LinkedHashMap<String, Object>();
-        properties.put( "nickname", "ed" );
-        em.updateProperties( user1, properties );
+        properties.put("nickname", "ed");
+        em.updateProperties(user1, properties);
 
         app.refreshIndex();
-
-        Thread.sleep(1000); //TODO find why we have to wait.  This is a bug
+        Thread.sleep(1000);
 
         final Query query = Query.fromQL( "nickname = 'ed'" );
 
-        Results r = em.searchCollection( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ) );
+        Results r = em.searchCollectionConsistent( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ),1 );
 
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );

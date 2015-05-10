@@ -152,9 +152,7 @@ public class IndexingUtils {
         sb.append( version.toString() );
 
         sb.append( FIELD_SEPERATOR );
-
-        idString( searchEdge.getNodeId() );
-
+        idString( sb, searchEdge.getNodeId() );
         sb.append( FIELD_SEPERATOR );
         sb.append( searchEdge.getEdgeName() );
         sb.append( FIELD_SEPERATOR );

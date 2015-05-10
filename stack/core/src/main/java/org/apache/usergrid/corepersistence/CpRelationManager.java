@@ -17,14 +17,7 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +97,7 @@ import static org.apache.usergrid.utils.MapUtils.addMapSet;
 public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
+    private final EntityManagerFig entityManagerFig;
 
     private ManagerCache managerCache;
     private final PipelineBuilderFactory pipelineBuilderFactory;
@@ -126,7 +120,7 @@ public class CpRelationManager implements RelationManager {
 
     public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache,
                               final PipelineBuilderFactory pipelineBuilderFactory, final AsyncEventService indexService,
-                              final EntityManager em, final UUID applicationId, final EntityRef headEntity ) {
+                              final EntityManager em, final EntityManagerFig entityManagerFig, final UUID applicationId, final EntityRef headEntity) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -134,6 +128,7 @@ public class CpRelationManager implements RelationManager {
         Assert.notNull( headEntity, "Head entity cannot be null" );
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
         Assert.notNull( indexService, "indexService cannot be null" );
+        this.entityManagerFig = entityManagerFig;
 
         // TODO: this assert should not be failing
         //Assert.notNull( indexBucketLocator, "indexBucketLocator cannot be null" );
@@ -652,11 +647,34 @@ public class CpRelationManager implements RelationManager {
         return new ObservableQueryExecutor( resultsObservable ).next();
     }
 
+    @Override
+    public Results searchCollectionConsistent( String collName, Query query, int expectedResults ) throws Exception {
+        Results results;
+        long maxLength = entityManagerFig.pollForRecordsTimeout();
+        long sleepTime = entityManagerFig.sleep();
+        boolean found;
+        long current = System.currentTimeMillis(), length = 0;
+        do {
+            results = searchCollection(collName, query);
+            length = System.currentTimeMillis() - current;
+            found = expectedResults == results.size();
+            if(found){
+                break;
+            }
+            Thread.sleep(sleepTime);
+        }while (!found && length <= maxLength);
+        if(logger.isInfoEnabled()){
+            logger.info(String.format("Consistent Search finished in %s,  results=%s, expected=%s...dumping stack",length, results.size(),expectedResults));
+            Thread.dumpStack();
+        }
+        return results;
+    }
+
 
     @Override
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
 
-        return createConnection( connection.getConnectionType(), connection.getConnectedEntity() );
+        return createConnection( connection.getConnectionType(), connection.getTargetRefs() );
     }
 
 
@@ -752,10 +770,10 @@ public class CpRelationManager implements RelationManager {
     public void deleteConnection( ConnectionRef connectionRef ) throws Exception {
 
         // First, clean up the dictionary records of the connection
-        EntityRef connectingEntityRef = connectionRef.getConnectingEntity();  // source
-        EntityRef connectedEntityRef = connectionRef.getConnectedEntity();  // target
+        EntityRef connectingEntityRef = connectionRef.getSourceRefs();  // source
+        EntityRef connectedEntityRef = connectionRef.getTargetRefs();  // target
 
-        String connectionType = connectionRef.getConnectedEntity().getConnectionType();
+        String connectionType = connectionRef.getTargetRefs().getConnectionType();
 
 
         if ( logger.isDebugEnabled() ) {
@@ -895,20 +913,29 @@ public class CpRelationManager implements RelationManager {
         query = adjustQuery( query );
 
         final String entityType = query.getEntityType();
+        //set startid -- graph | es query filter -- load entities filter (verifies exists) --> results page collector -> 1.0 results
 
+        //  startid -- graph edge load -- entity load (verify) from ids -> results page collector
+        // startid -- eq query candiddate -- entity load (verify) from canddiates -> results page collector
+
+        //startid -- graph edge load -- entity id verify --> filter to connection ref --> connection ref collector
+        //startid -- eq query candiddate -- candidate id verify --> filter to connection ref --> connection ref collector
 
         final ReadPipelineBuilder readPipelineBuilder =
             pipelineBuilderFactory.createReadPipelineBuilder(applicationScope);
+        //readPipelineBuilder.startId().load().collect()
 
         //set our fields applicable to both operations
-        readPipelineBuilder.withCursor( query.getCursor() );
-        readPipelineBuilder.withLimit(query.getLimit());
-
-        //TODO, this should be removed when the CP relation manager is removed
-        readPipelineBuilder.setStartId( cpHeadEntity.getId() );
+        readPipelineBuilder
+            .withCursor(query.getCursor())
+            .withLimit(query.getLimit())
+                //TODO, this should be removed when the CP relation manager is removed
+            .setStartId( cpHeadEntity.getId() );
 
         if ( query.isGraphSearch() ) {
-            readPipelineBuilder.getConnection( connection );
+           // if(query.getResultsLevel() == Level.ALL_PROPERTIES)
+           readPipelineBuilder.getConnection( connection );
+            //else
         }
         else {
             readPipelineBuilder.getConnectionWithQuery( connection, Optional.fromNullable( entityType ),

@@ -77,9 +77,9 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         List<ConnectionRef> connections = r.getConnections();
 
         assertNotNull( connections );
-        assertEquals( 1, connections.size() );
-        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getConnectedEntity().getUuid() );
-        assertEquals( firstUserEntity.getUuid(), connections.get( 0 ).getConnectingEntity().getUuid() );
+        assertEquals(1, connections.size());
+        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getTargetRefs().getUuid() );
+        assertEquals( firstUserEntity.getUuid(), connections.get( 0 ).getSourceRefs().getUuid() );
     }
 
 
@@ -268,10 +268,10 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         List<ConnectionRef> connections = r.getConnections();
 
-        assertNotNull( connections );
-        assertEquals( 1, connections.size() );
-        assertEquals( fourpeaks.getUuid(), connections.get( 0 ).getConnectedEntity().getUuid() );
-        assertEquals( firstUserEntity.getUuid(), connections.get( 0 ).getConnectingEntity().getUuid() );
+        assertNotNull(connections);
+        assertEquals(1, connections.size());
+        assertEquals(fourpeaks.getUuid(), connections.get(0).getTargetRefs().getUuid());
+        assertEquals(firstUserEntity.getUuid(), connections.get(0).getSourceRefs().getUuid());
 
         // now check membership
         assertTrue( em.isConnectionMember( firstUserEntity, "likes", fourpeaks ) );
@@ -283,9 +283,9 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         connections = r.getConnections();
 
         assertNotNull( connections );
-        assertEquals( 1, connections.size() );
-        assertEquals( arrogantbutcher.getUuid(), connections.get( 0 ).getConnectedEntity().getUuid() );
-        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getConnectingEntity().getUuid() );
+        assertEquals(1, connections.size());
+        assertEquals( arrogantbutcher.getUuid(), connections.get( 0 ).getTargetRefs().getUuid() );
+        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getSourceRefs().getUuid() );
 
         // now check membership
         assertTrue( em.isConnectionMember( secondUserEntity, "likes", arrogantbutcher ) );
