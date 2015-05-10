@@ -51,7 +51,6 @@ import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -60,7 +59,6 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.functions.Func1;
 
 
 /**
@@ -293,7 +291,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgeVersions( scope, searchByEdge );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .flatMap( new EdgeBufferFilter( searchByEdge.getMaxTimestamp(), searchByEdge.filterMarked() ) );
+                      .compose( new EdgeBufferFilter( searchByEdge.getMaxTimestamp(), searchByEdge.filterMarked() ) );
 
         return ObservableTimer.time( edges, loadEdgesVersionsTimer );
     }
@@ -308,7 +306,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgesFromSource( scope, search );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
 
         return ObservableTimer.time( edges, loadEdgesFromSourceTimer );
     }
@@ -323,7 +321,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgesToTarget( scope, search );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
 
 
         return ObservableTimer.time( edges, loadEdgesToTargetTimer );
@@ -334,14 +332,14 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
         final Observable<Edge> edges =
             Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
-                    @Override
-                    protected Iterator<MarkedEdge> getIterator() {
-                        return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
-                    }
-                } ).buffer( graphFig.getScanPageSize() )
-                      .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                @Override
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
+                }
+            } ).buffer( graphFig.getScanPageSize() )
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
 
-        return ObservableTimer.time( edges, loadEdgesFromSourceTimer );
+        return ObservableTimer.time( edges, loadEdgesFromSourceByTypeTimer );
     }
 
 
@@ -349,12 +347,12 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
         final Observable<Edge> edges =
             Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
-                    @Override
-                    protected Iterator<MarkedEdge> getIterator() {
-                        return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
-                    }
-                } ).buffer( graphFig.getScanPageSize() )
-                      .flatMap( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                @Override
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
+                }
+            } ).buffer( graphFig.getScanPageSize() )
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
 
         return ObservableTimer.time( edges, loadEdgesToTargetByTypeTimer );
     }
@@ -362,13 +360,13 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
-       final Observable<String> edgeTypes = Observable.create(
-            new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
-                @Override
-                protected Iterator<String> getIterator() {
-                    return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
-                }
-            } );
+        final Observable<String> edgeTypes =
+            Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
+                    @Override
+                    protected Iterator<String> getIterator() {
+                        return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
+                    }
+                } );
 
         return ObservableTimer.time( edgeTypes, getEdgeTypesFromSourceTimer );
     }
@@ -376,12 +374,13 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
-        final Observable<String> edgeTypes =  Observable.create( new ObservableIterator<String>( "getIdTypesFromSource" ) {
-            @Override
-            protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
-            }
-        } );
+        final Observable<String> edgeTypes =
+            Observable.create( new ObservableIterator<String>( "getIdTypesFromSource" ) {
+                @Override
+                protected Iterator<String> getIterator() {
+                    return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
+                }
+            } );
 
         return ObservableTimer.time( edgeTypes, getIdTypesFromSourceTimer );
     }
@@ -389,22 +388,21 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
-        final Observable<String> edgeTypes =   Observable.create(
-            new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
-                @Override
-                protected Iterator<String> getIterator() {
-                    return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
-                }
-            } );
+        final Observable<String> edgeTypes =
+            Observable.create( new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
+                    @Override
+                    protected Iterator<String> getIterator() {
+                        return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
+                    }
+                } );
 
-        return ObservableTimer.time( edgeTypes, getEdgeTypesFromSourceTimer );
+        return ObservableTimer.time( edgeTypes, getEdgeTypesToTargetTimer );
     }
 
 
     @Override
     public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
-        final Observable<String> edgeTypes =  Observable.create(
-            new ObservableIterator<String>( "getIdTypesToTarget" ) {
+        final Observable<String> edgeTypes = Observable.create( new ObservableIterator<String>( "getIdTypesToTarget" ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
@@ -418,7 +416,9 @@ public class GraphManagerImpl implements GraphManager {
     /**
      * Helper filter to perform mapping and return an observable of pre-filtered edges
      */
-    private class EdgeBufferFilter implements Func1<List<MarkedEdge>, Observable<MarkedEdge>> {
+    private class EdgeBufferFilter implements
+        Observable.Transformer<List<MarkedEdge>, MarkedEdge> {//implements Func1<List<MarkedEdge>,
+        // Observable<MarkedEdge>> {
 
         private final long maxVersion;
         private final boolean filterMarked;
@@ -430,46 +430,60 @@ public class GraphManagerImpl implements GraphManager {
         }
 
 
+        @Override
+
         /**
          * Takes a buffered list of marked edges.  It then does a single round trip to fetch marked ids These are then
          * used in conjunction with the max version filter to filter any edges that should not be returned
          *
          * @return An observable that emits only edges that can be consumed.  There could be multiple versions of the
          * same edge so those need de-duped.
-         */
-        @Override
-        public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
+         */ public Observable<MarkedEdge> call( final Observable<List<MarkedEdge>> markedEdgesObservable ) {
 
-            final Map<Id, Long> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
-            final long maxTimestamp = maxVersion;
+            return markedEdgesObservable.flatMap( markedEdges -> {
 
-            return Observable.from( markedEdges ).filter( edge -> {
-                final long edgeTimestamp = edge.getTimestamp();
+                final Observable<MarkedEdge> markedEdgeObservable = Observable.from( markedEdges );
 
-                //our edge needs to not be deleted and have a version that's > max Version
-                if (( edge.isDeleted() && filterMarked) || Long.compare( edgeTimestamp, maxTimestamp ) > 0 ) {
-                    return false;
+                /**
+                 * We aren't going to filter anything, return exactly what we're passed
+                 */
+                if(!filterMarked){
+                    return markedEdgeObservable;
                 }
 
+                //We need to filter, perform that filter
+                final Map<Id, Long> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
 
-                final Long sourceTimestamp = markedVersions.get( edge.getSourceNode() );
+                return markedEdgeObservable.filter( edge -> {
+                    final long edgeTimestamp = edge.getTimestamp();
 
-                //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-                // so we need to discard it
-                if ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 ) {
-                    return false;
-                }
-
-                final Long targetTimestamp = markedVersions.get( edge.getTargetNode() );
-
-                //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-                // so we need to discard it
-                if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
-                    return false;
-                }
+                    //our edge needs to not be deleted and have a version that's > max Version
+                    if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxVersion ) > 0 ) {
+                        return false;
+                    }
 
 
-                return true;
+                    final Long sourceTimestamp = markedVersions.get( edge.getSourceNode() );
+
+                    //the source Id has been marked for deletion.  It's version is <= to the marked version for
+                    // deletion,
+                    // so we need to discard it
+                    if ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 ) {
+                        return false;
+                    }
+
+                    final Long targetTimestamp = markedVersions.get( edge.getTargetNode() );
+
+                    //the target Id has been marked for deletion.  It's version is <= to the marked version for
+                    // deletion,
+                    // so we need to discard it
+                    if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
+                        return false;
+                    }
+
+
+                    return true;
+                } );
             } );
         }
     }
