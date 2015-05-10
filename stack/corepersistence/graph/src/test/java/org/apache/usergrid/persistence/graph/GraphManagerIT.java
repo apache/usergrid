@@ -25,11 +25,15 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.IdGenerator;
+import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -49,8 +53,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-
-public abstract class GraphManagerIT {
+@RunWith(ITRunner.class)
+@UseModules({ TestGraphModule.class })
+public class GraphManagerIT {
 
 
     @Inject
@@ -64,12 +69,6 @@ public abstract class GraphManagerIT {
     protected ApplicationScope scope;
 
 
-    /**
-     * Get the helper for performing our tests
-     *
-     * @return The helper to use when writing/synchronizing tests
-     */
-    protected abstract GraphManager getHelper( GraphManager gm );
 
 
     @Before
@@ -81,7 +80,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeSource() throws TimeoutException, InterruptedException {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
         Edge edge = createEdge( "source", "test", "target" );
 
@@ -113,7 +112,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeTarget() throws TimeoutException, InterruptedException {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
         Edge edge = createEdge( "source", "test", "target" );
 
@@ -145,7 +144,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeVersionSource() throws TimeoutException, InterruptedException {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
         final long earlyVersion = 1000l;
 
@@ -179,7 +178,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeVersionTarget() throws TimeoutException, InterruptedException {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
         final long earlyVersion = 10000l;
 
@@ -217,7 +216,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeVersionSourceDistinct() throws TimeoutException, InterruptedException {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
         final long earlyVersion = 10000l;
 
@@ -289,7 +288,7 @@ public abstract class GraphManagerIT {
     public void testWriteReadEdgeTypeVersionTargetDistinct() throws TimeoutException, InterruptedException {
 
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
 
         final long earlyVersion = 10000l;
@@ -361,7 +360,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypePagingSource() throws TimeoutException, InterruptedException {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
         final Id sourceId = IdGenerator.createId( "source" );
 
 
@@ -416,7 +415,7 @@ public abstract class GraphManagerIT {
     public void testWriteReadEdgeTypePagingTarget() {
 
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
 
         final Id targetId = IdGenerator.createId( "target" );
@@ -471,7 +470,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeTargetTypeSource() {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
 
         Edge edge = createEdge( "source", "test", "target" );
@@ -507,7 +506,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeTargetTypeTarget() {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
         ;
 
 
@@ -544,7 +543,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeDeleteSource() {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
 
         Edge edge = createEdge( "source", "test", "target" );
@@ -614,7 +613,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeDeleteTarget() {
 
-        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        GraphManager gm =  emf.createEdgeManager( scope );
 
 
         Edge edge = createEdge( "source", "test", "target" );
@@ -670,7 +669,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesSourceTypes() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -733,7 +732,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesTargetTypes() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -798,7 +797,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesSourceTypesPaging() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId1 = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -876,7 +875,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesTargetTypesPaging() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -957,7 +956,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testMarkSourceEdges() throws InterruptedException {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -1046,7 +1045,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testMarkTargetEdges() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -1114,7 +1113,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testMarkSourceEdgesType() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -1192,7 +1191,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testMarkTargetEdgesType() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -1270,7 +1269,7 @@ public abstract class GraphManagerIT {
     @Test
     public void markSourceNode() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -1352,7 +1351,7 @@ public abstract class GraphManagerIT {
     @Test
     public void markTargetNode() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -1434,7 +1433,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesSourceTypesPrefix() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId = new SimpleId( "target" );
@@ -1484,7 +1483,7 @@ public abstract class GraphManagerIT {
     public void testSourceSubTypes() {
 
         //now test sub edges
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1target1 = new SimpleId( "type1target1" );
@@ -1533,7 +1532,7 @@ public abstract class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesTargetTypesPrefix() {
 
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id targetId = new SimpleId( "target" );
         Id sourceId = new SimpleId( "source" );
@@ -1583,7 +1582,7 @@ public abstract class GraphManagerIT {
     public void testTargetSubTypes() {
 
         //now test sub edges
-        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        final GraphManager gm =  emf.createEdgeManager( scope );
 
         Id targetId = new SimpleId( "target" );
         Id sourceId1target1 = new SimpleId( "type1source1" );
