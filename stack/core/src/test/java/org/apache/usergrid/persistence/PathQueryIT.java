@@ -79,12 +79,12 @@ public class PathQueryIT extends AbstractCoreIT {
         // query the users, ignoring page boundaries
         Results results = em.searchCollection( em.getApplicationRef(), "users", userQuery );
         PagingResultsIterator pri = new PagingResultsIterator( results );
-        int count = 2;
+        int count = 13;
         while ( pri.hasNext() ) {
             Entity e = ( Entity ) pri.next();
-            assertEquals( count++, e.getProperty( "index" ) );
+            assertEquals( count --, e.getProperty( "index" ) );
         }
-        assertEquals( count, expectedUserQuerySize + 2 );
+        assertEquals( count, 1 );
 
         // query devices as a sub-query of the users, ignoring page boundaries
         Query deviceQuery = Query.fromQL( "select * where index >= 2 " );

@@ -86,7 +86,6 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
     @Override
     public Observable<IndexRefreshCommandInfo> execute( String[] indexes ) {
 
-
         final long start = System.currentTimeMillis();
 
 
@@ -122,24 +121,31 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
          * We want to search once we've added our record, then refreshed
          */
         final Observable<IndexRefreshCommandInfo> searchObservable =
-            Observable.range( 0, indexFig.maxRefreshSearches() ).map( i -> {
+            Observable.create(sub -> {
                 try {
+                    IndexRefreshCommandInfo info = null;
+                    for(int i = 0; i<indexFig.maxRefreshSearches();i++) {
+                        final SearchRequestBuilder builder = esProvider.getClient().prepareSearch(alias.getReadAlias())
+                            .setTypes(IndexingUtils.ES_ENTITY_TYPE)
+                            .setPostFilter(FilterBuilders
+                                .termFilter(IndexingUtils.ENTITY_ID_FIELDNAME,
+                                    entityId));
 
-                    final SearchRequestBuilder builder = esProvider.getClient().prepareSearch( alias.getReadAlias() )
-                                                                   .setTypes( IndexingUtils.ES_ENTITY_TYPE )
-                                                                   .setPostFilter( FilterBuilders
-                                                                       .termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
-                                                                           entityId ) );
-
-
-                    return new IndexRefreshCommandInfo( builder.execute().get().getHits().totalHits() > 0,
-                        System.currentTimeMillis() - start );
+                        info = new IndexRefreshCommandInfo(builder.execute().get().getHits().totalHits() > 0,
+                            System.currentTimeMillis() - start);
+                        if(info.hasFinished()){
+                            break;
+                        }else {
+                            Thread.sleep(50);
+                        }
+                    }
+                    sub.onNext(info);
+                    sub.onCompleted();
+                } catch (Exception ee) {
+                    logger.error("Failed during refresh search for " + uuid, ee);
+                    throw new RuntimeException("Failed during refresh search for " + uuid, ee);
                 }
-                catch ( Exception ee ) {
-                    logger.error( "Failed during refresh search for " + uuid, ee );
-                    throw new RuntimeException( "Failed during refresh search for " + uuid, ee );
-                }
-            } ).skipWhile( info -> !info.hasFinished() );
+            });
 
 
         //chain it all together
@@ -167,26 +173,25 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                     }
                 }
                 logger.debug( "Refreshed indexes: {},success:{} failed:{} ", StringUtils.join( indexes, ", " ),
-                    successfulShards, failedShards );
-            } )
+                    successfulShards, failedShards);
+            })
 
                 //once the refresh is done execute the search
-            .flatMap( refreshCommandResult -> searchObservable )
+            .flatMap(refreshCommandResult -> searchObservable)
 
                 //check when found
-            .doOnNext( found -> {
-                if ( !found.hasFinished() ) {
-                    logger.error( "Couldn't find record during refresh uuid: {} took ms:{} ", uuid,
-                        found.getExecutionTime() );
+            .doOnNext(found -> {
+                if (!found.hasFinished()) {
+                    logger.error("Couldn't find record during refresh uuid: {} took ms:{} ", uuid,
+                        found.getExecutionTime());
+                } else {
+                    logger.info("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
                 }
-                else {
-                    logger.info( "found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime() );
-                }
-            } ).doOnCompleted( () -> {
+            }).doOnCompleted(() -> {
                 //clean up our data
-                String[] aliases = indexCache.getIndexes( alias, AliasedEntityIndex.AliasType.Read );
+                String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
                 DeIndexOperation deIndexRequest =
-                    new DeIndexOperation( aliases, appScope, edge, entity.getId(), entity.getVersion() );
+                    new DeIndexOperation(aliases, appScope, edge, entity.getId(), entity.getVersion());
 
                 //delete the item
                 IndexOperationMessage indexOperationMessage = new IndexOperationMessage();
@@ -195,6 +200,6 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
             } );
 
 
-        return Async.start( () -> 1 ).flatMap( intValue -> ObservableTimer.time( refreshResults, timer ) );
+        return ObservableTimer.time( refreshResults, timer ) ;
     }
 }

@@ -126,7 +126,7 @@ public class ConnectionRefImpl implements ConnectionRef {
 
     public ConnectionRefImpl( ConnectionRef connection ) {
 
-        connectingEntity = connection.getConnectingEntity();
+        connectingEntity = connection.getSourceRefs();
 
         List<ConnectedEntityRef> pc = connection.getPairedConnections();
         if ( pc == null ) {
@@ -134,7 +134,7 @@ public class ConnectionRefImpl implements ConnectionRef {
         }
         pairedConnections = pc;
 
-        connectedEntity = connection.getConnectedEntity();
+        connectedEntity = connection.getTargetRefs();
     }
 
 
@@ -163,13 +163,13 @@ public class ConnectionRefImpl implements ConnectionRef {
             throw new NullPointerException( "ConnectionImpl constructor \'connection\' cannot be null" );
         }
 
-        connectingEntity = connection.getConnectingEntity();
+        connectingEntity = connection.getSourceRefs();
 
         if ( connections.length > 0 ) {
 
             pairedConnections = new ArrayList<ConnectedEntityRef>();
             pairedConnections.addAll( connection.getPairedConnections() );
-            pairedConnections.add( connection.getConnectedEntity() );
+            pairedConnections.add( connection.getTargetRefs() );
 
             connectedEntity = connections[connections.length - 1];
 
@@ -214,7 +214,7 @@ public class ConnectionRefImpl implements ConnectionRef {
 
 
     @Override
-    public EntityRef getConnectingEntity() {
+    public EntityRef getSourceRefs() {
         return connectingEntity;
     }
 
@@ -286,7 +286,7 @@ public class ConnectionRefImpl implements ConnectionRef {
 
 
     @Override
-    public ConnectedEntityRef getConnectedEntity() {
+    public ConnectedEntityRef getTargetRefs() {
         return connectedEntity;
     }
 
@@ -330,7 +330,7 @@ public class ConnectionRefImpl implements ConnectionRef {
     public UUID getUuid() {
         if ( id == null ) {
             List<ConnectedEntityRef> var = getPairedConnections();
-            id = getId( getConnectingEntity(), getConnectedEntity(),
+            id = getId( getSourceRefs(), getTargetRefs(),
                     var.toArray(new ConnectedEntityRef[var.size()]));
         }
         return id;
@@ -344,19 +344,19 @@ public class ConnectionRefImpl implements ConnectionRef {
 
 
     public UUID getIndexId() {
-        return getIndexId( getConnectingEntity(), getConnectionType(), getConnectedEntityType(),
+        return getIndexId( getSourceRefs(), getConnectionType(), getConnectedEntityType(),
                 pairedConnections.toArray(new ConnectedEntityRef[pairedConnections.size()]));
     }
 
 
     public UUID getConnectingIndexId() {
-        return getIndexId( getConnectingEntity(), getConnectionType(), null,
+        return getIndexId( getSourceRefs(), getConnectionType(), null,
                 pairedConnections.toArray(new ConnectedEntityRef[pairedConnections.size()]));
     }
 
 
     public ConnectionRefImpl getConnectionToConnectionEntity() {
-        return new ConnectionRefImpl( getConnectingEntity(),
+        return new ConnectionRefImpl( getSourceRefs(),
                 new ConnectedEntityRefImpl( CONNECTION_ENTITY_CONNECTION_TYPE, CONNECTION_ENTITY_TYPE, getUuid() ) );
     }
 
@@ -365,8 +365,8 @@ public class ConnectionRefImpl implements ConnectionRef {
     public UUID[] getIndexIds() {
 
         List<ConnectedEntityRef> var = getPairedConnections();
-        return getIndexIds( getConnectingEntity(), getConnectedEntity().getConnectionType(),
-                getConnectedEntity().getType(), var.toArray(new ConnectedEntityRef[var.size()]));
+        return getIndexIds( getSourceRefs(), getTargetRefs().getConnectionType(),
+                getTargetRefs().getType(), var.toArray(new ConnectedEntityRef[var.size()]));
     }
 
 

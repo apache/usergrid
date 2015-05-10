@@ -133,6 +133,7 @@ public class IntersectionUnionPagingIT {
 
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );

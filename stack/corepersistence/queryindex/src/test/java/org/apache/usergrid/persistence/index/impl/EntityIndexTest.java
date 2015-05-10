@@ -153,7 +153,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexEdge, entity2 );
         batch.execute().toBlocking().last();
 
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
 
         StopWatch timer = new StopWatch();
@@ -299,7 +299,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         ei.addIndex("v2", 1, 0, "one");
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 1 );
 
@@ -308,7 +308,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex( searchEdge, crs.get( 0 ) );
         entityIndexBatch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         //Hilda Youn
         testQuery( searchEdge, searchTypes, entityIndex, "name = 'Bowers Oneil'", 0 );
@@ -323,7 +323,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         insertJsonBlob( sampleJson, batch, entityType, indexEdge, max, startIndex );
         batch.execute().toBlocking().last();
-        IndexRefreshCommandImpl.IndexRefreshCommandInfo info =  ei.refreshAsync().toBlocking().last();
+        IndexRefreshCommandImpl.IndexRefreshCommandInfo info =  ei.refreshAsync().toBlocking().first();
         long time = info.getExecutionTime();
         log.info("refresh took ms:"+time);
     }
@@ -388,16 +388,16 @@ public class EntityIndexTest extends BaseIT {
         entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID()));
 
         entityIndex.createBatch().index( searchEdge, entity ).execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         CandidateResults candidateResults = entityIndex
             .search(searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
-        batch.deindex( searchEdge, entity ).execute().toBlocking().last();
+        batch.deindex( searchEdge, entity );
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         candidateResults = entityIndex
             .search(searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
@@ -526,7 +526,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.index( indexSCope, user );
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         final String query = "where username = 'edanuff'";
 
@@ -535,7 +535,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         // EntityRef
 
@@ -596,7 +596,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope, fred);
 
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         final SearchTypes searchTypes = SearchTypes.fromTypes( "user" );
 
@@ -620,7 +620,7 @@ public class EntityIndexTest extends BaseIT {
         Id appId = new SimpleId( "entityindextest" );
         assertNotEquals( "cluster should be ok", Health.RED, ei.getClusterHealth() );
         assertEquals( "index should be ready", Health.GREEN, ei.getIndexHealth() );
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
         assertNotEquals( "cluster should be ready now", Health.RED, ei.getClusterHealth() );
     }
@@ -678,7 +678,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.execute().toBlocking().last();
 
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
 
         final int limit = 5;
@@ -744,7 +744,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.index( indexSCope, user );
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         final String query = "where searchUUID = " + searchUUID;
 
@@ -783,7 +783,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.index( indexSCope, user );
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
         final String query = "where string = 'I am*'";
 
@@ -840,7 +840,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexSCope, first );
         batch.index( indexSCope, second );
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
 
         final String ascQuery = "order by string";
@@ -905,7 +905,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
 
         final String singleMatchQuery = "string contains 'alpha' OR string contains 'foo'";
@@ -986,7 +986,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
 
         final String notFirst = "NOT int = 1";
@@ -1096,7 +1096,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().toBlocking().last();
-        ei.refreshAsync().toBlocking().last();
+        ei.refreshAsync().toBlocking().first();
 
 
         final String notFirst = "NOT string = 'I ate a sammich'";

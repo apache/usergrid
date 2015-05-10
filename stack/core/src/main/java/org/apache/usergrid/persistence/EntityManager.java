@@ -403,6 +403,9 @@ public interface EntityManager {
     public Results searchCollection( EntityRef entityRef, String collectionName, Query query )
             throws Exception;
 
+    public Results searchCollectionConsistent( EntityRef entityRef, String collectionName, Query query, int expectedHits)
+        throws Exception;
+
     public Set<String> getCollectionIndexes( EntityRef entity, String collectionName )
             throws Exception;
 

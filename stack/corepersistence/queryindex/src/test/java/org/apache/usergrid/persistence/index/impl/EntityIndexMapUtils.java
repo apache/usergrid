@@ -57,7 +57,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 class EntityIndexMapUtils {
 
-    static ObjectMapper objectMapper = new ObjectMapper(  );
 
     public static Entity fromMap( Map<String, Object> item ) {
         return fromMap( null, item );
@@ -138,6 +137,8 @@ class EntityIndexMapUtils {
 
                 byte[] valueSerialized;
                 try {
+                     ObjectMapper objectMapper = new ObjectMapper(  );
+
                     valueSerialized = objectMapper.writeValueAsBytes( value );
                 }
                 catch ( JsonProcessingException e ) {
@@ -257,6 +258,8 @@ class EntityIndexMapUtils {
                 byte[] serilizedObj =  byteBuffer.array();
                 Object o;
                 try {
+                     ObjectMapper objectMapper = new ObjectMapper(  );
+
                     o = objectMapper.readValue( serilizedObj, ba.getClassinfo() );
                 }
                 catch ( IOException e ) {

@@ -230,7 +230,7 @@ public class CoreApplication implements Application, TestRule {
     @Override
     public synchronized void refreshIndex() {
         //Insert test entity and find it
-        entityIndex.refreshAsync().toBlocking().last();
+        entityIndex.refreshAsync().toBlocking().first();
     }
 
 
