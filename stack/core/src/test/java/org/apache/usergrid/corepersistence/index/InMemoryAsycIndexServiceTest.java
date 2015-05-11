@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.InMemoryAsyncEventService;
 import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
@@ -46,7 +47,7 @@ public class InMemoryAsycIndexServiceTest extends AsyncIndexServiceTest {
 
 
     @Inject
-    public IndexService indexService;
+    public EventBuilder eventBuilder;
 
     @Inject
     public RxTaskScheduler rxTaskScheduler;
@@ -54,7 +55,7 @@ public class InMemoryAsycIndexServiceTest extends AsyncIndexServiceTest {
 
     @Override
     protected AsyncEventService getAsyncEventService() {
-        return  new InMemoryAsyncEventService( indexService, rxTaskScheduler, entityCollectionManagerFactory,false  );
+        return  new InMemoryAsyncEventService( eventBuilder, rxTaskScheduler, false  );
     }
 
 
