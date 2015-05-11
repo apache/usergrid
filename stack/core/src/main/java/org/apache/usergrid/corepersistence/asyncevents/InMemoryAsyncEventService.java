@@ -23,13 +23,10 @@ package org.apache.usergrid.corepersistence.asyncevents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.index.IndexService;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -39,24 +36,27 @@ import com.google.inject.Singleton;
 import rx.Observable;
 
 
+/**
+ * TODO refactor this implementation into another class. The AsyncEventService impl will then invoke this class
+ *
+ * Performs in memory asynchronous execution using a task scheduler to limit throughput via RX.
+ */
 @Singleton
 public class InMemoryAsyncEventService implements AsyncEventService {
 
     private static final Logger log = LoggerFactory.getLogger( InMemoryAsyncEventService.class );
 
-    private final IndexService indexService;
+    private final EventBuilder eventBuilder;
     private final RxTaskScheduler rxTaskScheduler;
-    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final boolean resolveSynchronously;
 
 
+
     @Inject
-    public InMemoryAsyncEventService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler,
-                                      final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                      boolean resolveSynchronously ) {
-        this.indexService = indexService;
+    public InMemoryAsyncEventService( final EventBuilder eventBuilder, final RxTaskScheduler rxTaskScheduler, boolean
+        resolveSynchronously ) {
+        this.eventBuilder = eventBuilder;
         this.rxTaskScheduler = rxTaskScheduler;
-        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.resolveSynchronously = resolveSynchronously;
     }
 
@@ -68,62 +68,39 @@ public class InMemoryAsyncEventService implements AsyncEventService {
         //only process the same version, otherwise ignore
 
 
-        log.debug( "Indexing  in app scope {} entity {}", entity, applicationScope );
-
-        final Observable<IndexOperationMessage> edgeObservable = indexService.indexEntity( applicationScope, entity );
-
-
-        run( edgeObservable );
+        run( eventBuilder.queueEntityIndexUpdate( applicationScope, entity ) );
     }
 
 
     @Override
     public void queueNewEdge( final ApplicationScope applicationScope, final Entity entity, final Edge newEdge ) {
-
-        log.debug( "Indexing  in app scope {} with entity {} and new edge {}",
-            new Object[] { entity, applicationScope, newEdge } );
-
-        final Observable<IndexOperationMessage> edgeObservable =  indexService.indexEdge( applicationScope, entity, newEdge );
-
-        run( edgeObservable );
+        run( eventBuilder.queueNewEdge( applicationScope, entity, newEdge ) );
     }
 
 
     @Override
     public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
-        log.debug( "Deleting in app scope {} with edge {} }", applicationScope, edge );
 
-        final Observable<IndexOperationMessage> edgeObservable = indexService.deleteIndexEdge( applicationScope, edge );
-
-        run( edgeObservable );
+        run( eventBuilder.queueDeleteEdge( applicationScope, edge ) );
     }
 
 
     @Override
     public void queueEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
-        log.debug( "Deleting entity id from index in app scope {} with entityId {} }", applicationScope, entityId );
 
-        final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteEntityIndexes( applicationScope, entityId );
+        final EventBuilderImpl.EntityDeleteResults results =
+            eventBuilder.queueEntityDelete( applicationScope, entityId );
 
-        //TODO chain graph operations here
-
-        run( edgeObservable );
+        run( results.getIndexObservable() );
+        run( results.getEntitiesCompacted() );
     }
 
 
     @Override
     public void index( final EntityIdScope entityIdScope ) {
 
-        final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
 
-        final Id entityId = entityIdScope.getId();
-
-        //load the entity
-        entityCollectionManagerFactory.createCollectionManager( applicationScope ).load( entityId )
-            //perform indexing on the task scheduler and start it
-            .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) )
-            .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+        run(eventBuilder.index( entityIdScope ));
     }
 
 

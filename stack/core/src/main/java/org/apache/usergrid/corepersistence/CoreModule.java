@@ -20,6 +20,8 @@ import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
@@ -132,9 +134,14 @@ public class CoreModule  extends AbstractModule {
 
 
         bind( IndexService.class ).to( IndexServiceImpl.class );
-        //bind the queue provider
 
-        bind( AsyncEventService.class).toProvider( AsyncIndexProvider.class );
+        //bind the event handlers
+        bind( EventBuilder.class).to( EventBuilderImpl.class );
+
+        //bind the queue provider
+        bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
+
+
 
         install( new GuicyFigModule( IndexProcessorFig.class ) );
 
