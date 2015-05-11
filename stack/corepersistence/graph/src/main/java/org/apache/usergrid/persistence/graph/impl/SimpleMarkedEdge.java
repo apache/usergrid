@@ -24,6 +24,8 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 /**
  * Simple bean to represent our edge
@@ -47,6 +49,7 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
 
 
     @Override
+    @JsonIgnore
     public boolean isDeleted() {
         return deleted;
     }

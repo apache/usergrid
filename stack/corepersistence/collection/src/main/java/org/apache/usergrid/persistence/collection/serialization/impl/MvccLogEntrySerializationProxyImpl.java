@@ -111,6 +111,20 @@ public class MvccLogEntrySerializationProxyImpl implements MvccLogEntrySerializa
 
 
     @Override
+    public List<MvccLogEntry> loadReversed( final ApplicationScope applicationScope, final Id entityId,
+                                            final UUID minVersion, final int maxSize ) {
+
+        final MigrationRelationship<MvccLogEntrySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.loadReversed( applicationScope, entityId, minVersion, maxSize );
+        }
+
+        return migration.to.loadReversed( applicationScope, entityId, minVersion, maxSize );
+    }
+
+
+    @Override
     public MutationBatch delete( final ApplicationScope applicationScope, final Id entityId, final UUID version ) {
         final MigrationRelationship<MvccLogEntrySerializationStrategy> migration = getMigrationRelationShip();
 

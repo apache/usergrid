@@ -152,6 +152,19 @@ public class EdgeTestUtils {
         return new SimpleSearchByEdgeType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, last );
     }
 
+    /**
+       *
+       * @param sourceId
+       * @param type
+       * @param maxVersion
+       * @param last
+       * @return
+       */
+      public static SearchByEdgeType createSearchByEdgeUnfiltered( final Id sourceId, final String type, final long maxVersion,
+                                                         final Edge last ) {
+          return new SimpleSearchByEdgeType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.fromNullable( last ) , false );
+      }
+
 
     /**
      *
@@ -166,6 +179,20 @@ public class EdgeTestUtils {
                                                           final String idType, final Edge last ) {
         return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType,  Optional.fromNullable(last) );
     }
+
+    /**
+      *
+      * @param sourceId
+      * @param type
+      * @param maxVersion
+      * @param idType
+      * @param last
+      * @return
+      */
+     public static SearchByIdType createSearchByEdgeAndIdUnfiltered( final Id sourceId, final String type, final long maxVersion,
+                                                           final String idType, final Edge last ) {
+         return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType,  Optional.fromNullable(last), false );
+     }
 
 
     /**

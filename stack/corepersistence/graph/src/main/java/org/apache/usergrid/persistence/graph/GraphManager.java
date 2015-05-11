@@ -27,8 +27,7 @@ import rx.Observable;
 
 
 /**
- * Represents operations that can be performed on edges within our graph.  A graph should be within an
- * ApplicationScope
+ * Represents operations that can be performed on edges within our graph.  A graph should be within an ApplicationScope
  *
  * An Edge: is defined as the following.
  *
@@ -64,28 +63,40 @@ public interface GraphManager extends CPManager {
 
 
     /**
-     * @param edge The edge to delete
+     * @param edge Mark the edge as deleted in the graph
+     *
+     *
+     * Implementation should also mark the incoming (reversed) edge. Only marks the specific version
+     */
+    Observable<Edge> markEdge( Edge edge );
+
+    /**
+     * @param edge Remove the edge in the graph
      *
      *
      * EdgeDelete the edge. Implementation should also delete the incoming (reversed) edge. Only deletes the specific version
+     * Will only delete if the edge has marked versions
      */
     Observable<Edge> deleteEdge( Edge edge );
 
     /**
-     *
-     * Remove the node from the graph.
+     * Mark the node as removed from the graph.
      *
      * @param node The node to remove
-     * @param timestamp The timestamp to apply the delete operation.  Any edges connected to this node with a timestmap
-     * <= the specified time will be removed from the graph
-     * @return
+     * @param timestamp The timestamp to apply the mark operation.
      */
-    Observable<Id> deleteNode(Id node, long timestamp);
+    Observable<Id> markNode( Id node, long timestamp );
+
+    /**
+     * Mark the node as removed from the graph.
+     *
+     * @param node The node to remove.  This will apply a timestamp to apply the delete + compact operation.  Any edges connected to this node with a timestamp
+     * <= the specified time on the mark will be removed from the graph
+     */
+    Observable<Id> compactNode( final Id node );
 
     /**
      * Get all versions of this edge where versions <= max version
-     * @param edge
-     * @return
      */
     Observable<Edge> loadEdgeVersions( SearchByEdge edge );
 

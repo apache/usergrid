@@ -18,14 +18,13 @@ package org.apache.usergrid.corepersistence;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
-import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
-import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
-import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
+import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
@@ -38,9 +37,6 @@ import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
-import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
-import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
@@ -111,18 +107,6 @@ public class CoreModule  extends AbstractModule {
         bind(ManagerCache.class).to( CpManagerCache.class );
         bind(ApplicationIdCacheFactory.class);
 
-        Multibinder<EntityDeleted> entityBinder =
-            Multibinder.newSetBinder(binder(), EntityDeleted.class);
-        entityBinder.addBinding().to(EntityDeletedHandler.class);
-
-        Multibinder<EntityVersionDeleted> versionBinder =
-            Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
-        versionBinder.addBinding().to(EntityVersionDeletedHandler.class);
-
-        Multibinder<EntityVersionCreated> versionCreatedMultibinder =
-            Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
-        versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
-
 
         /**
          * Create our migrations for within our core plugin
@@ -150,9 +134,14 @@ public class CoreModule  extends AbstractModule {
 
 
         bind( IndexService.class ).to( IndexServiceImpl.class );
-        //bind the queue provider
 
-        bind( AsyncEventService.class).toProvider( AsyncIndexProvider.class );
+        //bind the event handlers
+        bind( EventBuilder.class).to( EventBuilderImpl.class );
+
+        //bind the queue provider
+        bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
+
+
 
         install( new GuicyFigModule( IndexProcessorFig.class ) );
 

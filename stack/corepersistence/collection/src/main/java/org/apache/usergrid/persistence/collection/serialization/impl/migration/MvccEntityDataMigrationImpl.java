@@ -31,16 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.impl.EntityVersionCleanupTask;
-import org.apache.usergrid.persistence.collection.impl.EntityVersionTaskFactory;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV3Impl;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyV2Impl;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueSerializationStrategyV2Impl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationException;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -76,7 +72,6 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
 
     private final Keyspace keyspace;
     private final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
-    private final EntityVersionTaskFactory entityVersionCleanupFactory;
     private final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
@@ -85,13 +80,11 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
     @Inject
     public MvccEntityDataMigrationImpl( final Keyspace keyspace,
                                         final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
-                                        final EntityVersionTaskFactory entityVersionCleanupFactory,
                                         final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy ) {
         this.keyspace = keyspace;
         this.allVersions = allVersions;
-        this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.mvccEntitySerializationStrategyV3 = mvccEntitySerializationStrategyV3;
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
@@ -162,7 +155,8 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
 
                         atomicLong.addAndGet( entities.size() );
 
-                        List<EntityVersionCleanupTask> entityVersionCleanupTasks = new ArrayList( entities.size() );
+                        final List<Id> toSaveIds = new ArrayList<>( entities.size() );
+
 
                         for ( EntityToSaveMessage message : entities ) {
                             final MutationBatch entityRewrite = migration.to.write( message.scope, message.entity );
@@ -186,6 +180,9 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
                             final Id entityId = entity.getId();
 
                             final UUID version = message.entity.getVersion();
+
+
+                            toSaveIds.add( entityId );
 
                             // re-write the unique
                             // values
@@ -215,7 +212,6 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
                              * Migrate the log entry to the new format
                              */
                             for(final MvccLogEntry entry: logEntries){
-
                                 final MutationBatch mb = mvccLogEntrySerializationStrategy.write( message.scope, entry );
 
                                 totalBatch.mergeShallow( mb );
@@ -223,24 +219,18 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
 
 
 
-                            //schedule our cleanup task to clean up all the data
-                            final EntityVersionCleanupTask task = entityVersionCleanupFactory
-                                .getCleanupTask( message.scope, message.entity.getId(), version, false );
 
-                            entityVersionCleanupTasks.add( task );
                         }
 
                         executeBatch( migration.to.getImplementationVersion(), totalBatch, observer, atomicLong );
 
                         //now run our cleanup task
 
-                        for ( EntityVersionCleanupTask entityVersionCleanupTask : entityVersionCleanupTasks ) {
-                            try {
-                                entityVersionCleanupTask.call();
-                            }
-                            catch ( Exception e ) {
-                                LOGGER.error( "Unable to run cleanup task", e );
-                            }
+                        for ( Id updatedId : toSaveIds ) {
+
+
+
+
                         }
                     } ).subscribeOn( Schedulers.io() );
 
