@@ -84,8 +84,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
     @Override
-    public IndexResponse rebuildIndex( final Optional<UUID> appId, final Optional<String> collection,
-                                       final Optional<String> collectionName, final Optional<String> cursor,
+    public IndexResponse rebuildIndex( final Optional<UUID> appId, final Optional<String> collection, final Optional<String> cursor,
                                        final Optional<Long> startTimestamp ) {
 
         //load our last emitted Scope if a cursor is present
@@ -100,7 +99,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         //create an observable that loads each entity and indexes it, start it running with publish
         final ConnectableObservable<EdgeScope> runningReIndex =
-            allEntityIdsObservable.getEdgesToEntities( applicationScopes, collectionName, startTimestamp )
+            allEntityIdsObservable.getEdgesToEntities( applicationScopes, collection, startTimestamp )
 
                 //for each edge, create our scope and index on it
                 .doOnNext( edge -> indexService.index( new EntityIdScope( edge.getApplicationScope(), edge.getEdge().getTargetNode() ) ) ).publish();

@@ -29,5 +29,9 @@ import org.apache.usergrid.persistence.collection.serialization.impl.migration.E
 @FunctionalInterface
 public interface ReIndexAction {
 
+    /**
+     * Index this entity with the specified scope
+     * @param entityIdScope
+     */
     void index( final EntityIdScope entityIdScope );
 }
