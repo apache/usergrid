@@ -627,7 +627,7 @@ public class CpRelationManager implements RelationManager {
 
         //set our fields applicable to both operations
         readPipelineBuilder.withCursor(query.getCursor());
-        readPipelineBuilder.withLimit(query.getLimit());
+        readPipelineBuilder.withLimit( Optional.of( query.getLimit() ));
 
         //TODO, this should be removed when the CP relation manager is removed
         readPipelineBuilder.setStartId( cpHeadEntity.getId() );
@@ -928,7 +928,7 @@ public class CpRelationManager implements RelationManager {
         //set our fields applicable to both operations
         readPipelineBuilder
             .withCursor(query.getCursor())
-            .withLimit(query.getLimit())
+            .withLimit(Optional.of(query.getLimit()))
                 //TODO, this should be removed when the CP relation manager is removed
             .setStartId( cpHeadEntity.getId() );
 
