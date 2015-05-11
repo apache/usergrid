@@ -190,7 +190,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         assertEquals( version, entity.getVersion() );
 
 
-        //now delete it
+        //now delete it, should remove it from cass
         serializationStrategy.delete( context, id, version ).execute();
 
         //now get it, should be gone

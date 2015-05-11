@@ -40,7 +40,7 @@ public interface EdgeDeleteListener {
      * @param eventTimestamp
      * @return
      */
-    public Observable<Integer> receive( final ApplicationScope scope, final MarkedEdge edge, final UUID eventTimestamp );
+    Observable<Integer> receive( final ApplicationScope scope, final MarkedEdge edge, final UUID eventTimestamp );
 
 
 }

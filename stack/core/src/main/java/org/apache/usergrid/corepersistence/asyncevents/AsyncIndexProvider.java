@@ -45,6 +45,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private final IndexService indexService;
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final EventBuilder eventBuilder;
 
     private AsyncEventService asyncEventService;
 
@@ -53,13 +54,15 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     public AsyncIndexProvider( final IndexProcessorFig indexProcessorFig, final QueueManagerFactory queueManagerFactory,
                                final MetricsFactory metricsFactory, final IndexService indexService,
                                final RxTaskScheduler rxTaskScheduler,
-                               final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
+                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                               final EventBuilder eventBuilder ) {
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
         this.metricsFactory = metricsFactory;
         this.indexService = indexService;
         this.rxTaskScheduler = rxTaskScheduler;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.eventBuilder = eventBuilder;
     }
 
 
@@ -82,8 +85,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
         switch ( impl ) {
             case LOCAL:
-                return new InMemoryAsyncEventService( indexService, rxTaskScheduler,
-                    entityCollectionManagerFactory, indexProcessorFig.resolveSynchronously());
+                return new InMemoryAsyncEventService( eventBuilder, rxTaskScheduler, indexProcessorFig.resolveSynchronously());
             case SQS:
                 return new SQSAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
                     entityCollectionManagerFactory, rxTaskScheduler );

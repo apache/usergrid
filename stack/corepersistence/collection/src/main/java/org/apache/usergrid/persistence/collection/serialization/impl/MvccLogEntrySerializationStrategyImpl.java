@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,11 +30,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.db.marshal.BytesType;
-import org.apache.cassandra.db.marshal.IntegerType;
-import org.apache.cassandra.db.marshal.ReversedType;
-import org.apache.cassandra.db.marshal.UUIDType;
-
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
@@ -43,10 +37,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
-import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -98,19 +89,16 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
         final UUID colName = entry.getVersion();
         final StageStatus stageStatus = new StageStatus( stage, entry.getState() );
 
-        return doWrite( collectionScope, entry.getEntityId(), entry.getVersion(), new RowOp() {
-            @Override
-            public void doOp( final ColumnListMutation<UUID> colMutation ) {
+        return doWrite( collectionScope, entry.getEntityId(), entry.getVersion(), colMutation -> {
 
-                //Write the stage with a timeout, it's set as transient
-                if ( stage.isTransient() ) {
-                    colMutation.putColumn( colName, stageStatus, SER, fig.getTimeout() );
-                    return;
-                }
-
-                //otherwise it's persistent, write it with no expiration
-                colMutation.putColumn( colName, stageStatus, SER, null );
+            //Write the stage with a timeout, it's set as transient
+            if ( stage.isTransient() ) {
+                colMutation.putColumn( colName, stageStatus, SER, fig.getTimeout() );
+                return;
             }
+
+            //otherwise it's persistent, write it with no expiration
+            colMutation.putColumn( colName, stageStatus, SER, null );
         } );
     }
 
@@ -126,12 +114,10 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
 
         //didnt put the max in the error message, I don't want to take the string construction hit every time
         Preconditions.checkArgument( entityIds.size() <= fig.getMaxLoadSize(),
-                "requested size cannot be over configured maximum" );
+            "requested size cannot be over configured maximum" );
 
 
         final Id applicationId = collectionScope.getApplication();
-        final Id ownerId = applicationId;
-
 
 
         final List<ScopedRowKey<K>> rowKeys = new ArrayList<>( entityIds.size() );
@@ -155,7 +141,7 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
         }
         catch ( ConnectionException e ) {
             throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
-                    e );
+                e );
         }
 
 
@@ -181,7 +167,7 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
             final StageStatus stageStatus = column.getValue( SER );
 
             final MvccLogEntry logEntry =
-                    new MvccLogEntryImpl( entityId, version, stageStatus.stage, stageStatus.state );
+                new MvccLogEntryImpl( entityId, version, stageStatus.stage, stageStatus.state );
 
 
             versionResults.addEntry( logEntry );
@@ -208,13 +194,41 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
             final ScopedRowKey<K> rowKey = createKey( applicationId, entityId );
 
 
-            columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( rowKey )
-                              .withColumnRange( version, null, false, maxSize ).execute().getResult();
+            columns =
+                keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( rowKey ).withColumnRange( version, null, false, maxSize )
+                        .execute().getResult();
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to load log entries", e );
         }
 
+        return parseResults( columns, entityId );
+    }
+
+
+    @Override
+    public List<MvccLogEntry> loadReversed( final ApplicationScope applicationScope, final Id entityId,
+                                            final UUID minVersion, final int maxSize ) {
+        ColumnList<UUID> columns;
+        try {
+
+            final Id applicationId = applicationScope.getApplication();
+
+            final ScopedRowKey<K> rowKey = createKey( applicationId, entityId );
+
+
+            columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( rowKey )
+                              .withColumnRange( minVersion, null, true, maxSize ).execute().getResult();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to load log entries", e );
+        }
+
+        return parseResults( columns, entityId );
+    }
+
+
+    private List<MvccLogEntry> parseResults( final ColumnList<UUID> columns, final Id entityId ) {
 
         List<MvccLogEntry> results = new ArrayList<MvccLogEntry>( columns.size() );
 
@@ -236,15 +250,8 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
         Preconditions.checkNotNull( entityId, "entityId is required" );
         Preconditions.checkNotNull( version, "version context is required" );
 
-        return doWrite( context, entityId, version, new RowOp() {
-            @Override
-            public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.deleteColumn( version );
-            }
-        } );
+        return doWrite( context, entityId, version, colMutation -> colMutation.deleteColumn( version ) );
     }
-
-
 
 
     /**
@@ -281,12 +288,14 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
         return batch;
     }
 
+
     protected abstract MultiTennantColumnFamily<ScopedRowKey<K>, UUID> getColumnFamily();
 
 
-    protected abstract ScopedRowKey<K> createKey(final Id applicationId, final Id entityId);
+    protected abstract ScopedRowKey<K> createKey( final Id applicationId, final Id entityId );
 
-    protected abstract Id getEntityIdFromKey(final ScopedRowKey<K> key);
+    protected abstract Id getEntityIdFromKey( final ScopedRowKey<K> key );
+
 
     /**
      * Internal stage shard
@@ -319,7 +328,7 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
      */
     private static class StatusCache {
         private Map<Integer, MvccLogEntry.State> values =
-                new HashMap<Integer, MvccLogEntry.State>( MvccLogEntry.State.values().length );
+            new HashMap<Integer, MvccLogEntry.State>( MvccLogEntry.State.values().length );
 
 
         private StatusCache() {

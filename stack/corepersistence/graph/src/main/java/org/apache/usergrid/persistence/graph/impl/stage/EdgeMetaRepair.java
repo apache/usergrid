@@ -27,7 +27,7 @@ import rx.Observable;
 
 
 /**
- * Audits edge meta data and removes them if they're obscelete
+ * Audits edge meta data and removes them if they're obsolete
  */
 public interface EdgeMetaRepair {
 
@@ -42,7 +42,7 @@ public interface EdgeMetaRepair {
      * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
      *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> repairSources( ApplicationScope scope, Id sourceId, String edgeType, long maxTimestamp );
+    Observable<Integer> repairSources( ApplicationScope scope, Id sourceId, String edgeType, long maxTimestamp );
 
 
     /**
@@ -56,5 +56,5 @@ public interface EdgeMetaRepair {
      * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
      *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> repairTargets( ApplicationScope scope, Id targetId, String edgeType, long maxTimestamp );
+    Observable<Integer> repairTargets( ApplicationScope scope, Id targetId, String edgeType, long maxTimestamp );
 }

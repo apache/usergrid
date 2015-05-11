@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +45,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -65,15 +68,15 @@ public abstract class MvccLogEntrySerializationStrategyImplTest {
 
     private MvccLogEntrySerializationStrategy logEntryStrategy;
 
+
     @Before
-    public void wireLogEntryStrategy(){
+    public void wireLogEntryStrategy() {
         logEntryStrategy = getLogEntryStrategy();
     }
 
 
     /**
      * Get the log entry strategy from
-     * @return
      */
     protected abstract MvccLogEntrySerializationStrategy getLogEntryStrategy();
 
@@ -178,6 +181,131 @@ public abstract class MvccLogEntrySerializationStrategyImplTest {
         results = logEntryStrategy.load( context, id, versions[versions.length - 1], versions.length );
 
         assertEquals( "All log entries were deleted", 0, results.size() );
+    }
+
+
+    @Test
+    public void getReversedEntries() throws ConnectionException {
+
+        final Id applicationId = new SimpleId( "application" );
+
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
+
+
+        final Id id = new SimpleId( "test" );
+
+        int count = 10;
+
+        final UUID[] versions = new UUID[count];
+        final Stage COMPLETE = Stage.COMPLETE;
+        final MvccLogEntry[] entries = new MvccLogEntry[count];
+
+
+        for ( int i = 0; i < count; i++ ) {
+            versions[i] = UUIDGenerator.newTimeUUID();
+
+            entries[i] = new MvccLogEntryImpl( id, versions[i], COMPLETE, MvccLogEntry.State.COMPLETE );
+            logEntryStrategy.write( context, entries[i] ).execute();
+
+            //Read it back
+
+            MvccLogEntry returned =
+                logEntryStrategy.load( context, Collections.singleton( id ), versions[i] ).getMaxVersion( id );
+
+            assertNotNull( "Returned value should not be null", returned );
+
+            assertEquals( "Returned should equal the saved", entries[i], returned );
+        }
+
+
+        final UUID[] assertVersions = Arrays.copyOf( versions, versions.length );
+
+        Arrays.sort( assertVersions, ( v1, v2 ) -> UUIDComparator.staticCompare( v1, v2 ) * -1 );
+
+        //now do a range scan from the end
+
+        final int half = count / 2;
+
+        final List<MvccLogEntry> results = logEntryStrategy.loadReversed( context, id, versions[0], half );
+
+        assertEquals( half, results.size() );
+
+        for ( int i = 0; i < count / 2; i++ ) {
+            final MvccLogEntry saved = entries[i];
+            final MvccLogEntry returned = results.get( i );
+
+            assertEquals( "Entry was not equal to the saved value", saved, returned );
+        }
+
+
+        //now get the next batch
+        final List<MvccLogEntry> results2 = logEntryStrategy.loadReversed( context, id, versions[half], count );
+
+        assertEquals( half, results2.size() );
+
+        for ( int i = 0; i < half; i++ ) {
+            final MvccLogEntry saved = entries[half + i];
+            final MvccLogEntry returned = results2.get( i );
+
+            assertEquals( "Entry was not equal to the saved value", saved, returned );
+        }
+
+
+        //now delete them all and ensure we get no results back
+        for ( int i = 0; i < count; i++ ) {
+            logEntryStrategy.delete( context, id, versions[i] ).execute();
+        }
+
+        final List<MvccLogEntry> results3 = logEntryStrategy.loadReversed( context, id, null, versions.length );
+
+        assertEquals( "All log entries were deleted", 0, results3.size() );
+    }
+
+
+    @Test
+    public void createAndDeleteEntries() throws ConnectionException {
+
+        final Id applicationId = new SimpleId( "application" );
+
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
+
+
+        final Id id = new SimpleId( "test" );
+
+
+        final int size = 10;
+
+        final List<MvccLogEntry> savedEntries = new ArrayList<>( size );
+
+        for ( int i = 0; i < size; i++ ) {
+            final UUID version = UUIDGenerator.newTimeUUID();
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
+            logEntryStrategy.write( context, saved ).execute();
+
+            savedEntries.add( saved );
+        }
+
+        //now test we get them all back
+
+        final List<MvccLogEntry> results = logEntryStrategy.loadReversed( context, id, null, size );
+
+        assertEquals( size, results.size() );
+
+        //assert they're the same
+        for ( int i = 0; i < size; i++ ) {
+            assertEquals( savedEntries.get( i ), results.get( i ) );
+        }
+
+        //now delete them all
+
+        for ( final MvccLogEntry mvccLogEntry : savedEntries ) {
+            logEntryStrategy.delete( context, id, mvccLogEntry.getVersion() ).execute();
+        }
+
+        //now get them back, should be empty
+        final List<MvccLogEntry> emptyResults = logEntryStrategy.loadReversed( context, id, null, size );
+
+        assertEquals( 0, emptyResults.size() );
     }
 
 

@@ -28,8 +28,6 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
 import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
-import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
@@ -195,15 +193,6 @@ public abstract class GraphModule extends AbstractModule {
 
     }
 
-
-    @Inject
-    @Singleton
-    @Provides
-    @GraphTaskExecutor
-    public TaskExecutor graphTaskExecutor( final GraphFig graphFig ) {
-        return new NamedTaskExecutorImpl( "graphTaskExecutor", graphFig.getShardAuditWorkerCount(),
-                graphFig.getShardAuditWorkerQueueSize() );
-    }
 
 
 
