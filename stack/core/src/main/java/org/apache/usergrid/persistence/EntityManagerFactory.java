@@ -174,8 +174,6 @@ public interface EntityManagerFactory {
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection );
-
     /**
      * Add a new index to the application for scale
      * @param suffix unique indentifier for additional index

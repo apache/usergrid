@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Optional;
 import org.apache.commons.lang.RandomStringUtils;
+
+import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.junit.After;
 import org.junit.Before;
@@ -63,9 +65,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final MetricRegistry registry = new MetricRegistry();
     private Slf4jReporter reporter;
 
-    private static final long RUNTIME_MS = TimeUnit.SECONDS.toMillis( 10 );
+    private static final int ENTITIES_TO_INDEX = 2000;
 
-    private static final long WRITE_DELAY_MS = 10;
 
 
 
@@ -99,6 +100,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         final EntityManager em = setup.getEmf().getEntityManager( appId );
 
+        final ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+
         // ----------------- create a bunch of entities
 
         Map<String, Object> entityMap = new HashMap<String, Object>() {{
@@ -107,37 +110,18 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             put("key3", "Some value");
         }};
 
-//        Map<String, Object> cat1map = new HashMap<String, Object>() {{
-//            put("name", "enzo");
-//            put("color", "orange");
-//        }};
-//        Map<String, Object> cat2map = new HashMap<String, Object>() {{
-//            put("name", "marquee");
-//            put("color", "grey");
-//        }};
-//        Map<String, Object> cat3map = new HashMap<String, Object>() {{
-//            put("name", "bertha");
-//            put("color", "tabby");
-//        }};
-//
-//        Entity cat1 = em.create("cat", cat1map );
-//        Entity cat2 = em.create("cat", cat2map );
-//        Entity cat3 = em.create("cat", cat3map );
-
-        final long stopTime = System.currentTimeMillis() + RUNTIME_MS;
 
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
-        int entityCount = 0;
         int herderCount  = 0;
         int shepardCount = 0;
-        while ( System.currentTimeMillis() < stopTime ) {
+        for (int i = 0; i < ENTITIES_TO_INDEX; i++) {
 
             final Entity entity;
 
             try {
-                entityMap.put("key", entityCount );
+                entityMap.put("key", i );
 
-                if ( entityCount % 2 == 0 ) {
+                if ( i % 2 == 0 ) {
                     entity = em.create("catherder", entityMap);
                     herderCount++;
                 } else {
@@ -156,15 +140,13 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             }
 
             entityRefs.add(new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
-            if ( entityCount % 10 == 0 ) {
-                logger.info("Created {} entities", entityCount );
+            if ( i % 10 == 0 ) {
+                logger.info("Created {} entities", i );
             }
 
-            entityCount++;
-            try { Thread.sleep( WRITE_DELAY_MS ); } catch (InterruptedException ignored ) {}
         }
 
-        logger.info("Created {} entities", entityCount);
+        logger.info("Created {} entities", ENTITIES_TO_INDEX);
         app.refreshIndex();
 
         // ----------------- test that we can read them, should work fine
@@ -182,7 +164,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         logger.debug("Reading data, should fail this time ");
         try {
-            readData( em,  "testTypes", entityCount, 0 );
+            readData( em,  "testTypes", ENTITIES_TO_INDEX, 0 );
             fail("should have failed to read data");
 
         } catch (Exception expected) {}
@@ -214,10 +196,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
-//            // do it forwards
-            setup.getEmf().rebuildCollectionIndex(Optional.of(em.getApplicationId()), Optional.<String>of("catherders"));
-//
-//            // and backwards, just to make sure both cases are covered
+            reIndexService.rebuildIndex( Optional.of( em.getApplicationId()), Optional.<String>of("catherders"), Optional.absent(), Optional.absent() );
 
             reporter.report();
             registry.remove( meterName );
@@ -269,11 +248,9 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         Entity cat2 = em.create("cat", cat2map );
         Entity cat3 = em.create("cat", cat3map );
 
-        final long stopTime = System.currentTimeMillis() + RUNTIME_MS;
-
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
         int entityCount = 0;
-        while ( System.currentTimeMillis() < stopTime ) {
+        for (int i = 0; i < ENTITIES_TO_INDEX; i++) {
 
             final Entity entity;
 
@@ -295,8 +272,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                 logger.info("Created {} entities", entityCount );
             }
 
-            entityCount++;
-            try { Thread.sleep( WRITE_DELAY_MS ); } catch (InterruptedException ignored ) {}
         }
 
         logger.info("Created {} entities", entityCount);

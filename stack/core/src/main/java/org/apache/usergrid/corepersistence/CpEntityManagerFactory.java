@@ -687,20 +687,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
     }
 
-    @Override
-    public ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection )   {
-        throw new UnsupportedOperationException( "Implement me" );
-//
-//        EntityManager em = getEntityManager( appId );
-//
-//        //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-//        Application app = em.getApplication();
-//
-//        em.reindexCollection(po, collectionName, reverse);
-//
-//        logger.info("\n\nRebuilt index for application {} id {} collection {}\n",
-//            new Object[]{app.getName(), appId, collectionName});
-    }
 
     @Override
     public void addIndex(final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
