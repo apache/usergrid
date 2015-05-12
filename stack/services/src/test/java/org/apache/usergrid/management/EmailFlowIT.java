@@ -28,6 +28,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.usergrid.CoreApplication;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -93,6 +94,8 @@ import static org.junit.Assert.assertTrue;
 public class EmailFlowIT {
     private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
 
+    @Rule
+    public org.apache.usergrid.Application app = new CoreApplication( setup );
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -264,13 +267,14 @@ public class EmailFlowIT {
         final String adminEmail = uniqueEmail();
         final String adminPasswd = "testpassword";
 
-        OrganizationOwnerInfo orgOwner = createOwnerAndOrganization( orgName, appName, adminUserName, adminEmail, adminPasswd, false, false );
+        OrganizationOwnerInfo orgOwner = createOwnerAndOrganization(orgName, appName, adminUserName, adminEmail, adminPasswd, false, false);
         assertNotNull( orgOwner );
 
         ApplicationInfo app = setup.getMgmtSvc().createApplication( orgOwner.getOrganization().getUuid(), appName );
+        this.app.refreshIndex();
 
         //turn on app admin approval for app users
-        enableAdminApproval( app.getId() );
+        enableAdminApproval(app.getId());
 
         final String appUserUsername = uniqueUsername();
         final String appUserEmail = uniqueEmail();
@@ -362,6 +366,7 @@ public class EmailFlowIT {
         enableEmailConfirmation( app.getId() );
         enableAdminApproval( app.getId() );
 
+        setup.getEntityIndex().refresh();
 
         final String appUserEmail = uniqueEmail();
         final String appUserUsername = uniqueUsername();
