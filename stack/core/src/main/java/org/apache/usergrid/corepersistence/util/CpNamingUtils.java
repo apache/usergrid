@@ -60,11 +60,11 @@ public class CpNamingUtils {
     /**
      * Information about applications is stored in the management app using these types
      */
-    public static final String APPLICATION_INFO = "application_info";
-    public static final String APPLICATION_INFOS = "application_infos";
+    public static final String APPLICATION_INFO = "application-info";
+    public static final String APPLICATION_INFOS = "application-infos";
 
-    public static final String DELETED_APPLICATION_INFO = "deleted_application_info";
-    public static final String DELETED_APPLICATION_INFOS = "deleted_application_infos";
+    public static final String DELETED_APPLICATION_INFO = "deleted-application-info";
+    public static final String DELETED_APPLICATION_INFOS = "deleted-application-infos";
 
     /**
      * The name of the map that holds our entity id->type mapping
