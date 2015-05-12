@@ -1481,7 +1481,7 @@ public class ManagementServiceImpl implements ManagementService {
                 organizations.put( entity.getUuid(), path );
             }
 
-            results = results.getNextPageResults();
+            results = results.hasMoreResults() ? results.getNextPageResults() : null ;
         }while(results != null);
 
         return organizations;
