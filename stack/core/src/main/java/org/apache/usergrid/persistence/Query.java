@@ -522,21 +522,16 @@ public class Query {
     }
 
 
-    public Optional<Integer> getLimit() {
+    public int getLimit() {
         return getLimit( DEFAULT_LIMIT );
     }
 
 
-    public Optional<Integer> getLimit( int defaultLimit ) {
+    public int getLimit( int defaultLimit ) {
         if ( limit <= 0 ) {
-            if ( defaultLimit > 0 ) {
-                return Optional.of( defaultLimit);
-            }
-            else {
-                return Optional.of( DEFAULT_LIMIT );
-            }
+            return  defaultLimit > 0 ? defaultLimit : DEFAULT_LIMIT;
         }
-        return Optional.of( limit );
+        return limit;
     }
 
 
