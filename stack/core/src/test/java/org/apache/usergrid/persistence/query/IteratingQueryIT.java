@@ -37,7 +37,7 @@ import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -111,6 +111,7 @@ public class IteratingQueryIT {
     @Test
     public void singleOrderByBoundRangeScanAscCollection() throws Exception {
         singleOrderByBoundRangeScanAsc( new CollectionIoHelper( app ) );
+
     }
 
 
@@ -282,7 +283,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         long start = System.currentTimeMillis();
@@ -291,20 +292,18 @@ public class IteratingQueryIT {
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
-            entity.put( "name", String.valueOf( i ) );
+            entity.put("name", String.valueOf(i));
 
-            io.writeEntity( entity );
+            io.writeEntity(entity);
             //we have to sleep, or we kill embedded cassandra
-            Thread.sleep( 10 );
 
         }
-
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
+        Query query = Query.fromQL("order by  created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -338,7 +337,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 700;
+        int size = 70;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -367,14 +366,13 @@ public class IteratingQueryIT {
                 expected.add( name );
             }
         }
+        app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
-        query.addEqualityFilter( "intersect", true );
+        Query query = Query.fromQL( "select * where intersect = true order by created asc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -388,7 +386,7 @@ public class IteratingQueryIT {
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ ) {
+            for ( int i = 0 ; i< results.size(); i++) {
                 assertEquals( expected.get( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -407,7 +405,7 @@ public class IteratingQueryIT {
 
     protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception {
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -444,10 +442,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
-        query.addEqualityFilter( "intersect", true );
-        query.addEqualityFilter( "intersect2", true );
+        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true order by  created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -481,7 +476,7 @@ public class IteratingQueryIT {
     protected void singleOrderByNoIntersection( IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -504,11 +499,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
-        // nothing will ever match this, the search should short circuit
-        query.addEqualityFilter( "intersect", true );
-        query.addEqualityFilter( "intersect2", true );
+        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true order by  created" );
         query.setLimit( queryLimit );
 
         start = System.currentTimeMillis();
@@ -529,7 +520,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -559,6 +550,7 @@ public class IteratingQueryIT {
                 expectedResults.add( name );
             }
         }
+        app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -599,7 +591,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -630,6 +622,7 @@ public class IteratingQueryIT {
             }
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
@@ -669,7 +662,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         int matchMax = queryLimit - 1;
@@ -695,14 +688,13 @@ public class IteratingQueryIT {
             }
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
+        Query query = Query.fromQL( "select * where searched = true order by created" );
         query.setLimit( queryLimit );
-        query.addEqualityFilter( "searched", true );
 
         int count = 0;
 
@@ -729,9 +721,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 100;
+        int size = 10;
+        int queryLimit = 5;
+        int startValue = 5;
 
         long start = System.currentTimeMillis();
 
@@ -749,14 +741,13 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        this.app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addLessThanEqualFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -772,7 +763,7 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-                assertEquals( expected.get( size - delta - count ), results.getEntities().get( i ).getName() );
+                assertEquals( expected.get( size  - count -1 ), results.getEntities().get( i ).getName() );
                 count++;
             }
 
@@ -780,7 +771,7 @@ public class IteratingQueryIT {
         }
         while ( results.hasCursor() );
 
-        assertEquals( expected.size() - delta + 1, count );
+        assertEquals( expected.size() - delta, count );
 
         stop = System.currentTimeMillis();
         LOG.info( "Query took {} ms to return {} entities", stop - start, count );
@@ -791,9 +782,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 50;
-        int startValue = 100;
+        int size = 20;
+        int queryLimit = 5;
+        int startValue = 10;
 
         long start = System.currentTimeMillis();
 
@@ -811,14 +802,13 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        this.app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addLessThanFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -834,7 +824,7 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-                assertEquals( expected.get( size - delta - count - 1 ), results.getEntities().get( i ).getName() );
+                assertEquals( expected.get( size - count - 1   ), results.getEntities().get( i ).getName() );
                 count++;
             }
 
@@ -853,9 +843,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 100;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 10;
 
         long start = System.currentTimeMillis();
 
@@ -874,13 +864,12 @@ public class IteratingQueryIT {
             expected.add( name );
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addGreaterThanEqualFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -914,9 +903,9 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 99;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 9;
 
         long start = System.currentTimeMillis();
 
@@ -934,14 +923,13 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addGreaterThanFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -964,7 +952,7 @@ public class IteratingQueryIT {
         }
         while ( results.hasCursor() );
 
-        assertEquals( expected.size() - startValue - 1, count );
+        assertEquals( expected.size() - startValue , count );
 
         stop = System.currentTimeMillis();
         LOG.info( "Query took {} ms to return {} entities", stop - start, count );
@@ -975,10 +963,10 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 50;
-        int endValue = 150;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 5;
+        int endValue = 15;
 
         long start = System.currentTimeMillis();
 
@@ -997,13 +985,14 @@ public class IteratingQueryIT {
             expected.add( name );
         }
 
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL(
-                String.format( "select * where index >= %d AND index <= %d order by index desc", startValue,
-                        endValue ) );
+            String.format( "select * where index >= %d AND index <= %d order by index desc", startValue,
+                endValue ) );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -1027,7 +1016,7 @@ public class IteratingQueryIT {
         }
         while ( results.hasCursor() );
 
-        assertEquals( expected.size() - startValue - delta + 1, count );
+        assertEquals( expected.size() - startValue - delta +1 , count );
 
         stop = System.currentTimeMillis();
         LOG.info( "Query took {} ms to return {} entities", stop - start, count );
@@ -1038,10 +1027,10 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
-        int queryLimit = 100;
-        int startValue = 50;
-        int endValue = 150;
+        int size = 20;
+        int queryLimit = 10;
+        int startValue = 5;
+        int endValue = 15;
 
         long start = System.currentTimeMillis();
 
@@ -1059,14 +1048,15 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
+        app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL(
-                String.format( "select * where index >= %d AND index <= %d order by index asc", startValue,
-                        endValue ) );
+            String.format( "select * where index >= %d AND index <= %d order by index asc", startValue,
+                endValue ) );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -1106,7 +1096,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 300;
+        int size = 30;
 
         long start = System.currentTimeMillis();
 
@@ -1115,18 +1105,18 @@ public class IteratingQueryIT {
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
-
             io.writeEntity( entity );
         }
 
+        this.app.refreshIndex();
+
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        LOG.info("Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
 
         Query query = new Query();
-        query.setLimit( 100 );
+        query.setLimit( 10 );
 
         int count = 0;
 
@@ -1140,7 +1130,7 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-                assertEquals( String.valueOf( count ), results.getEntities().get( i ).getName() );
+                assertEquals( String.valueOf( size - count -1 ), results.getEntities().get( i ).getName() );
                 count++;
             }
 
@@ -1159,7 +1149,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1224,7 +1214,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1266,7 +1256,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 20;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1330,10 +1320,10 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query =
-                Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
+            Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -1378,7 +1368,7 @@ public class IteratingQueryIT {
         /**
          * Leave this as a large size.  We have to write over 1k to reproduce this issue
          */
-        int size = 200;
+        int size = 20;
 
         long start = System.currentTimeMillis();
 
@@ -1387,18 +1377,19 @@ public class IteratingQueryIT {
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
-            entity.put( "boolean", !(i % 2 == 0));
+            entity.put( "boolean", (i % 2 == 0));
             entity.put( "index", i);
 
             io.writeEntity( entity );
         }
+        this.app.refreshIndex();
 
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL("select * where NOT boolean = false order by index asc");
-        query.setLimit( 20 );
+        query.setLimit( 2 );
 
         int index = 0;
         int count = 0;
@@ -1413,8 +1404,8 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-//                assertEquals( String.valueOf( index ), results.getEntities().get( i ).getName() );
-//                index +=2;
+                assertEquals( String.valueOf( index ), results.getEntities().get( i ).getName() );
+                index +=2;
                 count++;
             }
 

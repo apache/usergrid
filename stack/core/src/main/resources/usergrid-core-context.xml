@@ -98,9 +98,13 @@
 
     <bean id="injector"
    		class="org.apache.usergrid.corepersistence.GuiceFactory">
-   		<constructor-arg ref="cassandraHostConfigurator" />
-        <constructor-arg ref="properties" />
     </bean>
+
+    <!--  <bean id="injector"
+       		class="org.apache.usergrid.corepersistence.GuiceFactory">
+       		<constructor-arg ref="cassandraHostConfigurator" />
+            <constructor-arg ref="properties" />
+        </bean>-->
 
 	<bean id="cassandraService"
 		class="org.apache.usergrid.persistence.cassandra.CassandraService" init-method="init" destroy-method="destroy">
@@ -160,29 +164,8 @@
         <constructor-arg ref="properties"/>
     </bean>
 
-
-   <bean id="indexBucketLocator" class="org.apache.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
-    	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
-    </bean>
-
-    <bean id="entityManager" class="org.apache.usergrid.persistence.cassandra.EntityManagerImpl" scope="prototype"/>
-
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
-
-    <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
-
-    <aop:config>
-      <aop:aspect id="traceParticipant" ref="traceTagAspect">
-        <!-- pointcut on the prescense of the TraceParticipant annotation only -->
-        <aop:pointcut id="emTraceParticipant"
-            expression="execution(* org.apache.usergrid.persistence.cassandra.*EntityManagerImpl.*(..)) and
-            @annotation(org.apache.usergrid.persistence.cassandra.util.TraceParticipant)"/>
-        <aop:around
-           pointcut-ref="emTraceParticipant"
-           method="applyTrace"/>
-      </aop:aspect>
-    </aop:config>
-
+    
     <!-- ============================================================== -->
     <!-- Scheduler Settings from removed Scheduler Module's app context -->
     <!-- ============================================================== -->
@@ -193,6 +176,7 @@
       <property name="workerSize" value="${usergrid.scheduler.job.workers}" />
       <property name="interval" value="${usergrid.scheduler.job.interval}" />
       <property name="maxFailCount" value="${usergrid.scheduler.job.maxfail}" />
+      <property name="injector" ref="injector" />
     </bean>
 
     <bean id="schedulerService" class="org.apache.usergrid.batch.service.SchedulerServiceImpl">

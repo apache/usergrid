@@ -19,16 +19,23 @@
 package org.apache.usergrid.persistence.core.scope;
 
 
+import java.io.Serializable;
+
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 /**
  * A scope used for organizations
  */
-public interface ApplicationScope {
+@JsonDeserialize(as = ApplicationScopeImpl.class)
+public interface ApplicationScope extends Serializable {
 
     /**
      * Get an Application scope
      */
     Id getApplication();
+
 }

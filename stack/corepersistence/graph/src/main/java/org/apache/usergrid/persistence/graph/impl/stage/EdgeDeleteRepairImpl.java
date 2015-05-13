@@ -23,10 +23,10 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 import java.util.Iterator;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -94,7 +95,12 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
                                     //remove from storage
-                                    HystrixCassandra.async(storageSerialization.deleteEdge( scope, edge, timestamp ));
+                                    try {
+                                        storageSerialization.deleteEdge( scope, edge, timestamp ).execute();
+                                    }
+                                    catch ( ConnectionException e ) {
+                                        throw new RuntimeException( "Unable to connect to casandra", e );
+                                    }
                                 }
                             }
                         } );
@@ -115,7 +121,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
                 final SimpleSearchByEdge search =
                         new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                                edge.getTimestamp(), SearchByEdgeType.Order.DESCENDING, null );
+                                edge.getTimestamp(), SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() );
 
                 return serialization.getEdgeVersions( scope, search );
             }

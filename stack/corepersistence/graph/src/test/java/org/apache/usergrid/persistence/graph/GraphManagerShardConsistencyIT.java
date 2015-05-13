@@ -41,7 +41,6 @@ import javax.annotation.Nullable;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +49,7 @@ import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
@@ -60,6 +60,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -73,7 +74,7 @@ import rx.Observable;
 import rx.functions.Action1;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -129,7 +130,7 @@ public class GraphManagerShardConsistencyIT {
         //get the system property of the UUID to use.  If one is not set, use the defualt
         String uuidString = System.getProperty( "org.id", "80a42760-b699-11e3-a5e2-0800200c9a66" );
 
-        scope = new ApplicationScopeImpl( createId( UUID.fromString( uuidString ), "test" ) );
+        scope = new ApplicationScopeImpl( IdGenerator.createId( UUID.fromString( uuidString ), "test" ) );
 
 
         reporter.start( 10, TimeUnit.SECONDS );
@@ -147,7 +148,7 @@ public class GraphManagerShardConsistencyIT {
     public void writeThousandsSingleSource()
             throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
-        final Id sourceId = createId( "source" );
+        final Id sourceId = IdGenerator.createId( "source" );
         final String edgeType = "test";
 
         final EdgeGenerator generator = new EdgeGenerator() {
@@ -155,7 +156,7 @@ public class GraphManagerShardConsistencyIT {
 
             @Override
             public Edge newEdge() {
-                Edge edge = createEdge( sourceId, edgeType, createId( "target" ) );
+                Edge edge = createEdge( sourceId, edgeType, IdGenerator.createId( "target" ) );
 
 
                 return edge;
@@ -166,7 +167,7 @@ public class GraphManagerShardConsistencyIT {
             public Observable<Edge> doSearch( final GraphManager manager ) {
                 return manager.loadEdgesFromSource(
                         new SimpleSearchByEdgeType( sourceId, edgeType, Long.MAX_VALUE,
-                                SearchByEdgeType.Order.DESCENDING, null ) );
+                                SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
             }
         };
 
@@ -516,7 +517,7 @@ public class GraphManagerShardConsistencyIT {
                                                             }
                                                         } )
 
-                                                        .longCount().toBlocking().last();
+                                                        .countLong().toBlocking().last();
 
 
 //                if(returnedEdgeCount != count[0]-duplicate[0]){

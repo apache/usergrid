@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +37,7 @@ import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
@@ -44,6 +45,7 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 import net.jcip.annotations.NotThreadSafe;
 
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -217,11 +219,14 @@ public class CounterIT extends AbstractCoreIT {
         organizationEntity.setProperty( "name", orgName );
         organizationEntity = em.create( organizationEntity );
 
-        UUID applicationId = setup.getEmf().createApplication( orgName, appName  );
+        Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName  );
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", orgName + "/" + appName );
-        Entity applicationEntity = em.create( applicationId, "application_info", properties );
+        Entity applicationEntity = em.create(
+            applicationId, CpNamingUtils.APPLICATION_INFO, properties );
 
 //Creating connections like below doesn't work.
 //        em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",

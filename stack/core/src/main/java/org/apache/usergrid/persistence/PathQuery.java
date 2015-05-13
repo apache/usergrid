@@ -17,11 +17,11 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 
 
 public class PathQuery<E> {
@@ -101,7 +101,7 @@ public class PathQuery<E> {
 
     protected Results getHeadResults( EntityManager em ) throws Exception {
         EntityRef ref = new SimpleEntityRef(type,uuid);
-        return ( query.getCollection() != null ) ? 
+        return ( query.getCollection() != null ) ?
                em.searchCollection( ref, query.getCollection(), query ) :
                em.searchConnectedEntities( ref, query );
     }

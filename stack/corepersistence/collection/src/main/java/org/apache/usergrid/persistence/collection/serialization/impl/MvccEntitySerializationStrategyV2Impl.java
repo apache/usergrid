@@ -91,6 +91,12 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
     }
 
 
+    @Override
+    public int getImplementationVersion() {
+        return CollectionDataVersions.BUFFER_SHORT_FIX.getVersion();
+    }
+
+
     /**
      * We should only ever create this once, since this impl is a singleton
      */
@@ -211,7 +217,7 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
             // it's been deleted, remove it
 
             if ( STATE_DELETED == state ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+                return new EntityWrapper( MvccEntity.Status.DELETED, Optional.<Entity>absent() );
             }
 
             Entity storedEntity;

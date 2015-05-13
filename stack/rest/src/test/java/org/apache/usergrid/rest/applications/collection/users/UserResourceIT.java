@@ -20,28 +20,19 @@ package org.apache.usergrid.rest.applications.collection.users;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.core.MediaType;
-
-import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.jclouds.rest.annotations.Api;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -49,7 +40,6 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -881,7 +871,7 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity1);
 
         assertNotNull(entity2);
-        Token adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
+        Token adminToken = this.clientSetup.getRestClient().management().token().post(Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()));
         // now revoke the tokens
         this.app().token().setToken(adminToken);
 
@@ -929,7 +919,7 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity2);
 
         // now revoke the token3
-        adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
+        adminToken = this.clientSetup.getRestClient().management().token().post(Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()));
         // now revoke the tokens
         this.app().token().setToken(adminToken);
         usersResource.entity("edanuff").connection("revoketokens").post();
@@ -973,7 +963,7 @@ public class UserResourceIT extends AbstractRestIT {
         usersResource.post(new User("test_3", "Test3 User", "test_3@test.com", "test123")); // client.setApiUrl(apiUrl);
         refreshIndex();
 
-        Entity appInfo = this.app().get().getResponse().getEntities().get(0);
+        //Entity appInfo = this.app().get().getResponse().getEntities().get(0);
 
         Token token = this.app().token().post(new Token("test_1", "test123"));
 

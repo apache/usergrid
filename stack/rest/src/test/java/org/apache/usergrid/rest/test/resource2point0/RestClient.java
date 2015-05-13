@@ -115,6 +115,7 @@ public class RestClient implements UrlResource {
 
         this.getResource().path( "system/superuser/setup" )
             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        client.removeFilter( httpBasicAuthFilter );
     }
 
     //todo:fix this method for the client.

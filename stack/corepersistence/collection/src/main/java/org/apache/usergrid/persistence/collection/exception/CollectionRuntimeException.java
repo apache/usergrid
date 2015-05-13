@@ -17,53 +17,53 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
 public class CollectionRuntimeException extends RuntimeException {
 
     private MvccEntity entity;
-    private CollectionScope collectionScope;
+    private ApplicationScope applicationScope;
 
 
-    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope, final String message ) {
-        super( message ); 
+    public CollectionRuntimeException( MvccEntity entity, ApplicationScope scope, final String message ) {
+        super( message );
         this.entity = entity;
-        this.collectionScope = scope; 
+        this.applicationScope = scope;
     }
 
 
-    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope, final String message, final Throwable cause ) {
+    public CollectionRuntimeException( MvccEntity entity, ApplicationScope scope, final String message, final Throwable cause ) {
         super( message, cause );
         this.entity = entity;
-        this.collectionScope = scope; 
+        this.applicationScope = scope;
     }
 
 
-    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope, final Throwable cause ) {
+    public CollectionRuntimeException( MvccEntity entity, ApplicationScope scope, final Throwable cause ) {
         super( cause );
         this.entity = entity;
-        this.collectionScope = scope; 
+        this.applicationScope = scope;
     }
 
 
-    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope,
+    public CollectionRuntimeException( MvccEntity entity, ApplicationScope scope,
             final String message, final Throwable cause, final boolean enableSuppression,
             final boolean writableStackTrace ) {
         super( message, cause, enableSuppression, writableStackTrace );
         this.entity = entity;
-        this.collectionScope = scope; 
+        this.applicationScope = scope;
     }
 
-    
-    public CollectionScope getCollectionScope() {
-        return collectionScope;
+
+    public ApplicationScope getApplicationScope() {
+        return applicationScope;
     }
 
     /**
      * Entity involved in operation.
-     * @return Entity or null if entity not instantiated yet in operation. 
+     * @return Entity or null if entity not instantiated yet in operation.
      */
     public MvccEntity getEntity() {
         return entity;

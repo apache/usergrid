@@ -19,22 +19,50 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
-import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.index.impl.BufferQueue;
-import org.apache.usergrid.persistence.index.impl.BufferQueueInMemoryImpl;
-import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
+import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+
+import com.google.inject.Inject;
+import com.google.inject.TypeLiteral;
+
+import rx.Observable;
 
 
 public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {
+
         install( new CommonModule());
 
         // configure collections and our core astyanax framework
-        install( new CollectionModule() );
-        install( new IndexModule()  );
+        install( new IndexModule(){
+            @Override
+            public  void configureMigrationProvider(){
+
+                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} ).to(
+                    TestAllApplicationsObservable.class );
+            }
+        });
+        install( new GuicyFigModule(IndexTestFig.class) );
     }
+
+    public static class TestAllApplicationsObservable implements MigrationDataProvider<ApplicationScope>{
+
+        @Inject
+        public TestAllApplicationsObservable(){
+
+        }
+
+
+        @Override
+        public Observable<ApplicationScope> getData() {
+          return Observable.empty();
+        }
+    }
+
 }

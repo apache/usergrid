@@ -30,18 +30,13 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServiceResults;
-import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.DisabledAppUserException;
@@ -493,6 +488,9 @@ public class ApplicationResource extends ServiceResource {
     }
 
 
+    /**
+     * Put on application URL will restore application if it was deleted.
+     */
     @PUT
     @RequireOrganizationAccess
     @Override
@@ -503,12 +501,7 @@ public class ApplicationResource extends ServiceResource {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
 
-        ApplicationInfo app = management.getApplicationInfo( applicationId );
-        if ( app == null ) {
-            throw new EntityNotFoundException("Application ID " + applicationId + " not found");
-        }
-
-        emf.restoreApplication( applicationId );
+        management.restoreApplication( applicationId );
 
         ApiResponse response = createApiResponse();
         response.setAction( "restore" );
@@ -523,7 +516,13 @@ public class ApplicationResource extends ServiceResource {
     @RequireOrganizationAccess
     @Override
     public JSONWithPadding executeDelete(  @Context UriInfo ui,
-        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+        @QueryParam("callback") @DefaultValue("callback") String callback,
+        @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
+
+        if (!"confirm_delete_of_application_and_data".equals( confirmDelete ) ) {
+            throw new IllegalArgumentException(
+                "Cannot delete application without app_delete_confirm parameter");
+        }
 
         Properties props = management.getProperties();
 
@@ -537,17 +536,16 @@ public class ApplicationResource extends ServiceResource {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
 
-        ApplicationInfo app = management.getApplicationInfo( applicationId );
-        if ( app == null ) {
-            throw new EntityNotFoundException("Application ID " + applicationId + " not found");
-        }
+        management.deleteApplication( applicationId );
 
-        emf.deleteApplication( applicationId );
+        LOG.debug( "ApplicationResource.delete() deleted appId = {}", applicationId);
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
-        response.setApplication( services.getApplication() );
-        response.setParams( ui.getQueryParameters() );
+        response.setApplication(services.getApplication());
+        response.setParams(ui.getQueryParameters());
+
+        LOG.debug( "ApplicationResource.delete() sending response ");
 
         return new JSONWithPadding( response, callback );
     }

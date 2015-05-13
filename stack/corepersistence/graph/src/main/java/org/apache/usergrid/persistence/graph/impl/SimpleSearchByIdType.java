@@ -25,6 +25,8 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
  *
@@ -44,9 +46,17 @@ public class SimpleSearchByIdType extends SimpleSearchByEdgeType implements Sear
      * @param last The value to start seeking from.  Must be >= this value
 
      */
-    public SimpleSearchByIdType( final Id node, final String type, final long maxTimestamp, final Order order, final String idType, final Edge last  ) {
+    public SimpleSearchByIdType( final Id node, final String type, final long maxTimestamp, final Order order, final String idType, final Optional<Edge> last  ) {
         super( node, type, maxTimestamp, order, last );
 
+        ValidationUtils.verifyString( idType, "idType" );
+        this.idType = idType;
+    }
+
+
+    public SimpleSearchByIdType( final Id node, final String type, final long maxTimestamp, final Order order, final String idType,
+                                 final Optional<Edge> last, final boolean filterMarked ) {
+        super( node, type, maxTimestamp, order, last, filterMarked );
         ValidationUtils.verifyString( idType, "idType" );
         this.idType = idType;
     }

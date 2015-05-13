@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -70,16 +70,16 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
         assertNotNull( connections );
-        assertEquals( 1, connections.size() );
-        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getConnectedEntity().getUuid() );
-        assertEquals( firstUserEntity.getUuid(), connections.get( 0 ).getConnectingEntity().getUuid() );
+        assertEquals(1, connections.size());
+        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getTargetRefs().getUuid() );
+        assertEquals( firstUserEntity.getUuid(), connections.get( 0 ).getSourceRefs().getUuid() );
     }
 
 
@@ -134,7 +134,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catB );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // List forward connections for cat A
 
@@ -155,7 +155,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catA );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // List forward connections for cat A
 // Not valid with current usages
@@ -262,16 +262,16 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( secondUserEntity, "likes", arrogantbutcher );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getConnectedEntities( firstUserEntity, "likes", "restaurant", Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
-        assertNotNull( connections );
-        assertEquals( 1, connections.size() );
-        assertEquals( fourpeaks.getUuid(), connections.get( 0 ).getConnectedEntity().getUuid() );
-        assertEquals( firstUserEntity.getUuid(), connections.get( 0 ).getConnectingEntity().getUuid() );
+        assertNotNull(connections);
+        assertEquals(1, connections.size());
+        assertEquals(fourpeaks.getUuid(), connections.get(0).getTargetRefs().getUuid());
+        assertEquals(firstUserEntity.getUuid(), connections.get(0).getSourceRefs().getUuid());
 
         // now check membership
         assertTrue( em.isConnectionMember( firstUserEntity, "likes", fourpeaks ) );
@@ -283,9 +283,9 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         connections = r.getConnections();
 
         assertNotNull( connections );
-        assertEquals( 1, connections.size() );
-        assertEquals( arrogantbutcher.getUuid(), connections.get( 0 ).getConnectedEntity().getUuid() );
-        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getConnectingEntity().getUuid() );
+        assertEquals(1, connections.size());
+        assertEquals( arrogantbutcher.getUuid(), connections.get( 0 ).getTargetRefs().getUuid() );
+        assertEquals( secondUserEntity.getUuid(), connections.get( 0 ).getSourceRefs().getUuid() );
 
         // now check membership
         assertTrue( em.isConnectionMember( secondUserEntity, "likes", arrogantbutcher ) );
@@ -316,7 +316,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( fredEntity, "likes", wilmaEntity );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
 //        // search for "likes" edges from fred
 //        assertEquals( 1,
@@ -370,7 +370,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         }
 
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.ALL_PROPERTIES ) ;
 
@@ -414,7 +414,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 //
 //        em.createConnection( fredEntity, "likes", wilmaEntity );
 //
-//        em.refreshIndex();
+//        app.refreshIndex();
 //
 ////        // search for "likes" edges from fred
 ////        assertEquals( 1,

@@ -19,7 +19,7 @@ package org.apache.usergrid.services.notifications;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Receipt;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -52,7 +52,7 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
         long timeout = System.currentTimeMillis() + 60000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
-            app.getEntityManager().refreshIndex();
+            app.refreshIndex();
             notification = app.getEntityManager().get(notification.getUuid(), Notification.class);
             if (notification.getFinished() != null) {
                 return notification;

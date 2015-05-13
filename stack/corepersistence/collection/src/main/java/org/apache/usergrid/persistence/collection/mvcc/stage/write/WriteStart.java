@@ -6,15 +6,15 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.WriteStartException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.exception.WriteStartException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -38,7 +38,6 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
     private final MvccLogEntrySerializationStrategy logStrategy;
 
-    MvccEntity.Status status;
 
 
     /**
@@ -46,9 +45,8 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
      */
 
     @Inject
-    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy, MvccEntity.Status status) {
+    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy) {
         this.logStrategy = logStrategy;
-        this.status = status;
 
     }
 
@@ -57,7 +55,7 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
     public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<Entity> ioEvent ) {
         {
             final Entity entity = ioEvent.getEvent();
-            final CollectionScope collectionScope = ioEvent.getEntityCollection();
+            final ApplicationScope applicationScope = ioEvent.getEntityCollection();
 
             final Id entityId = entity.getId();
 
@@ -67,19 +65,19 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, newVersion,
                     Stage.ACTIVE, MvccLogEntry.State.COMPLETE);
 
-            MutationBatch write = logStrategy.write( collectionScope, startEntry );
+            MutationBatch write = logStrategy.write( applicationScope, startEntry );
 
-            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, newVersion, status, entity );
+            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, newVersion, MvccEntity.Status.COMPLETE, entity );
             if(ioEvent.getEvent().hasVersion()) {
                 try {
                     write.execute();
                 } catch (ConnectionException e) {
                     LOG.error("Failed to execute write ", e);
-                    throw new WriteStartException(nextStage, collectionScope,
+                    throw new WriteStartException(nextStage, applicationScope,
                         "Failed to execute write ", e);
                 } catch (NullPointerException e) {
                     LOG.error("Failed to execute write ", e);
-                    throw new WriteStartException(nextStage, collectionScope,
+                    throw new WriteStartException(nextStage, applicationScope,
                         "Failed to execute write", e);
                 }
             }
@@ -87,7 +85,7 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             //create the mvcc entity for the next stage
            //TODO: we need to create a complete or partial update here (or sooner)
 
-            return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
+            return new CollectionIoEvent<>( applicationScope, nextStage );
         }
     }
 }

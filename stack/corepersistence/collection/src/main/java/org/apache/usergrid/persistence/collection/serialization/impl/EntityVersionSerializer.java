@@ -21,9 +21,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -36,11 +33,9 @@ import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 /**
- * Serialize EntityVersion, entity ID and version, for use a column name in Unique Values Column Family. 
+ * Serialize EntityVersion, entity ID and version, for use a column name in Unique Values Column Family.
  */
 public class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
-
-    private static final Logger LOG = LoggerFactory.getLogger( EntityVersionSerializer.class );
 
     @Override
     public ByteBuffer toByteBuffer(final EntityVersion ev) {
@@ -71,8 +66,8 @@ public class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
         final UUID version      = composite.get( 0, UUIDSerializer.get() );
         final UUID entityId     = composite.get( 1, UUIDSerializer.get() );
         final String entityType = composite.get( 2, StringSerializer.get() );
-        
+
         return new EntityVersion( new SimpleId( entityId, entityType ), version);
     }
-    
+
 }

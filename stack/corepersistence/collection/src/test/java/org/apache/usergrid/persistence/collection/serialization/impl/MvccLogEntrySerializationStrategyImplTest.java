@@ -20,28 +20,32 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.test.UseModules;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -54,25 +58,35 @@ import static org.mockito.Mockito.mock;
 /** @author tnine */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccLogEntrySerializationStrategyImplTest {
+public abstract class MvccLogEntrySerializationStrategyImplTest {
 
-    @Inject
-    private MvccLogEntrySerializationStrategy logEntryStrategy;
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
 
+    private MvccLogEntrySerializationStrategy logEntryStrategy;
+
+
+    @Before
+    public void wireLogEntryStrategy() {
+        logEntryStrategy = getLogEntryStrategy();
+    }
+
+
+    /**
+     * Get the log entry strategy from
+     */
+    protected abstract MvccLogEntrySerializationStrategy getLogEntryStrategy();
+
+
     @Test
     public void createAndDelete() throws ConnectionException {
 
-        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
-        final String name = "test";
 
-
-        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
 
         final Id id = new SimpleId( "test" );
@@ -84,7 +98,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
             //Read it back
 
-            MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), version ).getMaxVersion( id );
+            MvccLogEntry returned =
+                logEntryStrategy.load( context, Collections.singleton( id ), version ).getMaxVersion( id );
 
             assertNotNull( "Returned value should not be null", returned );
 
@@ -96,19 +111,17 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void loadNoData() throws ConnectionException {
 
-        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
-        final String name = "test";
 
-
-        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
 
         final Id id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
 
 
-        MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), version ).getMaxVersion( id );
+        MvccLogEntry returned =
+            logEntryStrategy.load( context, Collections.singleton( id ), version ).getMaxVersion( id );
 
         assertNull( "Returned value should not exist", returned );
     }
@@ -117,12 +130,9 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void getMultipleEntries() throws ConnectionException {
 
-        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
-        final String name = "test";
 
-
-        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
 
         final Id id = new SimpleId( "test" );
@@ -142,7 +152,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
             //Read it back
 
-            MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), versions[i] ).getMaxVersion( id );
+            MvccLogEntry returned =
+                logEntryStrategy.load( context, Collections.singleton( id ), versions[i] ).getMaxVersion( id );
 
             assertNotNull( "Returned value should not be null", returned );
 
@@ -173,94 +184,214 @@ public class MvccLogEntrySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test
+    public void getReversedEntries() throws ConnectionException {
+
+        final Id applicationId = new SimpleId( "application" );
+
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
+
+
+        final Id id = new SimpleId( "test" );
+
+        int count = 10;
+
+        final UUID[] versions = new UUID[count];
+        final Stage COMPLETE = Stage.COMPLETE;
+        final MvccLogEntry[] entries = new MvccLogEntry[count];
+
+
+        for ( int i = 0; i < count; i++ ) {
+            versions[i] = UUIDGenerator.newTimeUUID();
+
+            entries[i] = new MvccLogEntryImpl( id, versions[i], COMPLETE, MvccLogEntry.State.COMPLETE );
+            logEntryStrategy.write( context, entries[i] ).execute();
+
+            //Read it back
+
+            MvccLogEntry returned =
+                logEntryStrategy.load( context, Collections.singleton( id ), versions[i] ).getMaxVersion( id );
+
+            assertNotNull( "Returned value should not be null", returned );
+
+            assertEquals( "Returned should equal the saved", entries[i], returned );
+        }
+
+
+        final UUID[] assertVersions = Arrays.copyOf( versions, versions.length );
+
+        Arrays.sort( assertVersions, ( v1, v2 ) -> UUIDComparator.staticCompare( v1, v2 ) * -1 );
+
+        //now do a range scan from the end
+
+        final int half = count / 2;
+
+        final List<MvccLogEntry> results = logEntryStrategy.loadReversed( context, id, versions[0], half );
+
+        assertEquals( half, results.size() );
+
+        for ( int i = 0; i < count / 2; i++ ) {
+            final MvccLogEntry saved = entries[i];
+            final MvccLogEntry returned = results.get( i );
+
+            assertEquals( "Entry was not equal to the saved value", saved, returned );
+        }
+
+
+        //now get the next batch
+        final List<MvccLogEntry> results2 = logEntryStrategy.loadReversed( context, id, versions[half], count );
+
+        assertEquals( half, results2.size() );
+
+        for ( int i = 0; i < half; i++ ) {
+            final MvccLogEntry saved = entries[half + i];
+            final MvccLogEntry returned = results2.get( i );
+
+            assertEquals( "Entry was not equal to the saved value", saved, returned );
+        }
+
+
+        //now delete them all and ensure we get no results back
+        for ( int i = 0; i < count; i++ ) {
+            logEntryStrategy.delete( context, id, versions[i] ).execute();
+        }
+
+        final List<MvccLogEntry> results3 = logEntryStrategy.loadReversed( context, id, null, versions.length );
+
+        assertEquals( "All log entries were deleted", 0, results3.size() );
+    }
+
+
+    @Test
+    public void createAndDeleteEntries() throws ConnectionException {
+
+        final Id applicationId = new SimpleId( "application" );
+
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
+
+
+        final Id id = new SimpleId( "test" );
+
+
+        final int size = 10;
+
+        final List<MvccLogEntry> savedEntries = new ArrayList<>( size );
+
+        for ( int i = 0; i < size; i++ ) {
+            final UUID version = UUIDGenerator.newTimeUUID();
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
+            logEntryStrategy.write( context, saved ).execute();
+
+            savedEntries.add( saved );
+        }
+
+        //now test we get them all back
+
+        final List<MvccLogEntry> results = logEntryStrategy.loadReversed( context, id, null, size );
+
+        assertEquals( size, results.size() );
+
+        //assert they're the same
+        for ( int i = 0; i < size; i++ ) {
+            assertEquals( savedEntries.get( i ), results.get( i ) );
+        }
+
+        //now delete them all
+
+        for ( final MvccLogEntry mvccLogEntry : savedEntries ) {
+            logEntryStrategy.delete( context, id, mvccLogEntry.getVersion() ).execute();
+        }
+
+        //now get them back, should be empty
+        final List<MvccLogEntry> emptyResults = logEntryStrategy.loadReversed( context, id, null, size );
+
+        assertEquals( 0, emptyResults.size() );
+    }
+
+
+    @Test( expected = NullPointerException.class )
     public void writeParamsNoContext() throws ConnectionException {
         logEntryStrategy.write( null, mock( MvccLogEntry.class ) );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void writeParams() throws ConnectionException {
-        logEntryStrategy.write( mock( CollectionScope.class ), null );
+        logEntryStrategy.write( mock( ApplicationScope.class ), null );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void deleteParamContext() throws ConnectionException {
         logEntryStrategy.delete( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void deleteParamEntityId() throws ConnectionException {
 
-        logEntryStrategy.delete(
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
-                UUIDGenerator.newTimeUUID() );
+        logEntryStrategy
+            .delete( new ApplicationScopeImpl( new SimpleId( "organization" ) ), null, UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void deleteParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
-                        new SimpleId( "test" ), null );
+            .delete( new ApplicationScopeImpl( new SimpleId( "organization" ) ), new SimpleId( "test" ), null );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadParamContext() throws ConnectionException {
         logEntryStrategy.load( null, Collections.<Id>emptyList(), UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
+            .load( new ApplicationScopeImpl( new SimpleId( "organization" ) ), null, UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadParamVersion() throws ConnectionException {
 
-        logEntryStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
-                        Collections.<Id>singleton( new SimpleId( "test" )), null );
+        logEntryStrategy.load( new ApplicationScopeImpl( new SimpleId( "organization" ) ),
+            Collections.<Id>singleton( new SimpleId( "test" ) ), null );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadListParamContext() throws ConnectionException {
         logEntryStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadListParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
-                        1 );
+            .load( new ApplicationScopeImpl( new SimpleId( "organization" ) ), null, UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadListParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
-                        new SimpleId( "test" ), null, 1 );
+            .load( new ApplicationScopeImpl( new SimpleId( "organization" ) ), new SimpleId( "test" ), null, 1 );
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test( expected = IllegalArgumentException.class )
     public void loadListParamSize() throws ConnectionException {
 
-        logEntryStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
-                UUIDGenerator.newTimeUUID(), 0 );
+        logEntryStrategy.load( new ApplicationScopeImpl( new SimpleId( "organization" ) ), new SimpleId( "test" ),
+            UUIDGenerator.newTimeUUID(), 0 );
     }
 }
 

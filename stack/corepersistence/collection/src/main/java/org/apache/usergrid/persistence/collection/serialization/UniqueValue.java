@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection.serialization;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 

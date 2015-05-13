@@ -20,28 +20,22 @@ package org.apache.usergrid.persistence.collection.util;/*
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +46,11 @@ import static org.mockito.Mockito.when;
 public class LogEntryMock {
 
 
-    private final TreeMap<UUID, MvccLogEntry> entries = new TreeMap<>(ReversedUUIDComparator.INSTANCE);
+    private final TreeMap<UUID, MvccLogEntry> reversedEntries =
+        new TreeMap<>( ( o1, o2 ) -> UUIDComparator.staticCompare( o1, o2 ) * -1 );
+
+    private final TreeMap<UUID, MvccLogEntry> entries =
+        new TreeMap<>( ( o1, o2 ) -> UUIDComparator.staticCompare( o1, o2 ) );
 
     private final Id entityId;
 
@@ -61,90 +59,108 @@ public class LogEntryMock {
      * Create a mock list of versions of the specified size
      *
      * @param entityId The entity Id to use
-     * @param size The size to use
+     * @param versions The versions to use
      */
-    private LogEntryMock(final Id entityId, final int size ) {
+    private LogEntryMock( final Id entityId, final List<UUID> versions ) {
 
         this.entityId = entityId;
 
-        for ( int i = 0; i < size; i++ ) {
-
-            final UUID version = UUIDGenerator.newTimeUUID();
-
-            entries.put( version,
-                    new MvccLogEntryImpl( entityId, version, Stage.ACTIVE, MvccLogEntry.State.COMPLETE ) );
+        for ( UUID version : versions ) {
+            final MvccLogEntry mvccLogEntry =
+                new MvccLogEntryImpl( entityId, version, Stage.ACTIVE, MvccLogEntry.State.COMPLETE );
+            reversedEntries.put( version, mvccLogEntry );
+            entries.put( version, mvccLogEntry );
         }
     }
 
 
     /**
      * Init the mock with the given data structure
+     *
      * @param logEntrySerializationStrategy The strategy to moc
-     * @param scope
-     * @throws ConnectionException
      */
-    private void initMock(  final MvccLogEntrySerializationStrategy logEntrySerializationStrategy, final  CollectionScope scope )
+    private void initMock( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+                           final ApplicationScope scope )
 
-            throws ConnectionException {
+        throws ConnectionException {
 
         //wire up the mocks
-        when(logEntrySerializationStrategy.load( same( scope ), same( entityId ), any(UUID.class), any(Integer.class)  )).thenAnswer( new Answer<List<MvccLogEntry>>() {
+        when( logEntrySerializationStrategy
+            .load( same( scope ), same( entityId ), any( UUID.class ), any( Integer.class ) ) ).thenAnswer(
 
-
-            @Override
-            public List<MvccLogEntry> answer( final InvocationOnMock invocation ) throws Throwable {
+            invocation -> {
                 final UUID startVersion = ( UUID ) invocation.getArguments()[2];
-                final int count = (Integer)invocation.getArguments()[3];
+                final int count = ( Integer ) invocation.getArguments()[3];
 
                 final List<MvccLogEntry> results = new ArrayList<>( count );
 
-                final Iterator<MvccLogEntry> itr = entries.tailMap( startVersion, true ).values().iterator();
+                final Iterator<MvccLogEntry> itr = reversedEntries.tailMap( startVersion, true ).values().iterator();
 
-                for(int i = 0; i < count && itr.hasNext(); i ++){
+                for ( int i = 0; i < count && itr.hasNext(); i++ ) {
                     results.add( itr.next() );
                 }
 
 
                 return results;
-            }
-        } );
+            } );
+
+
+        //mock in reverse
+
+        when( logEntrySerializationStrategy
+            .loadReversed( same( scope ), same( entityId ), any( UUID.class ), any( Integer.class ) ) ).thenAnswer(
+
+            invocation -> {
+                final UUID startVersion = ( UUID ) invocation.getArguments()[2];
+                final int count = ( Integer ) invocation.getArguments()[3];
+
+
+                final List<MvccLogEntry> results = new ArrayList<>( count );
+
+                final Iterator<MvccLogEntry> itr;
+
+                if ( startVersion == null ) {
+                    itr = entries.values().iterator();
+                }
+                else {
+                    itr = entries.tailMap( startVersion, true ).values().iterator();
+                }
+
+                for ( int i = 0; i < count && itr.hasNext(); i++ ) {
+                    results.add( itr.next() );
+                }
+
+
+                return results;
+            } );
     }
 
 
     /**
-     * Get the entries (ordered from high to low) this mock contains
-     * @return
-     */
-    public Collection<MvccLogEntry> getEntries(){
-        return entries.values();
-    }
-
-    /**
-     *
      * @param logEntrySerializationStrategy The mock to use
      * @param scope The scope to use
      * @param entityId The entityId to use
-     * @param size The number of entries to mock
-     * @throws ConnectionException
+     * @param versions The versions to mock
      */
-    public static LogEntryMock createLogEntryMock(final MvccLogEntrySerializationStrategy logEntrySerializationStrategy, final  CollectionScope scope,final Id entityId, final int size )
+    public static LogEntryMock createLogEntryMock(
+        final MvccLogEntrySerializationStrategy logEntrySerializationStrategy, final ApplicationScope scope,
+        final Id entityId, final List<UUID> versions )
 
-            throws ConnectionException {
-        LogEntryMock mock = new LogEntryMock( entityId, size );
+        throws ConnectionException {
+
+        LogEntryMock mock = new LogEntryMock( entityId, versions );
         mock.initMock( logEntrySerializationStrategy, scope );
 
         return mock;
     }
 
 
-    private static final class ReversedUUIDComparator implements Comparator<UUID> {
+    public Collection<MvccLogEntry> getReversedEntries() {
+        return reversedEntries.values();
+    }
 
-        public static final ReversedUUIDComparator INSTANCE = new ReversedUUIDComparator();
 
-
-        @Override
-        public int compare( final UUID o1, final UUID o2 ) {
-            return UUIDComparator.staticCompare( o1, o2 ) * -1;
-        }
+    public Collection<MvccLogEntry> getEntries() {
+        return entries.values();
     }
 }

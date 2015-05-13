@@ -32,11 +32,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -47,6 +46,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 public class CollectionIT extends AbstractCoreIT {
@@ -55,6 +55,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Rule
     public Application app = new CoreApplication( setup );
+
 
     @Test
     public void testSimpleCrud() throws Exception {
@@ -144,13 +145,12 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( 3, r.size() ); // success
 
         // query verb
-        query = new Query().addEqualityFilter( "verb", "tweet2" );
+        query = Query.fromQL( "verb = 'tweet2'" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 2, r.size() );
 
         // query verb, sort created
-        query = new Query().addEqualityFilter( "verb", "tweet2" );
-        query.addSort( "created" );
+        query = Query.fromQL( "verb = 'tweet2' order by created" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 2, r.size() );
         List<Entity> entities = r.getEntities();
@@ -158,8 +158,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( entities.get( 1 ).getUuid(), activity3.getUuid() );
 
         // query verb, sort ordinal
-        query = new Query().addEqualityFilter( "verb", "tweet2" );
-        query.addSort( "ordinal" );
+        query = Query.fromQL( "verb = 'tweet2' order by ordinal" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 2, r.size() );
         entities = r.getEntities();
@@ -169,9 +168,8 @@ public class CollectionIT extends AbstractCoreIT {
         // TODO: figure out why sort by content ascending is not working here
         // it works in the exact same test in the QueryIndex module/
 
-//        // empty query, sort content
-        query = new Query();
-        query.addSort( "content" );
+        //        // empty query, sort content
+        query = Query.fromQL( "order by content" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 3, r.size() );
         entities = r.getEntities();
@@ -181,14 +179,12 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( entities.get( 2 ).getUuid(), activity3.getUuid() );
 
         // empty query, sort verb
-        query = new Query();
-        query.addSort( "verb" );
+        query = Query.fromQL( "order by verb" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 3, r.size() );
 
         // empty query, sort ordinal
-        query = new Query();
-        query.addSort( "ordinal" );
+        query = Query.fromQL( "order by ordinal" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 3, r.size() );
         entities = r.getEntities();
@@ -197,16 +193,16 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( entities.get( 2 ).getUuid(), activity.getUuid() );
 
         // query ordinal
-        query = new Query().addEqualityFilter( "ordinal", 2 );
+        query = Query.fromQL( "ordinal = 2" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 1, r.size() );
 
         // query ordinal and sort ordinal
-        query = new Query().addEqualityFilter( "ordinal", 2 );
-        query.addSort( "ordinal" );
+        query = Query.fromQL( "ordinal = 2 order by ordinal" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 1, r.size() );
     }
+
 
     @Test
     public void userFirstNameSearch() throws Exception {
@@ -226,11 +222,10 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
-        Query query = new Query();
-        query.addEqualityFilter( "firstname", firstName );
+        Query query = Query.fromQL( "firstname = '" + firstName + "'" );
 
         Results r = em.searchCollection( em.getApplicationRef(), "users", query );
 
@@ -247,18 +242,17 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.update( user );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // search with the old username, should be no results
-        query.addEqualityFilter( "firstname", firstName );
+        query = Query.fromQL( "firstname = '" + firstName + "'" );
         r = em.searchCollection( em.getApplicationRef(), "users", query );
 
         assertEquals( 0, r.size() );
 
         // search with the new username, should be results.
 
-        query = new Query();
-        query.addEqualityFilter( "firstname", newFirstName );
+        query = Query.fromQL( "firstname = '" + newFirstName + "'" );
 
         r = em.searchCollection( em.getApplicationRef(), "users", query );
 
@@ -287,11 +281,10 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
-        Query query = new Query();
-        query.addEqualityFilter( "middlename", middleName );
+        final Query query = Query.fromQL( "middlename = '" + middleName + "'" );
 
         Results r = em.searchCollection( em.getApplicationRef(), "users", query );
 
@@ -320,11 +313,10 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
-        Query query = new Query();
-        query.addEqualityFilter( "lastname", lastName );
+        final Query query = Query.fromQL( "lastname = '" + lastName + "'" );
 
         Results r = em.searchCollection( em.getApplicationRef(), "users", query );
 
@@ -338,42 +330,43 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testGroups() throws Exception {
-        LOG.debug( "testGroups" );
+        LOG.debug("testGroups");
 
         EntityManager em = app.getEntityManager();
-        assertNotNull( em );
+        assertNotNull(em);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "username", "edanuff" );
-        properties.put( "email", "ed@anuff.com" );
+        properties.put("email", "ed@anuff.com");
 
         Entity user1 = em.create( "user", properties );
         assertNotNull( user1 );
 
         properties = new LinkedHashMap<String, Object>();
-        properties.put( "username", "djacobs" );
-        properties.put( "email", "djacobs@gmail.com" );
+        properties.put("username", "djacobs");
+        properties.put("email", "djacobs@gmail.com");
 
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
         properties = new LinkedHashMap<String, Object>();
-        properties.put( "path", "group1" );
+        properties.put("path", "group1");
         Entity group = em.create( "group", properties );
-        assertNotNull( group );
+        assertNotNull(group);
 
         em.addToCollection( group, "users", user1 );
         em.addToCollection( group, "users", user2 );
 
         properties = new LinkedHashMap<String, Object>();
-        properties.put( "nickname", "ed" );
-        em.updateProperties( user1, properties );
+        properties.put("nickname", "ed");
+        em.updateProperties(user1, properties);
 
-        em.refreshIndex();
+        app.refreshIndex();
+        Thread.sleep(1000);
 
-        Results r = em.searchCollection( group, "users",
-            new Query().addEqualityFilter( "nickname", "ed" )
-                .withResultsLevel(Level.LINKED_PROPERTIES ) );
+        final Query query = Query.fromQL( "nickname = 'ed'" );
+
+        Results r = em.searchCollectionConsistent( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ),1 );
 
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
@@ -399,11 +392,10 @@ public class CollectionIT extends AbstractCoreIT {
         Entity group = em.create( "group", properties );
         assertNotNull( group );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
-        Query query = new Query();
-        query.addEqualityFilter( "name", groupName );
+        final Query query = Query.fromQL( "name = '" + groupName + "'" );
 
         Results r = em.searchCollection( em.getApplicationRef(), "groups", query );
 
@@ -432,11 +424,11 @@ public class CollectionIT extends AbstractCoreIT {
         Entity group = em.create( "group", properties );
         assertNotNull( group );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
-        Query query = new Query();
-        query.addEqualityFilter( "title", titleName );
+
+        final Query query = Query.fromQL( "title = '" + titleName + "'" );
 
         Results r = em.searchCollection( em.getApplicationRef(), "groups", query );
 
@@ -490,9 +482,11 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.addToCollection( user, "activities", em.create( "activity", properties ) );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Results r = em.searchCollection( user, "activities", Query.searchForProperty( "verb", "post" ) );
+        final Query query = Query.fromQL( "verb = 'post'" );
+
+        Results r = em.searchCollection( user, "activities", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 2, r.size() );
     }
@@ -522,7 +516,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
         Query query = new Query();
@@ -533,11 +527,11 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity returned = r.getEntities().get( 0 );
 
-        assertEquals( user.getUuid(), returned.getUuid() );
+        assertEquals( user2.getUuid(), returned.getUuid() );
 
         returned = r.getEntities().get( 1 );
 
-        assertEquals( user2.getUuid(), returned.getUuid() );
+        assertEquals( user.getUuid(), returned.getUuid() );
     }
 
 
@@ -565,7 +559,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
         Query query = new Query();
@@ -606,11 +600,11 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "orquerygame", properties );
         assertNotNull( game2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // EntityRef
-        Query query = Query.fromQL( "select * where keywords contains 'Random' "
-                + "OR keywords contains 'Game' order by title desc" );
+        Query query = Query
+            .fromQL( "select * where keywords contains 'Random' " + "OR keywords contains 'Game' order by title desc" );
 
         Results r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -624,8 +618,8 @@ public class CollectionIT extends AbstractCoreIT {
 
         assertEquals( game2.getUuid(), returned.getUuid() );
 
-        query = Query.fromQL( "select * where ( keywords contains 'Random' "
-                + "OR keywords contains 'Game') order by title desc" );
+        query = Query.fromQL(
+            "select * where ( keywords contains 'Random' " + "OR keywords contains 'Game') order by title desc" );
 
         r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -640,8 +634,8 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( game2.getUuid(), returned.getUuid() );
 
         // field order shouldn't matter USERGRID-375
-        query = Query.fromQL( "select * where keywords contains 'blah' "
-                + "OR title contains 'blah'  order by title desc" );
+        query = Query
+            .fromQL( "select * where keywords contains 'blah' " + "OR title contains 'blah'  order by title desc" );
 
         r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -651,8 +645,8 @@ public class CollectionIT extends AbstractCoreIT {
 
         assertEquals( game1.getUuid(), returned.getUuid() );
 
-        query = Query.fromQL( "select * where  title contains 'blah' "
-                + "OR keywords contains 'blah' order by title desc" );
+        query = Query
+            .fromQL( "select * where  title contains 'blah' " + "OR keywords contains 'blah' order by title desc" );
 
         r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -685,23 +679,23 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // overlap
-        Query query = Query.fromQL( "select * where keywords contains 'test' "
-                + "AND keywords contains 'random' order by title desc" );
+        Query query = Query.fromQL(
+            "select * where keywords contains 'test' " + "AND keywords contains 'random' order by title desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 1, r.size() );
 
         // disjoint
-        query = Query.fromQL( "select * where keywords contains 'random' "
-                + "AND keywords contains 'blah' order by title desc" );
+        query = Query.fromQL(
+            "select * where keywords contains 'random' " + "AND keywords contains 'blah' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
 
         // same each side
-        query = Query.fromQL( "select * where keywords contains 'test' "
-                + "AND keywords contains 'test' order by title desc" );
+        query = Query
+            .fromQL( "select * where keywords contains 'test' " + "AND keywords contains 'test' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 2, r.size() );
 
@@ -712,14 +706,14 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( game2.getUuid(), returned.getUuid() );
 
         // one side, left
-        query = Query.fromQL( "select * where keywords contains 'test' "
-                + "AND keywords contains 'foobar' order by title desc" );
+        query = Query.fromQL(
+            "select * where keywords contains 'test' " + "AND keywords contains 'foobar' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
 
         // one side, right
-        query = Query.fromQL( "select * where keywords contains 'foobar' "
-                + "AND keywords contains 'test' order by title desc" );
+        query = Query.fromQL(
+            "select * where keywords contains 'foobar' " + "AND keywords contains 'test' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
     }
@@ -746,7 +740,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // simple not
         Query query = Query.fromQL( "select * where NOT keywords contains 'game'" );
@@ -795,10 +789,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         //search where we don't have a value, should return no results and no cursor
         query = Query.fromQL( "select * where NOT title = 'FooBar'" );
-        r = em.searchCollection( em.getApplicationRef(), "games", query);
-        assertEquals(2, r.size());
-        assertNull(r.getCursor());
-
+        r = em.searchCollection( em.getApplicationRef(), "games", query );
+        assertEquals( 2, r.size() );
+        assertNull( r.getCursor() );
     }
 
 
@@ -812,9 +805,9 @@ public class CollectionIT extends AbstractCoreIT {
         Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
             put( "subObjectArray", new ArrayList<Map<String, Object>>() {{
                 add( new LinkedHashMap<String, Object>() {{
-                    put("subField", "Foo");
-                }});
-            }});
+                    put( "subField", "Foo" );
+                }} );
+            }} );
         }};
 
         Entity entity1 = em.create( "game", properties );
@@ -823,7 +816,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity entity2 = em.create( "game", properties );
         assertNotNull( entity2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
 
         // search for games without sub-field Foo should returned zero entities
@@ -839,7 +832,7 @@ public class CollectionIT extends AbstractCoreIT {
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 1, r.size() );
         assertNotNull( r.getCursor() );
-        assertEquals( entity1, r.getEntities().get( 0 ) );
+        assertEquals( entity2, r.getEntities().get( 0 ) );
 
 
         query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
@@ -847,14 +840,13 @@ public class CollectionIT extends AbstractCoreIT {
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 1, r.size() );
         assertNotNull( r.getCursor() );
-        assertEquals( entity2, r.getEntities().get( 0 ) );
+        assertEquals( entity1, r.getEntities().get( 0 ) );
 
         query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
                      .withCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
         assertNull( r.getCursor() );
-
     }
 
 
@@ -880,7 +872,7 @@ public class CollectionIT extends AbstractCoreIT {
         properties.put( "keywords", "Action, New" );
         em.create( "game", properties );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query query = Query.fromQL( "select * where keywords contains 'hot' or title contains 'hot'" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
@@ -911,15 +903,15 @@ public class CollectionIT extends AbstractCoreIT {
         properties.put( "keywords", "Action, New" );
         Entity thirdGame = em.create( "game", properties );
 
-        em.refreshIndex();//need to track all batches then resolve promises
+        app.refreshIndex();//need to track all batches then resolve promises
 
         Query query = Query.fromQL( "select * where keywords contains 'new' and title contains 'extreme'" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 2, r.size() );
 
-        assertEquals( secondGame.getUuid(), r.getEntities().get( 0 ).getUuid() );
-        assertEquals( thirdGame.getUuid(), r.getEntities().get( 1 ).getUuid() );
+        assertEquals( thirdGame.getUuid(), r.getEntities().get( 0 ).getUuid() );
+        assertEquals( secondGame.getUuid(), r.getEntities().get( 1 ).getUuid() );
     }
 
 
@@ -942,7 +934,7 @@ public class CollectionIT extends AbstractCoreIT {
             entityIds.add( created.getUuid() );
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query query = new Query();
         query.setLimit( 50 );
@@ -951,11 +943,14 @@ public class CollectionIT extends AbstractCoreIT {
 
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
-        assertEquals(initialSize, r.size() );
+        assertEquals( initialSize, r.size() );
 
         // check they're all the same before deletion
         for ( int i = 0; i < initialSize; i++ ) {
-            assertEquals( entityIds.get( i ), r.getEntities().get( i ).getUuid() );
+            final int index = initialSize - i - 1;
+            final UUID entityId = entityIds.get( index );
+
+            assertEquals( entityId, r.getEntities().get( i ).getUuid() );
         }
 
         // now delete 5 items that will span the 10 pages
@@ -967,10 +962,10 @@ public class CollectionIT extends AbstractCoreIT {
             numDeleted++;
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // wait for indexes to be cleared
-        Thread.sleep( 500 );
+        Thread.sleep(1000); //TODO find why we have to wait.  This is a bug
 
         // now query with paging
         query = new Query();
@@ -980,7 +975,11 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( query.getLimit(), r.size() );
 
         for ( int i = 0; i < 10; i++ ) {
-            assertEquals( entityIds.get( i ), r.getEntities().get( i ).getUuid() );
+            final int index = initialSize - i - numDeleted - 1;
+            final UUID entityId = entityIds.get( index );
+
+
+            assertEquals( entityId, r.getEntities().get( i ).getUuid() );
         }
 
         // try the next page, set our cursor, it should be the last 5 entities
@@ -991,7 +990,11 @@ public class CollectionIT extends AbstractCoreIT {
 
         assertEquals( 5, r.size() );
         for ( int i = 10; i < 15; i++ ) {
-            assertEquals( entityIds.get( i ), r.getEntities().get( i - 10 ).getUuid() );
+            final int index = initialSize - i - numDeleted - 1;
+            final UUID entityId = entityIds.get( index );
+
+
+            assertEquals( entityId, r.getEntities().get( i - 10 ).getUuid() );
         }
     }
 
@@ -1016,11 +1019,8 @@ public class CollectionIT extends AbstractCoreIT {
 
         int pageSize = 10;
 
-        em.refreshIndex();
-
-        Query query = new Query();
-        query.setLimit( pageSize );
-        query.addFilter( "index < " + size * 2 );
+        app.refreshIndex();
+        final Query query = Query.fromQL( "index < " + size * 2 + " order by index asc" );
 
         Results r = null;
 
@@ -1048,6 +1048,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertNull( r.getCursor() );
     }
 
+
     @Test
     public void pagingGreaterThanWithCriteria() throws Exception {
         LOG.debug( "pagingGreaterThanWithCriteria" );
@@ -1069,16 +1070,16 @@ public class CollectionIT extends AbstractCoreIT {
 
         int pageSize = 10;
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Query query = Query.fromQL("select * where index >= " + size / 2);
+        Query query = Query.fromQL( "select * where index >= " + size / 2 + " sort by index asc" );
         query.setLimit( pageSize );
-        query.addSort(new Query.SortPredicate("index", Query.SortDirection.ASCENDING));
 
         Results r = null;
 
-        // check they're all the same before deletion
-        for ( int i = 2; i < size / pageSize; i++ ) {
+
+        //2 rounds of iterations since we should get 20->40
+        for ( int i = 0; i < 2; i++ ) {
 
             r = em.searchCollection( em.getApplicationRef(), "pages", query );
 
@@ -1087,7 +1088,11 @@ public class CollectionIT extends AbstractCoreIT {
             assertEquals( pageSize, r.size() );
 
             for ( int j = 0; j < pageSize; j++ ) {
-                assertEquals( entityIds.get( i * pageSize + j ), r.getEntities().get( j ).getUuid() );
+
+                final int indexToCheck = size - ( i * pageSize + j ) - 1;
+                final UUID entityId = entityIds.get( indexToCheck );
+
+                assertEquals( entityId, r.getEntities().get( j ).getUuid() );
             }
 
             query.setCursor( r.getCursor() );
@@ -1119,13 +1124,12 @@ public class CollectionIT extends AbstractCoreIT {
             entityIds.add( created.getUuid() );
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         int pageSize = 10;
 
-        Query query = Query.fromQL("select * where index >= 10 and index <= 29");
+        Query query = Query.fromQL( "select * where index >= 10 and index <= 29 sort by index asc" );
         query.setLimit( pageSize );
-        query.addSort(new Query.SortPredicate("index", Query.SortDirection.ASCENDING));
 
         Results r = null;
 
@@ -1139,7 +1143,9 @@ public class CollectionIT extends AbstractCoreIT {
             assertEquals( pageSize, r.size() );
 
             for ( int j = 0; j < pageSize; j++ ) {
-                assertEquals( entityIds.get( i * pageSize + j ), r.getEntities().get( j ).getUuid() );
+                final int index = size - 1 - ( i * pageSize + j );
+                final UUID expectedId = entityIds.get( index );
+                assertEquals( expectedId, r.getEntities().get( j ).getUuid() );
             }
 
             query.setCursor( r.getCursor() );
@@ -1171,13 +1177,12 @@ public class CollectionIT extends AbstractCoreIT {
             entityIds.add( created.getUuid() );
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         int pageSize = 10;
 
-        Query query = Query.fromQL("select * where index >= 10 and index <= 29");
+        Query query = Query.fromQL( "select * where index >= 10 and index <= 29 order by index asc" );
         query.setLimit( pageSize );
-        query.addSort(new Query.SortPredicate("index", Query.SortDirection.ASCENDING));
 
         Results r = em.searchCollection( em.getApplicationRef(), "pages", query );
 
@@ -1189,7 +1194,12 @@ public class CollectionIT extends AbstractCoreIT {
             assertEquals( pageSize, r.size() );
 
             for ( int j = 0; j < pageSize; j++ ) {
-                assertEquals( entityIds.get( i * pageSize + j ), r.getEntities().get( j ).getUuid() );
+                final int expectedIndex = i * pageSize + j;
+                final UUID entityId = entityIds.get( expectedIndex );
+
+                final UUID returnedId = r.getEntities().get( j ).getUuid();
+
+                assertEquals( entityId, returnedId );
             }
 
             r = r.getNextPageResults();
@@ -1220,23 +1230,20 @@ public class CollectionIT extends AbstractCoreIT {
         root.put( "subentity", subEntity );
 
 
-
         Entity saved = em.create( "test", root );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Query query = new Query();
-        query.addEqualityFilter( "rootprop1", "simpleprop" );
-
-        Results results = em.searchCollection( em.getApplicationRef(), "tests", query );
-
-        Entity entity = results.getEntitiesMap().get( saved.getUuid() );
+        Query query = Query.fromQL( "rootprop1 = 'simpleprop'" );
+        Entity entity;
+        Results results;
+        results = em.searchCollection( em.getApplicationRef(), "tests", query );
+        entity = results.getEntitiesMap().get( saved.getUuid() );
 
         assertNotNull( entity );
 
         // query on the nested int value
-        query = new Query();
-        query.addEqualityFilter( "subentity.intprop", 10 );
+        query = Query.fromQL( "subentity.intprop = 10" );
 
         results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
@@ -1245,9 +1252,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertNotNull( entity );
 
         // query on the nexted tokenized value
-        query = new Query();
-        query.addContainsFilter( "subentity.substring", "tokenized" );
-        query.addContainsFilter( "subentity.substring", "indexed" );
+        query = Query.fromQL( "subentity.substring contains 'tokenized' and subentity.substring contains 'indexed'" );
 
         results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
@@ -1274,10 +1279,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity saved = em.create( "test", jsonData );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Query query = new Query();
-        query.addEqualityFilter( "intprop", 10 );
+        Query query = Query.fromQL( "intprop = 10" );
 
         Results results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
@@ -1286,8 +1290,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertNotNull( entity );
 
         // query on the nested int value
-        query = new Query();
-        query.addEqualityFilter( "array", "val1" );
+        query = Query.fromQL( "array = 'val1'" );
 
         results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
@@ -1296,8 +1299,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertNotNull( entity );
 
         // query on the nexted tokenized value
-        query = new Query();
-        query.addEqualityFilter( "array", "val2" );
+        query = Query.fromQL( "array = 'val2'" );
 
         results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
@@ -1305,8 +1307,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         assertNotNull( entity );
 
-        query = new Query();
-        query.addEqualityFilter( "array", "val3" );
+        query = Query.fromQL( "array = 'val3'" );
 
         results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
@@ -1314,8 +1315,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         assertNull( entity );
 
-        query = new Query();
-        query.addContainsFilter( "array", "spaces" );
+        query = Query.fromQL( "array contains 'spaces'" );
         results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
         entity = results.getEntitiesMap().get( saved.getUuid() );
@@ -1338,10 +1338,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity saved = em.create( "test", props );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
-        Query query = new Query();
-        query.addEqualityFilter( "myString", "My simple string" );
+        Query query = Query.fromQL( "myString = 'My simple string'" );
 
         Results results = em.searchCollection( em.getApplicationRef(), "tests", query );
 
@@ -1355,7 +1354,7 @@ public class CollectionIT extends AbstractCoreIT {
     public void testSelectTerms() throws Exception {
         LOG.debug( "testSelectTerms" );
         EntityManager em = app.getEntityManager();
-                assertNotNull( em );
+        assertNotNull( em );
 
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -1364,7 +1363,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "user", properties );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         String s = "select username, email where username = 'edanuff'";
         Query query = Query.fromQL( s );
@@ -1373,11 +1372,11 @@ public class CollectionIT extends AbstractCoreIT {
         assertTrue( r.size() == 1 );
 
         // selection results should be a list of lists
-//        List<Object> sr = query.getSelectionResults( r );
-//        assertTrue( sr.size() == 1 );
-//        List firstResult = ( List ) sr.get( 0 );
-//        assertTrue( "edanuff".equals( firstResult.get( 0 ) ) );
-//        assertTrue( "ed@anuff.com".equals( firstResult.get( 1 ) ) );
+        //        List<Object> sr = query.getSelectionResults( r );
+        //        assertTrue( sr.size() == 1 );
+        //        List firstResult = ( List ) sr.get( 0 );
+        //        assertTrue( "edanuff".equals( firstResult.get( 0 ) ) );
+        //        assertTrue( "ed@anuff.com".equals( firstResult.get( 1 ) ) );
     }
 
 
@@ -1394,7 +1393,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "user", properties );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         String s = "select {name: username, email: email} where username = 'edanuff'";
         Query query = Query.fromQL( s );
@@ -1405,11 +1404,11 @@ public class CollectionIT extends AbstractCoreIT {
         // TODO: do we need selection results?
 
         // selection results should be a list of lists
-//        List<Object> sr = query.getSelectionResults( r );
-//        assertTrue( sr.size() == 1 );
-//        Map firstResult = ( Map ) sr.get( 0 );
-//        assertTrue( "edanuff".equals( firstResult.get( "name" ) ) );
-//        assertTrue( "ed@anuff.com".equals( firstResult.get( "email" ) ) );
+        //        List<Object> sr = query.getSelectionResults( r );
+        //        assertTrue( sr.size() == 1 );
+        //        Map firstResult = ( Map ) sr.get( 0 );
+        //        assertTrue( "edanuff".equals( firstResult.get( "name" ) ) );
+        //        assertTrue( "ed@anuff.com".equals( firstResult.get( "email" ) ) );
     }
 
 
@@ -1424,18 +1423,18 @@ public class CollectionIT extends AbstractCoreIT {
         properties.put( "username", "ed@anuff.com" );
         properties.put( "email", "ed@anuff.com" );
 
-        em.create( "user", properties );
+        final Entity entity = em.create( "user", properties );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         String s = "select * where username = 'ed@anuff.com'";
         Query query = Query.fromQL( s );
 
         Results r = em.searchCollection( em.getApplicationRef(), "users", query );
         assertTrue( r.size() == 1 );
+        assertEquals( entity.getUuid(), r.getId() );
 
         // selection results should be a list of lists
-        Entity entity = r.getEntity();
 
         assertTrue( "ed@anuff.com".equals( entity.getProperty( "username" ) ) );
         assertTrue( "ed@anuff.com".equals( entity.getProperty( "email" ) ) );
@@ -1448,7 +1447,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.createConnection( foo, "testconnection", entity );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // now query via the testConnection, this should work
 
@@ -1459,11 +1458,12 @@ public class CollectionIT extends AbstractCoreIT {
         r = em.searchConnectedEntities( foo, query );
 
         assertEquals( "connection must match", 1, r.size() );
+        assertEquals( entity.getUuid(), r.getId() );
 
         // selection results should be a list of lists
-        entity = r.getEntity();
-        assertTrue( "ed@anuff.com".equals( entity.getProperty( "username" ) ) );
-        assertTrue( "ed@anuff.com".equals( entity.getProperty( "email" ) ) );
+        final Entity entityResults = r.getEntity();
+        assertEquals( "ed@anuff.com", entityResults.getProperty( "username" ) );
+        assertEquals( "ed@anuff.com", entityResults.getProperty( "email" ) );
     }
 
 
@@ -1491,11 +1491,10 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "loveobject", properties );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         location = new LinkedHashMap<String, Object>();
-        location.put( "Place",
-            "Via Pietro Maroncelli, 48, 62012 Santa Maria Apparente Province of Macerata, Italy" );
+        location.put( "Place", "Via Pietro Maroncelli, 48, 62012 Santa Maria Apparente Province of Macerata, Italy" );
         location.put( "Longitude", 13.693080199999999 );
         location.put( "Latitude", 43.2985019 );
 
@@ -1510,25 +1509,24 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "loveobject", properties );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // String s = "select * where Flag = 'requested'";
         // String s = "select * where Flag = 'requested' and NOT Recipient.Username =
         // 'fb_536692245' order by created asc";
 
-        String s = "select * where Flag = 'requested' and NOT Recipient.Username "
-                + "= 'fb_536692245' order by created asc";
+        String s =
+            "select * where Flag = 'requested' and NOT Recipient.Username " + "= 'fb_536692245' order by created asc";
         Query query = Query.fromQL( s );
 
         Results r = em.searchCollection( em.getApplicationRef(), "loveobjects", query );
         assertTrue( r.size() == 1 );
 
-        String username = (String)( (Map)r.getEntities().get( 0 )
-                .getProperty( "Recipient" ) ).get( "Username" );
+        String username = ( String ) ( ( Map ) r.getEntities().get( 0 ).getProperty( "Recipient" ) ).get( "Username" );
 
         // selection results should be a list of lists
-//        List<Object> sr = query.getSelectionResults( r );
-//        assertTrue( sr.size() == 1 );
+        //        List<Object> sr = query.getSelectionResults( r );(
+        //        assertTrue( sr.size() == 1 );
 
         assertEquals( "fb_100000787138041", username );
     }
@@ -1556,7 +1554,7 @@ public class CollectionIT extends AbstractCoreIT {
             createdEntities.add( created );
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getCollection( em.getApplicationRef(), "users", null, 50, Level.ALL_PROPERTIES, false );
 
@@ -1566,8 +1564,10 @@ public class CollectionIT extends AbstractCoreIT {
 
         // check they're all the same before deletion
         for ( int i = 0; i < size; i++ ) {
-            assertEquals( createdEntities.get( i ).getUuid(), r.getEntities().get( i ).getUuid() );
-            assertTrue( r.getEntities().get( i ) instanceof User );
+            final Entity entity = r.getEntities().get( size - i - 1 );
+
+            assertEquals( createdEntities.get( i ).getUuid(), entity.getUuid() );
+            assertTrue( entity instanceof User );
         }
     }
 
@@ -1591,14 +1591,14 @@ public class CollectionIT extends AbstractCoreIT {
         }
         catch ( Exception nie ) {
             error = nie.getMessage();
-//            entityType = nie.getEntityType();
-//            propertyName = nie.getPropertyName();
+            //            entityType = nie.getEntityType();
+            //            propertyName = nie.getPropertyName();
         }
 
-//        assertEquals( "Entity 'user' with property named '' is not indexed.  "
-//                + "You cannot use the this field in queries.", error );
-//        assertEquals( "user", entityType );
-//        assertEquals( "", propertyName );
+        //        assertEquals( "Entity 'user' with property named '' is not indexed.  "
+        //                + "You cannot use the this field in queries.", error );
+        //        assertEquals( "user", entityType );
+        //        assertEquals( "", propertyName );
     }
 
 
@@ -1622,14 +1622,14 @@ public class CollectionIT extends AbstractCoreIT {
         }
         catch ( Exception nie ) {
             error = nie.getMessage();
-//            entityType = nie.getEntityType();
-//            propertyName = nie.getPropertyName();
+            //            entityType = nie.getEntityType();
+            //            propertyName = nie.getPropertyName();
         }
 
-//        assertEquals( "Entity 'user' with property named '' is not indexed.  "
-//                + "You cannot use the this field in queries.", error );
-//        assertEquals( "user", entityType );
-//        assertEquals( "", propertyName );
+        //        assertEquals( "Entity 'user' with property named '' is not indexed.  "
+        //                + "You cannot use the this field in queries.", error );
+        //        assertEquals( "user", entityType );
+        //        assertEquals( "", propertyName );
     }
 
 
@@ -1651,7 +1651,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // overlap
         Query query = new Query();
@@ -1685,7 +1685,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // overlap
         Query query = new Query();
@@ -1719,7 +1719,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity createUser2 = em.create( user2 );
         assertNotNull( createUser2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // overlap
         Query query = new Query();
@@ -1732,7 +1732,7 @@ public class CollectionIT extends AbstractCoreIT {
     }
 
 
-    @Test(expected = DuplicateUniquePropertyExistsException.class)
+    @Test( expected = DuplicateUniquePropertyExistsException.class )
     public void duplicateIdentifierTest() throws Exception {
         LOG.debug( "duplicateIdentifierTest" );
 
@@ -1754,7 +1754,7 @@ public class CollectionIT extends AbstractCoreIT {
     }
 
 
-    @Test(expected = DuplicateUniquePropertyExistsException.class)
+    @Test( expected = DuplicateUniquePropertyExistsException.class )
     public void duplicateNameTest() throws Exception {
         LOG.debug( "duplicateNameTest" );
 

@@ -26,11 +26,12 @@ import java.util.UUID;
 
 import org.junit.Test;
 
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -43,8 +44,8 @@ public class TargetDirectedEdgeDescendingComparatorTest {
     @Test
     public void sameEdges() {
 
-        final Id sourceId = createId( "source" );
-        final Id targetId = createId( "target" );
+        final Id sourceId = IdGenerator.createId( "source" );
+        final Id targetId = IdGenerator.createId( "target" );
         final String type = "type";
         final long timestamp = 10000;
 
@@ -65,8 +66,8 @@ public class TargetDirectedEdgeDescendingComparatorTest {
     @Test
     public void timestampDifferent() {
 
-        final Id sourceId = createId( "source" );
-        final Id targetId = createId( "target" );
+        final Id sourceId = IdGenerator.createId( "source" );
+        final Id targetId = IdGenerator.createId( "target" );
         final String type = "type";
         final long timestamp = 10000;
 
@@ -88,9 +89,9 @@ public class TargetDirectedEdgeDescendingComparatorTest {
     @Test
     public void uuidDifferent() {
 
-        final Id sourceId = createId( "source" );
-        final Id targetId1 = createId( "target" );
-        final Id targetId2 = createId( "target" );
+        final Id sourceId = IdGenerator.createId( "source" );
+        final Id targetId1 = IdGenerator.createId( "target" );
+        final Id targetId2 = IdGenerator.createId( "target" );
         final String type = "type";
         final long timestamp = 10000;
 
@@ -114,9 +115,9 @@ public class TargetDirectedEdgeDescendingComparatorTest {
 
         final UUID targetId = UUIDGenerator.newTimeUUID();
 
-        final Id sourceId = createId( "source" );
-        final Id targetId1 = createId( targetId, "target1" );
-        final Id targetId2 = createId( targetId, "target2" );
+        final Id sourceId = IdGenerator.createId( "source" );
+        final Id targetId1 = IdGenerator.createId( targetId, "target1" );
+        final Id targetId2 = IdGenerator.createId( targetId, "target2" );
         final String type = "type";
         final long timestamp = 10000;
 

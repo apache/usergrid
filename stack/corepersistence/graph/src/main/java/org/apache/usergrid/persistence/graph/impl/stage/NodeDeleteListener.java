@@ -42,5 +42,5 @@ public interface NodeDeleteListener {
        * @return An observable that emits the total number of edges that have been removed with this node both as the
        *         target and source
        */
-      public Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp );
+    Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp );
 }

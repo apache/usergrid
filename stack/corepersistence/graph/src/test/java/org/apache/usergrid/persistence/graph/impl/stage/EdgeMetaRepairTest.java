@@ -30,10 +30,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -48,7 +48,6 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
@@ -76,7 +75,6 @@ public class EdgeMetaRepairTest {
     protected EdgeSerialization storageEdgeSerialization;
 
     @Inject
-    @ProxyImpl
     protected EdgeMetadataSerialization edgeMetadataSerialization;
 
     @Inject
@@ -102,7 +100,7 @@ public class EdgeMetaRepairTest {
     public void cleanTargetNoEdgesNoMeta() {
         //do no writes, then execute a cleanup with no meta data
 
-        final Id targetId = createId( "target" );
+        final Id targetId = IdGenerator.createId( "target" );
         final String test = "test";
         final long version = System.currentTimeMillis();
 
@@ -152,22 +150,22 @@ public class EdgeMetaRepairTest {
     @Test
     public void cleanTargetMultipleEdge() throws ConnectionException {
 
-        Id targetId = createId( "target" );
+        Id targetId = IdGenerator.createId( "target" );
 
-        MarkedEdge edge1 = createEdge( createId( "source1" ), "test", targetId );
+        MarkedEdge edge1 = createEdge( IdGenerator.createId( "source1" ), "test", targetId );
 
 
         storageEdgeSerialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge1 ).execute();
 
-        MarkedEdge edge2 = createEdge( createId( "source2" ), "test", targetId );
+        MarkedEdge edge2 = createEdge( IdGenerator.createId( "source2" ), "test", targetId );
 
         storageEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge2 ).execute();
 
-        MarkedEdge edge3 = createEdge( createId( "source3" ), "test", targetId );
+        MarkedEdge edge3 = createEdge( IdGenerator.createId( "source3" ), "test", targetId );
 
         storageEdgeSerialization.writeEdge( scope, edge3, UUIDGenerator.newTimeUUID() ).execute();
 
@@ -223,7 +221,7 @@ public class EdgeMetaRepairTest {
     @Test
     public void cleanTargetMultipleEdgeBuffer() throws ConnectionException {
 
-        final Id targetId = createId( "target" );
+        final Id targetId = IdGenerator.createId( "target" );
         final String edgeType = "test";
 
         final int size = graphFig.getRepairConcurrentSize() * 2;
@@ -232,7 +230,7 @@ public class EdgeMetaRepairTest {
 
 
         for ( int i = 0; i < size; i++ ) {
-            MarkedEdge edge = createEdge( createId( "source" + i ), edgeType, targetId );
+            MarkedEdge edge = createEdge( IdGenerator.createId( "source" + i ), edgeType, targetId );
 
             storageEdgeSerialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
@@ -315,22 +313,22 @@ public class EdgeMetaRepairTest {
     @Test
     public void cleanSourceMultipleEdge() throws ConnectionException {
 
-        Id sourceId = createId( "source" );
+        Id sourceId = IdGenerator.createId( "source" );
 
-        MarkedEdge edge1 = createEdge( sourceId, "test", createId( "target1" ) );
+        MarkedEdge edge1 = createEdge( sourceId, "test", IdGenerator.createId( "target1" ) );
 
 
         storageEdgeSerialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge1 ).execute();
 
-        MarkedEdge edge2 = createEdge( sourceId, "test", createId( "target2" ) );
+        MarkedEdge edge2 = createEdge( sourceId, "test", IdGenerator.createId( "target2" ) );
 
         storageEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge2).execute();
 
-        MarkedEdge edge3 = createEdge( sourceId, "test", createId( "target3" ) );
+        MarkedEdge edge3 = createEdge( sourceId, "test", IdGenerator.createId( "target3" ) );
 
         storageEdgeSerialization.writeEdge( scope, edge3, UUIDGenerator.newTimeUUID() ).execute();
 
@@ -386,7 +384,7 @@ public class EdgeMetaRepairTest {
     @Test
     public void cleanSourceMultipleEdgeBuffer() throws ConnectionException {
 
-        Id sourceId = createId( "source" );
+        Id sourceId = IdGenerator.createId( "source" );
 
         final String edgeType = "test";
 
@@ -396,7 +394,7 @@ public class EdgeMetaRepairTest {
 
 
         for ( int i = 0; i < size; i++ ) {
-            MarkedEdge edge = createEdge( sourceId, edgeType, createId( "target" + i ) );
+            MarkedEdge edge = createEdge( sourceId, edgeType, IdGenerator.createId( "target" + i ) );
 
             storageEdgeSerialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 

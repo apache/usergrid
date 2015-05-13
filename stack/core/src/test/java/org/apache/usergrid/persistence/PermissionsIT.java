@@ -31,7 +31,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.entities.Role;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
@@ -151,10 +151,10 @@ public class PermissionsIT extends AbstractCoreIT {
         assertEquals( "proper number of group roles not set", 1, roles.size() );
         dump( "group roles", roles );
 
-        em.refreshIndex();
+        app.refreshIndex();
         em.addUserToGroupRole( user.getUuid(), group.getUuid(), "admin" );
 
-        em.refreshIndex();
+        app.refreshIndex();
         Results r = em.getUsersInGroupRole( group.getUuid(), "admin", Level.ALL_PROPERTIES );
         assertEquals( "proper number of users in group role not set", 1, r.size() );
         dump( "entities", r.getEntities() );

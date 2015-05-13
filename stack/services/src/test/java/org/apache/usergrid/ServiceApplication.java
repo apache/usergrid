@@ -73,7 +73,7 @@ public class ServiceApplication extends CoreApplication {
         ServiceResults testRequest = testRequest( action, expectedCount, true, params );
 
         if ( !action.equals( ServiceAction.GET )) {
-            getEntityManager().refreshIndex();
+            this.refreshIndex();
         }
 
         return testRequest;
@@ -105,7 +105,7 @@ public class ServiceApplication extends CoreApplication {
         dumpResults( results );
 
         if ( !action.name().equals( ServiceAction.GET )) {
-            getEntityManager().refreshIndex();
+            setup.getEntityIndex().refresh();
         }
 
         return results;
@@ -131,14 +131,14 @@ public class ServiceApplication extends CoreApplication {
         put( "name", name );
 
         Entity entity = testRequest( ServiceAction.POST, 1, pluralize( entityType ) ).getEntity();
-        getEntityManager().refreshIndex();
+        setup.getEntityIndex().refresh();
         return entity;
     }
 
 
     public void createConnection( Entity subject, String verb, Entity noun ) throws Exception {
         sm.getEntityManager().createConnection( subject, verb, noun );
-        getEntityManager().refreshIndex();
+        setup.getEntityIndex().refresh();
     }
 
 
@@ -153,7 +153,7 @@ public class ServiceApplication extends CoreApplication {
         dumpResults( results );
 
         if ( !action.name().equals( ServiceAction.GET )) {
-            getEntityManager().refreshIndex();
+            setup.getEntityIndex().refresh();
         }
 
         return results;
@@ -169,7 +169,7 @@ public class ServiceApplication extends CoreApplication {
         assertNotNull( results.getData() );
 
         if ( !action.name().equals( ServiceAction.GET )) {
-            getEntityManager().refreshIndex();
+            setup.getEntityIndex().refresh();
         }
 
         // dump( results.getData() );
@@ -179,20 +179,20 @@ public class ServiceApplication extends CoreApplication {
 
     public Entity createRole( String name, String title, int inactivity ) throws Exception {
         Entity createRole = sm.getEntityManager().createRole( name, title, inactivity );
-        getEntityManager().refreshIndex();
+        setup.getEntityIndex().refresh();
         return createRole;
     }
 
 
     public void grantRolePermission( String role, String permission ) throws Exception {
         sm.getEntityManager().grantRolePermission( role, permission );
-        getEntityManager().refreshIndex();
+        setup.getEntityIndex().refresh();
     }
 
 
     public void grantUserPermission( UUID uuid, String permission ) throws Exception {
         sm.getEntityManager().grantUserPermission( uuid, permission );
-        getEntityManager().refreshIndex();
+        setup.getEntityIndex().refresh();
     }
 
 

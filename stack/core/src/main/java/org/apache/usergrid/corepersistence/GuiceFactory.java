@@ -22,21 +22,22 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.Properties;
 
+import javax.inject.Named;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.PersistenceModule;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 import com.netflix.config.ConfigurationManager;
 
 import me.prettyprint.cassandra.service.CassandraHost;
@@ -46,25 +47,28 @@ import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 /**
  * Factory for configuring Guice then returning it
  */
-@Singleton
-public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAware {
+@Component
+public class GuiceFactory implements FactoryBean<Injector> {
 
     private static final Logger logger = LoggerFactory.getLogger( GuiceFactory.class );
 
-    private final CassandraHostConfigurator chc;
+    @Autowired
+    private CassandraHostConfigurator chc;
 
-    private final Properties systemProperties;
+    @Autowired
+    @Named("properties")
+    private Properties systemProperties;
 
-
+    @Autowired
     private ApplicationContext applicationContext;
 
     private Injector injector;
 
 
-
-    public GuiceFactory( final CassandraHostConfigurator chc, final Properties systemProperties  ) {
-        this.chc = chc;
-        this.systemProperties = systemProperties;
+    public GuiceFactory() {
+        //        this.chc = chc;
+        //        this.systemProperties = systemProperties;
+        //        this.applicationContext = applicationContext;
     }
 
 
@@ -84,14 +88,15 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
             if ( hosts.length == 0 ) {
                 throw new RuntimeException( "Fatal error: no Cassandra hosts configured" );
             }
-            String sep = "";
+
             for ( CassandraHost host : hosts ) {
                 if ( StringUtils.isEmpty( host.getHost() ) ) {
                     throw new RuntimeException( "Fatal error: Cassandra hostname cannot be empty" );
                 }
-                hostsString = hostsString + sep + host.getHost();
-                sep = ",";
+                hostsString += host.getHost() + ",";
             }
+
+            hostsString = hostsString.substring( 0, hostsString.length() - 1 );
 
             logger.info( "hostsString: " + hostsString );
 
@@ -100,21 +105,14 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
             // Some Usergrid properties must be mapped to Core Persistence properties
             cpProps.put( "cassandra.hosts", hostsString );
             cpProps.put( "cassandra.port", hosts[0].getPort() );
-            cpProps.put( "cassandra.cluster_name",  systemProperties.getProperty( "cassandra.cluster" ) );
 
-            String cassRemoteString = ( String ) systemProperties.getProperty( "cassandra.use_remote" );
-            if ( cassRemoteString != null && cassRemoteString.equals( "false" ) ) {
-                cpProps.put( "cassandra.embedded", "true" );
-            }
-            else {
-                cpProps.put( "cassandra.embedded", "false" );
-            }
+            cpProps.put( "cassandra.cluster_name", getAndValidateProperty( "cassandra.cluster" ) );
 
-            cpProps.put( "collections.keyspace.strategy.class",
-                systemProperties.getProperty( "cassandra.keyspace.strategy" ) );
+            cpProps
+                .put( "collections.keyspace.strategy.class", getAndValidateProperty( "cassandra.keyspace.strategy" ) );
 
             cpProps.put( "collections.keyspace.strategy.options",
-                systemProperties.getProperty( "cassandra.keyspace.replication" ) );
+                getAndValidateProperty( "cassandra.keyspace.replication" ) );
 
             logger.debug( "Set Cassandra properties for Core Persistence: " + cpProps.toString() );
 
@@ -128,10 +126,21 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
             throw new RuntimeException( "Fatal error loading configuration.", e );
         }
 
-        //this is seriously fugly, and needs removed
-        injector = Guice.createInjector( new CoreModule( applicationContext ) );
+
+        //we have to inject a couple of spring beans into our Guice.  Wire it with PersistenceModule
+        injector = Guice.createInjector( new CoreModule(), new PersistenceModule( applicationContext ) );
 
         return injector;
+    }
+
+
+    private String getAndValidateProperty( final String propName ) {
+
+        final String propValue = systemProperties.getProperty( propName );
+
+        Preconditions.checkNotNull( propValue, propName + " cannot be unset. Set this in your properties" );
+
+        return propValue;
     }
 
 
@@ -144,11 +153,5 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
     @Override
     public boolean isSingleton() {
         return true;
-    }
-
-
-    @Override
-    public void setApplicationContext( final ApplicationContext applicationContext ) throws BeansException {
-        this.applicationContext = applicationContext;
     }
 }

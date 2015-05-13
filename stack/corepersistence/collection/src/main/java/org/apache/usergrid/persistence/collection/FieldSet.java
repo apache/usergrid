@@ -18,7 +18,7 @@
  */
 package org.apache.usergrid.persistence.collection;
 
-import org.apache.usergrid.persistence.model.entity.Id;
+
 import org.apache.usergrid.persistence.model.field.Field;
 
 

@@ -23,7 +23,11 @@ package org.apache.usergrid.persistence.collection.cache;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.persistence.collection.*;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.FieldSet;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -70,8 +74,8 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
     }
 
     @Override
-    public Observable<FieldSet> getEntitiesFromFields( final Collection<Field> fields ) {
-        return targetEntityCollectionManager.getEntitiesFromFields( fields );
+    public Observable<FieldSet> getEntitiesFromFields(  final String entityType, final Collection<Field> fields) {
+        return targetEntityCollectionManager.getEntitiesFromFields( entityType, fields );
     }
 
     @Override
@@ -81,8 +85,8 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
 
 
     @Override
-    public Observable<Id> delete( final Id entityId ) {
-        return targetEntityCollectionManager.delete( entityId ).doOnNext( new Action1<Id>() {
+    public Observable<Id> mark( final Id entityId ) {
+        return targetEntityCollectionManager.mark( entityId ).doOnNext( new Action1<Id>() {
             @Override
             public void call( final Id id ) {
                 entityCache.invalidate( id );
@@ -110,9 +114,10 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
     }
 
 
+
     @Override
-    public Observable<Id> getIdField( final Field field ) {
-        return targetEntityCollectionManager.getIdField( field );
+    public Observable<Id> getIdField( final String entityType,  final Field field ) {
+        return targetEntityCollectionManager.getIdField( entityType, field );
     }
 
 
@@ -123,8 +128,14 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
 
 
     @Override
-    public Observable<Entity> update( final Entity entity ) {
-        return targetEntityCollectionManager.update( entity ).doOnNext( cacheAdd );
+    public Observable<MvccLogEntry> getVersions( final Id entityId ) {
+        return targetEntityCollectionManager.getVersions( entityId );
+    }
+
+
+    @Override
+    public Observable<MvccLogEntry> delete( final Collection<MvccLogEntry> entries ) {
+        return targetEntityCollectionManager.delete( entries );
     }
 
 

@@ -61,27 +61,16 @@ public class EdgeDeleteListenerImpl implements EdgeDeleteListener {
 
 
         return edgeDeleteRepair.repair( scope, edge, eventTimestamp )
-                               .flatMap( new Func1<MarkedEdge, Observable<Integer>>() {
-                                   @Override
-                                   public Observable<Integer> call( final MarkedEdge markedEdge ) {
+                               .flatMap( markedEdge -> {
 
-                                       Observable<Integer> sourceDelete = edgeMetaRepair
-                                               .repairSources( scope, edge.getSourceNode(), edge.getType(),
-                                                       maxTimestamp );
+                                   Observable<Integer> sourceDelete = edgeMetaRepair
+                                           .repairSources( scope, edge.getSourceNode(), edge.getType(), maxTimestamp );
 
-                                       Observable<Integer> targetDelete = edgeMetaRepair
-                                               .repairTargets( scope, edge.getTargetNode(), edge.getType(),
-                                                       maxTimestamp );
+                                   Observable<Integer> targetDelete = edgeMetaRepair
+                                           .repairTargets( scope, edge.getTargetNode(), edge.getType(), maxTimestamp );
 
-                                       return Observable.zip( sourceDelete, targetDelete,
-                                               new Func2<Integer, Integer, Integer>() {
-                                                   @Override
-                                                   public Integer call( final Integer sourceCount,
-                                                                        final Integer targetCount ) {
-                                                       return sourceCount + targetCount;
-                                                   }
-                                               } );
-                                   }
+                                   return Observable.zip( sourceDelete, targetDelete,
+                                       ( sourceCount, targetCount ) -> sourceCount + targetCount );
                                } );
     }
 }

@@ -15,32 +15,42 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.multibindings.Multibinder;
 
-import org.apache.usergrid.corepersistence.migration.EntityDataMigration;
+import org.safehaus.guicyfig.GuicyFigModule;
+
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
+import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
+import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
+import org.apache.usergrid.corepersistence.migration.CoreMigration;
+import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
-import org.apache.usergrid.corepersistence.migration.GraphShardVersionMigration;
-import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
-import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
-import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
-import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
+import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
+import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
+import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
-import org.apache.usergrid.persistence.index.impl.BufferQueue;
-import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
-import org.apache.usergrid.persistence.map.guice.MapModule;
-import org.apache.usergrid.persistence.queue.guice.QueueModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 
 
 /**
@@ -48,75 +58,101 @@ import org.springframework.context.ApplicationContext;
  */
 public class CoreModule  extends AbstractModule {
 
-    /**
-     * TODO this is a circular dependency, and should be refactored
-     */
-    private LazyEntityManagerFactoryProvider lazyEntityManagerFactoryProvider;
+
 
     public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
 
 
 
-    public CoreModule( final ApplicationContext context ) {
-        this.lazyEntityManagerFactoryProvider = new LazyEntityManagerFactoryProvider( context );
-    }
-
     @Override
     protected void configure() {
 
 
-        //See TODO, this is fugly
-        bind(EntityManagerFactory.class).toProvider( lazyEntityManagerFactoryProvider );
+//        //See TODO, this is fugly
+//        bind(EntityManagerFactory.class).toProvider( lazyEntityManagerFactoryProvider );
 
         install( new CommonModule());
-        install(new CollectionModule());
-        install(new GraphModule());
-        install( new IndexModule() );
-//        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
-//        install(new QueueModule());
+        install( new CollectionModule() {
+            /**
+             * configure our migration data provider for all entities in the system
+             */
+            @Override
+           public void configureMigrationProvider() {
+
+                bind(new TypeLiteral<MigrationDataProvider<EntityIdScope>>(){}).to(
+                    AllEntitiesInSystemImpl.class );
+           }
+        } );
+        install( new GraphModule() {
+
+            /**
+             * Override the observable that needs to be used for migration
+             */
+            @Override
+            public void configureMigrationProvider() {
+                bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} ).to(
+                    AllNodesInGraphImpl.class );
+            }
+        } );
+        install(new IndexModule(){
+            @Override
+            public void configureMigrationProvider() {
+                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} ).to(
+                    AllApplicationsObservableImpl.class );
+            }
+        });
+       //        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
+       //        install(new QueueModule());
 
         bind(ManagerCache.class).to( CpManagerCache.class );
+        bind(ApplicationIdCacheFactory.class);
 
-        Multibinder<DataMigration> dataMigrationMultibinder =
-                Multibinder.newSetBinder( binder(), DataMigration.class );
+
+        /**
+         * Create our migrations for within our core plugin
+         */
+        Multibinder<DataMigration<EntityIdScope>> dataMigrationMultibinder =
+                    Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration<EntityIdScope>>() {}, CoreMigration.class );
+
+
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
-        dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
-        dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
-
-        Multibinder<EntityDeleted> entityBinder =
-            Multibinder.newSetBinder(binder(), EntityDeleted.class);
-        entityBinder.addBinding().to(EntityDeletedHandler.class);
-
-        Multibinder<EntityVersionDeleted> versionBinder =
-            Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
-        versionBinder.addBinding().to(EntityVersionDeletedHandler.class);
-
-        Multibinder<EntityVersionCreated> versionCreatedMultibinder =
-            Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
-        versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
 
 
-    }
+        //wire up the collection migration plugin
+        final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
+        plugins.addBinding().to( CoreMigrationPlugin.class );
+        plugins.addBinding().to( AppInfoMigrationPlugin.class );
+        plugins.addBinding().to( MigrationModuleVersionPlugin.class );
+
+        bind( AllApplicationsObservable.class ).to( AllApplicationsObservableImpl.class );
+        bind( AllEntityIdsObservable.class).to( AllEntityIdsObservableImpl.class );
 
 
-    /**
-     * TODO, this is a hack workaround due to the guice/spring EMF circular dependency
-     * Once the entity managers have been refactored and moved into guice, remove this dependency.
-     *
-     */
-    public static class LazyEntityManagerFactoryProvider implements Provider<EntityManagerFactory>{
-
-        private final ApplicationContext context;
+        /*****
+         * Indexing service
+         *****/
 
 
-        public LazyEntityManagerFactoryProvider( final ApplicationContext context ) {this.context = context;}
+        bind( IndexService.class ).to( IndexServiceImpl.class );
+
+        //bind the event handlers
+        bind( EventBuilder.class).to( EventBuilderImpl.class );
+
+        //bind the queue provider
+        bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
 
 
 
-        @Override
-        public EntityManagerFactory get() {
-            return this.context.getBean( EntityManagerFactory.class );
-        }
+        install( new GuicyFigModule( IndexProcessorFig.class ) );
+
+
+        install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
+
+        install( new GuicyFigModule( EntityManagerFig.class ) );
+
+        //install our pipeline modules
+        install(new PipelineModule());
+
     }
 
 }

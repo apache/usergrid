@@ -112,7 +112,8 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
         assertNotNull(organization);
 
         //Retrieve an authorization token using the credentials created above
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(new Token("password", username, password));
+        Token tokenReturned = clientSetup.getRestClient().management().token()
+                                         .post(Token.class,new Token("password", username, password));
         assertNotNull(tokenReturned);
 
         //Instruct the test framework to use the new token

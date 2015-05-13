@@ -77,7 +77,9 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
 
         for ( ColumnNameIterator<C, T> columnNameIterator : columnNameIterators ) {
 
-            observables[i] = Observable.from( columnNameIterator, Schedulers.io() );
+
+
+            observables[i] = Observable.from( columnNameIterator ).subscribeOn( Schedulers.io() );
 
             i++;
         }

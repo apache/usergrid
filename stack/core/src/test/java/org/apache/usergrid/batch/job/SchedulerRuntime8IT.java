@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.JobData;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -66,8 +66,7 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
 
         // now query and make sure it equals the saved value
 
-        Query query = new Query();
-        query.addEqualityFilter( "notificationId", notificationId );
+        Query query = Query.fromQL( "notificationId = " +  notificationId );
 
 
         Results r = scheduler.queryJobData( query );
@@ -77,8 +76,7 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
         assertEquals( saved.getUuid(), r.getEntity().getUuid() );
 
         // query by uuid
-        query = new Query();
-        query.addEqualityFilter( "stringprop", "test" );
+        query = Query.fromQL(  "stringprop = 'test'" );
 
         r = scheduler.queryJobData( query );
 

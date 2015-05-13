@@ -33,7 +33,7 @@ import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 
@@ -90,7 +90,7 @@ public class IntersectionTransitivePagingIT{
         io.doSetup();
 
 
-        int writeSize =200;
+        int writeSize = 10;
 
         List<UUID> expected = new ArrayList<UUID>(writeSize);
 
@@ -131,6 +131,7 @@ public class IntersectionTransitivePagingIT{
 
 
         }
+        this.app.refreshIndex();
 
         return expected;
     }
@@ -159,7 +160,7 @@ public class IntersectionTransitivePagingIT{
             for ( int i = 0; i < results.size(); i++, currentExpectedIndex++ ) {
                 final UUID returnedUUID = results.getEntities().get( i ).getUuid();
 
-                assertEquals( "Value should not be returned twice", expectedResults.get( currentExpectedIndex ),
+                assertEquals( "Value should not be returned twice", expectedResults.get( expectedResults.size() - 1 - currentExpectedIndex ),
                         returnedUUID );
             }
 

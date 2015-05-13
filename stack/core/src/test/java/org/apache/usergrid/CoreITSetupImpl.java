@@ -17,32 +17,32 @@
 package org.apache.usergrid;
 
 
-import java.util.UUID;
-
+import com.google.inject.Injector;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.mq.QueueManagerFactory;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.IndexBucketLocator;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.mq.QueueManagerFactory;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
-import org.apache.usergrid.setup.ConcurrentProcessSingleton;
-import org.apache.usergrid.utils.JsonUtils;
+import java.util.UUID;
 
-import com.google.inject.Injector;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 
 
-public class CoreITSetupImpl implements CoreITSetup {
+public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
+    private final Injector injector;
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
-    protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
 
     protected SpringResource springResource;
@@ -54,7 +54,8 @@ public class CoreITSetupImpl implements CoreITSetup {
         cassandraService = springResource.getBean( CassandraService.class );
         emf = springResource.getBean( EntityManagerFactory.class );
         qmf = springResource.getBean( QueueManagerFactory.class );
-        indexBucketLocator = springResource.getBean( IndexBucketLocator.class );
+        injector = springResource.getBean(Injector.class);
+
 
     }
 
@@ -116,12 +117,6 @@ public class CoreITSetupImpl implements CoreITSetup {
 
 
     @Override
-    public IndexBucketLocator getIbl() {
-          return indexBucketLocator;
-    }
-
-
-    @Override
     public CassandraService getCassSvc() {
         return cassandraService;
     }
@@ -129,19 +124,43 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-
-        if ( USE_DEFAULT_APPLICATION ) {
-            return emf.getDefaultAppId();
-        }
-
-        return emf.createApplication( organizationName, applicationName );
+        Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        return applicationId;
     }
-
 
     @Override
     public void dump( String name, Object obj ) {
         if ( obj != null && LOG.isInfoEnabled() ) {
             LOG.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
+        }
+    }
+
+    @Override
+    public Injector getInjector() {
+        return injector;
+    }
+
+    @Override
+    public TestEntityIndex getEntityIndex(){
+        return this;
+    }
+
+    @Override
+    public void refresh(){
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException ie){
+
+        }
+
+        emf.refreshIndex();
+
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException ie){
+
         }
     }
 }

@@ -23,14 +23,14 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.inject.Inject;
@@ -69,14 +69,14 @@ public class WriteOptimisticVerify implements Action1<CollectionIoEvent<MvccEnti
         MvccEntity mvccEntity = ioevent.getEvent();
         final Entity entity = mvccEntity.getEntity().get();
 
-        CollectionScope collectionScope = ioevent.getEntityCollection();
+        ApplicationScope applicationScope = ioevent.getEntityCollection();
 
         if ( entity.getVersion() == null ) {
             return;
         }
 
 
-        List<MvccLogEntry> versions = logEntryStrat.load( collectionScope, entity.getId(), entity.getVersion(), 2 );
+        List<MvccLogEntry> versions = logEntryStrat.load( applicationScope, entity.getId(), entity.getVersion(), 2 );
 
         // Previous log entry must be committed, otherwise somebody is already writing
         if ( versions.size() > 1 && versions.get( 1 ).getStage().ordinal() < Stage.COMMITTED.ordinal() ) {
@@ -84,7 +84,7 @@ public class WriteOptimisticVerify implements Action1<CollectionIoEvent<MvccEnti
             log.debug( "Conflict writing entity id {} version {}", entity.getId().toString(),
                     entity.getVersion().toString() );
 
-            throw new WriteOptimisticVerifyException( mvccEntity, collectionScope,
+            throw new WriteOptimisticVerifyException( mvccEntity, applicationScope,
                     "Change conflict, not first writer" );
         }
     }
