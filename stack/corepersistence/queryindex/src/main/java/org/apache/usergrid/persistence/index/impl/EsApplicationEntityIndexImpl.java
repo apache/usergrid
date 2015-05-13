@@ -54,7 +54,6 @@ import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
-import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
@@ -298,7 +297,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         // >= seems odd.  However if we get an overflow, we need to account for it.
         if (  hits.length >= limit ) {
 
-            candidateResults.initializeCursor(from+limit);
+            candidateResults.initializeOffset( from + limit );
 
         }
 
