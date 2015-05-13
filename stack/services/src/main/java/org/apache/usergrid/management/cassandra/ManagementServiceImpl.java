@@ -540,6 +540,7 @@ public class ManagementServiceImpl implements ManagementService {
         organizationEntity = em.create( organizationEntity );
 
         em.addToCollection( organizationEntity, "users", new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
+      //  em.addToCollection( new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ), Schema.COLLECTION_GROUPS, organizationEntity );
 
 
         writeUserToken( smf.getManagementAppId(), organizationEntity, encryptionService

@@ -35,7 +35,7 @@ public class IndexingUtils {
     // These are not allowed in document type names: _ . , | #
     public static final String FIELD_SEPERATOR = "__";
 
-    public static final String ID_SEPERATOR = "_";
+    public static final String ID_SEPERATOR = "::";
 
 
     /**
