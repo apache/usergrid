@@ -20,7 +20,6 @@ package org.apache.usergrid.corepersistence;
 import java.util.*;
 
 import org.apache.usergrid.persistence.graph.*;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -576,7 +575,7 @@ public class CpRelationManager implements RelationManager {
                 results = em.getCollection( headEntity, srcRelationName, null, 5000, Level.REFS, false );
             }
             else {
-                results = em.getConnectedEntities( headEntity, srcRelationName, null, Level.REFS );
+                results = em.getTargetEntities(headEntity, srcRelationName, null, Level.REFS);
             }
 
             if ( ( results != null ) && ( results.size() > 0 ) ) {
@@ -837,7 +836,7 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results getConnectedEntities( String connectionType, String connectedEntityType, Level level )
+    public Results getTargetEntities(String connectionType, String connectedEntityType, Level level)
         throws Exception {
 
         //until this is refactored properly, we will delegate to a search by query
@@ -850,20 +849,20 @@ public class CpRelationManager implements RelationManager {
         query.setEntityType( connectedEntityType );
         query.setResultsLevel( level );
 
-        return searchConnectedEntities( query );
+        return searchTargetEntities(query);
     }
 
 
     @Override
-    public Results getConnectingEntities( String connType, String fromEntityType, Level resultsLevel )
+    public Results getSourceEntities(String connType, String fromEntityType, Level resultsLevel)
         throws Exception {
 
-        return getConnectingEntities( connType, fromEntityType, resultsLevel, -1 );
+        return getSourceEntities(connType, fromEntityType, resultsLevel, -1);
     }
 
 
     @Override
-    public Results getConnectingEntities( String connType, String fromEntityType, Level level, int count )
+    public Results getSourceEntities(String connType, String fromEntityType, Level level, int count)
         throws Exception {
 
         // looking for edges to the head entity
@@ -896,7 +895,7 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results searchConnectedEntities( Query query ) throws Exception {
+    public Results searchTargetEntities(Query query) throws Exception {
 
         Preconditions.checkNotNull( query, "query cannot be null" );
 

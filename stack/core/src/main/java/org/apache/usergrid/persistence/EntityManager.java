@@ -420,25 +420,25 @@ public interface EntityManager {
      */
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception;
 
-    public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType,
-                                           EntityRef connectedEntityRef ) throws Exception;
+    public ConnectionRef createConnection( EntityRef sourceEntity, String connectionType,
+                                           EntityRef targetEntityRef ) throws Exception;
 
-    public ConnectionRef createConnection( EntityRef connectingEntity, String pairedConnectionType,
+    public ConnectionRef createConnection( EntityRef sourceEntity, String pairedConnectionType,
                                            EntityRef pairedEntity, String connectionType,
-                                           EntityRef connectedEntityRef ) throws Exception;
+                                           EntityRef targetEntityRef ) throws Exception;
 
     public ConnectionRef createConnection(
-            EntityRef connectingEntity, ConnectedEntityRef... connections )
+            EntityRef sourceEntity, ConnectedEntityRef... connections )
             throws Exception;
 
-    public ConnectionRef connectionRef( EntityRef connectingEntity, String connectionType,
-                                        EntityRef connectedEntityRef ) throws Exception;
+    public ConnectionRef connectionRef( EntityRef sourceEntity, String connectionType,
+                                        EntityRef targetEntityRef ) throws Exception;
 
-    public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType,
-            EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef )
+    public ConnectionRef connectionRef( EntityRef sourceEntity, String pairedConnectionType,
+            EntityRef pairedEntity, String connectionType, EntityRef targetEntityRef )
             throws Exception;
 
-    public ConnectionRef connectionRef( EntityRef connectingEntity, ConnectedEntityRef... connections );
+    public ConnectionRef connectionRef( EntityRef sourceEntity, ConnectedEntityRef... connections );
 
     /**
      * Disconnects two connected entities with the specified connection type. Connections are
@@ -464,8 +464,8 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Results getConnectedEntities( EntityRef entityRef, String connectionType,
-            String connectedEntityType, Level resultsLevel ) throws Exception;
+    public Results getTargetEntities(EntityRef entityRef, String connectionType,
+                                     String connectedEntityType, Level resultsLevel) throws Exception;
 
     /**
      * Gets the entities connecting to this entity, optionally with the specified connection
@@ -481,13 +481,13 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Results getConnectingEntities( EntityRef entityRef, String connectionType,
-            String connectedEntityType, Level resultsLevel ) throws Exception;
+    public Results getSourceEntities(EntityRef entityRef, String connectionType,
+                                     String connectedEntityType, Level resultsLevel) throws Exception;
 
-    public Results getConnectingEntities( EntityRef entityRef, String connectionType,
-    		String entityType, Level level, int count) throws Exception;
+    public Results getSourceEntities(EntityRef entityRef, String connectionType,
+                                     String entityType, Level level, int count) throws Exception;
 
-	public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception;
+	public Results searchTargetEntities(EntityRef sourceEntity, Query query) throws Exception;
 
 
     // Application roles

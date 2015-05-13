@@ -133,8 +133,8 @@ public class ActivitiesService extends GenericCollectionService {
         em.addToCollection( user, "feed", activity );
 
         //publish to all connections
-        Results results =  em.getConnectingEntities(
-            new SimpleEntityRef( user.getType(), user.getUuid()),
+        Results results =  em.getSourceEntities(
+            new SimpleEntityRef(user.getType(), user.getUuid()),
             "following", User.ENTITY_TYPE, Level.REFS);
 
         if( results != null ){

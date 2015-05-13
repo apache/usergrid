@@ -1515,35 +1515,35 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Results getConnectedEntities( EntityRef entityRef, String connectionType,
-            String connectedEntityType, Level resultsLevel ) throws Exception {
+    public Results getTargetEntities(EntityRef entityRef, String connectionType,
+                                     String connectedEntityType, Level resultsLevel) throws Exception {
 
         return getRelationManager( entityRef )
-                .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
+                .getTargetEntities(connectionType, connectedEntityType, resultsLevel);
     }
 
 
     @Override
-    public Results getConnectingEntities( EntityRef entityRef, String connectionType,
-            String connectedEntityType, Level resultsLevel ) throws Exception {
+    public Results getSourceEntities(EntityRef entityRef, String connectionType,
+                                     String connectedEntityType, Level resultsLevel) throws Exception {
 
         return getRelationManager( entityRef )
-                .getConnectingEntities( connectionType, connectedEntityType, resultsLevel );
+                .getSourceEntities(connectionType, connectedEntityType, resultsLevel);
     }
 
 
     @Override
-    public Results getConnectingEntities( EntityRef entityRef, String connectionType,
-            String entityType, Level level, int count ) throws Exception {
+    public Results getSourceEntities(EntityRef entityRef, String connectionType,
+                                     String entityType, Level level, int count) throws Exception {
 
-        return getRelationManager( entityRef ).getConnectingEntities( connectionType, entityType, level, count );
+        return getRelationManager( entityRef ).getSourceEntities(connectionType, entityType, level, count);
     }
 
 
     @Override
-    public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception {
+    public Results searchTargetEntities(EntityRef connectingEntity, Query query) throws Exception {
 
-        return getRelationManager( connectingEntity ).searchConnectedEntities( query );
+        return getRelationManager( connectingEntity ).searchTargetEntities(query);
     }
 
 

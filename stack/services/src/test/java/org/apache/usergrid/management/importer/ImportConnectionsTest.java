@@ -31,7 +31,6 @@ import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
@@ -59,7 +58,7 @@ public class ImportConnectionsTest {
 
 
     @Test
-    @Ignore("Because getConnectedEntities() is broken")
+    @Ignore("Because getTargetEntities() is broken")
     public void testCreateAndCountConnectionsViaGet() throws Exception {
 
         doTestCreateAndCountConnections(new ConnectionCounter() {
@@ -135,8 +134,8 @@ public class ImportConnectionsTest {
             EntityManager emMgmtApp = setup.getEmf()
                 .getEntityManager(setup.getEmf().getManagementAppId() );
 
-            Results entities = emMgmtApp.getConnectedEntities(
-                importRoot, "includes", null, Query.Level.ALL_PROPERTIES );
+            Results entities = emMgmtApp.getTargetEntities(
+                importRoot, "includes", null, Query.Level.ALL_PROPERTIES);
 
             PagingResultsIterator itr = new PagingResultsIterator( entities );
             int count = 0;
@@ -164,7 +163,7 @@ public class ImportConnectionsTest {
             query.setConnectionType("includes");
             query.setLimit(10000);
 
-            Results entities = emMgmtApp.searchConnectedEntities( importRoot, query );
+            Results entities = emMgmtApp.searchTargetEntities(importRoot, query);
             return entities.size();
 
 //            PagingResultsIterator itr = new PagingResultsIterator( entities );

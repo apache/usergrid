@@ -74,8 +74,8 @@ public class ActivitiesService extends GenericCollectionService {
             return;
         }
 
-        Results r2 = em.getConnectingEntities( new SimpleEntityRef( user.getType(), user.getUuid()),
-            "following", User.ENTITY_TYPE, Level.IDS );
+        Results r2 = em.getSourceEntities(new SimpleEntityRef(user.getType(), user.getUuid()),
+            "following", User.ENTITY_TYPE, Level.IDS);
 
         if ( ( r2 == null ) || ( r2.isEmpty() ) ) {
             return;

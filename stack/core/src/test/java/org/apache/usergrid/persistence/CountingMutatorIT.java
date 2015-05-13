@@ -27,8 +27,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.persistence.Query.Level;
@@ -99,8 +97,8 @@ public class CountingMutatorIT extends AbstractCoreIT {
 
         //now verify our connections were created properly
 
-        PagingResultsIterator itr = new PagingResultsIterator(em.getConnectingEntities(
-                returned, "following", "user", Level.ALL_PROPERTIES, 1000 ));
+        PagingResultsIterator itr = new PagingResultsIterator(em.getSourceEntities(
+            returned, "following", "user", Level.ALL_PROPERTIES, 1000));
 
         int count = 0;
 

@@ -204,7 +204,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2( organizationName, name, null );
+        return createApplicationV2(organizationName, name, null);
     }
 
 
@@ -262,7 +262,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
         }
         properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager( applicationId);
+        EntityManager appEm = getEntityManager(applicationId);
         appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
      //   entityIndex.refreshAsync();//.toBlocking().last();
@@ -356,7 +356,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             copyConnections = Observable.from(connectionTypes).doOnNext(connType -> {
                 try {
                     final Results connResults =
-                        managementEm.getConnectedEntities(oldAppEntity, connType, null, Query.Level.ALL_PROPERTIES);
+                        managementEm.getTargetEntities(oldAppEntity, connType, null, Query.Level.ALL_PROPERTIES);
                     connResults.getEntities().forEach(entity -> {
                         try {
                             managementEm.createConnection(newAppEntity, connType, entity);
@@ -420,7 +420,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Map<String, UUID> appMap = new HashMap<>();
 
         ApplicationScope appScope =
-            CpNamingUtils.getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+            CpNamingUtils.getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         GraphManager gm = managerCache.getGraphManager(appScope);
 
         EntityManager em = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);

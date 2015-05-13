@@ -35,13 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -410,8 +406,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
                 assertEquals( 2000, e.getProperty("key2"));
 
-                Results catResults = em.searchConnectedEntities(e,
-                    Query.fromQL("select *").setConnectionType( "herds" ));
+                Results catResults = em.searchTargetEntities(e,
+                    Query.fromQL("select *").setConnectionType("herds"));
                 assertEquals( expectedConnections, catResults.size() );
 
                 if ( count % 100 == 0 ) {
