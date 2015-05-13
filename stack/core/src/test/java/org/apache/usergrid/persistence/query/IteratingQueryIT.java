@@ -275,7 +275,7 @@ public class IteratingQueryIT {
             query.setConnectionType( CONNECTION );
             // don't set it on purpose
             query.setEntityType( null );
-            return app.getEntityManager().searchConnectedEntities( rootEntity, query );
+            return app.getEntityManager().searchTargetEntities(rootEntity, query);
         }
     }
 

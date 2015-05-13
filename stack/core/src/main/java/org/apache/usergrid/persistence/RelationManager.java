@@ -106,11 +106,11 @@ public interface RelationManager {
      * @param connectionType The type/name of the connection
      * @param connectedEntityType The type of
      */
-    public Results getConnectedEntities( String connectionType, String connectedEntityType, Level resultsLevel )
+    public Results getTargetEntities(String connectionType, String connectedEntityType, Level resultsLevel)
             throws Exception;
 
-    public Results getConnectingEntities( String connectionType, String connectedEntityType,
-                                          Level resultsLevel ) throws Exception;
+    public Results getSourceEntities(String connectionType, String connectedEntityType,
+                                     Level resultsLevel) throws Exception;
 
     // public Results searchConnectedEntitiesForProperty(String connectionType,
     // String connectedEntityType, String propertyName,
@@ -118,10 +118,10 @@ public interface RelationManager {
     // UUID startResult, int count, boolean reversed, Level resultsLevel)
     // throws Exception;
 
-    public Results getConnectingEntities(
-            String connectionType, String entityType, Level level, int count) throws Exception;
+    public Results getSourceEntities(
+        String connectionType, String entityType, Level level, int count) throws Exception;
 
-	public Results searchConnectedEntities( Query query ) throws Exception;
+	public Results searchTargetEntities(Query query) throws Exception;
 
 
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception;
