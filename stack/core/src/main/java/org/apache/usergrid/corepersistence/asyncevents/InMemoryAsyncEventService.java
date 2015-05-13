@@ -80,7 +80,6 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
     @Override
     public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
-
         run( eventBuilder.queueDeleteEdge( applicationScope, edge ) );
     }
 
