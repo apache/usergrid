@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.exception.NotImplementedException;
@@ -184,7 +185,7 @@ public class SQSAsyncEventService implements AsyncEventService {
     }
 
 
-    @Override
+//    @Override
     public void index( final EntityIdScope entityIdScope ) {
         //queue the re-inex operation
         offer( entityIdScope );
@@ -345,5 +346,11 @@ public class SQSAsyncEventService implements AsyncEventService {
 
             subscriptions.add( subscription );
         }
+    }
+
+
+    @Override
+    public void index( final EntityIndexOperation entityIdScope ) {
+        throw new NotImplementedException( "Implement me" );
     }
 }

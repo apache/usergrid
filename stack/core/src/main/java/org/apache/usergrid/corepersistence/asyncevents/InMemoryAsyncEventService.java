@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -97,10 +98,10 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
 
     @Override
-    public void index( final EntityIdScope entityIdScope ) {
+    public void index( final EntityIndexOperation entityIndexOperation ) {
 
 
-        run(eventBuilder.index( entityIdScope ));
+        run(eventBuilder.index( entityIndexOperation ));
     }
 
 

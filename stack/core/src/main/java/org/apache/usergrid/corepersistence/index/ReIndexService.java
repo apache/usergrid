@@ -45,16 +45,17 @@ public interface ReIndexService {
     /**
      * Perform an index rebuild
      *
-     * @param appId The applicationId to re-index, or all applications if absent
-     * @param collection The collection name to re-index.  Otherwise all collections in an app will be used.
-     * @param cursor An optional cursor to resume processing
-     * @param startTimestamp The time to start indexing from.  All edges >= this time will be indexed.
+     * @param indexServiceRequestBuilder The builder to build the request
      * @return
      */
-    IndexResponse rebuildIndex( final Optional<UUID> appId, final Optional<String> collection, final Optional<String> cursor,
-                        final Optional<Long> startTimestamp);
+    IndexResponse rebuildIndex(final IndexServiceRequestBuilder indexServiceRequestBuilder);
 
 
+    /**
+     * Generate a build for the index
+     * @return
+     */
+    IndexServiceRequestBuilder getBuilder();
 
     /**
      * The response when requesting a re-index operation
