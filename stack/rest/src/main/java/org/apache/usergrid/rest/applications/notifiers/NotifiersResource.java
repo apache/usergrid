@@ -21,8 +21,9 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 import java.io.InputStream;
 import java.util.HashMap;
 import org.apache.commons.io.IOUtils;
+
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -113,10 +114,10 @@ public class NotifiersResource extends ServiceResource {
 
         logger.debug("ServiceResource.uploadData");
 
-        String name =         getValueOrNull(multiPart, "name"); 
-        String provider =     getValueOrNull(multiPart, "provider"); 
-        String environment =  getValueOrNull(multiPart, "environment"); 
-        String certPassword = getValueOrNull(multiPart, "certificatePassword"); 
+        String name =         getValueOrNull(multiPart, "name");
+        String provider =     getValueOrNull(multiPart, "provider");
+        String environment =  getValueOrNull(multiPart, "environment");
+        String certPassword = getValueOrNull(multiPart, "certificatePassword");
 
         InputStream is = null;
         if (multiPart.getField("p12Certificate") != null) {

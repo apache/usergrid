@@ -27,7 +27,7 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.generic.GenericCollectionService;
@@ -74,7 +74,7 @@ public class ActivitiesService extends GenericCollectionService {
             return;
         }
 
-        Results r2 = em.getConnectingEntities( new SimpleEntityRef( user.getType(), user.getUuid()), 
+        Results r2 = em.getConnectingEntities( new SimpleEntityRef( user.getType(), user.getUuid()),
             "following", User.ENTITY_TYPE, Level.IDS );
 
         if ( ( r2 == null ) || ( r2.isEmpty() ) ) {

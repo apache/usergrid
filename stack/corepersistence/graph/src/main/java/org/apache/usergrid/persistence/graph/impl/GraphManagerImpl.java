@@ -25,14 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -54,19 +51,14 @@ import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Notification;
 import rx.Observable;
-import rx.Observer;
-import rx.Subscriber;
-import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 
 /**
@@ -88,46 +80,30 @@ public class GraphManagerImpl implements GraphManager {
     private final EdgeDeleteListener edgeDeleteListener;
     private final NodeDeleteListener nodeDeleteListener;
     private final Timer writeEdgeTimer;
-    private final Meter writeEdgeMeter;
-    private final Meter deleteEdgeMeter;
-    private final Timer deleteEdgeTimer;
-    private final Meter deleteNodeMeter;
-    private final Timer deleteNodeTimer;
-    private final Meter loadEdgesFromSourceMeter;
+    private final Timer markEdgeTimer;
+    private final Timer markNodeTimer;
     private final Timer loadEdgesFromSourceTimer;
-    private final Meter loadEdgesToTargetMeter;
     private final Timer loadEdgesToTargetTimer;
-    private final Meter loadEdgesVersionsMeter;
     private final Timer loadEdgesVersionsTimer;
-    private final Meter loadEdgesFromSourceByTypeMeter;
     private final Timer loadEdgesFromSourceByTypeTimer;
-    private final Meter loadEdgesToTargetByTypeMeter;
     private final Timer loadEdgesToTargetByTypeTimer;
     private final Timer getEdgeTypesFromSourceTimer;
-    private final Meter getEdgeTypesFromSourceMeter;
     private final Timer getIdTypesFromSourceTimer;
-    private final Meter getIdTypesFromSourceMeter;
-    private final Meter getEdgeTypesToTargetMeter;
     private final Timer getEdgeTypesToTargetTimer;
     private final Timer getIdTypesToTargetTimer;
-    private final Meter getIdTypesToTargetMeter;
-
-    private Observer<Integer> edgeDeleteSubcriber;
-    private Observer<Integer> nodeDelete;
+    private final Timer deleteNodeTimer;
+    private final Timer deleteEdgeTimer;
 
 
     private final GraphFig graphFig;
 
 
     @Inject
-    public GraphManagerImpl( @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization,
+    public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              final EdgeSerialization storageEdgeSerialization,
-                             final NodeSerialization nodeSerialization,
-                             final GraphFig graphFig,
-                             final EdgeDeleteListener edgeDeleteListener,
-                             final NodeDeleteListener nodeDeleteListener,
-                             @Assisted final ApplicationScope scope,
-                             MetricsFactory metricsFactory) {
+                             final NodeSerialization nodeSerialization, final GraphFig graphFig,
+                             final EdgeDeleteListener edgeDeleteListener, final NodeDeleteListener nodeDeleteListener,
+                             final ApplicationScope scope, MetricsFactory metricsFactory ) {
 
 
         ValidationUtils.validateApplicationScope( scope );
@@ -146,38 +122,24 @@ public class GraphManagerImpl implements GraphManager {
         this.edgeDeleteListener = edgeDeleteListener;
         this.nodeDeleteListener = nodeDeleteListener;
 
-        this.edgeDeleteSubcriber = MetricSubscriber.INSTANCE;
-        this.nodeDelete = MetricSubscriber.INSTANCE;
-        this.writeEdgeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "write.edge.meter");
-        this.writeEdgeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "write.edge.timer");
-        this.deleteEdgeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "delete.edge.meter");
-        this.deleteEdgeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "delete.edge.timer");
-        this.deleteNodeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "delete.node.meter");
-        this.deleteNodeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "delete.node.timer");
-        this.loadEdgesFromSourceMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.from.meter");
-        this.loadEdgesFromSourceTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.from.timer");
-        this.loadEdgesToTargetMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.to.meter");
-        this.loadEdgesToTargetTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.to.timer");
-        this.loadEdgesVersionsMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.versions.meter");
-        this.loadEdgesVersionsTimer = metricsFactory.getTimer(GraphManagerImpl.class,"load.versions.timer");
-        this.loadEdgesFromSourceByTypeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.from.type.meter");
-        this.loadEdgesFromSourceByTypeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.from.type.timer");
-        this.loadEdgesToTargetByTypeMeter = metricsFactory.getMeter(GraphManagerImpl.class, "load.to.type.meter");
-        this.loadEdgesToTargetByTypeTimer = metricsFactory.getTimer(GraphManagerImpl.class, "load.to.type.timer");
+        this.writeEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "write.edge" );
+        this.markEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "mark.edge" );
+        this.deleteEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "delete.edge" );
+        this.markNodeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "mark.node" );
+        this.deleteNodeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "delete.node" );
+        this.loadEdgesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.from" );
+        this.loadEdgesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.to" );
+        this.loadEdgesVersionsTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.versions" );
+        this.loadEdgesFromSourceByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.from.type" );
+        this.loadEdgesToTargetByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.to.type" );
 
-        this.getEdgeTypesFromSourceTimer = metricsFactory.getTimer(GraphManagerImpl.class,"get.edge.from.timer");
-        this.getEdgeTypesFromSourceMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.edge.from.meter");
+        this.getEdgeTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.edge.from" );
 
-        this.getIdTypesFromSourceTimer = metricsFactory.getTimer(GraphManagerImpl.class,"get.idtype.from.timer");
-        this.getIdTypesFromSourceMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.idtype.from.meter");
+        this.getIdTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.idtype.from" );
 
-        this.getEdgeTypesToTargetTimer = metricsFactory.getTimer(GraphManagerImpl.class,"get.edge.to.timer");
-        this.getEdgeTypesToTargetMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.edge.to.meter");
+        this.getEdgeTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.edge.to" );
 
-        this.getIdTypesToTargetTimer = metricsFactory.getTimer(GraphManagerImpl.class, "get.idtype.to.timer");
-        this.getIdTypesToTargetMeter = metricsFactory.getMeter(GraphManagerImpl.class, "get.idtype.to.meter");
-
-
+        this.getIdTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.idtype.to" );
     }
 
 
@@ -186,374 +148,289 @@ public class GraphManagerImpl implements GraphManager {
         GraphValidation.validateEdge( edge );
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
-        final Timer.Context timer = writeEdgeTimer.time();
-        final Meter meter = writeEdgeMeter;
 
-        return Observable.from( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
-            @Override
-            public Edge call( final MarkedEdge edge ) {
+        final Observable<Edge> observable = Observable.just( markedEdge ).map( edge1 -> {
 
-                final UUID timestamp = UUIDGenerator.newTimeUUID();
+            final UUID timestamp = UUIDGenerator.newTimeUUID();
 
 
-                final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
+            final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge1 );
 
-                final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge, timestamp );
+            final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge1, timestamp );
 
-                mutation.mergeShallow( edgeMutation );
+            mutation.mergeShallow( edgeMutation );
 
-                HystrixCassandra.user( mutation );
-
-                return edge;
+            try {
+                mutation.execute();
             }
-        } )
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to execute mutation", e );
+            }
+
+            return edge1;
+        } );
+
+        return ObservableTimer.time( observable, writeEdgeTimer );
+    }
+
+
+    @Override
+    public Observable<Edge> markEdge( final Edge edge ) {
+        GraphValidation.validateEdge( edge );
+
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
+
+        final Observable<Edge> observable = Observable.just( markedEdge ).map( edge1 -> {
+
+            final UUID timestamp = UUIDGenerator.newTimeUUID();
+
+
+            final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge1, timestamp );
+
+
+            LOG.debug( "Marking edge {} as deleted to commit log", edge1 );
+            try {
+                edgeMutation.execute();
+            }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to execute mutation", e );
+            }
+
+
+            return edge1;
+        } );
+
+        return ObservableTimer.time( observable, markEdgeTimer );
     }
 
 
     @Override
     public Observable<Edge> deleteEdge( final Edge edge ) {
-        GraphValidation.validateEdge(edge);
 
-        final MarkedEdge markedEdge = new SimpleMarkedEdge(edge, true);
-
-        final Timer.Context timer = deleteEdgeTimer.time();
-        final Meter meter = deleteEdgeMeter;
-        return Observable.from(markedEdge).map(new Func1<MarkedEdge, Edge>() {
-            @Override
-            public Edge call(final MarkedEdge edge) {
-
-                final UUID timestamp = UUIDGenerator.newTimeUUID();
+        GraphValidation.validateEdge( edge );
+        final UUID startTimestamp = UUIDGenerator.newTimeUUID();
 
 
-                final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge(scope, edge, timestamp);
-
-
-                LOG.debug("Marking edge {} as deleted to commit log", edge);
-                HystrixCassandra.user(edgeMutation);
-
-
-                //HystrixCassandra.async( edgeDeleteListener.receive( scope, markedEdge,
-                // timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
-                edgeDeleteListener.receive(scope, markedEdge, timestamp).subscribeOn(Schedulers.io())
-                    .subscribe(edgeDeleteSubcriber);
-
-
-                return edge;
-            }
-        })
-            .doOnEach(new Action1<Notification<? super Edge>>() {
+        final Observable<Edge> observable =
+            Observable.create( new ObservableIterator<MarkedEdge>( "read edge versions" ) {
                 @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgeVersions( scope,
+                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
+                            Long.MAX_VALUE, SearchByEdgeType.Order.ASCENDING, Optional.absent() ) );
                 }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            } ).filter( markedEdge -> markedEdge.isDeleted() ).flatMap( marked ->
+                //fire our delete listener and wait for the results
+                edgeDeleteListener.receive( scope, marked, startTimestamp ).doOnNext(
+                    //log them
+                    count -> LOG.debug( "removed {} types for edge {} ", count, edge ) )
+                    //return the marked edge
+                    .map( count -> marked ) );
+
+
+        return ObservableTimer.time( observable, deleteEdgeTimer );
     }
 
 
     @Override
-    public Observable<Id> deleteNode( final Id node, final long timestamp ) {
-        final Timer.Context timer = deleteNodeTimer.time();
-        final Meter meter = deleteNodeMeter;
-        return Observable.from( node ).map( new Func1<Id, Id>() {
-            @Override
-            public Id call( final Id id ) {
+    public Observable<Id> markNode( final Id node, final long timestamp ) {
+        final Observable<Id> idObservable = Observable.just( node ).map( id -> {
 
-                //mark the node as deleted
+            //mark the node as deleted
+
+            final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
 
 
-                final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
-
-                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
-
-
-                LOG.debug( "Marking node {} as deleted to node mark", node );
-                HystrixCassandra.user( nodeMutation );
-
-
-                //HystrixCassandra.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn(
-                // Schedulers.io() ).subscribe( nodeDelete );
-                nodeDeleteListener.receive( scope, id, eventTimestamp ).subscribeOn( Schedulers.io() )
-                                  .subscribe( nodeDelete );
-
-                return id;
+            LOG.debug( "Marking node {} as deleted to node mark", node );
+            try {
+                nodeMutation.execute();
             }
-        } )
-            .doOnEach(new Action1<Notification<? super Id>>() {
-                @Override
-                public void call(Notification<? super Id> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to execute mutation", e );
+            }
+
+
+            return id;
+        } );
+
+        return ObservableTimer.time( idObservable, markNodeTimer );
+    }
+
+
+    @Override
+    public Observable<Id> compactNode( final Id inputNode ) {
+
+
+        final UUID startTime = UUIDGenerator.newTimeUUID();
+
+
+        final Observable<Id> nodeObservable =
+            Observable.just( inputNode ).map( node -> nodeSerialization.getMaxVersion( scope, inputNode ) ).takeWhile(
+                maxTimestamp -> maxTimestamp.isPresent() )
+
+                //map our delete listener
+                .flatMap( timestamp -> nodeDeleteListener.receive( scope, inputNode, startTime ) )
+                    //set to 0 if nothing is emitted
+                .lastOrDefault( 0 )
+                    //log for posterity
+                .doOnNext( count -> LOG.debug( "Removed {} edges from node {}", count, inputNode ) )
+                    //return our id
+                .map( count -> inputNode );
+
+        return ObservableTimer.time( nodeObservable, this.deleteNodeTimer );
     }
 
 
     @Override
     public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
-        final Timer.Context timer = loadEdgesVersionsTimer.time();
-        final Meter meter = loadEdgesVersionsMeter;
-        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-                return storageEdgeSerialization.getEdgeVersions( scope, searchByEdge );
-            }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(searchByEdge.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
+
+        final Observable<Edge> edges =
+            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                 @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgeVersions( scope, searchByEdge );
                 }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            } ).buffer( graphFig.getScanPageSize() )
+                      .compose( new EdgeBufferFilter( searchByEdge.getMaxTimestamp(), searchByEdge.filterMarked() ) );
+
+        return ObservableTimer.time( edges, loadEdgesVersionsTimer );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-        final Timer.Context timer = loadEdgesFromSourceTimer.time();
-        final Meter meter = loadEdgesFromSourceMeter;
-        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-                return storageEdgeSerialization.getEdgesFromSource( scope, search );
-            }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
+        final Observable<Edge> edges =
+            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                 @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesFromSource( scope, search );
                 }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            } ).buffer( graphFig.getScanPageSize() )
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+
+        return ObservableTimer.time( edges, loadEdgesFromSourceTimer );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
-        final Timer.Context timer = loadEdgesToTargetTimer.time();
-        final Meter meter = loadEdgesToTargetMeter;
-        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-                return storageEdgeSerialization.getEdgesToTarget( scope, search );
-            }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
+        final Observable<Edge> edges =
+            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                 @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesToTarget( scope, search );
                 }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            } ).buffer( graphFig.getScanPageSize() )
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+
+
+        return ObservableTimer.time( edges, loadEdgesToTargetTimer );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        final Timer.Context timer = loadEdgesFromSourceByTypeTimer.time();
-        final Meter meter = loadEdgesFromSourceByTypeMeter;
-        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-                return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
-            }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
+        final Observable<Edge> edges =
+            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+                @Override
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
+                }
+            } ).buffer( graphFig.getScanPageSize() )
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
 
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
-                @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        return ObservableTimer.time( edges, loadEdgesFromSourceByTypeTimer );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        final Timer.Context timer = loadEdgesToTargetByTypeTimer.time();
-        final Meter meter = loadEdgesToTargetByTypeMeter;
-        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-                return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
-            }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap(new EdgeBufferFilter(search.getMaxTimestamp()))
-                         .cast(Edge.class)
-            .doOnEach(new Action1<Notification<? super Edge>>() {
+        final Observable<Edge> edges =
+            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                 @Override
-                public void call(Notification<? super Edge> notification) {
-                    meter.mark();
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
                 }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            } ).buffer( graphFig.getScanPageSize() )
+                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+
+        return ObservableTimer.time( edges, loadEdgesToTargetByTypeTimer );
     }
 
 
     @Override
     public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
-        final Timer.Context timer = getEdgeTypesFromSourceTimer.time();
-        final Meter meter = getEdgeTypesFromSourceMeter;
-        return Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
-            @Override
-            protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
-            }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
-                @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        final Observable<String> edgeTypes =
+            Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
+                    @Override
+                    protected Iterator<String> getIterator() {
+                        return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
+                    }
+                } );
+
+        return ObservableTimer.time( edgeTypes, getEdgeTypesFromSourceTimer );
     }
 
 
     @Override
     public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
-        final Timer.Context timer = getIdTypesFromSourceTimer.time();
-        final Meter meter = getIdTypesFromSourceMeter;
-        return Observable.create( new ObservableIterator<String>( "getIdTypesFromSource" ) {
-            @Override
-            protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
-            }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
+        final Observable<String> edgeTypes =
+            Observable.create( new ObservableIterator<String>( "getIdTypesFromSource" ) {
                 @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
+                protected Iterator<String> getIterator() {
+                    return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
                 }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            } );
+
+        return ObservableTimer.time( edgeTypes, getIdTypesFromSourceTimer );
     }
 
 
     @Override
     public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
-        final Timer.Context timer = getEdgeTypesToTargetTimer.time();
-        final Meter meter = getEdgeTypesToTargetMeter;
-        return Observable.create( new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
-            @Override
-            protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
-            }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
-                @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
-                }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+        final Observable<String> edgeTypes =
+            Observable.create( new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
+                    @Override
+                    protected Iterator<String> getIterator() {
+                        return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
+                    }
+                } );
+
+        return ObservableTimer.time( edgeTypes, getEdgeTypesToTargetTimer );
     }
 
 
     @Override
     public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
-        final Timer.Context timer = getIdTypesToTargetTimer.time();
-        final Meter meter = getIdTypesToTargetMeter;
-        return Observable.create( new ObservableIterator<String>( "getIdTypesToTarget" ) {
-            @Override
-            protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
-            }
-        } )
-            .doOnEach(new Action1<Notification<? super String>>() {
+        final Observable<String> edgeTypes = Observable.create( new ObservableIterator<String>( "getIdTypesToTarget" ) {
                 @Override
-                public void call(Notification<? super String> notification) {
-                    meter.mark();
+                protected Iterator<String> getIterator() {
+                    return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
                 }
-            })
-            .doOnCompleted(new Action0() {
-                @Override
-                public void call() {
-                    timer.stop();
-                }
-            });
+            } );
+
+        return ObservableTimer.time( edgeTypes, getIdTypesToTargetTimer );
     }
 
 
     /**
      * Helper filter to perform mapping and return an observable of pre-filtered edges
      */
-    private class EdgeBufferFilter implements Func1<List<MarkedEdge>, Observable<MarkedEdge>> {
+    private class EdgeBufferFilter implements
+        Observable.Transformer<List<MarkedEdge>, MarkedEdge> {//implements Func1<List<MarkedEdge>,
+        // Observable<MarkedEdge>> {
 
         private final long maxVersion;
+        private final boolean filterMarked;
 
 
-        private EdgeBufferFilter( final long maxVersion ) {
+        private EdgeBufferFilter( final long maxVersion, final boolean filterMarked ) {
             this.maxVersion = maxVersion;
+            this.filterMarked = filterMarked;
         }
 
+
+        @Override
 
         /**
          * Takes a buffered list of marked edges.  It then does a single round trip to fetch marked ids These are then
@@ -561,110 +438,53 @@ public class GraphManagerImpl implements GraphManager {
          *
          * @return An observable that emits only edges that can be consumed.  There could be multiple versions of the
          * same edge so those need de-duped.
-         */
-        @Override
-        public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
+         */ public Observable<MarkedEdge> call( final Observable<List<MarkedEdge>> markedEdgesObservable ) {
 
-            final Map<Id, Long> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
-            return Observable.from( markedEdges ).filter( new EdgeFilter( this.maxVersion, markedVersions ) );
-        }
-    }
+            return markedEdgesObservable.flatMap( markedEdges -> {
 
+                final Observable<MarkedEdge> markedEdgeObservable = Observable.from( markedEdges );
 
-    /**
-     * Filter the returned values based on the max uuid and if it's been marked for deletion or not
-     */
-    private static class EdgeFilter implements Func1<MarkedEdge, Boolean> {
+                /**
+                 * We aren't going to filter anything, return exactly what we're passed
+                 */
+                if(!filterMarked){
+                    return markedEdgeObservable;
+                }
 
-        private final long maxTimestamp;
+                //We need to filter, perform that filter
+                final Map<Id, Long> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
 
-        private final Map<Id, Long> markCache;
+                return markedEdgeObservable.filter( edge -> {
+                    final long edgeTimestamp = edge.getTimestamp();
 
-
-        private EdgeFilter( final long maxTimestamp, Map<Id, Long> markCache ) {
-            this.maxTimestamp = maxTimestamp;
-            this.markCache = markCache;
-        }
-
-
-        @Override
-        public Boolean call( final MarkedEdge edge ) {
+                    //our edge needs to not be deleted and have a version that's > max Version
+                    if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxVersion ) > 0 ) {
+                        return false;
+                    }
 
 
-            final long edgeTimestamp = edge.getTimestamp();
+                    final Long sourceTimestamp = markedVersions.get( edge.getSourceNode() );
 
-            //our edge needs to not be deleted and have a version that's > max Version
-            if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp ) > 0 ) {
-                return false;
-            }
+                    //the source Id has been marked for deletion.  It's version is <= to the marked version for
+                    // deletion,
+                    // so we need to discard it
+                    if ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 ) {
+                        return false;
+                    }
 
+                    final Long targetTimestamp = markedVersions.get( edge.getTargetNode() );
 
-            final Long sourceTimestamp = markCache.get( edge.getSourceNode() );
-
-            //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-            // so we need to discard it
-            if ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 ) {
-                return false;
-            }
-
-            final Long targetTimestamp = markCache.get( edge.getTargetNode() );
-
-            //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-            // so we need to discard it
-            if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
-                return false;
-            }
+                    //the target Id has been marked for deletion.  It's version is <= to the marked version for
+                    // deletion,
+                    // so we need to discard it
+                    if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
+                        return false;
+                    }
 
 
-            return true;
-        }
-    }
-
-
-    /**
-     * Set the subscription for the edge delete
-     */
-    public void setEdgeDeleteSubcriber( final Observer<Integer> edgeDeleteSubcriber ) {
-        Preconditions.checkNotNull( edgeDeleteSubcriber, "Subscriber cannot be null" );
-        this.edgeDeleteSubcriber = edgeDeleteSubcriber;
-    }
-
-
-    /**
-     * Set the subscription for the node delete
-     */
-    public void setNodeDelete( final Observer<Integer> nodeDelete ) {
-        Preconditions.checkNotNull( nodeDelete, "Subscriber cannot be null" );
-        this.nodeDelete = nodeDelete;
-    }
-
-
-    /**
-     * Simple subscriber that can be used to gather metrics.  Needs to be refactored to use codehale metrics
-     */
-    private static class MetricSubscriber extends Subscriber<Integer> {
-
-
-        private static final MetricSubscriber INSTANCE = new MetricSubscriber();
-
-        private final Logger logger = LoggerFactory.getLogger( MetricSubscriber.class );
-
-
-        @Override
-        public void onCompleted() {
-            logger.debug( "Event completed" );
-        }
-
-
-        @Override
-        public void onError( final Throwable e ) {
-            logger.error( "Failed to execute event", e );
-        }
-
-
-        @Override
-        public void onNext( final Integer integer ) {
-            logger.debug( "Next received {}", integer );
+                    return true;
+                } );
+            } );
         }
     }
 }

@@ -26,12 +26,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.persistence.geo.model.Point;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -84,29 +80,30 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // define center point about 300m from that location
-        Point center = new Point( 37.774277, -122.404744 );
+        final double lat = 37.774277;
+        final double lon = -122.404744 ;
 
         Query query = Query.fromQL( "select * where location within 400 of "
-                                    + center.getLat() + "," + center.getLon());
+                                    + lat + "," + lon);
         Results listResults = em.searchCollection( em.getApplicationRef(), "users", query );
         assertEquals( 2, listResults.size() );
 
         query = Query.fromQL( "select * where employer='Apigee' or location within 100 of "
-                                    + center.getLat() + "," + center.getLon());
+                                    + lat + "," + lon);
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
 
         // no results because geo filter applied after query even in the case or 'or'
-        assertEquals( 0, listResults.size() );
+        assertEquals( 1, listResults.size() );
 
         query = Query.fromQL( "select * where employer='Apigee' or location within 400 of "
-                                    + center.getLat() + "," + center.getLon());
+                                    + lat + "," + lon);
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
 
         // only one result because geo filter applied after query even in the case or 'or'
-        assertEquals( 1, listResults.size() );
+        assertEquals( 2, listResults.size() );
     }
 
 
@@ -163,22 +160,23 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         Entity userFred = em.create( "user", properties );
         assertNotNull( userFred );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // define center point about 300m from that location
-        Point center = new Point( 37.774277, -122.404744 );
+        final double lat = 37.774277;
+        final double lon =  -122.404744 ;
 
         // one user within 400 meters IS NOT blocked by bart
         Query query = Query.fromQL(
             "select * where NOT blockedBy.name='bart' and location within 400 of "
-               + center.getLat() + "," + center.getLon());
+               + lat + "," + lon);
         Results listResults = em.searchCollection( em.getApplicationRef(), "users", query );
         assertEquals( 1, listResults.size() );
 
         // one user within 400 meters IS blocked by bart
         query = Query.fromQL(
             "select * where blockedBy.name='bart' and location within 400 of "
-               + center.getLat() + "," + center.getLon());
+               + lat + "," + lon);
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
         assertEquals( 1, listResults.size() );
 

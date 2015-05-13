@@ -64,7 +64,7 @@ public class ParallelTest {
         final int expected = size - 1;
 
 
-        // QUESTION Using this thread blocks indefinitely.  The execution of the Hystrix command 
+        // QUESTION Using this thread blocks indefinitely.  The execution of the Hystrix command
          // happens on the computation Thread if this is used
 
         //        final Scheduler scheduler = Schedulers.threadPoolForComputation();
@@ -90,7 +90,7 @@ public class ParallelTest {
          *  non blocking?
          */
 
-        final Observable<String> observable = Observable.from( input ).observeOn( Schedulers.io() );
+        final Observable<String> observable = Observable.just( input ).observeOn( Schedulers.io() );
 
 
         Observable<Integer> thing = observable.flatMap( new Func1<String, Observable<Integer>>() {
@@ -99,7 +99,7 @@ public class ParallelTest {
             public Observable<Integer> call( final String s ) {
                 List<Observable<Integer>> functions = new ArrayList<Observable<Integer>>();
 
-                logger.info( "Creating new set of observables in thread {}", 
+                logger.info( "Creating new set of observables in thread {}",
                         Thread.currentThread().getName() );
 
                 for ( int i = 0; i < size; i++ ) {
@@ -107,13 +107,13 @@ public class ParallelTest {
 
                     final int index = i;
 
-                    // create a new observable and execute the function on it.  
+                    // create a new observable and execute the function on it.
                     // These should happen in parallel when a subscription occurs
 
                     /**
                      * QUESTION: Should this again be the process thread, not the I/O
                      */
-                    Observable<String> newObservable = Observable.from( input ).subscribeOn( Schedulers.io() );
+                    Observable<String> newObservable = Observable.just( input ).subscribeOn( Schedulers.io() );
 
                     Observable<Integer> transformed = newObservable.map( new Func1<String, Integer>() {
 

@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.model.util.Verify;
 
+
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 
@@ -33,8 +34,18 @@ import com.google.common.base.Preconditions;
 public class SimpleId implements Id, Serializable {
 
 
-    private final UUID uuid;
-    private final String type;
+    private UUID uuid;
+    private String type;
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public SimpleId(){
+
+    }
+
 
 
     public SimpleId( final UUID uuid, final String type ) {
@@ -55,7 +66,6 @@ public class SimpleId implements Id, Serializable {
     }
 
 
-
     @Override
     public UUID getUuid() {
         return uuid;
@@ -65,6 +75,26 @@ public class SimpleId implements Id, Serializable {
     @Override
     public String getType() {
         return type;
+    }
+
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setType( final String type ) {
+        this.type = type;
+    }
+
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setUuid( final UUID uuid ) {
+        this.uuid = uuid;
     }
 
 

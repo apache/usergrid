@@ -19,9 +19,7 @@ package org.apache.usergrid.persistence;
 
 import java.util.Iterator;
 import java.util.List;
-import org.apache.usergrid.persistence.index.query.Query.Level;
-import static org.apache.usergrid.persistence.index.query.Query.Level.IDS;
-import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
+import org.apache.usergrid.persistence.Query.Level;
 
 
 /** iterates over a Results object, crossing page boundaries automatically */

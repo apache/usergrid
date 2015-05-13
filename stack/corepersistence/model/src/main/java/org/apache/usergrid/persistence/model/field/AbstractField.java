@@ -79,6 +79,14 @@ public abstract class AbstractField<T> implements Field<T> {
         return unique;
     }
 
+
+    /**
+     * Validate the entity.  Should throw an IllegalArgumentException if this value cannot be validated
+     */
+    public void validate(){
+
+    }
+
     @Override
     public T getValue() {
         return value;

@@ -19,6 +19,8 @@ package org.apache.usergrid;
 
 import java.util.Properties;
 
+import org.apache.usergrid.corepersistence.GuiceFactory;
+import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -45,7 +47,7 @@ import java.util.Properties;
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
 public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetup {
-    private static final Logger LOG = LoggerFactory.getLogger( ServiceITSetupImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( ServiceITSetupImpl.class );
 
     private ServiceManagerFactory smf;
     private ManagementService managementService;
@@ -55,18 +57,27 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private Properties properties;
     private ExportService exportService;
     private ImportService importService;
+    private AppInfoMigrationPlugin appInfoMigrationPlugin;
 
 
     public ServiceITSetupImpl() {
         super();
-        managementService = springResource.getBean( ManagementService.class );
+
+        managementService =  springResource.getBean( ManagementService.class );
         applicationCreator = springResource.getBean( ApplicationCreator.class );
-        tokenService = springResource.getBean( TokenService.class );
-        providerFactory = springResource.getBean( SignInProviderFactory.class );
-        properties = springResource.getBean( "properties", Properties.class );
-        smf = springResource.getBean( ServiceManagerFactory.class );
-        exportService = springResource.getBean( ExportService.class );
-        importService = springResource.getBean( ImportService.class );
+        tokenService =       springResource.getBean( TokenService.class );
+        providerFactory =    springResource.getBean( SignInProviderFactory.class );
+        properties =         springResource.getBean( "properties", Properties.class );
+        smf =                springResource.getBean( ServiceManagerFactory.class );
+        exportService =      springResource.getBean( ExportService.class );
+        importService =      springResource.getBean( ImportService.class );
+
+        try {
+            appInfoMigrationPlugin = springResource.getBean(GuiceFactory.class)
+                .getObject().getInstance(AppInfoMigrationPlugin.class);
+        } catch ( Exception e ) {
+            logger.error("Unable to instantiate AppInfoMigrationPlugin", e);
+        }
 
         //set our security manager for shiro
         SecurityUtils.setSecurityManager(springResource.getBean( org.apache.shiro.mgt.SecurityManager.class ));
@@ -74,8 +85,8 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
 
     protected void after( Description description ) {
-        super.after( description );
-        LOG.info( "Test {}: finish with application", description.getDisplayName() );
+        super.after(description);
+        logger.info("Test {}: finish with application", description.getDisplayName());
     }
 
 
@@ -155,12 +166,22 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public String get( String key ) {
-        return properties.getProperty( key );
+        return properties.getProperty(key);
     }
 
 
     @Override
     public SignInProviderFactory getProviderFactory() {
         return providerFactory;
+    }
+
+    @Override
+    public AppInfoMigrationPlugin getAppInfoMigrationPlugin() {
+        return appInfoMigrationPlugin;
+    }
+
+    @Override
+    public void refreshIndex(){
+        this.getEntityIndex().refresh();
     }
 }

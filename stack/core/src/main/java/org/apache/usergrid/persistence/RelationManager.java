@@ -18,12 +18,12 @@ package org.apache.usergrid.persistence;
 
 
 import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 
 import me.prettyprint.hector.api.mutation.Mutator;
 
@@ -65,6 +65,16 @@ public interface RelationManager {
             throws Exception;
 
     public Results searchCollection( String collectionName, Query query ) throws Exception;
+
+    /**
+     * this loops for consistentcy and is dangerous to run often
+     * @param collectionName
+     * @param query
+     * @param expectedResults
+     * @return
+     * @throws Exception
+     */
+    public Results searchCollectionConsistent( String collectionName, Query query, int expectedResults ) throws Exception;
 
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception;
 
@@ -116,6 +126,5 @@ public interface RelationManager {
 
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception;
 
-    public void batchUpdateSetIndexes( Mutator<ByteBuffer> batch, String setName, Object elementValue,
-                                       boolean removeFromSet, UUID timestampUuid ) throws Exception;
+
 }

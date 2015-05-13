@@ -31,11 +31,19 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public class SimpleEdge implements Edge {
 
-    protected final Id sourceNode;
-    protected final String type;
-    protected final Id targetNode;
-    protected final long timestamp;
+    protected Id sourceNode;
+    protected String type;
+    protected Id targetNode;
+    protected long timestamp;
 
+
+    /**
+     * Used for SMILE.  Do not remove
+     */
+    @SuppressWarnings( "unused" )
+    public SimpleEdge(){
+
+    }
 
     public SimpleEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp ) {
         this.sourceNode = sourceNode;

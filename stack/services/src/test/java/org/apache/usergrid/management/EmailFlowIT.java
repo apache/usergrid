@@ -28,6 +28,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.usergrid.CoreApplication;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,14 +42,12 @@ import org.apache.commons.lang.text.StrSubstitutor;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import net.jcip.annotations.NotThreadSafe;
 
@@ -95,6 +94,8 @@ import static org.junit.Assert.assertTrue;
 public class EmailFlowIT {
     private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
 
+    @Rule
+    public org.apache.usergrid.Application app = new CoreApplication( setup );
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -266,13 +267,14 @@ public class EmailFlowIT {
         final String adminEmail = uniqueEmail();
         final String adminPasswd = "testpassword";
 
-        OrganizationOwnerInfo orgOwner = createOwnerAndOrganization( orgName, appName, adminUserName, adminEmail, adminPasswd, false, false );
+        OrganizationOwnerInfo orgOwner = createOwnerAndOrganization(orgName, appName, adminUserName, adminEmail, adminPasswd, false, false);
         assertNotNull( orgOwner );
 
         ApplicationInfo app = setup.getMgmtSvc().createApplication( orgOwner.getOrganization().getUuid(), appName );
+        this.app.refreshIndex();
 
         //turn on app admin approval for app users
-        enableAdminApproval( app.getId() );
+        enableAdminApproval(app.getId());
 
         final String appUserUsername = uniqueUsername();
         final String appUserEmail = uniqueEmail();
@@ -283,7 +285,7 @@ public class EmailFlowIT {
         String activation_url = String.format( setup.get( PROPERTIES_USER_ACTIVATION_URL ), orgName, appName,
             appUser.getUuid().toString() );
 
-        setup.getEmf().refreshIndex();
+        setup.refreshIndex();
 
         // Activation
         setup.getMgmtSvc().startAppUserActivationFlow( app.getId(), appUser );
@@ -356,13 +358,15 @@ public class EmailFlowIT {
         orgOwner = createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
         assertNotNull( orgOwner );
 
-        setup.getEmf().refreshIndex();
+        setup.getEntityIndex().refresh();
 
         ApplicationInfo app = setup.getMgmtSvc().createApplication( orgOwner.getOrganization().getUuid(), appName );
+        setup.refreshIndex();
         assertNotNull( app );
         enableEmailConfirmation( app.getId() );
         enableAdminApproval( app.getId() );
 
+        setup.getEntityIndex().refresh();
 
         final String appUserEmail = uniqueEmail();
         final String appUserUsername = uniqueUsername();
@@ -466,7 +470,7 @@ public class EmailFlowIT {
         userProps.put( "activated", activated );
 
         User user = em.create( User.ENTITY_TYPE, User.class, userProps );
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         return user;
     }

@@ -24,40 +24,16 @@ public interface SerializationFig extends GuicyFig {
     @Default("5")
     int getTimeout();
 
-    /**
-     * Number of history items to return for delete.
-     *
-     * @return Timeout in seconds.
-     */
-    @Key("collection.delete.history.size")
-    @Default("100")
-    int getHistorySize();
 
     /**
      * Number of items to buffer.
      *
-     * @return Timeout in seconds.
+     * @return Number of items to buffer in memory
      */
-    @Key("collection.buffer.size")
-    @Default("10")
+    @Key("buffer.size")
+    @Default("100")
     int getBufferSize();
 
-
-    /**
-     * The size of threads to have in the task pool
-     */
-    @Key( "collection.task.pool.threadsize" )
-    @Default( "20" )
-    int getTaskPoolThreadSize();
-
-
-
-    /**
-     * The size of threads to have in the task pool
-     */
-    @Key( "collection.task.pool.queuesize" )
-    @Default( "20" )
-    int getTaskPoolQueueSize();
 
     /**
      * The maximum amount of entities we can load in a single request

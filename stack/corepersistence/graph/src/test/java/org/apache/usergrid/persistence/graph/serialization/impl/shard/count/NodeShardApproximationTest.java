@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
@@ -64,7 +65,7 @@ import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.astyanax.retry.RetryPolicy;
 
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -120,7 +121,7 @@ public class NodeShardApproximationTest {
                 new NodeShardApproximationImpl( graphFig, nodeShardCounterSerialization, timeService );
 
 
-        final Id id = createId( "test" );
+        final Id id = IdGenerator.createId( "test" );
         final Shard shard = new Shard( 0, 0, true );
         final String type = "type";
         final String type2 = "subType";
@@ -149,7 +150,7 @@ public class NodeShardApproximationTest {
         final int increments = 1000000;
         final int workers = Runtime.getRuntime().availableProcessors() * 2;
 
-        final Id id = createId( "test" );
+        final Id id = IdGenerator.createId( "test" );
         final String type = "type";
         final String type2 = "subType";
 
@@ -216,7 +217,7 @@ public class NodeShardApproximationTest {
         final int increments = 1000000;
         final int workers = Runtime.getRuntime().availableProcessors() * 2;
 
-        final Id id = createId( "test" );
+        final Id id = IdGenerator.createId( "test" );
         final String type = "type";
         final String type2 = "subType";
 

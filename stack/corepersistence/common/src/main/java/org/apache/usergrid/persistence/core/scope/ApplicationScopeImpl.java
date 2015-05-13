@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.core.scope;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Preconditions;
+
 
 /**
  *
@@ -29,10 +31,20 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public class ApplicationScopeImpl implements ApplicationScope {
 
-    protected final Id application;
+    protected Id application;
 
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public ApplicationScopeImpl(){
+
+    }
 
     public ApplicationScopeImpl( final Id application ) {
+        Preconditions.checkNotNull(application, "application id is required");
         this.application = application;
     }
 
@@ -40,6 +52,16 @@ public class ApplicationScopeImpl implements ApplicationScope {
     @Override
     public Id getApplication() {
         return this.application;
+    }
+
+
+
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public void setApplication( final Id application ) {
+        this.application = application;
     }
 
 

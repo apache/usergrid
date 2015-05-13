@@ -153,6 +153,7 @@ public class CollectionServiceIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1, "cats", "Tom" );
 
+        app.clear();
         app.put( "name", "Danny" );
 
         Entity dog = app.testRequest( ServiceAction.POST, 1, "dogs" ).getEntity();
@@ -214,6 +215,7 @@ public class CollectionServiceIT extends AbstractServiceIT {
             // ok
         }
 
+        app.refreshIndex();
         try {
             // try DELETE on cats with dogs name
             app.testRequest( ServiceAction.DELETE, 0, "cats", "Danny" );

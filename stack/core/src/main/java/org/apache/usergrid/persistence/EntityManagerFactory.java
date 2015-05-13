@@ -20,9 +20,12 @@ package org.apache.usergrid.persistence;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
+
+import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.springframework.context.ApplicationContext;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
+import rx.Observable;
 
 
 /**
@@ -41,18 +44,28 @@ public interface EntityManagerFactory {
      *
      * @return EntityDao for the specified parameters
      */
-    public abstract EntityManager getEntityManager( UUID applicationId );
+    EntityManager getEntityManager( UUID applicationId );
 
     /**
-     * Creates a new application.
-     *
-     * @param name a unique application name.
-     *
-     * @return the newly created application id.
-     *
-     * @throws Exception the exception
+     * get management app em
+     * @return
      */
-    public abstract UUID createApplication( String organizationName, String name ) throws Exception;
+    EntityManager getManagementEntityManager();
+
+
+        /**
+         * Creates a new application.
+         *
+         * @param name a unique application name.
+         *
+         * @return Entity of type application_info that represents the newly created Application
+         *
+         * @throws Exception the exception
+         */
+    Entity createApplicationV2( String organizationName, String name ) throws Exception;
+
+    @Deprecated
+    UUID createApplication( String organizationName, String name ) throws Exception;
 
     /**
      * Creates a Application entity. All entities except for applications must be attached to a
@@ -61,21 +74,49 @@ public interface EntityManagerFactory {
      * @param name the name of the application to create.
      * @param properties property values to create in the new entity or null.
      *
-     * @return the newly created application id.
+     * @return Entity of type application_info that represents the newly created Application
      *
      * @throws Exception the exception
      */
-    public abstract UUID createApplication(
-            String organizationName, String name, Map<String, Object> properties ) throws Exception;
+    Entity createApplicationV2(
+        String organizationName, String name, Map<String, Object> properties ) throws Exception;
+
+    @Deprecated
+    UUID createApplication(
+        String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
     /**
      * Delete Application.
      *
      * @param applicationId UUID of Application to be deleted.
      */
-    public abstract void deleteApplication( UUID applicationId ) throws Exception;
+    void deleteApplication( UUID applicationId ) throws Exception;
 
-    public abstract UUID importApplication( String organization, UUID applicationId, String name,
+    /**
+     *
+     * @param applicationUUID
+     * @param collectionFromName
+     * @param collectionToName
+     * @return
+     * @throws Exception
+     */
+    Observable migrateAppInfo( UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception;
+
+    /**
+     * Restore deleted application.
+     */
+    Entity restoreApplication( UUID applicationId) throws Exception;
+
+    /**
+     *
+     * @param organization
+     * @param applicationId
+     * @param name
+     * @param properties
+     * @return
+     * @throws Exception
+     */
+    UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
 
     /**
@@ -87,7 +128,7 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract UUID lookupApplication( String name ) throws Exception;
+    Optional<UUID> lookupApplication( String name ) throws Exception;
 
     /**
      * Returns all the applications in the system.
@@ -96,55 +137,34 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract Map<String, UUID> getApplications() throws Exception;
+    Map<String, UUID> getApplications() throws Exception;
 
     public Map<String, UUID> getDeletedApplications() throws Exception;
 
-    public abstract void setup() throws Exception;
+    void setup() throws Exception;
 
-    public abstract Map<String, String> getServiceProperties();
+    Map<String, String> getServiceProperties();
 
-    public abstract boolean updateServiceProperties( Map<String, String> properties );
+    boolean updateServiceProperties( Map<String, String> properties );
 
-    public abstract boolean setServiceProperty( String name, String value );
+    boolean setServiceProperty( String name, String value );
 
-    public abstract boolean deleteServiceProperty( String name );
+    boolean deleteServiceProperty( String name );
 
+    /**
+     * @return Entity of type application_info that represents the newly created application.
+     */
+    public Entity initializeApplicationV2(
+        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
+
+    @Deprecated
     public UUID initializeApplication(
         String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
 
     public UUID getManagementAppId();
 
-    public UUID getDefaultAppId();
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
 
-    public void refreshIndex();
-
-    public void rebuildAllIndexes( ProgressObserver po ) throws Exception;
-
-    public void rebuildInternalIndexes( ProgressObserver po ) throws Exception;
-
-    public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception;
-
-    /**
-     * Perform any data migrations necessary in the system
-     * @throws Exception
-     */
-    public void migrateData() throws Exception;
-
-    /**
-     * Return the migration status message
-     */
-    public String getMigrateDataStatus();
-
-    /**
-     * Return the current migration version of the system
-     */
-    public int getMigrateDataVersion();
-
-    /**
-     * Force the migration version to the specified version
-     */
-    public void setMigrationVersion(int version);
 
     /**
      * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph
@@ -154,26 +174,24 @@ public interface EntityManagerFactory {
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    void rebuildCollectionIndex(
-        UUID appId, String collection, boolean reverse, ProgressObserver po) throws Exception;
+    ReIndexService.IndexResponse rebuildCollectionIndex( Optional<UUID> appId, Optional<String> collection );
 
     /**
      * Add a new index to the application for scale
-     * @param appId application id
      * @param suffix unique indentifier for additional index
      * @param shards number of shards
      * @param replicas number of replicas
      * @param writeConsistency only "one, quorum, or all"
      */
-    public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas, final String writeConsistency);
+    public void addIndex(final String suffix,final int shards,final int replicas, final String writeConsistency);
 
     public Health getEntityStoreHealth();
 
-    void restoreApplication(UUID applicationId) throws Exception;
+    public Health getIndexHealth();
 
     public interface ProgressObserver {
 
-        public void onProgress( EntityRef entity);
+     public void onProgress( EntityRef entity);
 
     }
 }

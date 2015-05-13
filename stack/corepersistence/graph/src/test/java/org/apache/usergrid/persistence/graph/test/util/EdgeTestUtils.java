@@ -21,8 +21,8 @@ package org.apache.usergrid.persistence.graph.test.util;
 
 
 import java.util.Random;
-import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
@@ -36,8 +36,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import com.google.common.base.Optional;
 
 
 /**
@@ -61,7 +61,7 @@ public class EdgeTestUtils {
      * @return an Edge for testing
      */
     public static MarkedEdge createEdge( final String sourceType, final String edgeType, final String targetType ) {
-        return createEdge( createId( sourceType ), edgeType, createId( targetType ), System.currentTimeMillis() );
+        return createEdge( IdGenerator.createId( sourceType ), edgeType, IdGenerator.createId( targetType ), System.currentTimeMillis() );
     }
 
 
@@ -76,7 +76,7 @@ public class EdgeTestUtils {
      * @return an Edge for testing
      */
     public static MarkedEdge createEdge( final String sourceType, final String edgeType, final String targetType, final long timestamp ) {
-        return createEdge( createId( sourceType ), edgeType, createId( targetType ), timestamp );
+        return createEdge( IdGenerator.createId( sourceType ), edgeType, IdGenerator.createId( targetType ), timestamp );
     }
 
 
@@ -92,7 +92,7 @@ public class EdgeTestUtils {
      */
     public static MarkedEdge createMarkedEdge( final String sourceType, final String edgeType,
                                                final String targetType ) {
-        return createEdge( createId( sourceType ), edgeType, createId( targetType ), System.currentTimeMillis(),
+        return createEdge( IdGenerator.createId( sourceType ), edgeType, IdGenerator.createId( targetType ), System.currentTimeMillis(),
                 true );
     }
 
@@ -140,25 +140,6 @@ public class EdgeTestUtils {
 
 
     /**
-     * Create the id
-     */
-    public static Id createId( String type ) {
-        return createId(UUIDGenerator.newTimeUUID(), type );
-    }
-
-
-    /**
-     * Generate an ID with the type and id
-     *
-     * @param id The uuid in the id
-     * @param type The type of id
-     */
-    public static Id createId( UUID id, String type ) {
-        return new SimpleId( id, type );
-    }
-
-
-    /**
      *
      * @param sourceId
      * @param type
@@ -170,6 +151,19 @@ public class EdgeTestUtils {
                                                        final Edge last ) {
         return new SimpleSearchByEdgeType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, last );
     }
+
+    /**
+       *
+       * @param sourceId
+       * @param type
+       * @param maxVersion
+       * @param last
+       * @return
+       */
+      public static SearchByEdgeType createSearchByEdgeUnfiltered( final Id sourceId, final String type, final long maxVersion,
+                                                         final Edge last ) {
+          return new SimpleSearchByEdgeType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.fromNullable( last ) , false );
+      }
 
 
     /**
@@ -183,8 +177,22 @@ public class EdgeTestUtils {
      */
     public static SearchByIdType createSearchByEdgeAndId( final Id sourceId, final String type, final long maxVersion,
                                                           final String idType, final Edge last ) {
-        return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType, last );
+        return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType,  Optional.fromNullable(last) );
     }
+
+    /**
+      *
+      * @param sourceId
+      * @param type
+      * @param maxVersion
+      * @param idType
+      * @param last
+      * @return
+      */
+     public static SearchByIdType createSearchByEdgeAndIdUnfiltered( final Id sourceId, final String type, final long maxVersion,
+                                                           final String idType, final Edge last ) {
+         return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType,  Optional.fromNullable(last), false );
+     }
 
 
     /**
@@ -211,7 +219,8 @@ public class EdgeTestUtils {
      */
     public static SearchByEdge createGetByEdge( final Id sourceId, final String type, final Id targetId,
                                                 final long maxVersion, final Edge last ) {
-        return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, SearchByEdgeType.Order.DESCENDING, last );
+        return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, SearchByEdgeType.Order.DESCENDING,
+          Optional.fromNullable( last ) );
     }
 
 //

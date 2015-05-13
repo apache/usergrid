@@ -57,7 +57,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 class EntityIndexMapUtils {
 
-    static ObjectMapper objectMapper = new ObjectMapper(  );
 
     public static Entity fromMap( Map<String, Object> item ) {
         return fromMap( null, item );
@@ -78,7 +77,7 @@ class EntityIndexMapUtils {
 
             } else if ( value instanceof Boolean ) {
                 entity.setField( new BooleanField( fieldName, (Boolean)value ));
-                        
+
             } else if ( value instanceof Integer ) {
                 entity.setField( new IntegerField( fieldName, (Integer)value ));
 
@@ -87,13 +86,13 @@ class EntityIndexMapUtils {
 
 		    } else if ( value instanceof Float ) {
                 entity.setField( new FloatField( fieldName, (Float)value ));
-				
+
             } else if ( value instanceof Long ) {
                 entity.setField( new LongField( fieldName, (Long)value ));
 
             } else if ( value instanceof List) {
-                entity.setField( listToListField( fieldName, (List)value ));  
-            
+                entity.setField( listToListField( fieldName, (List)value ));
+
             } else if ( value instanceof UUID) {
                 entity.setField( new UUIDField( fieldName, (UUID)value ));
 
@@ -113,7 +112,7 @@ class EntityIndexMapUtils {
 							lat = Double.parseDouble( m.get("latitude").toString() );
 							lon = Double.parseDouble( m.get("longitude").toString() );
 
-						} else if ( m.get("lat") != null && m.get("lon") != null ) { 
+						} else if ( m.get("lat") != null && m.get("lon") != null ) {
 							lat = Double.parseDouble( m.get("lat").toString() );
 							lon = Double.parseDouble( m.get("lon").toString() );
 						}
@@ -124,20 +123,22 @@ class EntityIndexMapUtils {
 					}
 				}
 
-				if ( field == null ) { 
+				if ( field == null ) {
 
 					// not a location element, process it as map
-					entity.setField( new EntityObjectField( fieldName, 
+					entity.setField( new EntityObjectField( fieldName,
 						fromMap( (Map<String, Object>)value ))); // recursion
 
 				} else {
 					entity.setField( field );
 				}
-	
+
 			} else if ( value instanceof Object) {
 
                 byte[] valueSerialized;
                 try {
+                     ObjectMapper objectMapper = new ObjectMapper(  );
+
                     valueSerialized = objectMapper.writeValueAsBytes( value );
                 }
                 catch ( JsonProcessingException e ) {
@@ -158,42 +159,42 @@ class EntityIndexMapUtils {
         return entity;
     }
 
-    
+
     private static ListField listToListField( String fieldName, List list ) {
 
         if (list.isEmpty()) {
-            return new ListField( fieldName );
+            return new ArrayField( fieldName );
         }
 
         Object sample = list.get(0);
 
         if ( sample instanceof Map ) {
-            return new ListField<Entity>( fieldName, processListForField( list ));
+            return new ArrayField( fieldName, processListForField( list ));
 
         } else if ( sample instanceof List ) {
-            return new ListField<List>( fieldName, processListForField( list ));
-            
+            return new ArrayField<List>( fieldName, processListForField( list ));
+
         } else if ( sample instanceof String ) {
-            return new ListField<String>( fieldName, (List<String>)list );
-                    
+            return new ArrayField<String>( fieldName, (List<String>)list );
+
         } else if ( sample instanceof Boolean ) {
-            return new ListField<Boolean>( fieldName, (List<Boolean>)list );
-                    
+            return new ArrayField<Boolean>( fieldName, (List<Boolean>)list );
+
         } else if ( sample instanceof Integer ) {
-            return new ListField<Integer>( fieldName, (List<Integer>)list );
+            return new ArrayField<Integer>( fieldName, (List<Integer>)list );
 
         } else if ( sample instanceof Double ) {
-            return new ListField<Double>( fieldName, (List<Double>)list );
+            return new ArrayField<Double>( fieldName, (List<Double>)list );
 
         } else if ( sample instanceof Long ) {
-            return new ListField<Long>( fieldName, (List<Long>)list );
+            return new ArrayField<Long>( fieldName, (List<Long>)list );
 
         } else {
             throw new RuntimeException("Unknown type " + sample.getClass().getName());
         }
     }
 
-    
+
     private static List processListForField( List list ) {
         if ( list.isEmpty() ) {
             return list;
@@ -209,10 +210,10 @@ class EntityIndexMapUtils {
 
         } else if ( sample instanceof List ) {
             return processListForField( list ); // recursion
-            
-        } else { 
+
+        } else {
             return list;
-        } 
+        }
     }
 
 
@@ -245,7 +246,7 @@ class EntityIndexMapUtils {
                 LocationField locField = (LocationField) f;
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
-                // field names lat and lon trigger ElasticSearch geo location 
+                // field names lat and lon trigger ElasticSearch geo location
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongitude());
                 entityMap.put( field.getName(), locMap);
@@ -257,6 +258,8 @@ class EntityIndexMapUtils {
                 byte[] serilizedObj =  byteBuffer.array();
                 Object o;
                 try {
+                     ObjectMapper objectMapper = new ObjectMapper(  );
+
                     o = objectMapper.readValue( serilizedObj, ba.getClassinfo() );
                 }
                 catch ( IOException e ) {
@@ -272,7 +275,7 @@ class EntityIndexMapUtils {
         return entityMap;
     }
 
-    
+
     private static Collection processCollectionForMap(Collection c) {
         if (c.isEmpty()) {
             return c;

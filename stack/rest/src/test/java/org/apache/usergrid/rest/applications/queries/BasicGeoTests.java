@@ -17,30 +17,21 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import java.util.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.TestContextSetup;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
-import java.io.IOException;
-
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Results;
-
-import org.jclouds.json.Json;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.apache.usergrid.persistence.geo.model.Point;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-
-import static org.junit.Assert.assertEquals;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 

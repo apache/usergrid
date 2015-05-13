@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 
 /**
  * Simple bean implementation of search by edge
- *
  */
 public class SimpleSearchByEdge implements SearchByEdge {
 
@@ -43,23 +42,44 @@ public class SimpleSearchByEdge implements SearchByEdge {
     private final long maxTimestamp;
     private final Optional<Edge> last;
     private final SearchByEdgeType.Order order;
+    private final boolean filterMarked;
 
 
     /**
      * Create the search modules
+     *
      * @param sourceNode The source node of the edge
      * @param targetNode The target node of the edge
      * @param type The edge type
      * @param maxTimestamp The maximum timestamp to seek from
      * @param last The value to start seeking from.  Must be >= this value
      */
-    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp, final SearchByEdgeType.Order order, final Edge last ) {
+    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp,
+                               final SearchByEdgeType.Order order, final Optional<Edge> last ) {
+        this( sourceNode, type, targetNode, maxTimestamp, order, last, true );
+    }
 
-        ValidationUtils.verifyIdentity(sourceNode);
-        ValidationUtils.verifyIdentity(targetNode);
+
+    /**
+     * Create the search modules
+     *
+     * @param sourceNode The source node of the edge
+     * @param type The edge type
+     * @param targetNode The target node of the edge
+     * @param maxTimestamp The maximum timestamp to seek from
+     * @param last The value to start seeking from.  Must be >= this value
+     */
+    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp,
+                               final SearchByEdgeType.Order order, final Optional<Edge> last,
+                               final boolean filterMarked ) {
+
+
+        ValidationUtils.verifyIdentity( sourceNode );
+        ValidationUtils.verifyIdentity( targetNode );
         ValidationUtils.verifyString( type, "type" );
         GraphValidation.validateTimestamp( maxTimestamp, "maxTimestamp" );
-        Preconditions.checkNotNull(order, "order must not be null");
+        Preconditions.checkNotNull( order, "order must not be null" );
+        Preconditions.checkNotNull( last, "last can never be null" );
 
 
         this.sourceNode = sourceNode;
@@ -67,7 +87,8 @@ public class SimpleSearchByEdge implements SearchByEdge {
         this.type = type;
         this.maxTimestamp = maxTimestamp;
         this.order = order;
-        this.last = Optional.fromNullable(last);
+        this.last = last;
+        this.filterMarked = filterMarked;
     }
 
 
@@ -93,6 +114,10 @@ public class SimpleSearchByEdge implements SearchByEdge {
     public long getMaxTimestamp() {
         return maxTimestamp;
     }
+
+
+    @Override
+    public boolean filterMarked() { return filterMarked; }
 
 
     @Override

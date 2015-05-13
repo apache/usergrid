@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -40,7 +41,7 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
@@ -85,7 +86,7 @@ public class NodeSerializationTest {
     @Test
     public void writeReadDelete() throws ConnectionException {
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final long version = System.currentTimeMillis();
 
         serialization.mark( scope, nodeId, version ).execute();
@@ -111,7 +112,7 @@ public class NodeSerializationTest {
     @Test
     public void noDeleteVersion() {
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
 
         Optional<Long> returned = serialization.getMaxVersion( scope, nodeId );
 
@@ -128,7 +129,7 @@ public class NodeSerializationTest {
     @Test
     public void oldVersionDiscarded() throws ConnectionException {
 
-        final Id nodeId = createId( "test" );
+        final Id nodeId = IdGenerator.createId( "test" );
         final long version1 = System.currentTimeMillis();
         final long version2 = version1 + 1;
 
@@ -171,9 +172,9 @@ public class NodeSerializationTest {
     @Test
     public void multiGet() throws ConnectionException {
 
-        final Id nodeId1 = createId( "test" );
-        final Id nodeId2 = createId( "test" );
-        final Id nodeId3 = createId( "test" );
+        final Id nodeId1 = IdGenerator.createId( "test" );
+        final Id nodeId2 = IdGenerator.createId( "test" );
+        final Id nodeId3 = IdGenerator.createId( "test" );
 
 
         final long version = System.currentTimeMillis();

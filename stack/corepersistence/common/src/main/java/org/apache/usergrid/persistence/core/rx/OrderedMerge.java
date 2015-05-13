@@ -94,7 +94,6 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
             innerObservers[i] = inner;
         }
-
         /**
          * Once we're set up, begin the subscription to sub observables
          */

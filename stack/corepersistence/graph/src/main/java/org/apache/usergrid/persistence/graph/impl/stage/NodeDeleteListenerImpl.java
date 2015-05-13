@@ -28,10 +28,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -47,6 +46,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action0;
@@ -75,7 +75,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
      */
     @Inject
     public NodeDeleteListenerImpl( final NodeSerialization nodeSerialization,
-                                   @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization,
+                                   final EdgeMetadataSerialization edgeMetadataSerialization,
                                    final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
                                    final EdgeSerialization storageSerialization,
                                    final Keyspace keyspace ) {
@@ -103,7 +103,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
     public Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp ) {
 
 
-        return Observable.from( node )
+        return Observable.just( node )
 
                 //delete source and targets in parallel and merge them into a single observable
                 .flatMap( new Func1<Id, Observable<Integer>>() {
@@ -129,7 +129,12 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                                 .doOnCompleted( new Action0() {
                                     @Override
                                     public void call() {
-                                        HystrixCassandra.async(nodeSerialization.delete( scope, node, maxVersion.get() ));
+                                        try {
+                                            nodeSerialization.delete( scope, node, maxVersion.get()).execute();
+                                        }
+                                        catch ( ConnectionException e ) {
+                                            throw new RuntimeException( "Unable to connect to casandra", e );
+                                        }
                                     }
                                 } );
                     }
@@ -160,7 +165,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
                                 return storageSerialization.getEdgesToTarget( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, null ) );
+                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
                             }
                         } );
                     }
@@ -177,7 +182,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
                                 return storageSerialization.getEdgesFromSource( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, null ) );
+                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
                             }
                         } );
                     }
@@ -210,7 +215,12 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                             targetNodes.add( new TargetPair( edge.getTargetNode(), edge.getType() ) );
                         }
 
-                        HystrixCassandra.async( batch );
+                        try {
+                            batch.execute();
+                        }
+                        catch ( ConnectionException e ) {
+                            throw new RuntimeException( "Unable to connect to casandra", e );
+                        }
 
                         //now  delete meta data
 

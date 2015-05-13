@@ -27,9 +27,9 @@ import java.util.List;
  */
 public interface ConnectionRef extends ConnectedEntityRef, AssociatedEntityRef {
 
-    public EntityRef getConnectingEntity();
+    public EntityRef getSourceRefs();
 
     public List<ConnectedEntityRef> getPairedConnections();
 
-    public ConnectedEntityRef getConnectedEntity();
+    public ConnectedEntityRef getTargetRefs();
 }

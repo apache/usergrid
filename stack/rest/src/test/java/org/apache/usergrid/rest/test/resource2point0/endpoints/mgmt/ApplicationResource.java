@@ -22,17 +22,29 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.StringReader;
 
 
 /**
  * Classy class class.
  */
 public class ApplicationResource extends NamedResource {
+
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationResource.class);
+
+    ObjectMapper mapper = new ObjectMapper();
+
     public ApplicationResource(ClientContext context, UrlResource parent) {
         super("applications", context, parent);
     }
@@ -46,21 +58,47 @@ public class ApplicationResource extends NamedResource {
     }
 
 
-    public void post(Application application) {
-        getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(application);
+    public ApiResponse post(Application application) {
+        ApiResponse apiResponse =getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON).post(ApiResponse.class,application);
+        return apiResponse;
     }
 
-    public Entity post(Entity payload){
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-            .post(ApiResponse.class, payload);
+    public Entity post(Entity payload) {
+
+        String responseString = getResource(true)
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .accept(MediaType.APPLICATION_JSON)
+            .post(String.class, payload);
+
+        logger.debug("Response from post: " + responseString);
+
+        ApiResponse response;
+        try {
+            response = mapper.readValue(new StringReader(responseString), ApiResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing response", e);
+        }
+
         return new Entity(response);
     }
 
 
     public Entity get() {
-        ApiResponse response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-            .get(ApiResponse.class);
+
+        String responseString = getResource(true)
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .accept(MediaType.APPLICATION_JSON)
+            .get(String.class);
+
+        logger.debug("Response from post: " + responseString);
+
+        ApiResponse response;
+        try {
+            response = mapper.readValue(new StringReader(responseString), ApiResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing response", e);
+        }
 
         return new Entity(response);
     }

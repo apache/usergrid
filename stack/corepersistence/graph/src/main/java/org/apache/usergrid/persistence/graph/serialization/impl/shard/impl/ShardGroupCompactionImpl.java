@@ -29,13 +29,9 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.RejectedExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -43,14 +39,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
+import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.guice.GraphTaskExecutor;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
@@ -70,10 +63,13 @@ import com.google.common.hash.PrimitiveSink;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /**
@@ -91,7 +87,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     private static final HashFunction MURMUR_128 = Hashing.murmur3_128();
 
 
-    private final TaskExecutor taskExecutor;
+    private final ListeningExecutorService taskExecutor;
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final NodeShardAllocation nodeShardAllocation;
@@ -110,8 +106,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                                      final NodeShardAllocation nodeShardAllocation,
                                      final ShardedEdgeSerialization shardedEdgeSerialization,
                                      final EdgeColumnFamilies edgeColumnFamilies, final Keyspace keyspace,
-                                     final EdgeShardSerialization edgeShardSerialization,
-                                     @GraphTaskExecutor final TaskExecutor taskExecutor ) {
+                                     final EdgeShardSerialization edgeShardSerialization) {
 
         this.timeService = timeService;
         this.graphFig = graphFig;
@@ -125,7 +120,10 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         this.shardCompactionTaskTracker = new ShardCompactionTaskTracker();
         this.shardAuditTaskTracker = new ShardAuditTaskTracker();
 
-        this.taskExecutor = taskExecutor;
+
+        this.taskExecutor = MoreExecutors.listeningDecorator( TaskExecutorFactory
+            .createTaskExecutor( "ShardCompaction", graphFig.getShardAuditWorkerCount(),
+                graphFig.getShardAuditWorkerQueueSize() ) );
     }
 
 
@@ -145,8 +143,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
         Preconditions.checkNotNull( group, "group cannot be null" );
         Preconditions.checkArgument( group.isCompactionPending(), "Compaction is pending" );
-        Preconditions.checkArgument( group.shouldCompact( startTime ),
-                "Compaction cannot be run yet.  Ignoring compaction." );
+        Preconditions
+            .checkArgument( group.shouldCompact( startTime ), "Compaction cannot be run yet.  Ignoring compaction." );
 
 
         final CompactionResult.CompactionBuilder resultBuilder = CompactionResult.builder();
@@ -176,8 +174,9 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
         for ( Shard sourceShard : sourceShards ) {
-            Iterator<MarkedEdge> edges = edgeMeta.loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope,
-                    Collections.singleton( sourceShard ), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING );
+            Iterator<MarkedEdge> edges = edgeMeta
+                .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, Collections.singleton( sourceShard ),
+                    Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING );
 
             while ( edges.hasNext() ) {
                 final MarkedEdge edge = edges.next();
@@ -192,13 +191,13 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 }
 
 
-                newRowBatch.mergeShallow(
-                        edgeMeta.writeEdge( shardedEdgeSerialization, edgeColumnFamilies, scope, targetShard, edge,
-                                timestamp ) );
+                newRowBatch.mergeShallow( edgeMeta
+                        .writeEdge( shardedEdgeSerialization, edgeColumnFamilies, scope, targetShard, edge,
+                            timestamp ) );
 
-                deleteRowBatch.mergeShallow(
-                        edgeMeta.deleteEdge( shardedEdgeSerialization, edgeColumnFamilies, scope, sourceShard, edge,
-                                timestamp ) );
+                deleteRowBatch.mergeShallow( edgeMeta
+                        .deleteEdge( shardedEdgeSerialization, edgeColumnFamilies, scope, sourceShard, edge,
+                            timestamp ) );
 
                 edgeCount++;
 
@@ -207,8 +206,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 if ( edgeCount % maxWorkSize == 0 ) {
 
                     try {
-                        HystrixCassandra.async( newRowBatch );
-                        HystrixCassandra.async( deleteRowBatch );
+                        newRowBatch.execute();
+                        deleteRowBatch.execute();
                     }
                     catch ( Throwable t ) {
                         LOG.error( "Unable to move edges from shard {} to shard {}", sourceShard, targetShard );
@@ -219,8 +218,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
         try {
-            HystrixCassandra.async( newRowBatch );
-            HystrixCassandra.async( deleteRowBatch );
+            newRowBatch.execute();
+            deleteRowBatch.execute();
         }
         catch ( Throwable t ) {
             LOG.error( "Unable to move edges to target shard {}", targetShard );
@@ -260,7 +259,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             }
 
 
-            HystrixCassandra.async( shardRemovalRollup );
+            try {
+                shardRemovalRollup.execute();
+            }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to connect to casandra", e );
+            }
 
 
             LOG.info( "Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", targetShard );
@@ -268,7 +272,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             //Overwrite our shard index with a newly created one that has been marked as compacted
             Shard compactedShard = new Shard( targetShard.getShardIndex(), timeService.getCurrentTime(), true );
             final MutationBatch updateMark = edgeShardSerialization.writeShardMeta( scope, compactedShard, edgeMeta );
-            HystrixCassandra.async( updateMark );
+            try {
+                updateMark.execute();
+            }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to connect to casandra", e );
+            }
 
             resultBuilder.withCompactedShard( compactedShard );
         }
@@ -294,7 +303,18 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
          * Try and submit.  During back pressure, we may not be able to submit, that's ok.  Better to drop than to
          * hose the system
          */
-        ListenableFuture<AuditResult> future = taskExecutor.submit( new ShardAuditTask( scope, edgeMeta, group ) );
+        final ListenableFuture<AuditResult> future;
+
+        try {
+            future = taskExecutor.submit( new ShardAuditTask( scope, edgeMeta, group ) );
+        }
+        catch ( RejectedExecutionException ree ) {
+
+            //ignore, if this happens we don't care, we're saturated, we can check later
+            LOG.error( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
+
+            return Futures.immediateFuture( AuditResult.NOT_CHECKED );
+        }
 
         /**
          * Log our success or failures for debugging purposes
@@ -316,7 +336,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-    private final class ShardAuditTask implements Task<AuditResult> {
+    private final class ShardAuditTask implements Callable<AuditResult> {
 
         private final ApplicationScope scope;
         private final DirectedEdgeMeta edgeMeta;
@@ -328,20 +348,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             this.scope = scope;
             this.edgeMeta = edgeMeta;
             this.group = group;
-        }
-
-         @Override
-        public void exceptionThrown( final Throwable throwable ) {
-            LOG.error( "Unable to execute audit for shard of {}", throwable );
-        }
-
-
-        @Override
-        public AuditResult rejected() {
-            //ignore, if this happens we don't care, we're saturated, we can check later
-            LOG.error( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
-
-            return AuditResult.NOT_CHECKED;
         }
 
 
@@ -397,10 +403,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                  */
                 try {
                     CompactionResult result = compact( scope, edgeMeta, group );
-                    LOG.info(
-                            "Compaction result for compaction of scope {} with edge meta data of {} and shard group " +
-                                    "{} is {}",
-                            new Object[] { scope, edgeMeta, group, result } );
+                    LOG.info( "Compaction result for compaction of scope {} with edge meta data of {} and shard group "
+                            + "{} is {}", new Object[] { scope, edgeMeta, group, result } );
                 }
                 finally {
                     shardCompactionTaskTracker.complete( scope, edgeMeta, group );
@@ -412,8 +416,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             return AuditResult.NOT_CHECKED;
         }
     }
-
-
 
 
     /**
@@ -530,42 +532,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-    /**
-     * Create a thread pool that will reject work if our audit tasks become overwhelmed
-     */
-    private final class MaxSizeThreadPool extends ThreadPoolExecutor {
-
-        public MaxSizeThreadPool( final int workerSize, final int queueLength ) {
-            super( 1, workerSize, 30, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>( queueLength ),
-                    new CompactionThreadFactory(), new RejectionLogger() );
-        }
-    }
-
-
-    private final class CompactionThreadFactory implements ThreadFactory {
-
-        private final AtomicLong threadCounter = new AtomicLong();
-
-
-        @Override
-        public Thread newThread( final Runnable r ) {
-            final long newValue = threadCounter.incrementAndGet();
-
-            return new Thread( r, "Graph-Shard-Compaction-" + newValue );
-        }
-    }
-
-
-    private final class RejectionLogger implements RejectedExecutionHandler {
-
-
-        @Override
-        public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            LOG.warn( "Audit queue full, rejecting audit task {}", r );
-        }
-    }
-
-
     public static final class CompactionResult {
 
         public final long copiedEdges;
@@ -596,12 +562,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         @Override
         public String toString() {
             return "CompactionResult{" +
-                    "copiedEdges=" + copiedEdges +
-                    ", targetShard=" + targetShard +
-                    ", sourceShards=" + sourceShards +
-                    ", removedShards=" + removedShards +
-                    ", compactedShard=" + compactedShard +
-                    '}';
+                "copiedEdges=" + copiedEdges +
+                ", targetShard=" + targetShard +
+                ", sourceShards=" + sourceShards +
+                ", removedShards=" + removedShards +
+                ", compactedShard=" + compactedShard +
+                '}';
         }
 
 

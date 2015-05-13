@@ -448,8 +448,8 @@ public class Import extends ToolBase {
         // The entity that owns the collections
         String entityOwnerId = jp.getCurrentName();
 
-        // TODO: fix Import to work with Core Persistence 
-        EntityRef ownerEntityRef = em.get( 
+        // TODO: fix Import to work with Core Persistence
+        EntityRef ownerEntityRef = em.get(
             new SimpleEntityRef( "TODO: correct type goes here", UUID.fromString( entityOwnerId )) );
 
         jp.nextToken(); // start object
@@ -468,8 +468,8 @@ public class Import extends ToolBase {
                     while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                         String entryId = jp.getText();
 
-                        // TODO: fix Import to work with Core Persistence 
-                        EntityRef entryRef = em.get( new SimpleEntityRef( 
+                        // TODO: fix Import to work with Core Persistence
+                        EntityRef entryRef = em.get( new SimpleEntityRef(
                             "TODO: correct type goes here", UUID.fromString( entryId )) );
 
                         // Store in DB
@@ -487,7 +487,7 @@ public class Import extends ToolBase {
 
                     jp.nextToken();
 
-                    @SuppressWarnings("unchecked") Map<String, Object> dictionary = 
+                    @SuppressWarnings("unchecked") Map<String, Object> dictionary =
                             jp.readValueAs( HashMap.class );
 
                     em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
@@ -501,8 +501,8 @@ public class Import extends ToolBase {
                 while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                     String entryId = jp.getText();
 
-                    // TODO: fix Import to work with Core Persistence 
-                    EntityRef entryRef = em.get( new SimpleEntityRef( 
+                    // TODO: fix Import to work with Core Persistence
+                    EntityRef entryRef = em.get( new SimpleEntityRef(
                         "TODO: correct type goes here", UUID.fromString( entryId )) );
 
                     // store it

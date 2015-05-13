@@ -20,25 +20,35 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProvider;
+
+import com.google.inject.TypeLiteral;
 
 
 public class TestCollectionModule extends TestModule {
 
     @Override
     protected void configure() {
-        /**
-         * Runtime modules
-         */
+
         install( new CommonModule() );
-        install( new CollectionModule() );
+        install( new CollectionModule() {
+            @Override
+            public void configureMigrationProvider() {
+                //configure our migration data provider
+
+                TestMigrationDataProvider<EntityIdScope> migrationDataProvider = new TestMigrationDataProvider<>();
+                bind(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){}).toInstance( migrationDataProvider );
+            }
+        } );
 
         /**
          * Test modules
          */
-        install(new MaxMigrationModule());
+//        install(new MaxMigrationModule());
 
     }
 }

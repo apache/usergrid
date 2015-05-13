@@ -17,10 +17,17 @@
 package org.apache.usergrid;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -33,7 +40,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static junit.framework.Assert.assertNotNull;
@@ -48,6 +55,10 @@ public class CoreApplication implements Application, TestRule {
     protected CoreITSetup setup;
     protected EntityManager em;
     protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    private EntityIndex entityIndex;
+    private EntityIndexFactory entityIndexFactory;
+    private ApplicationEntityIndex applicationIndex;
+    private EntityManager managementEm;
 
 
     public CoreApplication( CoreITSetup setup ) {
@@ -142,9 +153,13 @@ public class CoreApplication implements Application, TestRule {
 
 
     protected void after( Description description ) {
-        LOG.info( "Test {}: finish with application", description.getDisplayName() );
+        LOG.info("Test {}: finish with application", description.getDisplayName());
 
-        setup.getEmf().getEntityManager( id ).deleteIndex();
+//        try {
+//            setup.getEmf().getEntityManager(id).().get();
+//        }catch (Exception ee){
+//            throw new RuntimeException(ee);
+//        }
     }
 
 
@@ -157,12 +172,20 @@ public class CoreApplication implements Application, TestRule {
         this.orgName = orgName;
         this.appName = appName;
         id = setup.createApplication( orgName, appName );
-        assertNotNull( id );
+        managementEm =  setup.getEmf().getEntityManager(setup.getEmf().getManagementAppId());
+        assertNotNull(id);
 
-        em = setup.getEmf().getEntityManager( id );
-        assertNotNull( em );
+        em = setup.getEmf().getEntityManager(id);
+        Injector injector = setup.getInjector();
+        entityIndex = injector.getInstance(EntityIndex.class);
+        entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
+        applicationIndex =  entityIndexFactory.createApplicationEntityIndex(CpNamingUtils.getApplicationScope(id));
+        assertNotNull(em);
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
+
+//        //wait for the index before proceeding
+//        em.refreshIndex();
 
     }
 
@@ -205,8 +228,9 @@ public class CoreApplication implements Application, TestRule {
 
 
     @Override
-    public void refreshIndex() {
-        em.refreshIndex();
+    public synchronized void refreshIndex() {
+        //Insert test entity and find it
+        entityIndex.refreshAsync().toBlocking().first();
     }
 
 

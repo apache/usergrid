@@ -29,10 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.IndexUpdate;
-import org.apache.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
-import org.apache.usergrid.persistence.cassandra.RelationManagerImpl;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -74,7 +70,7 @@ public class IndexIT extends AbstractCoreIT {
             em.create( "item", properties );
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         int i = 0;
 
@@ -85,14 +81,14 @@ public class IndexIT extends AbstractCoreIT {
             i++;
         }
 
-        query = Query.fromQL( "order by name" ).withCursor( r.getCursor() );
+        query = Query.fromQL( "order by name" ).withCursor(r.getCursor());
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
 
-        query = Query.fromQL( "order by name" ).withCursor( r.getCursor() );
+        query = Query.fromQL( "order by name" ).withCursor(r.getCursor());
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -110,7 +106,7 @@ public class IndexIT extends AbstractCoreIT {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
 
-        query = Query.fromQL( "order by name desc" ).withCursor( r.getCursor() );
+        query = Query.fromQL( "order by name desc" ).withCursor(r.getCursor());
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         // LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
         for ( Entity entity : r.getEntities() ) {
@@ -147,7 +143,7 @@ public class IndexIT extends AbstractCoreIT {
             em.create( "item", properties );
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query query = Query.fromQL( "name < 'delta' order by name asc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
@@ -275,7 +271,7 @@ public class IndexIT extends AbstractCoreIT {
             em.create( "item", properties );
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query query = Query.fromQL( "group = 1 order by name desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
@@ -314,7 +310,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.createConnection( entity2Ref, "connecting", entity1Ref );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         //should return valid values
         Query query = Query.fromQL( "select * where status = 'pickled'" );
@@ -333,7 +329,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.update( entity1Ref );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         //query and check the status has been updated, shouldn't return results
         query = Query.fromQL( "select * where status = 'pickled'" );
@@ -389,7 +385,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.createConnection( entity2Ref, "connecting", entity1Ref );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         //should return valid values
         Query query = Query.fromQL( "select * where status = 'pickled'" );
@@ -408,7 +404,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.update( entity1Ref );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         //query and check the status has been updated, shouldn't return results
         query = Query.fromQL( "select * where status = 'pickled'" );
@@ -437,43 +433,5 @@ public class IndexIT extends AbstractCoreIT {
 
 
 
-        //now read the index and see what properties are there
-
-        RelationManager rm = em.getRelationManager( entity2Ref );
-
-        if ( rm instanceof RelationManagerImpl ) { // only relevant for old-school EntityManagers
-
-            RelationManagerImpl impl = (RelationManagerImpl)rm;
-
-            CassandraService cass = SpringResource.getInstance().getBean( CassandraService.class );
-
-            ByteBufferSerializer buf = ByteBufferSerializer.get();
-
-            Keyspace ko = cass.getApplicationKeyspace( applicationId );
-            Mutator<ByteBuffer> m = createMutator( ko, buf );
-
-            IndexUpdate update = impl.batchStartIndexUpdate( m, entity1Ref,
-                    "status", "ignore", UUIDUtils.newTimeUUID(), false, false, true, false );
-
-            int count = 0;
-
-            IndexEntry lastMatch = null;
-
-            for ( IndexEntry entry : update.getPrevEntries() ) {
-                if ( "status".equals( entry.getPath() ) ) {
-                    count++;
-                    lastMatch = entry;
-                }
-            }
-
-            assertEquals( 1, count );
-
-            if ( lastMatch != null ) {
-                assertEquals( "herring", lastMatch.getValue() );
-            }
-            else {
-                fail( "The last match was null but should have been herring!" );
-            }
-        }
     }
 }

@@ -31,7 +31,7 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       $scope.queryLimitDisplay = 'block';
       $scope.queryStringDisplay = 'block';
       $scope.entitySelected = {};
-      $scope.newCollection = {};
+      $scope.newCollection = {name:"", entity:'{"name":"test"}'};
       $rootScope.queryCollection = {};
       $scope.data = {};
       $scope.data.queryPath = '';
@@ -71,7 +71,7 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       $scope.collectionList = collectionList;
       $scope.queryBoxesSelected = false;
       if(!$scope.queryPath){
-        $scope.loadCollection('/'+collectionList[Object.keys(collectionList).sort()[0]].name);
+        $scope.loadCollection('/'+$scope.collectionList[Object.keys($scope.collectionList).sort()[0]].name);
       }
       $scope.applyScope();
     });
@@ -98,6 +98,7 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
 
     $scope.$on('collection-created',function(){
       $scope.newCollection.name = '';
+      $scope.newCollection.entity = '{ "name":"value" }';
     });
 
     $scope.$on('query-received', function(event, collection) {
@@ -151,6 +152,21 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       }
     };
 
+    $scope.newCollectionWithEntityDialog = function(modalId){
+      if(!($scope.newCollection.name && $scope.newCollection.name.length>0)){
+        $rootScope.$broadcast('alert', 'error', 'You must specify a collection name.');
+      }else if(!($scope.newCollection.entity && $scope.newCollection.entity.length>0)){
+        $rootScope.$broadcast('alert', 'error', 'You must specify JSON data for the new entity.');
+      }else if(!$scope.validateEntityData(true)){
+        //Do Nothing. Alert is thrown in validateEntityData
+      }else{
+        ug.createCollectionWithEntity($scope.newCollection.name, $scope.newCollection.entity);
+        ug.getTopCollections();
+        $rootScope.$broadcast('alert', 'success', 'Collection created successfully.');
+        $scope.hideModal(modalId)
+      }
+    };
+
     $scope.addToPath = function(uuid){
       $scope.data.queryPath = '/' + $rootScope.queryCollection._type + '/' + uuid;
     }
@@ -199,6 +215,24 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       $scope.verb = 'DELETE';
     }
 
+    $scope.validateEntityData = function(skipMessage) {
+      var queryBody = $scope.newCollection.entity;
+
+      try {
+        queryBody = JSON.parse(queryBody);
+      } catch (e) {
+        $rootScope.$broadcast('alert', 'error', 'JSON is not valid');
+        return false;
+      }
+
+      queryBody = JSON.stringify(queryBody,null,2);
+
+      !skipMessage && $rootScope.$broadcast('alert','success', 'JSON is valid');
+
+      $scope.newCollection.entity = queryBody;
+      return true;
+    }
+
     $scope.validateJson = function(skipMessage) {
       var queryBody = $scope.data.queryBody;
 
@@ -215,6 +249,24 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
 
       $scope.data.queryBody = queryBody;
       return true;
+    }
+
+    $scope.isValidJSON = function(data) {
+      try {
+        data = JSON.parse(data);
+      } catch (e) {
+        return false;
+      }
+      return true;
+    }
+
+    $scope.formatJSON = function(data) {
+      try {
+        data = JSON.parse(data);
+      } catch (e) {
+        return data;
+      }
+      return JSON.stringify(data,null,2);
     }
 
 

@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 
 import java.util.Iterator;
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +35,7 @@ import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -45,7 +48,7 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
@@ -113,8 +116,8 @@ public class EdgeDeleteRepairTest {
     public void commitLogTest() throws ConnectionException {
 
 
-        final Id sourceId = createId( "source" );
-        final Id targetId = createId( "target" );
+        final Id sourceId = IdGenerator.createId( "source" );
+        final Id targetId = IdGenerator.createId( "target" );
         final String edgeType = "edge";
 
 
@@ -132,7 +135,7 @@ public class EdgeDeleteRepairTest {
 
 
         Iterator<MarkedEdge> itr = storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
 
         assertEquals( edge2, itr.next() );
         assertEquals( edge1, itr.next() );
@@ -143,7 +146,7 @@ public class EdgeDeleteRepairTest {
         assertEquals( edge1, deleted );
 
         itr = storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
 
         assertEquals( edge2, itr.next() );
         assertFalse( itr.hasNext() );

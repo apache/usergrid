@@ -19,15 +19,12 @@
 package org.apache.usergrid.persistence.collection.mvcc.entity;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 
 import com.google.common.base.Preconditions;
 
-import static org.apache.usergrid.persistence.core.util.ValidationUtils.validateApplicationScope;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyEntityWrite;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyIdentity;
-import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyString;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyTimeUuid;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyVersion;
 
@@ -66,19 +63,6 @@ public class MvccValidationUtils {
 
 
 
-    /**
-     * Validate the collection scope
-     */
-    public static void validateCollectionScope( final CollectionScope scope ) {
-
-        Preconditions.checkNotNull( scope, "collection scope is required" );
-
-        verifyIdentity( scope.getOwner() );
-
-        verifyString( scope.getName(), "name" );
-
-        validateApplicationScope( scope );
-    }
 
 
 }

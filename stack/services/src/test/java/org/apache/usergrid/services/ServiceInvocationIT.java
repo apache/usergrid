@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import static org.junit.Assert.assertNotNull;
 

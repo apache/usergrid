@@ -41,6 +41,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     private final long maxTimestamp;
     private final Optional<Edge> last;
     private final Order order;
+    private final boolean filterMarked;
 
 
     /**
@@ -51,21 +52,57 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
      * @param order The order order.  Descending is most efficient
      * @param last The value to start seeking from.  Must be >= this value
      * @param order
+     *
+     * //TODO, make last an optional
      */
-    public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Order order, final Edge last
-                                   ) {
+    public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Order order, final Edge last ) {
+        this(node, type, maxTimestamp, order, Optional.fromNullable(last), true);
+    }
+
+
+    /**
+     * Create the search modules
+     * @param node The node to search from
+     * @param type The edge type
+     * @param maxTimestamp The maximum timestamp to return
+     * @param order The order order.  Descending is most efficient
+     * @param last The value to start seeking from.  Must be >= this value
+     * @param order
+     *
+     * //TODO, make last an optional
+     */
+    public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Order order,
+                                   final Optional<Edge> last ) {
+        this( node, type, maxTimestamp, order, last, true );
+    }
+
+
+    /**
+     * Create the search modules
+     * @param node The node to search from
+     * @param type The edge type
+     * @param maxTimestamp The maximum timestamp to return
+     * @param order The order order.  Descending is most efficient
+     * @param last The value to start seeking from.  Must be >= this value
+     * @param filterMarked
+     */
+    public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Order order,
+                                   final Optional<Edge> last, final boolean filterMarked ) {
+
 
         Preconditions.checkNotNull( order, "order is required");
-        ValidationUtils.verifyIdentity(node);
+        ValidationUtils.verifyIdentity( node );
         ValidationUtils.verifyString( type, "type" );
         GraphValidation.validateTimestamp( maxTimestamp, "maxTimestamp" );
+        Preconditions.checkNotNull( last, "last is required" );
 
 
         this.node = node;
         this.type = type;
         this.maxTimestamp = maxTimestamp;
         this.order = order;
-        this.last = Optional.fromNullable(last);
+        this.last = last;
+        this.filterMarked = filterMarked;
     }
 
 
@@ -96,6 +133,12 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     @Override
     public Order getOrder() {
         return order;
+    }
+
+
+    @Override
+    public boolean filterMarked() {
+        return filterMarked;
     }
 
 

@@ -65,12 +65,18 @@ public interface SearchByEdgeType {
      */
     Order getOrder();
 
+    /**
+     * Return true to filter marked edges from the results
+     * @return
+     */
+    boolean filterMarked();
+
 
     /**
      * Options for ordering.  By default, we want to perform descending for common use cases and read speed.  This is our our data
      * is optimized in cassandra
      */
-    public enum Order {
+    enum Order {
         DESCENDING,
         ASCENDING
     }

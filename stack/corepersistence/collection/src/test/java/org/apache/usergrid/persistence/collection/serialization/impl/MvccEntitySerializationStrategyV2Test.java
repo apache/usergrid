@@ -22,7 +22,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,16 +29,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.EntityTooLargeException;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -50,7 +49,6 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySerializationStrategyImplTest {
@@ -94,8 +92,9 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
         final Entity entity = EntityHelper.generateEntity( setSize );
 
         //now we have one massive, entity, save it and retrieve it.
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "parent" ), "tests" );
+        final Id applicationId = new SimpleId( "application" );
+
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
 
         final Id id = entity.getId();
@@ -109,13 +108,10 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
         getMvccEntitySerializationStrategy().write( context, mvccEntity ).execute();
 
         //now load it
-        final Iterator<MvccEntity> loaded =
-                getMvccEntitySerializationStrategy().loadDescendingHistory( context, id, version, 100 );
+        final MvccEntity loadedEntity =
+                getMvccEntitySerializationStrategy().load( context, id ).get();
 
 
-        assertTrue( loaded.hasNext() );
-
-        final MvccEntity loadedEntity = loaded.next();
 
         assertLargeEntity( mvccEntity, loadedEntity );
 
@@ -137,8 +133,9 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
         final Entity entity = EntityHelper.generateEntity( setSize );
 
         //now we have one massive, entity, save it and retrieve it.
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "parent" ), "tests" );
+        final Id applicationId = new SimpleId( "application" );
+
+              ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
 
         final Id id = entity.getId();
@@ -178,8 +175,8 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
 
         final HashMap<Id, MvccEntity> entities = new HashMap<>( size );
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "parent" ), "tests" );
+        ApplicationScope context =
+                new ApplicationScopeImpl( new SimpleId( "organization" ));
 
 
         for ( int i = 0; i < size; i++ ) {
