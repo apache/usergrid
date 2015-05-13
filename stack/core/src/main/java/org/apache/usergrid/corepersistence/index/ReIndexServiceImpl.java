@@ -20,7 +20,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
@@ -28,7 +27,6 @@ import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.corepersistence.util.SerializableMapper;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -46,13 +44,11 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.observables.ConnectableObservable;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
-
 
 @Singleton
 public class ReIndexServiceImpl implements ReIndexService {
 
-    private static final MapScope RESUME_MAP_SCOPTE =
+    private static final MapScope RESUME_MAP_SCOPE =
         new MapScopeImpl( CpNamingUtils.getManagementApplicationId(), "reindexresume" );
 
     //Keep cursors to resume re-index for 1 day.  This is far beyond it's useful real world implications anyway.
@@ -78,31 +74,41 @@ public class ReIndexServiceImpl implements ReIndexService {
         this.rxTaskScheduler = rxTaskScheduler;
         this.indexService = indexService;
 
-        this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPTE );
+        this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
     }
 
 
 
-    @Override
-    public IndexResponse rebuildIndex( final Optional<UUID> appId, final Optional<String> collection, final Optional<String> cursor,
-                                       final Optional<Long> startTimestamp ) {
 
-        //load our last emitted Scope if a cursor is present
-        if ( cursor.isPresent() ) {
+
+    @Override
+    public IndexResponse rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder ) {
+
+          //load our last emitted Scope if a cursor is present
+        if ( indexServiceRequestBuilder.getCursor().isPresent() ) {
             throw new UnsupportedOperationException( "Build this" );
         }
 
 
-        final Observable<ApplicationScope>  applicationScopes = appId.isPresent()? Observable.just( getApplicationScope(appId.get()) ) : allApplicationsObservable.getData();
+        final Optional<ApplicationScope> appId = indexServiceRequestBuilder.getApplicationScope();
+        final Observable<ApplicationScope>  applicationScopes = appId.isPresent()? Observable.just( appId.get() ) : allApplicationsObservable.getData();
+
+
+
 
         final String newCursor = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 
+        final long modifiedSince = indexServiceRequestBuilder.getUpdateTimestamp().or( Long.MIN_VALUE );
+
         //create an observable that loads each entity and indexes it, start it running with publish
         final ConnectableObservable<EdgeScope> runningReIndex =
-            allEntityIdsObservable.getEdgesToEntities( applicationScopes, collection, startTimestamp )
+            allEntityIdsObservable.getEdgesToEntities( applicationScopes,
+                indexServiceRequestBuilder.getCollectionName() )
 
                 //for each edge, create our scope and index on it
-                .doOnNext( edge -> indexService.index( new EntityIdScope( edge.getApplicationScope(), edge.getEdge().getTargetNode() ) ) ).publish();
+                .doOnNext( edge -> indexService.index(
+                    new EntityIndexOperation( edge.getApplicationScope(), edge.getEdge().getTargetNode(),
+                        modifiedSince ) ) ).publish();
 
 
 
@@ -112,9 +118,9 @@ public class ReIndexServiceImpl implements ReIndexService {
             rxTaskScheduler.getAsyncIOScheduler() )
             .doOnNext( edge -> {
 
-                final String serializedState = SerializableMapper.asString( edge );
-
-                mapManager.putString( newCursor, serializedState, INDEX_TTL );
+//                final String serializedState = SerializableMapper.asString( edge );
+//
+//                mapManager.putString( newCursor, serializedState, INDEX_TTL );
             } ).subscribe();
 
 
@@ -123,6 +129,12 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
         return new IndexResponse( newCursor, runningReIndex );
+    }
+
+
+    @Override
+    public IndexServiceRequestBuilder getBuilder() {
+        return new IndexServiceRequestBuilderImpl();
     }
 }
 
