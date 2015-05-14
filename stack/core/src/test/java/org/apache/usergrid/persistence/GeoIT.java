@@ -199,18 +199,18 @@ public class GeoIT extends AbstractCoreIT {
 
         app.refreshIndex();
         //4. Test that the user is within 2000m of the entity
-        Results emSearchResults = em.searchConnectedEntities(user,
+        Results emSearchResults = em.searchTargetEntities(user,
             Query.fromQL("location within 5000 of "
                 + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude")
                 + ", " + ((LinkedHashMap<String, Object>)
-                        userProperties.get("location")).get("longitude")).setConnectionType("likes"));
+                userProperties.get("location")).get("longitude")).setConnectionType("likes"));
         assertEquals(1, emSearchResults.size());
         //5. Test that the user is NOT within 1000m of the entity
-        emSearchResults = em.searchConnectedEntities(user,
+        emSearchResults = em.searchTargetEntities(user,
             Query.fromQL("location within 1000 of "
                 + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude")
                 + ", " + ((LinkedHashMap<String, Object>)
-                        userProperties.get("location")).get("longitude")).setConnectionType("likes"));
+                userProperties.get("location")).get("longitude")).setConnectionType("likes"));
         assertEquals(0, emSearchResults.size());
         //cleanup
         em.delete(user);

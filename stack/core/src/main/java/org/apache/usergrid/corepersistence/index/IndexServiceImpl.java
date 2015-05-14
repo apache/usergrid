@@ -104,11 +104,11 @@ public class IndexServiceImpl implements IndexService {
 
 
         //we might or might not need to index from target-> source
-        final Observable<IndexEdge> targetSizes = getIndexEdgesAsTarget( gm, entityId );
+        final Observable<IndexEdge> edgesToSource = getIndexEdgesAsTarget( gm, entityId );
 
 
         //merge the edges together
-        final Observable<IndexEdge> observable = Observable.merge( sourceEdgesToIndex, targetSizes);
+        final Observable<IndexEdge> observable = Observable.merge( sourceEdgesToIndex, edgesToSource);
         //do our observable for batching
         //try to send a whole batch if we can
 
@@ -133,8 +133,6 @@ public class IndexServiceImpl implements IndexService {
 
     @Override
     public Observable<IndexOperationMessage> indexEdge( final ApplicationScope applicationScope, final Entity entity, final Edge edge ) {
-
-
 
         final Observable<IndexOperationMessage> batches =  Observable.just( edge ).map( observableEdge -> {
 

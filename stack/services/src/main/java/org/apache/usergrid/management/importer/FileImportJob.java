@@ -19,7 +19,6 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -112,8 +111,8 @@ public class FileImportJob extends OnlyOnceJob {
         rootEm.update(fileImport);
 
         // If one file Job fails, mark the main import Job also as failed
-        Results ImportJobResults = rootEm.getConnectingEntities(
-                fileImport, "includes", null, Level.ALL_PROPERTIES);
+        Results ImportJobResults = rootEm.getSourceEntities(
+            fileImport, "includes", null, Level.ALL_PROPERTIES);
         List<Entity> importEntity = ImportJobResults.getEntities();
         UUID importId = importEntity.get(0).getUuid();
         Import importUG = rootEm.get(importId, Import.class);

@@ -80,6 +80,6 @@ public class ConnectionHelper extends CollectionIoHelper {
         query.setConnectionType( CONNECTION );
         query.setEntityType( "test" );
 
-        return app.getEntityManager().searchConnectedEntities( rootEntity, query );
+        return app.getEntityManager().searchTargetEntities(rootEntity, query);
     }
 }

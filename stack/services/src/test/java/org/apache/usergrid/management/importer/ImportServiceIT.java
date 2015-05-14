@@ -28,7 +28,6 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.JobSchedulerService;
-import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -39,7 +38,6 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.services.notifications.QueueListener;
@@ -248,7 +246,7 @@ public class ImportServiceIT {
                     Results r;
                     List<ConnectionRef> connections;
                     for (int i = 0; i < 2; i++) {
-                        r = em.getConnectedEntities(entities.get(i), "related", null, Level.IDS);
+                        r = em.getTargetEntities(entities.get(i), "related", null, Level.IDS);
                         connections = r.getConnections();
                         assertNotNull(connections);
                     }
@@ -359,7 +357,7 @@ public class ImportServiceIT {
                         Results r;
                         List<ConnectionRef> connections;
                         for (int i = 0; i < 2; i++) {
-                            r = em.getConnectedEntities(entities.get(i), "related", null, Level.IDS);
+                            r = em.getTargetEntities(entities.get(i), "related", null, Level.IDS);
                             connections = r.getConnections();
                             assertNotNull(connections);
                         }

@@ -1455,7 +1455,7 @@ public class CollectionIT extends AbstractCoreIT {
         query.setConnectionType( "testconnection" );
         query.setEntityType( "user" );
 
-        r = em.searchConnectedEntities( foo, query );
+        r = em.searchTargetEntities(foo, query);
 
         assertEquals( "connection must match", 1, r.size() );
         assertEquals( entity.getUuid(), r.getId() );
