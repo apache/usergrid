@@ -20,29 +20,32 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializerUtil;
+import org.apache.usergrid.corepersistence.pipeline.read.CursorSeek;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.StringUtils;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
-import rx.observables.ConnectableObservable;
+import rx.schedulers.Schedulers;
 
 
 @Singleton
@@ -51,14 +54,18 @@ public class ReIndexServiceImpl implements ReIndexService {
     private static final MapScope RESUME_MAP_SCOPE =
         new MapScopeImpl( CpNamingUtils.getManagementApplicationId(), "reindexresume" );
 
-    //Keep cursors to resume re-index for 1 day.  This is far beyond it's useful real world implications anyway.
+    //Keep cursors to resume re-index for 10 days.  This is far beyond it's useful real world implications anyway.
     private static final int INDEX_TTL = 60 * 60 * 24 * 10;
+
+    private static final String MAP_CURSOR_KEY = "cursor";
+    private static final String MAP_COUNT_KEY = "count";
+    private static final String MAP_STATUS_KEY = "status";
+    private static final String MAP_UPDATED_KEY = "lastUpdated";
 
 
     private final AllApplicationsObservable allApplicationsObservable;
     private final AllEntityIdsObservable allEntityIdsObservable;
     private final IndexProcessorFig indexProcessorFig;
-    private final RxTaskScheduler rxTaskScheduler;
     private final MapManager mapManager;
     private final AsyncEventService indexService;
 
@@ -66,75 +73,216 @@ public class ReIndexServiceImpl implements ReIndexService {
     @Inject
     public ReIndexServiceImpl( final AllEntityIdsObservable allEntityIdsObservable,
                                final MapManagerFactory mapManagerFactory,
-                               final AllApplicationsObservable allApplicationsObservable, final IndexProcessorFig indexProcessorFig,
-                               final RxTaskScheduler rxTaskScheduler, final AsyncEventService indexService ) {
+                               final AllApplicationsObservable allApplicationsObservable,
+                               final IndexProcessorFig indexProcessorFig, final AsyncEventService indexService ) {
         this.allEntityIdsObservable = allEntityIdsObservable;
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;
-        this.rxTaskScheduler = rxTaskScheduler;
         this.indexService = indexService;
 
         this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
     }
 
 
-
-
-
     @Override
     public IndexResponse rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder ) {
 
-          //load our last emitted Scope if a cursor is present
-        if ( indexServiceRequestBuilder.getCursor().isPresent() ) {
-            throw new UnsupportedOperationException( "Build this" );
-        }
+        //load our last emitted Scope if a cursor is present
 
+        final Optional<EdgeScope> cursor = parseCursor( indexServiceRequestBuilder.getCursor() );
+
+
+        final CursorSeek<Edge> cursorSeek = getResumeEdge( cursor );
 
         final Optional<ApplicationScope> appId = indexServiceRequestBuilder.getApplicationScope();
-        final Observable<ApplicationScope>  applicationScopes = appId.isPresent()? Observable.just( appId.get() ) : allApplicationsObservable.getData();
 
 
+        Preconditions.checkArgument( cursor.isPresent() && appId.isPresent(),
+            "You cannot specify an app id and a cursor.  When resuming with cursor you must omit the appid" );
+
+        final Observable<ApplicationScope> applicationScopes = getApplications( cursor, appId );
 
 
-        final String newCursor = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
+        final String jobId = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 
         final long modifiedSince = indexServiceRequestBuilder.getUpdateTimestamp().or( Long.MIN_VALUE );
 
         //create an observable that loads each entity and indexes it, start it running with publish
-        final ConnectableObservable<EdgeScope> runningReIndex =
-            allEntityIdsObservable.getEdgesToEntities( applicationScopes,
-                indexServiceRequestBuilder.getCollectionName() )
+        final Observable<EdgeScope> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
+            indexServiceRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
 
-                //for each edge, create our scope and index on it
-                .doOnNext( edge -> indexService.index(
-                    new EntityIndexOperation( edge.getApplicationScope(), edge.getEdge().getTargetNode(),
-                        modifiedSince ) ) ).publish();
-
+            //for each edge, create our scope and index on it
+            .doOnNext( edge -> indexService.index(
+                new EntityIndexOperation( edge.getApplicationScope(), edge.getEdge().getTargetNode(),
+                    modifiedSince ) ) );
 
 
         //start our sampler and state persistence
         //take a sample every sample interval to allow us to resume state with minimal loss
-        runningReIndex.sample( indexProcessorFig.getReIndexSampleInterval(), TimeUnit.MILLISECONDS,
-            rxTaskScheduler.getAsyncIOScheduler() )
-            .doOnNext( edge -> {
-
-//                final String serializedState = SerializableMapper.asString( edge );
-//
-//                mapManager.putString( newCursor, serializedState, INDEX_TTL );
-            } ).subscribe();
+        runningReIndex.buffer( indexProcessorFig.getUpdateInterval() )
+            //create our flushing collector and flush the edge scopes to it
+            .collect( () -> new FlushingCollector( jobId ),
+                ( ( flushingCollector, edgeScopes ) -> flushingCollector.flushBuffer( edgeScopes ) ) ).doOnNext( flushingCollector-> flushingCollector.complete() )
+                //subscribe on our I/O scheduler and run the task
+            .subscribeOn( Schedulers.io() ).subscribe();
 
 
-        //start pushing to both
-        runningReIndex.connect();
-
-
-        return new IndexResponse( newCursor, runningReIndex );
+        return new IndexResponse( jobId, "Started", 0, 0 );
     }
 
 
     @Override
     public IndexServiceRequestBuilder getBuilder() {
         return new IndexServiceRequestBuilderImpl();
+    }
+
+
+    @Override
+    public IndexResponse getStatus( final String jobId ) {
+        Preconditions.checkNotNull( jobId, "jobId must not be null" );
+        return getIndexResponse( jobId );
+    }
+
+
+    /**
+     * Simple collector that counts state, then flushed every time a buffer is provided.  Writes final state when complete
+     */
+    private class FlushingCollector {
+
+        private final String jobId;
+        private long count;
+
+
+        private FlushingCollector( final String jobId ) {
+            this.jobId = jobId;
+        }
+
+
+        public void flushBuffer( final List<EdgeScope> buffer ) {
+            count += buffer.size();
+
+            //write our cursor state
+            if ( buffer.size() > 0 ) {
+                writeCursorState( jobId, buffer.get( buffer.size() - 1 ) );
+            }
+
+            writeStateMeta( jobId, "InProgress", count, System.currentTimeMillis() );
+        }
+
+        public void complete(){
+            writeStateMeta( jobId, "Complete", count, System.currentTimeMillis() );
+        }
+    }
+
+
+    /**
+     * Get the resume edge scope
+     *
+     * @param edgeScope The optional edge scope from the cursor
+     */
+    private CursorSeek<Edge> getResumeEdge( final Optional<EdgeScope> edgeScope ) {
+
+
+        if ( edgeScope.isPresent() ) {
+            return new CursorSeek<>( Optional.of( edgeScope.get().getEdge() ) );
+        }
+
+        return new CursorSeek<>( Optional.absent() );
+    }
+
+
+    /**
+     * Generate an observable for our appliation scope
+     */
+    private Observable<ApplicationScope> getApplications( final Optional<EdgeScope> cursor,
+                                                          final Optional<ApplicationScope> appId ) {
+        //cursor is present use it and skip until we hit that app
+        if ( cursor.isPresent() ) {
+
+            final EdgeScope cursorValue = cursor.get();
+            //we have a cursor and an application scope that was used.
+            return allApplicationsObservable.getData().skipWhile(
+                applicationScope -> !cursorValue.getApplicationScope().equals( applicationScope ) );
+        }
+        //this is intentional.  If
+        else if ( appId.isPresent() ) {
+            return Observable.just( appId.get() );
+        }
+
+        return allApplicationsObservable.getData();
+    }
+
+
+    /**
+     * Swap our cursor for an optional edgescope
+     */
+    private Optional<EdgeScope> parseCursor( final Optional<String> cursor ) {
+
+        if ( !cursor.isPresent() ) {
+            return Optional.absent();
+        }
+
+        //get our cursor
+        final String persistedCursor = mapManager.getString( cursor.get() );
+
+        if ( persistedCursor == null ) {
+            return Optional.absent();
+        }
+
+        final JsonNode node = CursorSerializerUtil.fromString( persistedCursor );
+
+        final EdgeScope edgeScope = EdgeScopeSerializer.INSTANCE.fromJsonNode( node, CursorSerializerUtil.getMapper() );
+
+        return Optional.of( edgeScope );
+    }
+
+
+    /**
+     * Write the cursor state to the map in cassandra
+     */
+    private void writeCursorState( final String jobId, final EdgeScope edge ) {
+
+        final JsonNode node = EdgeScopeSerializer.INSTANCE.toNode( CursorSerializerUtil.getMapper(), edge );
+
+        final String serializedState = CursorSerializerUtil.asString( node );
+
+        mapManager.putString( jobId + MAP_CURSOR_KEY, serializedState, INDEX_TTL );
+    }
+
+
+    /**
+     * Write our state meta data into cassandra so everyone can see it
+     * @param jobId
+     * @param status
+     * @param processedCount
+     * @param lastUpdated
+     */
+    private void writeStateMeta( final String jobId, final String status, final long processedCount,
+                                 final long lastUpdated ) {
+
+        mapManager.putString( jobId + MAP_STATUS_KEY, status );
+        mapManager.putLong( jobId + MAP_COUNT_KEY, processedCount );
+        mapManager.putLong( jobId + MAP_UPDATED_KEY, lastUpdated );
+    }
+
+
+    /**
+     * Get the index response from the jobId
+     * @param jobId
+     * @return
+     */
+    private IndexResponse getIndexResponse( final String jobId ) {
+
+        final String status = mapManager.getString( jobId+MAP_STATUS_KEY );
+
+        if(status == null){
+            throw new IllegalArgumentException( "Could not find a job with id " + jobId );
+        }
+
+        final long processedCount = mapManager.getLong( jobId + MAP_COUNT_KEY );
+        final long lastUpdated = mapManager.getLong( jobId + MAP_COUNT_KEY );
+
+        return new IndexResponse( jobId, status, processedCount, lastUpdated );
     }
 }
 

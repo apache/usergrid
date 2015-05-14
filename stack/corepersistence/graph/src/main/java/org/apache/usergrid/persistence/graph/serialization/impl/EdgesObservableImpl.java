@@ -72,7 +72,7 @@ public class EdgesObservableImpl implements EdgesObservable {
 
     @Override
     public Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode,
-                                                       final Optional<String> edgeTypeInput ) {
+                                                       final Optional<String> edgeTypeInput, final Optional<Edge> resume  ) {
 
 
 
@@ -86,7 +86,7 @@ public class EdgesObservableImpl implements EdgesObservable {
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                        Optional.<Edge>absent() ) );
+                       resume ) );
         } );
     }
 

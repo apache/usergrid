@@ -99,8 +99,6 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
     @Override
     public void index( final EntityIndexOperation entityIndexOperation ) {
-
-
         run(eventBuilder.index( entityIndexOperation ));
     }
 
