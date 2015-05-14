@@ -123,10 +123,21 @@ public class EventBuilderImpl implements EventBuilder {
 
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
+        //needs get versions here.
+
+        //TODO: change this to be an observable
+        //so we get these versions and loop through them until we find the MvccLogEntry that is marked as delete.
+        //TODO: evauluate this to possibly be an observable to pass to the nextmethod.
+        MvccLogEntry mostRecentlyMarked = ecm.getVersions( entityId ).toBlocking()
+                                             .first( mvccLogEntry -> mvccLogEntry.getState()== MvccLogEntry.State.DELETED );
+
 
         //observable of index operation messages
+        //this method will need the most recent version.
+        //When we go to compact the graph make sure you turn on the debugging mode for the deleted nodes so
+        //we can verify that we mark them. That said that part seems kinda done. as we also delete the mvcc buffers.
         final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteEntityIndexes( applicationScope, entityId );
+            indexService.deleteEntityIndexes( applicationScope, entityId,mostRecentlyMarked.getVersion() );
 
 
         //observable of entries as the batches are deleted

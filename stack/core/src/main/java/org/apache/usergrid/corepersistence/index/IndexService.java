@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.IndexEdge;
@@ -78,7 +80,8 @@ public interface IndexService {
      * @param entityId
      * @return
      */
-    Observable<IndexOperationMessage> deleteEntityIndexes(final ApplicationScope applicationScope, final Id entityId);
+    Observable<IndexOperationMessage> deleteEntityIndexes(final ApplicationScope applicationScope, final Id entityId,
+                                                         final UUID version);
 
 
 

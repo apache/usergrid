@@ -21,11 +21,11 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -41,7 +41,6 @@ import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -219,10 +218,43 @@ public class IndexServiceImpl implements IndexService {
 
     @Override
     public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
-                                                                  final Id entityId ) {
+                                                                  final Id entityId, final UUID version ) {
 
-        //TODO query ES and remove this entityId
-        throw new NotImplementedException( "Implement me" );
+        //bootstrap the lower modules from their caches
+        final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+        final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+
+        //we always index in the target scope
+        final Observable<Edge> edgesToTarget = edgesObservable.edgesToTarget( gm, entityId );
+
+        //we may have to index  we're indexing from source->target here
+        final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeFromSource( edge ) );
+
+
+        //we might or might not need to index from target-> source
+        final Observable<IndexEdge> targetSizes = getIndexEdgesAsTarget( gm, entityId );
+
+        //merge the edges together
+        final Observable<IndexEdge> observable = Observable.merge( sourceEdgesToIndex, targetSizes);
+        //do our observable for batching
+        //try to send a whole batch if we can
+        version.
+
+        //do our observable for batching
+        //try to send a whole batch if we can
+        final Observable<IndexOperationMessage>  batches =  observable.buffer( indexFig.getIndexBatchSize() )
+
+            //map into batches based on our buffer size
+            .flatMap( buffer -> Observable.from( buffer )
+                //collect results into a single batch
+                .collect( () -> ei.createBatch(), ( batch, indexEdge ) -> {
+                    //logger.debug( "adding edge {} to batch for entity {}", indexEdge, entity );
+                    batch.deindex( indexEdge, entityId, version );
+                } )
+                    //return the future from the batch execution
+                .flatMap( batch -> batch.execute() ) );
+
+        return ObservableTimer.time( batches, indexTimer );
     }
 
 
