@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
@@ -213,7 +212,7 @@ public class ImportServiceImpl implements ImportService {
             //set our entity type
             query.setEntityType( Schema.getDefaultSchema().getEntityType( FileImport.class ) );
 
-            return rootEm.searchConnectedEntities( importEntity, query );
+            return rootEm.searchTargetEntities(importEntity, query);
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );
@@ -272,7 +271,7 @@ public class ImportServiceImpl implements ImportService {
             //set our entity type
             query.setEntityType( Schema.getDefaultSchema().getEntityType( FailedImportEntity.class ) );
 
-            return rootEm.searchConnectedEntities( importEntity,  query );
+            return rootEm.searchTargetEntities(importEntity, query);
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );
@@ -382,11 +381,11 @@ public class ImportServiceImpl implements ImportService {
             query.setLimit(MAX_FILE_IMPORTS);
 
             // TODO, this won't work with more than 100 files
-            Results entities = rootEM.searchConnectedEntities( importRoot, query );
+            Results entities = rootEM.searchTargetEntities(importRoot, query);
             return entities.size();
 
             // see ImportConnectsTest()
-//            Results entities = rootEM.getConnectedEntities(
+//            Results entities = rootEM.getTargetEntities(
 //              importRoot, "includes", null, Level.ALL_PROPERTIES );
 //            PagingResultsIterator itr = new PagingResultsIterator( entities );
 //            int count = 0;
@@ -767,8 +766,8 @@ public class ImportServiceImpl implements ImportService {
     private Import getImportEntity( final EntityManager rootEm, final FileImport fileImport ) {
         try {
             Results importJobResults =
-                rootEm.getConnectingEntities( fileImport, IMPORT_FILE_INCLUDES_CONNECTION,
-                    null, Level.ALL_PROPERTIES );
+                rootEm.getSourceEntities(fileImport, IMPORT_FILE_INCLUDES_CONNECTION,
+                    null, Level.ALL_PROPERTIES);
 
             List<Entity> importEntities = importJobResults.getEntities();
             final Import importEntity = ( Import ) importEntities.get( 0 ).toTypedEntity();
@@ -802,7 +801,7 @@ public class ImportServiceImpl implements ImportService {
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit( MAX_FILE_IMPORTS );
 
-            Results entities = rootEM.searchConnectedEntities( importEntity, query );
+            Results entities = rootEM.searchTargetEntities(importEntity, query);
             PagingResultsIterator itr = new PagingResultsIterator( entities );
 
             if ( !itr.hasNext() ) {

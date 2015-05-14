@@ -17,10 +17,8 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.Query;
 import java.util.Iterator;
 import java.util.UUID;
-import org.apache.usergrid.persistence.Query.Level;
 
 
 /**
@@ -94,7 +92,7 @@ public class MultiQueryIterator implements ResultsIterator {
         try {
             return ( query.getCollection() != null ) ?
                    entityManager.searchCollection( entityRef, query.getCollection(), query ) :
-                   entityManager.searchConnectedEntities( entityRef, query );
+                   entityManager.searchTargetEntities(entityRef, query);
         }
         catch ( Exception e ) {
             throw new RuntimeException( e );
