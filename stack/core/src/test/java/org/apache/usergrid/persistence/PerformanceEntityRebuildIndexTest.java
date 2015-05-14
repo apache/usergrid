@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.base.Optional;
 import org.apache.commons.lang.RandomStringUtils;
 
+import org.apache.usergrid.corepersistence.index.IndexServiceRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.junit.After;
@@ -196,7 +197,9 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
-            reIndexService.rebuildIndex( Optional.of( em.getApplicationId()), Optional.<String>of("catherders"), Optional.absent(), Optional.absent() );
+            final IndexServiceRequestBuilder builder = reIndexService.getBuilder().withApplicationId( em.getApplicationId() ).withCollection( "catherders" );
+
+            reIndexService.rebuildIndex(builder );
 
             reporter.report();
             registry.remove( meterName );
