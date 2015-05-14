@@ -138,10 +138,11 @@ public class IndexServiceImpl implements IndexService {
 
             //if the node is the target node, generate our scope correctly
             if ( edge.getTargetNode().equals( entity.getId() ) ) {
+
                 return generateScopeFromSource( edge );
             }
 
-            return generateScopeFromTarget( edge );
+            throw new IllegalArgumentException("target not equal to entity + "+entity.getId());
         } ).flatMap( indexEdge -> {
 
             final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
