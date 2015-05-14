@@ -126,4 +126,6 @@ public class EdgesObservableImpl implements EdgesObservable {
                     Optional.<Edge>absent() ) );
         } );
     }
+
+
 }

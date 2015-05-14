@@ -2622,7 +2622,7 @@ public class CpEntityManager implements EntityManager {
 
             String collectionName = Schema.defaultCollectionName( eType );
             CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
-            cpr.addToCollection( collectionName, entity, cpEntity, false );
+            cpr.addToCollection( collectionName, entity);
 
             // Invoke counters
             incrementEntityCollection( collectionName, timestamp );
