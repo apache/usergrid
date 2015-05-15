@@ -292,10 +292,10 @@ public class CpRelationManager implements RelationManager {
 
         final Set<String> indexes = new HashSet<String>();
 
-        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Observable<String> str =
-            gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) );
+            gm.getEdgeTypesFromSource(new SimpleSearchEdgeType(cpHeadEntity.getId(), null, null));
 
         Iterator<String> iter = str.toBlocking().getIterator();
         while ( iter.hasNext() ) {
@@ -320,7 +320,7 @@ public class CpRelationManager implements RelationManager {
             ql = "select *";
         }
 
-        Query query = Query.fromQL( ql );
+        Query query = Query.fromQL(ql);
         query.setLimit( count );
         query.setReversed( reversed );
 
@@ -391,11 +391,14 @@ public class CpRelationManager implements RelationManager {
         }
 
         indexService.queueNewEdge(applicationScope, memberEntity, edge);
-        //reverse
+
+        //reverse the edge
         if(!cpHeadEntity.getId().getType().equals("application")) {
-            String pluralType =  InflectionUtils.pluralize(cpHeadEntity.getId().getType());
-            final Edge reverseEdge = createCollectionEdge(memberEntity.getId(), pluralType, cpHeadEntity.getId());
+            //TODO this should be easier
+            final Edge reverseEdge = createCollectionEdgeFromTargetEntity(memberEntity.getId(),cpHeadEntity.getId());
+            //add to graph
             gm.writeEdge(reverseEdge).toBlocking().last();
+            //add to index
             indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
         }
 
@@ -410,6 +413,10 @@ public class CpRelationManager implements RelationManager {
         return itemEntity;
     }
 
+    private Edge createCollectionEdgeFromTargetEntity(Id source, Id target) {
+        String pluralType =  InflectionUtils.pluralize(target.getType());
+        return createCollectionEdge(source, pluralType, target);
+    }
 
 
     @Override
