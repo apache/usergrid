@@ -22,70 +22,57 @@ package org.apache.usergrid.corepersistence.index;
 
 import java.util.UUID;
 
-
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.base.Optional;
 
 
+/**
+ * Index service request builder
+ */
 public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilder {
 
-
-    /**
-     *
-     final Observable<ApplicationScope>  applicationScopes = appId.isPresent()? Observable.just( getApplicationScope(appId.get()) ) : allApplicationsObservable.getData();
-
-     final String newCursor = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
-
-     //create an observable that loads each entity and indexes it, start it running with publish
-     final ConnectableObservable<EdgeScope> runningReIndex =
-         allEntityIdsObservable.getEdgesToEntities( applicationScopes, collection, startTimestamp )
-
-             //for each edge, create our scope and index on it
-             .doOnNext( edge -> indexService.index( new EntityIdScope( edge.getApplicationScope(), edge.getEdge().getTargetNode() ) ) ).publish();
-
-
-
-     //start our sampler and state persistence
-     //take a sample every sample interval to allow us to resume state with minimal loss
-     runningReIndex.sample( indexProcessorFig.getReIndexSampleInterval(), TimeUnit.MILLISECONDS,
-         rxTaskScheduler.getAsyncIOScheduler() )
-         .doOnNext( edge -> {
-
-             final String serializedState = SerializableMapper.asString( edge );
-
-             mapManager.putString( newCursor, serializedState, INDEX_TTL );
-         } ).subscribe();
-
-
-     */
-
-    private Optional<UUID> withApplicationId;
-    private Optional<String> withCollectionName;
-    private Optional<String> cursor;
-    private Optional<Long> updateTimestamp;
+    private Optional<UUID> withApplicationId = Optional.absent();
+    private Optional<String> withCollectionName = Optional.absent();
+    private Optional<String> cursor = Optional.absent();
+    private Optional<Long> updateTimestamp = Optional.absent();
 
 
     /***
      *
-     * @param applicationId
+     * @param applicationId The application id
      * @return
      */
     @Override
     public IndexServiceRequestBuilder withApplicationId( final UUID applicationId ) {
-        this.withApplicationId = Optional.fromNullable(applicationId);
+        this.withApplicationId = Optional.fromNullable( applicationId );
         return this;
     }
 
 
+    /**
+     * the colleciton name
+     * @param collectionName
+     * @return
+     */
     @Override
     public IndexServiceRequestBuilder withCollection( final String collectionName ) {
-        this.withCollectionName = Optional.fromNullable( collectionName );
+        if(collectionName == null){
+            this.withCollectionName = Optional.absent();
+        }
+        else {
+            this.withCollectionName = Optional.fromNullable( CpNamingUtils.getEdgeTypeFromCollectionName( collectionName ) );
+        }
         return this;
     }
 
 
+    /**
+     * The cursor
+     * @param cursor
+     * @return
+     */
     @Override
     public IndexServiceRequestBuilder withCursor( final String cursor ) {
         this.cursor = Optional.fromNullable( cursor );
@@ -93,9 +80,14 @@ public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilde
     }
 
 
+    /**
+     * Set start timestamp in epoch time.  Only entities updated since this time will be processed for indexing
+     * @param timestamp
+     * @return
+     */
     @Override
     public IndexServiceRequestBuilder withStartTimestamp( final Long timestamp ) {
-        this.updateTimestamp = Optional.fromNullable(timestamp  );
+        this.updateTimestamp = Optional.fromNullable( timestamp );
         return this;
     }
 
@@ -103,8 +95,8 @@ public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilde
     @Override
     public Optional<ApplicationScope> getApplicationScope() {
 
-        if(this.withApplicationId.isPresent()){
-            return Optional.of(  CpNamingUtils.getApplicationScope( withApplicationId.get()));
+        if ( this.withApplicationId.isPresent() ) {
+            return Optional.of( CpNamingUtils.getApplicationScope( withApplicationId.get() ) );
         }
 
         return Optional.absent();

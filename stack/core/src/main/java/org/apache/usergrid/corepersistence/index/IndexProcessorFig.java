@@ -78,7 +78,7 @@ public interface IndexProcessorFig extends GuicyFig {
     String getQueueImplementation();
 
 
-    @Default("10000")
+    @Default("1000")
     @Key("elasticsearch.reindex.flush.interval")
     int getUpdateInterval();
 
