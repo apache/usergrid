@@ -260,7 +260,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<Edge> edges = gm.loadEdgeVersions(
             new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
-                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ) );
+                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent() ) );
 
         return edges.toBlocking().firstOrDefault( null ) != null;
     }
