@@ -589,6 +589,12 @@
       <artifactId>jbcrypt</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-apache-client</artifactId>
+      <version>${jersey-version}</version>
+    </dependency>
+
   </dependencies>
 
 </project>
