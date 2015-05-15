@@ -31,7 +31,7 @@ public interface ReIndexService {
      *
      * @param indexServiceRequestBuilder The builder to build the request
      */
-    IndexResponse rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder );
+    ReIndexStatus rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder );
 
 
     /**
@@ -45,20 +45,20 @@ public interface ReIndexService {
      * @param jobId The jobId returned during the rebuild index
      * @return
      */
-    IndexResponse getStatus( final String jobId );
+    ReIndexStatus getStatus( final String jobId );
 
 
     /**
      * The response when requesting a re-index operation
      */
-    class IndexResponse {
+    class ReIndexStatus {
         final String jobId;
-        final String status;
+        final Status status;
         final long numberProcessed;
         final long lastUpdated;
 
 
-        public IndexResponse( final String jobId, final String status, final long numberProcessed,
+        public ReIndexStatus( final String jobId, final Status status, final long numberProcessed,
                               final long lastUpdated ) {
             this.jobId = jobId;
             this.status = status;
@@ -97,8 +97,12 @@ public interface ReIndexService {
          * Get the status
          * @return
          */
-        public String getStatus() {
+        public Status getStatus() {
             return status;
         }
+    }
+
+    enum Status{
+        STARTED, INPROGRESS, COMPLETE;
     }
 }

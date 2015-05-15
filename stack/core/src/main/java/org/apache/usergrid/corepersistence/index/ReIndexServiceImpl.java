@@ -22,6 +22,10 @@ package org.apache.usergrid.corepersistence.index;
 
 import java.util.List;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializerUtil;
 import org.apache.usergrid.corepersistence.pipeline.read.CursorSeek;
@@ -50,6 +54,8 @@ import rx.schedulers.Schedulers;
 
 @Singleton
 public class ReIndexServiceImpl implements ReIndexService {
+
+    private static final Logger logger = LoggerFactory.getLogger( ReIndexServiceImpl.class );
 
     private static final MapScope RESUME_MAP_SCOPE =
         new MapScopeImpl( CpNamingUtils.getManagementApplicationId(), "reindexresume" );
@@ -85,7 +91,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
     @Override
-    public IndexResponse rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder ) {
+    public ReIndexStatus rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder ) {
 
         //load our last emitted Scope if a cursor is present
 
@@ -97,7 +103,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         final Optional<ApplicationScope> appId = indexServiceRequestBuilder.getApplicationScope();
 
 
-        Preconditions.checkArgument( cursor.isPresent() && appId.isPresent(),
+        Preconditions.checkArgument( !(cursor.isPresent() && appId.isPresent()),
             "You cannot specify an app id and a cursor.  When resuming with cursor you must omit the appid" );
 
         final Observable<ApplicationScope> applicationScopes = getApplications( cursor, appId );
@@ -112,9 +118,14 @@ public class ReIndexServiceImpl implements ReIndexService {
             indexServiceRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
 
             //for each edge, create our scope and index on it
-            .doOnNext( edge -> indexService.index(
-                new EntityIndexOperation( edge.getApplicationScope(), edge.getEdge().getTargetNode(),
-                    modifiedSince ) ) );
+            .doOnNext( edge -> {
+                final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( edge.getApplicationScope(), edge.getEdge().getTargetNode(), modifiedSince );
+
+                logger.info( "Queueing {}", entityIndexOperation );
+
+                indexService.index(entityIndexOperation);
+
+            } );
 
 
         //start our sampler and state persistence
@@ -127,7 +138,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             .subscribeOn( Schedulers.io() ).subscribe();
 
 
-        return new IndexResponse( jobId, "Started", 0, 0 );
+        return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );
     }
 
 
@@ -138,7 +149,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
     @Override
-    public IndexResponse getStatus( final String jobId ) {
+    public ReIndexStatus getStatus( final String jobId ) {
         Preconditions.checkNotNull( jobId, "jobId must not be null" );
         return getIndexResponse( jobId );
     }
@@ -166,11 +177,11 @@ public class ReIndexServiceImpl implements ReIndexService {
                 writeCursorState( jobId, buffer.get( buffer.size() - 1 ) );
             }
 
-            writeStateMeta( jobId, "InProgress", count, System.currentTimeMillis() );
+            writeStateMeta( jobId, Status.INPROGRESS, count, System.currentTimeMillis() );
         }
 
         public void complete(){
-            writeStateMeta( jobId, "Complete", count, System.currentTimeMillis() );
+            writeStateMeta( jobId, Status.COMPLETE, count, System.currentTimeMillis() );
         }
     }
 
@@ -257,10 +268,15 @@ public class ReIndexServiceImpl implements ReIndexService {
      * @param processedCount
      * @param lastUpdated
      */
-    private void writeStateMeta( final String jobId, final String status, final long processedCount,
+    private void writeStateMeta( final String jobId, final Status status, final long processedCount,
                                  final long lastUpdated ) {
 
-        mapManager.putString( jobId + MAP_STATUS_KEY, status );
+        if(logger.isDebugEnabled()) {
+            logger.debug( "Flushing state for jobId {}, status {}, processedCount {}, lastUpdated {}",
+                new Object[] { jobId, status, processedCount, lastUpdated } );
+        }
+
+        mapManager.putString( jobId + MAP_STATUS_KEY, status.name() );
         mapManager.putLong( jobId + MAP_COUNT_KEY, processedCount );
         mapManager.putLong( jobId + MAP_UPDATED_KEY, lastUpdated );
     }
@@ -271,18 +287,20 @@ public class ReIndexServiceImpl implements ReIndexService {
      * @param jobId
      * @return
      */
-    private IndexResponse getIndexResponse( final String jobId ) {
+    private ReIndexStatus getIndexResponse( final String jobId ) {
 
-        final String status = mapManager.getString( jobId+MAP_STATUS_KEY );
+        final String stringStatus = mapManager.getString( jobId+MAP_STATUS_KEY );
 
-        if(status == null){
+        if(stringStatus == null){
             throw new IllegalArgumentException( "Could not find a job with id " + jobId );
         }
+
+        final Status status = Status.valueOf( stringStatus );
 
         final long processedCount = mapManager.getLong( jobId + MAP_COUNT_KEY );
         final long lastUpdated = mapManager.getLong( jobId + MAP_COUNT_KEY );
 
-        return new IndexResponse( jobId, status, processedCount, lastUpdated );
+        return new ReIndexStatus( jobId, status, processedCount, lastUpdated );
     }
 }
 
