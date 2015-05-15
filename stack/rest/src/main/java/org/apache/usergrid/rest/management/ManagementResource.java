@@ -24,12 +24,21 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.api.view.Viewable;
+import com.sun.jersey.client.apache.ApacheHttpClient;
+import com.sun.jersey.client.apache.ApacheHttpClientHandler;
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpConnectionManager;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationCreator;
@@ -104,6 +113,9 @@ public class ManagementResource extends AbstractContextResource {
     @Autowired
     MetricsFactory metricsFactory;
 
+    private static Client jerseyClient = null;
+
+
     // names for metrics to be collected
     private static final String SSO_TOKENS_REJECTED = "sso_tokens_rejected";
     private static final String SSO_TOKENS_VALIDATED = "sso_tokens_validated";
@@ -111,10 +123,11 @@ public class ManagementResource extends AbstractContextResource {
     private static final String SSO_PROCESSING_TIME = "sso_processing_time";
 
     // usergrid configuration property names needed
-    public static final String USERGRID_CENTRAL_URL = "usergrid.central.url";
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
-    public static final String USERGRID_SYSADMIN_LOGIN_ALLOWED = "usergrid.sysadmin.login.allowed";
-
+    public static final String USERGRID_CENTRAL_URL =         "usergrid.central.url";
+    public static final String CENTRAL_CONNECTION_POOL_SIZE = "usergrid.central.connection.pool.size";
+    public static final String CENTRAL_CONNECTION_TIMEOUT =   "usergrid.central.connection.timeout";
+    public static final String CENTRAL_READ_TIMEOUT =         "usergrid.central.read.timeout";
 
     public ManagementResource() {
         logger.info( "ManagementResource initialized" );
@@ -188,7 +201,7 @@ public class ManagementResource extends AbstractContextResource {
     }
 
 
-   private Response getAccessTokenInternal(UriInfo ui, String authorization, String grant_type, String username,
+    private Response getAccessTokenInternal(UriInfo ui, String authorization, String grant_type, String username,
                                            String password, String client_id, String client_secret, long ttl,
                                            String callback, boolean adminData, boolean me) throws Exception {
 
@@ -651,7 +664,6 @@ public class ManagementResource extends AbstractContextResource {
         return response;
     }
 
-
     /**
      * Look up Admin User via UG Central's /management/me endpoint.
      *
@@ -678,10 +690,7 @@ public class ManagementResource extends AbstractContextResource {
 
         // use our favorite HTTP client to GET /management/me
 
-        ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        Client client = Client.create( clientConfig );
-
+        Client client = getJerseyClient();
         final JsonNode accessInfoNode;
         try {
             accessInfoNode = client.resource( me )
@@ -698,6 +707,50 @@ public class ManagementResource extends AbstractContextResource {
         }
 
         return accessInfoNode;
+    }
+
+
+    synchronized Client getJerseyClient() {
+
+        if ( jerseyClient == null ) {
+
+            // create HTTPClient and with configured connection pool
+
+            int poolSize = 100; // connections
+            final String poolSizeStr = properties.getProperty( CENTRAL_CONNECTION_POOL_SIZE );
+            if ( poolSizeStr != null ) {
+                poolSize = Integer.parseInt( poolSizeStr );
+            }
+
+            MultiThreadedHttpConnectionManager cm = new MultiThreadedHttpConnectionManager();
+            HttpConnectionManagerParams cmParams = cm.getParams();
+            cmParams.setMaxTotalConnections( poolSize );
+            HttpClient httpClient = new HttpClient( cm );
+
+            // create Jersey Client using that HTTPClient and with configured timeouts
+
+            int timeout = 20000; // ms
+            final String timeoutStr = properties.getProperty( CENTRAL_CONNECTION_TIMEOUT );
+            if ( timeoutStr != null ) {
+                timeout = Integer.parseInt( timeoutStr );
+            }
+
+            int readTimeout = 20000; // ms
+            final String readTimeoutStr = properties.getProperty( CENTRAL_READ_TIMEOUT );
+            if ( readTimeoutStr != null ) {
+                readTimeout = Integer.parseInt( readTimeoutStr );
+            }
+
+            ClientConfig clientConfig = new DefaultClientConfig();
+            clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
+            clientConfig.getProperties().put( ClientConfig.PROPERTY_CONNECT_TIMEOUT, timeout ); // ms
+            clientConfig.getProperties().put( ClientConfig.PROPERTY_READ_TIMEOUT, readTimeout ); // ms
+
+            ApacheHttpClientHandler handler = new ApacheHttpClientHandler( httpClient, clientConfig );
+            jerseyClient = new ApacheHttpClient( handler );
+        }
+
+        return jerseyClient;
     }
 
 
