@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.index;
 
 
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
@@ -49,13 +51,24 @@ public interface ApplicationEntityIndex {
 
 
     /**
-     * Same as search, just iterates all documents that match the index edge exactly
-     * @param edge
-     * @param limit
-     * @param offset
+     * Same as search, just iterates all documents that match the index edge exactly.
+     * @param edge The edge to search on
+     * @param entityId The entity that the searchEdge is connected to.
+     * @param limit The limit of the values to return per search.
+     * @param offset The offset to page the query on.
      * @return
      */
     CandidateResults getAllEdgeDocuments(final IndexEdge edge, final Id entityId,  final int limit, final int offset);
+
+    /**
+     * Returns all entity documents that match the entityId and come before the marked version
+     * @param entityId The entityId to match when searching
+     * @param markedVersion The version that has been marked for deletion. All version before this one must be deleted.
+     * @param limit The limit of the values to return per search.
+     * @param offset The offset to page the query on.
+     * @return
+     */
+    CandidateResults getAllEntityVersionBeforeMark(final Id entityId, final UUID markedVersion ,final int limit, final int offset);
 
     /**
      * delete all application records

@@ -81,7 +81,7 @@ public interface IndexService {
      * @return
      */
     Observable<IndexOperationMessage> deleteEntityIndexes(final ApplicationScope applicationScope, final Id entityId,
-                                                         final UUID version);
+                                                         final UUID markedVersion);
 
 
 
