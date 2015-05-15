@@ -913,7 +913,10 @@ public class CpRelationManager implements RelationManager {
 
         if ( query.isGraphSearch() ) {
            // if(query.getResultsLevel() == Level.ALL_PROPERTIES)
-           readPipelineBuilder.getConnection( connection );
+           if(entityType ==null )
+               readPipelineBuilder.getConnection( connection );
+            else
+               readPipelineBuilder.getConnection(connection, entityType);
             //else
         }
         else {
