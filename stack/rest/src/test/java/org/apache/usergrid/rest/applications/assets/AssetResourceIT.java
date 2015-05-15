@@ -139,10 +139,14 @@ public class AssetResourceIT extends AbstractRestIT {
         UserRepo.INSTANCE.load( resource(), access_token );
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
-        FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
 
-        JsonNode node = resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA )
+        FormDataMultiPart form = new FormDataMultiPart()
+                .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+
+        JsonNode node = resource().path( "/test-organization/test-app/foos" )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.MULTIPART_FORM_DATA )
                 .post( JsonNode.class, form );
 
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
@@ -151,25 +155,47 @@ public class AssetResourceIT extends AbstractRestIT {
         logNode( node );
 
         // get entity
-        node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+        node = resource().path( "/test-organization/test-app/foos/" + uuid )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON_TYPE )
+                .get( JsonNode.class );
+
         logNode( node );
         assertEquals( "application/octet-stream", node.findValue( AssetUtils.CONTENT_TYPE ).getTextValue() );
         assertEquals( 5324800, node.findValue( AssetUtils.CONTENT_LENGTH ).getIntValue() );
         idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         assertEquals( uuid, idNode.getTextValue() );
 
-        // get data
-        InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        int retries = 0;
+        boolean done = false;
+        byte[] foundData = new byte[0];
 
-        byte[] foundData = IOUtils.toByteArray( is );
+        // retry until upload complete
+        while ( !done && retries < 30 ) {
+
+            // get data
+            try {
+                InputStream is = resource().path( "/test-organization/test-app/foos/" + uuid )
+                        .queryParam( "access_token", access_token )
+                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                        .get( InputStream.class );
+
+                foundData = IOUtils.toByteArray( is );
+                done = true;
+
+            } catch ( Exception intentiallyIgnored ) {}
+
+            Thread.sleep(1000);
+            retries++;
+        }
+
         assertEquals( 5324800, foundData.length );
 
         // delete
-        node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+        node = resource().path( "/test-organization/test-app/foos/" + uuid )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON_TYPE )
+                .delete( JsonNode.class );
     }
 
 
