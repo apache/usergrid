@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
@@ -39,6 +40,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang.NotImplementedException;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -218,6 +221,13 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         failureMonitor.success();
 
         return parseResults(searchResponse, parsedQuery, limit, offset);
+    }
+
+
+    @Override
+    public CandidateResults getAllEntityVersionBeforeMark( final Id entityId, final UUID markedVersion, final int limit,
+                                                           final int offset ) {
+        throw new NotImplementedException( "Implement me or else I won't work." );
     }
 
 

@@ -218,7 +218,7 @@ public class IndexServiceImpl implements IndexService {
 
     @Override
     public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
-                                                                  final Id entityId, final UUID version ) {
+                                                                  final Id entityId, final UUID markedVersion ) {
 
         //bootstrap the lower modules from their caches
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
@@ -238,7 +238,10 @@ public class IndexServiceImpl implements IndexService {
         final Observable<IndexEdge> observable = Observable.merge( sourceEdgesToIndex, targetSizes);
         //do our observable for batching
         //try to send a whole batch if we can
-        version.
+
+
+
+        //loop through candidateResults and deindex every single result that comeback.
 
         //do our observable for batching
         //try to send a whole batch if we can
@@ -249,7 +252,11 @@ public class IndexServiceImpl implements IndexService {
                 //collect results into a single batch
                 .collect( () -> ei.createBatch(), ( batch, indexEdge ) -> {
                     //logger.debug( "adding edge {} to batch for entity {}", indexEdge, entity );
-                    batch.deindex( indexEdge, entityId, version );
+                    //TODO: refactor into stages of observable, also need a loop to get entities until we recieve nothing back.
+                    CandidateResults crs = ei.getAllEntityVersionBeforeMark( entityId, markedVersion, 1000, 0 );
+                    for(CandidateResult cr: crs){
+                        batch.deindex( indexEdge, cr);
+                    }
                 } )
                     //return the future from the batch execution
                 .flatMap( batch -> batch.execute() ) );
