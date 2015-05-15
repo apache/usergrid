@@ -27,7 +27,9 @@ Usergrid.overrideUrl = 'http://localhost:8080/';
 
 Usergrid.options = {
   client: {
-    requiresDeveloperKey: false
+    requiresDeveloperKey: false,
+    buildCurl: true,
+    logging: true
       // apiKey:'123456'
   },
   showAutoRefresh: true,
