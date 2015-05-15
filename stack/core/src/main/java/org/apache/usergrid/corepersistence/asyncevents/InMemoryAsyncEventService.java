@@ -110,7 +110,7 @@ public class InMemoryAsyncEventService implements AsyncEventService {
             observable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
         }
         else {
-            observable.toBlocking().last();
+            observable.toBlocking().lastOrDefault(null);
         }
     }
 }
