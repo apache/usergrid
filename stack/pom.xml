@@ -1241,6 +1241,13 @@
         <groupId>org.apache.jclouds</groupId>
         <artifactId>jclouds-blobstore</artifactId>
         <version>${jclouds.version}</version>
+          <exclusions>
+              <!-- blows up our version of guice-->
+                          <exclusion>
+                              <groupId>com.google.inject.extensions</groupId>
+                              <artifactId>guice-assistedinject</artifactId>
+                          </exclusion>
+          </exclusions>
       </dependency>
 
       <dependency>
@@ -1262,6 +1269,12 @@
             <groupId>aopalliance</groupId>
             <artifactId>aopalliance</artifactId>
           </exclusion>
+
+            <!-- blows up our version of guice-->
+            <exclusion>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-assistedinject</artifactId>
+            </exclusion>
         </exclusions>
       </dependency>
 

@@ -99,6 +99,8 @@ public class IndexingUtils {
 
     /**
      * Create our sub scope.  This is the ownerUUID + type
+     *
+     * TODO make this format more readable and parsable
      */
     public static String createContextName( final ApplicationScope applicationScope, final SearchEdge scope ) {
         StringBuilder sb = new StringBuilder();

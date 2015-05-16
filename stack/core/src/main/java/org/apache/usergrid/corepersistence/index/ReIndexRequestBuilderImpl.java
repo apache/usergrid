@@ -31,7 +31,7 @@ import com.google.common.base.Optional;
 /**
  * Index service request builder
  */
-public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilder {
+public class ReIndexRequestBuilderImpl implements ReIndexRequestBuilder {
 
     private Optional<UUID> withApplicationId = Optional.absent();
     private Optional<String> withCollectionName = Optional.absent();
@@ -45,7 +45,7 @@ public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilde
      * @return
      */
     @Override
-    public IndexServiceRequestBuilder withApplicationId( final UUID applicationId ) {
+    public ReIndexRequestBuilder withApplicationId( final UUID applicationId ) {
         this.withApplicationId = Optional.fromNullable( applicationId );
         return this;
     }
@@ -57,7 +57,7 @@ public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilde
      * @return
      */
     @Override
-    public IndexServiceRequestBuilder withCollection( final String collectionName ) {
+    public ReIndexRequestBuilder withCollection( final String collectionName ) {
         if(collectionName == null){
             this.withCollectionName = Optional.absent();
         }
@@ -74,7 +74,7 @@ public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilde
      * @return
      */
     @Override
-    public IndexServiceRequestBuilder withCursor( final String cursor ) {
+    public ReIndexRequestBuilder withCursor( final String cursor ) {
         this.cursor = Optional.fromNullable( cursor );
         return this;
     }
@@ -86,7 +86,7 @@ public class IndexServiceRequestBuilderImpl implements IndexServiceRequestBuilde
      * @return
      */
     @Override
-    public IndexServiceRequestBuilder withStartTimestamp( final Long timestamp ) {
+    public ReIndexRequestBuilder withStartTimestamp( final Long timestamp ) {
         this.updateTimestamp = Optional.fromNullable( timestamp );
         return this;
     }

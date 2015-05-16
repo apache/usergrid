@@ -22,8 +22,6 @@ package org.apache.usergrid.corepersistence.index;
 
 import java.util.UUID;
 
-import org.elasticsearch.action.index.IndexRequestBuilder;
-
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.base.Optional;
@@ -32,26 +30,26 @@ import com.google.common.base.Optional;
 /**
  * A builder interface to build our re-index request
  */
-public interface IndexServiceRequestBuilder {
+public interface ReIndexRequestBuilder {
 
     /**
      * Set the application id
      */
-    IndexServiceRequestBuilder withApplicationId( final UUID applicationId );
+    ReIndexRequestBuilder withApplicationId( final UUID applicationId );
 
     /**
      * Set the collection name.  If not set, every collection will be reindexed
      * @param collectionName
      * @return
      */
-    IndexServiceRequestBuilder withCollection( final String collectionName );
+    ReIndexRequestBuilder withCollection( final String collectionName );
 
     /**
      * Set our cursor to resume processing
      * @param cursor
      * @return
      */
-    IndexServiceRequestBuilder withCursor(final String cursor);
+    ReIndexRequestBuilder withCursor(final String cursor);
 
 
     /**
@@ -59,7 +57,7 @@ public interface IndexServiceRequestBuilder {
      * @param timestamp
      * @return
      */
-    IndexServiceRequestBuilder withStartTimestamp(final Long timestamp);
+    ReIndexRequestBuilder withStartTimestamp(final Long timestamp);
 
 
     /**

@@ -33,7 +33,7 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.corepersistence.index.IndexServiceRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -153,7 +153,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         logger.debug( "Preparing to rebuild all indexes" );
 
 
-        final IndexServiceRequestBuilder builder =
+        final ReIndexRequestBuilder builder =
             reIndexService.getBuilder().withApplicationId( em.getApplicationId() ).withCollection( "catherders" );
 
         ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );
@@ -270,7 +270,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
-            final IndexServiceRequestBuilder builder =
+            final ReIndexRequestBuilder builder =
                 reIndexService.getBuilder().withApplicationId( em.getApplicationId() );
 
             ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );

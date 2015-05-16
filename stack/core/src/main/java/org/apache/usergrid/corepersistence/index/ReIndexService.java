@@ -29,15 +29,15 @@ public interface ReIndexService {
     /**
      * Perform an index rebuild
      *
-     * @param indexServiceRequestBuilder The builder to build the request
+     * @param reIndexRequestBuilder The builder to build the request
      */
-    ReIndexStatus rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder );
+    ReIndexStatus rebuildIndex( final ReIndexRequestBuilder reIndexRequestBuilder );
 
 
     /**
      * Generate a build for the index
      */
-    IndexServiceRequestBuilder getBuilder();
+    ReIndexRequestBuilder getBuilder();
 
 
     /**

@@ -91,16 +91,16 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
     @Override
-    public ReIndexStatus rebuildIndex( final IndexServiceRequestBuilder indexServiceRequestBuilder ) {
+    public ReIndexStatus rebuildIndex( final ReIndexRequestBuilder reIndexRequestBuilder ) {
 
         //load our last emitted Scope if a cursor is present
 
-        final Optional<EdgeScope> cursor = parseCursor( indexServiceRequestBuilder.getCursor() );
+        final Optional<EdgeScope> cursor = parseCursor( reIndexRequestBuilder.getCursor() );
 
 
         final CursorSeek<Edge> cursorSeek = getResumeEdge( cursor );
 
-        final Optional<ApplicationScope> appId = indexServiceRequestBuilder.getApplicationScope();
+        final Optional<ApplicationScope> appId = reIndexRequestBuilder.getApplicationScope();
 
 
         Preconditions.checkArgument( !(cursor.isPresent() && appId.isPresent()),
@@ -111,11 +111,11 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         final String jobId = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 
-        final long modifiedSince = indexServiceRequestBuilder.getUpdateTimestamp().or( Long.MIN_VALUE );
+        final long modifiedSince = reIndexRequestBuilder.getUpdateTimestamp().or( Long.MIN_VALUE );
 
         //create an observable that loads each entity and indexes it, start it running with publish
         final Observable<EdgeScope> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
-            indexServiceRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
+            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
 
             //for each edge, create our scope and index on it
             .doOnNext( edge -> {
@@ -143,8 +143,8 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
     @Override
-    public IndexServiceRequestBuilder getBuilder() {
-        return new IndexServiceRequestBuilderImpl();
+    public ReIndexRequestBuilder getBuilder() {
+        return new ReIndexRequestBuilderImpl();
     }
 
 
