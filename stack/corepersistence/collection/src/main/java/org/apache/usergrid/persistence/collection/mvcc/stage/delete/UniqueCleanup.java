@@ -88,44 +88,76 @@ public class UniqueCleanup
                 final ApplicationScope applicationScope = mvccEntityCollectionIoEvent.getEntityCollection();
                 final UUID entityVersion = mvccEntityCollectionIoEvent.getEvent().getVersion();
 
+                Iterator<UniqueValue> uniqueFields = uniqueValueSerializationStrategy.getAllUniqueFields(
+                    applicationScope, entityId );
+
+                final MutationBatch uniqueCleanupBatch = keyspace.prepareMutationBatch();
+
+
+                while(uniqueFields.hasNext()){
+                    UniqueValue uniqueValue = uniqueFields.next();
+                    final UUID uniqueValueVersion = uniqueValue.getEntityVersion();
+                    //TODO: should this be equals? That way we clean up the one marked as well
+                    if(UUIDComparator.staticCompare( entityVersion, uniqueValueVersion ) >= 0){
+                        logger
+                            .debug( "Deleting value:{} from application scope: {} ", uniqueValue, applicationScope );
+                        uniqueCleanupBatch.mergeShallow(
+                            uniqueValueSerializationStrategy.delete( applicationScope,uniqueValue ));
+
+                    }
+                }
+
+                try {
+                    uniqueCleanupBatch.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to execute batch mutation", e );
+                }
+
+
+
                 //TODO Refactor this logic into a a class that can be invoked from anywhere
-                //iterate all unique values
-                final Observable<CollectionIoEvent<MvccEntity>> uniqueValueCleanup =
-                    Observable.create( new ObservableIterator<UniqueValue>( "Unique value load" ) {
-                        @Override
-                        protected Iterator<UniqueValue> getIterator() {
-                            return uniqueValueSerializationStrategy.getAllUniqueFields( applicationScope, entityId );
-                        }
-                    } )
-
-                        //skip  versions > the specified version
-                        .skipWhile( uniqueValue -> {
-
-                            final UUID uniqueValueVersion = uniqueValue.getEntityVersion();
-
-                            return UUIDComparator.staticCompare( uniqueValueVersion, entityVersion ) > 0;
-                        } )
-
-                            //buffer our buffer size, then roll them all up in a single batch mutation
-                        .buffer( serializationFig.getBufferSize() )
-
-                            //roll them up
-                        .doOnNext( uniqueValues -> {
-                            final MutationBatch uniqueCleanupBatch = keyspace.prepareMutationBatch();
-
-
-                            for ( UniqueValue value : uniqueValues ) {
-                                uniqueCleanupBatch
-                                    .mergeShallow( uniqueValueSerializationStrategy.delete( applicationScope, value ) );
-                            }
-
-                            try {
-                                uniqueCleanupBatch.execute();
-                            }
-                            catch ( ConnectionException e ) {
-                                throw new RuntimeException( "Unable to execute batch mutation", e );
-                            }
-                        } ).lastOrDefault( Collections.emptyList() ).map( list -> mvccEntityCollectionIoEvent );
+//                //iterate all unique values
+//                final Observable<CollectionIoEvent<MvccEntity>> uniqueValueCleanup =
+//                    Observable.create( new ObservableIterator<UniqueValue>( "Unique value load" ) {
+//                        @Override
+//                        protected Iterator<UniqueValue> getIterator() {
+//                            return uniqueValueSerializationStrategy.getAllUniqueFields( applicationScope, entityId );
+//                        }
+//                    } )
+//
+//                        //skip  versions > the specified version
+//                        //TODO: does this emit for every version before the staticComparator?
+//                        .skipWhile( uniqueValue -> {
+//
+//                            logger.debug( "Cleaning up version:{} in UniqueCleanup", entityVersion );
+//                            final UUID uniqueValueVersion = uniqueValue.getEntityVersion();
+//                            //TODO: should this be equals? That way we clean up the one marked as well
+//                            return UUIDComparator.staticCompare( entityVersion,uniqueValueVersion ) > 0;
+//                        } )
+//
+//                            //buffer our buffer size, then roll them all up in a single batch mutation
+//                        .buffer( serializationFig.getBufferSize() )
+//
+//                            //roll them up
+//                        .doOnNext( uniqueValues -> {
+//                            final MutationBatch uniqueCleanupBatch = keyspace.prepareMutationBatch();
+//
+//
+//                            for ( UniqueValue value : uniqueValues ) {
+//                                logger
+//                                    .debug( "Deleting value:{} from application scope: {} ", value, applicationScope );
+//                                uniqueCleanupBatch
+//                                    .mergeShallow( uniqueValueSerializationStrategy.delete( applicationScope, value ) );
+//                            }
+//
+//                            try {
+//                                uniqueCleanupBatch.execute();
+//                            }
+//                            catch ( ConnectionException e ) {
+//                                throw new RuntimeException( "Unable to execute batch mutation", e );
+//                            }
+//                        } ).lastOrDefault( Collections.emptyList() ).map( list -> mvccEntityCollectionIoEvent );
             } );
 
         return ObservableTimer.time( outputObservable, uniqueCleanupTimer );
