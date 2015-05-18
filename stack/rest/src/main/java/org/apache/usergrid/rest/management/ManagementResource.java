@@ -710,44 +710,48 @@ public class ManagementResource extends AbstractContextResource {
     }
 
 
-    synchronized Client getJerseyClient() {
+    private Client getJerseyClient() {
 
         if ( jerseyClient == null ) {
 
-            // create HTTPClient and with configured connection pool
+            synchronized ( this ) {
 
-            int poolSize = 100; // connections
-            final String poolSizeStr = properties.getProperty( CENTRAL_CONNECTION_POOL_SIZE );
-            if ( poolSizeStr != null ) {
-                poolSize = Integer.parseInt( poolSizeStr );
+                // create HTTPClient and with configured connection pool
+
+                int poolSize = 100; // connections
+                final String poolSizeStr = properties.getProperty( CENTRAL_CONNECTION_POOL_SIZE );
+                if ( poolSizeStr != null ) {
+                    poolSize = Integer.parseInt( poolSizeStr );
+                }
+
+                MultiThreadedHttpConnectionManager cm = new MultiThreadedHttpConnectionManager();
+                HttpConnectionManagerParams cmParams = cm.getParams();
+                cmParams.setMaxTotalConnections( poolSize );
+                HttpClient httpClient = new HttpClient( cm );
+
+                // create Jersey Client using that HTTPClient and with configured timeouts
+
+                int timeout = 20000; // ms
+                final String timeoutStr = properties.getProperty( CENTRAL_CONNECTION_TIMEOUT );
+                if ( timeoutStr != null ) {
+                    timeout = Integer.parseInt( timeoutStr );
+                }
+
+                int readTimeout = 20000; // ms
+                final String readTimeoutStr = properties.getProperty( CENTRAL_READ_TIMEOUT );
+                if ( readTimeoutStr != null ) {
+                    readTimeout = Integer.parseInt( readTimeoutStr );
+                }
+
+                ClientConfig clientConfig = new DefaultClientConfig();
+                clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
+                clientConfig.getProperties().put( ClientConfig.PROPERTY_CONNECT_TIMEOUT, timeout ); // ms
+                clientConfig.getProperties().put( ClientConfig.PROPERTY_READ_TIMEOUT, readTimeout ); // ms
+
+                ApacheHttpClientHandler handler = new ApacheHttpClientHandler( httpClient, clientConfig );
+                jerseyClient = new ApacheHttpClient( handler );
+
             }
-
-            MultiThreadedHttpConnectionManager cm = new MultiThreadedHttpConnectionManager();
-            HttpConnectionManagerParams cmParams = cm.getParams();
-            cmParams.setMaxTotalConnections( poolSize );
-            HttpClient httpClient = new HttpClient( cm );
-
-            // create Jersey Client using that HTTPClient and with configured timeouts
-
-            int timeout = 20000; // ms
-            final String timeoutStr = properties.getProperty( CENTRAL_CONNECTION_TIMEOUT );
-            if ( timeoutStr != null ) {
-                timeout = Integer.parseInt( timeoutStr );
-            }
-
-            int readTimeout = 20000; // ms
-            final String readTimeoutStr = properties.getProperty( CENTRAL_READ_TIMEOUT );
-            if ( readTimeoutStr != null ) {
-                readTimeout = Integer.parseInt( readTimeoutStr );
-            }
-
-            ClientConfig clientConfig = new DefaultClientConfig();
-            clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-            clientConfig.getProperties().put( ClientConfig.PROPERTY_CONNECT_TIMEOUT, timeout ); // ms
-            clientConfig.getProperties().put( ClientConfig.PROPERTY_READ_TIMEOUT, readTimeout ); // ms
-
-            ApacheHttpClientHandler handler = new ApacheHttpClientHandler( httpClient, clientConfig );
-            jerseyClient = new ApacheHttpClient( handler );
         }
 
         return jerseyClient;
