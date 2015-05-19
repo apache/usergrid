@@ -25,10 +25,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Stack;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
+import org.apache.usergrid.utils.StringUtils;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobStore;
@@ -63,12 +65,16 @@ public class S3BinaryStore implements BinaryStore {
 
     private static final Logger LOG = LoggerFactory.getLogger( S3BinaryStore.class );
     private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
+    private static String WORKERS_PROP_NAME = "usergrid.binary.upload-workers";
 
     private BlobStoreContext context;
     private String accessId;
     private String secretKey;
     private String bucketName;
-    private ExecutorService executor = Executors.newFixedThreadPool( 10 );
+    private ExecutorService executorService;
+
+    @Autowired
+    private Properties properties;
 
     @Autowired
     private EntityManagerFactory emf;
@@ -104,17 +110,19 @@ public class S3BinaryStore implements BinaryStore {
     @Override
     public void write( final UUID appId, final Entity entity, InputStream inputStream ) throws IOException {
 
-        final String uploadFileName = AssetUtils.buildAssetKey( appId, entity );
+        // write up to 5mb of data to an byte array
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         long written = IOUtils.copyLarge( inputStream, baos, 0, FIVE_MB );
         byte[] data = baos.toByteArray();
 
-        final Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
-        fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
-
-        final String mimeType = AssetMimeHandler.get().getMimeType( entity, data );
-
         if ( written < FIVE_MB ) { // total smaller than 5mb
+
+            final String uploadFileName = AssetUtils.buildAssetKey( appId, entity );
+            final String mimeType = AssetMimeHandler.get().getMimeType( entity, data );
+
+            final Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
+            fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
 
             BlobStore blobStore = getContext().getBlobStore();
             BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder( uploadFileName )
@@ -134,69 +142,31 @@ public class S3BinaryStore implements BinaryStore {
         }
         else { // bigger than 5mb... dump 5 mb tmp files and upload from them
 
-            // create temp file and copy entire file to that temp file
+            ExecutorService executors = getExecutorService();
 
-            LOG.debug( "Writing temp file for S3 upload" );
-
-            final File tempFile = File.createTempFile( entity.getUuid().toString(), "tmp" );
-            tempFile.deleteOnExit();
-            OutputStream os = null;
-            try {
-                os = new BufferedOutputStream( new FileOutputStream( tempFile.getAbsolutePath() ) );
-                os.write( data );
-                written += IOUtils.copyLarge( inputStream, os, 0, ( FileUtils.ONE_GB * 5 ) );
-            }
-            finally {
-                IOUtils.closeQuietly( os );
-            }
-
-            fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
-
-            // JClouds no longer supports async blob store, so we have to do this fun stuff
-
-            LOG.debug( "Starting upload thread" );
-
-            Thread uploadThread = new Thread( new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        LOG.debug( "S3 upload thread started" );
-
-                        BlobStore blobStore = getContext().getBlobStore();
-
-                        BlobBuilder.PayloadBlobBuilder bb =  blobStore.blobBuilder( uploadFileName )
-                                .payload( tempFile ).calculateMD5().contentType( mimeType );
-
-                        if ( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ) != null ) {
-                            bb.contentDisposition( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ).toString() );
-                        }
-                        final Blob blob = bb.build();
-
-                        String md5sum = Hex.encodeHexString( blob.getMetadata().getContentMetadata().getContentMD5() );
-                        fileMetadata.put( AssetUtils.CHECKSUM, md5sum );
-
-                        LOG.debug( "S3 upload starting" );
-
-                        String eTag = blobStore.putBlob( bucketName, blob );
-                        fileMetadata.put( AssetUtils.E_TAG, eTag );
-
-                        LOG.debug( "S3 upload complete eTag=" + eTag);
-
-                        EntityManager em = emf.getEntityManager( appId );
-                        em.update( entity );
-                        tempFile.delete();
-                    }
-                    catch ( Exception e ) {
-                        LOG.error( "error uploading", e );
-                    }
-                    if ( tempFile != null && tempFile.exists() ) {
-                        tempFile.delete();
-                    }
-                }
-            });
-
-            uploadThread.start();
+            executors.submit( new UploadWorker( appId, entity, inputStream, data, written ) );
         }
+    }
+
+
+    private ExecutorService getExecutorService() {
+
+        if ( executorService == null ) {
+            synchronized (this) {
+
+                int workers = 40;
+                String workersString = properties.getProperty( WORKERS_PROP_NAME, "40");
+
+                if ( StringUtils.isNumeric( workersString ) ) {
+                    workers = Integer.parseInt( workersString );
+                } else if ( !StringUtils.isEmpty( workersString )) {
+                    LOG.error("Ignoring invalid setting for {}", WORKERS_PROP_NAME);
+                }
+                executorService = Executors.newFixedThreadPool( workers );
+            }
+        }
+
+        return executorService;
     }
 
 
@@ -228,6 +198,125 @@ public class S3BinaryStore implements BinaryStore {
     public void delete( UUID appId, Entity entity ) {
         BlobStore blobStore = getContext().getBlobStore();
         blobStore.removeBlob( bucketName, AssetUtils.buildAssetKey( appId, entity ) );
+    }
+
+    class UploadWorker implements Callable<Void> {
+
+        private UUID appId;
+        private Entity entity;
+        private InputStream inputStream;
+        private byte[] data;
+        private long written;
+
+
+        public UploadWorker( UUID appId, Entity entity, InputStream is, byte[] data, long written ) {
+            this.appId = appId;
+            this.entity = entity;
+            this.inputStream = is;
+            this.data = data;
+            this.written = written;
+        }
+
+        @Override
+        public Void call() {
+
+            LOG.debug( "Writing temp file for S3 upload" );
+
+            // determine max size file allowed, default to 50mb
+            long maxSizeBytes = 50 * FileUtils.ONE_MB;
+            String maxSizeMbString = properties.getProperty( "usergrid.binary.max-size-mb", "50" );
+            if (StringUtils.isNumeric( maxSizeMbString )) {
+                maxSizeBytes = Long.parseLong( maxSizeMbString ) * FileUtils.ONE_MB;
+            }
+
+            // always allow files up to 5mb
+            if (maxSizeBytes < 5 * FileUtils.ONE_MB ) {
+                maxSizeBytes = 5 * FileUtils.ONE_MB;
+            }
+
+            // write temporary file, slightly larger than our size limit
+            OutputStream os = null;
+            File tempFile;
+            try {
+                tempFile = File.createTempFile( entity.getUuid().toString(), "tmp" );
+                tempFile.deleteOnExit();
+                os = new BufferedOutputStream( new FileOutputStream( tempFile.getAbsolutePath() ) );
+                os.write( data );
+                written += IOUtils.copyLarge( inputStream, os, 0, maxSizeBytes + 1 );
+
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Error creating temp file", e );
+
+            } finally {
+                if ( os != null ) {
+                    IOUtils.closeQuietly( os );
+                }
+            }
+
+            // if tempFile is too large, delete it, add error to entity file metadata and abort
+
+            Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
+
+            if ( tempFile.length() > maxSizeBytes ) {
+                LOG.debug("File too large. Temp file size (bytes) = {}, " +
+                        "Max file size (bytes) = {} ", tempFile.length(), maxSizeBytes);
+                try {
+                    EntityManager em = emf.getEntityManager( appId );
+                    fileMetadata.put( "error", "Asset size " + tempFile.length()
+                                    + " is larger than max size of " + maxSizeBytes );
+                    em.update( entity );
+                    tempFile.delete();
+
+                } catch ( Exception e ) {
+                    LOG.error( "Error updating entity with error message", e);
+                }
+                return null;
+            }
+
+            String uploadFileName = AssetUtils.buildAssetKey( appId, entity );
+            String mimeType = AssetMimeHandler.get().getMimeType( entity, data );
+
+            try {  // start the upload
+
+                LOG.debug( "S3 upload thread started" );
+
+                BlobStore blobStore = getContext().getBlobStore();
+
+                BlobBuilder.PayloadBlobBuilder bb =  blobStore.blobBuilder( uploadFileName )
+                        .payload( tempFile ).calculateMD5().contentType( mimeType );
+
+                if ( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ) != null ) {
+                    bb.contentDisposition( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ).toString() );
+                }
+                final Blob blob = bb.build();
+
+                String md5sum = Hex.encodeHexString( blob.getMetadata().getContentMetadata().getContentMD5() );
+                fileMetadata.put( AssetUtils.CHECKSUM, md5sum );
+
+                LOG.debug( "S3 upload starting" );
+
+                String eTag = blobStore.putBlob( bucketName, blob );
+
+                LOG.debug( "S3 upload complete eTag=" + eTag);
+
+                // update entity with information about uploaded asset
+
+                EntityManager em = emf.getEntityManager( appId );
+                fileMetadata.put( AssetUtils.E_TAG, eTag );
+                fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
+                fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
+                em.update( entity );
+            }
+            catch ( Exception e ) {
+                LOG.error( "error uploading", e );
+            }
+
+            if ( tempFile != null && tempFile.exists() ) {
+                tempFile.delete();
+            }
+
+            return null;
+        }
     }
 }
 
