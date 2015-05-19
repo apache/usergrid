@@ -36,7 +36,7 @@ import rx.Observable;
  * A filter that is used when we can potentially serialize pages via cursor.  This will filter the first result, only if
  * it matches the Id that was set
  */
-public class EntityFilter extends AbstractPathFilter<Entity, Entity, Id> implements Filter<Entity, Entity> {
+public class EntityResumeFilter extends AbstractPathFilter<Entity, Entity, Id> implements Filter<Entity, Entity> {
 
 
     @Override
