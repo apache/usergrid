@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.applications.assets;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -40,10 +41,9 @@ import org.apache.commons.io.IOUtils;
 
 import com.sun.jersey.multipart.FormDataMultiPart;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.*;
 
 
 @Concurrent()
@@ -249,12 +249,11 @@ public class AssetResourceIT extends AbstractRestIT {
         node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA ).put( JsonNode.class, form );
         logNode( node );
-        Assert.assertTrue( lastModified != node.findValue( AssetUtils.LAST_MODIFIED ).getLongValue() );
+        assertTrue( lastModified != node.findValue( AssetUtils.LAST_MODIFIED ).getLongValue() );
     }
 
 
     @Test
-    @Ignore("Just enable and run when testing S3 large file upload specifically")
     public void largeFileInS3() throws Exception {
         UserRepo.INSTANCE.load( resource(), access_token );
 
@@ -302,6 +301,63 @@ public class AssetResourceIT extends AbstractRestIT {
                 .accept( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
     }
 
+    @Test
+    public void fileTooLargeShouldResultInError() throws Exception {
+
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( "usergrid.binary.max-size-mb", "6" );
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+
+        try {
+
+            UserRepo.INSTANCE.load( resource(), access_token );
+
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cat-larger-than-6mb.jpg" ) );
+            FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+
+            // send data
+            JsonNode node = resource().path( "/test-organization/test-app/bars" ).queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA )
+                    .post( JsonNode.class, form );
+            //logNode( node );
+            JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
+            String uuid = idNode.getTextValue();
+
+            // get entity
+            String errorMessage = null;
+            long timeout = System.currentTimeMillis() + 60000;
+            while (true) {
+                LOG.info( "Waiting for upload to finish..." );
+                Thread.sleep( 2000 );
+                node = resource().path( "/test-organization/test-app/bars/" + uuid )
+                        .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
+                        .get( JsonNode.class );
+                //logNode( node );
+
+                // poll for the error to happen
+                if (node.findValue( "error" ) != null) {
+                    errorMessage = node.findValue("error").asText();
+                    break;
+                }
+                if (System.currentTimeMillis() > timeout) {
+                    throw new TimeoutException();
+                }
+            }
+
+            assertTrue( errorMessage.startsWith("Asset size "));
+
+        } finally {
+            props = new HashMap<String, String>();
+            props.put( "usergrid.binary.max-size-mb", "25" );
+            resource().path( "/testproperties" )
+                    .queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+        }
+    }
 
     /**
      * Deleting a connection to an asset should not delete the asset or the asset's data
@@ -317,7 +373,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
 
-        JsonNode node = resource().path("/test-organization/test-app/foos")
+        JsonNode node = resource().path("/test-organization/test-app/bars")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
