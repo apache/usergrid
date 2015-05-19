@@ -20,20 +20,11 @@
 package org.apache.usergrid.corepersistence.pipeline;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.ReadPipelineBuilder;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-
-
-/**
- * Factory for creating pipeline builders
- */
-public interface PipelineBuilderFactory {
-
+public interface PipelineOperations {
 
     /**
-     * Create a read pipeline builder
-     * @param applicationScope
-     * @return
+     * Add the pipeline operation to the set of operations
+     * @param po
      */
-    ReadPipelineBuilder createReadPipelineBuilder( final ApplicationScope applicationScope );
+    void add( PipelineOperation po );
 }

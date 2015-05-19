@@ -20,8 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.collect.EntityFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.collect.IdCursorSerializer;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.EntityResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateEntityFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateIdFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchCollectionFilter;
@@ -139,5 +138,5 @@ public interface FilterFactory {
      * Create a new instance of our entity filter
      * @return
      */
-    EntityFilter entityFilter();
+    EntityResumeFilter entityResumeFilter();
 }

@@ -28,4 +28,11 @@ import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
  * an observable of FilterResults.  Filters should never emit groups or objects that represent collections.  Items should
  * always be emitted 1 at a time.  It is the responsibility of the collector to aggregate results.
  */
-public interface Filter<T, R> extends PipelineOperation<T, FilterResult<R>> {}
+public interface Filter<T, R> extends PipelineOperation<T, FilterResult<R>> {
+
+    /**
+     * Get the builder for the next phase
+     * @return
+     */
+//    B getNextBuilder();
+}
