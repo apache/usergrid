@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDef
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.StringRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -149,7 +150,8 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
             return 0;
         }
         catch ( ConnectionException e ) {
-            throw new DataMigrationException( "Unable to retrieve status", e );
+            AstayanxUtils.isKeyspaceMissing("Unable to connect to cassandra to retrieve status", e);
+            return 0;
         }
     }
 

@@ -20,11 +20,8 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import java.util.Base64;
-
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -53,8 +50,8 @@ public class ResponseCursor {
 
 
     /**
-     * Lazyily encoded deliberately.  If the user doesn't care about a cursor and is using streams, we dont' want to take the
-     * time to calculate it
+     * Lazyily encoded deliberately.  If the user doesn't care about a cursor and is using streams, we dont' want to
+     * take the time to calculate it
      */
     public Optional<String> encodeAsString() {
 
@@ -68,42 +65,34 @@ public class ResponseCursor {
             return encodedValue;
         }
 
+        //no edge path, short circuit
 
-        try {
-
-            //no edge path, short circuit
-
-            final ObjectNode map = MAPPER.createObjectNode();
+        final ObjectNode map = MAPPER.createObjectNode();
 
 
-            Optional<EdgePath> current = edgePath;
+        Optional<EdgePath> current = edgePath;
 
 
-            //traverse each edge and add them to our json
-            do {
+        //traverse each edge and add them to our json
+        do {
 
-                final EdgePath edgePath = current.get();
-                final Object cursorValue = edgePath.getCursorValue();
-                final CursorSerializer serializer = edgePath.getSerializer();
-                final int filterId = edgePath.getFilterId();
+            final EdgePath edgePath = current.get();
+            final Object cursorValue = edgePath.getCursorValue();
+            final CursorSerializer serializer = edgePath.getSerializer();
+            final int filterId = edgePath.getFilterId();
 
-                final JsonNode serialized = serializer.toNode( MAPPER, cursorValue );
-                map.put( String.valueOf( filterId ), serialized );
+            final JsonNode serialized = serializer.toNode( MAPPER, cursorValue );
+            map.put( String.valueOf( filterId ), serialized );
 
-                current = current.get().getPrevious();
-            }
-            while ( current.isPresent() );
-
-            final byte[] output = MAPPER.writeValueAsBytes( map );
-
-            //generate a base64 url save string
-            final String value = Base64.getUrlEncoder().encodeToString( output );
-
-            encodedValue =  Optional.of( value );
+            current = current.get().getPrevious();
         }
-        catch ( JsonProcessingException e ) {
-            throw new CursorParseException( "Unable to serialize cursor", e );
-        }
+        while ( current.isPresent() );
+
+        //generate a base64 url save string
+        final String value = CursorSerializerUtil.asString( map );
+
+        encodedValue = Optional.of( value );
+
 
         return encodedValue;
     }

@@ -55,7 +55,7 @@ public class EdgesObservableImpl implements EdgesObservable {
      * Get all edges from the source
      */
     @Override
-    public Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode ) {
+    public Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode ) {
         final Observable<String> edgeTypes =
             gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( sourceNode, null, null ) );
 
@@ -71,8 +71,8 @@ public class EdgesObservableImpl implements EdgesObservable {
 
 
     @Override
-    public Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode, final Optional<String> edgeTypeInput,
-                                                      final Optional<Long> startTimestamp ) {
+    public Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode,
+                                                       final Optional<String> edgeTypeInput, final Optional<Edge> resume  ) {
 
 
 
@@ -85,8 +85,8 @@ public class EdgesObservableImpl implements EdgesObservable {
                 logger.debug( "Loading edges of edgeType {} from {}", edgeType, sourceNode );
 
                 return gm.loadEdgesFromSource(
-                    new SimpleSearchByEdgeType( sourceNode, edgeType, startTimestamp.or( Long.MIN_VALUE ), SearchByEdgeType.Order.ASCENDING,
-                        Optional.<Edge>absent() ) );
+                    new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                       resume ) );
         } );
     }
 

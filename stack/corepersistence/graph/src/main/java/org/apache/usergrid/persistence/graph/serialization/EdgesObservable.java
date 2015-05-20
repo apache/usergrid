@@ -38,19 +38,8 @@ public interface EdgesObservable {
      * @param sourceNode
      * @return
      */
-    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode );
+    Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode );
 
-
-    /**
-     * Return an observable of all edges from a source node.  Ordered ascending, from the startTimestamp if specified
-     * @param gm
-     * @param sourceNode
-     * @param edgeType The edge type if specified.  Otherwise all types will be used
-     * @param startTimestamp The start timestamp if specfiied, otherwise Long.MIN will be used
-     * @return
-     */
-    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode,final Optional<String> edgeType,
-                                               final Optional<Long> startTimestamp );
 
     /**
      * Get all edges from the source node with the target type
@@ -68,4 +57,15 @@ public interface EdgesObservable {
      * @return
      */
     Observable<Edge> edgesToTarget(final GraphManager gm,  final Id targetNode);
+
+    /**
+     * Return an observable of all edges from a source node.  Ordered ascending, from the startTimestamp if specified
+     * @param gm
+     * @param sourceNode
+     * @param edgeType The edge type if specified.  Otherwise all types will be used
+     * @param resume The edge to start seeking after.  Otherwise starts at the most recent
+     * @return
+     */
+    Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode,
+                                                final Optional<String> edgeType, final Optional<Edge> resume );
 }

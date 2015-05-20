@@ -28,6 +28,7 @@ import com.google.inject.Singleton;
 
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
@@ -81,12 +82,13 @@ public class AllEntityIdsObservableImpl implements AllEntityIdsObservable {
 
 
     @Override
-    public Observable<EdgeScope> getEdgesToEntities( final Observable<ApplicationScope> appScopes, final Optional<String> edgeType,  final Optional<Long> startTime) {
+    public Observable<EdgeScope> getEdgesToEntities( final Observable<ApplicationScope> appScopes, final Optional<String> edgeType, final Optional<Edge> lastEdge) {
 
         return appScopes.flatMap( applicationScope -> {
             final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-            return edgesObservable.edgesFromSourceAscending( gm, applicationScope.getApplication(),edgeType,  startTime ).map( edge -> new EdgeScope(applicationScope, edge ));
+            return edgesObservable.edgesFromSourceDescending( gm, applicationScope.getApplication(), edgeType, lastEdge )
+                                  .map( edge -> new EdgeScope(applicationScope, edge ));
         } );
     }
 }
