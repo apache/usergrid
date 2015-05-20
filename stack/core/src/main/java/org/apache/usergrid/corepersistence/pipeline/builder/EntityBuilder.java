@@ -17,30 +17,35 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.collect;
+package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
-import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
-import org.apache.usergrid.corepersistence.pipeline.read.Collector;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.persistence.model.entity.Entity;
+
+import rx.Observable;
 
 
 /**
- * Basic functionality for our commands to handle cursor IO
- * @param <T> the input type
- * @param <R> The output Type
+ * Builder to build our entity state
  */
-public abstract class AbstractCollector<T, R> implements Collector<T, R> {
+public class EntityBuilder {
+
+    private final FilterPipeline<FilterResult<Entity>> filterPipeline;
 
 
-    protected PipelineContext pipelineContext;
-
-
-    @Override
-    public void setContext( final PipelineContext pipelineContext ) {
-        this.pipelineContext = pipelineContext;
+    public EntityBuilder( final FilterPipeline<FilterResult<Entity>> filterPipeline ) {
+        this.filterPipeline = filterPipeline;
     }
 
 
-
+    /**
+     * Build our results of entities
+     * @return
+     */
+    public Observable<ResultsPage<Entity>> build(){
+        return null;
+    }
 }

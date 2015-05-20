@@ -31,9 +31,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.read.CollectorFactory;
-import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
-import org.apache.usergrid.corepersistence.pipeline.read.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.builder.EntityBuilder;
+import org.apache.usergrid.corepersistence.pipeline.builder.IdBuilder;
+import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ObservableQueryExecutor;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
@@ -52,7 +54,6 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -121,13 +122,12 @@ public class CpRelationManager implements RelationManager {
     private final AsyncEventService indexService;
 
 
-    private final FilterFactory filterFactory;
-    private final CollectorFactory collectorFactory;
+    private final PipelineBuilderFactory pipelineBuilderFactory;
 
 
 
-    public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache,
-                              final FilterFactory filterFactory, final CollectorFactory collectorFactory, final AsyncEventService indexService,
+    public CpRelationManager(  final ManagerCache managerCache,
+                              final PipelineBuilderFactory pipelineBuilderFactory, final AsyncEventService indexService,
                               final EntityManager em, final EntityManagerFig entityManagerFig, final UUID applicationId,
                               final EntityRef headEntity ) {
 
@@ -147,8 +147,7 @@ public class CpRelationManager implements RelationManager {
         this.managerCache = managerCache;
         this.applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
-        this.filterFactory = filterFactory;
-        this.collectorFactory = collectorFactory;
+        this.pipelineBuilderFactory = pipelineBuilderFactory;
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading head entity {}:{} from app {}", new Object[] {
@@ -629,29 +628,23 @@ public class CpRelationManager implements RelationManager {
         query = adjustQuery( query );
 
 
-        final FilterPipeline<Id> filterPipeline =  new FilterPipeline( applicationScope, query.getCursor(), query.getLimit() ).withFilter(  filterFactory.getEntityIdFilter( cpHeadEntity.getId() ) );
+        final IdBuilder pipelineBuilder =
+            pipelineBuilderFactory.create( applicationScope ).withCursor( query.getCursor() )
+                                  .withLimit( query.getLimit() ).fromId( cpHeadEntity.getId() );
 
 
-        final FilterPipeline<org.apache.usergrid.persistence.model.entity.Entity> entityFilterPipeline;
+        final EntityBuilder results;
 
         if ( query.isGraphSearch() ) {
-            entityFilterPipeline = filterPipeline.withFilter( filterFactory.readGraphCollectionFilter( collectionName ) )
-                                            .withFilter( filterFactory.entityLoadFilter() );
+            results = pipelineBuilder.traverseCollection( collectionName ).loadEntities();
         }
         else {
             final String entityType = collection.getType();
-
-            entityFilterPipeline = filterPipeline.withFilter(
-                filterFactory.elasticSearchCollectionFilter( query.getQl().get(), collectionName, entityType ) )
-                                            .withFilter( filterFactory.candidateEntityFilter() );
+            results = pipelineBuilder.searchCollection( collectionName, entityType, query.getQl().get() ).loadEntities();
         }
 
 
-        final Observable<ResultsPage> resultsObservable =
-            entityFilterPipeline.withFilter( filterFactory.entityResumeFilter() )
-                                .withCollector( collectorFactory.getResultsPageCollector() ).execute();
-
-        return new ObservableQueryExecutor( resultsObservable ).next();
+        return new ObservableQueryExecutor( results.build() ).next();
     }
 
 
@@ -923,7 +916,7 @@ public class CpRelationManager implements RelationManager {
 
         query = adjustQuery( query );
 
-        final String entityType = query.getEntityType();
+        final Optional<String> entityType = Optional.fromNullable( query.getEntityType() ) ;
         //set startid -- graph | es query filter -- load entities filter (verifies exists) --> results page collector
         // -> 1.0 results
 
@@ -935,31 +928,57 @@ public class CpRelationManager implements RelationManager {
         // collector
 
 
-        final FilterPipeline<Id> filterPipeline =
-            new FilterPipeline( applicationScope, query.getCursor(), query.getLimit() )
-                .withFilter( filterFactory.getEntityIdFilter( cpHeadEntity.getId() ) );
+        final IdBuilder
+            pipelineBuilder = pipelineBuilderFactory.create( applicationScope ).withCursor( query.getCursor() ).withLimit( query.getLimit() ).fromId(
+            cpHeadEntity.getId() );
 
 
-        final FilterPipeline<org.apache.usergrid.persistence.model.entity.Entity> entityFilterPipeline;
+
+
+        if(query.getResultsLevel() == Level.REFS){
+            final Observable<ResultsPage<ConnectionRef>> results;
+
+            if(query.isGraphSearch()){
+
+               results = pipelineBuilder.traverseConnection( connection, entityType   ).loadConnectionRefs( cpHeadEntity.getId(), connection ).build();
+
+
+            }
+            else
+            {
+                results = pipelineBuilder.searchConnection( connection, query.getQl().get(),entityType) .loadIds().loadConnectionRefs( cpHeadEntity.getId(), connection ).build();
+
+            }
+
+            throw new UnsupportedOperationException( "Implement me" );
+
+        }
+
+
+
+        if(query.getResultsLevel() == Level.IDS){
+
+            throw new UnsupportedOperationException( "Not yet implemented" );
+        }
+
+
+        //we want to load all entities
+
+        final Observable<ResultsPage<org.apache.usergrid.persistence.model.entity.Entity>> results;
+
 
         if ( query.isGraphSearch() ) {
-            entityFilterPipeline = filterPipeline.withFilter( filterFactory.readGraphConnectionFilter( connection ) )
-                                                 .withFilter( filterFactory.entityLoadFilter() );
+            results = pipelineBuilder.traverseConnection( connection, entityType ).loadEntities().build();
         }
 
         else {
 
-            entityFilterPipeline = filterPipeline.withFilter( filterFactory
-                .elasticSearchConnectionFilter( query.getQl().get(), connection, Optional.fromNullable( entityType ) ) )
-                                                 .withFilter( filterFactory.candidateEntityFilter() );
+            results = pipelineBuilder.searchConnection( connection,  query.getQl().get() , entityType).loadEntities().build();
         }
 
 
-        final Observable<ResultsPage> resultsObservable =
-            entityFilterPipeline.withFilter( filterFactory.entityResumeFilter() )
-                                .withCollector( collectorFactory.getResultsPageCollector() ).execute();
 
-        return new ObservableQueryExecutor( resultsObservable ).next();
+        return new ObservableQueryExecutor( results ).next();
     }
 
 

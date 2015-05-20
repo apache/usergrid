@@ -17,22 +17,26 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read;
+package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
-import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 
 
 /**
- * A command that is used to reduce our stream of results into a stream of final batch outputs.  When used
- * no further transformation or encoding should occur.  Otherwise EdgePath data will be lost, and serialization cannot occur
- * across requests
- *
- * @param <T>  The input type
- * @param <R> The output type
+ * Edge cursor serializer
  */
-public interface Collector<T, R> extends PipelineOperation<T,R> {
+public class EdgeCursorSerializer extends AbstractCursorSerializer<Edge> {
 
+
+    public static final EdgeCursorSerializer INSTANCE = new EdgeCursorSerializer();
+
+    @Override
+    protected Class<SimpleEdge> getType() {
+        return SimpleEdge.class;
+    }
 
 
 }

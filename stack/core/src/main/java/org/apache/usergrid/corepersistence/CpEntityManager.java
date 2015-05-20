@@ -38,8 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.read.CollectorFactory;
-import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
+import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -180,8 +179,7 @@ public class CpEntityManager implements EntityManager {
 
     private final AsyncEventService indexService;
 
-    private final FilterFactory filterFactory;
-    private final CollectorFactory collectorFactory;
+    private final PipelineBuilderFactory filterFactory;
 
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
@@ -223,7 +221,7 @@ public class CpEntityManager implements EntityManager {
      */
     public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
                             final MetricsFactory metricsFactory, final EntityManagerFig entityManagerFig,
-                            final FilterFactory filterFactory, final CollectorFactory collectorFactory, final UUID applicationId ) {
+                            final PipelineBuilderFactory pipelineBuilderFactory,  final UUID applicationId ) {
         this.entityManagerFig = entityManagerFig;
 
 
@@ -232,10 +230,8 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( managerCache, "managerCache must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
         Preconditions.checkNotNull( indexService, "indexService must not be null" );
-        Preconditions.checkNotNull( filterFactory, "filterFactory must not be null" );
-        Preconditions.checkNotNull( collectorFactory, "collectorFactory must not be null" );
-        this.filterFactory = filterFactory;
-        this.collectorFactory = collectorFactory;
+        Preconditions.checkNotNull( pipelineBuilderFactory, "filterFactory must not be null" );
+        this.filterFactory = pipelineBuilderFactory;
 
 
         this.managerCache = managerCache;
@@ -750,7 +746,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
 
         CpRelationManager relationManager =
-            new CpRelationManager( metricsFactory, managerCache, filterFactory, collectorFactory, indexService, this, entityManagerFig, applicationId, entityRef );
+            new CpRelationManager( managerCache, filterFactory, indexService, this, entityManagerFig, applicationId, entityRef );
         return relationManager;
     }
 

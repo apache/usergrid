@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
+package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import org.apache.usergrid.persistence.index.CandidateResult;

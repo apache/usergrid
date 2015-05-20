@@ -17,12 +17,10 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
+package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 
 
 /**

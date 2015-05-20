@@ -17,22 +17,21 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read;
+package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
-import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
+import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.persistence.ConnectionRef;
+
+import rx.Observable;
 
 
-/**
- * Traverses edges in the graph.  Either by query or graph traversal.  Take an observable of FilterResult, and emits
- * an observable of FilterResults.  Filters should never emit groups or objects that represent collections.  Items should
- * always be emitted 1 at a time.  It is the responsibility of the collector to aggregate results.
- */
-public interface Filter<T, R> extends PipelineOperation<T, FilterResult<R>> {
+public class ConnectionBuilder {
 
-    /**
-     * Get the builder for the next phase
-     * @return
-     */
-//    B getNextBuilder();
+
+
+    public Observable<ResultsPage<ConnectionRef>> build(){
+        return null;
+    }
+
 }
