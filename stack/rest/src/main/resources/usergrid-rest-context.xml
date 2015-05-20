@@ -47,9 +47,6 @@
 		<property name="securityManager" ref="securityManager" />
 	</bean>
 
-	<bean id="mongoServer" class="org.apache.usergrid.mongo.MongoServer"
-		init-method="startServer" destroy-method="stopServer" />
-
 	<!-- override the security manager -->
 	<bean id="securityManager" class="org.apache.usergrid.rest.security.shiro.RestSecurityManager">
 		<property name="cacheManager" ref="cacheManager" />

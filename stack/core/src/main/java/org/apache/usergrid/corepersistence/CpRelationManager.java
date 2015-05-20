@@ -644,7 +644,6 @@ public class CpRelationManager implements RelationManager {
         }while (!found && length <= maxLength);
         if(logger.isInfoEnabled()){
             logger.info(String.format("Consistent Search finished in %s,  results=%s, expected=%s...dumping stack",length, results.size(),expectedResults));
-            Thread.dumpStack();
         }
         return results;
     }

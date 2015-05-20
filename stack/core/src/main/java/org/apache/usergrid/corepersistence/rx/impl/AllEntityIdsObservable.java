@@ -24,6 +24,7 @@ import  com.google.common.base.Optional;
 
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
 
 import rx.Observable;
 
@@ -44,9 +45,9 @@ public interface AllEntityIdsObservable {
      * Get all edges that represent edges to entities in the system
      * @param appScopes
      * @param edgeType The edge type to use (if specified)
-     * @param startTime The time to start with
+     * @param lastEdge The edge to resume processing from
      * @return
      */
-    Observable<EdgeScope> getEdgesToEntities(final Observable<ApplicationScope> appScopes, final Optional<String> edgeType, final Optional<Long> startTime);
+    Observable<EdgeScope> getEdgesToEntities(final Observable<ApplicationScope> appScopes, final Optional<String> edgeType, final Optional<Edge> lastEdge);
 
 }
