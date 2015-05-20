@@ -20,11 +20,15 @@
 package org.apache.usergrid.corepersistence.pipeline.read.collect;
 
 
+import java.util.UUID;
+
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
-import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.ConnectedEntityRef;
+import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.common.base.Optional;
 
@@ -33,13 +37,15 @@ import rx.Observable;
 
 /**
  * A filter that is used when we can potentially serialize pages via cursor.  This will filter the first result, only if
- * it matches the Id that was set
+ * it matches the Id that was set.   This is a 1.0 compatibility implementation, and should be removed when services no
+ * longer depends on connection refs
  */
-public class EntityResumeFilter extends AbstractPathFilter<Entity, Entity, Id>  {
+public class ConnectionRefResumeFilter extends AbstractPathFilter<ConnectionRef, ConnectionRef, Id> {
 
 
     @Override
-    public Observable<FilterResult<Entity>> call( final Observable<FilterResult<Entity>> filterResultObservable ) {
+    public Observable<FilterResult<ConnectionRef>> call(
+        final Observable<FilterResult<ConnectionRef>> filterResultObservable ) {
 
         //filter only the first id, then map into our path for our next pass
 
@@ -48,12 +54,25 @@ public class EntityResumeFilter extends AbstractPathFilter<Entity, Entity, Id>  
 
             final Optional<Id> startFromCursor = getSeekValue();
 
-            return startFromCursor.isPresent() && startFromCursor.get().equals( filterResult.getValue().getId() );
+
+            if ( !startFromCursor.isPresent() ) {
+                return false;
+            }
+
+            final ConnectedEntityRef ref = filterResult.getValue().getTargetRefs();
+
+            final Id entityId = startFromCursor.get();
+
+            return entityId.getUuid().equals( ref.getUuid() ) && entityId.getType().equals( ref.getType() );
         } ).map( filterResult -> {
 
 
-            final Entity entity = filterResult.getValue();
-            final Id entityId = entity.getId();
+            final ConnectionRef entity = filterResult.getValue();
+
+            final String type = entity.getTargetRefs().getType();
+            final UUID uuid = entity.getTargetRefs().getUuid();
+
+            final Id entityId = new SimpleId( uuid, type );
 
             return createFilterResult( entity, entityId, filterResult.getPath() );
         } );

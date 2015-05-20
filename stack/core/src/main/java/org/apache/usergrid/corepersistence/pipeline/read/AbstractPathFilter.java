@@ -33,7 +33,7 @@ import com.google.common.base.Optional;
  * @param <R> The response type
  * @param <C> The cursor type
  */
-public abstract class AbstractPathFilter<T, R, C extends Serializable> extends AbstractFilter<T, R> implements Filter<T, R> {
+public abstract class AbstractPathFilter<T, R, C extends Serializable> extends AbstractFilter<FilterResult<T>, FilterResult<R>>  {
 
 
 

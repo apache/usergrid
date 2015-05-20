@@ -17,12 +17,11 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read;
+package org.apache.usergrid.corepersistence.pipeline;
 
 
-import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
-import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
 import org.apache.usergrid.corepersistence.pipeline.cursor.RequestCursor;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -81,31 +80,20 @@ public class FilterPipeline<InputType> {
 
 
     public <OutputType> FilterPipeline<OutputType> withFilter(
-        final Filter<? super InputType, ? extends OutputType> filter ) {
+        final PipelineOperation<? super InputType, ? extends OutputType> filter ) {
 
 
-        setUp( filter );
 
-        return ( FilterPipeline<OutputType> ) this;
-    }
+        final PipelineContext context = new PipelineContext( applicationScope, requestCursor, limit, idCount );
 
+        filter.setContext( context );
 
-    public <OutputType> FilterPipeline<OutputType> withCollector(
-        final Collector<? super InputType, ? extends OutputType> collector ) {
-
-
-        setUp( collector );
+        //done for clarity
+        idCount++;
 
         return ( FilterPipeline<OutputType> ) this;
     }
 
-
-    private <OutputType> void setUp(
-        final PipelineOperation<? super InputType, ? extends OutputType> pipelineOperation ) {
-        setState( pipelineOperation );
-
-        currentObservable = currentObservable.compose( pipelineOperation );
-    }
 
 
     /**
@@ -116,17 +104,4 @@ public class FilterPipeline<InputType> {
     }
 
 
-    /**
-     * Set the id of the state
-     */
-    private void setState( final PipelineOperation pipelineOperation ) {
-
-
-        final PipelineContext context = new PipelineContext( applicationScope, requestCursor, limit, idCount );
-
-        pipelineOperation.setContext( context );
-
-        //done for clarity
-        idCount++;
-    }
 }

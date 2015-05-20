@@ -20,18 +20,20 @@
 package org.apache.usergrid.corepersistence.pipeline.read;
 
 
+import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.EntityResumeFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateEntityFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.CandidateIdFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchCollectionFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticSearchConnectionFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.EntityIdFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.EntityLoadFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphCollectionByIdFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphCollectionFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphConnectionByIdFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphConnectionByTypeFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.ReadGraphConnectionFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.search.CandidateEntityFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.search.CandidateIdFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.search.SearchCollectionFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.search.SearchConnectionFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.EntityIdFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.EntityLoadVerifyFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphCollectionByIdFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphCollectionFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphConnectionByIdFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphConnectionByTypeFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphConnectionFilter;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -90,10 +92,9 @@ public interface FilterFactory {
      * @param query The query to use when querying the entities in the collection
      * @param collectionName The collection name to use when querying
      */
-    ElasticSearchCollectionFilter elasticSearchCollectionFilter( @Assisted( "query" ) final String query,
-                                                                 @Assisted( "collectionName" )
-                                                                 final String collectionName,
-                                                                 @Assisted( "entityType" ) final String entityType );
+    SearchCollectionFilter searchCollectionFilter( @Assisted( "query" ) final String query,
+                                                   @Assisted( "collectionName" ) final String collectionName,
+                                                   @Assisted( "entityType" ) final String entityType );
 
 
     /**
@@ -103,17 +104,16 @@ public interface FilterFactory {
      * @param connectionName The type of connection to query
      * @param connectedEntityType The type of entity in the connection.  Leave absent to query all entity types
      */
-    ElasticSearchConnectionFilter elasticSearchConnectionFilter( @Assisted( "query" ) final String query,
-                                                                 @Assisted( "connectionName" )
-                                                                 final String connectionName,
-                                                                 @Assisted( "connectedEntityType" )
-                                                                 final Optional<String> connectedEntityType );
+    SearchConnectionFilter searchConnectionFilter( @Assisted( "query" ) final String query,
+                                                   @Assisted( "connectionName" ) final String connectionName,
+                                                   @Assisted( "connectedEntityType" )
+                                                   final Optional<String> connectedEntityType );
 
 
     /**
      * Generate a new instance of the command with the specified parameters
      */
-    EntityLoadFilter entityLoadFilter();
+    EntityLoadVerifyFilter entityLoadFilter();
 
     /**
      * Get the collector for collection candidate results to entities
@@ -127,16 +127,37 @@ public interface FilterFactory {
     CandidateIdFilter candidateResultsIdVerifyFilter();
 
     /**
-     * Get an entity id filter.  Used as a 1.0->2.0 bridge since we're not doing full traversals
-     *
      * @param entityId The entity id to emit
+     *
+     * @deprecated A 1.0 api
+     *
+     * Get an entity id filter.  Used as a 1.0->2.0 bridge since we're not doing full traversals
      */
+    @Deprecated
     EntityIdFilter getEntityIdFilter( final Id entityId );
 
 
     /**
      * Create a new instance of our entity filter
-     * @return
      */
     EntityResumeFilter entityResumeFilter();
+
+    /**
+     * @deprecated A 1.0 api Create a filter for resuming connection references
+     */
+    @Deprecated
+    ConnectionRefResumeFilter connectionRefResumeFilter();
+
+    /**
+     *
+     * Creates connection refs for 1.0 compatibilty
+     *
+     * @param sourceId The source id
+     * @param connectionType The connection type
+     *
+     * @deprecated A 1.0 api Create a filter for transforming incoming ids into connection refs
+     */
+    @Deprecated
+    ConnectionRefFilter connectionRefFilter( @Assisted( "sourceId" ) final Id sourceId,
+                                             @Assisted( "connectionType" ) final String connectionType );
 }

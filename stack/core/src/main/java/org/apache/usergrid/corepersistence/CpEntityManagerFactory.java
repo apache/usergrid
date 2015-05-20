@@ -35,8 +35,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
-import org.apache.usergrid.corepersistence.pipeline.read.CollectorFactory;
-import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
+import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.persistence.AbstractEntity;
@@ -126,8 +125,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
     private final AsyncEventService indexService;
-    private final FilterFactory filterFactory;
-    private final CollectorFactory collectorFactory;
+    private final PipelineBuilderFactory pipelineBuilderFactory;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector ) {
@@ -141,8 +139,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
-        this.filterFactory = injector.getInstance( FilterFactory.class );
-        this.collectorFactory = injector.getInstance( CollectorFactory.class );
+        this.pipelineBuilderFactory = injector.getInstance( PipelineBuilderFactory.class );
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
@@ -203,7 +200,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory, entityManagerFig,
 
-            filterFactory,  collectorFactory, applicationId );
+
+            pipelineBuilderFactory, applicationId );
         return em;
     }
 
