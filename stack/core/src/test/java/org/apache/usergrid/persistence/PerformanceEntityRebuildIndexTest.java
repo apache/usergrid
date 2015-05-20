@@ -314,7 +314,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                 }
             }
             catch ( IllegalArgumentException iae ) {
-                //swallow
+                //swallow.  Thrown if our job can't be found.  I.E hasn't updated yet
             }
 
 
