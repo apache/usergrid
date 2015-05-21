@@ -21,7 +21,7 @@ package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
-import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -31,13 +31,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public class CandidateBuilder {
 
 
-    private final FilterPipeline<FilterResult<Candidate>> filterPipeline;
+    private final Pipeline<FilterResult<Candidate>> pipeline;
     private final FilterFactory filterFactory;
 
 
-    public CandidateBuilder( final FilterPipeline<FilterResult<Candidate>> filterPipeline,
+    public CandidateBuilder( final Pipeline<FilterResult<Candidate>> pipeline,
                              final FilterFactory filterFactory ) {
-        this.filterPipeline = filterPipeline;
+        this.pipeline = pipeline;
         this.filterFactory = filterFactory;
     }
 
@@ -48,7 +48,7 @@ public class CandidateBuilder {
      */
     public IdBuilder loadIds(){
 
-        final FilterPipeline<FilterResult<Id>> newFilter = filterPipeline.withFilter( filterFactory.candidateResultsIdVerifyFilter() );
+        final Pipeline<FilterResult<Id>> newFilter = pipeline.withFilter( filterFactory.candidateResultsIdVerifyFilter() );
 
         return new IdBuilder( newFilter, filterFactory );
     }
@@ -60,7 +60,7 @@ public class CandidateBuilder {
      */
     public EntityBuilder loadEntities(){
 
-        final FilterPipeline<FilterResult<Entity>> newFilter = filterPipeline.withFilter( filterFactory.candidateEntityFilter() );
+        final Pipeline<FilterResult<Entity>> newFilter = pipeline.withFilter( filterFactory.candidateEntityFilter() );
 
         return new EntityBuilder(newFilter  );
     }

@@ -22,12 +22,11 @@ package org.apache.usergrid.corepersistence.pipeline.builder;
 
 import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
-import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphConnectionByTypeFilter;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -42,11 +41,11 @@ public class IdBuilder {
 
 
     private final FilterFactory filterFactory;
-    private final FilterPipeline<FilterResult<Id>> filterPipeline;
+    private final Pipeline<FilterResult<Id>> pipeline;
 
 
-    public IdBuilder( final FilterPipeline<FilterResult<Id>> filterPipeline, final FilterFactory filterFactory ) {
-        this.filterPipeline = filterPipeline;
+    public IdBuilder( final Pipeline<FilterResult<Id>> pipeline, final FilterFactory filterFactory ) {
+        this.pipeline = pipeline;
         this.filterFactory = filterFactory;
     }
 
@@ -56,8 +55,8 @@ public class IdBuilder {
      * @return
      */
     public EntityBuilder loadEntities() {
-        final FilterPipeline<FilterResult<Entity>> pipeline =
-            filterPipeline.withFilter( filterFactory.entityLoadFilter() );
+        final Pipeline<FilterResult<Entity>> pipeline =
+            this.pipeline.withFilter( filterFactory.entityLoadFilter() );
 
         return new EntityBuilder( pipeline );
     }
@@ -69,8 +68,8 @@ public class IdBuilder {
      * @return
      */
     public IdBuilder traverseCollection( final String collectionName ) {
-        final FilterPipeline<FilterResult<Id>> newFilter =
-            filterPipeline.withFilter( filterFactory.readGraphCollectionFilter( collectionName ) );
+        final Pipeline<FilterResult<Id>> newFilter =
+            pipeline.withFilter( filterFactory.readGraphCollectionFilter( collectionName ) );
 
         return new IdBuilder( newFilter, filterFactory );
     }
@@ -93,7 +92,7 @@ public class IdBuilder {
         }
 
 
-        return new IdBuilder( filterPipeline.withFilter(filter ), filterFactory );
+        return new IdBuilder( pipeline.withFilter(filter ), filterFactory );
     }
 
 
@@ -106,7 +105,7 @@ public class IdBuilder {
      */
     public CandidateBuilder searchCollection( final String collectionName, final String ql, final String entityType  ) {
 
-        final FilterPipeline<FilterResult<Candidate>> newFilter = filterPipeline.withFilter( filterFactory.searchCollectionFilter(
+        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
             ql, collectionName, entityType ) );
 
         return new CandidateBuilder( newFilter, filterFactory );
@@ -123,7 +122,7 @@ public class IdBuilder {
     public CandidateBuilder searchConnection( final String connectionName, final String ql ,  final Optional<String> entityType) {
 
 
-        final FilterPipeline<FilterResult<Candidate>> newFilter = filterPipeline.withFilter( filterFactory.searchConnectionFilter(
+        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchConnectionFilter(
             ql, connectionName, entityType ) );
 
         return new CandidateBuilder( newFilter, filterFactory );
@@ -139,7 +138,7 @@ public class IdBuilder {
     @Deprecated
     public ConnectionRefBuilder loadConnectionRefs(final Id sourceId, final String connectionType){
 
-        final FilterPipeline<FilterResult<ConnectionRef>> connectionRefFilter = filterPipeline.withFilter( new ConnectionRefFilter(sourceId, connectionType  ) ).withFilter(
+        final Pipeline<FilterResult<ConnectionRef>> connectionRefFilter = pipeline.withFilter( new ConnectionRefFilter(sourceId, connectionType  ) ).withFilter(
             new ConnectionRefResumeFilter() );
         return new ConnectionRefBuilder(connectionRefFilter);
     }

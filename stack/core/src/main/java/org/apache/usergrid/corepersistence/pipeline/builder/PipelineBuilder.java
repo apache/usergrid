@@ -21,7 +21,7 @@ package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
-import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -91,9 +91,9 @@ public class PipelineBuilder {
      */
     @Deprecated
     public IdBuilder fromId(final Id entityId){
-        FilterPipeline<FilterResult<Id>>  filterPipeline =  new FilterPipeline( applicationScope, this.cursor,limit ).withFilter(  filterFactory.getEntityIdFilter( entityId ) );
+        Pipeline<FilterResult<Id>> pipeline =  new Pipeline( applicationScope, this.cursor,limit ).withFilter(  filterFactory.getEntityIdFilter( entityId ) );
 
-        return new IdBuilder( filterPipeline, filterFactory );
+        return new IdBuilder( pipeline, filterFactory );
     }
 
 
