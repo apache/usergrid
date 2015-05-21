@@ -20,7 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
-import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
@@ -36,9 +36,9 @@ import rx.Observable;
 public class ConnectionRefBuilder {
 
 
-    private final FilterPipeline<FilterResult<ConnectionRef>> connectionRefFilter;
+    private final Pipeline<FilterResult<ConnectionRef>> connectionRefFilter;
 
-    public ConnectionRefBuilder( final FilterPipeline<FilterResult<ConnectionRef>> connectionRefFilter ) {
+    public ConnectionRefBuilder( final Pipeline<FilterResult<ConnectionRef>> connectionRefFilter ) {
        this.connectionRefFilter = connectionRefFilter;
     }
 

@@ -20,9 +20,11 @@
 package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
-import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
+import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.EntityResumeFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import rx.Observable;
@@ -33,11 +35,11 @@ import rx.Observable;
  */
 public class EntityBuilder {
 
-    private final FilterPipeline<FilterResult<Entity>> filterPipeline;
+    private final Pipeline<FilterResult<Entity>> pipeline;
 
 
-    public EntityBuilder( final FilterPipeline<FilterResult<Entity>> filterPipeline ) {
-        this.filterPipeline = filterPipeline;
+    public EntityBuilder( final Pipeline<FilterResult<Entity>> pipeline ) {
+        this.pipeline = pipeline;
     }
 
 
@@ -46,6 +48,7 @@ public class EntityBuilder {
      * @return
      */
     public Observable<ResultsPage<Entity>> build(){
-        return null;
+        //we must add our resume filter so we drop our previous page first element if it's present
+        return pipeline.withFilter( new EntityResumeFilter() ).withFilter( new ResultsPageCollector<>() ).execute();
     }
 }

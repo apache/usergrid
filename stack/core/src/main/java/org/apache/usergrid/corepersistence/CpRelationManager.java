@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.FilterPipeline;
 import org.apache.usergrid.corepersistence.pipeline.builder.EntityBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.IdBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
-import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
+import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
 import org.apache.usergrid.corepersistence.results.ObservableQueryExecutor;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -640,11 +640,11 @@ public class CpRelationManager implements RelationManager {
         }
         else {
             final String entityType = collection.getType();
-            results = pipelineBuilder.searchCollection( collectionName, entityType, query.getQl().get() ).loadEntities();
+            results = pipelineBuilder.searchCollection( collectionName, query.getQl().get() ,  entityType).loadEntities();
         }
 
 
-        return new ObservableQueryExecutor( results.build() ).next();
+        return new EntityQueryExecutor( results.build() ).next();
     }
 
 
@@ -936,21 +936,24 @@ public class CpRelationManager implements RelationManager {
 
 
         if(query.getResultsLevel() == Level.REFS){
-            final Observable<ResultsPage<ConnectionRef>> results;
 
+            final IdBuilder traversedIds;
             if(query.isGraphSearch()){
 
-               results = pipelineBuilder.traverseConnection( connection, entityType   ).loadConnectionRefs( cpHeadEntity.getId(), connection ).build();
+               traversedIds = pipelineBuilder.traverseConnection( connection, entityType );
 
 
             }
             else
             {
-                results = pipelineBuilder.searchConnection( connection, query.getQl().get(),entityType) .loadIds().loadConnectionRefs( cpHeadEntity.getId(), connection ).build();
+                traversedIds = pipelineBuilder.searchConnection( connection, query.getQl().get(), entityType ).loadIds();
 
             }
 
-            throw new UnsupportedOperationException( "Implement me" );
+            final Observable<ResultsPage<ConnectionRef>> results = traversedIds.loadConnectionRefs(
+                cpHeadEntity.getId(), connection ).build();
+
+            return new ConnectionRefQueryExecutor( results ).next();
 
         }
 
@@ -978,7 +981,7 @@ public class CpRelationManager implements RelationManager {
 
 
 
-        return new ObservableQueryExecutor( results ).next();
+        return new EntityQueryExecutor( results ).next();
     }
 
 

@@ -39,7 +39,7 @@ import rx.Observable;
  *
  * @param InputType the input type in the current pipeline state
  */
-public class FilterPipeline<InputType> {
+public class Pipeline<InputType> {
 
 
     private int idCount = 0;
@@ -57,7 +57,7 @@ public class FilterPipeline<InputType> {
     /**
      * Create our filter pipeline
      */
-    public FilterPipeline( final ApplicationScope applicationScope, final Optional<String> cursor, final int limit ) {
+    public Pipeline( final ApplicationScope applicationScope, final Optional<String> cursor, final int limit ) {
 
 
         ValidationUtils.validateApplicationScope( applicationScope );
@@ -79,7 +79,7 @@ public class FilterPipeline<InputType> {
     }
 
 
-    public <OutputType> FilterPipeline<OutputType> withFilter(
+    public <OutputType> Pipeline<OutputType> withFilter(
         final PipelineOperation<? super InputType, ? extends OutputType> filter ) {
 
 
@@ -88,10 +88,13 @@ public class FilterPipeline<InputType> {
 
         filter.setContext( context );
 
+        //update the observable
+        this.currentObservable = currentObservable.compose( filter );
+
         //done for clarity
         idCount++;
 
-        return ( FilterPipeline<OutputType> ) this;
+        return ( Pipeline<OutputType> ) this;
     }
 
 

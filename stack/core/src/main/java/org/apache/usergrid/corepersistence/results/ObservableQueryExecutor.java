@@ -20,9 +20,7 @@
 package org.apache.usergrid.corepersistence.results;
 
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -42,53 +40,42 @@ import rx.Observable;
  * Our proxy to allow us to subscribe to observable results, then return them as an iterator.  A bridge for 2.0 -> 1.0
  * code.  This should not be used on any new code, and will eventually be deleted
  */
-public class ObservableQueryExecutor implements QueryExecutor {
+@Deprecated//Required for 1.0 compatibility
+public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
 
     private final Observable<Results> resultsObservable;
 
     public Iterator<Results> iterator;
 
 
-    public ObservableQueryExecutor( final Observable<ResultsPage<Entity>> resultsObservable) {
-       //map to our old results objects, return a default empty if required
-        this.resultsObservable = resultsObservable.map( resultsPage -> createResults( resultsPage ) ).defaultIfEmpty( new Results() );
+    public ObservableQueryExecutor( final Observable<ResultsPage<T>> resultsObservable ) {
+        //map to our old results objects, return a default empty if required
+        this.resultsObservable = resultsObservable.map( resultsPage -> createResultsInternal( resultsPage ) )
+                                                  .defaultIfEmpty( new Results() );
     }
 
 
     /**
-     *
-     * @param cpEntity
+     * Transform the results
+     * @param resultsPage
      * @return
      */
-    private org.apache.usergrid.persistence.Entity mapEntity( final Entity cpEntity ) {
+    protected abstract Results createResults( final ResultsPage resultsPage );
 
 
-        final Id entityId = cpEntity.getId();
 
-        org.apache.usergrid.persistence.Entity entity =
-            EntityFactory.newEntity( entityId.getUuid(), entityId.getType() );
-
-        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
-        entity.addProperties( entityMap );
-
-        return entity;
-    }
-
-    private Results createResults( final ResultsPage resultsPage ){
-
-        final List<Entity> entityList = resultsPage.getEntityList();
-        final List<org.apache.usergrid.persistence.Entity> resultsEntities = new ArrayList<>( entityList.size() );
+    /**
+     * Legacy to transform our results page to a new results
+     * @param resultsPage
+     * @return
+     */
+    private Results createResultsInternal( final ResultsPage resultsPage ) {
 
 
-        for(final Entity entity: entityList){
-            resultsEntities.add( mapEntity( entity ) );
-        }
-
-        final Results results = Results.fromEntities( resultsEntities );
-
+        final Results results = createResults( resultsPage );
 
         //add the cursor if our limit is the same
-        if(resultsPage.hasMoreResults()) {
+        if ( resultsPage.hasMoreResults() ) {
             final Optional<String> cursor = resultsPage.getResponseCursor().encodeAsString();
 
             if ( cursor.isPresent() ) {
@@ -96,9 +83,8 @@ public class ObservableQueryExecutor implements QueryExecutor {
             }
         }
         return results;
-
-
     }
+
 
 
     @Override
@@ -130,6 +116,4 @@ public class ObservableQueryExecutor implements QueryExecutor {
 
         return next;
     }
-
-
 }
