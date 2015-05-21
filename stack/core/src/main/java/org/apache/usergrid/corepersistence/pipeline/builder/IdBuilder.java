@@ -24,14 +24,19 @@ import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
 import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefResumeFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.IdResumeFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+
+import rx.Observable;
 
 
 /**

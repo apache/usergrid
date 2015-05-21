@@ -35,7 +35,7 @@ import rx.Observable;
 
 
 /**
- * Processes our results of entities and turns them into
+ * Processes our results of entities
  */
 @Deprecated//Required for 1.0 compatibility
 public class EntityQueryExecutor extends ObservableQueryExecutor<Entity> {

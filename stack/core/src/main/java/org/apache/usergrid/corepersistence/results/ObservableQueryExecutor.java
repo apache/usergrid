@@ -60,7 +60,7 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
      * @param resultsPage
      * @return
      */
-    protected abstract Results createResults( final ResultsPage resultsPage );
+    protected abstract Results createResults( final ResultsPage<T> resultsPage );
 
 
 
@@ -69,7 +69,7 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
      * @param resultsPage
      * @return
      */
-    private Results createResultsInternal( final ResultsPage resultsPage ) {
+    private Results createResultsInternal( final ResultsPage<T> resultsPage ) {
 
 
         final Results results = createResults( resultsPage );

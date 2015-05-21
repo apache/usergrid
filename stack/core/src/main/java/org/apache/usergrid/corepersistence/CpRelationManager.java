@@ -37,7 +37,6 @@ import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFacto
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
-import org.apache.usergrid.corepersistence.results.ObservableQueryExecutor;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
@@ -268,7 +267,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<Edge> edges = gm.loadEdgeVersions(
             new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
-                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ) );
+                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent() ) );
 
         return edges.toBlocking().firstOrDefault( null ) != null;
     }
@@ -933,36 +932,27 @@ public class CpRelationManager implements RelationManager {
             cpHeadEntity.getId() );
 
 
-
-
-        if(query.getResultsLevel() == Level.REFS){
+        if ( query.getResultsLevel() == Level.REFS || query.getResultsLevel() == Level.IDS ) {
 
             final IdBuilder traversedIds;
-            if(query.isGraphSearch()){
 
-               traversedIds = pipelineBuilder.traverseConnection( connection, entityType );
-
-
+            if ( query.isGraphSearch() ) {
+                traversedIds = pipelineBuilder.traverseConnection( connection, entityType );
             }
-            else
-            {
-                traversedIds = pipelineBuilder.searchConnection( connection, query.getQl().get(), entityType ).loadIds();
-
+            else {
+                traversedIds =
+                    pipelineBuilder.searchConnection( connection, query.getQl().get(), entityType ).loadIds();
             }
 
-            final Observable<ResultsPage<ConnectionRef>> results = traversedIds.loadConnectionRefs(
-                cpHeadEntity.getId(), connection ).build();
+            //create connection refs
+
+            final Observable<ResultsPage<ConnectionRef>> results =
+                traversedIds.loadConnectionRefs( cpHeadEntity.getId(), connection ).build();
 
             return new ConnectionRefQueryExecutor( results ).next();
-
         }
 
 
-
-        if(query.getResultsLevel() == Level.IDS){
-
-            throw new UnsupportedOperationException( "Not yet implemented" );
-        }
 
 
         //we want to load all entities

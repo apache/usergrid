@@ -36,7 +36,7 @@ import rx.Observable;
 
 
 /**
- * Processes our results of entities and turns them into
+ * Processes our results of connection refs
  */
 @Deprecated//Required for 1.0 compatibility
 public class ConnectionRefQueryExecutor extends ObservableQueryExecutor<ConnectionRef> {
