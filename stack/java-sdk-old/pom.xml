@@ -32,14 +32,14 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.2-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 	
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.usergrid</groupId>
     <artifactId>usergrid-java-client</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4-SNAPSHOT</version>
     <packaging>jar</packaging>
 	
     <licenses>
