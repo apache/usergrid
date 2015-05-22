@@ -54,11 +54,9 @@ public interface ApplicationEntityIndex {
      * Same as search, just iterates all documents that match the index edge exactly.
      * @param edge The edge to search on
      * @param entityId The entity that the searchEdge is connected to.
-     * @param limit The limit of the values to return per search.
-     * @param offset The offset to page the query on.
      * @return
      */
-    CandidateResults getAllEdgeDocuments(final IndexEdge edge, final Id entityId,  final int limit, final int offset);
+    CandidateResults getAllEdgeDocuments( final IndexEdge edge, final Id entityId );
 
     /**
      * Returns all entity documents that match the entityId and come before the marked version
