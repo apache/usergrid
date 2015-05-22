@@ -181,8 +181,8 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
     },
     client: function() {
       var options = {
-        buildCurl: true,
-        logging: true
+        buildCurl: Usergrid.options.client.buildCurl || false,
+        logging: Usergrid.options.client.logging || false
       };
       if (Usergrid.options && Usergrid.options.client) {
         options.keys = Usergrid.options.client;

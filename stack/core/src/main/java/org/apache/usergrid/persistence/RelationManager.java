@@ -54,8 +54,6 @@ public interface RelationManager {
 
     public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception;
 
-    public Entity addToCollections( List<EntityRef> owners, String collectionName ) throws Exception;
-
     public Entity createItemInCollection( String collectionName, String itemType, Map<String, Object> properties )
             throws Exception;
 

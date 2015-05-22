@@ -351,23 +351,10 @@ public class CpRelationManager implements RelationManager {
             return null;
         }
 
-        return addToCollection( collectionName, itemRef,
-            ( collection != null && collection.getLinkedCollection() != null ) );
-    }
-
-
-    public Entity addToCollection( String collectionName, EntityRef itemRef, boolean connectBack ) throws Exception {
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load( entityId );
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load(entityId);
 
-        return addToCollection( collectionName, itemRef, memberEntity, connectBack );
-    }
-
-
-    public Entity addToCollection( final String collectionName, final EntityRef itemRef,
-                                   final org.apache.usergrid.persistence.model.entity.Entity memberEntity,
-                                   final boolean connectBack ) throws Exception {
 
         // don't fetch entity if we've already got one
         final Entity itemEntity;
@@ -382,10 +369,6 @@ public class CpRelationManager implements RelationManager {
             return null;
         }
 
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
-        if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
-            return null;
-        }
 
 
         if ( memberEntity == null ) {
@@ -402,8 +385,10 @@ public class CpRelationManager implements RelationManager {
 
         // create graph edge connection from head entity to member entity
         final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
+
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         gm.writeEdge( edge ).toBlocking().last();
+        //reverse
 
 
         //perform indexing
@@ -412,7 +397,14 @@ public class CpRelationManager implements RelationManager {
             logger.debug( "Wrote edge {}", edge );
         }
 
-        indexService.queueNewEdge( applicationScope, memberEntity, edge );
+        indexService.queueNewEdge(applicationScope, memberEntity, edge);
+        //reverse
+        if(!cpHeadEntity.getId().getType().equals("application")) {
+            String pluralType =  InflectionUtils.pluralize(cpHeadEntity.getId().getType());
+            final Edge reverseEdge = createCollectionEdge(memberEntity.getId(), pluralType, cpHeadEntity.getId());
+            gm.writeEdge(reverseEdge).toBlocking().last();
+            indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+        }
 
 
         if ( logger.isDebugEnabled() ) {
@@ -425,17 +417,6 @@ public class CpRelationManager implements RelationManager {
         return itemEntity;
     }
 
-
-    @Override
-    public Entity addToCollections( List<EntityRef> owners, String collectionName ) throws Exception {
-
-        // TODO: this addToCollections() implementation seems wrong.
-        for ( EntityRef eref : owners ) {
-            addToCollection( collectionName, eref );
-        }
-
-        return null;
-    }
 
 
     @Override
@@ -662,14 +643,10 @@ public class CpRelationManager implements RelationManager {
             if ( found ) {
                 break;
             }
-            Thread.sleep( sleepTime );
-        }
-        while ( !found && length <= maxLength );
-        if ( logger.isInfoEnabled() ) {
-            logger.info( String
-                .format( "Consistent Search finished in %s,  results=%s, expected=%s...dumping stack", length,
-                    results.size(), expectedResults ) );
-            Thread.dumpStack();
+            Thread.sleep(sleepTime);
+        }while (!found && length <= maxLength);
+        if(logger.isInfoEnabled()){
+            logger.info(String.format("Consistent Search finished in %s,  results=%s, expected=%s...dumping stack",length, results.size(),expectedResults));
         }
         return results;
     }
@@ -968,6 +945,7 @@ public class CpRelationManager implements RelationManager {
 
             results = pipelineBuilder.searchConnection( connection,  query.getQl().get() , entityType).loadEntities().build();
         }
+
 
 
 

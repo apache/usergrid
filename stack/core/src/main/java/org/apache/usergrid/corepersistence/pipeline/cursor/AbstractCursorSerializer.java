@@ -44,7 +44,7 @@ public abstract class AbstractCursorSerializer<T> implements CursorSerializer<T>
         try {
             final Class<? extends T> classType = getType();
 
-            return objectMapper.treeToValue( node, classType );
+             return objectMapper.treeToValue( node, classType );
         }
         catch ( JsonProcessingException e ) {
             throw new CursorParseException( "Unable to deserialize value", e );
