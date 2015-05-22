@@ -17,21 +17,37 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.corepersistence.pipeline.read;
 
 
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import com.google.common.base.Optional;
 
 
 /**
- * Callback to perform an index operation based on an scope during bulk re-index operations
+ * An internal class that holds a mutable state.  When resuming, we only ever honor the seek value on the first call.  Afterwards, we will seek from the beginning on newly emitted values.
+ * Calling get will return the first value to seek, or absent if not specified.  Subsequent calls will return absent.  Callers should treat the results as seek values for each operation
  */
-@FunctionalInterface
-public interface ReIndexAction {
+public class CursorSeek<C> {
+
+    private Optional<C> seek;
+
+    public CursorSeek( final Optional<C> cursorValue ){
+        seek = cursorValue;
+    }
+
 
     /**
-     * Index this entity with the specified scope
-     * @param entityIdScope
+     * Get the seek value to use when searching
+     * @return
      */
-    void index( final EntityIndexOperation entityIdScope );
+    public Optional<C> getSeekValue(){
+        final Optional<C> toReturn = seek;
+
+        seek = Optional.absent();
+
+        return toReturn;
+    }
+
+
+
 }

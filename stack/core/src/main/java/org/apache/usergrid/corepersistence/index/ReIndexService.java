@@ -20,22 +20,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.FutureTask;
-
-import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
-import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-
-import com.google.common.base.Optional;
-
-import rx.Observable;
-import rx.Observer;
-import rx.observables.ConnectableObservable;
-
-
 /**
  * An interface for re-indexing all entities in an application
  */
@@ -44,46 +28,81 @@ public interface ReIndexService {
 
     /**
      * Perform an index rebuild
-     * @param appId
-     * @param collection
+     *
+     * @param reIndexRequestBuilder The builder to build the request
+     */
+    ReIndexStatus rebuildIndex( final ReIndexRequestBuilder reIndexRequestBuilder );
+
+
+    /**
+     * Generate a build for the index
+     */
+    ReIndexRequestBuilder getBuilder();
+
+
+    /**
+     * Get the status of a job
+     * @param jobId The jobId returned during the rebuild index
      * @return
      */
-    IndexResponse rebuildIndex( final Optional<UUID> appId, final Optional<String> collection, final Optional<String> collectionName, final Optional<String> cursor,
-                        final Optional<Long> startTimestamp );
-
+    ReIndexStatus getStatus( final String jobId );
 
 
     /**
      * The response when requesting a re-index operation
      */
-    class IndexResponse {
-        final String cursor;
-        final ConnectableObservable<EdgeScope> indexedEdgecount;
+    class ReIndexStatus {
+        final String jobId;
+        final Status status;
+        final long numberProcessed;
+        final long lastUpdated;
 
 
-        public IndexResponse( final String cursor, final ConnectableObservable<EdgeScope> indexedEdgecount ) {
-            this.cursor = cursor;
-            this.indexedEdgecount = indexedEdgecount;
+        public ReIndexStatus( final String jobId, final Status status, final long numberProcessed,
+                              final long lastUpdated ) {
+            this.jobId = jobId;
+            this.status = status;
+            this.numberProcessed = numberProcessed;
+            this.lastUpdated = lastUpdated;
         }
 
 
         /**
-         * Get the cursor used to resume this operation
-         * @return
+         * Get the jobId used to resume this operation
          */
-        public String getCursor() {
-            return cursor;
+        public String getJobId() {
+            return jobId;
         }
 
 
         /**
-         * Return the observable of all edges to be indexed.
-         *
-         * Note that after subscribing "connect" will need to be called to ensure that processing begins
+         * Get the last updated time, as a long
          * @return
          */
-        public ConnectableObservable<EdgeScope> getCount() {
-            return indexedEdgecount;
+        public long getLastUpdated() {
+            return lastUpdated;
         }
+
+
+        /**
+         * Get the number of records processed
+         * @return
+         */
+        public long getNumberProcessed() {
+            return numberProcessed;
+        }
+
+
+        /**
+         * Get the status
+         * @return
+         */
+        public Status getStatus() {
+            return status;
+        }
+    }
+
+    enum Status{
+        STARTED, INPROGRESS, COMPLETE;
     }
 }

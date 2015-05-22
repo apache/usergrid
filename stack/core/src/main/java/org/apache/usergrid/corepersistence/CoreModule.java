@@ -25,6 +25,8 @@ import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
 import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
@@ -141,6 +143,8 @@ public class CoreModule  extends AbstractModule {
         //bind the queue provider
         bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
 
+
+        bind( ReIndexService.class).to( ReIndexServiceImpl.class );
 
 
         install( new GuicyFigModule( IndexProcessorFig.class ) );

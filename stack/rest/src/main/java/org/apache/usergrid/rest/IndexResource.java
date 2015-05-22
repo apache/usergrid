@@ -20,25 +20,34 @@
 
 package org.apache.usergrid.rest;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.sun.jersey.api.json.JSONWithPadding;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+
+import com.google.common.base.Preconditions;
+import com.sun.jersey.api.json.JSONWithPadding;
+
 
 /**
  * Classy class class.
@@ -46,260 +55,239 @@ import java.util.UUID;
 @Component
 @Scope( "singleton" )
 @Produces( {
-        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript"
+    MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+    "application/ecmascript", "text/jscript"
 } )
 public class IndexResource extends AbstractContextResource {
 
-    private static final Logger logger = LoggerFactory.getLogger(IndexResource.class);
+    private static final Logger logger = LoggerFactory.getLogger( IndexResource.class );
+    private static final String UPDATED_FIELD = "updated";
 
-    public IndexResource(){
+
+    public IndexResource() {
         super();
     }
+
+
+    @RequireSystemAccess
+    @POST
+    @Path( "rebuild" )
+    public JSONWithPadding rebuildIndexesPost( @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+
+
+        logger.info( "Rebuilding all applications" );
+
+        final ReIndexRequestBuilder request = createRequest();
+
+        return executeAndCreateResponse( request, callback );
+    }
+
 
     @RequireSystemAccess
     @PUT
     @Path( "rebuild" )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes" );
+    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
+                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
 
 
-        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+        logger.info( "Resuming rebuilding all applications" );
+        final ReIndexRequestBuilder request = createRequest();
+
+        return executeResumeAndCreateResponse( payload, request, callback );
+    }
 
 
-            @Override
-            public void onProgress( final EntityRef entity ) {
-                logger.info( "Indexing entity {}:{} ", entity.getType(), entity.getUuid() );
-            }
+    @RequireSystemAccess
+    @POST
+    @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
+    public JSONWithPadding rebuildIndexesPut( @PathParam( "applicationId" ) String applicationIdStr,
+                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                                              @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
 
-        };
-
-
-        final Thread rebuild = new Thread() {
-
-            @Override
-            public void run() {
-                logger.info( "Rebuilding all indexes" );
-
-                try {
-                    emf.rebuildAllIndexes( po );
-                }
-                catch ( Exception e ) {
-                    logger.error( "Unable to rebuild indexes", e );
-                }
-
-                logger.info( "Completed all indexes" );
-            }
-        };
-
-        rebuild.setName( "Index rebuild all usergrid" );
-        rebuild.setDaemon( true );
-        rebuild.start();
+        throws Exception {
 
 
-        response.setSuccess();
+        logger.info( "Rebuilding application {}", applicationIdStr );
 
-        return new JSONWithPadding( response, callback );
+
+        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+
+        final ReIndexRequestBuilder request = createRequest().withApplicationId( appId );
+
+        return executeAndCreateResponse( request, callback );
     }
 
 
     @RequireSystemAccess
     @PUT
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                                           @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
+    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
+                                              @PathParam( "applicationId" ) String applicationIdStr,
+                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                                              @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
 
-            throws Exception {
+        throws Exception {
 
-        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
-        ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes started" );
+        logger.info( "Resuming rebuilding application {}", applicationIdStr );
 
-        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
 
-            @Override
-            public void onProgress( final EntityRef entity ) {
-                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
-            }
+        final ReIndexRequestBuilder request = createRequest().withApplicationId( appId );
 
-
-        };
+        return executeResumeAndCreateResponse( payload, request, callback );
+    }
 
 
-        final Thread rebuild = new Thread() {
-
-            @Override
-            public void run() {
-
-
-                logger.info( "Started rebuilding application {} in collection ", appId );
-
-
-                try {
-                    emf.rebuildApplicationIndexes( appId, po );
-                }
-                catch ( Exception e ) {
-                    logger.error( "Unable to re-index application", e );
-                }
+    @RequireSystemAccess
+    @POST
+    @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
+    public JSONWithPadding rebuildIndexesPost( @PathParam( "applicationId" ) final String applicationIdStr,
+                                               @PathParam( "collectionName" ) final String collectionName,
+                                               @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
+                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
 
 
-                logger.info( "Completed rebuilding application {} in collection ", appId );
-            }
-        };
+        logger.info( "Rebuilding collection {} in  application {}", collectionName, applicationIdStr );
 
-        rebuild.setName( String.format( "Index rebuild for app %s", appId ) );
-        rebuild.setDaemon( true );
-        rebuild.start();
+        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
 
-        response.setSuccess();
+        final ReIndexRequestBuilder request =
+            createRequest().withApplicationId( appId ).withCollection( collectionName );
 
-        return new JSONWithPadding( response, callback );
+        return executeAndCreateResponse( request, callback );
     }
 
 
     @RequireSystemAccess
     @PUT
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexes(
-        @Context UriInfo ui,
-        @PathParam( "applicationId" ) final String applicationIdStr,
-        @PathParam( "collectionName" ) final String collectionName,
-        @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
-        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback) throws Exception {
+    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
+                                              @PathParam( "applicationId" ) final String applicationIdStr,
+                                              @PathParam( "collectionName" ) final String collectionName,
+                                              @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
+                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+
+        logger.info( "Resuming rebuilding collection {} in  application {}", collectionName, applicationIdStr );
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
-        ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes" );
 
-        final Thread rebuild = new Thread() {
+        final ReIndexRequestBuilder request =
+            createRequest().withApplicationId( appId ).withCollection( collectionName );
 
-            public void run() {
-
-                logger.info( "Started rebuilding application {} in collection {}", appId, collectionName );
-
-                try {
-                    rebuildCollection( appId, collectionName, reverse );
-                } catch (Exception e) {
-
-                    // TODO: handle this in rebuildCollection() instead
-                    throw new RuntimeException("Error rebuilding collection");
-                }
-
-                logger.info( "Completed rebuilding application {} in collection {}", appId, collectionName );
-            }
-        };
-
-        rebuild.setName( String.format( "Index rebuild for app %s and collection %s", appId, collectionName ) );
-        rebuild.setDaemon( true );
-        rebuild.start();
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
+        return executeResumeAndCreateResponse( payload, request, callback );
     }
 
-    @RequireSystemAccess
-    @PUT
-    @Path( "rebuildinternal" )
-    public JSONWithPadding rebuildInternalIndexes(
-        @Context UriInfo ui,
-        @PathParam( "applicationId" ) String applicationIdStr,
-        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-        @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )  throws Exception {
-
-
-        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
-        ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes started" );
-
-        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
-
-            @Override
-            public void onProgress( final EntityRef entity ) {
-                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
-            }
-
-        };
-
-        final Thread rebuild = new Thread() {
-
-            @Override
-            public void run() {
-
-                logger.info( "Started rebuilding internal indexes", appId );
-
-                try {
-                    emf.rebuildInternalIndexes( po );
-                }
-                catch ( Exception e ) {
-                    logger.error( "Unable to re-index internals", e );
-                }
-
-                logger.info( "Completed rebuilding internal indexes" );
-            }
-        };
-
-        rebuild.setName( String.format( "Index rebuild for app %s", appId ) );
-        rebuild.setDaemon( true );
-        rebuild.start();
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
-    }
 
     @RequireSystemAccess
     @POST
-    @Path( RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding addIndex(@Context UriInfo ui,
-            Map<String, Object> config,
-            @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback)  throws Exception{
+    @Path( "rebuild/management" )
+    public JSONWithPadding rebuildInternalIndexesPost(
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
 
-        Preconditions.checkNotNull(config,"Payload for config is null, please pass {replicas:int, shards:int} in body");
+
+        final UUID managementAppId = emf.getManagementAppId();
+
+        logger.info( "Rebuilding management application with id {} ", managementAppId );
+        final ReIndexRequestBuilder request = createRequest().withApplicationId( managementAppId );
+
+        return executeAndCreateResponse( request, callback );
+    }
+
+
+    @RequireSystemAccess
+    @POST
+    @Path( "rebuild/management" )
+    public JSONWithPadding rebuildInternalIndexesPut( final Map<String, Object> payload,
+                                                      @QueryParam( "callback" ) @DefaultValue( "callback" )
+                                                      String callback ) throws Exception {
+
+
+        final UUID managementAppId = emf.getManagementAppId();
+
+        logger.info( "Resuming rebuilding management application with id {} ", managementAppId );
+        final ReIndexRequestBuilder request = createRequest().withApplicationId( managementAppId );
+
+        return executeResumeAndCreateResponse( payload, request, callback );
+    }
+
+
+    @RequireSystemAccess
+    @POST
+    public JSONWithPadding addIndex( @Context UriInfo ui, Map<String, Object> config,
+                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+
+        Preconditions
+            .checkNotNull( config, "Payload for config is null, please pass {replicas:int, shards:int} in body" );
 
         ApiResponse response = createApiResponse();
 
-        if (!config.containsKey("replicas") || !config.containsKey("shards") ||
-                !(config.get("replicas") instanceof Integer) || !(config.get("shards") instanceof Integer)){
-            throw new IllegalArgumentException("body must contains 'replicas' of type int and 'shards' of type int");
+        if ( !config.containsKey( "replicas" ) || !config.containsKey( "shards" ) ||
+            !( config.get( "replicas" ) instanceof Integer ) || !( config.get( "shards" ) instanceof Integer ) ) {
+            throw new IllegalArgumentException( "body must contains 'replicas' of type int and 'shards' of type int" );
         }
 
-        if(!config.containsKey("indexSuffix")) {
-            throw new IllegalArgumentException("Please add an indexSuffix to your post");
+        if ( !config.containsKey( "indexSuffix" ) ) {
+            throw new IllegalArgumentException( "Please add an indexSuffix to your post" );
         }
 
 
-        emf.addIndex( config.get("indexSuffix").toString(),
-            (int) config.get("shards"),(int) config.get("replicas"),(String)config.get("writeConsistency"));
-        response.setAction("Add index to alias");
+        emf.addIndex( config.get( "indexSuffix" ).toString(), ( int ) config.get( "shards" ),
+            ( int ) config.get( "replicas" ), ( String ) config.get( "writeConsistency" ) );
+        response.setAction( "Add index to alias" );
 
-        return new JSONWithPadding(response, callback);
-
+        return new JSONWithPadding( response, callback );
     }
 
-    private void rebuildCollection(
-        final UUID applicationId,
-        final String collectionName,
-        final boolean reverse) throws Exception {
 
-        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
-
-            @Override
-            public void onProgress( final EntityRef entity ) {
-                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
-            }
-
-        };
-
-        logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
-
-        emf.rebuildCollectionIndex(Optional.of(applicationId),Optional.of(collectionName));
-        getEntityIndex().refreshAsync().toBlocking().first();
+    private ReIndexService getReIndexService() {
+        return injector.getInstance( ReIndexService.class );
     }
 
+
+    private ReIndexRequestBuilder createRequest() {
+        return createRequest();
+    }
+
+
+    private JSONWithPadding executeResumeAndCreateResponse( final Map<String, Object> payload,
+                                                            final ReIndexRequestBuilder request,
+                                                            final String callback ) {
+
+        Preconditions.checkArgument( payload.containsKey( UPDATED_FIELD ),
+            "You must specified the field \"updated\" in the payload" );
+
+        //add our updated timestamp to the request
+        if ( !payload.containsKey( UPDATED_FIELD ) ) {
+            final long timestamp = ( long ) payload.get( UPDATED_FIELD );
+            request.withStartTimestamp( timestamp );
+        }
+
+        return executeAndCreateResponse( request, callback );
+    }
+
+
+    /**
+     * Execute the request and return the response.
+     */
+    private JSONWithPadding executeAndCreateResponse( final ReIndexRequestBuilder request, final String callback ) {
+
+
+        final ReIndexService.ReIndexStatus status = getReIndexService().rebuildIndex( request );
+
+        final ApiResponse response = createApiResponse();
+
+        response.setAction( "rebuild indexes" );
+        response.setProperty( "jobId", status.getJobId() );
+        response.setProperty( "status", status.getStatus() );
+        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
+        response.setProperty( "numberQueued", status.getNumberProcessed() );
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
 }
