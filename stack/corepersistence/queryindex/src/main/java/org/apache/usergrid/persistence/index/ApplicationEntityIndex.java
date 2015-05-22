@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.index;
 
 
+import org.apache.usergrid.persistence.model.entity.Id;
+
 import rx.Observable;
 
 /**
@@ -44,6 +46,16 @@ public interface ApplicationEntityIndex {
      */
     CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                              final int limit, final int offset );
+
+
+    /**
+     * Same as search, just iterates all documents that match the index edge exactly
+     * @param edge
+     * @param limit
+     * @param offset
+     * @return
+     */
+    CandidateResults getAllEdgeDocuments(final IndexEdge edge, final Id entityId,  final int limit, final int offset);
 
     /**
      * delete all application records

@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.Iterator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +35,13 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.CandidateResult;
+import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -162,16 +167,54 @@ public class IndexServiceImpl implements IndexService {
     }
 
 
+    //Steps to delete an IndexEdge.
+    //1.Take the search edge given and search for all the edges in elasticsearch matching that search edge
+    //2. Batch Delete all of those edges returned in the previous search.
+    //TODO: optimize loops further.
     @Override
     public Observable<IndexOperationMessage> deleteIndexEdge( final ApplicationScope applicationScope,
                                                               final Edge edge ) {
 
+        final Observable<IndexOperationMessage> batches =
+            Observable.just( edge ).flatMap( edgeValue -> {
+                final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+                EntityIndexBatch batch = ei.createBatch();
 
-        //TODO, query ES and remove this edge
 
-        throw new NotImplementedException( "Implement me" );
+                //review why generating the Scope from the Source  and the target node makes sense.
+                final IndexEdge fromSource = generateScopeFromSource( edge );
+                final Id targetId = edge.getTargetNode();
+
+
+                CandidateResults targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId, 1000, 0 );
+
+                //Should loop thorugh and query for all documents and if there are no documents then the loop should exit.
+                do{
+                    batch = deindexBatchIteratorResolver( fromSource, targetEdgesToBeDeindexed, batch );
+                    if(!targetEdgesToBeDeindexed.getOffset().isPresent())
+                        break;
+                    targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId, 1000, targetEdgesToBeDeindexed.getOffset().get() );
+                }while(!targetEdgesToBeDeindexed.isEmpty());
+
+
+
+                final IndexEdge fromTarget = generateScopeFromTarget( edge );
+                final Id sourceId = edge.getSourceNode();
+
+                CandidateResults sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId, 1000, 0 );
+
+                do{
+                    batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
+                    if(!sourceEdgesToBeDeindexed.getOffset().isPresent())
+                        break;
+                    sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId, 1000, sourceEdgesToBeDeindexed.getOffset().get()  );
+                }while(!sourceEdgesToBeDeindexed.isEmpty());
+
+                return batch.execute();
+            } );
+
+        return ObservableTimer.time( batches, addTimer );
     }
-
 
     @Override
     public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
@@ -219,6 +262,19 @@ public class IndexServiceImpl implements IndexService {
          */
         return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection )
                               .map( edge -> generateScopeFromTarget( edge ) );
+    }
+
+    /**
+     * Takes in candidate results and uses the iterator to create batch commands
+     */
+
+    public EntityIndexBatch deindexBatchIteratorResolver(IndexEdge edge,CandidateResults edgesToBeDeindexed, EntityIndexBatch batch){
+        Iterator itr = edgesToBeDeindexed.iterator();
+        while( itr.hasNext() ) {
+            CandidateResult cr = ( CandidateResult ) itr.next();
+            batch.deindex( edge, cr.getId(), cr.getVersion() );
+        }
+        return batch;
     }
 
 

@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -29,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.corepersistence.TestIndexModule;
+import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.Candidate;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -173,9 +176,9 @@ public class IndexServiceTest {
         final ApplicationEntityIndex applicationEntityIndex =
             entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
+        //query until the collection edge is available
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
-        //query until it's available
         final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1);
 
@@ -184,10 +187,9 @@ public class IndexServiceTest {
         assertEquals( testEntity.getId(), collectionResults.get( 0 ).getId() );
 
 
+        //query until the connection edge is available
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
 
-
-        //query until it's available
         final CandidateResults connectionResults = getResults( applicationEntityIndex, connectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
@@ -247,7 +249,7 @@ public class IndexServiceTest {
         //get the first and last edge
         final Edge connectionSearch = connectionSearchEdges.get( 0 );
 
-        final Edge lastSearch = connectionSearchEdges.get( edgeCount-1 );
+        final Edge lastSearch = connectionSearchEdges.get( edgeCount - 1 );
 
 
         //now index
@@ -295,6 +297,199 @@ public class IndexServiceTest {
         assertEquals( 1, lastConnectionResults.size() );
 
         assertEquals( testEntity.getId(), lastConnectionResults.get( 0 ).getId() );
+    }
+
+
+
+
+    /**
+     *This test must do the following steps.
+     *1. Delete the connecting edge
+     *2. Run the deleteIndexEdge using the search edge that gets returned from the delete call
+     *3. Run queries to make sure that the collection entity still exists while the connection search edge is gone.
+     * @throws InterruptedException
+     */
+    @Test
+    public void testDeleteSingleConnectingEdge() throws InterruptedException {
+        ApplicationScope applicationScope =
+            new ApplicationScopeImpl( new SimpleId( UUID.randomUUID(), "application" ) );
+
+        final ApplicationEntityIndex applicationEntityIndex =
+            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+
+        final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+
+        final Entity testEntity = new Entity( createId( "thing" ), UUIDGenerator.newTimeUUID() );
+        testEntity.setField( new StringField( "string", "foo" ) );
+
+        //write entity
+        final Edge connectionSearch =
+            createTestEntityAndReturnConnectionEdge( applicationScope,graphManager,testEntity );
+
+
+        final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
+
+        //step 1
+        //(We need to mark then delete things in the graph manager.)
+        final Edge toBeMarkedEdge = graphManager.markEdge( connectionSearch ).toBlocking().firstOrDefault( null );
+        final Edge toBeDeletedEdge = graphManager.deleteEdge( toBeMarkedEdge ).toBlocking().firstOrDefault( null );
+
+        //step 2
+        IndexOperationMessage indexOperationMessage =
+            indexService.deleteIndexEdge( applicationScope, toBeDeletedEdge ).toBlocking().lastOrDefault(
+            null );
+
+        assertEquals( 1, indexOperationMessage.getDeIndexRequests().size() );
+
+        //ensure that no edges remain
+        final CandidateResults connectionResultsEmpty = applicationEntityIndex.search( connectionSearchEdge,
+            SearchTypes.fromTypes( "things" ),"select *",10,0 );
+
+        assertEquals(0,connectionResultsEmpty.size());
+
+    }
+
+    @Test
+    public void testDeleteMultipleConnectingEdges() throws InterruptedException {
+        ApplicationScope applicationScope =
+            new ApplicationScopeImpl( new SimpleId( UUID.randomUUID(), "application" ) );
+
+        final ApplicationEntityIndex applicationEntityIndex =
+            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+
+        final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+
+        final Entity testEntity = new Entity( createId( "thing" ), UUIDGenerator.newTimeUUID() );
+        testEntity.setField( new StringField( "string", "foo" ) );
+
+
+        //write entity
+        Edge collectionEdge = createEntityandCollectionEdge( applicationScope, graphManager, testEntity );
+        //Write multiple connection edges
+        final int edgeCount = 5;
+
+        final List<Edge> connectionSearchEdges = createConnectionSearchEdges( testEntity, graphManager, edgeCount );
+
+        indexService.indexEntity( applicationScope, testEntity ).toBlocking().getIterator();
+
+        //query until results are available for collections
+        final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
+        getResults( applicationEntityIndex, collectionSearchEdge,
+            SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
+
+        for(int i = 0; i < edgeCount; i++) {
+            //query until results are available for connections
+
+            final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearchEdges.get( i ) );
+            getResults( applicationEntityIndex, connectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
+                 1 );
+        }
+
+        for(Edge connectionSearch:connectionSearchEdges) {
+            //step 1
+            final Edge toBeMarkedEdge = graphManager.markEdge( connectionSearch ).toBlocking().firstOrDefault( null );
+            final Edge toBeDeletedEdge = graphManager.deleteEdge( toBeMarkedEdge ).toBlocking().first();
+
+            final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
+
+            //step 2
+            IndexOperationMessage indexOperationMessage =
+                indexService.deleteIndexEdge( applicationScope, toBeDeletedEdge ).toBlocking().lastOrDefault( null );
+
+            //not sure if this is still valid.
+            assertEquals( 1, indexOperationMessage.getDeIndexRequests().size() );
+
+            //ensure that no edges remain
+            final CandidateResults connectionResultsEmpty = applicationEntityIndex.search( connectionSearchEdge,
+                SearchTypes.fromTypes( "things" ),"select *",10,0 );
+
+            assertEquals(0,connectionResultsEmpty.size());
+        }
+    }
+
+
+    /**
+     * Refactor into two methods . Should only have one responsiblitiy.
+     * @param applicationScope
+     * @param graphManager
+     * @return
+     */
+    private Edge createTestEntityAndReturnConnectionEdge( final ApplicationScope applicationScope,
+                                                          final GraphManager graphManager,
+                                                          final Entity testEntity) {
+        final EntityCollectionManager collectionManager =
+            entityCollectionManagerFactory.createCollectionManager( applicationScope );
+
+        final ApplicationEntityIndex applicationEntityIndex =
+            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+
+        final Edge collectionEdge =
+            createEntityandCollectionEdge( applicationScope, graphManager, testEntity );
+
+
+        //create our connection edge.
+        final Id connectingId = createId( "connecting" );
+        final Edge connectionEdge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
+
+        final Edge connectionSearch = graphManager.writeEdge( connectionEdge ).toBlocking().last();
+
+        //now index
+        indexService.indexEntity( applicationScope, testEntity ).count().toBlocking().last();
+
+        //query until results are available for collections
+        final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
+        getResults( applicationEntityIndex, collectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
+            1 );
+
+        //query until results are available for connections
+        final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
+        getResults( applicationEntityIndex, connectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
+            1 );
+
+        return connectionSearch;
+    }
+
+
+    /**
+     * Creates an entity along with the corresponding collection edge.
+     * @param applicationScope
+     * @param graphManager
+     * @param testEntity
+     * @return
+     */
+    private Edge createEntityandCollectionEdge( final ApplicationScope applicationScope,
+                                                final GraphManager graphManager, final Entity testEntity) {
+
+        final EntityCollectionManager collectionManager =
+            entityCollectionManagerFactory.createCollectionManager( applicationScope );
+
+        collectionManager.write( testEntity ).toBlocking().last();
+
+        //create our collection edge
+        final Edge collectionEdge =
+            CpNamingUtils.createCollectionEdge( applicationScope.getApplication(), testEntity.getId().getType(),
+                testEntity.getId() );
+
+        graphManager.writeEdge( collectionEdge ).toBlocking().last();
+        return collectionEdge;
+    }
+
+
+    private List<Edge> createConnectionSearchEdges(
+        final Entity testEntity, final GraphManager graphManager, final int edgeCount ) {
+
+        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
+
+            //create our connection edge.
+            final Id connectingId = createId( "connecting" );
+            final Edge connectionEdge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
+
+            return graphManager.writeEdge( connectionEdge ).subscribeOn( Schedulers.io() );
+        }, 20).toList().toBlocking().last();
+
+
+        assertEquals( "All edges saved", edgeCount, connectionSearchEdges.size() );
+        return connectionSearchEdges;
     }
 
 

@@ -30,6 +30,8 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
@@ -46,6 +48,7 @@ import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
@@ -56,6 +59,7 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
@@ -148,7 +152,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build( query );
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset );
+        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset )
+                                                      .setTimeout( TimeValue.timeValueMillis(queryTimeout) );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -159,7 +164,50 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         try {
             //Added For Graphite Metrics
             Timer.Context timeSearch = searchTimer.time();
-            searchResponse = srb.execute().actionGet(queryTimeout);
+            searchResponse = srb.execute().actionGet();
+            timeSearch.stop();
+        }
+        catch ( Throwable t ) {
+            logger.error( "Unable to communicate with Elasticsearch", t );
+            failureMonitor.fail( "Unable to execute batch", t );
+            throw t;
+        }
+        failureMonitor.success();
+
+        return parseResults(searchResponse, parsedQuery, limit, offset);
+    }
+
+
+    @Override
+    public CandidateResults getAllEdgeDocuments( final IndexEdge edge, final Id entityId, final int limit,
+                                                 final int offset ) {
+        /**
+         * Take a list of IndexEdge, with an entityId
+         and query Es directly for matches
+
+         */
+        IndexValidationUtils.validateSearchEdge( edge );
+        Preconditions.checkNotNull( entityId, "entityId cannot be null" );
+        Preconditions.checkArgument( limit > 0, "limit must be > 0" );
+
+        SearchResponse searchResponse;
+
+        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+        FilterBuilders.idsFilter( entityId.getType() );
+
+        final SearchRequestBuilder srb = searchRequest.getBuilder( edge, SearchTypes.fromTypes( entityId.getType() ),
+            parsedQuery, limit, offset ).setTimeout( TimeValue.timeValueMillis( queryTimeout ) );
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Searching for edge index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
+                this.alias.getReadAlias(), edge.getNodeId(), edge.getEdgeName(),
+                SearchTypes.fromTypes( entityId.getType()), srb );
+        }
+
+        try {
+            //Added For Graphite Metrics
+            Timer.Context timeSearch = searchTimer.time();
+            searchResponse = srb.execute().actionGet();
             timeSearch.stop();
         }
         catch ( Throwable t ) {
@@ -249,7 +297,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         // >= seems odd.  However if we get an overflow, we need to account for it.
         if (  hits.length >= limit ) {
 
-            candidateResults.initializeCursor(from+limit);
+            candidateResults.initializeOffset( from + limit );
 
         }
 
