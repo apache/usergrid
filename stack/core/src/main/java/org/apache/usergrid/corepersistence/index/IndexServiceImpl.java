@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -33,6 +34,7 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResult;
@@ -41,6 +43,7 @@ import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -52,9 +55,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
-import rx.functions.Func1;
-import rx.observables.ConnectableObservable;
 
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
@@ -188,14 +190,15 @@ public class IndexServiceImpl implements IndexService {
 
                 CandidateResults targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId, 1000, 0 );
 
-                //Should loop thorugh and query for all documents and if there are no documents then the loop should exit.
-                do{
+                //Should loop thorugh and query for all documents and if there are no documents then the loop should
+                // exit.
+                do {
                     batch = deindexBatchIteratorResolver( fromSource, targetEdgesToBeDeindexed, batch );
-                    if(!targetEdgesToBeDeindexed.getOffset().isPresent())
-                        break;
-                    targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId, 1000, targetEdgesToBeDeindexed.getOffset().get() );
-                }while(!targetEdgesToBeDeindexed.isEmpty());
-
+                    if ( !targetEdgesToBeDeindexed.getOffset().isPresent() ) break;
+                    targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId, 1000,
+                        targetEdgesToBeDeindexed.getOffset().get() );
+                }
+                while ( !targetEdgesToBeDeindexed.isEmpty() );
 
 
                 final IndexEdge fromTarget = generateScopeFromTarget( edge );
@@ -203,12 +206,13 @@ public class IndexServiceImpl implements IndexService {
 
                 CandidateResults sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId, 1000, 0 );
 
-                do{
+                do {
                     batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
-                    if(!sourceEdgesToBeDeindexed.getOffset().isPresent())
-                        break;
-                    sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId, 1000, sourceEdgesToBeDeindexed.getOffset().get()  );
-                }while(!sourceEdgesToBeDeindexed.isEmpty());
+                    if ( !sourceEdgesToBeDeindexed.getOffset().isPresent() ) break;
+                    sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId, 1000,
+                        sourceEdgesToBeDeindexed.getOffset().get() );
+                }
+                while ( !sourceEdgesToBeDeindexed.isEmpty() );
 
                 return batch.execute();
             } );
@@ -216,52 +220,33 @@ public class IndexServiceImpl implements IndexService {
         return ObservableTimer.time( batches, addTimer );
     }
 
+    //This should look up the entityId and delete any documents with a timestamp that comes before
+    //The edges that are connected will be compacted away from the graph.
     @Override
     public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
                                                                   final Id entityId, final UUID markedVersion ) {
 
         //bootstrap the lower modules from their caches
-        final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
         final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
-        //we always index in the target scope
-        final Observable<Edge> edgesToTarget = edgesObservable.edgesToTarget( gm, entityId );
+        CandidateResults crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion );
 
-        //we may have to index  we're indexing from source->target here
-        final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeFromSource( edge ) );
-
-
-        //we might or might not need to index from target-> source
-        final Observable<IndexEdge> targetSizes = getIndexEdgesAsTarget( gm, entityId );
-
-        //merge the edges together
-        final Observable<IndexEdge> observable = Observable.merge( sourceEdgesToIndex, targetSizes);
-        //do our observable for batching
-        //try to send a whole batch if we can
+        //not actually sure about the timestamp but ah well. works.
+        SearchEdge searchEdge = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
+            CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
+            entityId.getUuid().timestamp() ) );
 
 
-
-        //loop through candidateResults and deindex every single result that comeback.
-
-        //do our observable for batching
-        //try to send a whole batch if we can
-        final Observable<IndexOperationMessage>  batches =  observable.buffer( indexFig.getIndexBatchSize() )
-
-            //map into batches based on our buffer size
-            .flatMap( buffer -> Observable.from( buffer )
+        final Observable<IndexOperationMessage>  batches = Observable.from( crs )
                 //collect results into a single batch
-                .collect( () -> ei.createBatch(), ( batch, indexEdge ) -> {
-                    //logger.debug( "adding edge {} to batch for entity {}", indexEdge, entity );
-                    //TODO: refactor into stages of observable, also need a loop to get entities until we recieve nothing back.
-                    CandidateResults crs = ei.getAllEntityVersionBeforeMark( entityId, markedVersion, 1000, 0 );
-                    for(CandidateResult cr: crs){
-                        batch.deindex( indexEdge, cr);
-                    }
+                .collect( () -> ei.createBatch(), ( batch, candidateResult ) -> {
+                    logger.debug( "Deindexing on edge {} for entity {} added to batch",searchEdge , entityId );
+                    batch.deindex( searchEdge, candidateResult );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> batch.execute() ) );
+                .flatMap( batch -> batch.execute() );
 
-        return ObservableTimer.time( batches, indexTimer );
+        return ObservableTimer.time(batches, indexTimer);
     }
 
 
@@ -274,7 +259,7 @@ public class IndexServiceImpl implements IndexService {
      */
     private Observable<IndexEdge> getIndexEdgesAsTarget( final GraphManager graphManager, final Id entityId ) {
 
-        final String collectionName = InflectionUtils.pluralize( entityId.getType() );
+            final String collectionName = InflectionUtils.pluralize( entityId.getType() );
 
 
         final CollectionInfo collection = getDefaultSchema().getCollection( Application.ENTITY_TYPE, collectionName );
@@ -311,8 +296,7 @@ public class IndexServiceImpl implements IndexService {
     public EntityIndexBatch deindexBatchIteratorResolver(IndexEdge edge,CandidateResults edgesToBeDeindexed, EntityIndexBatch batch){
         Iterator itr = edgesToBeDeindexed.iterator();
         while( itr.hasNext() ) {
-            CandidateResult cr = ( CandidateResult ) itr.next();
-            batch.deindex( edge, cr.getId(), cr.getVersion() );
+            batch.deindex( edge, ( CandidateResult ) itr.next());
         }
         return batch;
     }

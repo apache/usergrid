@@ -228,7 +228,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
 
     @Override
-    public CandidateResults getAllEntityVersionBeforeMark( final Id entityId , final UUID markedVersion) {
+    public CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion ) {
 
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
         //TODO: check to see if there is some version verifcation. I know there is but i forget where.

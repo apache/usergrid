@@ -68,7 +68,7 @@ public interface ApplicationEntityIndex {
      * @param offset The offset to page the query on.
      * @return
      */
-    CandidateResults getAllEntityVersionBeforeMark(final Id entityId, final UUID markedVersion ,final int limit, final int offset);
+    CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion );
 
     /**
      * delete all application records
