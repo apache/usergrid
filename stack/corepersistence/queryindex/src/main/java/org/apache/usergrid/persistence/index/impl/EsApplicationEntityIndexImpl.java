@@ -185,8 +185,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
 
     @Override
-    public CandidateResults getAllEdgeDocuments( final IndexEdge edge, final Id entityId, final int limit,
-                                                 final int offset ) {
+    public CandidateResults getAllEdgeDocuments( final IndexEdge edge, final Id entityId ) {
         /**
          * Take a list of IndexEdge, with an entityId
          and query Es directly for matches
@@ -194,26 +193,59 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
          */
         IndexValidationUtils.validateSearchEdge( edge );
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
-        Preconditions.checkArgument( limit > 0, "limit must be > 0" );
 
         SearchResponse searchResponse;
 
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
-        FilterBuilders.idsFilter( entityId.getType() );
+        List<CandidateResult> candidates = new ArrayList<>();
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( edge, SearchTypes.fromTypes( entityId.getType() ),
-            parsedQuery, limit, offset ).setTimeout( TimeValue.timeValueMillis( queryTimeout ) );
+        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+
+        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
+
+        //I can't just search on the entity Id.
+
+        FilterBuilder entityEdgeFilter = FilterBuilders.termFilter( IndexingUtils.EDGE_NODE_ID_FIELDNAME,
+            IndexingUtils.idString( edge.getNodeId() ));
+
+        srb.setPostFilter(entityEdgeFilter);
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Searching for edge index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
-                this.alias.getReadAlias(), edge.getNodeId(), edge.getEdgeName(),
-                SearchTypes.fromTypes( entityId.getType() ), srb );
+            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
+                this.alias.getReadAlias(),entityId, srb );
         }
 
         try {
             //Added For Graphite Metrics
             Timer.Context timeSearch = searchTimer.time();
-            searchResponse = srb.execute().actionGet();
+
+            //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
+            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
+            //TODO: review this and make them not magic numbers when acking this PR.
+            searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
+            
+
+            while(true){
+                //add search result hits to some sort of running tally of hits.
+                candidates = aggregateScrollResults( candidates, searchResponse );
+
+                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
+                    .getScrollBuilder( searchResponse.getScrollId() )
+                    .setScroll( new TimeValue( 6000 ) );
+
+                //TODO: figure out how to log exactly what we're putting into elasticsearch
+                //                if ( logger.isDebugEnabled() ) {
+                //                    logger.debug( "Scroll search using query: {} ",
+                //                        ssrb.toString() );
+                //                }
+
+                searchResponse = ssrb.execute().actionGet();
+
+                if (searchResponse.getHits().getHits().length == 0) {
+                    break;
+                }
+
+
+            }
             timeSearch.stop();
         }
         catch ( Throwable t ) {
@@ -223,7 +255,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         }
         failureMonitor.success();
 
-        return parseResults(searchResponse, parsedQuery, limit, offset);
+        return new CandidateResults( candidates, parsedQuery.getSelectFieldMappings());
     }
 
 
@@ -264,8 +296,6 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             //Added For Graphite Metrics
             Timer.Context timeSearch = searchTimer.time();
 
-            //REfactor this out and have it return a modified parseResults that will create the candidateResults from
-            //the hit results and then keep that
             //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
             //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
             //TODO: review this and make them not magic numbers when acking this PR.

@@ -187,32 +187,23 @@ public class IndexServiceImpl implements IndexService {
                 final IndexEdge fromSource = generateScopeFromSource( edge );
                 final Id targetId = edge.getTargetNode();
 
+                CandidateResults targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId );
 
-                CandidateResults targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId, 1000, 0 );
 
-                //Should loop thorugh and query for all documents and if there are no documents then the loop should
-                // exit.
-                do {
-                    batch = deindexBatchIteratorResolver( fromSource, targetEdgesToBeDeindexed, batch );
-                    if ( !targetEdgesToBeDeindexed.getOffset().isPresent() ) break;
-                    targetEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromSource, targetId, 1000,
-                        targetEdgesToBeDeindexed.getOffset().get() );
-                }
-                while ( !targetEdgesToBeDeindexed.isEmpty() );
+                //1. Feed the observable the candidate results you got back. Since it now does the aggregation for you
+                // you don't need to worry about putting your code in a do while.
+
+
+                batch = deindexBatchIteratorResolver( fromSource, targetEdgesToBeDeindexed, batch );
+
 
 
                 final IndexEdge fromTarget = generateScopeFromTarget( edge );
                 final Id sourceId = edge.getSourceNode();
 
-                CandidateResults sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId, 1000, 0 );
+                CandidateResults sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId );
 
-                do {
-                    batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
-                    if ( !sourceEdgesToBeDeindexed.getOffset().isPresent() ) break;
-                    sourceEdgesToBeDeindexed = ei.getAllEdgeDocuments( fromTarget, sourceId, 1000,
-                        sourceEdgesToBeDeindexed.getOffset().get() );
-                }
-                while ( !sourceEdgesToBeDeindexed.isEmpty() );
+                batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
 
                 return batch.execute();
             } );
