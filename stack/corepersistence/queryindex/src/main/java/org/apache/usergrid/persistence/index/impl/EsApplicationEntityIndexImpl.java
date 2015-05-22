@@ -31,6 +31,7 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -227,16 +228,11 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
 
     @Override
-    public CandidateResults getAllEntityVersionBeforeMark( final Id entityId , final UUID markedVersion, final int limit,
-                                                           final int offset ) {
+    public CandidateResults getAllEntityVersionBeforeMark( final Id entityId , final UUID markedVersion) {
 
-        /**
-         * Take a list of IndexEdge, with an entityId
-         and query Es directly for matches
-
-         */
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
-        Preconditions.checkArgument( limit > 0, "limit must be > 0" );
+        //TODO: check to see if there is some version verifcation. I know there is but i forget where.
+        Preconditions.checkNotNull( markedVersion, "markedVersion cannot be null" );
 
         SearchResponse searchResponse;
 
@@ -246,14 +242,21 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
 
-        FilterBuilder termFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
+        //I can't just search on the entity Id.
+        FilterBuilder entityIdFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
             IndexingUtils.idString( entityId ) );
-        srb.setPostFilter( termFilter );
+
+        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte( markedVersion );
+
+            //aggregate the filters into the and filder and feed that in.
+        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter,entityVersionFilter  );
+
+        srb.setPostFilter(andFilter);
 
 
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Searching for edge index (read alias): {}\n  nodeId: {},\n   query: {} ",
+            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
                 this.alias.getReadAlias(),entityId, srb );
         }
 
@@ -264,6 +267,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             //REfactor this out and have it return a modified parseResults that will create the candidateResults from
             //the hit results and then keep that
             //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
+            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
+            //TODO: review this and make them not magic numbers when acking this PR.
             searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
 
             //list that will hold all of the search hits
@@ -273,9 +278,17 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
                 //add search result hits to some sort of running tally of hits.
                 candidates = aggregateScrollResults( candidates, searchResponse );
 
-                searchResponse = searchRequestBuilderStrategyV2
+                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
                     .getScrollBuilder( searchResponse.getScrollId() )
-                    .setScroll( new TimeValue( 6000 ) ).execute().actionGet();
+                    .setScroll( new TimeValue( 6000 ) );
+
+                //TODO: figure out how to log exactly what we're putting into elasticsearch
+//                if ( logger.isDebugEnabled() ) {
+//                    logger.debug( "Scroll search using query: {} ",
+//                        ssrb.toString() );
+//                }
+
+                searchResponse = ssrb.execute().actionGet();
 
                 if (searchResponse.getHits().getHits().length == 0) {
                     break;
@@ -385,14 +398,14 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
 
-        logger.debug( "Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits() );
-
         for ( SearchHit hit : hits ) {
 
             final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
 
             candidates.add( candidateResult );
         }
+
+        logger.debug( "Aggregated {} out of {} hits ",candidates.size(),searchHits.getTotalHits() );
 
         return  candidates;
 
