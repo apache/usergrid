@@ -72,6 +72,7 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.MapUtils;
 
 import com.google.common.base.Optional;
@@ -397,14 +398,25 @@ public class CpRelationManager implements RelationManager {
             logger.debug( "Wrote edge {}", edge );
         }
 
-        indexService.queueNewEdge(applicationScope, memberEntity, edge);
-        //reverse
-        if(!cpHeadEntity.getId().getType().equals("application")) {
-            String pluralType =  InflectionUtils.pluralize(cpHeadEntity.getId().getType());
-            final Edge reverseEdge = createCollectionEdge(memberEntity.getId(), pluralType, cpHeadEntity.getId());
-            gm.writeEdge(reverseEdge).toBlocking().last();
-            indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+
+        //check if we need to reverse our edges
+
+
+        final String linkedCollection = collection.getLinkedCollection();
+
+        /**
+         * Nothing to link
+         */
+        if ( linkedCollection != null ) {
+            String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
+            final Edge reverseEdge = createCollectionEdge( memberEntity.getId(), pluralType, cpHeadEntity.getId() );
+            gm.writeEdge( reverseEdge ).toBlocking().last();
         }
+
+
+        indexService.queueNewEdge( applicationScope, memberEntity, edge );
+
+
 
 
         if ( logger.isDebugEnabled() ) {
