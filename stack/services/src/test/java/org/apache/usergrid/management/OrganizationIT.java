@@ -68,7 +68,7 @@ public class OrganizationIT {
         final String orgName =  uniqueOrg();
         OrganizationOwnerInfo organization = newOrgAppAdminRule.createOwnerAndOrganization( orgName, uniqueUsername(), uniqueEmail(),"Ed Anuff", "test" ); //setup.getMgmtSvc().getOrganizationsForAdminUser( organization.getOwner().getUuid() );
         //createOrganization( orgName, user, false );
-        assertNotNull( organization );
+        assertNotNull(organization);
 
         setup.getEntityIndex().refresh();
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser(
@@ -142,9 +142,9 @@ public class OrganizationIT {
 
         // set history to 4
         Map<String, Object> props = new HashMap<String, Object>();
-        props.put( OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 3 );
-        organization.setProperties( props );
-        setup.getMgmtSvc().updateOrganization( organization );
+        props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 3);
+        organization.setProperties(props);
+        setup.getMgmtSvc().updateOrganization(organization);
 
         // check the history
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] ); // ok
@@ -153,10 +153,15 @@ public class OrganizationIT {
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[4] ); // ok
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] ); // ok
 
-        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
+        setup.getEmf().getEntityManager(setup.getSmf().getManagementAppId());
+        setup.getEmf().refreshIndex();
 
         try {
-            setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[3] );
+            int i = 0;
+            do {
+                setup.getMgmtSvc().setAdminUserPassword(user.getUuid(), passwords[3]);
+                Thread.sleep(500);
+            }while (i++<10);
             fail( "password change should fail" );
         }
         catch ( RecentlyUsedPasswordException e ) {
