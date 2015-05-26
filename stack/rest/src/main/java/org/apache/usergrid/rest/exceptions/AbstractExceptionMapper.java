@@ -66,21 +66,30 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
 
     public Response toResponse( int status, E e ) {
+
         if ( status >= 500 ) {
             // only log real errors as errors
             logger.error( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
+
         } else if ( logger.isDebugEnabled() ) {
             logger.debug( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
         }
+
         ApiResponse response = new ApiResponse();
+
+        logger.error("Uncaught Exception", e);
+
         AuthErrorInfo authError = AuthErrorInfo.getForException( e );
+
         if ( authError != null ) {
             response.setError( authError.getType(), authError.getMessage(), e );
         }
         else {
             response.setError( e );
         }
+
         String jsonResponse = mapToJsonString( response );
+
         return toResponse( status, jsonResponse );
     }
 
