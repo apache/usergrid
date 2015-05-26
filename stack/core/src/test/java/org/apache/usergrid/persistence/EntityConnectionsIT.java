@@ -72,7 +72,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
-        Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.IDS );
+        Results r = em.getTargetEntities(firstUserEntity, "likes", null, Level.IDS);
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -186,7 +186,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         Entity en = em.get( new SimpleEntityRef( entityType, entityId));
 
-        Results results = em.getConnectedEntities( en, connectionType, null, Level.REFS );
+        Results results = em.getTargetEntities(en, connectionType, null, Level.REFS);
 
         LOG.info( "----------------------------------------------------" );
         assertEquals( "Expected " + expectedCount + " connections",
@@ -264,7 +264,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
-        Results r = em.getConnectedEntities( firstUserEntity, "likes", "restaurant", Level.IDS );
+        Results r = em.getTargetEntities(firstUserEntity, "likes", "restaurant", Level.IDS);
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -278,7 +278,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertFalse( em.isConnectionMember( firstUserEntity, "likes", arrogantbutcher ) );
 
         // check we don't get the restaurant from the second user
-        r = em.getConnectedEntities( secondUserEntity, "likes", "restaurant", Level.IDS );
+        r = em.getTargetEntities(secondUserEntity, "likes", "restaurant", Level.IDS);
 
         connections = r.getConnections();
 
@@ -320,19 +320,19 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
 //        // search for "likes" edges from fred
 //        assertEquals( 1,
-//            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
+//            em.getTargetEntities( fredEntity, "likes", null, Level.IDS ).size());
 //
 //        // search for any type of edges from fred
 //        assertEquals( 1,
-//            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
+//            em.getTargetEntities( fredEntity, null, null, Level.IDS ).size());
 
         // search for "likes" edges to wilman from any type of object
-        Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
+        Results res = em.getSourceEntities(wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
         assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() ); // fred is a user
 
         // search for "likes" edges to wilman from user type object
-        res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
+        res = em.getSourceEntities(wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
         assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() );
     }
@@ -372,7 +372,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
-        Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.ALL_PROPERTIES ) ;
+        Results r = em.getTargetEntities(firstUserEntity, "likes", null, Level.ALL_PROPERTIES) ;
 
         PagingResultsIterator itr = new PagingResultsIterator( r );
 
@@ -418,19 +418,19 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 //
 ////        // search for "likes" edges from fred
 ////        assertEquals( 1,
-////            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
+////            em.getTargetEntities( fredEntity, "likes", null, Level.IDS ).size());
 ////
 ////        // search for any type of edges from fred
 ////        assertEquals( 1,
-////            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
+////            em.getTargetEntities( fredEntity, null, null, Level.IDS ).size());
 //
 //        // search for "likes" edges to wilman from any type of object
-//        Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
+//        Results res = em.getSourceEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
 //        assertEquals( 1, res.size() );
 //        assertEquals( "user", res.getEntity().getType() ); // fred is a user
 //
 //        // search for "likes" edges to wilman from user type object
-//        res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
+//        res = em.getSourceEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
 //        assertEquals( 1, res.size() );
 //        assertEquals( "user", res.getEntity().getType() );
 //    }

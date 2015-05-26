@@ -508,9 +508,9 @@ public class ExportServiceImpl implements ExportService {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities(
+            Results results = em.getTargetEntities(
                 new SimpleEntityRef(entity.getType(), entity.getUuid()),
-                connectionType, null, Level.IDS );
+                connectionType, null, Level.IDS);
 
             List<ConnectionRef> connections = results.getConnections();
 

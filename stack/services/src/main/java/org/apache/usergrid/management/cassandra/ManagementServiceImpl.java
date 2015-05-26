@@ -540,8 +540,7 @@ public class ManagementServiceImpl implements ManagementService {
         organizationEntity = em.create( organizationEntity );
 
         em.addToCollection( organizationEntity, "users", new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
-      //  em.addToCollection( new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ), Schema.COLLECTION_GROUPS, organizationEntity );
-
+//        em.addToCollection( new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ), Schema.COLLECTION_GROUPS, organizationEntity );
 
         writeUserToken( smf.getManagementAppId(), organizationEntity, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.ORGANIZATION ), user.getUuid(),
@@ -1731,9 +1730,9 @@ public class ManagementServiceImpl implements ManagementService {
 
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        Results r = em.getConnectingEntities(
-                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-                "owns", Group.ENTITY_TYPE, Level.ALL_PROPERTIES );
+        Results r = em.getSourceEntities(
+            new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
+            "owns", Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
 
         Entity entity = r.getEntity();
         if ( entity != null ) {
@@ -1754,9 +1753,9 @@ public class ManagementServiceImpl implements ManagementService {
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         // query for application_info entities
-        final Results results = em.getConnectedEntities(
-                new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
-                "owns", CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES );
+        final Results results = em.getTargetEntities(
+            new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
+            "owns", CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES);
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );
 

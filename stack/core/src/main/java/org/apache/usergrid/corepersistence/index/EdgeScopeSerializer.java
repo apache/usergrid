@@ -20,18 +20,22 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
+import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 
 
 /**
- * Callback to perform an index operation based on an scope during bulk re-index operations
+ * Serialize our edge scope for cursors
  */
-@FunctionalInterface
-public interface ReIndexAction {
+public class EdgeScopeSerializer extends AbstractCursorSerializer<EdgeScope> {
 
-    /**
-     * Index this entity with the specified scope
-     * @param entityIdScope
-     */
-    void index( final EntityIndexOperation entityIdScope );
+
+    public static final EdgeScopeSerializer INSTANCE = new EdgeScopeSerializer();
+
+    @Override
+    protected Class<EdgeScope> getType() {
+        return EdgeScope.class;
+    }
+
+
 }

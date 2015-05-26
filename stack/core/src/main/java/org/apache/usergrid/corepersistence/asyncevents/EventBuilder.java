@@ -22,8 +22,8 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import java.util.List;
 
+import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
@@ -72,10 +72,10 @@ public interface EventBuilder {
 
     /**
      * Re-index an entity in the scope provided
-     * @param entityIdScope
+     * @param entityIndexOperation
      * @return
      */
-    Observable<IndexOperationMessage> index( EntityIdScope entityIdScope );
+    Observable<IndexOperationMessage> index( EntityIndexOperation entityIndexOperation );
 
     /**
      * A bean to hold both our observables so the caller can choose the subscription mechanism.  Note that

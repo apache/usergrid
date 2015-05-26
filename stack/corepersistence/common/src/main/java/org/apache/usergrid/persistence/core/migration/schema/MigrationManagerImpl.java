@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -131,21 +132,14 @@ public class MigrationManagerImpl implements MigrationManager {
 
         try {
             keyspaceDefinition = keyspace.describeKeyspace();
-        }
-        catch ( BadRequestException badRequestException ) {
 
-            //check if it's b/c the keyspace is missing, if so
-            final String message = badRequestException.getMessage();
-
-            boolean missingKeyspace = message.contains( "why:Keyspace" ) && message.contains( "does not exist" );
-
-            if ( !missingKeyspace ) {
-                throw badRequestException;
-            }
         }catch( NotFoundException nfe){
             //if we execute this immediately after a drop keyspace in 1.2.x, Cassandra is returning the NFE instead of a BadRequestException
             //swallow and log, then continue to create the keyspaces.
             logger.info( "Received a NotFoundException when attempting to describe keyspace.  It does not exist" );
+        }
+        catch(Exception e){
+            AstayanxUtils.isKeyspaceMissing("Unable to connect to cassandra", e);
         }
 
 
