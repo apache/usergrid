@@ -49,12 +49,7 @@ public class CandidateResults implements Iterable<CandidateResult> {
         offset = Optional.absent();
     }
 
-
-    /**
-     * Hilarious! we call this initialize Cursor but everywhere else , even in the code call it offset!
-     * wonderful!
-     * @param offset
-     */
+    
     public void initializeOffset( int offset ){
         this.offset = Optional.of(offset);
     }
