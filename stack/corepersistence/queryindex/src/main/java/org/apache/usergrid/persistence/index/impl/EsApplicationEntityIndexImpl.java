@@ -274,13 +274,11 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
 
-        //I can't just search on the entity Id.
         FilterBuilder entityIdFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
             IndexingUtils.idString( entityId ) );
 
         FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte( markedVersion );
 
-            //aggregate the filters into the and filder and feed that in.
         FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter,entityVersionFilter  );
 
         srb.setPostFilter(andFilter);
