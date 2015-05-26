@@ -102,20 +102,13 @@ public class IndexServiceImpl implements IndexService {
         //we may have to index  we're indexing from source->target here
         final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeFromSource( edge ) );
 
-
-        //we might or might not need to index from target-> source
-        final Observable<IndexEdge> edgesToSource = getIndexEdgesAsTarget( gm, entityId );
-
-
-        //merge the edges together
-        final Observable<IndexEdge> observable = Observable.merge( sourceEdgesToIndex, edgesToSource);
         //do our observable for batching
         //try to send a whole batch if we can
 
 
         //do our observable for batching
         //try to send a whole batch if we can
-        final Observable<IndexOperationMessage>  batches =  observable.buffer( indexFig.getIndexBatchSize() )
+        final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex.buffer( indexFig.getIndexBatchSize() )
 
             //map into batches based on our buffer size
             .flatMap( buffer -> Observable.from( buffer )
@@ -182,44 +175,7 @@ public class IndexServiceImpl implements IndexService {
     }
 
 
-    /**
-     * Get index edges to the target.  Used in only certain entity types, such as roles, users, groups etc
-     * where we doubly index on both directions of the edge
-     *
-     * @param graphManager The graph manager
-     * @param entityId The entity's id
-     */
-    private Observable<IndexEdge> getIndexEdgesAsTarget( final GraphManager graphManager, final Id entityId ) {
 
-        final String collectionName = InflectionUtils.pluralize( entityId.getType() );
-
-
-        final CollectionInfo collection = getDefaultSchema().getCollection( Application.ENTITY_TYPE, collectionName );
-
-        //nothing to do
-        if ( collection == null ) {
-            return Observable.empty();
-        }
-
-
-        final String linkedCollection = collection.getLinkedCollection();
-
-        /**
-         * Nothing to link
-         */
-        if ( linkedCollection == null ) {
-            return Observable.empty();
-        }
-
-
-        /**
-         * An observable of sizes as we execute batches
-         *
-         * we're indexing from target->source here
-         */
-        return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection )
-                              .map( edge -> generateScopeFromTarget( edge ) );
-    }
 
 
 

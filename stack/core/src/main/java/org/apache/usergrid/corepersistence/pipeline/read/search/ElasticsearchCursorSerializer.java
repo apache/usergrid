@@ -17,25 +17,23 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.graph;
+package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 
 
 /**
- * Edge cursor serializer
+ * ElasticSearch cursor serializer
  */
-public class EdgeCursorSerializer extends AbstractCursorSerializer<Edge> {
+public class ElasticsearchCursorSerializer extends AbstractCursorSerializer<Integer> {
 
 
-    public static final EdgeCursorSerializer INSTANCE = new EdgeCursorSerializer();
+    public static final ElasticsearchCursorSerializer INSTANCE = new ElasticsearchCursorSerializer();
 
     @Override
-    protected Class<SimpleEdge> getType() {
-        return SimpleEdge.class;
+    protected Class<Integer> getType() {
+        return Integer.class;
     }
 
 

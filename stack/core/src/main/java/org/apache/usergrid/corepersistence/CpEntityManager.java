@@ -17,14 +17,28 @@ package org.apache.usergrid.corepersistence;
 
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
+import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -165,7 +179,7 @@ public class CpEntityManager implements EntityManager {
 
     private final AsyncEventService indexService;
 
-    private PipelineBuilderFactory pipelineBuilderFactory;
+    private final PipelineBuilderFactory filterFactory;
 
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
@@ -207,7 +221,7 @@ public class CpEntityManager implements EntityManager {
      */
     public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
                             final MetricsFactory metricsFactory, final EntityManagerFig entityManagerFig,
-                            final PipelineBuilderFactory pipelineBuilderFactory , final UUID applicationId ) {
+                            final PipelineBuilderFactory pipelineBuilderFactory,  final UUID applicationId ) {
         this.entityManagerFig = entityManagerFig;
 
 
@@ -216,8 +230,8 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( managerCache, "managerCache must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
         Preconditions.checkNotNull( indexService, "indexService must not be null" );
-        Preconditions.checkNotNull( pipelineBuilderFactory, "pipelineBuilderFactory must not be null" );
-        this.pipelineBuilderFactory = pipelineBuilderFactory;
+        Preconditions.checkNotNull( pipelineBuilderFactory, "filterFactory must not be null" );
+        this.filterFactory = pipelineBuilderFactory;
 
 
         this.managerCache = managerCache;
@@ -732,7 +746,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
 
         CpRelationManager relationManager =
-            new CpRelationManager( metricsFactory, managerCache, pipelineBuilderFactory, indexService, this, entityManagerFig, applicationId, entityRef );
+            new CpRelationManager( managerCache, filterFactory, indexService, this, entityManagerFig, applicationId, entityRef );
         return relationManager;
     }
 
