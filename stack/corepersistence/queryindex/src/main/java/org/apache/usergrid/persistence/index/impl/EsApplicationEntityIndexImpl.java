@@ -222,7 +222,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
             //TODO: review this and make them not magic numbers when acking this PR.
             searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
-            
+
 
             while(true){
                 //add search result hits to some sort of running tally of hits.
@@ -263,8 +263,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     public CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion ) {
 
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
-        //TODO: check to see if there is some version verifcation. I know there is but i forget where.
         Preconditions.checkNotNull( markedVersion, "markedVersion cannot be null" );
+        ValidationUtils.verifyVersion( markedVersion );
 
         SearchResponse searchResponse;
 
