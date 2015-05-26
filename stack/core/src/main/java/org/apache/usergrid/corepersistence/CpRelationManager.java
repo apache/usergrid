@@ -386,37 +386,37 @@ public class CpRelationManager implements RelationManager {
 
         // create graph edge connection from head entity to member entity
         final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
-
-        GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlocking().last();
-        //reverse
-
-
-        //perform indexing
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Wrote edge {}", edge );
-        }
-
-
-        //check if we need to reverse our edges
-
-
         final String linkedCollection = collection.getLinkedCollection();
 
-        /**
-         * Nothing to link
-         */
-        if ( linkedCollection != null ) {
-            String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
-            final Edge reverseEdge = createCollectionEdge( memberEntity.getId(), pluralType, cpHeadEntity.getId() );
-            gm.writeEdge( reverseEdge ).toBlocking().last();
-        }
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
 
+        gm.writeEdge( edge )
+            .doOnNext( writtenEdge -> {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Wrote edge {}", writtenEdge);
+                }
+            })
+            .filter(writtenEdge -> linkedCollection != null )
+            .flatMap(writtenEdge -> {
+                final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
+                final Edge reverseEdge = createCollectionEdge( memberEntity.getId(), pluralType, cpHeadEntity.getId() );
 
-        indexService.queueNewEdge( applicationScope, memberEntity, edge );
+                //reverse
+                return gm.writeEdge(reverseEdge).doOnNext(reverseEdgeWritten -> {
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+                });
+            })
+            .doOnCompleted(() -> {
+                indexService.queueNewEdge(applicationScope, memberEntity, edge);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Added entity {}:{} to collection {}", new Object[]{
+                        itemRef.getUuid().toString(), itemRef.getType(), collectionName
+                    });
+                }
+            })
+            .toBlocking().lastOrDefault(null);
 
-
+        //check if we need to reverse our edges
 
 
         if ( logger.isDebugEnabled() ) {
@@ -622,7 +622,7 @@ public class CpRelationManager implements RelationManager {
 
         final IdBuilder pipelineBuilder =
             pipelineBuilderFactory.create( applicationScope ).withCursor( query.getCursor() )
-                                  .withLimit( query.getLimit() ).fromId( cpHeadEntity.getId() );
+                                  .withLimit( query.getLimit() ).fromId(cpHeadEntity.getId());
 
 
         final EntityBuilder results;
@@ -904,7 +904,7 @@ public class CpRelationManager implements RelationManager {
 
         query = adjustQuery( query );
 
-        final Optional<String> entityType = Optional.fromNullable( query.getEntityType() ) ;
+        final Optional<String> entityType = Optional.fromNullable(query.getEntityType()) ;
         //set startid -- graph | es query filter -- load entities filter (verifies exists) --> results page collector
         // -> 1.0 results
 
