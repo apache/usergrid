@@ -360,7 +360,7 @@ public class ImportResourceIT extends AbstractRestIT {
 //
 //            int conCount = 0;
 //            for ( org.apache.usergrid.persistence.Entity e : importedThings ) {
-//                Results r = emApp2.getConnectedEntities( e, "related", null, Query.Level.IDS);
+//                Results r = emApp2.getTargetEntities( e, "related", null, Query.Level.IDS);
 //                List<ConnectionRef> connections = r.getConnections();
 //                conCount += connections.size();
 //            }

@@ -20,10 +20,15 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import com.fasterxml.jackson.core.Base64Variant;
-import com.fasterxml.jackson.core.Base64Variants;
+import java.io.IOException;
+import java.util.Base64;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import com.google.common.base.Preconditions;
 
 
 /**
@@ -35,9 +40,54 @@ public class CursorSerializerUtil {
 
     private static final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
 
+    /**
+     * Aritrary number, just meant to keep us from having a DOS issue
+     */
+    private static final int MAX_SIZE = 1024;
+
 
     public static ObjectMapper getMapper() {
         return MAPPER;
     }
 
+
+    /**
+     * Turn the json node in to a base64 encoded SMILE binary
+     */
+    public static String asString( final JsonNode node ) {
+        final byte[] output;
+        try {
+            output = MAPPER.writeValueAsBytes( node );
+        }
+        catch ( JsonProcessingException e ) {
+            throw new RuntimeException( "Unable to create output from json node " + node );
+        }
+
+        //generate a base64 url save string
+        final String value = Base64.getUrlEncoder().encodeToString( output );
+
+        return value;
+    }
+
+
+    /**
+     * Parse the base64 encoded binary string
+     */
+    public static JsonNode fromString( final String base64EncodedJson ) {
+
+        Preconditions.checkArgument( base64EncodedJson.length() <= MAX_SIZE,
+            "Your cursor must be less than " + MAX_SIZE + " chars in length" );
+
+        final byte[] data = Base64.getUrlDecoder().decode( base64EncodedJson );
+
+        JsonNode jsonNode;
+        try {
+            jsonNode =  MAPPER.readTree( data );
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException( "Unable to parse json node from string " + base64EncodedJson );
+        }
+
+        return jsonNode;
+    }
 }

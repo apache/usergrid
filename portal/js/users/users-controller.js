@@ -61,15 +61,29 @@ AppServices.Controllers.controller('UsersCtrl', ['ug', '$scope', '$rootScope', '
           clearNewUserForm();
           break;
       }
-    }
+    };
 
     ug.getUsers();
+    function sanitizeUsersCollection(){
+      var cleanProperties = ["password", "oldpassword", "newpassword"]
+      if($scope.usersCollection._list.length > 0){
+        $scope.usersCollection._list.forEach(function(user, i){
+          Object.keys(user._data).forEach(function(key){
+            if(cleanProperties.indexOf(key.toLowerCase()) !== -1){
+              // console.warn("Removing %s from %s", key, user._data.uuid);
+              delete user._data[key]
+            }
+          });
+          $scope.usersCollection._list[i]=user;
+        })
+      }
+    }
 
     $scope.$on('users-received', function(event, users) {
       $scope.usersCollection = users;
       $scope.usersSelected = false;
       $scope.hasUsers = users._list.length;
-
+      sanitizeUsersCollection();
       if(users._list.length > 0){
         $scope.selectUser(users._list[0]._data.uuid)
       }
@@ -79,6 +93,7 @@ AppServices.Controllers.controller('UsersCtrl', ['ug', '$scope', '$rootScope', '
     });
 
     $scope.$on('users-create-success', function () {
+      sanitizeUsersCollection();
       $rootScope.$broadcast("alert", "success", "User successfully created.");
     });
 

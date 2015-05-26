@@ -25,12 +25,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -38,6 +39,7 @@ import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -160,14 +162,20 @@ public class EventBuilderImpl implements EventBuilder {
 
 
     @Override
-    public Observable<IndexOperationMessage> index( final EntityIdScope entityIdScope ) {
+    public Observable<IndexOperationMessage> index( final EntityIndexOperation entityIndexOperation ) {
 
-        final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
+        final ApplicationScope applicationScope = entityIndexOperation.getApplicationScope();
 
-        final Id entityId = entityIdScope.getId();
+        final Id entityId = entityIndexOperation.getId();
 
         //load the entity
-        return entityCollectionManagerFactory.createCollectionManager( applicationScope ).load( entityId )
+        return entityCollectionManagerFactory.createCollectionManager( applicationScope ).load( entityId ).filter(
+            entity -> {
+                final Field<Long> modified = entity.getField( Schema.PROPERTY_MODIFIED );
+
+                //only re-index if it has been updated and been updated after our timestamp
+                return modified != null && modified.getValue() >= entityIndexOperation.getUpdatedSince();
+            } )
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );
     }

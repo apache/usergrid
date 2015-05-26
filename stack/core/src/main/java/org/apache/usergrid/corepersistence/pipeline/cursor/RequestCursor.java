@@ -37,10 +37,6 @@ import com.google.common.base.Preconditions;
  */
 public class RequestCursor {
 
-    /**
-     * Aritrary number, just meant to keep us from having a DOS issue
-     */
-    private static final int MAX_SIZE = 1024;
 
     private static final int MAX_CURSOR_COUNT = 100;
 
@@ -83,11 +79,8 @@ public class RequestCursor {
         try {
 
 
-            Preconditions.checkArgument( cursor.length() <= MAX_SIZE, "Your cursor must be less than " + MAX_SIZE + " chars in length");
 
-            final byte[] data = Base64.getUrlDecoder().decode( cursor );
-
-            JsonNode jsonNode = MAPPER.readTree( data );
+            JsonNode jsonNode = CursorSerializerUtil.fromString( cursor );
 
 
             Preconditions

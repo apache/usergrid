@@ -21,17 +21,26 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * Callback to perform an index operation based on an scope during bulk re-index operations
+ * The operation for re-indexing an entity.  The entity should be updated
+ * with an updated timestamp > updatedSince.
  */
-@FunctionalInterface
-public interface ReIndexAction {
+public class EntityIndexOperation extends EntityIdScope {
 
-    /**
-     * Index this entity with the specified scope
-     * @param entityIdScope
-     */
-    void index( final EntityIndexOperation entityIdScope );
+    private final long updatedSince;
+
+
+    public EntityIndexOperation( final ApplicationScope applicationScope, final Id id, final long updatedSince ) {
+        super( applicationScope, id );
+        this.updatedSince = updatedSince;
+    }
+
+
+    public long getUpdatedSince() {
+        return updatedSince;
+    }
 }

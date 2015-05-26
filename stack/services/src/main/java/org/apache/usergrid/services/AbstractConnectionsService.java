@@ -172,14 +172,14 @@ public class AbstractConnectionsService extends AbstractService {
         Results r = null;
 
         if ( connecting() ) {
-            r = em.getConnectingEntities(
-                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()),
-                context.getCollectionName(), null, Level.ALL_PROPERTIES );
+            r = em.getSourceEntities(
+                new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
+                context.getCollectionName(), null, Level.ALL_PROPERTIES);
         }
         else {
-            r = em.getConnectedEntities(
-                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()),
-                context.getCollectionName(), null, Level.ALL_PROPERTIES );
+            r = em.getTargetEntities(
+                new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
+                context.getCollectionName(), null, Level.ALL_PROPERTIES);
         }
 
         importEntities( context, r );
@@ -302,17 +302,17 @@ public class AbstractConnectionsService extends AbstractService {
                 return null;
             }
             else {
-//            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),
+//            	r = em.getSourceEntities( context.getOwner().getUuid(), query.getConnectionType(),
 //            			query.getEntityType(), level );
                 // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding
                 // the limit to the method parameter downstream.
-            	r = em.getConnectingEntities(
-                    new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()),
-                    query.getConnectionType(),query.getEntityType(), level , query.getLimit());
+            	r = em.getSourceEntities(
+                    new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
+                    query.getConnectionType(), query.getEntityType(), level, query.getLimit());
             }
         }
         else {
-            r = em.searchConnectedEntities( context.getOwner(), query );
+            r = em.searchTargetEntities(context.getOwner(), query);
         }
 
         importEntities( context, r );
@@ -419,7 +419,7 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
 
-        Results r = em.searchConnectedEntities( context.getOwner(), query );
+        Results r = em.searchTargetEntities(context.getOwner(), query);
         if ( r.isEmpty() ) {
             throw new ServiceResourceNotFoundException( context );
         }

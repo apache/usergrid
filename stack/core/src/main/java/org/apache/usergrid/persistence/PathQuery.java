@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.Query;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -103,7 +102,7 @@ public class PathQuery<E> {
         EntityRef ref = new SimpleEntityRef(type,uuid);
         return ( query.getCollection() != null ) ?
                em.searchCollection( ref, query.getCollection(), query ) :
-               em.searchConnectedEntities( ref, query );
+               em.searchTargetEntities(ref, query);
     }
 
 

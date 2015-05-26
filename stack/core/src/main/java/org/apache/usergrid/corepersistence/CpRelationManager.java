@@ -19,6 +19,8 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.*;
 
+import org.apache.usergrid.persistence.graph.*;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -48,10 +50,6 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.SearchByEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
@@ -262,7 +260,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<Edge> edges = gm.loadEdgeVersions(
             new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
-                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ) );
+                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent() ) );
 
         return edges.toBlocking().firstOrDefault( null ) != null;
     }
@@ -270,11 +268,11 @@ public class CpRelationManager implements RelationManager {
 
     @SuppressWarnings( "unchecked" )
     @Override
-    public boolean isCollectionMember( String collName, EntityRef entity ) throws Exception {
+    public boolean isCollectionMember( String collectionName, EntityRef entity ) throws Exception {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(collName);
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(collectionName);
 
         logger.debug( "isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
             edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
@@ -313,7 +311,6 @@ public class CpRelationManager implements RelationManager {
     public Results getCollection( String collectionName, UUID startResult, int count, Level resultsLevel,
                                   boolean reversed ) throws Exception {
 
-
         final String ql;
 
         if ( startResult != null ) {
@@ -332,37 +329,25 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results getCollection( String collName, Query query, Level level ) throws Exception {
+    public Results getCollection( String collectionName, Query query, Level level ) throws Exception {
 
-        return searchCollection( collName, query );
+        return searchCollection( collectionName, query );
     }
 
 
     // add to a named collection of the head entity
     @Override
-    public Entity addToCollection( String collName, EntityRef itemRef ) throws Exception {
+    public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
         if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
             return null;
         }
 
-        return addToCollection( collName, itemRef, ( collection != null && collection.getLinkedCollection() != null ) );
-    }
-
-
-    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load( entityId );
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load(entityId);
 
-        return addToCollection( collName, itemRef, memberEntity, connectBack );
-    }
-
-
-    public Entity addToCollection( final String collName, final EntityRef itemRef,
-                                   final org.apache.usergrid.persistence.model.entity.Entity memberEntity,
-                                   final boolean connectBack ) throws Exception {
 
         // don't fetch entity if we've already got one
         final Entity itemEntity;
@@ -377,10 +362,6 @@ public class CpRelationManager implements RelationManager {
             return null;
         }
 
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
-        if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
-            return null;
-        }
 
 
         if ( memberEntity == null ) {
@@ -396,9 +377,11 @@ public class CpRelationManager implements RelationManager {
 
 
         // create graph edge connection from head entity to member entity
-        final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collName, memberEntity.getId() );
+        final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
+
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         gm.writeEdge( edge ).toBlocking().last();
+        //reverse
 
 
         //perform indexing
@@ -408,11 +391,18 @@ public class CpRelationManager implements RelationManager {
         }
 
         indexService.queueNewEdge(applicationScope, memberEntity, edge);
+        //reverse
+        if(!cpHeadEntity.getId().getType().equals("application")) {
+            String pluralType =  InflectionUtils.pluralize(cpHeadEntity.getId().getType());
+            final Edge reverseEdge = createCollectionEdge(memberEntity.getId(), pluralType, cpHeadEntity.getId());
+            gm.writeEdge(reverseEdge).toBlocking().last();
+            indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+        }
 
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Added entity {}:{} to collection {}", new Object[] {
-                itemRef.getUuid().toString(), itemRef.getType(), collName
+                itemRef.getUuid().toString(), itemRef.getType(), collectionName
             } );
         }
 
@@ -421,25 +411,14 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    @Override
-    public Entity addToCollections( List<EntityRef> owners, String collName ) throws Exception {
-
-        // TODO: this addToCollections() implementation seems wrong.
-        for ( EntityRef eref : owners ) {
-            addToCollection( collName, eref );
-        }
-
-        return null;
-    }
-
 
     @Override
-    public Entity createItemInCollection( String collName, String itemType, Map<String, Object> properties )
+    public Entity createItemInCollection( String collectionName, String itemType, Map<String, Object> properties )
         throws Exception {
 
         if ( headEntity.getUuid().equals( applicationId ) ) {
             if ( itemType.equals( TYPE_ENTITY ) ) {
-                itemType = singularize( collName );
+                itemType = singularize( collectionName );
             }
 
             if ( itemType.equals( TYPE_ROLE ) ) {
@@ -453,13 +432,13 @@ public class CpRelationManager implements RelationManager {
             return em.create( itemType, properties );
         }
 
-        else if ( headEntity.getType().equals( Group.ENTITY_TYPE ) && ( collName.equals( COLLECTION_ROLES ) ) ) {
+        else if ( headEntity.getType().equals( Group.ENTITY_TYPE ) && ( collectionName.equals( COLLECTION_ROLES ) ) ) {
             UUID groupId = headEntity.getUuid();
             String roleName = ( String ) properties.get( PROPERTY_NAME );
             return em.createGroupRole( groupId, roleName, ( Long ) properties.get( PROPERTY_INACTIVITY ) );
         }
 
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
         if ( ( collection != null ) && !collection.getType().equals( itemType ) ) {
             return null;
         }
@@ -470,11 +449,11 @@ public class CpRelationManager implements RelationManager {
 
         if ( itemEntity != null ) {
 
-            addToCollection( collName, itemEntity );
+            addToCollection( collectionName, itemEntity );
 
             if ( collection != null && collection.getLinkedCollection() != null ) {
                 Id itemEntityId = new SimpleId( itemEntity.getUuid(), itemEntity.getType() );
-                final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collName, itemEntityId );
+                final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, itemEntityId );
 
                 GraphManager gm = managerCache.getGraphManager( applicationScope );
                 gm.writeEdge( edge );
@@ -486,11 +465,11 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public void removeFromCollection( String collName, EntityRef itemRef ) throws Exception {
+    public void removeFromCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
         // special handling for roles collection of the application
         if ( headEntity.getUuid().equals( applicationId ) ) {
-            if ( collName.equals( COLLECTION_ROLES ) ) {
+            if ( collectionName.equals( COLLECTION_ROLES ) ) {
                 Entity itemEntity = em.get( itemRef );
                 if ( itemEntity != null ) {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
@@ -522,7 +501,7 @@ public class CpRelationManager implements RelationManager {
 
 
         //run our delete
-        final Edge collectionToItemEdge = createCollectionEdge( cpHeadEntity.getId(), collName, memberEntity.getId() );
+        final Edge collectionToItemEdge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
         gm.markEdge( collectionToItemEdge ).toBlocking().last();
 
 
@@ -535,7 +514,7 @@ public class CpRelationManager implements RelationManager {
         final EntityIndexBatch batch = ei.createBatch();
 
         // remove item from collection index
-        SearchEdge indexScope = createCollectionSearchEdge( cpHeadEntity.getId(), collName );
+        SearchEdge indexScope = createCollectionSearchEdge( cpHeadEntity.getId(), collectionName );
 
         batch.deindex( indexScope, memberEntity );
 
@@ -546,7 +525,7 @@ public class CpRelationManager implements RelationManager {
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
 
-            if ( collName.equals( COLLECTION_ROLES ) ) {
+            if ( collectionName.equals( COLLECTION_ROLES ) ) {
                 String path = ( String ) ( ( Entity ) itemRef ).getMetadata( "path" );
 
                 if ( path.startsWith( "/roles/" ) ) {
@@ -579,7 +558,7 @@ public class CpRelationManager implements RelationManager {
                 results = em.getCollection( headEntity, srcRelationName, null, 5000, Level.REFS, false );
             }
             else {
-                results = em.getConnectedEntities( headEntity, srcRelationName, null, Level.REFS );
+                results = em.getTargetEntities(headEntity, srcRelationName, null, Level.REFS);
             }
 
             if ( ( results != null ) && ( results.size() > 0 ) ) {
@@ -599,20 +578,20 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results searchCollection( String collName, Query query ) throws Exception {
+    public Results searchCollection( String collectionName, Query query ) throws Exception {
 
         if ( query == null ) {
             query = new Query();
-            query.setCollection( collName );
+            query.setCollection( collectionName );
         }
 
         headEntity = em.validate( headEntity );
 
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
 
         if ( collection == null ) {
             throw new RuntimeException(
-                "Cannot find collection-info for '" + collName + "' of " + headEntity.getType() + ":" + headEntity
+                "Cannot find collection-info for '" + collectionName + "' of " + headEntity.getType() + ":" + headEntity
                     .getUuid() );
         }
 
@@ -627,18 +606,18 @@ public class CpRelationManager implements RelationManager {
 
         //set our fields applicable to both operations
         readPipelineBuilder.withCursor(query.getCursor());
-        readPipelineBuilder.withLimit( Optional.of( query.getLimit() ));
+        readPipelineBuilder.withLimit( Optional.of(query.getLimit()));
 
         //TODO, this should be removed when the CP relation manager is removed
         readPipelineBuilder.setStartId( cpHeadEntity.getId() );
 
         if ( query.isGraphSearch() ) {
-            readPipelineBuilder.getCollection( collName );
+            readPipelineBuilder.getCollection( collectionName );
         }
         else {
             final String entityType = collection.getType();
 
-            readPipelineBuilder.getCollectionWithQuery( collName, entityType, query.getQl().get() );
+            readPipelineBuilder.getCollectionWithQuery( collectionName, entityType, query.getQl().get() );
         }
 
 
@@ -648,14 +627,14 @@ public class CpRelationManager implements RelationManager {
     }
 
     @Override
-    public Results searchCollectionConsistent( String collName, Query query, int expectedResults ) throws Exception {
+    public Results searchCollectionConsistent( String collectionName, Query query, int expectedResults ) throws Exception {
         Results results;
         long maxLength = entityManagerFig.pollForRecordsTimeout();
         long sleepTime = entityManagerFig.sleep();
         boolean found;
         long current = System.currentTimeMillis(), length = 0;
         do {
-            results = searchCollection(collName, query);
+            results = searchCollection(collectionName, query);
             length = System.currentTimeMillis() - current;
             found = expectedResults == results.size();
             if(found){
@@ -665,7 +644,6 @@ public class CpRelationManager implements RelationManager {
         }while (!found && length <= maxLength);
         if(logger.isInfoEnabled()){
             logger.info(String.format("Consistent Search finished in %s,  results=%s, expected=%s...dumping stack",length, results.size(),expectedResults));
-            Thread.dumpStack();
         }
         return results;
     }
@@ -840,7 +818,7 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results getConnectedEntities( String connectionType, String connectedEntityType, Level level )
+    public Results getTargetEntities(String connectionType, String connectedEntityType, Level level)
         throws Exception {
 
         //until this is refactored properly, we will delegate to a search by query
@@ -853,20 +831,20 @@ public class CpRelationManager implements RelationManager {
         query.setEntityType( connectedEntityType );
         query.setResultsLevel( level );
 
-        return searchConnectedEntities( query );
+        return searchTargetEntities(query);
     }
 
 
     @Override
-    public Results getConnectingEntities( String connType, String fromEntityType, Level resultsLevel )
+    public Results getSourceEntities(String connType, String fromEntityType, Level resultsLevel)
         throws Exception {
 
-        return getConnectingEntities( connType, fromEntityType, resultsLevel, -1 );
+        return getSourceEntities(connType, fromEntityType, resultsLevel, -1);
     }
 
 
     @Override
-    public Results getConnectingEntities( String connType, String fromEntityType, Level level, int count )
+    public Results getSourceEntities(String connType, String fromEntityType, Level level, int count)
         throws Exception {
 
         // looking for edges to the head entity
@@ -899,7 +877,7 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results searchConnectedEntities( Query query ) throws Exception {
+    public Results searchTargetEntities(Query query) throws Exception {
 
         Preconditions.checkNotNull( query, "query cannot be null" );
 
@@ -934,7 +912,10 @@ public class CpRelationManager implements RelationManager {
 
         if ( query.isGraphSearch() ) {
            // if(query.getResultsLevel() == Level.ALL_PROPERTIES)
-           readPipelineBuilder.getConnection( connection );
+           if(entityType ==null )
+               readPipelineBuilder.getConnection( connection );
+            else
+               readPipelineBuilder.getConnection(connection, entityType);
             //else
         }
         else {

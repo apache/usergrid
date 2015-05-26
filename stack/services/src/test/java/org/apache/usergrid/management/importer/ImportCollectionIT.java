@@ -203,7 +203,7 @@ public class ImportCollectionIT {
 
             int conCount = 0;
             for ( Entity e : importedThings ) {
-                Results r = emApp2.getConnectedEntities( e, "related", null, Level.IDS);
+                Results r = emApp2.getTargetEntities(e, "related", null, Level.IDS);
                 List<ConnectionRef> connections = r.getConnections();
                 conCount += connections.size();
             }

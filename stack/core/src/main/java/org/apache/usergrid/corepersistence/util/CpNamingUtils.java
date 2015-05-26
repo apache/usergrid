@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.util;
 
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
@@ -196,7 +197,7 @@ public class CpNamingUtils {
         final String edgeType = getEdgeTypeFromConnectionType( connectionType );
 
         return new SimpleSearchByEdge( sourceId, edgeType, targetId, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-            null );
+            Optional.absent() );
     }
 
 

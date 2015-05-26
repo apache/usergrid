@@ -73,14 +73,14 @@ public class OrganizationIT {
         setup.getEntityIndex().refresh();
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser(
             organization.getOwner().getUuid() );
-        assertEquals( "wrong number of organizations", 1, userOrganizations.size() );
+        assertEquals("wrong number of organizations", 1, userOrganizations.size());
 
         List<UserInfo> users = setup.getMgmtSvc().getAdminUsersForOrganization(
-            organization.getOrganization().getUuid() );
-        assertEquals( "wrong number of users", 1, users.size() );
+            organization.getOrganization().getUuid());
+        assertEquals("wrong number of users", 1, users.size());
 
         ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication(organization.getOrganization().getUuid(), "ed-application");
-        assertNotNull( applicationInfo.getId() );
+        assertNotNull(applicationInfo.getId());
 
 
         setup.getEntityIndex().refresh();
