@@ -17,38 +17,34 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.graph;
+package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
-import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import rx.Observable;
-
 
 /**
- * This command is a stopgap to make migrating 1.0 code easier.  Once full traversal has been implemented, this should
- * be removed
+ * Read an edge in the graph to verify it's existence by id
  */
-public class EntityIdFilter extends AbstractFilter<Id, Id> implements Filter<Id, Id> {
+public class ReadGraphConnectionByIdFilter extends AbstractReadGraphEdgeByIdFilter{
 
-    private final Id entityId;
-
+    private final String connectionName;
 
     @Inject
-    public EntityIdFilter( @Assisted final Id entityId ) {this.entityId = entityId;}
-
+    public ReadGraphConnectionByIdFilter( final GraphManagerFactory graphManagerFactory,
+                                          @Assisted final String connectionName, @Assisted final Id targetId ) {
+        super( graphManagerFactory, targetId );
+        this.connectionName = connectionName;
+    }
 
 
     @Override
-    public Observable<FilterResult<Id>> call( final Observable<FilterResult<Id>> filterValueObservable ) {
-        //ignore what our input was, and simply emit the id specified
-       return filterValueObservable.map( idFilterResult ->  new FilterResult( entityId, idFilterResult.getPath() ));
-
+    protected String getEdgeName() {
+        return CpNamingUtils.getEdgeTypeFromConnectionType( connectionName );
     }
 }
