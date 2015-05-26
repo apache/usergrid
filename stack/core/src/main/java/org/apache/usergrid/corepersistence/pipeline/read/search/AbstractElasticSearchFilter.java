@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
+package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import org.slf4j.Logger;
@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
@@ -46,8 +45,7 @@ import rx.Observable;
 /**
  * Command for reading graph edges
  */
-public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id, Candidate, Integer>
-    implements Filter<Id, Candidate> {
+public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id, Candidate, Integer> {
 
     private static final Logger log = LoggerFactory.getLogger( AbstractElasticSearchFilter.class );
 
