@@ -170,9 +170,9 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
             final Observable<IndexOperation> index = Observable.from( batch.getIndexRequests() );
             final Observable<DeIndexOperation> deIndex = Observable.from( batch.getDeIndexRequests() );
-            if(indexOperationSetSize +  deIndexOperationSetSize > 0){
-                batch.done();
-            }
+//            if(indexOperationSetSize +  deIndexOperationSetSize > 0){
+//                batch.done();
+//            }
 
             return Observable.merge( index, deIndex );
         } );
