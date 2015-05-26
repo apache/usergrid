@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.graph;
+package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
 import java.util.ArrayList;
@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -44,17 +43,17 @@ import rx.Observable;
 
 
 /**
- * Loads entities from a set of Ids.
+ * Loads entities from a set of Ids. and verify they are valid
  *
  * TODO refactor this into a common command that both ES search and graphSearch can use for repair and verification
  */
-public class EntityLoadFilter extends AbstractFilter<Id, Entity> implements Filter<Id, Entity> {
+public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, FilterResult<Entity>>{
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
 
     @Inject
-    public EntityLoadFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
+    public EntityLoadVerifyFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
     }
 

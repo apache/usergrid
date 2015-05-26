@@ -17,22 +17,37 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read;
+package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
+import org.apache.usergrid.corepersistence.pipeline.Pipeline;
+import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
+import org.apache.usergrid.persistence.ConnectionRef;
+
+import rx.Observable;
 
 
 /**
- * A factory for generating collectors
+ * A 1.0 compatibility state.  Should be removed as services are refactored
  */
-public interface CollectorFactory {
+@Deprecated
+public class ConnectionRefBuilder {
+
+
+    private final Pipeline<FilterResult<ConnectionRef>> connectionRefFilter;
+
+    public ConnectionRefBuilder( final Pipeline<FilterResult<ConnectionRef>> connectionRefFilter ) {
+       this.connectionRefFilter = connectionRefFilter;
+    }
 
 
     /**
-     * Get the results page collector
+     * Build our connection refs observable
      * @return
      */
-   ResultsPageCollector getResultsPageCollector();
-
+    public Observable<ResultsPage<ConnectionRef>> build(){
+        return connectionRefFilter.withFilter( new ResultsPageCollector<>() ).execute();
+    }
 }
