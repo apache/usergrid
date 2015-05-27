@@ -65,6 +65,7 @@ import com.google.inject.Inject;
 import rx.Observable;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.applicationId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.parseIndexDocId;
 
 
@@ -178,7 +179,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
      */
     public Observable deleteApplication() {
         deleteApplicationMeter.mark();
-        String idString = IndexingUtils.idString( applicationScope.getApplication() );
+        String idString = applicationId( applicationScope.getApplication() );
         final TermQueryBuilder tqb = QueryBuilders.termQuery( APPLICATION_ID_FIELDNAME, idString );
         final String[] indexes = entityIndex.getUniqueIndexes();
         Timer.Context timer = deleteApplicationTimer.time();

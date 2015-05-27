@@ -19,6 +19,8 @@ package org.apache.usergrid.persistence.index.impl;/*
 
 
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.CandidateResult;
@@ -28,14 +30,46 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
+import com.google.common.base.Preconditions;
+
 
 public class IndexingUtils {
 
 
-    // These are not allowed in document type names: _ . , | #
-    public static final String FIELD_SEPERATOR = "__";
+    /**
+     * Regular expression for uuids
+     */
+    public static final String UUID_REX =
+        "([A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})";
 
-    public static final String ID_SEPERATOR = "::";
+    public static final String TYPE_REX = "(\\w+)";
+
+
+    private static final String APPID_NAME = "appId";
+
+    private static final String ENTITY_NAME = "entityId";
+
+    private static final String NODEID_NAME = "nodeId";
+
+    private static final String VERSION_NAME = "version";
+    private static final String EDGE_NAME = "edgeName";
+
+    private static final String NODE_TYPE_NAME = "nodeType";
+    private static final String ENTITY_TYPE_NAME = "entityType";
+
+
+    //the document Id will have 9 groups
+    private static final String DOCUMENT_ID_REGEX =
+        "appId\\(" + UUID_REX + "," + TYPE_REX + "\\)\\.entityId\\(" + UUID_REX + "," + TYPE_REX + "\\)\\.version\\(" + UUID_REX
+            + "\\)\\.nodeId\\(" + UUID_REX + "," + TYPE_REX + "\\)\\.edgeName\\(" + TYPE_REX + "\\)\\.nodeType\\(" + TYPE_REX + "\\)";
+
+
+    private static final Pattern DOCUMENT_PATTERN = Pattern.compile( DOCUMENT_ID_REGEX );
+
+    // These are not allowed in document type names: _ . , | #
+    public static final String FIELD_SEPERATOR = ".";
+
+    public static final String ID_SEPERATOR = ",";
 
 
     /**
@@ -93,10 +127,6 @@ public class IndexingUtils {
     public static final String FIELD_STRING_NESTED_UNANALYZED = FIELD_STRING_NESTED + ".exact";
 
 
-
-
-
-
     /**
      * Create our sub scope.  This is the ownerUUID + type
      *
@@ -104,29 +134,11 @@ public class IndexingUtils {
      */
     public static String createContextName( final ApplicationScope applicationScope, final SearchEdge scope ) {
         StringBuilder sb = new StringBuilder();
-        idString( sb, applicationScope.getApplication() );
+        idString( sb, APPID_NAME, applicationScope.getApplication() );
         sb.append( FIELD_SEPERATOR );
-        idString( sb, scope.getNodeId() );
+        idString( sb, NODEID_NAME, scope.getNodeId() );
         sb.append( FIELD_SEPERATOR );
-        sb.append( scope.getEdgeName() );
-        return sb.toString();
-    }
-
-
-    /**
-     * Append the id to the string
-     */
-    public static final void idString( final StringBuilder builder, final Id id ) {
-        builder.append( id.getUuid() ).append( ID_SEPERATOR ).append( id.getType().toLowerCase() );
-    }
-
-
-    /**
-     * Turn the id into a string
-     */
-    public static final String idString( final Id id ) {
-        final StringBuilder sb = new StringBuilder();
-        idString( sb, id );
+        appendField( sb, EDGE_NAME, scope.getEdgeName() );
         return sb.toString();
     }
 
@@ -147,20 +159,63 @@ public class IndexingUtils {
                                            final UUID version, final SearchEdge searchEdge ) {
 
         StringBuilder sb = new StringBuilder();
-        idString( sb, applicationScope.getApplication() );
+        idString( sb, APPID_NAME, applicationScope.getApplication() );
         sb.append( FIELD_SEPERATOR );
-        idString( sb, entityId );
+        idString( sb, ENTITY_ID_FIELDNAME, entityId );
         sb.append( FIELD_SEPERATOR );
-        sb.append( version.toString() );
-
+        appendField( sb, VERSION_NAME, version.toString() );
         sb.append( FIELD_SEPERATOR );
-        idString( sb, searchEdge.getNodeId() );
+        idString( sb, NODEID_NAME, searchEdge.getNodeId() );
         sb.append( FIELD_SEPERATOR );
-        sb.append( searchEdge.getEdgeName() );
+        appendField( sb, EDGE_NAME, searchEdge.getEdgeName() );
         sb.append( FIELD_SEPERATOR );
-        sb.append( searchEdge.getNodeType() );
+        appendField( sb, NODE_TYPE_NAME, searchEdge.getNodeType().name() );
 
         return sb.toString();
+    }
+
+
+    public static final String entityId( final Id id ) {
+        return idString( ENTITY_NAME, id );
+    }
+
+
+    public static final String applicationId( final Id id ) {
+        return idString( APPID_NAME, id );
+    }
+
+
+    public static final String nodeId( final Id id ) {
+        return idString( NODEID_NAME, id );
+    }
+
+
+    /**
+     * Construct and Id string with the specified type for the id provided.
+     */
+    private static final String idString( final String type, final Id id ) {
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        idString( stringBuilder, type, id );
+
+        return stringBuilder.toString();
+    }
+
+
+    /**
+     * Append the id to the string
+     */
+    private static final void idString( final StringBuilder builder, final String type, final Id id ) {
+        builder.append( type ).append( "(" ).append( id.getUuid() ).append( ID_SEPERATOR )
+               .append( id.getType().toLowerCase() ).append( ")" );
+    }
+
+
+    /**
+     * Append a field
+     */
+    private static void appendField( final StringBuilder builder, final String type, final String value ) {
+        builder.append( type ).append( "(" ).append( value ).append( ")" );
     }
 
 
@@ -169,24 +224,40 @@ public class IndexingUtils {
      */
     public static CandidateResult parseIndexDocId( final String documentId ) {
 
-        String[] idparts = documentId.split( FIELD_SEPERATOR );
-        String entityIdString = idparts[1];
-        String version = idparts[2];
 
-        final String[] entityIdParts = entityIdString.split( ID_SEPERATOR );
+        final Matcher matcher = DOCUMENT_PATTERN.matcher( documentId );
 
-        Id entityId = new SimpleId( UUID.fromString( entityIdParts[0] ), entityIdParts[1] );
+        Preconditions.checkArgument( matcher.matches(), "Pattern for document id did not match expected format" );
+        Preconditions.checkArgument( matcher.groupCount() == 9, "9 groups expected in the pattern" );
 
-        return new CandidateResult( entityId, UUID.fromString( version ) );
+        //Other fields can be parsed using groups.  The groups start at value 1, group 0 is the entire match
+        final String entityUUID = matcher.group( 3 );
+        final String entityType = matcher.group( 4 );
+
+        final String versionUUID = matcher.group( 5 );
+
+
+        Id entityId = new SimpleId( UUID.fromString( entityUUID ), entityType );
+
+        return new CandidateResult( entityId, UUID.fromString( versionUUID ) );
     }
 
 
+    /**
+     * Get the entity type
+     */
     public static String getType( ApplicationScope applicationScope, Id entityId ) {
         return getType( applicationScope, entityId.getType() );
     }
 
 
     public static String getType( ApplicationScope applicationScope, String type ) {
-        return idString( applicationScope.getApplication() ) + FIELD_SEPERATOR + type;
+
+        StringBuilder sb = new StringBuilder();
+
+        idString( sb, APPID_NAME, applicationScope.getApplication() );
+        sb.append( FIELD_SEPERATOR );
+        sb.append( ENTITY_TYPE_NAME).append("(" ).append( type ).append( ")" );
+        return sb.toString();
     }
 }
