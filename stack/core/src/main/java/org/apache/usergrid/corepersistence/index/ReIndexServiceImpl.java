@@ -292,7 +292,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         final String stringStatus = mapManager.getString( jobId+MAP_STATUS_KEY );
 
         if(stringStatus == null){
-            throw new IllegalArgumentException( "Could not find a job with id " + jobId );
+           return new ReIndexStatus( jobId, Status.UNKNOWN, 0, 0 );
         }
 
         final Status status = Status.valueOf( stringStatus );
