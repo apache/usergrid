@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
+package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -26,48 +26,52 @@ import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionSearchEdge;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionSearchEdge;
 
 
-public class ElasticSearchConnectionFilter extends AbstractElasticSearchFilter {
+public class SearchCollectionFilter extends AbstractElasticSearchFilter {
 
-
-    private final String connectionName;
-    private final Optional<String> connectedEntityType;
-
+    private final String collectionName;
+    private final String entityType;
 
     /**
      * Create a new instance of our command
+     *
+     * @param entityIndexFactory The entity index factory used to search
+     * @param  metricsFactory The metrics factory for metrics
+     * @param collectionName The name of the collection
+     * @param entityType The entity type
      */
     @Inject
-    public ElasticSearchConnectionFilter( final EntityIndexFactory entityIndexFactory,
-                                          final MetricsFactory metricsFactory, @Assisted( "query" ) final String query,
-                                          @Assisted( "connectionName" ) final String connectionName,
-                                          @Assisted( "connectedEntityType" )
-                                          final Optional<String> connectedEntityType ) {
+    public SearchCollectionFilter( final EntityIndexFactory entityIndexFactory, final MetricsFactory metricsFactory,
+                                   @Assisted( "query" ) final String query,
+                                   @Assisted( "collectionName" ) final String collectionName,
+                                   @Assisted( "entityType" ) final String entityType ) {
         super( entityIndexFactory, metricsFactory, query );
-
-        this.connectionName = connectionName;
-        this.connectedEntityType = connectedEntityType;
+        this.collectionName = collectionName;
+        this.entityType = entityType;
     }
+
 
 
     @Override
     protected SearchTypes getSearchTypes() {
-        final SearchTypes searchTypes = SearchTypes.fromNullableTypes( connectedEntityType.orNull() );
+        final SearchTypes types = SearchTypes.fromTypes( entityType );
 
-        return searchTypes;
+        return types;
     }
 
 
     @Override
-    protected SearchEdge getSearchEdge( final Id id ) {
-        final SearchEdge searchEdge = createConnectionSearchEdge( id, connectionName );
+    protected SearchEdge getSearchEdge( final Id incomingId ) {
+        final SearchEdge searchEdge = createCollectionSearchEdge( incomingId, collectionName );
 
         return searchEdge;
     }
+
+
+
 }

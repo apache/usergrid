@@ -23,8 +23,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -35,18 +38,9 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
-import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
+import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
-import org.apache.usergrid.persistence.AbstractEntity;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityFactory;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
@@ -62,6 +56,7 @@ import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsExcept
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
@@ -122,10 +117,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
+    private final ReIndexService reIndexService;
     private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
     private final AsyncEventService indexService;
     private final PipelineBuilderFactory pipelineBuilderFactory;
+    private final GraphManagerFactory graphManagerFactory;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector ) {
@@ -133,6 +130,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
+        this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
         this.entityIndex = injector.getInstance(EntityIndex.class);
         this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
@@ -140,6 +138,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
         this.pipelineBuilderFactory = injector.getInstance( PipelineBuilderFactory.class );
+        this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
@@ -198,7 +197,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory, entityManagerFig, pipelineBuilderFactory,  applicationId );
+        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
+            metricsFactory, entityManagerFig, pipelineBuilderFactory, graphManagerFactory, applicationId );
+
         return em;
     }
 
@@ -312,19 +313,28 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             .lastOrDefault(null);
     }
 
+    //TODO: return status for restore
     @Override
     public Entity restoreApplication(UUID applicationId) throws Exception {
 
         // get the deleted_application_info for the deleted app
-
-        final EntityManager managementEm = getEntityManager(getManagementAppId());
-
-        migrateAppInfo(applicationId,CpNamingUtils.DELETED_APPLICATION_INFO,CpNamingUtils.APPLICATION_INFO)
+        return (Entity) migrateAppInfo(applicationId, CpNamingUtils.DELETED_APPLICATION_INFO, CpNamingUtils.APPLICATION_INFO)
+            .map(o -> {
+                final ReIndexRequestBuilder builder =
+                    reIndexService.getBuilder().withApplicationId(applicationId);
+                return reIndexService.rebuildIndex(builder);
+            })
+            .map(status -> {
+                final EntityManager managementEm = getEntityManager(getManagementAppId());
+                try {
+                    return managementEm.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationId));
+                } catch (Exception e) {
+                    logger.error("Failed to get entity", e);
+                    throw new RuntimeException(e);
+                }
+            })
             .toBlocking().lastOrDefault(null);
 
-        throw new UnsupportedOperationException( "Implement index rebuild" );
-
-//        return managementEm.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO,applicationId));
     }
 
     @Override
@@ -350,6 +360,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
             final Entity newAppEntity = managementEm.create(new SimpleId(applicationUUID,
                 collectionToName), oldAppEntity.getProperties());
+
             // copy its connections too
 
             final Set<String> connectionTypes = managementEm.getConnectionTypes(oldAppEntity);

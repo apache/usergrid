@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
+package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import java.util.ArrayList;
@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -56,8 +55,7 @@ import rx.Observable;
  * performs internal buffering for efficiency.  Note that all entities may not be emitted if our load crosses page boundaries.  It is up to the
  * collector to determine when to stop streaming entities.
  */
-public class CandidateEntityFilter extends AbstractFilter<Candidate, Entity>
-    implements Filter<Candidate, Entity> {
+public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate>, FilterResult<Entity>> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;

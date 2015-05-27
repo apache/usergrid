@@ -17,37 +17,33 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.graph;
+package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeTypeFromCollectionName;
-
 
 /**
- * Command for reading graph edges on a collection
+ * Read an edge in the graph to verify it's existence by id
  */
-public class ReadGraphCollectionFilter extends AbstractReadGraphFilter {
+public class ReadGraphCollectionByIdFilter extends AbstractReadGraphEdgeByIdFilter{
 
     private final String collectionName;
 
-
-    /**
-     * Create a new instance of our command
-     */
     @Inject
-    public ReadGraphCollectionFilter( final GraphManagerFactory graphManagerFactory, @Assisted final String collectionName ) {
-        super( graphManagerFactory );
+    public ReadGraphCollectionByIdFilter( final GraphManagerFactory graphManagerFactory, @Assisted final String collectionName, @Assisted final Id targetId ) {
+        super( graphManagerFactory, targetId );
         this.collectionName = collectionName;
     }
 
 
     @Override
-    protected String getEdgeTypeName() {
-        return getEdgeTypeFromCollectionName( collectionName );
+    protected String getEdgeName() {
+        return CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
     }
 }

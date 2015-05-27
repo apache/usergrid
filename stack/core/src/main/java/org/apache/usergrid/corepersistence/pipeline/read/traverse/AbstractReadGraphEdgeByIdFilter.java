@@ -17,11 +17,11 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.graph;
+package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
+import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -40,8 +40,8 @@ import rx.Observable;
 /**
  * Filter should take and Id and a graph edge, and ensure the connection between the two exists
  */
-public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractFilter<Id, Id> implements
-    Filter<Id, Id> {
+public abstract class AbstractReadGraphEdgeByIdFilter extends AbstractFilter<FilterResult<Id>, FilterResult<Id>> implements
+    PipelineOperation<FilterResult<Id>, FilterResult<Id>> {
 
     private final GraphManagerFactory graphManagerFactory;
     private final Id targetId;

@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
@@ -298,7 +297,7 @@ public class EntityIndexTest extends BaseIT {
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
 
 
-        ei.addIndex("v2", 1, 0, "one");
+        ei.addIndex( "v2", 1, 0, "one" );
         ei.refreshAsync().toBlocking().first();
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 1 );
@@ -325,7 +324,7 @@ public class EntityIndexTest extends BaseIT {
         batch.execute().toBlocking().last();
         IndexRefreshCommandImpl.IndexRefreshCommandInfo info =  ei.refreshAsync().toBlocking().first();
         long time = info.getExecutionTime();
-        log.info("refresh took ms:"+time);
+        log.info( "refresh took ms:" + time );
     }
 
 
@@ -385,13 +384,13 @@ public class EntityIndexTest extends BaseIT {
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ) );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID()));
+        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
 
         entityIndex.createBatch().index( searchEdge, entity ).execute().toBlocking().last();
         ei.refreshAsync().toBlocking().first();
 
         CandidateResults candidateResults = entityIndex
-            .search(searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
+            .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
@@ -403,6 +402,52 @@ public class EntityIndexTest extends BaseIT {
             .search(searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10, 0 );
         assertEquals( 0, candidateResults.size() );
     }
+
+
+    /**
+     * Tests that we aggregate results only before the halfway version point.
+     */
+    @Test
+    public void testScollingDeindex() {
+
+        int numberOfEntities = 1000;
+        int versionToSearchFor = numberOfEntities / 2;
+
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "mehCars", SearchEdge.NodeType.SOURCE, 1 );
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+        UUID entityUUID = UUID.randomUUID();
+        Id entityId = new SimpleId( "mehCar" );
+
+        Map entityMap = new HashMap() {{
+            put( "name", "Toyota Corolla" );
+            put( "introduced", 1966 );
+            put( "topspeed", 111 );
+        }};
+
+        Entity[] entity = new Entity[numberOfEntities];
+        for(int i = 0; i < numberOfEntities; i++) {
+            entity[i] = EntityIndexMapUtils.fromMap( entityMap );
+            EntityUtils.setId( entity[i], entityId );
+            EntityUtils.setVersion( entity[i], UUIDGenerator.newTimeUUID() );
+            entity[i].setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, entityUUID ) );
+
+            //index the new entity. This is where the loop will be set to create like 100 entities.
+            entityIndex.createBatch().index( searchEdge, entity[i] ).execute().toBlocking().last();
+        }
+        ei.refreshAsync().toBlocking().first();
+
+        CandidateResults candidateResults = entityIndex
+            .getAllEntityVersionsBeforeMarkedVersion( entity[versionToSearchFor].getId(),
+                entity[versionToSearchFor].getVersion() );
+        assertEquals( 501, candidateResults.size() );
+    }
+
 
 
     private CandidateResults testQuery( final SearchEdge scope, final SearchTypes searchTypes,
