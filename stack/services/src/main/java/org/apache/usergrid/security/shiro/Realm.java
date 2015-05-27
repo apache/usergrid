@@ -234,8 +234,16 @@ public class Realm extends AuthorizingRealm {
 
         for ( PrincipalIdentifier principal : principals.byType( PrincipalIdentifier.class ) ) {
 
+            // TODO: refactor so that this whole instanceof mess can be replaced with this:
+            // principle.addRolesAndPermissionsToInfo( info );
+            // principle.addApplicationsToSet( applicationsSet );
+            // principle.addOrganizationsToSet( applicationsSet );
+            // organization = principle.getOrganization();
+            // application = principle.getApplication();
+
             if ( principal instanceof OrganizationPrincipal ) {
-                // OrganizationPrincipals are usually only through OAuth
+
+                // OrganizationPricipals are usually only through OAuth
                 // They have access to a single organization
 
                 organization = ( ( OrganizationPrincipal ) principal ).getOrganization();
