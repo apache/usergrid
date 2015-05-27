@@ -25,6 +25,12 @@ package org.apache.usergrid.persistence.index;
 /**
  * An edge to perform indexing on.
  */
+/**
+ *source node - edge - target node =>
+ IndexEdge => sourceNode, edgeType, timestamp, NodeType we're indexing (TARGET)
+ SearchEdge = > sourceNode, edgeType, NodeType (Target)
+
+ */
 public interface IndexEdge extends SearchEdge {
 
     /**

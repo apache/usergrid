@@ -49,8 +49,8 @@ public class CandidateResults implements Iterable<CandidateResult> {
         offset = Optional.absent();
     }
 
-
-    public void initializeCursor(int offset){
+    
+    public void initializeOffset( int offset ){
         this.offset = Optional.of(offset);
     }
 
