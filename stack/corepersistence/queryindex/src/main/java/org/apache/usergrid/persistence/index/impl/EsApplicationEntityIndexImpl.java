@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
@@ -30,6 +31,10 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
@@ -45,7 +50,9 @@ import org.apache.usergrid.persistence.index.AliasedEntityIndex;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.index.CandidateResults;
+import org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder.SearchRequestBuilderStrategyV2;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
@@ -56,6 +63,7 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
@@ -89,6 +97,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     private final Timer deleteApplicationTimer;
     private final Meter deleteApplicationMeter;
     private final SearchRequestBuilderStrategy searchRequest;
+    private final SearchRequestBuilderStrategyV2 searchRequestBuilderStrategyV2;
     private FailureMonitor failureMonitor;
     private final int cursorTimeout;
     private final long queryTimeout;
@@ -112,7 +121,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         this.esProvider = provider;
 
         mapManager = mapManagerFactory.createMapManager( mapScope );
-        this.searchTimer = metricsFactory.getTimer(EsApplicationEntityIndexImpl.class, "search.timer");
+        this.searchTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.timer" );
         this.cursorTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.cursor.timer" );
         this.cursorTimeout = config.getQueryCursorTimeout();
         this.queryTimeout = config.getWriteTimeout();
@@ -125,6 +134,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         this.alias = indexIdentifier.getAlias();
 
         this.searchRequest = new SearchRequestBuilderStrategy( esProvider, appScope, alias, cursorTimeout );
+        this.searchRequestBuilderStrategyV2 = new SearchRequestBuilderStrategyV2( esProvider, appScope, alias, cursorTimeout  );
     }
 
 
@@ -148,7 +158,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build( query );
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset );
+        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset )
+                                                      .setTimeout( TimeValue.timeValueMillis( queryTimeout ) );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -159,7 +170,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         try {
             //Added For Graphite Metrics
             Timer.Context timeSearch = searchTimer.time();
-            searchResponse = srb.execute().actionGet(queryTimeout);
+            searchResponse = srb.execute().actionGet();
             timeSearch.stop();
         }
         catch ( Throwable t ) {
@@ -170,6 +181,159 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         failureMonitor.success();
 
         return parseResults(searchResponse, parsedQuery, limit, offset);
+    }
+
+
+    @Override
+    public CandidateResults getAllEdgeDocuments( final IndexEdge edge, final Id entityId ) {
+        /**
+         * Take a list of IndexEdge, with an entityId
+         and query Es directly for matches
+
+         */
+        IndexValidationUtils.validateSearchEdge( edge );
+        Preconditions.checkNotNull( entityId, "entityId cannot be null" );
+
+        SearchResponse searchResponse;
+
+        List<CandidateResult> candidates = new ArrayList<>();
+
+        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+
+        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
+
+        //I can't just search on the entity Id.
+
+        FilterBuilder entityEdgeFilter = FilterBuilders.termFilter( IndexingUtils.EDGE_NODE_ID_FIELDNAME,
+            IndexingUtils.idString( edge.getNodeId() ));
+
+        srb.setPostFilter(entityEdgeFilter);
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
+                this.alias.getReadAlias(),entityId, srb );
+        }
+
+        try {
+            //Added For Graphite Metrics
+            Timer.Context timeSearch = searchTimer.time();
+
+            //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
+            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
+            //TODO: review this and make them not magic numbers when acking this PR.
+            searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
+
+
+            while(true){
+                //add search result hits to some sort of running tally of hits.
+                candidates = aggregateScrollResults( candidates, searchResponse );
+
+                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
+                    .getScrollBuilder( searchResponse.getScrollId() )
+                    .setScroll( new TimeValue( 6000 ) );
+
+                //TODO: figure out how to log exactly what we're putting into elasticsearch
+                //                if ( logger.isDebugEnabled() ) {
+                //                    logger.debug( "Scroll search using query: {} ",
+                //                        ssrb.toString() );
+                //                }
+
+                searchResponse = ssrb.execute().actionGet();
+
+                if (searchResponse.getHits().getHits().length == 0) {
+                    break;
+                }
+
+
+            }
+            timeSearch.stop();
+        }
+        catch ( Throwable t ) {
+            logger.error( "Unable to communicate with Elasticsearch", t );
+            failureMonitor.fail( "Unable to execute batch", t );
+            throw t;
+        }
+        failureMonitor.success();
+
+        return new CandidateResults( candidates, parsedQuery.getSelectFieldMappings());
+    }
+
+
+    @Override
+    public CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion ) {
+
+        Preconditions.checkNotNull( entityId, "entityId cannot be null" );
+        Preconditions.checkNotNull( markedVersion, "markedVersion cannot be null" );
+        ValidationUtils.verifyVersion( markedVersion );
+
+        SearchResponse searchResponse;
+
+        List<CandidateResult> candidates = new ArrayList<>();
+
+        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+
+        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
+
+        FilterBuilder entityIdFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
+            IndexingUtils.idString( entityId ) );
+
+        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte( markedVersion );
+
+        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter,entityVersionFilter  );
+
+        srb.setPostFilter(andFilter);
+
+
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
+                this.alias.getReadAlias(),entityId, srb );
+        }
+
+        try {
+            //Added For Graphite Metrics
+            Timer.Context timeSearch = searchTimer.time();
+
+            //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
+            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
+            //TODO: review this and make them not magic numbers when acking this PR.
+            searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
+
+            //list that will hold all of the search hits
+
+
+            while(true){
+                //add search result hits to some sort of running tally of hits.
+                candidates = aggregateScrollResults( candidates, searchResponse );
+
+                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
+                    .getScrollBuilder( searchResponse.getScrollId() )
+                    .setScroll( new TimeValue( 6000 ) );
+
+                //TODO: figure out how to log exactly what we're putting into elasticsearch
+//                if ( logger.isDebugEnabled() ) {
+//                    logger.debug( "Scroll search using query: {} ",
+//                        ssrb.toString() );
+//                }
+
+                searchResponse = ssrb.execute().actionGet();
+
+                if (searchResponse.getHits().getHits().length == 0) {
+                    break;
+                }
+
+
+            }
+            timeSearch.stop();
+        }
+        catch ( Throwable t ) {
+            logger.error( "Unable to communicate with Elasticsearch", t );
+            failureMonitor.fail( "Unable to execute batch", t );
+            throw t;
+        }
+        failureMonitor.success();
+
+        return new CandidateResults( candidates, parsedQuery.getSelectFieldMappings());
     }
 
 
@@ -249,11 +413,30 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         // >= seems odd.  However if we get an overflow, we need to account for it.
         if (  hits.length >= limit ) {
 
-            candidateResults.initializeCursor(from+limit);
+            candidateResults.initializeOffset( from + limit );
 
         }
 
         return candidateResults;
+    }
+
+    private List<CandidateResult> aggregateScrollResults( List<CandidateResult> candidates,
+                                                          final SearchResponse searchResponse ){
+
+        final SearchHits searchHits = searchResponse.getHits();
+        final SearchHit[] hits = searchHits.getHits();
+
+        for ( SearchHit hit : hits ) {
+
+            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
+
+            candidates.add( candidateResult );
+        }
+
+        logger.debug( "Aggregated {} out of {} hits ",candidates.size(),searchHits.getTotalHits() );
+
+        return  candidates;
+
     }
 
 }
