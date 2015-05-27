@@ -63,6 +63,7 @@ public class ConnectionsServiceIT extends AbstractServiceIT {
         //DELETE users/conn-user1/manages/user2/conn-user2 (qualified by collection type on second entity)
         app.testRequest( ServiceAction.DELETE, 1, "users", "conn-user1", "manages", "users", "conn-user2" );
 
+        //TODO: test fails because the connections metadata is null. When before, data would still be returned. 
         // "manages" connection removed from both entities
         user1 = app.testRequest( ServiceAction.GET, 1, "users", "conn-user1" ).getEntities().get( 0 );
         assertFalse( ( ( Map ) user1.getMetadata( "connections" ) ).containsKey( "manages" ) );

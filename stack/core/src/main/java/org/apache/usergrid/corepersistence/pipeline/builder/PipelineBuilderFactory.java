@@ -17,30 +17,19 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.collect;
+package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
-import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
-import org.apache.usergrid.corepersistence.pipeline.read.Collector;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
-/**
- * Basic functionality for our commands to handle cursor IO
- * @param <T> the input type
- * @param <R> The output Type
- */
-public abstract class AbstractCollector<T, R> implements Collector<T, R> {
+public interface PipelineBuilderFactory {
 
 
-    protected PipelineContext pipelineContext;
-
-
-    @Override
-    public void setContext( final PipelineContext pipelineContext ) {
-        this.pipelineContext = pipelineContext;
-    }
-
-
-
+    /**
+     * Create our pipeline builder to allow us to build our pipeline
+     * @param applicationScope
+     * @return
+     */
+    PipelineBuilder create( final ApplicationScope applicationScope );
 }

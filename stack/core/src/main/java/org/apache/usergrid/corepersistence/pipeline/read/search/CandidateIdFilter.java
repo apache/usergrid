@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.elasticsearch;
+package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import java.util.ArrayList;
@@ -28,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
-import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
-import org.apache.usergrid.corepersistence.pipeline.read.Filter;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -50,11 +48,10 @@ import rx.Observable;
 
 
 /**
- * Responsible for verifying candidate result versions, then emitting the Ids of these versions
- * Input is a batch of candidate results, output is a stream of validated Ids
+ * Responsible for verifying candidate result versions, then emitting the Ids of these versions Input is a batch of
+ * candidate results, output is a stream of validated Ids
  */
-public class CandidateIdFilter extends AbstractFilter<Candidate, Id>
-    implements Filter<Candidate, Id> {
+public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, FilterResult<Id>> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
@@ -68,9 +65,8 @@ public class CandidateIdFilter extends AbstractFilter<Candidate, Id>
     }
 
 
-
     @Override
-      public Observable<FilterResult<Id>> call( final Observable<FilterResult<Candidate>> filterResultObservable ) {
+    public Observable<FilterResult<Id>> call( final Observable<FilterResult<Candidate>> filterResultObservable ) {
 
 
         /**
@@ -87,30 +83,26 @@ public class CandidateIdFilter extends AbstractFilter<Candidate, Id>
         final ApplicationEntityIndex applicationIndex =
             entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
-        final Observable<FilterResult<Id>> searchIdSetObservable = filterResultObservable.buffer( pipelineContext.getLimit() ).flatMap(
-            candidateResults -> {
-                //flatten toa list of ids to load
-                final Observable<List<Id>> candidateIds =
-                    Observable.from( candidateResults ).map( candidate -> candidate.getValue().getCandidateResult().getId() )
-                              .toList();
+        final Observable<FilterResult<Id>> searchIdSetObservable =
+            filterResultObservable.buffer( pipelineContext.getLimit() ).flatMap( candidateResults -> {
+                    //flatten toa list of ids to load
+                    final Observable<List<Id>> candidateIds = Observable.from( candidateResults ).map(
+                        candidate -> candidate.getValue().getCandidateResult().getId() ).toList();
 
-                //load the ids
-                final Observable<VersionSet> versionSetObservable =
-                    candidateIds.flatMap( ids -> entityCollectionManager.getLatestVersion( ids ) );
+                    //load the ids
+                    final Observable<VersionSet> versionSetObservable =
+                        candidateIds.flatMap( ids -> entityCollectionManager.getLatestVersion( ids ) );
 
-                //now we have a collection, validate our canidate set is correct.
+                    //now we have a collection, validate our canidate set is correct.
 
-                return versionSetObservable.map(
-                    entitySet -> new EntityCollector( applicationIndex.createBatch(), entitySet, candidateResults ) )
-                                           .doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
+                    return versionSetObservable.map(
+                        entitySet -> new EntityCollector( applicationIndex.createBatch(), entitySet,
+                            candidateResults ) ).doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
                         entityCollector -> Observable.from( entityCollector.collectResults() ) );
-        } );
+                } );
 
         return searchIdSetObservable;
     }
-
-
-
 
 
     /**
@@ -155,7 +147,6 @@ public class CandidateIdFilter extends AbstractFilter<Candidate, Id>
 
         /**
          * Validate each candidate results vs the data loaded from cass
-         * @param filterCandidate
          */
         private void validate( final FilterResult<Candidate> filterCandidate ) {
 
@@ -191,11 +182,9 @@ public class CandidateIdFilter extends AbstractFilter<Candidate, Id>
 
             //they're the same add it
 
-            final FilterResult<Id> result = new FilterResult<>( entityId, filterCandidate.getPath()  );
+            final FilterResult<Id> result = new FilterResult<>( entityId, filterCandidate.getPath() );
 
             results.add( result );
         }
     }
-
-
 }

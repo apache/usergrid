@@ -29,7 +29,7 @@ import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
  * @param <T> the input type
  * @param <R> The output Type
  */
-public abstract class AbstractFilter<T, R> implements Filter<T, R> {
+public abstract class AbstractFilter<T, R> implements PipelineOperation<T, R> {
 
 
     protected PipelineContext pipelineContext;

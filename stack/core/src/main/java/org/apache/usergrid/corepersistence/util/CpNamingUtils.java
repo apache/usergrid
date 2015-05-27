@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.util;
 import java.util.UUID;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
@@ -270,4 +271,8 @@ public class CpNamingUtils {
     }
 
 
+    public static boolean isApplication(Id id) {
+        Preconditions.checkNotNull(id);
+        return id.getType().equals("application");
+    }
 }

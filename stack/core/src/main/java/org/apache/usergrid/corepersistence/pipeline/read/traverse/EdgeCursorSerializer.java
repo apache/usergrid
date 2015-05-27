@@ -17,23 +17,26 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline;
+package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
-import org.apache.usergrid.corepersistence.pipeline.read.ReadPipelineBuilder;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 
 
 /**
- * Factory for creating pipeline builders
+ * Edge cursor serializer
  */
-public interface PipelineBuilderFactory {
+public class EdgeCursorSerializer extends AbstractCursorSerializer<Edge> {
 
 
-    /**
-     * Create a read pipeline builder
-     * @param applicationScope
-     * @return
-     */
-    ReadPipelineBuilder createReadPipelineBuilder( final ApplicationScope applicationScope );
+    public static final EdgeCursorSerializer INSTANCE = new EdgeCursorSerializer();
+
+    @Override
+    protected Class<SimpleEdge> getType() {
+        return SimpleEdge.class;
+    }
+
+
 }

@@ -17,34 +17,37 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline.read.graph;
+package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeTypeFromConnectionType;
+
 
 /**
- * Read an edge in the graph to verify it's existence by id
+ * Command for reading graph edges on a connection
  */
-public class ReadGraphConnectionByIdFilter extends AbstractReadGraphEdgeByIdFilter{
+public class ReadGraphConnectionFilter extends AbstractReadGraphFilter {
 
     private final String connectionName;
 
+
+    /**
+     * Create a new instance of our command
+     */
     @Inject
-    public ReadGraphConnectionByIdFilter( final GraphManagerFactory graphManagerFactory,
-                                          @Assisted final String connectionName, @Assisted final Id targetId ) {
-        super( graphManagerFactory, targetId );
+    public ReadGraphConnectionFilter( final GraphManagerFactory graphManagerFactory, @Assisted final String connectionName ) {
+        super( graphManagerFactory );
         this.connectionName = connectionName;
     }
 
 
     @Override
-    protected String getEdgeName() {
-        return CpNamingUtils.getEdgeTypeFromConnectionType( connectionName );
+    protected String getEdgeTypeName() {
+        return getEdgeTypeFromConnectionType( connectionName );
     }
 }
