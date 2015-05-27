@@ -183,23 +183,6 @@
     </developer>
   </developers>
 
-
-  <distributionManagement>
-    <!-- Versioned (non-snapshot) releases are published to this repository -->
-    <repository>
-      <id>usergrid.releases</id>
-      <name>Usergrid Releases</name>
-      <url>${release.repository.url}</url>
-    </repository>
-
-    <!-- Snapshots (not-releases) are published to this repository -->
-    <snapshotRepository>
-      <id>usergrid.snapshots</id>
-      <name>Usergrid Snapshots</name>
-      <url>${snapshot.repository.url}</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <modules>
     <module>build-tools</module>
     <module>test-utils</module>
@@ -287,7 +270,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.2</version>
+        <version>4.4.1</version>
         <exclusions>
           <exclusion>
             <groupId>commons-codec</groupId>
@@ -295,6 +278,13 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk-s3</artifactId>
+        <version>1.9.31</version>
+      </dependency>
+
 
       <dependency>
         <groupId>org.apache.activemq</groupId>

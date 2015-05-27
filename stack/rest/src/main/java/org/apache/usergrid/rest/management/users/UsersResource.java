@@ -19,36 +19,33 @@ package org.apache.usergrid.rest.management.users;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
+
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
-import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )
@@ -72,7 +69,7 @@ public class UsersResource extends AbstractContextResource {
     @Path(RootResource.USER_ID_PATH)
     public UserResource getUserById( @Context UriInfo ui, @PathParam( "userId" ) String userIdStr ) throws Exception {
 
-        return getUserResource(management.getAdminUserByUuid(UUID.fromString(userIdStr)), "user id", userIdStr);
+        return getUserResource(management.getAdminUserByUuid( UUID.fromString( userIdStr ) ), "user id", userIdStr);
     }
 
 
@@ -95,14 +92,14 @@ public class UsersResource extends AbstractContextResource {
         if (user == null) {
             throw new ManagementException("Could not find organization for " + type + " : " + value);
         }
-        return getSubResource(UserResource.class).init(user);
+        return getSubResource(UserResource.class).init( user );
     }
 
 
     @Path(RootResource.EMAIL_PATH)
     public UserResource getUserByEmail( @Context UriInfo ui, @PathParam( "email" ) String email ) throws Exception {
 
-        return getUserResource(management.getAdminUserByEmail(email), "email", email);
+        return getUserResource(management.getAdminUserByEmail( email ), "email", email);
     }
 
 
@@ -113,6 +110,14 @@ public class UsersResource extends AbstractContextResource {
                                        @FormParam( "password" ) String password,
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        final boolean externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
+        if ( externalTokensEnabled ) {
+            throw new IllegalArgumentException( "Admin Users must signup via " +
+                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        }
 
         logger.info( "Create user: " + username );
 

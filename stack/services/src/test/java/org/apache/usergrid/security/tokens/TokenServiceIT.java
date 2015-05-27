@@ -441,4 +441,46 @@ public class TokenServiceIT {
 
         assertTrue( invalidTokenException );
     }
+
+    @Test
+    public void testImportToken() throws Exception {
+
+        // create admin user token and make sure it is working
+
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), UUIDUtils.newTimeUUID() );
+
+        String tokenStr = setup.getTokenSvc().createToken(
+                TokenCategory.ACCESS, null, adminPrincipal, null, 0 );
+
+        log.info("token: " + tokenStr);
+
+        // revoke token and check to make sure it is no longer valid
+
+        setup.getTokenSvc().revokeToken( tokenStr );
+
+        boolean invalidTokenException = false;
+        try {
+            setup.getTokenSvc().getTokenInfo( tokenStr );
+        }
+        catch ( InvalidTokenException ite ) {
+            invalidTokenException = true;
+        }
+        assertTrue(invalidTokenException);
+
+        // import same token and make sure it works again
+
+        setup.getTokenSvc().importToken( tokenStr, TokenCategory.ACCESS, null, adminPrincipal, null, 0 );
+
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo( tokenStr );
+
+        long last_access = tokenInfo.getAccessed();
+
+        assertEquals( "access", tokenInfo.getType() );
+        assertEquals( adminUser.getUuid(), tokenInfo.getPrincipal().getUuid() );
+
+        tokenInfo = setup.getTokenSvc().getTokenInfo( tokenStr );
+
+        assertTrue(last_access < tokenInfo.getAccessed());
+    }
 }
