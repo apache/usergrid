@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.CpEntityManager;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -327,7 +328,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         ack(message);
 
-        indexService.deleteEntityIndexes(applicationScope, entityId)
+        indexService.deleteEntityIndexes(applicationScope, entityId, UUIDUtils.maxTimeUUID(Long.MAX_VALUE))
             .doOnNext(ignore -> ack(message)).subscribe();
     }
 
