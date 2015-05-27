@@ -54,7 +54,6 @@ import static org.junit.Assert.assertNotNull;
 
 
 @NotThreadSafe
-@Ignore("Not elasticsearch safe either because it needs to refresh indexes after creation and deletion")
 public class CounterIT extends AbstractCoreIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
@@ -71,6 +70,7 @@ public class CounterIT extends AbstractCoreIT {
 
 
 
+    @Ignore("needs to have elasticsearch refreshes implemented")
     @Test
     public void testIncrementAndDecrement() throws Exception {
 
