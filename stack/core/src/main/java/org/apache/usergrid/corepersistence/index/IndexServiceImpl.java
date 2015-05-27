@@ -187,7 +187,7 @@ public class IndexServiceImpl implements IndexService {
 
 
                 batch = deindexBatchIteratorResolver( fromSource, targetEdgesToBeDeindexed, batch );
-                
+
                 final IndexEdge fromTarget = generateScopeFromTarget( edge );
                 final Id sourceId = edge.getSourceNode();
 
@@ -211,6 +211,11 @@ public class IndexServiceImpl implements IndexService {
         final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
 
         CandidateResults crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion );
+
+        //If we get no search results, its possible that something was already deleted or
+        //that it wasn't indexed yet. In either case we can't delete anything and return an empty observable..
+        if(crs.isEmpty())
+            return Observable.empty();
 
         //not actually sure about the timestamp but ah well. works.
         SearchEdge searchEdge = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),

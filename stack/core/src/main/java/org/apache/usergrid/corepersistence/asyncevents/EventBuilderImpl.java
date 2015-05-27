@@ -151,6 +151,7 @@ public class EventBuilderImpl implements EventBuilder {
             indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
 
 
+        //TODO: not sure what we need the list of versions here when we search for the mark above
         //observable of entries as the batches are deleted
         final Observable<List<MvccLogEntry>> entries =
             ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
