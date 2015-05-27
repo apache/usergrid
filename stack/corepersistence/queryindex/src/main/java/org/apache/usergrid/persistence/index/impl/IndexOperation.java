@@ -30,7 +30,6 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.idString;
 
 
 /**

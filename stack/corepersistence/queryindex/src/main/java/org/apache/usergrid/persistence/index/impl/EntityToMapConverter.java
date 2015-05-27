@@ -37,8 +37,11 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_FI
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_TYPE_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_VERSION_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.applicationId;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.entityId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.getType;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.idString;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.nodeId;
+
 
 /**
  * Convert a CP entity to an elasticsearch document
@@ -64,16 +67,16 @@ public class EntityToMapConverter {
          * Add our static fields for easier admin/debugging/reporting
          ****/
 
-        outputEntity.put( ENTITY_ID_FIELDNAME, idString(entityId) );
+        outputEntity.put( ENTITY_ID_FIELDNAME, entityId( entityId ) );
 
         outputEntity.put( ENTITY_VERSION_FIELDNAME, entity.getVersion() );
 
         outputEntity.put( ENTITY_TYPE_FIELDNAME, getType( applicationScope, entityId ) );
 
 
-        outputEntity.put( APPLICATION_ID_FIELDNAME, idString( applicationScope.getApplication() ) );
+        outputEntity.put( APPLICATION_ID_FIELDNAME, applicationId( applicationScope.getApplication() ) );
 
-        outputEntity.put( EDGE_NODE_ID_FIELDNAME, idString( indexEdge.getNodeId() ) );
+        outputEntity.put( EDGE_NODE_ID_FIELDNAME, nodeId( indexEdge.getNodeId() ) );
 
         outputEntity.put( EDGE_NODE_TYPE_FIELDNAME, indexEdge.getNodeType() );
 
