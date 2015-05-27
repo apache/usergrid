@@ -1270,11 +1270,12 @@
             <artifactId>aopalliance</artifactId>
           </exclusion>
 
+            <!-- if this is uncommented out sends our service tier into bootloop -->
             <!-- blows up our version of guice-->
-            <exclusion>
-                <groupId>com.google.inject.extensions</groupId>
-                <artifactId>guice-assistedinject</artifactId>
-            </exclusion>
+            <!--<exclusion>-->
+                <!--<groupId>com.google.inject.extensions</groupId>-->
+                <!--<artifactId>guice-assistedinject</artifactId>-->
+            <!--</exclusion>-->
         </exclusions>
       </dependency>
 
