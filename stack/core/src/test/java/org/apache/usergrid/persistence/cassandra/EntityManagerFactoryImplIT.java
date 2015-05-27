@@ -25,6 +25,10 @@ import java.util.UUID;
 
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.*;
@@ -107,6 +111,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @Test
     public void testDeleteApplication() throws Exception {
+        ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
 
         int maxRetries = 10;
 
@@ -177,13 +182,22 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         // restore the app
         emf.restoreApplication(deletedAppId);
-        fail( "Implement index rebuild" );
-//        emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
-//            @Override
-//            public void onProgress(EntityRef entity) {
-//                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid());
-//            }
-//        });
+        final ReIndexRequestBuilder builder =
+            reIndexService.getBuilder().withApplicationId( deletedAppId );
+
+        ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
+        int count = 0;
+        do{
+            status = reIndexService.getStatus(status.getJobId());
+            count++;
+            if(count>0){
+                if(count>10){
+                    break;
+                }
+                Thread.sleep(1000);
+            }
+        }while (status.getStatus()!= ReIndexService.Status.COMPLETE);
+
         this.app.refreshIndex();
 
         // test to see that app now works and is happy
@@ -191,6 +205,8 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         // it should not be found in the deleted apps collection
         found = findApps.call( deletedAppId, emf.getDeletedApplications());
         assertFalse("Restored app found in deleted apps collection", found);
+        this.app.refreshIndex();
+
         Map<String,UUID> apps = setup.getEmf().getApplications();
         found = findApps.call(deletedAppId, apps);
         assertTrue("Restored app not found in apps collection", found);

@@ -23,8 +23,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -123,6 +125,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
+    private final ReIndexService reIndexService;
     private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
     private final AsyncEventService indexService;
@@ -135,6 +138,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
+        this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
         this.entityIndex = injector.getInstance(EntityIndex.class);
         this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
@@ -317,19 +321,28 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             .lastOrDefault(null);
     }
 
+    //TODO: return status for restore
     @Override
     public Entity restoreApplication(UUID applicationId) throws Exception {
 
         // get the deleted_application_info for the deleted app
-
-        final EntityManager managementEm = getEntityManager(getManagementAppId());
-
-        migrateAppInfo(applicationId,CpNamingUtils.DELETED_APPLICATION_INFO,CpNamingUtils.APPLICATION_INFO)
+        return (Entity) migrateAppInfo(applicationId, CpNamingUtils.DELETED_APPLICATION_INFO, CpNamingUtils.APPLICATION_INFO)
+            .map(o -> {
+                final ReIndexRequestBuilder builder =
+                    reIndexService.getBuilder().withApplicationId(applicationId);
+                return reIndexService.rebuildIndex(builder);
+            })
+            .map(status -> {
+                final EntityManager managementEm = getEntityManager(getManagementAppId());
+                try {
+                    return managementEm.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationId));
+                } catch (Exception e) {
+                    logger.error("Failed to get entity", e);
+                    throw new RuntimeException(e);
+                }
+            })
             .toBlocking().lastOrDefault(null);
 
-        throw new UnsupportedOperationException( "Implement index rebuild" );
-
-//        return managementEm.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO,applicationId));
     }
 
     @Override
