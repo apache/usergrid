@@ -382,10 +382,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         final ApplicationEntityIndex aei = entityIndexFactory.createApplicationEntityIndex(applicationScope);
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
-        final Observable deleteNodeGraph = managementGraphManager.markNode( applicationId, Long.MAX_VALUE );
+        Edge deleteEdge = CpNamingUtils.createCollectionEdge( CpNamingUtils.getManagementApplicationId(),collectionFromName,applicationId);
+        Edge createEdge = CpNamingUtils.createCollectionEdge( CpNamingUtils.getManagementApplicationId(),collectionToName,applicationId);
+
+        final Observable deleteNodeGraph = managementGraphManager.deleteEdge(deleteEdge);
+        final Observable createNodeGraph = managementGraphManager.writeEdge(createEdge);
+
         final Observable deleteAppFromIndex = aei.deleteApplication();
 
-        return Observable.concat(copyConnections, deleteNodeGraph, deleteAppFromIndex)
+        return Observable.concat(copyConnections, createNodeGraph, deleteNodeGraph, deleteAppFromIndex)
             .doOnCompleted(() -> {
                 try {
                     if (oldAppEntity != null) {
