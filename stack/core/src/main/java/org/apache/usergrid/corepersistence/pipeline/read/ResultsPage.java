@@ -29,24 +29,26 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 /**
  * An encapsulation of entities as a group of responses.  Ordered by the requesting filters.  Each set should be
  * considered a "page" of results.  A hold over from 1.0.  We shouldn't need this when we fully move away from the EM/RM
+ *
+ * @param T the type of results page
  */
-public class ResultsPage {
+public class ResultsPage<T> {
 
-    private final List<Entity> entityList;
+    private final List<T> entityList;
 
     private final int limit;
 
     private final ResponseCursor responseCursor;
 
 
-    public ResultsPage( final List<Entity> entityList, final ResponseCursor responseCursor, final int limit ) {
+    public ResultsPage( final List<T> entityList, final ResponseCursor responseCursor, final int limit ) {
         this.entityList = entityList;
         this.responseCursor = responseCursor;
         this.limit = limit;
     }
 
 
-    public List<Entity> getEntityList() {
+    public List<T> getEntityList() {
         return entityList;
     }
 

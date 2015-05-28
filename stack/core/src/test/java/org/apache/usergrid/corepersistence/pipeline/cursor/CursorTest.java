@@ -25,8 +25,8 @@ package org.apache.usergrid.corepersistence.pipeline.cursor;
 import org.junit.Test;
 
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
-import org.apache.usergrid.corepersistence.pipeline.read.elasticsearch.ElasticsearchCursorSerializer;
-import org.apache.usergrid.corepersistence.pipeline.read.graph.EdgeCursorSerializer;
+import org.apache.usergrid.corepersistence.pipeline.read.search.ElasticsearchCursorSerializer;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.EdgeCursorSerializer;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 

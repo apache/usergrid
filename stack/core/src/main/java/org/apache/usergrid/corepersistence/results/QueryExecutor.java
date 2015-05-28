@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.Results;
  *
  * QueryExecutor.next() should always return a non-null Results object
  */
+@Deprecated//Required for 1.0 compatibility
 public interface QueryExecutor extends Iterable<Results>, Iterator<Results> {
 
 

@@ -17,19 +17,26 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import org.apache.usergrid.persistence.graph.*;
-import org.apache.usergrid.utils.InflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
-import org.apache.usergrid.corepersistence.pipeline.read.ReadPipelineBuilder;
+import org.apache.usergrid.corepersistence.pipeline.builder.EntityBuilder;
+import org.apache.usergrid.corepersistence.pipeline.builder.IdBuilder;
+import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
-import org.apache.usergrid.corepersistence.results.ObservableQueryExecutor;
+import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
+import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
@@ -46,10 +53,13 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
@@ -62,9 +72,9 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.MapUtils;
 
-import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -98,7 +108,6 @@ public class CpRelationManager implements RelationManager {
     private final EntityManagerFig entityManagerFig;
 
     private ManagerCache managerCache;
-    private final PipelineBuilderFactory pipelineBuilderFactory;
 
     private EntityManager em;
 
@@ -112,13 +121,15 @@ public class CpRelationManager implements RelationManager {
 
     private final AsyncEventService indexService;
 
-    private MetricsFactory metricsFactory;
-    private Timer updateCollectionTimer;
+
+    private final PipelineBuilderFactory pipelineBuilderFactory;
 
 
-    public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache,
+
+    public CpRelationManager(  final ManagerCache managerCache,
                               final PipelineBuilderFactory pipelineBuilderFactory, final AsyncEventService indexService,
-                              final EntityManager em, final EntityManagerFig entityManagerFig, final UUID applicationId, final EntityRef headEntity) {
+                              final EntityManager em, final EntityManagerFig entityManagerFig, final UUID applicationId,
+                              final EntityRef headEntity ) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -135,11 +146,8 @@ public class CpRelationManager implements RelationManager {
         this.headEntity = headEntity;
         this.managerCache = managerCache;
         this.applicationScope = CpNamingUtils.getApplicationScope( applicationId );
-        this.pipelineBuilderFactory = pipelineBuilderFactory;
 
-        this.metricsFactory = metricsFactory;
-        this.updateCollectionTimer =
-            metricsFactory.getTimer( CpRelationManager.class, "relation.manager.es.update.collection" );
+        this.pipelineBuilderFactory = pipelineBuilderFactory;
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading head entity {}:{} from app {}", new Object[] {
@@ -163,7 +171,7 @@ public class CpRelationManager implements RelationManager {
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
         GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-        String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName(collectionName);
+        String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
         logger.debug( "getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", new Object[] {
             edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
@@ -199,7 +207,7 @@ public class CpRelationManager implements RelationManager {
 
 
     private Map<EntityRef, Set<String>> getContainers() {
-        return getContainers(-1, null, null);
+        return getContainers( -1, null, null );
     }
 
 
@@ -216,14 +224,14 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edges =
             gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeType, null ) )
-              .flatMap(new Func1<String, Observable<Edge>>() {
+              .flatMap( new Func1<String, Observable<Edge>>() {
                   @Override
-                  public Observable<Edge> call(final String edgeType) {
+                  public Observable<Edge> call( final String edgeType ) {
                       return gm.loadEdgesToTarget(
-                          new SimpleSearchByEdgeType(cpHeadEntity.getId(), edgeType, Long.MAX_VALUE,
-                              SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
+                          new SimpleSearchByEdgeType( cpHeadEntity.getId(), edgeType, Long.MAX_VALUE,
+                              SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
                   }
-              });
+              } );
 
         //if our limit is set, take them.  Note this logic is still borked, we can't possibly fit everything in memmory
         if ( limit > -1 ) {
@@ -251,7 +259,7 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType(connectionType);
+        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
 
         logger.debug( "isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
             edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
@@ -272,13 +280,13 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(collectionName);
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
         logger.debug( "isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
             edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
         } );
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<Edge> edges = gm.loadEdgeVersions(
             new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
                 Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
@@ -378,26 +386,37 @@ public class CpRelationManager implements RelationManager {
 
         // create graph edge connection from head entity to member entity
         final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
+        final String linkedCollection = collection.getLinkedCollection();
 
-        GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlocking().last();
-        //reverse
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
 
+        gm.writeEdge( edge )
+            .doOnNext( writtenEdge -> {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Wrote edge {}", writtenEdge);
+                }
+            })
+            .filter(writtenEdge -> linkedCollection != null )
+            .flatMap(writtenEdge -> {
+                final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
+                final Edge reverseEdge = createCollectionEdge( memberEntity.getId(), pluralType, cpHeadEntity.getId() );
 
-        //perform indexing
+                //reverse
+                return gm.writeEdge(reverseEdge).doOnNext(reverseEdgeWritten -> {
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+                });
+            })
+            .doOnCompleted(() -> {
+                indexService.queueNewEdge(applicationScope, memberEntity, edge);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Added entity {}:{} to collection {}", new Object[]{
+                        itemRef.getUuid().toString(), itemRef.getType(), collectionName
+                    });
+                }
+            })
+            .toBlocking().lastOrDefault(null);
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Wrote edge {}", edge );
-        }
-
-        indexService.queueNewEdge(applicationScope, memberEntity, edge);
-        //reverse
-        if(!cpHeadEntity.getId().getType().equals("application")) {
-            String pluralType =  InflectionUtils.pluralize(cpHeadEntity.getId().getType());
-            final Edge reverseEdge = createCollectionEdge(memberEntity.getId(), pluralType, cpHeadEntity.getId());
-            gm.writeEdge(reverseEdge).toBlocking().last();
-            indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
-        }
+        //check if we need to reverse our edges
 
 
         if ( logger.isDebugEnabled() ) {
@@ -501,7 +520,8 @@ public class CpRelationManager implements RelationManager {
 
 
         //run our delete
-        final Edge collectionToItemEdge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
+        final Edge collectionToItemEdge =
+            createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
         gm.markEdge( collectionToItemEdge ).toBlocking().last();
 
 
@@ -558,7 +578,7 @@ public class CpRelationManager implements RelationManager {
                 results = em.getCollection( headEntity, srcRelationName, null, 5000, Level.REFS, false );
             }
             else {
-                results = em.getTargetEntities(headEntity, srcRelationName, null, Level.REFS);
+                results = em.getTargetEntities( headEntity, srcRelationName, null, Level.REFS );
             }
 
             if ( ( results != null ) && ( results.size() > 0 ) ) {
@@ -600,44 +620,39 @@ public class CpRelationManager implements RelationManager {
         query = adjustQuery( query );
 
 
+        final IdBuilder pipelineBuilder =
+            pipelineBuilderFactory.create( applicationScope ).withCursor( query.getCursor() )
+                                  .withLimit( query.getLimit() ).fromId(cpHeadEntity.getId());
 
-        final ReadPipelineBuilder readPipelineBuilder =
-            pipelineBuilderFactory.createReadPipelineBuilder(applicationScope);
 
-        //set our fields applicable to both operations
-        readPipelineBuilder.withCursor(query.getCursor());
-        readPipelineBuilder.withLimit( Optional.of(query.getLimit()));
-
-        //TODO, this should be removed when the CP relation manager is removed
-        readPipelineBuilder.setStartId( cpHeadEntity.getId() );
+        final EntityBuilder results;
 
         if ( query.isGraphSearch() ) {
-            readPipelineBuilder.getCollection( collectionName );
+            results = pipelineBuilder.traverseCollection( collectionName ).loadEntities();
         }
         else {
             final String entityType = collection.getType();
-
-            readPipelineBuilder.getCollectionWithQuery( collectionName, entityType, query.getQl().get() );
+            results = pipelineBuilder.searchCollection( collectionName, query.getQl().get() ,  entityType).loadEntities();
         }
 
 
-        final Observable<ResultsPage> resultsObservable = readPipelineBuilder.execute();
-
-        return new ObservableQueryExecutor( resultsObservable ).next();
+        return new EntityQueryExecutor( results.build() ).next();
     }
 
+
     @Override
-    public Results searchCollectionConsistent( String collectionName, Query query, int expectedResults ) throws Exception {
+    public Results searchCollectionConsistent( String collectionName, Query query, int expectedResults )
+        throws Exception {
         Results results;
         long maxLength = entityManagerFig.pollForRecordsTimeout();
         long sleepTime = entityManagerFig.sleep();
         boolean found;
         long current = System.currentTimeMillis(), length = 0;
         do {
-            results = searchCollection(collectionName, query);
+            results = searchCollection( collectionName, query );
             length = System.currentTimeMillis() - current;
             found = expectedResults == results.size();
-            if(found){
+            if ( found ) {
                 break;
             }
             Thread.sleep(sleepTime);
@@ -818,7 +833,7 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results getTargetEntities(String connectionType, String connectedEntityType, Level level)
+    public Results getTargetEntities( String connectionType, String connectedEntityType, Level level )
         throws Exception {
 
         //until this is refactored properly, we will delegate to a search by query
@@ -831,20 +846,19 @@ public class CpRelationManager implements RelationManager {
         query.setEntityType( connectedEntityType );
         query.setResultsLevel( level );
 
-        return searchTargetEntities(query);
+        return searchTargetEntities( query );
     }
 
 
     @Override
-    public Results getSourceEntities(String connType, String fromEntityType, Level resultsLevel)
-        throws Exception {
+    public Results getSourceEntities( String connType, String fromEntityType, Level resultsLevel ) throws Exception {
 
-        return getSourceEntities(connType, fromEntityType, resultsLevel, -1);
+        return getSourceEntities( connType, fromEntityType, resultsLevel, -1 );
     }
 
 
     @Override
-    public Results getSourceEntities(String connType, String fromEntityType, Level level, int count)
+    public Results getSourceEntities( String connType, String fromEntityType, Level level, int count )
         throws Exception {
 
         // looking for edges to the head entity
@@ -877,7 +891,7 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results searchTargetEntities(Query query) throws Exception {
+    public Results searchTargetEntities( Query query ) throws Exception {
 
         Preconditions.checkNotNull( query, "query cannot be null" );
 
@@ -890,43 +904,64 @@ public class CpRelationManager implements RelationManager {
 
         query = adjustQuery( query );
 
-        final String entityType = query.getEntityType();
-        //set startid -- graph | es query filter -- load entities filter (verifies exists) --> results page collector -> 1.0 results
+        final Optional<String> entityType = Optional.fromNullable(query.getEntityType()) ;
+        //set startid -- graph | es query filter -- load entities filter (verifies exists) --> results page collector
+        // -> 1.0 results
 
         //  startid -- graph edge load -- entity load (verify) from ids -> results page collector
         // startid -- eq query candiddate -- entity load (verify) from canddiates -> results page collector
 
         //startid -- graph edge load -- entity id verify --> filter to connection ref --> connection ref collector
-        //startid -- eq query candiddate -- candidate id verify --> filter to connection ref --> connection ref collector
+        //startid -- eq query candiddate -- candidate id verify --> filter to connection ref --> connection ref
+        // collector
 
-        final ReadPipelineBuilder readPipelineBuilder =
-            pipelineBuilderFactory.createReadPipelineBuilder(applicationScope);
-        //readPipelineBuilder.startId().load().collect()
 
-        //set our fields applicable to both operations
-        readPipelineBuilder
-            .withCursor(query.getCursor())
-            .withLimit(Optional.of(query.getLimit()))
-                //TODO, this should be removed when the CP relation manager is removed
-            .setStartId( cpHeadEntity.getId() );
+        final IdBuilder
+            pipelineBuilder = pipelineBuilderFactory.create( applicationScope ).withCursor( query.getCursor() ).withLimit( query.getLimit() ).fromId(
+            cpHeadEntity.getId() );
+
+
+        if ( query.getResultsLevel() == Level.REFS || query.getResultsLevel() == Level.IDS ) {
+
+            final IdBuilder traversedIds;
+
+            if ( query.isGraphSearch() ) {
+                traversedIds = pipelineBuilder.traverseConnection( connection, entityType );
+            }
+            else {
+                traversedIds =
+                    pipelineBuilder.searchConnection( connection, query.getQl().get(), entityType ).loadIds();
+            }
+
+            //create connection refs
+
+            final Observable<ResultsPage<ConnectionRef>> results =
+                traversedIds.loadConnectionRefs( cpHeadEntity.getId(), connection ).build();
+
+            return new ConnectionRefQueryExecutor( results ).next();
+        }
+
+
+
+
+        //we want to load all entities
+
+        final Observable<ResultsPage<org.apache.usergrid.persistence.model.entity.Entity>> results;
+
 
         if ( query.isGraphSearch() ) {
-           // if(query.getResultsLevel() == Level.ALL_PROPERTIES)
-           if(entityType ==null )
-               readPipelineBuilder.getConnection( connection );
-            else
-               readPipelineBuilder.getConnection(connection, entityType);
-            //else
+            results = pipelineBuilder.traverseConnection( connection, entityType ).loadEntities().build();
         }
+
         else {
-            readPipelineBuilder.getConnectionWithQuery( connection, Optional.fromNullable( entityType ),
-                query.getQl().get() );
+
+            results = pipelineBuilder.searchConnection( connection,  query.getQl().get() , entityType).loadEntities().build();
         }
 
 
-        final Observable<ResultsPage> resultsObservable = readPipelineBuilder.execute();
 
-        return new ObservableQueryExecutor( resultsObservable ).next();
+
+        return new EntityQueryExecutor( results ).next();
     }
 
 

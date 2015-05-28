@@ -33,7 +33,7 @@ import rx.Observable;
  * @param <T> The input type of the filter value
  * @param <R> The output type of the filter value
  */
-public interface PipelineOperation<T, R> extends Observable.Transformer<FilterResult<T>, R> {
+public interface PipelineOperation<T, R> extends Observable.Transformer<T, R> {
 
     void setContext(final PipelineContext pipelineContext);
 }
