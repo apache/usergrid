@@ -338,7 +338,11 @@ public class Query {
      * @return
      */
     public boolean hasSelectSubjects() {
-        return this.selectFields != null || this.selectFields.size() > 0;
+        if ( this.selectFields != null )
+            if ( this.selectFields.size()>0 )
+                return true;
+
+        return false;
     }
 
 
