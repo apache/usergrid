@@ -171,52 +171,55 @@ public abstract class QueueListener  {
 
 
         while ( true ) {
-            try {
+
 
                 Timer.Context timerContext = timer.time();
                 //Get the messages out of the queue.
                 //TODO: a model class to get generic queueMessages out of the queueManager. Ask Shawn what should go here.
-                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ImportQueueMessage.class);
-                LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
+                queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ImportQueueMessage.class)
+                    .buffer(getBatchSize())
+                    .doOnNext(messages -> {
+                        try {
+                            LOG.info("retrieved batch of {} messages from queue {} ", messages.size(), queueName);
 
-                if (messages.size() > 0) {
+                            if (messages.size() > 0) {
 
-                    long now = System.currentTimeMillis();
-                    //TODO: make sure this has a way to determine which QueueListener needs to be used
-                    // ideally this is done by checking which type the messages have then
-                    // asking for a onMessage call.
-                    onMessage( messages );
+                                long now = System.currentTimeMillis();
+                                //TODO: make sure this has a way to determine which QueueListener needs to be used
+                                // ideally this is done by checking which type the messages have then
+                                // asking for a onMessage call.
+                                onMessage(messages);
 
-                    queueManager.commitMessages(messages);
+                                queueManager.commitMessages(messages);
 
-                    meter.mark(messages.size());
-                    LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
+                                meter.mark(messages.size());
+                                LOG.info("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
 
-                    if(sleepBetweenRuns > 0) {
-                        LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
-                        Thread.sleep(sleepBetweenRuns);
-                    }
+                                if (sleepBetweenRuns > 0) {
+                                    LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    Thread.sleep(sleepBetweenRuns);
+                                }
 
-                }
-                else{
-                    LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
-                    Thread.sleep(sleepWhenNoneFound);
-                }
-                timerContext.stop();
-                //send to the providers
-                consecutiveExceptions.set(0);
-            }catch (Exception ex){
-                LOG.error("failed to dequeue",ex);
-                try {
-                    long sleeptime = sleepWhenNoneFound*consecutiveExceptions.incrementAndGet();
-                    long maxSleep = 15000;
-                    sleeptime = sleeptime > maxSleep ? maxSleep : sleeptime ;
-                    LOG.info("sleeping due to failures {} ms", sleeptime);
-                    Thread.sleep(sleeptime);
-                }catch (InterruptedException ie){
-                    LOG.info("sleep interrupted");
-                }
-            }
+                            } else {
+                                LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
+                                Thread.sleep(sleepWhenNoneFound);
+                            }
+                            timerContext.stop();
+                            //send to the providers
+                            consecutiveExceptions.set(0);
+                        } catch (Exception ex) {
+                            LOG.error("failed to dequeue", ex);
+                            try {
+                                long sleeptime = sleepWhenNoneFound * consecutiveExceptions.incrementAndGet();
+                                long maxSleep = 15000;
+                                sleeptime = sleeptime > maxSleep ? maxSleep : sleeptime;
+                                LOG.info("sleeping due to failures {} ms", sleeptime);
+                                Thread.sleep(sleeptime);
+                            } catch (InterruptedException ie) {
+                                LOG.info("sleep interrupted");
+                            }
+                        }
+                    }).toBlocking().last();
         }
     }
 

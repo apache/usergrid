@@ -20,6 +20,8 @@
 
 package org.apache.usergrid.persistence.queue;
 
+import rx.Observable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +34,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class DefaultQueueManager implements QueueManager {
     public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
     @Override
-    public synchronized List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+    public synchronized Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
         for(int i=0;i<limit;i++){
             if(!queue.isEmpty()){
@@ -41,7 +43,7 @@ public class DefaultQueueManager implements QueueManager {
                 break;
             }
         }
-        return returnQueue;
+        return Observable.from( returnQueue);
     }
 
     @Override

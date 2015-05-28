@@ -74,13 +74,13 @@ public class QueueManagerTest {
     public void send() throws IOException,ClassNotFoundException{
         String value = "bodytest";
         qm.sendMessage(value);
-        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,String.class);
+        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,String.class).toList().toBlocking().last();
         assertTrue(messageList.size() >= 1);
         for(QueueMessage message : messageList){
             assertTrue(message.getBody().equals(value));
             qm.commitMessage(message);
         }
-        messageList = qm.getMessages(1,5000,5000,String.class);
+        messageList = qm.getMessages(1,5000,5000,String.class).toList().toBlocking().last();
         assertTrue(messageList.size() <= 0);
 
     }
@@ -93,14 +93,14 @@ public class QueueManagerTest {
         List<Map<String,String>> bodies = new ArrayList<>();
         bodies.add(values);
         qm.sendMessages(bodies);
-        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,values.getClass());
+        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,values.getClass()).toList().toBlocking().last();
         assertTrue(messageList.size() >= 1);
         for(QueueMessage message : messageList){
             assertTrue(message.getBody().equals(values));
         }
         qm.commitMessages(messageList);
 
-        messageList = qm.getMessages(1,5000,5000,values.getClass());
+        messageList = qm.getMessages(1,5000,5000,values.getClass()).toList().toBlocking().last();
         assertTrue(messageList.size() <= 0);
 
     }
