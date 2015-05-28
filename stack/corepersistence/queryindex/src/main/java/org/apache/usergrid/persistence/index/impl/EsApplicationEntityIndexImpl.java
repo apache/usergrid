@@ -206,7 +206,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         //I can't just search on the entity Id.
 
         FilterBuilder entityEdgeFilter = FilterBuilders.termFilter( IndexingUtils.EDGE_NODE_ID_FIELDNAME,
-            IndexingUtils.idString( edge.getNodeId() ));
+            IndexingUtils.nodeId( edge.getNodeId() ));
 
         srb.setPostFilter(entityEdgeFilter);
 
@@ -276,7 +276,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
 
         FilterBuilder entityIdFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
-            IndexingUtils.idString( entityId ) );
+            IndexingUtils.entityId( entityId ) );
 
         FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte( markedVersion );
 
