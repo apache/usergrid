@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.rest.management.ManagementResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,9 +118,9 @@ public class OrganizationsResource extends AbstractContextResource {
         String name = ( String ) json.remove( "name" );
         String email = ( String ) json.remove( "email" );
         String password = ( String ) json.remove( "password" );
-        Map<String, Object> properties = ( Map<String, Object> ) json.remove( ORGANIZATION_PROPERTIES );
+        Map<String, Object> orgProperties = ( Map<String, Object> ) json.remove( ORGANIZATION_PROPERTIES );
 
-        return newOrganization(ui, organizationName, username, name, email, password, json, properties, callback);
+        return newOrganization( ui, organizationName, username, name, email, password, json, orgProperties, callback );
     }
 
 
@@ -154,7 +155,18 @@ public class OrganizationsResource extends AbstractContextResource {
     /** Create a new organization */
     private JSONWithPadding newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
                                              String email, String password, Map<String, Object> userProperties,
-                                             Map<String, Object> properties, String callback ) throws Exception {
+                                             Map<String, Object> orgProperties, String callback ) throws Exception {
+
+        final boolean externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
+        if ( externalTokensEnabled ) {
+            throw new IllegalArgumentException( "Organization / Admin Users must be created via " +
+                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        }
+
+        Preconditions
+                .checkArgument( StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
         Preconditions.checkArgument(
             StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
@@ -166,7 +178,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
         OrganizationOwnerInfo organizationOwner = management
                 .createOwnerAndOrganization( organizationName, username, name, email, password, false, false,
-                        userProperties, properties );
+                        userProperties, orgProperties );
 
         if ( organizationOwner == null ) {
             logger.info( "organizationOwner is null, returning. organization: {}", organizationName );
