@@ -17,6 +17,8 @@
  */
 package org.apache.usergrid.persistence.queue;
 
+import rx.Observable;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
@@ -34,7 +36,7 @@ public interface QueueManager {
      * @param klass class to cast the return from
      * @return List of Queue Messages
      */
-    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
+    Observable<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
 
     /**
      * Commit the transaction
