@@ -170,6 +170,9 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
             final Observable<IndexOperation> index = Observable.from( batch.getIndexRequests() );
             final Observable<DeIndexOperation> deIndex = Observable.from( batch.getDeIndexRequests() );
+//            if(indexOperationSetSize +  deIndexOperationSetSize > 0){
+//                batch.done();
+//            }
 
             return Observable.merge( index, deIndex );
         } );
@@ -230,7 +233,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
 
         try {
-            responses = bulkRequest.execute().actionGet( indexFig.getWriteTimeout() );
+            responses = bulkRequest.execute().actionGet( );
         }
         catch ( Throwable t ) {
             log.error( "Unable to communicate with elasticsearch" );

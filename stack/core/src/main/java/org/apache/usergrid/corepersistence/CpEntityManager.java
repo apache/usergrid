@@ -17,14 +17,28 @@ package org.apache.usergrid.corepersistence;
 
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.PipelineBuilderFactory;
+import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -65,6 +79,8 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -165,7 +181,9 @@ public class CpEntityManager implements EntityManager {
 
     private final AsyncEventService indexService;
 
-    private PipelineBuilderFactory pipelineBuilderFactory;
+    private final PipelineBuilderFactory pipelineBuilderFactory;
+
+    private final GraphManagerFactory graphManagerFactory;
 
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
@@ -207,7 +225,9 @@ public class CpEntityManager implements EntityManager {
      */
     public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
                             final MetricsFactory metricsFactory, final EntityManagerFig entityManagerFig,
-                            final PipelineBuilderFactory pipelineBuilderFactory , final UUID applicationId ) {
+                            final PipelineBuilderFactory pipelineBuilderFactory ,
+                            final GraphManagerFactory graphManagerFactory,final UUID applicationId ) {
+
         this.entityManagerFig = entityManagerFig;
 
 
@@ -217,7 +237,10 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
         Preconditions.checkNotNull( indexService, "indexService must not be null" );
         Preconditions.checkNotNull( pipelineBuilderFactory, "pipelineBuilderFactory must not be null" );
+        Preconditions.checkNotNull( graphManagerFactory, "graphManagerFactory must not be null" );
         this.pipelineBuilderFactory = pipelineBuilderFactory;
+        this.graphManagerFactory = graphManagerFactory;
+
 
 
         this.managerCache = managerCache;
@@ -407,10 +430,10 @@ public class CpEntityManager implements EntityManager {
         if(entity == null) {
             return null;
         }
-        Class clazz = Schema.getDefaultSchema().getEntityClass(entity.getId().getType());
+        Class clazz = Schema.getDefaultSchema().getEntityClass( entity.getId().getType() );
 
-        Entity oldFormatEntity = EntityFactory.newEntity(entity.getId().getUuid(), entity.getId().getType(), clazz);
-        oldFormatEntity.setProperties(CpEntityMapUtils.toMap(entity));
+        Entity oldFormatEntity = EntityFactory.newEntity( entity.getId().getUuid(), entity.getId().getType(), clazz );
+        oldFormatEntity.setProperties( CpEntityMapUtils.toMap( entity ) );
 
         return oldFormatEntity;
     }
@@ -615,47 +638,72 @@ public class CpEntityManager implements EntityManager {
     }
 
 
+    /**
+     * There are a series of steps that are kicked off by a delete
+     * 1. Mark the entity in the entity collection manager as deleted
+     * 2. Mark entity as deleted in the graph
+     * 3. Kick off async process
+     * 4. Delete all entity documents out of elasticsearch.
+     * 5. Compact Graph so that it deletes the marked values.
+     * 6. Delete entity from cassandra using the map manager.
+     *
+     * @param entityRef an entity reference
+     *
+     * @throws Exception
+     */
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteAsync( entityRef ).toBlocking().lastOrDefault( null );
-        //delete from our UUID index
-        MapManager mm = getMapManagerForTypes();
-        mm.delete( entityRef.getUuid().toString() );
+        //TODO: since we want the user to mark it and we sweep it later. It should be marked by the graph manager here.
+        //Step 1 & 2 Currently to block so we ensure that marking is done immediately
+        //If this returns null then nothing was marked null so the entity doesn't exist
+        markEntity( entityRef ).toBlocking().lastOrDefault( null );
+
+        //TODO: figure out how to return async call to service tier? Do I not need to?
+        //Step 3
+        deleteAsync( entityRef );
 
     }
 
 
-    private Observable deleteAsync( EntityRef entityRef ) throws Exception {
-
+    /**
+     * Marks entity for deletion in entity collection manager and graph.
+     * Convert this method to return a list of observables that we can crunch through on return.
+     * Returns merged obversable that will mark the edges in the ecm and the graph manager.
+     * @param entityRef
+     * @return
+     */
+    private Observable markEntity(EntityRef entityRef){
         if(applicationScope == null || entityRef == null){
             return Observable.empty();
         }
+        GraphManager gm =  graphManagerFactory.createEdgeManager( applicationScope );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( applicationScope );
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
-        //        if ( !UUIDUtils.isTimeBased( entityId.getUuid() ) ) {
-        //            throw new IllegalArgumentException(
-        //                "Entity Id " + entityId.getType() + ":"+ entityId.getUuid() +" uuid not time based");
-        //        }
+        //Step 1 & 2 of delete
+        return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, entityRef.getUuid().timestamp() ) );
 
-        org.apache.usergrid.persistence.model.entity.Entity entity =
-                load(entityId);
+    }
 
-        if ( entity != null ) {
+    /**
+    * 4. Delete all entity documents out of elasticsearch.
+    * 5. Compact Graph so that it deletes the marked values.
+    * 6. Delete entity from cassandra using the map manager.
+     **/
+    private void deleteAsync( EntityRef entityRef ) throws Exception {
 
-            decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
-            // and finally...
+        Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
-            //delete it asynchronously
-            indexService.queueEntityDelete( applicationScope, entityId );
+        //Step 4 && 5
+        indexService.queueEntityDelete( applicationScope, entityId );
 
-            return ecm.mark( entityId );
-        }
-        else {
-            return Observable.empty();
-        }
+        //Step 6
+        //delete from our UUID index
+        MapManager mm = getMapManagerForTypes();
+        mm.delete( entityRef.getUuid().toString() );
+
     }
 
 
@@ -732,7 +780,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
 
         CpRelationManager relationManager =
-            new CpRelationManager( metricsFactory, managerCache, pipelineBuilderFactory, indexService, this, entityManagerFig, applicationId, entityRef );
+            new CpRelationManager( managerCache, pipelineBuilderFactory, indexService, this, entityManagerFig, applicationId, entityRef );
         return relationManager;
     }
 

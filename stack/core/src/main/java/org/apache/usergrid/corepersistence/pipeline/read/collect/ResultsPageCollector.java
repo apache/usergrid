@@ -23,12 +23,12 @@ package org.apache.usergrid.corepersistence.pipeline.read.collect;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.usergrid.corepersistence.pipeline.PipelineContext;
 import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
-import org.apache.usergrid.corepersistence.pipeline.read.Collector;
+import org.apache.usergrid.corepersistence.pipeline.read.AbstractFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
-import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Optional;
 
@@ -37,21 +37,32 @@ import rx.Observable;
 
 /**
  * Takes entities and collects them into results.  This mostly exists for 1.0 compatibility.  Eventually this will
- * become the only collector in our pipline and be used when rendering results, both on GET, PUT and POST.
+ * become the only collector in our pipeline and be used when rendering results, both on GET, PUT and POST.
+ *
+ *
+ *
+ * @param T the type of element to be collected
  */
-public class ResultsPageCollector extends AbstractCollector<Entity, ResultsPage>
-    implements Collector<Entity, ResultsPage> {
+public class ResultsPageCollector<T> extends AbstractFilter<FilterResult<T>, ResultsPage<T>> {
+
+
+    protected PipelineContext pipelineContext;
 
 
     @Override
-    public Observable<ResultsPage> call( final Observable<FilterResult<Entity>> filterResultObservable ) {
+    public void setContext( final PipelineContext pipelineContext ) {
+        this.pipelineContext = pipelineContext;
+    }
+
+
+
+    @Override
+    public Observable<ResultsPage<T>> call( final Observable<FilterResult<T>> filterResultObservable ) {
 
         final int limit = pipelineContext.getLimit();
 
         return filterResultObservable.buffer( limit ).flatMap( buffer -> Observable.from( buffer ).collect(
-            () -> new ResultsPageWithCursorCollector( limit ), ( collector, entity ) -> {
-                collector.add( entity );
-            } ) ).map( resultsPageCollector -> new ResultsPage( resultsPageCollector.results,
+            () -> new ResultsPageWithCursorCollector( limit ), ( collector, element ) -> collector.add( element ) ) ).map( resultsPageCollector -> new ResultsPage( resultsPageCollector.results,
             new ResponseCursor( resultsPageCollector.lastPath ), pipelineContext.getLimit() ) );
     }
 
@@ -59,10 +70,10 @@ public class ResultsPageCollector extends AbstractCollector<Entity, ResultsPage>
     /**
      * A collector that will aggregate our results together
      */
-    private static class ResultsPageWithCursorCollector {
+    private class ResultsPageWithCursorCollector {
 
 
-        private final List<Entity> results;
+        private final List<T> results;
 
         private Optional<EdgePath> lastPath;
 
@@ -72,7 +83,7 @@ public class ResultsPageCollector extends AbstractCollector<Entity, ResultsPage>
         }
 
 
-        public void add( final FilterResult<Entity> result ) {
+        public void add( final FilterResult<T> result ) {
             this.results.add( result.getValue() );
             this.lastPath = result.getPath();
         }
