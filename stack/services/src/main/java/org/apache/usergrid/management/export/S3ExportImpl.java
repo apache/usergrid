@@ -82,10 +82,17 @@ public class S3ExportImpl implements S3Export {
 
         try {
             BlobStore blobStore = context.getBlobStore();
+
+            // need this for JClouds 1.7.x:
+//            BlobBuilder blobBuilder =
+//                blobStore.blobBuilder( filename ).payload( ephemeral ).calculateMD5().contentType( "application/json" );
+
+            // needed for JClouds 1.8.x:
             BlobBuilder blobBuilder = blobStore.blobBuilder( filename )
                 .payload( ephemeral )
                 .contentMD5(Files.hash( ephemeral, Hashing.md5() ))
                 .contentType("application/json");
+
             Blob blob = blobBuilder.build();
 
             final String uploadedFile = blobStore.putBlob(

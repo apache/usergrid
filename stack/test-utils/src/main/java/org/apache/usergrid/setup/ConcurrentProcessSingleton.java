@@ -89,14 +89,18 @@ public class ConcurrentProcessSingleton {
                 // maybe delete existing column families and indexes
                 if ( CLEAN_STORAGE ) {
                     logger.info("Destroying current database");
-                    schemaManager.destroy();
+                    try {
+                        schemaManager.destroy();
+                    } catch ( Exception e ) {
+                        logger.error("Exception on destroying current database, continuing", e);
+                    }
                 }
 
                 // create our schema
                 logger.info("Creating database");
                 schemaManager.create();
 
-                logger.info("Populating database");
+                logger.info( "Populating database" );
                 schemaManager.populateBaseData();
 
                 // signal to other processes we've migrated, and they can proceed

@@ -81,7 +81,7 @@ public class JsonUtils {
     /** Converts object to JSON string, throws runtime exception JsonWriteException on failure. */
     public static String mapToFormattedJsonString( Object obj ) {
         try {
-            return mapper.writeValueAsString( obj );
+            return indentObjectMapper.writeValueAsString( obj );
         }
         catch ( Throwable t ) {
             LOG.debug( "Error generating JSON", t );

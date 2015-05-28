@@ -87,13 +87,20 @@ public class S3Upload {
 
             String filename = fileNameIterator.next();
             File uploadFile = new File( filename );
-            
+
             try {
                 BlobStore blobStore = context.getBlobStore();
+
+                // need this for JClouds 1.7.x:
+//                BlobBuilder.PayloadBlobBuilder blobBuilder =  blobStore.blobBuilder( filename )
+//                    .payload( uploadFile ).calculateMD5().contentType( "application/json" );
+
+                // needed for JClouds 1.8.x:
                 BlobBuilder blobBuilder = blobStore.blobBuilder( filename )
                     .payload( uploadFile )
                     .contentMD5(Files.hash( uploadFile, Hashing.md5()))
                     .contentType( "application/json" );
+
                 Blob blob = blobBuilder.build();
 
                 final String uploadedFile = blobStore.putBlob( bucketName, blob, PutOptions.Builder.multipart() );
