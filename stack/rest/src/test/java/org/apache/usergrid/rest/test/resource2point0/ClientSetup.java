@@ -34,6 +34,8 @@ import org.junit.runners.model.Statement;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 
@@ -42,6 +44,8 @@ import javax.ws.rs.core.MediaType;
  * This class is used to setup the client rule that will setup the RestClient and create default applications.
  */
 public class ClientSetup implements TestRule {
+
+    private Logger logger = LoggerFactory.getLogger( ClientSetup.class );
 
     RestClient restClient;
 
@@ -95,10 +99,17 @@ public class ClientSetup implements TestRule {
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;
 
-        restClient.superuserSetup();
-        superuserToken = restClient.management().token().post(Token.class, new Token( superuserName, superuserPassword ) );
-        restClient.management().token().setToken( superuserToken );
-
+        try {
+            restClient.superuserSetup();
+            superuserToken = restClient.management().token().post(Token.class, new Token( superuserName, superuserPassword ) );
+            restClient.management().token().setToken( superuserToken );
+        } catch ( Exception e ) {
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Error creating superuser, may already exist", e );
+            } else {
+                logger.warn( "Error creating superuser, may already exist");
+            }
+        }
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         password = username;
