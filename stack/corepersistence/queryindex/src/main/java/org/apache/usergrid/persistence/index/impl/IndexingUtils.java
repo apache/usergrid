@@ -42,7 +42,7 @@ public class IndexingUtils {
     public static final String UUID_REX =
         "([A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})";
 
-    public static final String TYPE_REX = "(\\w+)";
+    public static final String TYPE_REX = "(.+)";
 
 
     private static final String APPID_NAME = "appId";

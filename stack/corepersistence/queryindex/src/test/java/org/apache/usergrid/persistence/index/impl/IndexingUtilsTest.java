@@ -91,6 +91,38 @@ public class IndexingUtilsTest {
 
 
     @Test
+    public void testDocumentIdPipes() {
+
+        final ApplicationScopeImpl applicationScope = new ApplicationScopeImpl( new SimpleId( "application" ) );
+
+        final Id id = new SimpleId( "id" );
+        final UUID version = UUIDGenerator.newTimeUUID();
+
+        final SearchEdgeImpl searchEdge =
+            new SearchEdgeImpl( new SimpleId( "source" ), "zzzcollzzz|users", SearchEdge.NodeType.TARGET );
+
+        final String output = IndexingUtils.createIndexDocId( applicationScope, id, version, searchEdge );
+
+
+        final String expected =
+            "appId(" + applicationScope.getApplication().getUuid() + ",application).entityId(" + id.getUuid() + "," + id
+                .getType() + ").version(" + version + ").nodeId(" + searchEdge.getNodeId().getUuid() + "," + searchEdge
+                .getNodeId().getType() + ").edgeName(zzzcollzzz|users).nodeType(TARGET)";
+
+
+        assertEquals( output, expected );
+
+
+        //now parse it
+
+        final CandidateResult parsedId = parseIndexDocId( output );
+
+        assertEquals(version, parsedId.getVersion());
+        assertEquals(id, parsedId.getId());
+    }
+
+
+    @Test
     public void testEntityType() {
 
         final ApplicationScopeImpl applicationScope = new ApplicationScopeImpl( new SimpleId( "application" ) );
