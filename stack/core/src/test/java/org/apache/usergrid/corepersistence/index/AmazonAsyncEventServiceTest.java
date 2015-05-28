@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.asyncevents.SQSAsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.AmazonAsyncEventService;
 import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
@@ -45,7 +45,7 @@ import static org.junit.Assert.fail;
 @RunWith( EsRunner.class )
 @UseModules( { TestIndexModule.class } )
 @NotThreadSafe
-public class SQSAsyncEventServiceTest extends AsyncIndexServiceTest {
+public class AmazonAsyncEventServiceTest extends AsyncIndexServiceTest {
 
 
 
@@ -73,7 +73,7 @@ public class SQSAsyncEventServiceTest extends AsyncIndexServiceTest {
 
     @Override
     protected AsyncEventService getAsyncEventService() {
-        return  new SQSAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
+        return  new AmazonAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
                     entityCollectionManagerFactory, rxTaskScheduler );
     }
 

@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.queue.guice;
 
 
+import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.queue.QueueFig;
@@ -40,17 +41,12 @@ public class QueueModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        install(new GuicyFigModule(QueueFig.class));
 
-        install( new GuicyFigModule( QueueFig.class) );
-
-        // create a guice factory for getting our collection manager
-        install( new FactoryModuleBuilder().implement( QueueManager.class, SQSQueueManagerImpl.class )
-                                           .build( QueueManagerFactory.class ) );
+        install(new FactoryModuleBuilder().implement(QueueManager.class, SNSQueueManagerImpl.class)
+            .build(QueueManagerFactory.class));
 
     }
 
 
-
 }
-
-

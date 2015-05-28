@@ -144,30 +144,31 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         this.app.refreshIndex();
 
-        // delete the application
-
-        setup.getEmf().deleteApplication(deletedAppId);
-        this.app.refreshIndex();
-        this.app.refreshIndex();
 
         // wait for it to appear in delete apps list
 
-        Func2<UUID, Map<String, UUID> ,Boolean> findApps = new Func2<UUID,Map<String, UUID> ,Boolean>() {
-            @Override
-            public Boolean call(UUID applicationId,  Map<String, UUID> apps) {
-                boolean found = false;
-                for (String appName : apps.keySet()) {
-                    UUID appId = apps.get(appName);
-                    if (appId.equals(applicationId)) {
-                        found = true;
-                        break;
-                    }
+        Func2<UUID, Map<String, UUID> ,Boolean> findApps = (applicationId, apps) -> {
+            boolean found = false;
+            for (String app : apps.keySet()) {
+                UUID appId = apps.get(app);
+                if (appId.equals(applicationId)) {
+                    found = true;
+                    break;
                 }
-                return found;
             }
+            return found;
         };
 
-        boolean found = findApps.call( deletedAppId, emf.getDeletedApplications() );
+        Map<String,UUID> apps = setup.getEmf().getApplications();
+        boolean found = findApps.call(deletedAppId, apps);
+        assertTrue("Restored app not found in apps collection", found);
+
+        // delete the application
+        setup.getEmf().deleteApplication(deletedAppId);
+
+        this.app.refreshIndex();
+
+        found = findApps.call( deletedAppId, emf.getDeletedApplications() );
 
         assertTrue("Deleted app must be found in in deleted apps collection", found);
 
@@ -182,8 +183,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         // restore the app
         emf.restoreApplication(deletedAppId);
-        final ReIndexRequestBuilder builder =
-            reIndexService.getBuilder().withApplicationId( deletedAppId );
+        final ReIndexRequestBuilder builder = reIndexService.getBuilder().withApplicationId( deletedAppId );
 
         ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
         int count = 0;
@@ -207,7 +207,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         assertFalse("Restored app found in deleted apps collection", found);
         this.app.refreshIndex();
 
-        Map<String,UUID> apps = setup.getEmf().getApplications();
+        apps = setup.getEmf().getApplications();
         found = findApps.call(deletedAppId, apps);
         assertTrue("Restored app not found in apps collection", found);
 
