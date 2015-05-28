@@ -18,7 +18,6 @@ package org.apache.usergrid.services.assets.data;
 
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.google.inject.Module;
@@ -49,7 +48,6 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 
 public class S3BinaryStore implements BinaryStore {
 
@@ -118,6 +116,12 @@ public class S3BinaryStore implements BinaryStore {
             fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
 
             BlobStore blobStore = getContext().getBlobStore();
+
+            // need this for JClouds 1.7.x:
+//            BlobBuilder.PayloadBlobBuilder bb =  blobStore.blobBuilder( uploadFileName )
+//                .payload( data ).calculateMD5().contentType( mimeType );
+
+            // need this for JClouds 1.8.x:
             BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder(uploadFileName)
                 .payload( data )
                 .contentMD5( Hashing.md5().newHasher().putBytes( data ).hash() )
@@ -284,6 +288,11 @@ public class S3BinaryStore implements BinaryStore {
 
                 BlobStore blobStore = getContext().getBlobStore();
 
+                // need this for JClouds 1.7.x:
+//                BlobBuilder.PayloadBlobBuilder bb =  blobStore.blobBuilder( uploadFileName )
+//                    .payload( tempFile ).calculateMD5().contentType( mimeType );
+
+                // need this for JClouds 1.8.x:
                 BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder( uploadFileName )
                     .payload( tempFile )
                     .contentMD5( Files.hash( tempFile, Hashing.md5() ) )
