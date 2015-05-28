@@ -173,14 +173,14 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     @Override
-    public List<QueueMessage> getMessages(final int limit,
+    public rx.Observable<QueueMessage> getMessages(final int limit,
                                           final int transactionTimeout,
                                           final int waitTime,
                                           final Class klass) {
 
         if (sqs == null) {
             logger.error("Sqs is null");
-            return new ArrayList<>();
+            return rx.Observable.empty();
         }
 
         String url = getQueue().getUrl();
@@ -212,7 +212,7 @@ public class SQSQueueManagerImpl implements QueueManager {
             queueMessages.add(queueMessage);
         }
 
-        return queueMessages;
+        return rx.Observable.from(queueMessages);
     }
 
     @Override
