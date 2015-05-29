@@ -22,6 +22,10 @@ package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.SelectFieldMapping;
+
+import java.util.Collection;
+import java.util.List;
 
 
 /**
@@ -31,16 +35,19 @@ public class Candidate {
 
     private final CandidateResult candidateResult;
     private final SearchEdge searchEdge;
+    private final Collection<SelectFieldMapping>  fields;
 
 
     /**
      * Create a new Candidate for further processing
      * @param candidateResult  The candidate result
      * @param searchEdge The search edge this was searched on
+     * @param fields
      */
-    public Candidate( final CandidateResult candidateResult, final SearchEdge searchEdge ) {
+    public Candidate( final CandidateResult candidateResult, final SearchEdge searchEdge, final Collection<SelectFieldMapping> fields ) {
         this.candidateResult = candidateResult;
         this.searchEdge = searchEdge;
+        this.fields = fields;
     }
 
 
@@ -52,4 +59,6 @@ public class Candidate {
     public SearchEdge getSearchEdge() {
         return searchEdge;
     }
+
+    public Collection<SelectFieldMapping>  getFields(){ return fields; }
 }
