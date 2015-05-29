@@ -107,7 +107,9 @@ public class Organization extends Entity {
         LinkedHashMap orgHashMap = ( LinkedHashMap ) response.getProperties().get( "organization" );
         LinkedHashMap userHashMap = (LinkedHashMap) orgHashMap.get( "users" );
         //this gets the first value in the users entities and returns it .
-        this.user = new User( ( Map<String, Object> ) userHashMap.get( userHashMap.keySet().iterator().next() ) ); //new User().mapOrgGetResponse(orgHashMap.get( "users" ));
+        if(userHashMap.keySet().iterator().hasNext())
+            this.user = new User( ( Map<String, Object> ) userHashMap.get( userHashMap.keySet().iterator().next() ) );
+        //new User().mapOrgGetResponse(orgHashMap.get( "users" ));
     }
 
     public Organization mapOrgResponse(Map<String,Object> map){

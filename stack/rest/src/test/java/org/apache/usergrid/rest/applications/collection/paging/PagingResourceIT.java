@@ -146,7 +146,10 @@ public class PagingResourceIT extends AbstractRestIT {
         createEntities( collectionName, numOfEntities );
 
         //checks to make sure we have a cursor
-        pageAndVerifyEntities( collectionName,null,numOfPages, numOfEntities );
+        //pages through entities and verifies that they are correct.
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.setQuery( "select * ORDER BY created" );
+        pageAndVerifyEntities( collectionName,queryParameters,numOfPages, numOfEntities );
 
         //Create new collection of only 5 entities
         String trinketCollectionName = "trinkets" ;
@@ -155,7 +158,10 @@ public class PagingResourceIT extends AbstractRestIT {
         createEntities( trinketCollectionName, numOfEntities );
 
         //checks to make sure we don't get a cursor for just 5 entities.
-        pageAndVerifyEntities( trinketCollectionName,null,numOfPages, numOfEntities );
+        //Created a new query parameter because when generated it store the cursor token back into it. 
+        queryParameters = new QueryParameters();
+        queryParameters.setQuery( "select * ORDER BY created" );
+        pageAndVerifyEntities( trinketCollectionName,queryParameters,numOfPages, numOfEntities );
 
     }
 
@@ -174,7 +180,9 @@ public class PagingResourceIT extends AbstractRestIT {
         createEntities( collectionName,numOfEntities );
 
         //pages through entities and verifies that they are correct.
-        pageAndVerifyEntities( collectionName,null,numOfPages,numOfEntities);
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.setQuery( "select * ORDER BY created" );
+        pageAndVerifyEntities( collectionName, queryParameters, numOfPages, numOfEntities );
     }
 
 

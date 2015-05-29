@@ -854,7 +854,7 @@ public class Query {
      * @return
      */
     public boolean isGraphSearch(){
-        return ql == null;
+        return ql == null || ql.trim().equals( "select *" );
     }
 
     public Query setQl( String ql ) {

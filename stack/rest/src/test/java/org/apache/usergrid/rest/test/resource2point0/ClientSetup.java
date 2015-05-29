@@ -119,15 +119,15 @@ public class ClientSetup implements TestRule {
         organization = restClient.management().orgs()
                                  .post( new Organization( orgName, username, username + "@usergrid.com", username,
                                      username, null ) );
-        refreshIndex();
+       // refreshIndex();
         clientCredentials = restClient.management().orgs().organization( orgName ).credentials().get();
-        refreshIndex();
+        //refreshIndex();
 
         //restClient.management().token().post(Token.class,new Token(username,password));
 
         ApiResponse appResponse = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
         appUuid = ( String ) appResponse.getEntities().get( 0 ).get( "uuid" );
-        refreshIndex();
+        //refreshIndex();
 
     }
 
