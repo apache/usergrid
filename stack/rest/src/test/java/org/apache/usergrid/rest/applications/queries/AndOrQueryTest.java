@@ -306,7 +306,7 @@ public class AndOrQueryTest extends QueryTestBase {
         generateTestEntities(numOfEntities, collectionName);
 
         //2. Issue a query
-        String inquisitiveQuery = String.format("select * where ordinal >= 0 and ordinal <= %d or WhoHelpedYou = 'Ruff'", numOfEntities);
+        String inquisitiveQuery = String.format("select * where ordinal >= 0 and ordinal <= %d or WhoHelpedYou = 'Ruff' ORDER BY created", numOfEntities);
         QueryParameters params = new QueryParameters().setQuery(inquisitiveQuery);
         Collection activities = this.app().collection(collectionName).get(params);
 
@@ -333,7 +333,7 @@ public class AndOrQueryTest extends QueryTestBase {
         generateTestEntities(numOfEntities, collectionName);
 
         //2. Issue a query using alphanumeric operators
-        String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
+        String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff' ORDER BY created";
         QueryParameters params = new QueryParameters().setQuery(inquisitiveQuery);
         Collection activities = this.app().collection(collectionName).get(params);
 
