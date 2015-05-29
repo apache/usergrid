@@ -72,12 +72,17 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( organizationResponse );
 
+//        Thread.sleep( 1000 );
+//        this.refreshIndex();
+
         //Creates token
         Token token =
                 clientSetup.getRestClient().management().token().post(Token.class, new Token( "password",
                         organization.getUsername(), organization.getPassword() ) );
 
         assertNotNull( token );
+
+        //this.refreshIndex();
 
         //Assert that the get returns the correct org and owner.
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization()).get();
