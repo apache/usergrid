@@ -86,11 +86,11 @@ public class EntityToMapConverterTest {
 
         final String applicationId = entityMap.get( IndexingUtils.APPLICATION_ID_FIELDNAME ).toString();
 
-        assertEquals( IndexingUtils.idString( scope.getApplication() ), applicationId );
+        assertEquals( IndexingUtils.applicationId( scope.getApplication() ), applicationId );
 
         final String entityIdString = entityMap.get( IndexingUtils.ENTITY_ID_FIELDNAME ).toString();
 
-        assertEquals( IndexingUtils.idString( entity.getId() ), entityIdString );
+        assertEquals( IndexingUtils.entityId( entity.getId() ), entityIdString );
 
 
         final String versionString = entityMap.get( IndexingUtils.ENTITY_VERSION_FIELDNAME ).toString();
@@ -103,7 +103,7 @@ public class EntityToMapConverterTest {
 
         final String nodeIdString = entityMap.get( IndexingUtils.EDGE_NODE_ID_FIELDNAME ).toString();
 
-        assertEquals( IndexingUtils.idString( indexEdge.getNodeId() ), nodeIdString );
+        assertEquals( IndexingUtils.nodeId( indexEdge.getNodeId() ), nodeIdString );
 
         final String edgeName = entityMap.get( IndexingUtils.EDGE_NAME_FIELDNAME ).toString();
 
