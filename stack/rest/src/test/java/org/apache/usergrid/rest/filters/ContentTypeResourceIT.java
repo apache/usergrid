@@ -28,6 +28,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.utils.JsonUtils;
@@ -45,6 +47,9 @@ import java.util.Map;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 
 
 /**
@@ -53,7 +58,7 @@ import static org.junit.Assert.assertEquals;
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not
 // using grizzly to test")
-public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
+public class ContentTypeResourceIT extends AbstractRestIT {
 
 
     /**
@@ -137,58 +142,19 @@ public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resourc
 
 
         Form payload = new Form();
-        payload.add("organization", "formContentOrg");
-        payload.add("username", "formContentOrg");
-        payload.add("name", "Test User");
-        payload.add("email", UUIDUtils.newTimeUUID() + "@usergrid.org");
-        payload.add("password", "foobar");
+        payload.add( "organization", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.add( "username", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.add( "name", "Test User" + UUIDUtils.newTimeUUID() );
+        payload.add( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" );
+        payload.add( "password", "foobar" );
 
-        WebResource.Builder builder = app().getResource(true, this.getAdminToken(clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword()))
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+        //checks that the organization was created using a form encoded content type, this is checked else where so
+        //this test should be depreciated eventually.
+        Organization newlyCreatedOrganizationForm = management().orgs().post( payload );
 
-        ClientResponse clientResponse = builder.post(ClientResponse.class, payload);
-
-        assertEquals(200, clientResponse.getStatus());
-
-        MultivaluedMap<String, String> headers = clientResponse.getHeaders();
-
-        List<String> contentType = headers.get("Content-Type");
-        assertEquals(1, contentType.size());
-        assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
-    }
-
-
-    /**
-     * Tests that application/x-www-url-form-encoded works correctly
-     */
-    @Test
-    @Ignore("This will only pass in tomcat, and shouldn't pass in grizzly")
-    public void formEncodedUrlContentType() throws Exception {
-        String orgName = clientSetup.getOrganizationName().toLowerCase();
-        String appName = clientSetup.getAppName().toLowerCase();
-
-        WebResource.Builder builder = resource().path(String.format("/%s/%s", orgName, appName))
-            .queryParam("organization", "formUrlContentOrg")
-            .queryParam("username", "formUrlContentOrg")
-            .queryParam("name", "Test User")
-            .queryParam("email", UUIDUtils.newTimeUUID() + "@usergrid.org")
-            .queryParam("password", "foobar")
-            .queryParam("grant_type", "password")
-            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
-
-        ClientResponse clientResponse = builder.post(ClientResponse.class);
-
-        assertEquals(200, clientResponse.getStatus());
-
-        MultivaluedMap<String, String> headers = clientResponse.getHeaders();
-
-        List<String> contentType = headers.get("Content-Type");
-        assertEquals(1, contentType.size());
-        assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
+        assertNotNull( newlyCreatedOrganizationForm );
 
     }
-
 
     /**
      * Creates a simple entity of type game. Does not set the content type or accept. The type should be set to json to
@@ -233,7 +199,7 @@ public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resourc
     @Test
     public void noAcceptGet() throws Exception {
         User user = new User("shawn","shawn","shawn@email.com","aliensquirrel");
-        this.app().collection("users").post(user);
+        this.app().collection("users").post( user );
         Token token = this.app().token().post(new Token("shawn", "aliensquirrel"));
         Map<String, String> data = hashMap("name", "bar");
 
@@ -257,7 +223,7 @@ public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resourc
             .queryParam("access_token", this.getAdminToken().getAccessToken())
             .type(MediaType.APPLICATION_JSON_TYPE);
 
-        ClientResponse clientResponse = builder.post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar")));
+        ClientResponse clientResponse = builder.post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar2")));
 
         assertEquals(200, clientResponse.getStatus());
 
