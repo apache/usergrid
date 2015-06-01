@@ -441,7 +441,6 @@ public class GeoIT extends AbstractCoreIT {
             setPos(data, 0, 0);
 
             em.create("store", data);
-//            Thread.sleep(1);
         }
 
         app.refreshIndex();

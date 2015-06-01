@@ -93,7 +93,8 @@ public class GeoPagingTest extends AbstractRestIT {
     this.refreshIndex();
     // 2. Query the groups from a nearby location, restricting the search
     //    by creation time to a single entity where created[i-1] < created[i] < created[i+1]
-    String query = "select * where location within 20000 of 37.0,-75.0 "
+      //since this geo location is contained by an actor it needs to be actor.location.
+    String query = "select * where actor.location within 20000 of 37.0,-75.0 "
         + " and created > " + (index[0])
         + " and created < " + (index[2])
         + " order by created";

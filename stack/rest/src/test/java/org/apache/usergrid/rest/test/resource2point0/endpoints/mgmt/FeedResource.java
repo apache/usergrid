@@ -26,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
@@ -39,9 +40,9 @@ public class FeedResource extends NamedResource {
         super ( "feed",context, parent);
     }
 
-    public Entity get() {
+    public ApiResponse get() {
         return getResource( true ).type( MediaType.APPLICATION_JSON_TYPE )
-            .accept( MediaType.APPLICATION_JSON ).get( Entity.class);
+            .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
 
 
     }
