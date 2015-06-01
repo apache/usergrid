@@ -78,16 +78,14 @@ public class RegistrationIT extends AbstractRestIT {
         return StringUtils.substringAfterLast(body, "token=");
     }
 
-    public User postAddAdminToOrg(String organizationName, String email, String password, String token) throws IOException {
+    public Entity postAddAdminToOrg(String organizationName, String email, String password) throws IOException {
 
-        User user = this
+        Entity user = this
             .management()
             .orgs()
             .organization(organizationName)
             .users()
-            .getResource(false)
-            .queryParam("access_token", token)
-            .post(User.class, new User().chainPut("email", email).chainPut("password", password));
+            .post(this.getAdminToken(), new User().chainPut("email", email).chainPut("password", password)  );
 
         assertNotNull(user);
         return user;
@@ -219,8 +217,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
             setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
-            String t = this.getAdminToken().getAccessToken();
-            postAddAdminToOrg("test-organization", "test-admin@mockserver.com", "password", t);
+            postAddAdminToOrg(this.clientSetup.getOrganizationName(), UUIDGenerator.newTimeUUID()+"@email.com", "password");
         } finally {
             setTestProperties(originalProperties);
         }
@@ -242,7 +239,7 @@ public class RegistrationIT extends AbstractRestIT {
             // this should send resetpwd  link in email to newly added org admin user(that did not exist
             ///in usergrid) and "User Invited To Organization" email
             String adminToken = getAdminToken().getAccessToken();
-            Entity node = postAddAdminToOrg("test-organization", "test-admin-nopwd@mockserver.com", "", adminToken);
+            Entity node = postAddAdminToOrg("test-organization", "test-admin-nopwd@mockserver.com", "");
             UUID userId = (UUID) node.getMap("data").get("user").get("uuid");
 
             refreshIndex();
