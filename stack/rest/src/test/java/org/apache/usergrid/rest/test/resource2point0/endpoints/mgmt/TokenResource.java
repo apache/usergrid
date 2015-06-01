@@ -35,6 +35,14 @@ public class TokenResource extends NamedResource {
         super("token", context, parent);
     }
 
+    public Token get(String username, String password){
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "grant_type", "password" );
+        queryParameters.addParam( "username", username );
+        queryParameters.addParam( "password", password );
+        return get(queryParameters);
+
+    }
     /**
      * Obtains an access token and sets the token for the context to use in later calls
      *

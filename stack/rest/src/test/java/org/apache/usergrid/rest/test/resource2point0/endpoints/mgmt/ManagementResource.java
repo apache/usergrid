@@ -49,6 +49,10 @@ public class ManagementResource extends NamedResource {
         return new UsersResource( context, this );
     }
 
+    public EntityEndpoint externaltoken(){
+        return new EntityEndpoint("externaltoken",context,this);
+    }
+
     public EntityEndpoint get(final String identifier){
         return new EntityEndpoint(identifier, context, this);
     }
