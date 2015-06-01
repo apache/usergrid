@@ -29,4 +29,8 @@ public class MeResource extends NamedResource {
     public MeResource( final ClientContext context, final UrlResource parent ) {
         super( "me", context, parent );
     }
+
+    public TokenResource token(){
+        return new TokenResource(context,this);
+    }
 }
