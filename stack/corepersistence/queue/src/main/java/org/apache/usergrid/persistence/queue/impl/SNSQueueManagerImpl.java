@@ -212,14 +212,14 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
     @Override
-    public List<QueueMessage> getMessages(final int limit,
+    public rx.Observable<QueueMessage> getMessages(final int limit,
                                           final int transactionTimeout,
                                           final int waitTime,
                                           final Class klass) {
 
         if (sqs == null) {
             logger.error("SQS is null - was not initialized properly");
-            return new ArrayList<>();
+            return rx.Observable.empty();
         }
 
 
@@ -251,7 +251,7 @@ public class SNSQueueManagerImpl implements QueueManager {
             QueueMessage queueMessage = new QueueMessage(message.getMessageId(), message.getReceiptHandle(), body, message.getAttributes().get("type"));
             queueMessages.add(queueMessage);
         }
-        return queueMessages;
+        return rx.Observable.from( queueMessages);
     }
 
     @Override

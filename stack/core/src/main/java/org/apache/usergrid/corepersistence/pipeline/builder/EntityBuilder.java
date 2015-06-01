@@ -49,6 +49,6 @@ public class EntityBuilder {
      */
     public Observable<ResultsPage<Entity>> build(){
         //we must add our resume filter so we drop our previous page first element if it's present
-        return pipeline.withFilter( new EntityResumeFilter() ).withFilter( new ResultsPageCollector<>() ).execute();
+        return pipeline.withFilter( new EntityResumeFilter() ).withFilter(new ResultsPageCollector<>()).execute();
     }
 }

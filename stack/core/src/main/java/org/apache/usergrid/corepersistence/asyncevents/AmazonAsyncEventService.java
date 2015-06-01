@@ -144,7 +144,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     /**
      * Take message from SQS
      */
-    public List<QueueMessage> take() {
+    private Observable<QueueMessage> take() {
 
         //SQS doesn't support more than 10
         final Timer.Context timer = this.readTimer.time();
@@ -376,7 +376,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                             Timer.Context timer = readTimer.time();
 
                             try {
-                                drainList = take();
+                                drainList = take().toList().toBlocking().last();
 
                                 //emit our list in it's entity to hand off to a worker pool
                                 subscriber.onNext(drainList);

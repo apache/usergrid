@@ -74,9 +74,9 @@ public class UserResourceIT extends AbstractRestIT {
     public void usernameQuery() throws IOException {
         String ql = "username = 'user*'";
         Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
-        assertEquals(userRepo.getByUserName("user1"), getIdFromSearchResults(collection, 0));
+        assertEquals(userRepo.getByUserName("user1"), getIdFromSearchResults(collection, 2));
         assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 1));
-        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 2));
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 0));
     }
 
 
@@ -85,8 +85,8 @@ public class UserResourceIT extends AbstractRestIT {
         String ql = "name = 'John*'";
 
         Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
-        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 0));
-        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 1));
+        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 1));
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 0));
     }
 
 
@@ -94,7 +94,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void nameQueryByUUIDs() throws Exception {
         String ql = "select uuid name = 'John*'";
         Collection response = this.app().collection("users").get(new QueryParameters().setQuery(ql));
-        assertNotNull(response.getResponse().list());
+        assertNotNull(response.getResponse().getEntities());
     }
 
 
@@ -1068,8 +1068,11 @@ public class UserResourceIT extends AbstractRestIT {
         {
             final Collection response = usersResource.get(new QueryParameters().setQuery("select uuid"));
 
-            assertNotNull("List must exist", response.getResponse().list());
-            assertTrue("Must be some list items", response.getResponse().list().size() > 0);
+            assertNotNull("List must exist", response.getResponse().getEntities());
+            assertTrue("Must be some list items", response.getResponse().getEntities().size() > 0);
+
+            assertTrue("Must be some list items", response.getResponse().getEntities().get(0).keySet().size() == 3);
+
         }
     }
 

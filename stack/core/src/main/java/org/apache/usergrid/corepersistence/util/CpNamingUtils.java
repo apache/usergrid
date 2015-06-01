@@ -173,6 +173,14 @@ public class CpNamingUtils {
 
 
     /**
+     * When marking nodes for deletion we must use the same unit of measure as the edge timestamps
+     * @return
+     */
+    public static long createGraphOperationTimestamp(){
+        return UUIDUtils.newTimeUUID().timestamp();
+    }
+
+    /**
      * Create a connection searchEdge
      *
      * @param sourceId The source id in the connection

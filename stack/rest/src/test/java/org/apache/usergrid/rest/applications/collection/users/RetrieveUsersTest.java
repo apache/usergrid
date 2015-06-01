@@ -48,11 +48,12 @@ public class RetrieveUsersTest extends AbstractRestIT {
         CollectionEndpoint users =this.app().collection( "users" );
 
         Entity props = new Entity();
+        props.put( "username", "Bob" );
+        users.post(props);
         props.put( "username", "Alica" );
         users.post(props);
 
-        props.put( "username", "Bob" );
-        users.post(props);
+
 
         refreshIndex();
 

@@ -40,6 +40,7 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -148,91 +149,97 @@ public class QueueListener  {
         QueueScope queueScope = new QueueScopeImpl( queueName ) {};
         QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
-        long runCount = 0;
+        final AtomicLong runCount = new AtomicLong(0);
         //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
         LoadingCache<UUID, ApplicationQueueManager> queueManagerMap = getQueueManagerCache(queueManager);
 
         while ( true ) {
-            try {
 
                 Timer.Context timerContext = timer.time();
-                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 10000, ApplicationQueueMessage.class);
-                LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
+                queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 10000, ApplicationQueueMessage.class)
+                    .buffer(getBatchSize())
+                    .doOnNext(messages -> {
+                        try {
+                            LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
-                if (messages.size() > 0) {
-                    HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
-                    //group messages into hash map by app id
-                    for (QueueMessage message : messages) {
-                        //TODO: stop copying around this area as it gets notification specific.
-                        ApplicationQueueMessage queueMessage = (ApplicationQueueMessage) message.getBody();
-                        UUID applicationId = queueMessage.getApplicationId();
-                        //Groups queue messages by application Id, ( they are all probably going to the same place )
-                        if (!messageMap.containsKey(applicationId)) {
-                            //For each app id it sends the set.
-                            List<QueueMessage> applicationQueueMessages = new ArrayList<QueueMessage>();
-                            applicationQueueMessages.add(message);
-                            messageMap.put(applicationId, applicationQueueMessages);
-                        } else {
-                            messageMap.get(applicationId).add(message);
-                        }
-                    }
-                    long now = System.currentTimeMillis();
-                    Observable merge = null;
-                    //send each set of app ids together
-                    for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
-                        UUID applicationId = entry.getKey();
-                        ApplicationQueueManager manager = queueManagerMap.get(applicationId);
-                        LOG.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
-                        Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
-                        if(merge == null)
-                            merge = current;
-                        else {
-                            merge = Observable.merge(merge,current);
-                        }
-                    }
-                    if(merge!=null) {
-                        merge.toBlocking().lastOrDefault(null);
-                    }
-                    queueManager.commitMessages(messages);
+                            if (messages.size() > 0) {
+                                HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
+                                //group messages into hash map by app id
+                                for (QueueMessage message : messages) {
+                                    //TODO: stop copying around this area as it gets notification specific.
+                                    ApplicationQueueMessage queueMessage = (ApplicationQueueMessage) message.getBody();
+                                    UUID applicationId = queueMessage.getApplicationId();
+                                    //Groups queue messages by application Id, ( they are all probably going to the same place )
+                                    if (!messageMap.containsKey(applicationId)) {
+                                        //For each app id it sends the set.
+                                        List<QueueMessage> applicationQueueMessages = new ArrayList<QueueMessage>();
+                                        applicationQueueMessages.add(message);
+                                        messageMap.put(applicationId, applicationQueueMessages);
+                                    } else {
+                                        messageMap.get(applicationId).add(message);
+                                    }
+                                }
+                                long now = System.currentTimeMillis();
+                                Observable merge = null;
+                                //send each set of app ids together
+                                for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
+                                    UUID applicationId = entry.getKey();
+                                    ApplicationQueueManager manager = queueManagerMap.get(applicationId);
+                                    LOG.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                                    Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
+                                    if(merge == null)
+                                        merge = current;
+                                    else {
+                                        merge = Observable.merge(merge,current);
+                                    }
+                                }
+                                if(merge!=null) {
+                                    merge.toBlocking().lastOrDefault(null);
+                                }
+                                queueManager.commitMessages(messages);
 
-                    meter.mark(messages.size());
-                    LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
+                                meter.mark(messages.size());
+                                LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
-                    if(sleepBetweenRuns > 0) {
-                        LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
-                        Thread.sleep(sleepBetweenRuns);
-                    }
-                    if(++runCount % consecutiveCallsToRemoveDevices == 0){
-                        for(ApplicationQueueManager applicationQueueManager : queueManagerMap.asMap().values()){
+                                if(sleepBetweenRuns > 0) {
+                                    LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    Thread.sleep(sleepBetweenRuns);
+                                }
+                                if(runCount.incrementAndGet() % consecutiveCallsToRemoveDevices == 0){
+                                    for(ApplicationQueueManager applicationQueueManager : queueManagerMap.asMap().values()){
+                                        try {
+                                            applicationQueueManager.asyncCheckForInactiveDevices();
+                                        }catch (Exception inactiveDeviceException){
+                                            LOG.error("Inactive Device Get failed",inactiveDeviceException);
+                                        }
+                                    }
+                                    //clear everything
+                                    runCount.set(0);
+                                }
+                            }
+                            else{
+                                LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
+                                Thread.sleep(sleepWhenNoneFound);
+                            }
+                            timerContext.stop();
+                            //send to the providers
+                            consecutiveExceptions.set(0);
+                        }catch (Exception ex){
+                            LOG.error("failed to dequeue",ex);
                             try {
-                                applicationQueueManager.asyncCheckForInactiveDevices();
-                            }catch (Exception inactiveDeviceException){
-                                LOG.error("Inactive Device Get failed",inactiveDeviceException);
+                                long sleeptime = sleepWhenNoneFound*consecutiveExceptions.incrementAndGet();
+                                long maxSleep = 15000;
+                                sleeptime = sleeptime > maxSleep ? maxSleep : sleeptime ;
+                                LOG.info("sleeping due to failures {} ms", sleeptime);
+                                Thread.sleep(sleeptime);
+                            }catch (InterruptedException ie){
+                                LOG.info("sleep interrupted");
                             }
                         }
-                        //clear everything
-                        runCount=0;
-                    }
-                }
-                else{
-                    LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
-                    Thread.sleep(sleepWhenNoneFound);
-                }
-                timerContext.stop();
-                //send to the providers
-                consecutiveExceptions.set(0);
-            }catch (Exception ex){
-                LOG.error("failed to dequeue",ex);
-                try {
-                    long sleeptime = sleepWhenNoneFound*consecutiveExceptions.incrementAndGet();
-                    long maxSleep = 15000;
-                    sleeptime = sleeptime > maxSleep ? maxSleep : sleeptime ;
-                    LOG.info("sleeping due to failures {} ms", sleeptime);
-                    Thread.sleep(sleeptime);
-                }catch (InterruptedException ie){
-                    LOG.info("sleep interrupted");
-                }
-            }
+                    })
+                    .toBlocking().last();
+
+
         }
     }
 
