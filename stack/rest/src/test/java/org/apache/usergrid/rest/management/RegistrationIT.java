@@ -20,7 +20,6 @@ package org.apache.usergrid.rest.management;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.management.AccountCreationProps;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
@@ -110,74 +109,6 @@ public class RegistrationIT extends AbstractRestIT {
         }
         return msgs;
     }
-
-    @Test
-    public void postCreateOrgAndAdmin() throws Exception {
-
-        Map<String, Object> originalProperties = getRemoteTestProperties();
-
-        try {
-            setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
-            setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
-
-            final String username = "registrationUser" + UUIDGenerator.newTimeUUID();
-            final String email = username + "@usergrid.com";
-            final String password = "password";
-
-            Organization organization = this
-                .management()
-                .orgs()
-                .post(new Organization("org" + UUIDGenerator.newTimeUUID(), username, email, username, password, new HashMap<String, Object>()), this.getAdminToken());
-            Application application = new Application("app" + UUIDGenerator.newTimeUUID());
-            this.management().orgs().organization(organization.getName()).app().post(application);
-
-            List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get("test-user-1@mockserver.com");
-
-            assertFalse(inbox.isEmpty());
-
-            Message account_confirmation_message = inbox.get(0);
-            assertEquals("User Account Confirmation: " + email,
-                account_confirmation_message.getSubject());
-
-            String token = getTokenFromMessage(account_confirmation_message);
-            logger.info(token);
-
-            setTestProperty(AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED, "false");
-
-            refreshIndex();
-
-            try {
-                this.management().orgs().organization(organization.getName()).users().user(username)
-                    .getResource(false)
-                    .queryParam("username", username)
-                    .queryParam("password", password)
-                    .get(String.class);
-                fail("request for disabled user should fail");
-            } catch (UniformInterfaceException uie) {
-                assertEquals("user disabled", uie.getMessage());
-            }
-            this.management()
-                .orgs()
-                .organization(organization.getName())
-                .users()
-                .user(username)
-                .put(new Entity().chainPut("activated", false).chainPut("deactivated", System.currentTimeMillis()));
-            try {
-                management()
-                    .token()
-                    .get(new QueryParameters().addParam("grant_type", "password").addParam("username", username).addParam("password", password));
-                fail("request for deactivated user should fail");
-            } catch (UniformInterfaceException uie) {
-                assertEquals("user not activated", uie.getMessage());
-            }
-
-        } finally {
-            setTestProperties(originalProperties);
-        }
-    }
-
 
     @Test
     public void putAddToOrganizationFail() throws Exception {
@@ -282,6 +213,10 @@ public class RegistrationIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Adds an existing user to the organization by creating it first in the management collection. Then adding it later.
+     * @throws Exception
+     */
     @Test
     public void addExistingAdminUserToOrganization() throws Exception {
 
@@ -298,40 +233,38 @@ public class RegistrationIT extends AbstractRestIT {
             String adminUserName = "AdminUserFromOtherOrg";
             String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
 
-            User adminUser = (User) management().users().post(
-                User.class, new User(adminUserEmail, adminUserEmail, adminUserEmail, "password1"));
+            //A form is REQUIRED to post a user to a management application
+            Form userForm = new Form();
+            userForm.add( "username", adminUserEmail );
+            userForm.add( "name", adminUserEmail );
+            userForm.add( "email", adminUserEmail );
+            userForm.add( "password", "password1" );
+
+            //Disgusting data manipulation to parse the form response.
+            Map adminUserResponse = ( Map<String, Object> ) (management().users().post( User.class, userForm )).get( "data" );
+            Entity adminUser = new Entity( ( Map<String, Object> ) adminUserResponse.get( "user" ) );
 
             refreshIndex();
 
             assertNotNull(adminUser);
-            Message[] msgs = getMessages("otherorg.com", adminUserName, "password1");
-            assertEquals(1, msgs.length);
-
-            // add existing admin user to org
 
             // this should NOT send resetpwd link in email to newly added org admin user(that
             // already exists in usergrid) only "User Invited To Organization" email
-            String adminToken = getAdminToken().getAccessToken();
-            User node = postAddAdminToOrg("test-organization",
-                adminUserEmail, "password1", adminToken);
-            String uuid = node.getMap("data").get("user").get("uuid").toString();
-            UUID userId = UUID.fromString(uuid);
+            Entity node = postAddAdminToOrg(this.clientSetup.getOrganizationName(),
+                adminUserEmail, "password1");
+            UUID userId = node.getUuid();
 
             assertEquals(adminUser.getUuid(), userId);
 
-            msgs = getMessages("otherorg.com", adminUserName, "password1");
+            Message[] msgs = getMessages("otherorg.com", adminUserName, "password1");
 
             // only 1 invited msg
-            assertEquals(2, msgs.length);
-
-            // check email subject
-            String resetpwd = "Password Reset";
-            assertNotSame(resetpwd, msgs[1].getSubject());
+            assertEquals(1, msgs.length);
 
             String invited = "User Invited To Organization";
-            assertEquals(invited, msgs[1].getSubject());
+            assertEquals(invited, msgs[0].getSubject());
         } finally {
-            setTestProperties(originalProperties);
+            setTestProperties( originalProperties );
         }
     }
 
