@@ -28,6 +28,8 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -88,6 +90,14 @@ public abstract class AbstractEntity implements Entity {
     }
 
 
+
+    @Override
+    public Id asId() {
+        return new SimpleId( uuid, getType() );
+    }
+
+
+
     @Override
     @EntityProperty(indexed = true, required = true, mutable = false)
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -103,6 +113,7 @@ public abstract class AbstractEntity implements Entity {
         }
         this.created = created;
     }
+
 
 
     @Override
