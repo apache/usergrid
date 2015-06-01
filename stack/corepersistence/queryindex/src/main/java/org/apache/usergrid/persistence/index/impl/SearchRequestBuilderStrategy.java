@@ -20,12 +20,8 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.Set;
-
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.common.geo.GeoDistance;
-import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -82,13 +78,14 @@ public class SearchRequestBuilderStrategy {
      * Get the search request builder
      */
     public SearchRequestBuilder getBuilder( final SearchEdge searchEdge, final SearchTypes searchTypes,
-                                            final ParsedQuery query, final int limit, final int from) {
+                                            final ParsedQuery query, final int limit, final int from ) {
 
         Preconditions
-                .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
+            .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
 
         SearchRequestBuilder srb =
-                esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE ).setSearchType(SearchType.QUERY_THEN_FETCH);
+            esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE )
+                      .setSearchType( SearchType.QUERY_THEN_FETCH );
 
 
         final QueryVisitor visitor = visitParsedQuery( query );
@@ -126,28 +123,22 @@ public class SearchRequestBuilderStrategy {
      * Apply our default sort predicate logic
      */
     private void applyDefaultSortPredicates( final SearchRequestBuilder srb, final GeoSortFields geoFields ) {
-
-
-        if ( geoFields.isEmpty() ) {
-
-            //sort by the edge timestamp
-            srb.addSort( SortBuilders.fieldSort( IndexingUtils.EDGE_TIMESTAMP_FIELDNAME ).order( SortOrder.DESC ) );
-
-            //sort by the entity id if our times are equal
-            srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
-
-            return;
-        }
-
         //we have geo fields, sort through them in visit order
-
-
         for ( String geoField : geoFields.fields() ) {
 
             final GeoDistanceSortBuilder geoSort = geoFields.applyOrder( geoField, SortOrder.ASC );
 
             srb.addSort( geoSort );
         }
+
+        //now sort by edge timestamp, then entity id
+        //sort by the edge timestamp
+        srb.addSort( SortBuilders.fieldSort( IndexingUtils.EDGE_TIMESTAMP_FIELDNAME ).order( SortOrder.DESC ) );
+
+        //sort by the entity id if our times are equal
+        srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
+
+        return;
     }
 
 
@@ -170,9 +161,10 @@ public class SearchRequestBuilderStrategy {
             final String propertyName = sp.getPropertyName();
 
 
-            //if the user specified a geo field in their sort, then honor their sort order and use the point they specified
+            //if the user specified a geo field in their sort, then honor their sort order and use the point they
+            // specified
             if ( geoFields.contains( propertyName ) ) {
-                final GeoDistanceSortBuilder geoSort = geoFields.applyOrder(propertyName,  SortOrder.ASC);
+                final GeoDistanceSortBuilder geoSort = geoFields.applyOrder( propertyName, SortOrder.ASC );
                 srb.addSort( geoSort );
             }
 
@@ -202,8 +194,8 @@ public class SearchRequestBuilderStrategy {
      * Create our filter builder.  We need to restrict our results on edge search, as well as on types, and any filters
      * that came from the grammar.
      */
-    private FilterBuilder createFilterBuilder( final SearchEdge searchEdge, final QueryVisitor visitor, final
-    SearchTypes searchTypes ) {
+    private FilterBuilder createFilterBuilder( final SearchEdge searchEdge, final QueryVisitor visitor,
+                                               final SearchTypes searchTypes ) {
         String context = createContextName( applicationScope, searchEdge );
 
 
@@ -227,7 +219,7 @@ public class SearchRequestBuilderStrategy {
         final String[] sourceTypes = searchTypes.getTypeNames( applicationScope );
 
 
-        if(sourceTypes.length > 0 ) {
+        if ( sourceTypes.length > 0 ) {
             final FilterBuilder[] typeTerms = new FilterBuilder[sourceTypes.length];
 
             for ( int i = 0; i < sourceTypes.length; i++ ) {
@@ -270,7 +262,6 @@ public class SearchRequestBuilderStrategy {
     }
 
 
-
     /**
      * Create a sort for the property name and field name specified
      *
@@ -284,7 +275,6 @@ public class SearchRequestBuilderStrategy {
         final TermFilterBuilder propertyFilter = sortPropertyTermFilter( propertyName );
 
 
-        return SortBuilders.fieldSort( fieldName ).order( sortOrder )
-                           .setNestedFilter( propertyFilter );
+        return SortBuilders.fieldSort( fieldName ).order( sortOrder ).setNestedFilter( propertyFilter );
     }
 }

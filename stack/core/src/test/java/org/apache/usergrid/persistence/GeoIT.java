@@ -441,6 +441,7 @@ public class GeoIT extends AbstractCoreIT {
             setPos(data, 0, 0);
 
             em.create("store", data);
+//            Thread.sleep(1);
         }
 
         app.refreshIndex();
@@ -459,7 +460,9 @@ public class GeoIT extends AbstractCoreIT {
 
             for (Entity entity : results.getEntities()) {
                 //TODO:can we assert order
-                assertEquals(String.valueOf(count), entity.getName());
+                final int expected = numEntities - count - 1;
+
+                assertEquals(String.valueOf(expected), entity.getName());
                 count++;
             }
 
