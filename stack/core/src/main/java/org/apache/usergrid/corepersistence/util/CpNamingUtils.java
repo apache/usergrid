@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
 
@@ -141,7 +142,7 @@ public class CpNamingUtils {
         //if they don't use a time based uuid (such as in devices) we need to create a timestamp from "now" since
         // this is when the entity
         //will be added to the collection
-        final UUID timeStampUuid = UUIDUtils.isTimeBased( entityIdUUID ) ? entityIdUUID : UUIDUtils.newTimeUUID();
+        final UUID timeStampUuid = UUIDUtils.isTimeBased( entityIdUUID ) ? entityIdUUID : UUIDGenerator.newTimeUUID();
 
         long uuidTimestamp = UUIDUtils.getUUIDLong( timeStampUuid );
 
@@ -167,7 +168,7 @@ public class CpNamingUtils {
         final String edgeType = getEdgeTypeFromConnectionType( connectionType );
 
         // create graph edge connection from head entity to member entity
-        return new SimpleEdge( sourceEntityId, edgeType, targetEntityId, System.currentTimeMillis() );
+        return new SimpleEdge( sourceEntityId, edgeType, targetEntityId, UUIDGenerator.newTimeUUID().timestamp() );
     }
 
 

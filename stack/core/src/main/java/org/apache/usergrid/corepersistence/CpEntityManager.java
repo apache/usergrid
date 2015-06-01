@@ -2500,7 +2500,7 @@ public class CpEntityManager implements EntityManager {
 
         long timestamp = UUIDUtils.getUUIDLong( timestampUuid );
 
-        UUID itemId = UUIDUtils.newTimeUUID();
+        UUID itemId = UUIDGenerator.newTimeUUID();
 
         if ( is_application ) {
             itemId = applicationId;
