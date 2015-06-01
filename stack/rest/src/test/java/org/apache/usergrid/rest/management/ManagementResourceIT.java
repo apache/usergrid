@@ -316,48 +316,41 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     @Test
     public void token() throws Exception {
-        JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                                  .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        Token myToken = management.token().get(new QueryParameters().addParam("grant_type", "password").addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()));
 
-        logNode( node );
-        String token = node.get( "access_token" ).textValue();
+        String token = myToken.getAccessToken();
         assertNotNull( token );
 
         // set an organization property
-        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Organization payload = new Organization();
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "securityLevel", 5 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-        node = resource().path( "/management/organizations/test-organization" )
-            .queryParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .put( JsonNode.class, payload );
+        management.orgs().organization(clientSetup.getOrganizationName())
+            .put(payload);
 
         // ensure the organization property is included
-        node = resource().path( "/management/token" ).queryParam( "access_token", token )
-                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        logNode( node );
+        myToken = myToken = management.token().get(new QueryParameters().addParam("access_token", token));
 
-        JsonNode securityLevel = node.findValue( "securityLevel" );
+
+        Object securityLevel = myToken.get("securityLevel");
         assertNotNull( securityLevel );
-        assertEquals( 5L, securityLevel.asLong() );
+        assertEquals( 5L, (long)securityLevel );
     }
 
 
     @Test
     public void meToken() throws Exception {
-        JsonNode node = resource().path( "/management/me" ).queryParam( "grant_type", "password" )
-                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                                  .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        QueryParameters queryParameters = new QueryParameters().addParam("grant_type", "password")
+                                  .addParam("username", "test@usergrid.com").addParam("password", "test");
+        JsonNode node = management.me().post(JsonNode.class,queryParameters);
+
 
         logNode( node );
         String token = node.get( "access_token" ).textValue();
         assertNotNull( token );
 
-        node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        node = management.me().get( JsonNode.class );
         logNode( node );
 
         assertNotNull( node.get( "passwordChanged" ) );
@@ -427,8 +420,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         Status responseStatus = null;
         try {
-            resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+           management.token().post(JsonNode.class, payload);
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -448,8 +440,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         Status responseStatus = null;
 
         try {
-            resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management.token().post(JsonNode.class, payload);
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -522,15 +513,10 @@ public class ManagementResourceIT extends AbstractRestIT {
         management().orgs().post(
             new Organization( username, username, username+"@example.com", username, "password", null ) );
 
-        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
-            put("username", username );
-            put("password", "password");
-            put("grant_type", "password");
-        }};
-        JsonNode accessInfoNode = resource().path("/management/token")
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .post( JsonNode.class, loginInfo );
-        String accessToken = accessInfoNode.get( "access_token" ).textValue();
+        refreshIndex();
+        QueryParameters queryParams = new QueryParameters().addParam("username", username ).addParam("password", "password").addParam("grant_type", "password");
+        Token accessInfoNode = management.token().get(queryParams);
+        String accessToken = accessInfoNode.getAccessToken();
 
         // set the Usergrid Central SSO URL because Tomcat port is dynamically assigned
 
@@ -538,29 +524,25 @@ public class ManagementResourceIT extends AbstractRestIT {
         Map<String, String> props = new HashMap<String, String>();
         props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
         resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
+                .queryParam("access_token", suToken)
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( props );
 
         // attempt to validate the token, must be valid
+        queryParams = new QueryParameters().addParam("access_token", suToken ).addParam("ext_access_token", accessToken).addParam("ttl", "1000");
 
-        JsonNode validatedNode = resource().path( "/management/externaltoken" )
-            .queryParam( "access_token", suToken ) // as superuser
-            .queryParam( "ext_access_token", accessToken )
-            .queryParam( "ttl", "1000" )
-            .get( JsonNode.class );
-        String validatedAccessToken = validatedNode.get( "access_token" ).textValue();
+        Entity validatedNode = management.externaltoken().get(Entity.class,queryParams);
+        String validatedAccessToken = validatedNode.get( "access_token" ).toString();
         assertEquals( accessToken, validatedAccessToken );
 
         // attempt to validate an invalid token, must fail
 
         try {
-            resource().path( "/management/externaltoken" )
-                .queryParam( "access_token", suToken ) // as superuser
-                .queryParam( "ext_access_token", "rubbish_token")
-                .queryParam( "ttl", "1000" )
-                .get( JsonNode.class );
+            queryParams = new QueryParameters().addParam("access_token", suToken ).addParam("ext_access_token", "rubbish_token").addParam("ttl", "1000");
+
+            validatedNode = management.externaltoken().get(Entity.class,queryParams);
+
             fail("Validation should have failed");
         } catch ( UniformInterfaceException actual ) {
             assertEquals( 404, actual.getResponse().getStatus() );
