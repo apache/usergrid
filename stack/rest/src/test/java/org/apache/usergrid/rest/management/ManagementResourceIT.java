@@ -17,48 +17,71 @@
 package org.apache.usergrid.rest.management;
 
 
-import java.util.*;
-
-import javax.ws.rs.core.MediaType;
-
 import com.fasterxml.jackson.databind.JsonNode;
-
-import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.apache.commons.lang.StringUtils;
-
-
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.*;
 
+import static org.apache.usergrid.rest.AbstractRestIT.logNode;
+import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.Assert.*;
 
 /**
  * @author tnine
  */
+public class ManagementResourceIT extends AbstractRestIT {
 
-public class ManagementResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
+    private static final Logger logger = LoggerFactory.getLogger(ManagementResourceIT.class);
+    private org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource management;
 
     public ManagementResourceIT() throws Exception {
 
+    }
+
+
+    @Before
+    public void setup() {
+        management= clientSetup.getRestClient().management();
+    }
+
+    /**
+     * Test if we can reset our password as an admin
+     */
+    @Test
+    public void setSelfAdminPasswordAsAdmin() {
+
+        management.token().setToken(this.getAdminToken());
+
+
+        management.users().post(User.class,new User("test","test","test@email.com","test"));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put( "newpassword", "foo" );
+        data.put( "oldpassword", "test" );
+
+        management.users().user("test").password().post(Entity.class, data);
+        data.clear();
+        data.put( "oldpassword", "foo" );
+        data.put( "newpassword", "test" );
+        Token token = management.token().post(Token.class, new Token( "test", "foo" ) );
+        management.token().setToken( token );
+        management.users().user("test").password().post(Entity.class,data);
     }
 
 
@@ -213,7 +236,6 @@ public class ManagementResourceIT extends org.apache.usergrid.rest.test.resource
         actorMap.put( "username", user );
         activityPayload.put("actor", actorMap);
         Entity entity = this.app().collection("users").entity(user).collection("activities").post(new Entity(activityPayload));
-
     }
 
 
@@ -238,7 +260,7 @@ public class ManagementResourceIT extends org.apache.usergrid.rest.test.resource
         Map roles =(Map) collections.get("roles");
         assertNotNull(roles.get("title"));
         assertEquals("Roles", roles.get("title").toString());
-        assertEquals(3, roles.size());
+        assertEquals(4, roles.size());
 
         refreshIndex(   );
 
@@ -248,10 +270,8 @@ public class ManagementResourceIT extends org.apache.usergrid.rest.test.resource
         Entity app = management().orgs().organization(clientSetup.getOrganizationName()).app().addToPath("mgmt-org-app").get();
 
 
-        assertEquals(this.clientSetup.getOrganizationName().toLowerCase(), app.get("organization").toString());
+        assertEquals(this.clientSetup.getOrganizationName().toLowerCase(), app.get("organizationName").toString());
         assertEquals( "mgmt-org-app", app.get( "applicationName" ).toString() );
-        assertEquals( "http://sometestvalue/" + this.clientSetup.getOrganizationName().toLowerCase() + "/mgmt-org-app",
-            app.get( "uri" ).toString() );
 
         assertEquals( clientSetup.getOrganizationName().toLowerCase() + "/mgmt-org-app", app.get( "name" ).toString() );
         metadata =(Map) appdata.get( "metadata" );
@@ -259,6 +279,362 @@ public class ManagementResourceIT extends org.apache.usergrid.rest.test.resource
         roles =(Map) collections.get("roles");
 
         assertEquals( "Roles", roles.get("title").toString() );
-        assertEquals(3, roles.size());
+        assertEquals(4, roles.size());
     }
+
+    @Test
+    public void tokenTtl() throws Exception {
+
+        long ttl = 2000;
+
+        Token token = management.token().get(new QueryParameters().addParam("grant_type", "password").addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()).addParam("ttl", String.valueOf(ttl)));
+
+
+        long startTime = System.currentTimeMillis();
+
+
+        assertNotNull( token );
+
+        Entity userdata = management.users().entity(clientSetup.getEmail()).get(token);
+
+        assertNotNull(userdata.get("email").toString());
+
+        // wait for the token to expire
+        Thread.sleep(  (System.currentTimeMillis() - startTime) + ttl );
+
+        Status responseStatus = null;
+        try {
+            userdata = management.users().user(clientSetup.getEmail()).get();
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.UNAUTHORIZED, responseStatus );
+    }
+
+
+    @Test
+    public void token() throws Exception {
+        Token myToken = management.token().get(new QueryParameters().addParam("grant_type", "password").addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()));
+
+        String token = myToken.getAccessToken();
+        assertNotNull( token );
+
+        // set an organization property
+        Organization payload = new Organization();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put( "securityLevel", 5 );
+        payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
+        management.orgs().organization(clientSetup.getOrganizationName())
+            .put(payload);
+
+        // ensure the organization property is included
+        myToken = myToken = management.token().get(new QueryParameters().addParam("access_token", token));
+
+
+        Object securityLevel = myToken.get("securityLevel");
+        assertNotNull( securityLevel );
+        assertEquals( 5L, (long)securityLevel );
+    }
+
+
+    @Test
+    public void meToken() throws Exception {
+        QueryParameters queryParameters = new QueryParameters().addParam("grant_type", "password")
+                                  .addParam("username", "test@usergrid.com").addParam("password", "test");
+        JsonNode node = management.me().post(JsonNode.class,queryParameters);
+
+
+        logNode( node );
+        String token = node.get( "access_token" ).textValue();
+        assertNotNull( token );
+
+        node = management.me().get( JsonNode.class );
+        logNode( node );
+
+        assertNotNull( node.get( "passwordChanged" ) );
+        assertNotNull( node.get( "access_token" ) );
+        assertNotNull( node.get( "expires_in" ) );
+        JsonNode userNode = node.get( "user" );
+        assertNotNull( userNode );
+        assertNotNull( userNode.get( "uuid" ) );
+        assertNotNull( userNode.get( "username" ) );
+        assertNotNull( userNode.get( "email" ) );
+        assertNotNull( userNode.get( "name" ) );
+        assertNotNull( userNode.get( "properties" ) );
+        JsonNode orgsNode = userNode.get( "organizations" );
+        assertNotNull( orgsNode );
+        JsonNode orgNode = orgsNode.get( "test-organization" );
+        assertNotNull( orgNode );
+        assertNotNull( orgNode.get( "name" ) );
+        assertNotNull( orgNode.get( "properties" ) );
+    }
+
+
+    @Test
+    public void meTokenPost() throws Exception {
+        Map<String, String> payload =
+                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" );
+
+        JsonNode node = management.me().post(JsonNode.class, payload);
+
+        logNode( node );
+        String token = node.get( "access_token" ).textValue();
+
+        assertNotNull( token );
+
+        node = management.me().get( JsonNode.class );
+    }
+
+
+    @Test
+    public void meTokenPostForm() {
+
+        Form form = new Form();
+        form.add( "grant_type", "password" );
+        form.add( "username", "test@usergrid.com" );
+        form.add( "password", "test" );
+
+        JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
+                                  .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+                                  .entity( form, MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( JsonNode.class );
+
+        logNode( node );
+        String token = node.get( "access_token" ).textValue();
+
+        assertNotNull( token );
+
+        node = resource().path( "/management/me" ).queryParam( "access_token", token )
+                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        logNode( node );
+    }
+
+
+    @Test
+    public void ttlNan() throws Exception {
+
+        Map<String, String> payload =
+                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
+                                                   .map( "ttl", "derp" );
+
+        Status responseStatus = null;
+        try {
+           management.token().post(JsonNode.class, payload);
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.BAD_REQUEST, responseStatus );
+    }
+
+
+    @Test
+    public void ttlOverMax() throws Exception {
+
+        Map<String, String> payload =
+                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
+                                                   .map( "ttl", Long.MAX_VALUE + "" );
+
+        Status responseStatus = null;
+
+        try {
+            management.token().post(JsonNode.class, payload);
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.BAD_REQUEST, responseStatus );
+    }
+
+
+    @Test
+    public void revokeToken() throws Exception {
+        Token token1 = management.token().get(clientSetup.getUsername(),clientSetup.getPassword());
+
+        Entity response = management.users().user(clientSetup.getUsername()).get();
+
+        assertNotNull(response.get("email").toString());
+
+        response =   management.users().user(clientSetup.getUsername()).get();
+
+        assertNotNull(response.get("email").toString());
+
+        // now revoke the tokens
+        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class);
+
+        // the tokens shouldn't work
+
+        Status status = null;
+
+        try {
+            response = management.users().user(clientSetup.getUsername()).get();
+        }
+        catch ( UniformInterfaceException uie ) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.UNAUTHORIZED, status );
+
+        Token token3 = management.token().get(clientSetup.getUsername(), clientSetup.getPassword());
+
+        response = management.users().user(clientSetup.getUsername()).get();
+        assertNotNull(response.get("email").toString());
+
+        // now revoke the token3
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "token", token3.getAccessToken() );
+        response = management.users().user(clientSetup.getUsername()).revokeToken().post( Entity.class,queryParameters );;
+
+        // the token3 shouldn't work
+        status = null;
+
+        try {
+            response = management.users().user(clientSetup.getUsername()).get();
+        }
+        catch ( UniformInterfaceException uie ) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.UNAUTHORIZED, status );
+
+    }
+
+
+    @Test
+    public void testValidateExternalToken() throws Exception {
+
+        // create a new admin user, get access token
+
+        String rand = RandomStringUtils.randomAlphanumeric(10);
+        final String username = "user_" + rand;
+        management().orgs().post(
+            new Organization( username, username, username+"@example.com", username, "password", null ) );
+
+        refreshIndex();
+        QueryParameters queryParams = new QueryParameters().addParam("username", username ).addParam("password", "password").addParam("grant_type", "password");
+        Token accessInfoNode = management.token().get(queryParams);
+        String accessToken = accessInfoNode.getAccessToken();
+
+        // set the Usergrid Central SSO URL because Tomcat port is dynamically assigned
+
+        String suToken = clientSetup.getSuperuserToken().getAccessToken();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
+        resource().path( "/testproperties" )
+                .queryParam("access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
+        // attempt to validate the token, must be valid
+        queryParams = new QueryParameters().addParam("access_token", suToken ).addParam("ext_access_token", accessToken).addParam("ttl", "1000");
+
+        Entity validatedNode = management.externaltoken().get(Entity.class,queryParams);
+        String validatedAccessToken = validatedNode.get( "access_token" ).toString();
+        assertEquals( accessToken, validatedAccessToken );
+
+        // attempt to validate an invalid token, must fail
+
+        try {
+            queryParams = new QueryParameters().addParam("access_token", suToken ).addParam("ext_access_token", "rubbish_token").addParam("ttl", "1000");
+
+            validatedNode = management.externaltoken().get(Entity.class,queryParams);
+
+            fail("Validation should have failed");
+        } catch ( UniformInterfaceException actual ) {
+            assertEquals( 404, actual.getResponse().getStatus() );
+            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            logger.error( "ERROR: " + errorMsg );
+            assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
+        }
+
+
+
+        // TODO: how do we test the create new user and organization case?
+
+
+
+        // unset the Usergrid Central SSO URL so it does not interfere with other tests
+
+        props.put( USERGRID_CENTRAL_URL, "" );
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
+    }
+
+
+    @Test
+    public void testSuperuserOnlyWhenValidateExternalTokensEnabled() throws Exception {
+
+        // create an org and an admin user
+
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
+        final String username = "user_" + rand;
+        management().orgs().post(
+            new Organization( username, username, username+"@example.com", username, "password", null ) );
+
+        // turn on validate external tokens by setting the usergrid.central.url
+
+        String suToken = clientSetup.getSuperuserToken().getAccessToken();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
+        // calls to login as an Admin User must now fail
+
+        try {
+
+            Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+                put("username", username );
+                put("password", "password");
+                put("grant_type", "password");
+            }};
+            JsonNode accessInfoNode = resource().path("/management/token")
+                    .type( MediaType.APPLICATION_JSON_TYPE )
+                    .post( JsonNode.class, loginInfo );
+            fail("Login as Admin User must fail when validate external tokens is enabled");
+
+        } catch ( UniformInterfaceException actual ) {
+            assertEquals( 400, actual.getResponse().getStatus() );
+            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            logger.error( "ERROR: " + errorMsg );
+            assertTrue( errorMsg.contains( "Admin Users must login via" ));
+
+        } catch ( Exception e ) {
+            fail( "We expected a UniformInterfaceException" );
+        }
+
+        // login as superuser must succeed
+
+        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+            put("username", "superuser");
+            put("password", "superpassword");
+            put("grant_type", "password");
+        }};
+        JsonNode accessInfoNode = resource().path("/management/token")
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( JsonNode.class, loginInfo );
+        String accessToken = accessInfoNode.get( "access_token" ).textValue();
+        assertNotNull( accessToken );
+
+        // turn off validate external tokens by un-setting the usergrid.central.url
+
+        props.put( USERGRID_CENTRAL_URL, "" );
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+    }
+
 }

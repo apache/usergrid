@@ -454,7 +454,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         do {
             //trigger the repair
-            queryCollectionEm("dogs", "select *");
+            queryCollectionEm("dogs", "select * order by created");
             app.refreshIndex();
             crs = queryCollectionCp("dogs", "dog", "select *");
         } while ( crs.size() != numEntities && count++ < 15 );

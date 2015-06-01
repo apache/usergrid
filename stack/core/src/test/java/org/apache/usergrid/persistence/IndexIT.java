@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +38,7 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
+import static org.junit.Assert.*;
 
 
 public class IndexIT extends AbstractCoreIT {
@@ -286,6 +284,44 @@ public class IndexIT extends AbstractCoreIT {
     }
 
 
+    @Test
+    public void testEntityReduction() throws Exception {
+
+        UUID applicationId = app.getId();
+
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
+
+
+        Map<String, Object> entity1 = new LinkedHashMap<String, Object>();
+        entity1.put("name", "name_1");
+        entity1.put("status", "pickled");
+
+        em.create("names", entity1);
+
+        app.refreshIndex();
+
+        //should return valid values
+        Query query = Query.fromQL("select status where status = 'pickled'");
+        Results r = em.searchCollection( em.getApplicationRef(), "names", query );
+        assertTrue(r.getEntities() != null && r.getEntities().size() > 0);
+        Entity first =  r.getEntities().get(0);
+        assertTrue(first.getDynamicProperties().size() == 1);
+
+        //should return valid values
+        query = Query.fromQL("select uuid where status = 'pickled'");
+        r = em.searchCollection( em.getApplicationRef(), "names", query );
+        assertTrue(r.getEntities() != null && r.getEntities().size() > 0);
+        first =  r.getEntities().get(0);
+        assertTrue(first.getDynamicProperties().size() == 0);
+
+        //should return valid values
+        query = Query.fromQL("select uuid:myid where status = 'pickled'");
+        r = em.searchCollection( em.getApplicationRef(), "names", query );
+        assertTrue(r.getEntities() != null && r.getEntities().size() > 0);
+        first =  r.getEntities().get(0);
+        assertTrue(first.getDynamicProperties().size() == 0);
+
+    }
     @Test
     public void testPropertyUpdateWithConnection() throws Exception {
 

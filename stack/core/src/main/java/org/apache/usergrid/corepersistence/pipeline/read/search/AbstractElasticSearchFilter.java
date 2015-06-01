@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
+import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,18 +29,14 @@ import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
 
 import rx.Observable;
+
+import java.util.Collection;
 
 
 /**
@@ -107,6 +104,8 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
                             applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet );
 
 
+                        Collection<SelectFieldMapping> fieldMappingCollection = candidateResults.getGetFieldMappings();
+
 
                         for( CandidateResult candidateResult: candidateResults){
 
@@ -115,7 +114,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
                                 return;
                             }
 
-                            final Candidate candidate = new Candidate( candidateResult, searchEdge );
+                            final Candidate candidate = new Candidate( candidateResult, searchEdge, fieldMappingCollection );
 
                             final FilterResult<Candidate>
                                 result = createFilterResult( candidate, currentOffSet, idFilterResult.getPath() );

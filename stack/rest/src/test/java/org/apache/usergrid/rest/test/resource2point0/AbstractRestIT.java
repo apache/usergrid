@@ -54,8 +54,6 @@ public class AbstractRestIT extends JerseyTest {
 
     public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
 
-
-
     @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
 

@@ -131,20 +131,20 @@ public class PermissionsResourceIT extends AbstractRestIT {
         refreshIndex();
 
         //Create a user that is in the group.
-        node = this.app().collection("groups").entity(groupPath).collection("users").entity(USER).post();
+        node = this.app().collection("groups").entity(groupPath).collection("users").entity(user).post();
 
         assertNull( node.get( "error" ) );
 
         refreshIndex();
 
         //Get the user and make sure that they are part of the group
-        Collection groups = this.app().collection("users").entity(USER).collection("groups").get();
+        Collection groups = this.app().collection("users").entity(user).collection("groups").get();
 
         assertEquals(groups.next().get("name"), groupPath);
 
         // now delete the group
 
-        ApiResponse response = this.app().collection("groups").entity(groupPath).collection("users").entity(USER).delete();
+        ApiResponse response = this.app().collection("groups").entity(groupPath).collection("users").entity(user).delete();
 
         assertNull( response.getError() );
 
@@ -153,11 +153,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
         //Check that the user no longer exists in the group
         int status = 0;
         try {
-            groups = this.app().collection("users").entity(USER).collection("groups").get();
-            assertFalse(groups.hasNext());
+            this.app().collection("users").entity(user).collection("groups").entity( groupPath ).collection( "users" ).entity( user ).get();
+            fail("Should not have been able to retrieve the user as it was deleted");
         }catch (UniformInterfaceException e){
             status=e.getResponse().getStatus();
-            fail();
+            assertEquals( 404,status );
         }
 
     }
@@ -257,7 +257,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // get the reviews and assert they were created
-        Collection reviews = this.app().collection("reviews").get();
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.setQuery( "select * ORDER BY created" );
+        Collection reviews = this.app().collection("reviews").get(queryParameters);
 
         assertEquals( "noca",reviews.next().get("name") );
         assertEquals("4peaks", reviews.next().get( "name" ));
@@ -304,7 +306,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // get all reviews as reviewer2
-        reviews =  this.app().collection("reviews").get();
+        queryParameters = new QueryParameters();
+        queryParameters.setQuery( "select * ORDER BY created" );
+        reviews =  this.app().collection("reviews").get(queryParameters);
 
         assertEquals("noca", reviews.next().get("name").toString());
         assertEquals("4peaks", reviews.next().get("name").toString());

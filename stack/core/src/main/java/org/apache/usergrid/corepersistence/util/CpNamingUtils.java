@@ -167,9 +167,17 @@ public class CpNamingUtils {
         final String edgeType = getEdgeTypeFromConnectionType( connectionType );
 
         // create graph edge connection from head entity to member entity
-        return new SimpleEdge( sourceEntityId, edgeType, targetEntityId, System.currentTimeMillis() );
+        return new SimpleEdge( sourceEntityId, edgeType, targetEntityId, UUIDUtils.newTimeUUID().timestamp() );
     }
 
+
+    /**
+     * When marking nodes for deletion we must use the same unit of measure as the edge timestamps
+     * @return
+     */
+    public static long createGraphOperationTimestamp(){
+        return UUIDUtils.newTimeUUID().timestamp();
+    }
 
     /**
      * Create a connection searchEdge
