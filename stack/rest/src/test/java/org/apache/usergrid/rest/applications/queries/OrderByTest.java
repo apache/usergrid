@@ -340,7 +340,7 @@ public class OrderByTest extends QueryTestBase {
         long lastCreated = Long.parseLong(activities[0].get("created").toString());
         //2. Query for the entities in descending order
         String errorQuery = String.format("select * where created <= %d order by created desc", lastCreated);
-        int index = size - 1;
+        int index = 0;
 
         QueryParameters params = new QueryParameters().setQuery(errorQuery);
         Collection activitiesResponse = this.app().collection("activities").get(params);
@@ -348,9 +348,9 @@ public class OrderByTest extends QueryTestBase {
         do {
             int returnSize = activitiesResponse.getResponse().getEntityCount();
             //loop through the current page of results
-            for (int i = 0; i < returnSize; i++, index--) {
-                assertEquals(activitiesResponse.getResponse().getEntities().get(i).get("uuid").toString(),
-                    (activities[i]).get("uuid").toString());
+            for (int i = 0; i < returnSize; i++, index++) {
+                assertEquals( ( activities[index] ).get( "uuid" ).toString(),
+                    activitiesResponse.getResponse().getEntities().get(i).get("uuid").toString());
             }
             //grab the next page of results
             activitiesResponse = this.app().collection("activities").getNextPage(activitiesResponse, params, true);

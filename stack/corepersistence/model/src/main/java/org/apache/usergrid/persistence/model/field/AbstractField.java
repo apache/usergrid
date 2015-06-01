@@ -74,6 +74,7 @@ public abstract class AbstractField<T> implements Field<T> {
     public String getName() {
         return name;
     }
+    public void setName(final String newName){name = newName;}
 
     public boolean isUnique() {
         return unique;

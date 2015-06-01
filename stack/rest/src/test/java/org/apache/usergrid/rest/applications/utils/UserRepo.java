@@ -17,26 +17,19 @@
 package org.apache.usergrid.rest.applications.utils;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.WebResource;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ws.rs.core.MediaType;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
-
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.ClientSetup;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
+
+/**
+ * Creates three users in current app
+ */
 public class UserRepo {
-
     private final ClientSetup clientSetup;
 
     public UserRepo(ClientSetup clientSetup){
@@ -49,16 +42,10 @@ public class UserRepo {
         if ( loaded.size() > 0 ) {
             return;
         }
-
-        // pause between creation to insure entities are created in order
-
         createUser( "user1", "user1@apigee.com", "user1", "Jane Smith 1" );
-
         createUser( "user2", "user2@apigee.com", "user2", "John Smith 2" );
-
         createUser( "user3", "user3@apigee.com", "user3", "John Smith 3"  );
     }
-
 
     private void createUser( String username, String email, String password, String fullName) {
         Entity entity = new Entity();
@@ -71,20 +58,15 @@ public class UserRepo {
         loaded.put( username, id );
     }
 
-
     public UUID getByUserName( String name ) {
         return loaded.get( name );
     }
 
-
     /** Create a user via the REST API and post it. Return the response */
     private UUID createUser( Entity payload )  {
-
-        Entity entity =  clientSetup.getRestClient().org(clientSetup.getOrganizationName()).app(clientSetup.getAppName()).collection("users").post(payload);
-
+        Entity entity =  clientSetup.getRestClient().org(
+            clientSetup.getOrganizationName()).app(clientSetup.getAppName()).collection("users").post(payload);
         String idString = entity.get("uuid").toString();
-
         return UUIDUtils.tryExtractUUID( idString );
     }
-
 }

@@ -220,6 +220,15 @@ public abstract class NamedResource implements UrlResource {
 
     }
 
+    //For edge cases like Organizations and Tokens without any payload
+    public <T> T post(boolean useToken , Class<T> type) {
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return getResource(useToken).type(MediaType.APPLICATION_JSON_TYPE)
+            .accept( MediaType.APPLICATION_JSON )
+            .post(gt.getRawClass());
+
+    }
+
     public <T> T post(Class<T> type, Form requestEntity) {
         GenericType<T> gt = new GenericType<>((Class) type);
         return getResource()

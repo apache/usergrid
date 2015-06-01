@@ -230,14 +230,56 @@ public class TokenServiceImpl implements TokenService {
             Assert.notNull( principal.getUuid() );
         }
 
+        // create UUID that we will use to store token info in our database
         UUID uuid = UUIDUtils.newTimeUUID( creationTimestamp );
+
         long timestamp = getTimestampInMillis( uuid );
         if ( type == null ) {
             type = TOKEN_TYPE_ACCESS;
         }
         TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal, state );
         putTokenInfo( tokenInfo );
-        return getTokenForUUID( tokenInfo, tokenCategory, uuid );
+
+        // generate token from the UUID that we created
+        return getTokenForUUID(tokenInfo, tokenCategory, uuid);
+    }
+
+
+    @Override
+    public void importToken(String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                            Map<String, Object> state, long duration) throws Exception {
+
+        // same logic as create token
+
+        long maxTokenTtl = getMaxTtl( tokenCategory, principal );
+
+        if ( duration > maxTokenTtl ) {
+            throw new IllegalArgumentException(
+                    String.format( "Your token age cannot be more than the maximum age of %d milliseconds",
+                            maxTokenTtl ) );
+        }
+
+        if ( duration == 0 ) {
+            duration = maxTokenTtl;
+        }
+
+        if ( principal != null ) {
+            Assert.notNull( principal.getType() );
+            Assert.notNull( principal.getApplicationId() );
+            Assert.notNull( principal.getUuid() );
+        }
+
+        // except that we generate the UUID based on the token
+
+        UUID uuid = getUUIDForToken(token);
+
+        long timestamp = getTimestampInMillis( uuid );
+        if ( type == null ) {
+            type = TOKEN_TYPE_ACCESS;
+        }
+
+        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal, state );
+        putTokenInfo( tokenInfo );
     }
 
 
