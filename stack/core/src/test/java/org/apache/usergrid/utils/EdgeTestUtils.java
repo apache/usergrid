@@ -40,11 +40,11 @@ public class EdgeTestUtils {
 
 
     public static boolean isCollectionEdgeType( String type ) {
-        return type.startsWith( CpNamingUtils.EDGE_COLL_SUFFIX );
+        return type.startsWith( CpNamingUtils.EDGE_COLL_PREFIX );
     }
 
 
     public static boolean isConnectionEdgeType( String type ) {
-        return type.startsWith( CpNamingUtils.EDGE_CONN_SUFFIX );
+        return type.startsWith( CpNamingUtils.EDGE_CONN_PREFIX );
     }
 }
