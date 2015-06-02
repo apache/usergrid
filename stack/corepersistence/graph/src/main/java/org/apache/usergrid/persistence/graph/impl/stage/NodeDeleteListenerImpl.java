@@ -158,112 +158,89 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
         //get all edges pointing to the target node and buffer then into groups for deletion
         Observable<MarkedEdge> targetEdges =
                 getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null, null ) )
-                        .subscribeOn( Schedulers.io() ).flatMap( new Func1<String, Observable<MarkedEdge>>() {
-                    @Override
-                    public Observable<MarkedEdge> call( final String edgeType ) {
-                        return Observable.create( new ObservableIterator<MarkedEdge>( "getTargetEdges" ) {
+                        .subscribeOn( Schedulers.io() ).flatMap( edgeType -> Observable.create( new ObservableIterator<MarkedEdge>( "getTargetEdges" ) {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
                                 return storageSerialization.getEdgesToTarget( scope,
                                         new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
                             }
-                        } );
-                    }
-                } );
+                        } ) );
 
 
         //get all edges pointing to the source node and buffer them into groups for deletion
         Observable<MarkedEdge> sourceEdges =
                 getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null, null ) )
-                        .subscribeOn( Schedulers.io() ).flatMap( new Func1<String, Observable<MarkedEdge>>() {
-                    @Override
-                    public Observable<MarkedEdge> call( final String edgeType ) {
-                        return Observable.create( new ObservableIterator<MarkedEdge>( "getSourceEdges" ) {
+                        .subscribeOn( Schedulers.io() ).flatMap( edgeType -> Observable.create( new ObservableIterator<MarkedEdge>( "getSourceEdges" ) {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
                                 return storageSerialization.getEdgesFromSource( scope,
                                         new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
                             }
-                        } );
-                    }
-                } );
+                        } ) );
 
         //merge both source and target into 1 observable.  We'll need to check them all regardless of order
         return Observable.merge( targetEdges, sourceEdges )
 
                 //buffer and delete marked edges in our buffer size so we're making less trips to cassandra
-                .buffer( graphFig.getScanPageSize() ).flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
-                    @Override
-                    public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
+                .buffer( graphFig.getScanPageSize() ).flatMap( markedEdges -> {
 
-                        LOG.debug( "Batching {} edges for node {} for deletion", markedEdges.size(), node );
+                    LOG.debug( "Batching {} edges for node {} for deletion", markedEdges.size(), node );
 
-                        final MutationBatch batch = keyspace.prepareMutationBatch();
+                    final MutationBatch batch = keyspace.prepareMutationBatch();
 
-                        Set<TargetPair> sourceNodes = new HashSet<>( markedEdges.size() );
-                        Set<TargetPair> targetNodes = new HashSet<>( markedEdges.size() );
+                    Set<TargetPair> sourceNodes = new HashSet<>( markedEdges.size() );
+                    Set<TargetPair> targetNodes = new HashSet<>( markedEdges.size() );
 
-                        for ( MarkedEdge edge : markedEdges ) {
+                    for ( MarkedEdge edge : markedEdges ) {
 
-                            //delete the newest edge <= the version on the node delete
+                        //delete the newest edge <= the version on the node delete
 
-                            //we use the version specified on the delete purposefully.  If these edges are re-written
-                            //at a greater time we want them to exit
-                            batch.mergeShallow( storageSerialization.deleteEdge( scope, edge, eventTimestamp ) );
+                        //we use the version specified on the delete purposefully.  If these edges are re-written
+                        //at a greater time we want them to exit
+                        batch.mergeShallow( storageSerialization.deleteEdge( scope, edge, eventTimestamp ) );
 
-                            sourceNodes.add( new TargetPair( edge.getSourceNode(), edge.getType() ) );
-                            targetNodes.add( new TargetPair( edge.getTargetNode(), edge.getType() ) );
-                        }
-
-                        try {
-                            batch.execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to connect to casandra", e );
-                        }
-
-                        //now  delete meta data
-
-
-                        //delete both the source and target meta data in parallel for the edge we deleted in the
-                        // previous step
-                        //if nothing else is using them.  We purposefully do not schedule them on a new scheduler
-                        //we want them running on the i/o thread from the Observable emitting all the edges
-
-                        //
-                        LOG.debug( "About to audit {} source types", sourceNodes.size() );
-
-                        Observable<Integer> sourceMetaCleanup =
-                                Observable.from( sourceNodes ).flatMap( new Func1<TargetPair, Observable<Integer>>() {
-                                    @Override
-                                    public Observable<Integer> call( final TargetPair targetPair ) {
-                                        return edgeMetaRepair
-                                                .repairSources( scope, targetPair.id, targetPair.edgeType, maxVersion );
-                                    }
-                                } ).last();
-
-
-                        LOG.debug( "About to audit {} target types", targetNodes.size() );
-
-                        Observable<Integer> targetMetaCleanup =
-                                Observable.from( targetNodes ).flatMap( new Func1<TargetPair, Observable<Integer>>() {
-                                    @Override
-                                    public Observable<Integer> call( final TargetPair targetPair ) {
-                                        return edgeMetaRepair
-                                                .repairTargets( scope, targetPair.id, targetPair.edgeType, maxVersion );
-                                    }
-                                } ).last();
-
-
-                        //run both the source/target edge type cleanup, then proceed
-                        return Observable.merge( sourceMetaCleanup, targetMetaCleanup ).lastOrDefault( null )
-                                         .flatMap( new Func1<Integer, Observable<MarkedEdge>>() {
-                                             @Override
-                                             public Observable<MarkedEdge> call( final Integer integer ) {
-                                                 return Observable.from( markedEdges );
-                                             }
-                                         } );
+                        sourceNodes.add( new TargetPair( edge.getSourceNode(), edge.getType() ) );
+                        targetNodes.add( new TargetPair( edge.getTargetNode(), edge.getType() ) );
                     }
+
+                    try {
+                        batch.execute();
+                    }
+                    catch ( ConnectionException e ) {
+                        throw new RuntimeException( "Unable to connect to casandra", e );
+                    }
+
+                    //now  delete meta data
+
+
+                    //delete both the source and target meta data in parallel for the edge we deleted in the
+                    // previous step
+                    //if nothing else is using them.  We purposefully do not schedule them on a new scheduler
+                    //we want them running on the i/o thread from the Observable emitting all the edges
+
+                    //
+                    LOG.debug( "About to audit {} source types", sourceNodes.size() );
+
+                    Observable<Integer> sourceMetaCleanup =
+                            Observable.from( sourceNodes ).flatMap( targetPair -> edgeMetaRepair
+                                    .repairSources( scope, targetPair.id, targetPair.edgeType, maxVersion ) ).last();
+
+
+                    LOG.debug( "About to audit {} target types", targetNodes.size() );
+
+                    Observable<Integer> targetMetaCleanup =
+                            Observable.from( targetNodes ).flatMap( targetPair -> edgeMetaRepair
+                                    .repairTargets( scope, targetPair.id, targetPair.edgeType, maxVersion ) ).last();
+
+
+                    //run both the source/target edge type cleanup, then proceed
+                    return Observable.merge( sourceMetaCleanup, targetMetaCleanup ).lastOrDefault( null )
+                                     .flatMap( new Func1<Integer, Observable<MarkedEdge>>() {
+                                         @Override
+                                         public Observable<MarkedEdge> call( final Integer integer ) {
+                                             return Observable.from( markedEdges );
+                                         }
+                                     } );
                 } );
     }
 
