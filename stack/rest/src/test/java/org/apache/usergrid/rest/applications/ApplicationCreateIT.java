@@ -77,12 +77,12 @@ public class ApplicationCreateIT extends AbstractRestIT {
     @Test
     public void testCreateAndImmediateList() throws Exception {
 
-        int appCount = 40;
+        int appCount = 10;
 
         String random = RandomStringUtils.randomAlphabetic(10);
-        String orgName = "org_" + random;
-        String appName = "app_" + random;
-        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getUsername());
+        String orgName = clientSetup.getOrganizationName();
+        String appName = "testCreateAndImmediateList_app_" + random;
+        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getPassword());
 
         for ( int i=0; i<appCount; i++ ) {
            createAppWithCollection( orgName, appName + i, orgAdminToken, new ArrayList<>() );
@@ -95,7 +95,9 @@ public class ApplicationCreateIT extends AbstractRestIT {
 
         int count = 0;
         for ( String name : orgAppResponse.getData().keySet() ) {
-            count++;
+            if(name.contains("testcreateandimmediatelist_app")) {
+                count++;
+            }
         }
         assertEquals( appCount, count );
     }
@@ -105,14 +107,10 @@ public class ApplicationCreateIT extends AbstractRestIT {
         String orgName, String appName, Token orgAdminToken, List<Entity> entities) {
 
         ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().getResource()
-            .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .type( MediaType.APPLICATION_JSON )
-            .post( ApiResponse.class, new Application( appName ) );
+            .management().orgs().organization(orgName).app().post(new Application( appName ));
         UUID appId = appCreateResponse.getEntities().get(0).getUuid();
 
-        try { Thread.sleep(1000); } catch (InterruptedException ignored ) { }
-
+        refreshIndex();
         for ( int i=0; i<5; i++ ) {
 
             final String entityName = "entity" + i;
