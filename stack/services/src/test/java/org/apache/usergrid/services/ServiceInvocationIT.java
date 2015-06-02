@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,7 +169,22 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
          app.testRequest( ServiceAction.GET, 1, "contributor", contributor.getName());
     }
-    
+
+    //USERGRID-82
+    @Test
+    public void testUpdateImmutableProperty() throws Exception {
+
+        Entity contributor = app.doCreate( "contributor", "Malaka" );
+        app.put("name", "stliu");
+        try {
+            app.testRequest(ServiceAction.PUT, 1, "contributors", contributor.getName());
+            Assert.fail();
+        }catch (IllegalArgumentException e){
+            //success
+        }
+
+    }
+
     /* Written to test fix for https://issues.apache.org/jira/browse/USERGRID-94
      * (Null pointer was returned when querying names with spaces.)
      * e.x.: http://localhost:8080/test-organization/test-app/projects/Usergrid/contains/contributors/Malaka Mahanama

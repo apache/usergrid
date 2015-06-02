@@ -29,43 +29,33 @@
     </appender>
     <logger name="org.apache">
         <level value="error"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="me.prettyprint.cassandra.hector.TimingLogger">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="me.prettyprint.hector.api.beans.AbstractComposite">
         <level value="error"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.apache.usergrid.persistence.cassandra.BATCH">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.apache.usergrid.persistence.cassandra.ConnectionRefImpl">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.apache.usergrid.persistence.cassandra.DaoUtils">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.apache.usergrid.persistence.cassandra.DB">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.apache.usergrid.persistence.cassandra.EntityManagerImpl">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.apache.usergrid.rest.security.AllowAjaxFilter">
         <level value="warn"/>
-        <appender-ref ref="stdout"/>
     </logger>
     <logger name="TraceTagReporter">
         <level value="info"/>
