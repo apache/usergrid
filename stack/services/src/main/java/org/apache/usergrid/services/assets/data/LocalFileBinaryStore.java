@@ -22,9 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.utils.StringUtils;
 
 import org.apache.commons.io.FileUtils;
 
@@ -34,6 +39,8 @@ public class LocalFileBinaryStore implements BinaryStore {
 
     private String reposLocation = FileUtils.getTempDirectoryPath();
 
+    @Autowired
+    private Properties properties;
 
     /** Control where to store the file repository. In the system's temp dir by default. */
     public void setReposLocation( String reposLocation ) {
@@ -62,15 +69,37 @@ public class LocalFileBinaryStore implements BinaryStore {
 
         FileUtils.copyInputStreamToFile( inputStream, file );
 
+        long maxSizeBytes = 50 * FileUtils.ONE_MB;
         long size = FileUtils.sizeOf( file );
 
+        String maxSizeMbString = properties.getProperty( "usergrid.binary.max-size-mb", "50" );
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
-        fileMetadata.put( AssetUtils.CONTENT_LENGTH, size );
-        fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
 
-        // if we were successful, write the mime type
-        if ( file.exists() ) {
-            AssetMimeHandler.get().getMimeType( entity, file );
+
+        if ( StringUtils.isNumeric( maxSizeMbString )) {
+            maxSizeBytes = Long.parseLong( maxSizeMbString ) * FileUtils.ONE_MB;
+        }
+
+        if ( size > maxSizeBytes ) {
+            try {
+                fileMetadata.put( "error", "Asset size " + file.length()
+                    + " is larger than max size of " + maxSizeBytes );
+                //em.update( entity );
+                //tempFile.delete();
+
+            } catch ( Exception e ) {
+                //LOG.error( "Error updating entity with error message", e);
+            }
+
+        }
+        else {
+            fileMetadata.put( AssetUtils.CONTENT_LENGTH, size );
+            fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
+
+            // if we were successful, write the mime type
+            if ( file.exists() ) {
+                AssetMimeHandler.get().getMimeType( entity, file );
+            }
         }
     }
 
