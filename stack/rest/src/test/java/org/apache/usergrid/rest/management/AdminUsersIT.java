@@ -200,6 +200,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * TODO:test for parallel test that changing the properties here won't affect other tests
      * @throws Exception
      */
+    @Ignore("breaks other tests")
     @Test
     public void testUnconfirmedAdminLogin()  throws Exception{
 
@@ -285,6 +286,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the system admin doesn't need a confirmation email
      * @throws Exception
      */
+    @Ignore("breaks other tests")
     @Test
     public void testSystemAdminNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -645,6 +647,7 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
+    @Ignore("breaks other tests")
     @Test
     public void testProperties(){
         ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();
