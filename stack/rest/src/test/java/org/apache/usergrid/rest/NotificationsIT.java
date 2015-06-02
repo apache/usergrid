@@ -77,8 +77,8 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
     @Test
     public void testPaging() throws Exception {
 
-        int numDevices = 10;
-        int numNotifications = 100; // to send to each device
+        int numDevices = 2;
+        int numNotifications = 5; // to send to each device
 
         User user = new User("ed","ed", "ed@anuff.com", "sesame" );
         Entity entity = this.app().collection("users").post(user);
@@ -163,12 +163,17 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
         StopWatch sw = new StopWatch();
         sw.start();
         boolean allSent = false;
+        int count = 0;
         while (!allSent) {
 
             Thread.sleep(100);
             int finished = pageThroughAllNotifications("FINISHED");
             if ( finished == (numDevices * numNotifications) ) {
                 allSent = true;
+            }
+            count++;
+            if(count>100){
+                break;
             }
         }
         sw.stop();

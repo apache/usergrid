@@ -285,8 +285,7 @@ public class AssetResourceIT extends AbstractRestIT {
         String uuid = idNode.textValue();
 
         // get entity
-        long timeout = System.currentTimeMillis() + 60000;
-        while ( true ) {
+        //TODO: seperate tests for s3 and local system property tests.
             LOG.info( "Waiting for upload to finish..." );
             Thread.sleep( 2000 );
             node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
@@ -294,14 +293,6 @@ public class AssetResourceIT extends AbstractRestIT {
                 .accept( MediaType.APPLICATION_JSON_TYPE )
                 .get( String.class ) );
 
-            // poll for the upload to complete
-            if ( node.findValue( AssetUtils.E_TAG ) != null ) {
-                break;
-            }
-            if ( System.currentTimeMillis() > timeout ) {
-                throw new TimeoutException();
-            }
-        }
         LOG.info( "Upload complete!" );
 
         // get data
@@ -351,24 +342,17 @@ public class AssetResourceIT extends AbstractRestIT {
 
             // get entity
             String errorMessage = null;
-            long timeout = System.currentTimeMillis() + 60000;
-            while (true) {
+            //TODO: seperate tests for s3 and local system property tests.
                 LOG.info( "Waiting for upload to finish..." );
                 Thread.sleep( 2000 );
                 node = resource().path( orgAppPath + "/bars/" + uuid )
                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
                         .get( JsonNode.class );
-                //logNode( node );
 
-                // poll for the error to happen
+                // check for the error
                 if (node.findValue( "error" ) != null) {
                     errorMessage = node.findValue("error").asText();
-                    break;
                 }
-                if (System.currentTimeMillis() > timeout) {
-                    throw new TimeoutException();
-                }
-            }
 
             assertTrue( errorMessage.startsWith("Asset size "));
 

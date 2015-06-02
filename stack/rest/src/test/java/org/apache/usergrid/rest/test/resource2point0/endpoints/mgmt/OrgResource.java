@@ -103,7 +103,7 @@ public class OrgResource  extends NamedResource {
     public Organization post(Organization organization){
 
         // use string type so we can log actual response from server
-        String responseString = getResource().type( MediaType.APPLICATION_JSON_TYPE )
+        String responseString = getResource(false).type( MediaType.APPLICATION_JSON_TYPE )
             .accept(MediaType.APPLICATION_JSON)
             .post(String.class, organization);
 

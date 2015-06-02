@@ -127,7 +127,7 @@ public class ClientSetup implements TestRule {
 
         ApiResponse appResponse = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
         appUuid = ( String ) appResponse.getEntities().get( 0 ).get( "uuid" );
-        //refreshIndex();
+        refreshIndex();
 
     }
 
