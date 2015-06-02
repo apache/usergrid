@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -47,27 +48,18 @@ public class ApplicationCreateIT extends AbstractRestIT {
      */
     @Test
     public void testCreateAndImmediateGet() throws Exception {
-
-        // create app
-
-        String orgName = clientSetup.getOrganization().getName();
+        
+        String orgName = clientSetup.getOrganizationName();
         String appName = clientSetup.getAppName() + "_new_app";
-        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getUsername());
+        Map applicationMap = new HashMap<String, Object>(  );
+        applicationMap.put( "name", appName );
 
-        ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization(orgName).app().getResource()
-            .queryParam("access_token", orgAdminToken.getAccessToken())
-            .type( MediaType.APPLICATION_JSON )
-            .post(ApiResponse.class, new Application(appName));
-        appCreateResponse.getEntities().get(0).getUuid();
+        Entity appCreateResponse = this.management().orgs().organization( orgName ).apps().post(
+            clientSetup.getSuperuserToken(),applicationMap );
 
-        // should be able to immediately get the application's roles collection
+        Entity response = this.management().orgs().organization( orgName ).addToPath( "apps" ).addToPath( appName ).get();
 
-        ApiResponse response = clientSetup.getRestClient().getResource()
-            .path("/" + clientSetup.getOrganizationName() + "/" + appName + "/roles" )
-            .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .get(ApiResponse.class);
-        assertTrue( !response.getEntities().isEmpty() );
+        assertNotNull( response );
     }
 
 
@@ -107,7 +99,7 @@ public class ApplicationCreateIT extends AbstractRestIT {
         String orgName, String appName, Token orgAdminToken, List<Entity> entities) {
 
         ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization(orgName).app().post(new Application( appName ));
+            .management().orgs().organization( orgName ).app().post( new Application( appName ) );
         UUID appId = appCreateResponse.getEntities().get(0).getUuid();
 
         refreshIndex();
