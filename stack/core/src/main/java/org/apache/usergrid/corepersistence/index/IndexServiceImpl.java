@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -217,10 +218,11 @@ public class IndexServiceImpl implements IndexService {
         if(crs.isEmpty())
             return Observable.empty();
 
+        UUID timeUUID = UUIDUtils.isTimeBased(entityId.getUuid()) ? entityId.getUuid() : UUIDUtils.newTimeUUID();
         //not actually sure about the timestamp but ah well. works.
         SearchEdge searchEdge = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
             CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
-            entityId.getUuid().timestamp() ) );
+            timeUUID.timestamp() ) );
 
 
         final Observable<IndexOperationMessage>  batches = Observable.from( crs )
