@@ -43,7 +43,7 @@ public class TokenResource extends NamedResource {
      * @return
      */
     public Token post(QueryParameters params) {
-        WebResource resource = getResource();
+        WebResource resource = getResource(false);
         resource = addParametersToResource(resource, params);
         Token token = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
             .get(Token.class);
@@ -70,7 +70,7 @@ public class TokenResource extends NamedResource {
      * @return
      */
     public Token post(Token token) {
-        token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
+        token = getResource(false).type(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
         this.context.setToken(token);
         return token;
