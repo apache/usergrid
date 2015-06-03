@@ -1,0 +1,23 @@
+[ {
+  "uuid" : "USER_UUID_1",
+  "type" : "user",
+  "name" : "USER_NAME_1",
+  "created" : 1433331613479,
+  "modified" : 1433331613479,
+  "username" : "USER_NAME_1",
+  "email" : "USER_NAME_1@example.com",
+  "activated" : true,
+  "confirmed" : true,
+  "disabled" : false
+}, {
+  "uuid" : "USER_UUID_2",
+  "type" : "user",
+  "name" : "USER_NAME_2",
+  "created" : 1433331614002,
+  "modified" : 1433331614002,
+  "username" : "USER_NAME_2",
+  "email" : "USER_NAME_2@example.com",
+  "activated" : true,
+  "confirmed" : true,
+  "disabled" : false
+} ]
