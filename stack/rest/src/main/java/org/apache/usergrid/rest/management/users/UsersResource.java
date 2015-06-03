@@ -34,6 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import net.tanesha.recaptcha.ReCaptchaException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.rest.RootResource;
@@ -196,14 +197,16 @@ public class UsersResource extends AbstractContextResource {
 
                 if(!reCaptchaResponse.isValid()){
                     errorMsg = "Incorrect Captcha, try again...";
-                    throw new Exception("Incorrect Captcha");
+                    throw new Exception("reCAPTCHA error message: "+reCaptchaResponse.getErrorMessage());
                 }
             }
             user = management.findAdminUser(email);
+
             if (user == null) {
                 errorMsg = "We don't recognize that email, try again...";
                 throw new Exception("Unrecognized email address");
             }
+            logger.info("Starting Admin User Password Reset Flow for "+user.getUuid());
             management.startAdminUserPasswordResetFlow(user);
             return handleViewable("resetpw_email_success", this);
         }
@@ -211,7 +214,8 @@ public class UsersResource extends AbstractContextResource {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "resetpw_email_form", e );
+            logger.error(String.format("Exception in password reset form. (%s) %s ", e.getClass().getCanonicalName(), e.getMessage()));
+            return handleViewable( "resetpw_email_form", this );
         }
     }
 
