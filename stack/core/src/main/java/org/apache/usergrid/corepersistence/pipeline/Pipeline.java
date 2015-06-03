@@ -20,102 +20,91 @@
 package org.apache.usergrid.corepersistence.pipeline;
 
 
-import java.util.List;
-
 import org.apache.usergrid.corepersistence.pipeline.cursor.RequestCursor;
-import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
-import org.apache.usergrid.corepersistence.pipeline.read.Collector;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import rx.Observable;
 
 
 /**
- * A pipeline that will allow us to build a traversal command for execution
+ * Pipeline for applying our UG domain specific filters.
  *
- * See http://martinfowler.com/articles/collection-pipeline/ for some examples
+ * Modeled after an observable, with typing to allow input of specific filters
  *
- * TODO: Re work the cursor and limit phases.  They need to be lazily evaluated, not added on build time
+ * @param InputType the input type in the current pipeline state
  */
-public class Pipeline<R> {
-
-
-    private final ApplicationScope applicationScope;
-    private final List<PipelineOperation> idPipelineOperationList;
-    private final Collector<?, R> collector;
-    private final RequestCursor requestCursor;
-
-    private final int limit;
+public class Pipeline<InputType> {
 
 
     private int idCount = 0;
 
+    private final ApplicationScope applicationScope;
+
+
+    private final RequestCursor requestCursor;
+    private int limit;
+
+    //Generics hell, intentionally without a generic, we check at the filter level
+    private Observable currentObservable;
+
 
     /**
-     * Our first pass, where we implement our start point as an Id until we can use this to perform our entire
-     * traversal.  Eventually as we untangle the existing Query service nightmare, the sourceId will be remove and
-     * should only be traversed from the root application
+     * Create our filter pipeline
      */
-    public Pipeline( final ApplicationScope applicationScope, final List<PipelineOperation> pipelineOperations,
-                     final Collector<?, R> collector, final Optional<String> cursor, final int limit ) {
+    public Pipeline( final ApplicationScope applicationScope, final Optional<String> cursor, final int limit ) {
+
+
+        ValidationUtils.validateApplicationScope( applicationScope );
+        Preconditions.checkNotNull( cursor, "cursor optional is required" );
+        Preconditions.checkArgument( limit > 0, "limit must be > 0" );
+
 
         this.applicationScope = applicationScope;
-        this.idPipelineOperationList = pipelineOperations;
-        this.collector = collector;
+
+        //init our cursor to empty
+        this.requestCursor = new RequestCursor( cursor );
+
+        //set the default limit
         this.limit = limit;
 
-        this.requestCursor = new RequestCursor( cursor );
+        //set our observable to start at the application
+        final FilterResult<Id> filter = new FilterResult<>( applicationScope.getApplication(), Optional.absent() );
+        this.currentObservable = Observable.just( filter );
     }
 
 
-    /**
-     * Execute the pipline construction, returning an observable of results
-     * @return
-     */
-    public Observable<R> execute(){
-
-
-        Observable traverseObservable = Observable.just( new FilterResult<>( applicationScope.getApplication(), Optional.absent() ));
-
-        //build our traversal commands
-        for ( PipelineOperation pipelineOperation : idPipelineOperationList ) {
-            setState( pipelineOperation );
-
-            //TODO, see if we can wrap this observable in our ObservableTimer so we can see how long each filter takes
-
-
-            traverseObservable = traverseObservable.compose( pipelineOperation );
-        }
-
-
-        setState( collector );
-
-        final Observable<R> response =  traverseObservable.compose( collector );
-
-
-        //append the optional cursor into the response for the caller to use
-        return response;
-    }
+    public <OutputType> Pipeline<OutputType> withFilter(
+        final PipelineOperation<? super InputType, ? extends OutputType> filter ) {
 
 
 
+        final PipelineContext context = new PipelineContext( applicationScope, requestCursor, limit, idCount );
 
-    /**
-     * Set the id of the state
-     */
-    private void setState( final PipelineOperation pipelineOperation ) {
+        filter.setContext( context );
 
-
-        final PipelineContext context = new PipelineContext( applicationScope, requestCursor,
-            limit, idCount );
-
-        pipelineOperation.setContext( context );
+        //update the observable
+        this.currentObservable = currentObservable.compose( filter );
 
         //done for clarity
         idCount++;
 
+        return ( Pipeline<OutputType> ) this;
     }
+
+
+
+    /**
+     * Return the observable of the filter pipeline
+     */
+    public Observable<InputType> execute() {
+        return currentObservable;
+    }
+
+
 }

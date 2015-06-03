@@ -16,11 +16,8 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.SystemResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.*;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -106,6 +103,10 @@ public class RestClient implements UrlResource {
                 .queryParam( "org_name", orgname )
                 .queryParam( "app_name",appName )
                 .accept( MediaType.APPLICATION_JSON ).post();
+    }
+
+    public NamedResource pathResource(String path){
+        return new NamedResource(path,context,this);
     }
 
     public void superuserSetup() {

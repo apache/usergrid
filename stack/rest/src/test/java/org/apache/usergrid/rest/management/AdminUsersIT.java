@@ -27,6 +27,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,11 +40,6 @@ import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -61,9 +57,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
 
 
 /**
@@ -98,12 +91,12 @@ public class AdminUsersIT extends AbstractRestIT {
         this.refreshIndex();
 
         //Get the token using the new password
-        Token adminToken = management.token().post( Token.class, new Token( username, "testPassword" )  );
+        Token adminToken = management.token().post( false, Token.class, new Token( username, "testPassword" ) ,null );
         management.token().setToken( adminToken );
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( Token.class, new Token( username, password ));
+            management.token().post(false, Token.class, new Token( username, password ),null);
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -163,16 +156,17 @@ public class AdminUsersIT extends AbstractRestIT {
         Map<String, Object> passwordPayload = new HashMap<String, Object>();
         passwordPayload.put( "newpassword", "testPassword" );
 
-        management.users().user( username ).password().post( clientSetup.getSuperuserToken(), passwordPayload );
+        management.token().setToken( clientSetup.getSuperuserToken());
+        management.users().user( username ).password().post( passwordPayload );
 
         this.refreshIndex();
 
-        assertNotNull(management.token().post( Token.class, new Token( username, "testPassword" )  ));
+        assertNotNull(management.token().post( false,Token.class, new Token( username, "testPassword" ) ,null ));
 
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( Token.class, new Token( username, password) );
+            management.token().post( false,Token.class, new Token( username, password) ,null);
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -187,12 +181,13 @@ public class AdminUsersIT extends AbstractRestIT {
     @Test
     public void mgmtUserFeed() throws Exception {
         //TODO: fix or establish what the user feed should do
-        Entity mgmtUserFeedEntity = management.users().user( clientSetup.getUsername() ).feed().get();
+        management.token().setToken( this.getAdminToken() );
+        ApiResponse mgmtUserFeedEntity = management.users().user( clientSetup.getUsername() ).feed().get();
         String correctValue= "<a href=mailto:"+clientSetup.getUsername();  //user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com">user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f (user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com)</a> created a new organization account named org_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3ec910-acc7-11e4-94c8-33f0d48a5559
 
         assertNotNull( mgmtUserFeedEntity );
 
-        ArrayList<Map<String,Object>> feedEntityMap = ( ArrayList ) mgmtUserFeedEntity.get( "entities" );
+        List<Entity> feedEntityMap =  mgmtUserFeedEntity.getEntities();
         assertNotNull( feedEntityMap );
         assertNotEquals( 0,feedEntityMap.size() );
         assertNotNull( feedEntityMap.get( 0 ).get( "title" )  );
@@ -206,6 +201,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * TODO:test for parallel test that changing the properties here won't affect other tests
      * @throws Exception
      */
+    @Ignore("breaks other tests")
     @Test
     public void testUnconfirmedAdminLogin()  throws Exception{
 
@@ -291,6 +287,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the system admin doesn't need a confirmation email
      * @throws Exception
      */
+    @Ignore("breaks other tests")
     @Test
     public void testSystemAdminNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -618,7 +615,7 @@ public class AdminUsersIT extends AbstractRestIT {
 //        management().token().setToken( organizationToken );
 
         //Create admin user
-        management().orgs().organization( clientSetup.getOrganizationName() ).users().postWithToken(ApiResponse.class ,adminUserPayload );
+        management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
 
         refreshIndex();
 
@@ -651,6 +648,7 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
+    @Ignore("breaks other tests")
     @Test
     public void testProperties(){
         ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();

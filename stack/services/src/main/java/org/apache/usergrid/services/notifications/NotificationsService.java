@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.queue.DefaultQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,6 @@ public class NotificationsService extends AbstractCollectionService {
     private static final int PAGE = 100;
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
     //need a mocking framework, this is to substitute for no mocking
-    public static QueueManager TEST_QUEUE_MANAGER = null;
 
     static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
 
@@ -110,7 +110,7 @@ public class NotificationsService extends AbstractCollectionService {
         String name = ApplicationQueueManagerImpl.getQueueNames( props );
         QueueScope queueScope = new QueueScopeImpl( name );
         queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
-        QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+        QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
         notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }

@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -170,9 +171,10 @@ public class AppInfoMigrationPluginTest {
             new SimpleEntityRef("application", mgmtAppId), "appinfos", Query.fromQL("select *"));
         assertEquals( 0, appInfoResults.size() );
 
-        final Results applicationInfoResults = rootEm.searchCollection(
+        final Results applicationInfoResults =  rootEm.searchCollection(
             new SimpleEntityRef("application", mgmtAppId), "application_infos", Query.fromQL("select *"));
-        assertEquals( 10, applicationInfoResults.size() );
+        int appCount =  Observable.from(applicationInfoResults.getEntities()).filter(entity -> !entity.getName().startsWith("org.") && !entity.getName().startsWith("usergrid")).toList().toBlocking().last().size();
+        assertEquals( appIds.size() - deletedApps.size(),appCount );
 
         // test that 10 applications are no longer broken
 

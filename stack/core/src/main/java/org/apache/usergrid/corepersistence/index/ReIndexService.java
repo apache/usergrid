@@ -51,7 +51,7 @@ public interface ReIndexService {
     /**
      * The response when requesting a re-index operation
      */
-    class ReIndexStatus {
+    public class ReIndexStatus {
         final String jobId;
         final Status status;
         final long numberProcessed;
@@ -103,6 +103,6 @@ public interface ReIndexService {
     }
 
     enum Status{
-        STARTED, INPROGRESS, COMPLETE;
+        STARTED, INPROGRESS, COMPLETE, UNKNOWN;
     }
 }

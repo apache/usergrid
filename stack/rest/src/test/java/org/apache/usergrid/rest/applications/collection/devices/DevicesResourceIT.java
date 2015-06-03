@@ -47,10 +47,10 @@ public class DevicesResourceIT extends AbstractRestIT {
         Entity payload = new Entity().chainPut("name", "foo");
         UUID uuid = UUID.randomUUID();
 
-        refreshIndex();
 
         CollectionEndpoint devicesResource  =this.app().collection("devices");
         Entity entity = devicesResource.entity(uuid).put(payload);
+        refreshIndex();
 
         // create
         assertNotNull( entity );
@@ -71,6 +71,7 @@ public class DevicesResourceIT extends AbstractRestIT {
         catch ( UniformInterfaceException e ) {
             assertEquals( 404, e.getResponse().getStatus() );
         }
+        refreshIndex();
 
         // create again
         entity = devicesResource.entity(uuid).put(payload);

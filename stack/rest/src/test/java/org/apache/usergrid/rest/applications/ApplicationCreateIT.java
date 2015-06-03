@@ -33,8 +33,8 @@ import javax.ws.rs.core.MediaType;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+
 
 
 public class ApplicationCreateIT extends AbstractRestIT {
@@ -48,26 +48,19 @@ public class ApplicationCreateIT extends AbstractRestIT {
     @Test
     public void testCreateAndImmediateGet() throws Exception {
 
-        // create app
-
-        String orgName = clientSetup.getOrganization().getName();
+        String orgName = clientSetup.getOrganizationName();
         String appName = clientSetup.getAppName() + "_new_app";
-        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getUsername());
+        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getPassword());
 
-        ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization(orgName).app().getResource()
-            .queryParam("access_token", orgAdminToken.getAccessToken())
-            .type( MediaType.APPLICATION_JSON )
-            .post(ApiResponse.class, new Application(appName));
-        appCreateResponse.getEntities().get(0).getUuid();
+        Map applicationMap = new HashMap<String, Object>(  );
+        applicationMap.put( "name", appName );
 
-        // should be able to immediately get the application's roles collection
+        this.management().token().setToken(orgAdminToken);
+        this.management().orgs().organization( orgName ).apps().post(applicationMap );
 
-        ApiResponse response = clientSetup.getRestClient().getResource()
-            .path("/" + clientSetup.getOrganizationName() + "/" + appName + "/roles" )
-            .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .get(ApiResponse.class);
-        assertTrue( !response.getEntities().isEmpty() );
+        Entity response = this.management().orgs().organization( orgName ).addToPath( "apps" ).addToPath( appName ).get();
+
+        assertNotNull( response );
     }
 
 
@@ -77,12 +70,12 @@ public class ApplicationCreateIT extends AbstractRestIT {
     @Test
     public void testCreateAndImmediateList() throws Exception {
 
-        int appCount = 40;
+        int appCount = 10;
 
         String random = RandomStringUtils.randomAlphabetic(10);
-        String orgName = "org_" + random;
-        String appName = "app_" + random;
-        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getUsername());
+        String orgName = clientSetup.getOrganizationName();
+        String appName = "testCreateAndImmediateList_app_" + random;
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getPassword() );
 
         for ( int i=0; i<appCount; i++ ) {
            createAppWithCollection( orgName, appName + i, orgAdminToken, new ArrayList<>() );
@@ -95,7 +88,9 @@ public class ApplicationCreateIT extends AbstractRestIT {
 
         int count = 0;
         for ( String name : orgAppResponse.getData().keySet() ) {
-            count++;
+            if(name.contains("testcreateandimmediatelist_app")) {
+                count++;
+            }
         }
         assertEquals( appCount, count );
     }
@@ -105,14 +100,10 @@ public class ApplicationCreateIT extends AbstractRestIT {
         String orgName, String appName, Token orgAdminToken, List<Entity> entities) {
 
         ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().getResource()
-            .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .type( MediaType.APPLICATION_JSON )
-            .post( ApiResponse.class, new Application( appName ) );
+            .management().orgs().organization( orgName ).app().post( new Application( appName ) );
         UUID appId = appCreateResponse.getEntities().get(0).getUuid();
 
-        try { Thread.sleep(1000); } catch (InterruptedException ignored ) { }
-
+        refreshIndex();
         for ( int i=0; i<5; i++ ) {
 
             final String entityName = "entity" + i;

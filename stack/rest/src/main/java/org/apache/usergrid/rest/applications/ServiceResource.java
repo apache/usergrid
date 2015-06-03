@@ -649,7 +649,7 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
         Entity entity = serviceResults.getEntity();
 
-        LOG.info( "In AssetsResource.findAsset with id: {}, range: {}, modifiedSince: {}",
+        LOG.info( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
                 new Object[] { entityId, rangeHeader, modifiedSince } );
 
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );

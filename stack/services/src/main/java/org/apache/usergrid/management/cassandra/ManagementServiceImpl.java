@@ -1412,6 +1412,13 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    @Override
+    public void importTokenForAdminUser(UUID userId, String token, long ttl) throws Exception {
+        tokens.importToken( token, TokenCategory.ACCESS, null,
+                new AuthPrincipalInfo( ADMIN_USER, userId, smf.getManagementAppId() ), null, ttl );
+    }
+
+
     /*
    * (non-Javadoc)
    *
