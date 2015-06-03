@@ -1,0 +1,85 @@
+{
+  "USER_UUID_1" : {
+    "activities" : [ ],
+    "devices" : [ ],
+    "feed" : [ "4c6275ba-09e5-11e5-bccc-97be717704cf" ],
+    "groups" : [ "4c5444ea-09e5-11e5-908d-61d76b477be4", "4c88c26a-09e5-11e5-8a66-594dd93a503d" ],
+    "roles" : [ ],
+    "connections" : { },
+    "organizations" : [ {
+      "uuid" : "ORG_UUID_1",
+      "name" : "ORG_NAME_1"
+    }, {
+      "uuid" : "ORG_UUID_2",
+      "name" : "ORG_NAME_2"
+    } ],
+    "dictionaries" : {
+      "credentials" : {
+        "mongo_pwd" : {
+          "recoverable" : true,
+          "encrypted" : false,
+          "secret" : "e045e38bbe5bf23334407ca9419ac94c",
+          "hashType" : null,
+          "created" : 1433331613575,
+          "cryptoChain" : [ "plaintext" ]
+        },
+        "password" : {
+          "recoverable" : false,
+          "encrypted" : true,
+          "secret" : "JDJhJDA5JEFpeC5IbHlpclo4ODFFVVNVTmN3Q3VEeGJ5emMyQlBwREN5WGZ6aHkydkVLdThJQlFzZExL",
+          "hashType" : null,
+          "created" : 1433331613505,
+          "cryptoChain" : [ "bcrypt" ]
+        },
+        "secret" : {
+          "recoverable" : true,
+          "encrypted" : false,
+          "secret" : "YWQ6bpC6YOMVf0s0dIQZ1CUdXIxDTY0",
+          "hashType" : null,
+          "created" : 1433331613575,
+          "cryptoChain" : [ "plaintext" ]
+        }
+      }
+    }
+  },
+  "USER_UUID_2" : {
+    "activities" : [ ],
+    "devices" : [ ],
+    "feed" : [ "4c8fee64-09e5-11e5-b3c6-57bd4e12c0b1" ],
+    "groups" : [ "4c88c26a-09e5-11e5-8a66-594dd93a503d" ],
+    "roles" : [ ],
+    "connections" : { },
+    "organizations" : [ {
+      "uuid" : "ORG_UUID_2",
+      "name" : "ORG_NAME_2"
+    } ],
+    "dictionaries" : {
+      "credentials" : {
+        "mongo_pwd" : {
+          "recoverable" : true,
+          "encrypted" : false,
+          "secret" : "e7b4fc7db5b97088997e44eced015d42",
+          "hashType" : null,
+          "created" : 1433331614067,
+          "cryptoChain" : [ "plaintext" ]
+        },
+        "password" : {
+          "recoverable" : false,
+          "encrypted" : true,
+          "secret" : "JDJhJDA5JER0RTdNSldMRjkxSUlJVm5hZWJMTy5DelFLemwvd2tXdUttaHViZWdyRjRURVdxYk5TUGJt",
+          "hashType" : null,
+          "created" : 1433331614018,
+          "cryptoChain" : [ "bcrypt" ]
+        },
+        "secret" : {
+          "recoverable" : true,
+          "encrypted" : false,
+          "secret" : "YWQ6Rx9A-m5U-TihpkPVS4PmyQO4qig",
+          "hashType" : null,
+          "created" : 1433331614067,
+          "cryptoChain" : [ "plaintext" ]
+        }
+      }
+    }
+  }
+}
