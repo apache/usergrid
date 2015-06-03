@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.queue.guice;
 
 
+import org.apache.usergrid.persistence.queue.QueueManagerInternalFactory;
+import org.apache.usergrid.persistence.queue.impl.QueueManagerFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
@@ -43,8 +45,9 @@ public class QueueModule extends AbstractModule {
 
         install(new GuicyFigModule(QueueFig.class));
 
+        bind(QueueManagerFactory.class).to(QueueManagerFactoryImpl.class);
         install(new FactoryModuleBuilder().implement(QueueManager.class, SNSQueueManagerImpl.class)
-            .build(QueueManagerFactory.class));
+            .build(QueueManagerInternalFactory.class));
 
     }
 
