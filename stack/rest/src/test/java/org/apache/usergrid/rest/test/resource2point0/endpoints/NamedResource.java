@@ -41,7 +41,7 @@ import com.sun.jersey.api.representation.Form;
  * Base class that is extended by named endpoints.
  * The NamedResource stores the parent of the class, the context in which the class operates and then Name of this resource
  */
-public abstract class NamedResource implements UrlResource {
+public class NamedResource implements UrlResource {
 
     protected final String name;
     protected final ClientContext context;
@@ -190,6 +190,20 @@ public abstract class NamedResource implements UrlResource {
         return getResource().type(MediaType.APPLICATION_JSON_TYPE)
                             .accept( MediaType.APPLICATION_JSON )
                             .post(gt.getRawClass(), requestEntity);
+
+    }
+    //For edge cases like Organizations and Tokens
+    public ApiResponse postEntity(Entity requestEntity, boolean useToken) {
+        return getResource(useToken).type(MediaType.APPLICATION_JSON_TYPE)
+            .accept( MediaType.APPLICATION_JSON )
+            .post(ApiResponse.class, requestEntity);
+
+    }
+    //For edge cases like Organizations and Tokens
+    public ApiResponse postEntity(Entity requestEntity) {
+        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+            .accept( MediaType.APPLICATION_JSON )
+            .post(ApiResponse.class, requestEntity);
 
     }
 
