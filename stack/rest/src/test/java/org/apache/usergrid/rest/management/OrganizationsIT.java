@@ -60,6 +60,8 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void createOrgAndOwner() throws Exception {
 
+        management().token().setToken(clientSetup.getSuperuserToken());
+
         //User property to see if owner properties exist when created.
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "company", "Apigee" );
@@ -277,6 +279,7 @@ public class OrganizationsIT extends AbstractRestIT {
         Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload);
 
         assertNotNull( tokenReturned );
+        management().token().setToken(clientSetup.getSuperuserToken());
 
         //Assert that the get returns the correct org and owner.
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
