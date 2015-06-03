@@ -34,8 +34,7 @@ import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+
 
 
 public class ApplicationCreateIT extends AbstractRestIT {
@@ -48,14 +47,16 @@ public class ApplicationCreateIT extends AbstractRestIT {
      */
     @Test
     public void testCreateAndImmediateGet() throws Exception {
-        
+
         String orgName = clientSetup.getOrganizationName();
         String appName = clientSetup.getAppName() + "_new_app";
+        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getPassword());
+
         Map applicationMap = new HashMap<String, Object>(  );
         applicationMap.put( "name", appName );
 
-        Entity appCreateResponse = this.management().orgs().organization( orgName ).apps().post(
-            clientSetup.getSuperuserToken(),applicationMap );
+        this.management().orgs().organization( orgName ).apps().post(
+            orgAdminToken,applicationMap );
 
         Entity response = this.management().orgs().organization( orgName ).addToPath( "apps" ).addToPath( appName ).get();
 
@@ -74,7 +75,7 @@ public class ApplicationCreateIT extends AbstractRestIT {
         String random = RandomStringUtils.randomAlphabetic(10);
         String orgName = clientSetup.getOrganizationName();
         String appName = "testCreateAndImmediateList_app_" + random;
-        Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getPassword());
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getPassword() );
 
         for ( int i=0; i<appCount; i++ ) {
            createAppWithCollection( orgName, appName + i, orgAdminToken, new ArrayList<>() );
