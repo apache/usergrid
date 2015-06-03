@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
- * Interface for fields.  All fields must implement this method The T is the type of field 
+ * Interface for fields.  All fields must implement this method The T is the type of field
  * (in the java runtime) The V is the value of the field
  * @param <T>
  */
@@ -39,7 +39,12 @@ public interface Field<T> extends Serializable {
      */
     @JsonProperty
     public String getName();
-
+    /**
+     * Get the name of the field
+     * @return
+     */
+    @JsonProperty
+    public void setName(final String newName);
     /**
      * Get the value of the field
      * @return
@@ -47,9 +52,9 @@ public interface Field<T> extends Serializable {
     @JsonProperty
     public T getValue();
 
-    /** 
+    /**
      * True if field value must be unique within Entity Collection.
-     * @return 
+     * @return
      */
     public boolean isUnique();
 

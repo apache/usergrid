@@ -120,7 +120,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         ns = getNotificationService();
 
         DefaultQueueManager qm = new DefaultQueueManager();
-        ns.TEST_QUEUE_MANAGER = qm;
 
                 setup.getEntityIndex().refresh();
 

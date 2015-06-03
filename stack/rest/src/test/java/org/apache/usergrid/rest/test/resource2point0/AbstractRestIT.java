@@ -29,6 +29,7 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
@@ -53,8 +54,6 @@ public class AbstractRestIT extends JerseyTest {
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
     public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
-
-
 
     @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
@@ -135,6 +134,12 @@ public class AbstractRestIT extends JerseyTest {
         return clientSetup.restClient.management();
     }
 
+    protected NamedResource pathResource(String path){ return clientSetup.restClient.pathResource(path);}
+
+    protected String getOrgAppPath(String additionalPath){
+        return clientSetup.orgName + "/" + clientSetup.appName + "/" + (additionalPath !=null ? additionalPath : "");
+    }
+
     protected ClientContext context(){
         return this.clientSetup.getRestClient().getContext();
     }
@@ -166,14 +171,14 @@ public class AbstractRestIT extends JerseyTest {
 
 
     protected Token getAdminToken(String username, String password){
-        return this.clientSetup.getRestClient().management().token().post(Token.class,
-                new Token(username, password)
+        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
+                new Token(username, password),null
         );
     }
 
     protected Token getAdminToken(){
-        return this.clientSetup.getRestClient().management().token().post(Token.class,
-                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername())
+        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
+                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null
         );
     }
 }

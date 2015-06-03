@@ -98,12 +98,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         device2 = app.getEntityManager().get(e.getUuid(), Device.class);
         ns = getNotificationService();
 
-        DefaultQueueManager qm = new DefaultQueueManager();
-        ns.TEST_QUEUE_MANAGER = qm;
-
         listener = new QueueListener(ns.getServiceManagerFactory(), ns.getEntityManagerFactory(), new Properties());
         listener.DEFAULT_SLEEP = 200;
-        listener.TEST_QUEUE_MANAGER = qm;
         listener.start();
     }
 

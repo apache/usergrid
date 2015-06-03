@@ -149,12 +149,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertEquals(user.get("email"), email);
         this.refreshIndex();
 
+        String collectionName = "nestprofiles";
         //create a permission with the path "me" in it
         payload = new Entity();
-        payload.put( "permission", "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**" );
+        payload.put( "permission", "get,post,put,delete:/"+collectionName+"/**" );
         //POST to /users/sumeet.agarwal@usergrid.com/permissions
         Entity permission = this.app().collection("users").entity(user).collection("permissions").post(payload);
-        assertEquals(permission.get("data"), "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**");
+        assertEquals(permission.get("data"), "get,post,put,delete:/"+collectionName+"/**");
 
         //delete the default role, which would allow all authenticated requests
         this.app().collection("role").uniqueID("Default").delete();
@@ -171,13 +172,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "firstname", "sumeet" );
         payload.put( "lastname", "agarwal" );
         payload.put( "mobile", "122" );
-        Entity nestProfile = this.app().collection("nestprofiles").post(payload);
+        Entity nestProfile = this.app().collection(collectionName).post(payload);
         assertEquals(nestProfile.get("name"), profileName);
 
         this.refreshIndex();
 
-        Entity nestprofileReturned = this.app().collection("nestprofiles").entity(nestProfile).get();
-        assertEquals(nestprofileReturned.get("name"), name);
+        Entity nestprofileReturned = this.app().collection(collectionName).entity(nestProfile).get();
+        assertEquals(nestprofileReturned.get("name"), profileName);
 
     }
 

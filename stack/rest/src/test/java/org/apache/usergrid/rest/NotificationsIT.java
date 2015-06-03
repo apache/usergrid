@@ -28,7 +28,9 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.rest.test.resource2point0.*;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -48,8 +50,6 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
 
     final String org = "test-organization";
     final String app = "test-app";
-    final String orgapp = org + "/" + app;
-    String token;
 
     private static final long writeDelayMs = 15;
     private static final long readDelayMs = 15;
@@ -76,21 +76,21 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
 
     @Test
     public void testPaging() throws Exception {
+        // create notifier
+        Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
 
-        int numDevices = 10;
-        int numNotifications = 100; // to send to each device
+        ApiResponse notifierNode = this.pathResource(getOrgAppPath("notifier")).post(ApiResponse.class,notifier);
+
+        //logger.debug("Notifier is: " + notifierNode.toString());
+        assertEquals("noop", notifierNode.getEntities().get(0).get("provider").toString());
+
+        int numDevices = 2;
+        int numNotifications = 5; // to send to each device
 
         User user = new User("ed","ed", "ed@anuff.com", "sesame" );
         Entity entity = this.app().collection("users").post(user);
         Token token = this.app().token().post(new Token("ed", "sesame"));
-
-        // create notifier
-        Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
-
-        Entity notifierNode =this.app().collection("notifier").post(notifier);
-
-        //logger.debug("Notifier is: " + notifierNode.toString());
-        assertEquals("noop", notifierNode.getResponse().getEntities().get(0).get("provider").toString());
+        this.clientSetup.getRestClient().token().setToken(token);
 
         this.refreshIndex();
 
@@ -163,12 +163,17 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
         StopWatch sw = new StopWatch();
         sw.start();
         boolean allSent = false;
+        int count = 0;
         while (!allSent) {
 
             Thread.sleep(100);
             int finished = pageThroughAllNotifications("FINISHED");
             if ( finished == (numDevices * numNotifications) ) {
                 allSent = true;
+            }
+            count++;
+            if(count>100){
+                break;
             }
         }
         sw.stop();

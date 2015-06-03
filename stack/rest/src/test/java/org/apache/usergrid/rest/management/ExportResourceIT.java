@@ -74,7 +74,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
             exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
-                        .addToPath( "users" ).addToPath( "export" ).postWithToken(ApiResponse.class,payloadBuilder() );
+                        .addToPath( "users" ).addToPath( "export" ).post(ApiResponse.class,payloadBuilder() );
         }
         catch ( UniformInterfaceException uie ) {
             fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
@@ -98,7 +98,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         try {
             exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
-                                       .addToPath( "export" ).postWithToken( ApiResponse.class, payloadBuilder() );
+                                       .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
         catch ( UniformInterfaceException uie ) {
             fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
@@ -141,7 +141,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
                                        .app().addToPath( clientSetup.getAppUuid() )
-                                       .addToPath( "export" ).postWithToken( ApiResponse.class, payloadBuilder() );
+                                       .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
         catch ( UniformInterfaceException uie ) {
             fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
@@ -177,7 +177,7 @@ public class ExportResourceIT extends AbstractRestIT {
         exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
                                    .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
                                    .addToPath( "users" ).addToPath( "export" )
-                                   .postWithToken( ApiResponse.class, payloadBuilder() );
+                                   .post( ApiResponse.class, payloadBuilder() );
 
         assertNotNull( exportEntity );
         String uuid = ( String ) exportEntity.getProperties().get( "Export Entity" );
@@ -223,7 +223,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
                                        .app().addToPath( clientSetup.getAppUuid() )
-                                       .addToPath( "export" ).postWithToken( ApiResponse.class,
+                                       .addToPath( "export" ).post( ApiResponse.class,
                 new HashMap<String, Object>() );
             fail( "Should not have passed, The payload is empty." );
         }
@@ -238,7 +238,7 @@ public class ExportResourceIT extends AbstractRestIT {
     public void exportPostOrganizationNullPointerProperties() throws Exception {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, new HashMap<String, Object>()  );
+                        .addToPath( "export" ).post( ApiResponse.class, new HashMap<String, Object>()  );
             fail( "Should not have passed, The payload is empty." );
         }
         catch ( UniformInterfaceException uie ) {
@@ -254,7 +254,7 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, new HashMap<String, Object>()  );
+                        .addToPath( "export" ).post( ApiResponse.class, new HashMap<String, Object>()  );
 
             fail( "Should not have passed, The payload is empty." );
         }
@@ -272,7 +272,7 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
-                        .addToPath( "export" ).addToPath( fake.toString() ).getWithoutToken( ApiResponse.class );
+                        .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
         }
         catch ( UniformInterfaceException uie ) {
@@ -288,7 +288,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
-                        .addToPath( "export" ).addToPath( fake.toString() ).getWithoutToken( ApiResponse.class );
+                        .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
         }
         catch ( UniformInterfaceException uie ) {
@@ -303,7 +303,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
-                        .addToPath( "export" ).addToPath( fake.toString() ).getWithoutToken( ApiResponse.class );
+                        .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
         }
         catch ( UniformInterfaceException uie ) {
@@ -321,7 +321,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -342,7 +342,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class,
+                        .addToPath( "export" ).post( ApiResponse.class,
                 payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -364,7 +364,7 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class,
+                        .addToPath( "export" ).post( ApiResponse.class,
                 payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -384,7 +384,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -405,7 +405,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class,
+                        .addToPath( "export" ).post( ApiResponse.class,
                 payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -427,7 +427,7 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class,
+                        .addToPath( "export" ).post( ApiResponse.class,
                 payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -449,7 +449,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -465,7 +465,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -481,7 +481,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -502,7 +502,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -519,7 +519,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -536,7 +536,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -558,7 +558,7 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -576,7 +576,7 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
@@ -594,7 +594,7 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().organization( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
-                        .addToPath( "export" ).postWithToken( ApiResponse.class, payload );
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }

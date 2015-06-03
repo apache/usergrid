@@ -437,7 +437,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
             for ( int j=0; j<numUpdates; j++) {
                 toUpdate = em.get( dog.getUuid() );
-                toUpdate.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
+                toUpdate.setProperty( "property", RandomStringUtils.randomAlphanumeric(10));
                 em.update(toUpdate);
                 count++;
                 if ( count % 100 == 0 ) {
@@ -451,11 +451,15 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         // wait for indexes to be cleared for the deleted entities
         count = 0;
+
         do {
+            //trigger the repair
+            queryCollectionEm("dogs", "select * order by created");
+            app.refreshIndex();
             crs = queryCollectionCp("dogs", "dog", "select *");
         } while ( crs.size() != numEntities && count++ < 15 );
 
-        Assert.assertEquals("Expect candidates without earlier stale entities", crs.size(), numEntities);
+        Assert.assertEquals("Expect candidates without earlier stale entities", numEntities,crs.size());
     }
 
 

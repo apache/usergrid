@@ -17,52 +17,48 @@
 package org.apache.usergrid.rest.filters;
 
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.UUIDUtils;
-
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.representation.Form;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.ParseException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.EntityUtils;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.List;
+import java.util.Map;
+
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not
 // using grizzly to test")
-public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
-
-
+public class ContentTypeResourceIT extends AbstractRestIT {
 
 
     /**
@@ -101,6 +97,7 @@ public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resourc
         assertEquals( 1, headers.length );
 
         assertEquals( MediaType.APPLICATION_JSON, headers[0].getValue() );
+
     }
 
 
@@ -134,88 +131,30 @@ public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resourc
 
         assertEquals( 200, rsp.getStatusLine().getStatusCode() );
 
-        Header[] headers = rsp.getHeaders( HttpHeaders.CONTENT_TYPE );
-
-        assertEquals( 1, headers.length );
-
-        assertEquals( MediaType.APPLICATION_JSON, headers[0].getValue() );
     }
 
 
-    /** Tests that application/x-www-url-form-encoded works correctly */
+    /**
+     * Tests that application/x-www-url-form-encoded works correctly
+     */
     @Test
     public void formEncodedContentType() throws Exception {
 
-        List<NameValuePair> pairs = new ArrayList<NameValuePair>();
 
-        pairs.add( new BasicNameValuePair( "organization", "formContentOrg" ) );
-        pairs.add( new BasicNameValuePair( "username", "formContentOrg" ) );
-        pairs.add( new BasicNameValuePair( "name", "Test User" ) );
-        pairs.add( new BasicNameValuePair( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" ) );
-        pairs.add( new BasicNameValuePair( "password", "foobar" ) );
+        Form payload = new Form();
+        payload.add( "organization", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.add( "username", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.add( "name", "Test User" + UUIDUtils.newTimeUUID() );
+        payload.add( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" );
+        payload.add( "password", "foobar" );
 
-        UrlEncodedFormEntity entity = new UrlEncodedFormEntity( pairs, "UTF-8" );
+        //checks that the organization was created using a form encoded content type, this is checked else where so
+        //this test should be depreciated eventually.
+        Organization newlyCreatedOrganizationForm = management().orgs().post( payload );
 
-        DefaultHttpClient client = new DefaultHttpClient();
+        assertNotNull( newlyCreatedOrganizationForm );
 
-        HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
-
-        HttpPost post = new HttpPost( "/management/orgs" );
-        post.setEntity( entity );
-        // post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken());
-
-        post.setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED );
-
-        HttpResponse rsp = client.execute( host, post );
-
-        printResponse( rsp );
-
-        // should be an error, no content type was set
-        assertEquals( 200, rsp.getStatusLine().getStatusCode() );
-
-        Header[] headers = rsp.getHeaders( HttpHeaders.CONTENT_TYPE );
-
-        assertEquals( 1, headers.length );
-
-        assertEquals( MediaType.APPLICATION_JSON, headers[0].getValue() );
     }
-
-
-    /** Tests that application/x-www-url-form-encoded works correctly */
-    @Test
-    @Ignore("This will only pass in tomcat, and shouldn't pass in grizzly")
-    public void formEncodedUrlContentType() throws Exception {
-        BasicHttpParams params = new BasicHttpParams();
-
-        params.setParameter( "organization", "formUrlContentOrg" );
-        params.setParameter( "username", "formUrlContentOrg" );
-        params.setParameter( "name", "Test User" );
-        params.setParameter( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" );
-        params.setParameter( "password", "foobar" );
-        params.setParameter( "grant_type", "password" );
-
-        DefaultHttpClient client = new DefaultHttpClient();
-
-        HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
-
-        HttpPost post = new HttpPost( "/management/orgs" );
-        post.setParams( params );
-
-        post.setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED );
-
-        HttpResponse rsp = client.execute( host, post );
-
-        printResponse( rsp );
-
-        assertEquals( 200, rsp.getStatusLine().getStatusCode() );
-
-        Header[] headers = rsp.getHeaders( HttpHeaders.CONTENT_TYPE );
-
-        assertEquals( 1, headers.length );
-
-        assertEquals( MediaType.APPLICATION_JSON, headers[0].getValue() );
-    }
-
 
     /**
      * Creates a simple entity of type game. Does not set the content type or accept. The type should be set to json to
@@ -254,13 +193,13 @@ public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resourc
 
 
     /**
-     * Creates a simple entity of type game. Does not set the content type. The type should be set to json to match the
+     * Creates a simple entity of type game. Does not set the Accepts header. The type should be set to json to match the
      * body.  Then does a get without Accept type, it should return application/json, not text/csv
      */
     @Test
     public void noAcceptGet() throws Exception {
         User user = new User("shawn","shawn","shawn@email.com","aliensquirrel");
-        this.app().collection("users").post(user);
+        this.app().collection("users").post( user );
         Token token = this.app().token().post(new Token("shawn", "aliensquirrel"));
         Map<String, String> data = hashMap("name", "bar");
 
@@ -279,32 +218,34 @@ public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resourc
 
         HttpResponse rsp = client.execute( host, post );
 
-        printResponse( rsp );
 
-        assertEquals( 200, rsp.getStatusLine().getStatusCode() );
+        WebResource.Builder builder = app().collection("games").getResource(true)
+            .queryParam("access_token", this.getAdminToken().getAccessToken())
+            .type(MediaType.APPLICATION_JSON_TYPE);
 
-        Header[] headers = rsp.getHeaders( HttpHeaders.CONTENT_TYPE );
+        ClientResponse clientResponse = builder.post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar2")));
 
-        assertEquals( 1, headers.length );
+        assertEquals(200, clientResponse.getStatus());
 
-        assertEquals( MediaType.APPLICATION_JSON, headers[0].getValue() );
+        MultivaluedMap<String, String> headers = clientResponse.getHeaders();
+
+        List<String> contentType = headers.get("Content-Type");
+        assertEquals(1, contentType.size());
+        assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
 
         //do the get with no content type, it should get set to application/json
         HttpPost get = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         get.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
+        clientResponse = builder.get(ClientResponse.class);
 
-        rsp = client.execute( host, get );
+        assertEquals(200, clientResponse.getStatus());
 
-        printResponse( rsp );
+        headers = clientResponse.getHeaders();
 
-        assertEquals( 200, rsp.getStatusLine().getStatusCode() );
-
-        headers = rsp.getHeaders( HttpHeaders.CONTENT_TYPE );
-
-        assertEquals( 1, headers.length );
-
-        assertEquals( MediaType.APPLICATION_JSON, headers[0].getValue() );
+        contentType = headers.get("Content-Type");
+        assertEquals(1, contentType.size());
+        assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
     }
 
 

@@ -51,11 +51,14 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
 
     @Inject
-    public AsyncIndexProvider( final IndexProcessorFig indexProcessorFig, final QueueManagerFactory queueManagerFactory,
-                               final MetricsFactory metricsFactory, final IndexService indexService,
-                               final RxTaskScheduler rxTaskScheduler,
-                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                               final EventBuilder eventBuilder ) {
+    public AsyncIndexProvider(final IndexProcessorFig indexProcessorFig,
+                              final QueueManagerFactory queueManagerFactory,
+                              final MetricsFactory metricsFactory,
+                              final IndexService indexService,
+                              final RxTaskScheduler rxTaskScheduler,
+                              final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                              final EventBuilder eventBuilder) {
+
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
         this.metricsFactory = metricsFactory;
@@ -69,10 +72,9 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     @Override
     @Singleton
     public AsyncEventService get() {
-        if ( asyncEventService == null ) {
+        if (asyncEventService == null) {
             asyncEventService = getIndexService();
         }
-
 
         return asyncEventService;
     }
@@ -81,16 +83,19 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private AsyncEventService getIndexService() {
         final String value = indexProcessorFig.getQueueImplementation();
 
-        final Implementations impl = Implementations.valueOf( value );
+        final Implementations impl = Implementations.valueOf(value);
 
-        switch ( impl ) {
+        switch (impl) {
             case LOCAL:
-                return new InMemoryAsyncEventService( eventBuilder, rxTaskScheduler, indexProcessorFig.resolveSynchronously());
+                return new InMemoryAsyncEventService(eventBuilder, rxTaskScheduler, indexProcessorFig.resolveSynchronously());
             case SQS:
-                return new SQSAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
-                    entityCollectionManagerFactory, rxTaskScheduler );
+                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
+                    entityCollectionManagerFactory, rxTaskScheduler);
+            case SNS:
+                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
+                    entityCollectionManagerFactory, rxTaskScheduler);
             default:
-                throw new IllegalArgumentException( "Configuration value of " + getErrorValues() + " are allowed" );
+                throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
         }
     }
 
@@ -98,11 +103,11 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private String getErrorValues() {
         String values = "";
 
-        for ( final Implementations impl : Implementations.values() ) {
+        for (final Implementations impl : Implementations.values()) {
             values += impl + ", ";
         }
 
-        values = values.substring( 0, values.length() - 2 );
+        values = values.substring(0, values.length() - 2);
 
         return values;
     }
@@ -114,7 +119,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     public static enum Implementations {
         TEST,
         LOCAL,
-        SQS;
+        SQS,
+        SNS;
 
 
         public String asString() {

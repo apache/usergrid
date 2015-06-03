@@ -17,35 +17,29 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-
-import javax.ws.rs.core.MediaType;
-
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.multipart.FormDataMultiPart;
+import org.apache.commons.io.IOUtils;
+import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.rest.applications.utils.UserRepo;
-import org.apache.usergrid.services.assets.data.AssetUtils;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.io.IOUtils;
-
-import com.sun.jersey.multipart.FormDataMultiPart;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-
+import static org.junit.Assert.*;
 
 
 public class AssetResourceIT extends AbstractRestIT {
@@ -65,23 +59,29 @@ public class AssetResourceIT extends AbstractRestIT {
     @Test
     public void verifyBinaryCrud() throws Exception {
 
+        userRepo.load();
+
+        this.refreshIndex();
+
         UUID userId = userRepo.getByUserName( "user1" );
         Map<String, String> payload =
                 hashMap( "path", "my/clean/path" ).map( "owner", userId.toString() ).map( "someprop", "somevalue" );
 
+        String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
+
         JsonNode node =
-                mapper.readTree( resource().path( "/test-organization/test-app/assets" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( String.class, payload ));
+                mapper.readTree( resource().path( orgAppPath + "/assets" ).queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                    .post( String.class, payload ) );
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         UUID id = UUID.fromString( idNode.textValue() );
-        assertNotNull(idNode.textValue());
+        assertNotNull( idNode.textValue() );
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
-        resource().path( "/test-organization/test-app/assets/" + id.toString() + "/data" )
+        resource().path( orgAppPath + "/assets/" + id.toString() + "/data" )
                 .queryParam( "access_token", access_token ).type( MediaType.APPLICATION_OCTET_STREAM_TYPE ).put( data );
 
-        InputStream is = resource().path( "/test-organization/test-app/assets/" + id.toString() + "/data" )
+        InputStream is = resource().path( orgAppPath + "/assets/" + id.toString() + "/data" )
                 .queryParam( "access_token", access_token ).get( InputStream.class );
 
         byte[] foundData = IOUtils.toByteArray( is );
@@ -89,9 +89,9 @@ public class AssetResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/assets/my/clean/path" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
-                .get( String.class ));
+        node = mapper.readTree( resource().path( orgAppPath + "/assets/my/clean/path" )
+            .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
+            .get( String.class ) );
 
         idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         assertEquals( id.toString(), idNode.textValue() );
@@ -101,22 +101,26 @@ public class AssetResourceIT extends AbstractRestIT {
     @Test
     public void octetStreamOnDynamicEntity() throws Exception {
 
+        this.refreshIndex();
+
         Map<String, String> payload = hashMap( "name", "assetname" );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload ));
+        String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
+
+        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" ).queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+            .post( String.class, payload ) );
 
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         String uuid = idNode.textValue();
-        assertNotNull(uuid);
+        assertNotNull( uuid );
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
-        resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+        resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
                 .type( MediaType.APPLICATION_OCTET_STREAM_TYPE ).put( data );
 
         // get entity
-        node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         Assert.assertEquals( "image/jpeg", node.findValue( AssetUtils.CONTENT_TYPE ).textValue() );
         Assert.assertEquals( 7979, node.findValue( "content-length" ).intValue() );
@@ -125,7 +129,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         // get data by UUID
         InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+                resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
 
         byte[] foundData = IOUtils.toByteArray( is );
@@ -134,7 +138,7 @@ public class AssetResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // get data by name
-        is = resource().path( "/test-organization/test-app/foos/assetname" ).queryParam( "access_token", access_token )
+        is = resource().path( orgAppPath + "/foos/assetname" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
 
         foundData = IOUtils.toByteArray( is );
@@ -145,35 +149,52 @@ public class AssetResourceIT extends AbstractRestIT {
     @Test
     public void multipartPostFormOnDynamicEntity() throws Exception {
 
+        this.refreshIndex();
+
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
         FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA )
-                .post( String.class, form ));
+        String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
+
+        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.MULTIPART_FORM_DATA )
+            .post( String.class, form ));
 
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         String uuid = idNode.textValue();
         assertNotNull(uuid);
 
-        // get entity
-        node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertEquals( "application/octet-stream", node.findValue( AssetUtils.CONTENT_TYPE ).textValue() );
-        assertEquals( 5324800, node.findValue( AssetUtils.CONTENT_LENGTH ).intValue() );
-        idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        assertEquals( uuid, idNode.textValue() );
+        this.refreshIndex();
 
-        // get data
-        InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        int retries = 0;
+        boolean done = false;
+        byte[] foundData = new byte[0];
 
-        byte[] foundData = IOUtils.toByteArray( is );
+        // retry until upload complete
+        while ( !done && retries < 30 ) {
+
+            // get data
+            try {
+                InputStream is = resource().path( orgAppPath + "/foos/" + uuid )
+                        .queryParam( "access_token", access_token )
+                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                        .get( InputStream.class );
+
+                foundData = IOUtils.toByteArray( is );
+                done = true;
+
+            } catch ( Exception intentiallyIgnored ) {}
+
+            Thread.sleep(1000);
+            retries++;
+        }
+
         assertEquals( 5324800, foundData.length );
 
         // delete
-        node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
     }
 
@@ -181,15 +202,19 @@ public class AssetResourceIT extends AbstractRestIT {
     @Test
     public void multipartPutFormOnDynamicEntity() throws Exception {
 
+        this.refreshIndex();
+
         Map<String, String> payload = hashMap( "foo", "bar" );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
+        String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
+
+        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                 .post( String.class, payload ));
 
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         String uuid = idNode.textValue();
-        assertNotNull(uuid);
+        assertNotNull( uuid );
 
         // set file & assetname
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
@@ -197,12 +222,21 @@ public class AssetResourceIT extends AbstractRestIT {
                                                         .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
 
         long created = System.currentTimeMillis();
-        node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA ).put( String.class, form ));
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.MULTIPART_FORM_DATA )
+            .put( String.class, form ));
+
+        this.refreshIndex();
 
         // get entity
-        node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON_TYPE )
+            .get( String.class ));
+        LOG.debug( mapToFormattedJsonString(node) );
+
         assertEquals( "image/jpeg", node.findValue( AssetUtils.CONTENT_TYPE ).textValue() );
         assertEquals( 7979, node.findValue( AssetUtils.CONTENT_LENGTH ).intValue() );
         idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
@@ -213,66 +247,124 @@ public class AssetResourceIT extends AbstractRestIT {
         Assert.assertEquals( created, lastModified, 500 );
 
         // get data
-        InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( "image/jpeg" ).get( InputStream.class );
+        InputStream is = resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( "image/jpeg" )
+            .get( InputStream.class );
 
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
 
         // post new data
-        node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA ).put( String.class, form ));
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.MULTIPART_FORM_DATA )
+            .put( String.class, form ) );
         Assert.assertTrue( lastModified != node.findValue( AssetUtils.LAST_MODIFIED ).longValue() );
     }
 
 
     @Test
-    @Ignore("Just enable and run when testing S3 large file upload specifically")
     public void largeFileInS3() throws Exception {
+
+        this.refreshIndex();
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
         FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
 
+        String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
+
         // send data
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA )
-                .post( String.class, form ));
+        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.MULTIPART_FORM_DATA )
+            .post( String.class, form ) );
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         String uuid = idNode.textValue();
 
         // get entity
-        long timeout = System.currentTimeMillis() + 60000;
-        while ( true ) {
-            LOG.info("Waiting for upload to finish...");
+        //TODO: seperate tests for s3 and local system property tests.
+            LOG.info( "Waiting for upload to finish..." );
             Thread.sleep( 2000 );
-            node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid )
-                    .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
-                    .get( String.class ));
+            node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON_TYPE )
+                .get( String.class ) );
 
-            // poll for the upload to complete
-            if ( node.findValue( AssetUtils.E_TAG ) != null ) {
-                break;
-            }
-            if ( System.currentTimeMillis() > timeout ) {
-                throw new TimeoutException();
-            }
-        }
         LOG.info( "Upload complete!" );
 
         // get data
-        InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        InputStream is = resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+            .get( InputStream.class );
 
         byte[] foundData = IOUtils.toByteArray( is );
-        assertEquals( 5324800, foundData.length );
+        assertEquals( data.length, foundData.length );
 
         // delete
-        node = mapper.readTree( resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON_TYPE )
+            .delete( String.class ) );
     }
 
+    @Test
+    public void fileTooLargeShouldResultInError() throws Exception {
+
+        this.refreshIndex();
+
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( "usergrid.binary.max-size-mb", "6" );
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+
+        try {
+
+            //UserRepo.INSTANCE.load( resource(), access_token );
+
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cat-larger-than-6mb.jpg" ) );
+            FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+
+            String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
+
+            // send data
+            JsonNode node = resource().path( orgAppPath + "/bars" ).queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA )
+                    .post( JsonNode.class, form );
+            //logNode( node );
+            JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
+            String uuid = idNode.textValue();
+
+            // get entity
+            String errorMessage = null;
+            //TODO: seperate tests for s3 and local system property tests.
+                LOG.info( "Waiting for upload to finish..." );
+                Thread.sleep( 2000 );
+                node = resource().path( orgAppPath + "/bars/" + uuid )
+                        .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
+                        .get( JsonNode.class );
+
+                // check for the error
+                if (node.findValue( "error" ) != null) {
+                    errorMessage = node.findValue("error").asText();
+                }
+
+            assertTrue( errorMessage.startsWith("Asset size "));
+
+        } finally {
+            props = new HashMap<String, String>();
+            props.put( "usergrid.binary.max-size-mb", "25" );
+            resource().path( "/testproperties" )
+                    .queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+        }
+    }
 
     /**
      * Deleting a connection to an asset should not delete the asset or the asset's data
@@ -280,26 +372,30 @@ public class AssetResourceIT extends AbstractRestIT {
     @Test
     public void deleteConnectionToAsset() throws IOException {
 
-        userRepo.load();
+        this.refreshIndex();
 
         final String uuid;
+
+        access_token = this.getAdminToken().getAccessToken();
+
+        String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
 
         // create the entity that will be the asset, an image
 
         Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
-
-        JsonNode node = resource().path("/test-organization/test-app/foos")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, payload);
+        JsonNode node = resource().path(orgAppPath + "/foos")
+            .header( "Authorization", "Bearer " + access_token )
+            //.queryParam("access_token", access_token)
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .post(JsonNode.class, payload);
         JsonNode idNode = node.get("entities").get(0).get("uuid");
         uuid = idNode.textValue();
 
         // post image data to the asset entity
 
         byte[] data = IOUtils.toByteArray(this.getClass().getResourceAsStream("/cassandra_eye.jpg"));
-        resource().path("/test-organization/test-app/foos/" + uuid)
+        resource().path(orgAppPath + "/foos/" + uuid)
                 .queryParam("access_token", access_token)
                 .type(MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .put(data);
@@ -308,7 +404,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         Map<String, String> imageGalleryPayload = hashMap("name", "my image gallery");
 
-        JsonNode imageGalleryNode = resource().path("/test-organization/test-app/imagegalleries")
+        JsonNode imageGalleryNode = resource().path(orgAppPath + "/imagegalleries")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -320,34 +416,40 @@ public class AssetResourceIT extends AbstractRestIT {
         // connect imagegallery to asset
 
         JsonNode connectNode = resource()
-                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
+                .path(orgAppPath + "/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class);
+        LOG.debug( mapToFormattedJsonString(connectNode) );
+
+        this.refreshIndex();
 
         // verify connection from imagegallery to asset
 
         JsonNode listConnectionsNode = resource()
-                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/")
+                .path(orgAppPath + "/imagegalleries/" + imageGalleryId + "/contains/")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .get(JsonNode.class);
+        LOG.debug( mapToFormattedJsonString(listConnectionsNode) );
         assertEquals(uuid, listConnectionsNode.get("entities").get(0).get("uuid").textValue());
 
         // delete the connection
 
-        resource().path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
+        resource().path(orgAppPath + "/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .delete();
 
+        this.refreshIndex();
+
         // verify that connection is gone
 
         listConnectionsNode = resource()
-                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/")
+                .path(orgAppPath + "/imagegalleries/" + imageGalleryId + "/contains/")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -356,7 +458,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         // asset should still be there
 
-        JsonNode assetNode = resource().path("/test-organization/test-app/foos/" + uuid)
+        JsonNode assetNode = resource().path(orgAppPath + "/foos/" + uuid)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON_TYPE)
                 .get(JsonNode.class);
@@ -368,7 +470,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         // asset data should still be there
 
-        InputStream assetIs = resource().path("/test-organization/test-app/foos/" + uuid)
+        InputStream assetIs = resource().path(orgAppPath + "/foos/" + uuid)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .get(InputStream.class);

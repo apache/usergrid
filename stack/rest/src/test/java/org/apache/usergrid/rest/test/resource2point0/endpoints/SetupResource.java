@@ -47,6 +47,6 @@ public class SetupResource extends NamedResource {
         resource.addFilter( httpBasicAuthFilter );
 
         return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                                .get( Entity.class );
+                                .get( Entity.class);
     }
 }

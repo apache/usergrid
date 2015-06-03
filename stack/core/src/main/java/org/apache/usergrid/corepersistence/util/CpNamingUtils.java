@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.util;
 import java.util.UUID;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
@@ -38,6 +39,7 @@ import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
 
@@ -140,7 +142,7 @@ public class CpNamingUtils {
         //if they don't use a time based uuid (such as in devices) we need to create a timestamp from "now" since
         // this is when the entity
         //will be added to the collection
-        final UUID timeStampUuid = UUIDUtils.isTimeBased( entityIdUUID ) ? entityIdUUID : UUIDUtils.newTimeUUID();
+        final UUID timeStampUuid = UUIDUtils.isTimeBased( entityIdUUID ) ? entityIdUUID : UUIDGenerator.newTimeUUID();
 
         long uuidTimestamp = UUIDUtils.getUUIDLong( timeStampUuid );
 
@@ -166,9 +168,17 @@ public class CpNamingUtils {
         final String edgeType = getEdgeTypeFromConnectionType( connectionType );
 
         // create graph edge connection from head entity to member entity
-        return new SimpleEdge( sourceEntityId, edgeType, targetEntityId, System.currentTimeMillis() );
+        return new SimpleEdge( sourceEntityId, edgeType, targetEntityId, UUIDGenerator.newTimeUUID().timestamp() );
     }
 
+
+    /**
+     * When marking nodes for deletion we must use the same unit of measure as the edge timestamps
+     * @return
+     */
+    public static long createGraphOperationTimestamp(){
+        return UUIDUtils.newTimeUUID().timestamp();
+    }
 
     /**
      * Create a connection searchEdge
@@ -270,4 +280,8 @@ public class CpNamingUtils {
     }
 
 
+    public static boolean isApplication(Id id) {
+        Preconditions.checkNotNull(id);
+        return id.getType().equals("application");
+    }
 }

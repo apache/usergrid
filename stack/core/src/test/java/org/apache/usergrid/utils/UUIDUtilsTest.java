@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -166,10 +165,10 @@ public class UUIDUtilsTest {
 
     /** Populate timestamp set for the methods testing uuid contention */
     @SuppressWarnings("unchecked")
-    private static Set buildTsMicros( int count ) {
-        HashSet created = new HashSet( count );
+    private static Set<UUID> buildTsMicros( int count ) {
+        HashSet<UUID> created = new HashSet<>( count );
         for ( int x = 0; x < count; x++ ) {
-            created.add( UUIDUtils.getTimestampInMicros( UUIDUtils.newTimeUUID() ) );
+            created.add(  UUIDUtils.newTimeUUID() );
         }
         return created;
     }
@@ -207,20 +206,17 @@ public class UUIDUtilsTest {
         List<Future> jobs = new ArrayList<Future>( 10 );
 
         for ( int x = 0; x < 10; x++ ) {
-            jobs.add( exec.submit( new Callable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    logger.info("call invoked");
+            jobs.add( exec.submit( () -> {
+                logger.info("call invoked");
 
-                    int count = 1000 * 100;
-                    Set created = buildTsMicros( count );
+                int count = 1000 * 100;
+                Set created = buildTsMicros( count );
 
-                    assertEquals( count, created.size() );
-                    assertTrue( created.size() > 0 );
+                assertEquals( count, created.size() );
+                assertTrue( created.size() > 0 );
 
-                    logger.info("run complete");
-                    return null;
-                }
+                logger.info("run complete");
+                return null;
             } ) );
         }
         return jobs;

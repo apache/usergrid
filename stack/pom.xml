@@ -105,7 +105,7 @@
       <hector-test-version>1.1-4</hector-test-version>
       <jackson-version>1.9.9</jackson-version>
       <jackson-2-version>2.3.3</jackson-2-version>
-      <jclouds.version>1.8.0</jclouds.version>
+      <jclouds.version>1.9.0</jclouds.version>
       <jersey-version>1.18.1</jersey-version>
       <junit-version>4.12</junit-version>
       <log4j-version>1.2.16</log4j-version>
@@ -181,23 +181,6 @@
       <name>Dave Johnson</name>
     </developer>
   </developers>
-
-
-  <distributionManagement>
-    <!-- Versioned (non-snapshot) releases are published to this repository -->
-    <repository>
-      <id>usergrid.releases</id>
-      <name>Usergrid Releases</name>
-      <url>${release.repository.url}</url>
-    </repository>
-
-    <!-- Snapshots (not-releases) are published to this repository -->
-    <snapshotRepository>
-      <id>usergrid.snapshots</id>
-      <name>Usergrid Snapshots</name>
-      <url>${snapshot.repository.url}</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <modules>
     <module>build-tools</module>
@@ -288,7 +271,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.2</version>
+        <version>4.4.1</version>
         <exclusions>
           <exclusion>
             <groupId>commons-codec</groupId>
@@ -296,6 +279,13 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk-s3</artifactId>
+        <version>1.9.31</version>
+      </dependency>
+
 
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -1270,11 +1260,12 @@
             <artifactId>aopalliance</artifactId>
           </exclusion>
 
+            <!-- if this is uncommented out sends our service tier into bootloop -->
             <!-- blows up our version of guice-->
-            <exclusion>
-                <groupId>com.google.inject.extensions</groupId>
-                <artifactId>guice-assistedinject</artifactId>
-            </exclusion>
+            <!--<exclusion>-->
+                <!--<groupId>com.google.inject.extensions</groupId>-->
+                <!--<artifactId>guice-assistedinject</artifactId>-->
+            <!--</exclusion>-->
         </exclusions>
       </dependency>
 

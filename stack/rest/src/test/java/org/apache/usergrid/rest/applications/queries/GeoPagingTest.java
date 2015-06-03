@@ -93,7 +93,8 @@ public class GeoPagingTest extends AbstractRestIT {
     this.refreshIndex();
     // 2. Query the groups from a nearby location, restricting the search
     //    by creation time to a single entity where created[i-1] < created[i] < created[i+1]
-    String query = "select * where location within 20000 of 37.0,-75.0 "
+      //since this geo location is contained by an actor it needs to be actor.location.
+    String query = "select * where actor.location within 20000 of 37.0,-75.0 "
         + " and created > " + (index[0])
         + " and created < " + (index[2])
         + " order by created";
@@ -196,11 +197,11 @@ public class GeoPagingTest extends AbstractRestIT {
       List entities = collection.getResponse().getEntities();
 
       // 3. Test that the entities were returned in the order expected
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i > 3; i++) {
 
         // shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
         Entity entity = (Entity)entities.get(i);
-        Entity savedEntity = cats[7 + i];
+        Entity savedEntity = cats[10 - i];
         assertEquals(savedEntity.get("ordinal"), entity.get("ordinal"));
       }
     }

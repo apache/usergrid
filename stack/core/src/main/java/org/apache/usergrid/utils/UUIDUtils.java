@@ -37,6 +37,8 @@ import static com.fasterxml.uuid.impl.UUIDUtil.BYTE_OFFSET_CLOCK_SEQUENCE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 
@@ -82,27 +84,8 @@ public class UUIDUtils {
      * 'unique.'
      */
     public static java.util.UUID newTimeUUID() {
-        // get & inc counter, but roll on 1k (because we divide by 10 on retrieval)
-        // if count + currentMicro > 1k, block and roll
-        tsLock.lock();
-        long ts = System.currentTimeMillis();
-        if ( ts > timestampMillisNow ) {
-            timestampMillisNow = ts;
-            currentMicrosPoint.set( 0 );
-        }
-        int pointer = currentMicrosPoint.getAndIncrement();
-        try {
-            if ( pointer > 990 ) {
-                TimeUnit.MILLISECONDS.sleep( 1L );
-            }
-        }
-        catch ( Exception ex ) {
-            ex.printStackTrace();
-        }
-        finally {
-            tsLock.unlock();
-        }
-        return newTimeUUID( ts, MICROS[pointer] );
+        //replaced with our new impl.  The old impl does not properly generate sequential times when under heavy load in the same millisecond.  Causes edge ordering issues. See USERGRID-628
+        return UUIDGenerator.newTimeUUID();
     }
 
 
@@ -209,13 +192,6 @@ public class UUIDUtils {
         return newTimeUUID( ts, MICROS[pointer] );
     }
 
-
-    public static UUID minTimeUUID( long ts ) {
-        byte[] uuidBytes = new byte[16];
-        setTimestamp( ts, uuidBytes, 0, 0 );
-
-        return uuid( uuidBytes );
-    }
 
 
     public static UUID maxTimeUUID( long ts ) {
