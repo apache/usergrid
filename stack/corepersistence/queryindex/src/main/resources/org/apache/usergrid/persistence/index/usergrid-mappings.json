@@ -91,9 +91,9 @@
                     }
                 }
             }
+        },
+        "_all": {
+            "enabled": false
         }
-    },
-    "_all": {
-        "enabled": false
     }
 }
