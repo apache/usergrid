@@ -55,8 +55,8 @@ public class ApplicationCreateIT extends AbstractRestIT {
         Map applicationMap = new HashMap<String, Object>(  );
         applicationMap.put( "name", appName );
 
-        this.management().orgs().organization( orgName ).apps().post(
-            orgAdminToken,applicationMap );
+        this.management().token().setToken(orgAdminToken);
+        this.management().orgs().organization( orgName ).apps().post(applicationMap );
 
         Entity response = this.management().orgs().organization( orgName ).addToPath( "apps" ).addToPath( appName ).get();
 

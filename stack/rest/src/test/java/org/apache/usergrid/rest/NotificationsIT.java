@@ -79,7 +79,7 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
         // create notifier
         Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
 
-        ApiResponse notifierNode = this.pathResource(getOrgAppPath("notifier")).postEntity(notifier);
+        ApiResponse notifierNode = this.pathResource(getOrgAppPath("notifier")).post(ApiResponse.class,notifier);
 
         //logger.debug("Notifier is: " + notifierNode.toString());
         assertEquals("noop", notifierNode.getEntities().get(0).get("provider").toString());

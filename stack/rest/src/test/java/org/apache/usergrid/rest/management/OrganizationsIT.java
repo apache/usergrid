@@ -23,17 +23,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.RestClient;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -60,8 +56,6 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void createOrgAndOwner() throws Exception {
 
-        management().token().setToken(clientSetup.getSuperuserToken());
-
         //User property to see if owner properties exist when created.
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "company", "Apigee" );
@@ -79,8 +73,9 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //Creates token
         Token token =
-                clientSetup.getRestClient().management().token().post(Token.class, new Token( "password",
-                        organization.getUsername(), organization.getPassword() ) );
+                clientSetup.getRestClient().management().token().post(false,Token.class, new Token( "password",
+                        organization.getUsername(), organization.getPassword() ) ,null);
+        this.management().token().setToken(token);
 
         assertNotNull( token );
 
@@ -117,8 +112,8 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //Ensure that the token from the newly created organization works.
         Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
-
+        Token tokenReturned = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
+        this.management().token().setToken(tokenReturned);
         assertNotNull( tokenReturned );
 
         //Try to create a organization with the same name as an organization that already exists, ensure that it fails
@@ -139,7 +134,7 @@ public class OrganizationsIT extends AbstractRestIT {
         tokenPayload = new Token( "password", organization.getName() + "test", organization.getPassword() );
         Token tokenError = null;
         try {
-            tokenError = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
+            tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created user" );
         }
         catch ( UniformInterfaceException ex ) {
@@ -194,7 +189,7 @@ public class OrganizationsIT extends AbstractRestIT {
         tokenPayload = new Token( "password", organization.getUsername()+"test", organization.getPassword()+"test" );
         Token tokenError = null;
         try {
-            tokenError = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
+            tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created organization" );
         }
         catch ( UniformInterfaceException ex ) {
@@ -276,10 +271,11 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //get token from organization that was created to verify it exists. also sets the current context.
         Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload);
+        Token tokenReturned = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null);
 
         assertNotNull( tokenReturned );
-        management().token().setToken(clientSetup.getSuperuserToken());
+
+        this.management().token().setToken(tokenReturned);
 
         //Assert that the get returns the correct org and owner.
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
@@ -324,12 +320,12 @@ public class OrganizationsIT extends AbstractRestIT {
         adminUserPayload.put("password", username);
 
         //create adminUser
-        Entity adminUserResponse = management().orgs().organization( clientSetup.getOrganizationName() ).users().postWithToken(Entity.class, adminUserPayload );
+        ApiResponse adminUserEntityResponse = management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class, adminUserPayload);
 
-        LinkedHashMap user = ((LinkedHashMap)((LinkedHashMap)adminUserResponse.get("data")).get("user"));
+        Entity adminUserResponse = new Entity(adminUserEntityResponse);
         //verify that the response contains the correct data
         assertNotNull( adminUserResponse );
-        assertEquals(username, user.get("username"));
+        assertEquals(username, adminUserResponse.get("username"));
 
         //fetch the stored response
         adminUserResponse = management().users().entity( username ).get(this.getAdminToken(username,username));

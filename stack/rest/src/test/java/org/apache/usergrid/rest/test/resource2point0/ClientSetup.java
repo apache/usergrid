@@ -101,7 +101,7 @@ public class ClientSetup implements TestRule {
 
         try {
             restClient.superuserSetup();
-            superuserToken = restClient.management().token().get( superuserName, superuserPassword  );
+            superuserToken = restClient.management().token().get(superuserName, superuserPassword);
         } catch ( Exception e ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Error creating superuser, may already exist", e );
@@ -122,7 +122,7 @@ public class ClientSetup implements TestRule {
         restClient.management().token().get(username,password);
 
         // refreshIndex();
-        clientCredentials = restClient.management().orgs().organization( orgName ).credentials().get(null,true);
+        clientCredentials = restClient.management().orgs().organization( orgName ).credentials().get(Credentials.class);
         //refreshIndex();
 
 

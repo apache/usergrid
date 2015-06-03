@@ -109,7 +109,7 @@ public class CollectionEndpoint extends NamedResource {
      * <pre>
      */
     public Collection get(){
-        return get(null, true);
+        return new Collection( get(ApiResponse.class,null,true));
     }
 
     public Collection get( final QueryParameters parameters ){

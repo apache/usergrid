@@ -34,7 +34,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 import com.sun.jersey.api.representation.Form;
-
+import org.jclouds.openstack.v2_0.domain.Extension;
 
 
 /**
@@ -156,25 +156,34 @@ public class NamedResource implements UrlResource {
         return sb.toString();
     }
 
-    //Post Resources
-    public Entity postResource(WebResource resource, Map<String,Object> payload){
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                                                .post(ApiResponse.class, payload);
-        return new Entity(response);
+    /**
+     * Need to refactor all instances of tokens to either be passed in or manually set during the test.
+     * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
+     * @param map
+     * @return
+     */
+    //For edge cases like Organizations and Tokens
+    public ApiResponse  post(Map map) {
+        return post(true,ApiResponse.class,map,null);
+
     }
+    //For edge cases like Organizations and Tokens
+    public ApiResponse  post(boolean useToken, Map map, QueryParameters queryParameters) {
+        return post(true,ApiResponse.class,map,queryParameters);
 
-    public Entity post(Token token, Map<String,Object> payload){
-        WebResource resource;
-
-        if(token != null) {
-            resource = getResource( true, token );
-        }
-        else
-            resource = getResource( true );
-
-        return postResource( resource, payload );
     }
+    /**
+     * Need to refactor all instances of tokens to either be passed in or manually set during the test.
+     * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
+     * @param type
+     * @param <T>
+     * @return
+     */
+    //For edge cases like Organizations and Tokens
+    public <T> T post(Class<T> type) {
+        return post(true,type,null,null);
 
+    }
 
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
@@ -185,50 +194,24 @@ public class NamedResource implements UrlResource {
      * @return
      */
     //For edge cases like Organizations and Tokens
-    public <T> T post(Class<T> type, Object requestEntity) {
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource().type(MediaType.APPLICATION_JSON_TYPE)
-                            .accept( MediaType.APPLICATION_JSON )
-                            .post(gt.getRawClass(), requestEntity);
+    public <T> T post(Class<T> type, Entity requestEntity) {
+        return post(true,type,requestEntity,null);
 
     }
+
+    /**
+     * Need to refactor all instances of tokens to either be passed in or manually set during the test.
+     * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
+     * @param type
+     * @param requestEntity
+     * @param <T>
+     * @return
+     */
     //For edge cases like Organizations and Tokens
-    public ApiResponse postEntity(Entity requestEntity, boolean useToken) {
-        return getResource(useToken).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept( MediaType.APPLICATION_JSON )
-            .post( ApiResponse.class, requestEntity );
+    public <T> T post(Class<T> type, Map requestEntity) {
+        return post(true,type,requestEntity,null);
 
     }
-    //For edge cases like Organizations and Tokens
-    public ApiResponse postEntity(Entity requestEntity) {
-        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept( MediaType.APPLICATION_JSON )
-            .post( ApiResponse.class, requestEntity );
-
-    }
-
-
-
-    public <T> T postWithToken(Class<T> type, Object requestEntity) {
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-                            .accept( MediaType.APPLICATION_JSON )
-                            .post(gt.getRawClass(), requestEntity);
-
-    }
-
-    //Used for empty posts
-    public <T> T post( boolean userToken, Class<T> type, final QueryParameters queryParameters ) {
-        WebResource resource = getResource(userToken);
-        resource = addParametersToResource(resource, queryParameters);
-
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE )
-            .accept( MediaType.APPLICATION_JSON )
-            .post(gt.getRawClass());
-
-    }
-
 
     /**
      * Used to test POST using form payloads.
@@ -240,37 +223,58 @@ public class NamedResource implements UrlResource {
     public <T> T post(Class<T> type, Form requestEntity) {
         GenericType<T> gt = new GenericType<>((Class) type);
         return getResource()
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-        .entity(requestEntity, MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-        .post(gt.getRawClass());
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+            .entity(requestEntity, MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+            .post(gt.getRawClass());
+
+    }
+
+
+    //Used for empty posts
+    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters ) {
+        WebResource resource = getResource(useToken);
+        resource = addParametersToResource(resource, queryParameters);
+        WebResource.Builder builder = resource
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept( MediaType.APPLICATION_JSON );
+
+        if(entity!=null){
+            builder.entity(entity);
+        }
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return builder
+            .post(gt.getRawClass());
+
+    }
+
+
+    //For edge cases like Organizations and Tokens without any payload
+    public <T> T get(Class<T> type) {
+        return get(type,null,true);
 
     }
 
     //For edge cases like Organizations and Tokens without any payload
-    public <T> T get(Class<T> type) {
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-                                  .accept(MediaType.APPLICATION_JSON)
-                                  .get(gt.getRawClass());
+    public <T> T get(Class<T> type, boolean useToken) {
+        return get(type,null,useToken);
 
     }
 
-    public <T> T getWithoutToken(Class<T> type) {
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource().type(MediaType.APPLICATION_JSON_TYPE)
-                                  .accept( MediaType.APPLICATION_JSON )
-                                  .get( gt.getRawClass() );
-
-    }
 
     public <T> T get(Class<T> type,QueryParameters queryParameters) {
-        WebResource resource = getResource();
-        resource = addParametersToResource(resource, queryParameters);
+        return get(type,queryParameters,true);
+    }
+
+    public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken) {
+        WebResource resource = getResource(useToken);
+        if(queryParameters!=null) {
+            resource = addParametersToResource(resource, queryParameters);
+        }
         GenericType<T> gt = new GenericType<>((Class) type);
         return resource.type(MediaType.APPLICATION_JSON_TYPE)
-                                  .accept( MediaType.APPLICATION_JSON )
-                                  .get( gt.getRawClass() );
+            .accept( MediaType.APPLICATION_JSON )
+            .get( gt.getRawClass() );
 
     }
 

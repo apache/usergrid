@@ -70,7 +70,7 @@ public class ManagementResourceIT extends AbstractRestIT {
     public void setSelfAdminPasswordAsAdwmin() {
         UUID uuid =  UUIDUtils.newTimeUUID();
         management.token().setToken(clientSetup.getSuperuserToken());
-        management.orgs().organization(clientSetup.getOrganizationName()).users().postWithToken(User.class, new User("test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test"));
+        management.orgs().organization(clientSetup.getOrganizationName()).users().post(ApiResponse.class, new User("test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test"));
         Map<String, Object> data = new HashMap<>();
         data.put( "newpassword", "foo" );
         data.put( "oldpassword", "test" );
@@ -457,7 +457,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertNotNull(response.get("email").toString());
 
         // now revoke the tokens
-        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class, null);
+        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class,null, null);
 
         // the tokens shouldn't work
 
@@ -480,7 +480,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         // now revoke the token3
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "token", token3.getAccessToken() );
-        management.users().user(clientSetup.getUsername()).revokeToken().post( false, Entity.class,queryParameters );
+        management.users().user(clientSetup.getUsername()).revokeToken().post( false, Entity.class,null,queryParameters );
 
         // the token3 shouldn't work
         status = null;
