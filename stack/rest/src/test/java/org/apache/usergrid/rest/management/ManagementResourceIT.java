@@ -22,7 +22,7 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
+
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
@@ -457,7 +457,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertNotNull(response.get("email").toString());
 
         // now revoke the tokens
-        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class);
+        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class, null);
 
         // the tokens shouldn't work
 
@@ -480,13 +480,13 @@ public class ManagementResourceIT extends AbstractRestIT {
         // now revoke the token3
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "token", token3.getAccessToken() );
-        response = management.users().user(clientSetup.getUsername()).revokeToken().post( Entity.class,queryParameters );;
+        management.users().user(clientSetup.getUsername()).revokeToken().post( false, Entity.class,queryParameters );
 
         // the token3 shouldn't work
         status = null;
 
         try {
-            response = management.users().user(clientSetup.getUsername()).get();
+            management.users().user(clientSetup.getUsername()).get();
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();

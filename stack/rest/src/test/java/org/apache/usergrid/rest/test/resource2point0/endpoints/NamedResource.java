@@ -172,7 +172,7 @@ public class NamedResource implements UrlResource {
         else
             resource = getResource( true );
 
-        return postResource(resource,payload);
+        return postResource( resource, payload );
     }
 
 
@@ -196,26 +196,18 @@ public class NamedResource implements UrlResource {
     public ApiResponse postEntity(Entity requestEntity, boolean useToken) {
         return getResource(useToken).type(MediaType.APPLICATION_JSON_TYPE)
             .accept( MediaType.APPLICATION_JSON )
-            .post(ApiResponse.class, requestEntity);
+            .post( ApiResponse.class, requestEntity );
 
     }
     //For edge cases like Organizations and Tokens
     public ApiResponse postEntity(Entity requestEntity) {
         return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
             .accept( MediaType.APPLICATION_JSON )
-            .post(ApiResponse.class, requestEntity);
+            .post( ApiResponse.class, requestEntity );
 
     }
 
-    public <T> T post(Class<T> type, QueryParameters queryParameters) {
-        WebResource resource = getResource();
-        resource = addParametersToResource(resource, queryParameters);
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return resource.type(MediaType.APPLICATION_JSON_TYPE)
-                            .accept( MediaType.APPLICATION_JSON )
-                            .post(gt.getRawClass());
 
-    }
 
     public <T> T postWithToken(Class<T> type, Object requestEntity) {
         GenericType<T> gt = new GenericType<>((Class) type);
@@ -225,24 +217,26 @@ public class NamedResource implements UrlResource {
 
     }
 
-    //For edge cases like Organizations and Tokens without any payload
-    public <T> T post(Class<T> type) {
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource().type(MediaType.APPLICATION_JSON_TYPE)
-                            .accept( MediaType.APPLICATION_JSON )
-                            .post(gt.getRawClass());
+    //Used for empty posts
+    public <T> T post( boolean userToken, Class<T> type, final QueryParameters queryParameters ) {
+        WebResource resource = getResource(userToken);
+        resource = addParametersToResource(resource, queryParameters);
 
-    }
-
-    //For edge cases like Organizations and Tokens without any payload
-    public <T> T post(boolean useToken , Class<T> type) {
         GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource(useToken).type(MediaType.APPLICATION_JSON_TYPE)
+        return resource.type( MediaType.APPLICATION_JSON_TYPE )
             .accept( MediaType.APPLICATION_JSON )
             .post(gt.getRawClass());
 
     }
 
+
+    /**
+     * Used to test POST using form payloads.
+     * @param type
+     * @param requestEntity
+     * @param <T>
+     * @return
+     */
     public <T> T post(Class<T> type, Form requestEntity) {
         GenericType<T> gt = new GenericType<>((Class) type);
         return getResource()
