@@ -1,5 +1,6 @@
 {
     "entity": {
+        "dynamic": "strict",
         "properties": {
             "entityId": {
                 "type": "string",
