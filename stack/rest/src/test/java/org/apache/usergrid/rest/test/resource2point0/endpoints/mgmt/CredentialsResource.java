@@ -49,7 +49,5 @@ public class CredentialsResource extends NamedResource {
         return get(parameters, true);
     }
 
-    public Credentials get() {
-        return get(null, true);
-    }
+
 }

@@ -91,12 +91,12 @@ public class AdminUsersIT extends AbstractRestIT {
         this.refreshIndex();
 
         //Get the token using the new password
-        Token adminToken = management.token().post( Token.class, new Token( username, "testPassword" )  );
+        Token adminToken = management.token().post( false, Token.class, new Token( username, "testPassword" ) ,null );
         management.token().setToken( adminToken );
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( Token.class, new Token( username, password ));
+            management.token().post(false, Token.class, new Token( username, password ),null);
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -156,16 +156,17 @@ public class AdminUsersIT extends AbstractRestIT {
         Map<String, Object> passwordPayload = new HashMap<String, Object>();
         passwordPayload.put( "newpassword", "testPassword" );
 
-        management.users().user( username ).password().post( clientSetup.getSuperuserToken(), passwordPayload );
+        management.token().setToken( clientSetup.getSuperuserToken());
+        management.users().user( username ).password().post( passwordPayload );
 
         this.refreshIndex();
 
-        assertNotNull(management.token().post( Token.class, new Token( username, "testPassword" )  ));
+        assertNotNull(management.token().post( false,Token.class, new Token( username, "testPassword" ) ,null ));
 
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( Token.class, new Token( username, password) );
+            management.token().post( false,Token.class, new Token( username, password) ,null);
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -614,7 +615,7 @@ public class AdminUsersIT extends AbstractRestIT {
 //        management().token().setToken( organizationToken );
 
         //Create admin user
-        management().orgs().organization( clientSetup.getOrganizationName() ).users().postWithToken(ApiResponse.class ,adminUserPayload );
+        management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
 
         refreshIndex();
 

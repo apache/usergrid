@@ -43,12 +43,6 @@ public class OrganizationResource extends NamedResource {
         return new ApplicationsResource( name, context ,this );
     }
 
-    public void post(Map<String,String> organization) {
-
-        getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                     .post( ApiResponse.class, organization );
-    }
-
     public Organization get(){
         throw new UnsupportedOperationException("service doesn't exist");
     }

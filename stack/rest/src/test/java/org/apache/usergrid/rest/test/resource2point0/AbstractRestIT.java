@@ -171,14 +171,14 @@ public class AbstractRestIT extends JerseyTest {
 
 
     protected Token getAdminToken(String username, String password){
-        return this.clientSetup.getRestClient().management().token().post(Token.class,
-                new Token(username, password)
+        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
+                new Token(username, password),null
         );
     }
 
     protected Token getAdminToken(){
-        return this.clientSetup.getRestClient().management().token().post(Token.class,
-                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername())
+        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
+                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null
         );
     }
 }

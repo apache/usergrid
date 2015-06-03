@@ -235,7 +235,7 @@ public class AccessTokenIT extends AbstractRestIT {
 
         // using a superuser token, revoke all tokens associated with the admin user
         management().token().setToken( clientSetup.getSuperuserToken() );
-        management().users().user( clientSetup.getUsername() ).revokeTokens().post(true , ApiResponse.class, null);
+        management().users().user( clientSetup.getUsername() ).revokeTokens().post(true , ApiResponse.class, null,null);
 
         refreshIndex();
 
@@ -276,7 +276,7 @@ public class AccessTokenIT extends AbstractRestIT {
         queryParameters.addParam( "token", token1.getAccessToken() );
 
         management().token().setToken( clientSetup.getSuperuserToken() );
-        management().users().user( clientSetup.getUsername() ).revokeToken().post( false, ApiResponse.class,queryParameters );
+        management().users().user( clientSetup.getUsername() ).revokeToken().post( false, ApiResponse.class,null,queryParameters );
 
         refreshIndex();
 
