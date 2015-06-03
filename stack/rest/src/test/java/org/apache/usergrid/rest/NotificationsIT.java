@@ -74,9 +74,6 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
 
     @Test
     public void testPaging() throws Exception {
-        Token adminToken = clientSetup.getRestClient().management().token().post(Token.class, new Token( clientSetup.getUsername(), clientSetup.getPassword() ) );
-        clientSetup.getRestClient().management().token().setToken( adminToken );
-
         // create notifier
         Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
 

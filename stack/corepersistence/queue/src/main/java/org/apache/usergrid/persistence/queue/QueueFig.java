@@ -43,4 +43,8 @@ public interface QueueFig extends GuicyFig {
     @Key( "usergrid.queue.deliveryLimit" )
     @Default("5")
     public String getQueueDeliveryLimit();
+
+    @Key("usergrid.use.default.queue")
+    @Default("false")
+    public boolean overrideQueueForDefault();
 }
