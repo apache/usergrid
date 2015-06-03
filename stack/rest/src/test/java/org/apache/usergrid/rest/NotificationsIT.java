@@ -28,7 +28,9 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.rest.test.resource2point0.*;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -77,10 +79,10 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
         // create notifier
         Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
 
-        Entity notifierNode =this.app().collection("notifier").post(notifier);
+        ApiResponse notifierNode = this.pathResource(getOrgAppPath("notifier")).postEntity(notifier);
 
         //logger.debug("Notifier is: " + notifierNode.toString());
-        assertEquals("noop", notifierNode.getResponse().getEntities().get(0).get("provider").toString());
+        assertEquals("noop", notifierNode.getEntities().get(0).get("provider").toString());
 
         int numDevices = 2;
         int numNotifications = 5; // to send to each device

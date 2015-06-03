@@ -29,6 +29,7 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
@@ -131,6 +132,12 @@ public class AbstractRestIT extends JerseyTest {
 
     protected ManagementResource management(){
         return clientSetup.restClient.management();
+    }
+
+    protected NamedResource pathResource(String path){ return clientSetup.restClient.pathResource(path);}
+
+    protected String getOrgAppPath(String additionalPath){
+        return clientSetup.orgName + "/" + clientSetup.appName + "/" + (additionalPath !=null ? additionalPath : "");
     }
 
     protected ClientContext context(){
