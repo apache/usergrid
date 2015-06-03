@@ -48,8 +48,6 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
 
     final String org = "test-organization";
     final String app = "test-app";
-    final String orgapp = org + "/" + app;
-    String token;
 
     private static final long writeDelayMs = 15;
     private static final long readDelayMs = 15;
@@ -76,13 +74,8 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
 
     @Test
     public void testPaging() throws Exception {
-
-        int numDevices = 2;
-        int numNotifications = 5; // to send to each device
-
-        User user = new User("ed","ed", "ed@anuff.com", "sesame" );
-        Entity entity = this.app().collection("users").post(user);
-        Token token = this.app().token().post(new Token("ed", "sesame"));
+        Token adminToken = clientSetup.getRestClient().management().token().post(Token.class, new Token( clientSetup.getUsername(), clientSetup.getPassword() ) );
+        clientSetup.getRestClient().management().token().setToken( adminToken );
 
         // create notifier
         Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
@@ -91,6 +84,14 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource2poin
 
         //logger.debug("Notifier is: " + notifierNode.toString());
         assertEquals("noop", notifierNode.getResponse().getEntities().get(0).get("provider").toString());
+
+        int numDevices = 2;
+        int numNotifications = 5; // to send to each device
+
+        User user = new User("ed","ed", "ed@anuff.com", "sesame" );
+        Entity entity = this.app().collection("users").post(user);
+        Token token = this.app().token().post(new Token("ed", "sesame"));
+        this.clientSetup.getRestClient().token().setToken(token);
 
         this.refreshIndex();
 

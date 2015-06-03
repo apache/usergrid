@@ -101,8 +101,7 @@ public class ClientSetup implements TestRule {
 
         try {
             restClient.superuserSetup();
-            superuserToken = restClient.management().token().post(Token.class, new Token( superuserName, superuserPassword ) );
-            restClient.management().token().setToken( superuserToken );
+            superuserToken = restClient.management().token().get( superuserName, superuserPassword  );
         } catch ( Exception e ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Error creating superuser, may already exist", e );
@@ -123,7 +122,7 @@ public class ClientSetup implements TestRule {
         clientCredentials = restClient.management().orgs().organization( orgName ).credentials().get();
         //refreshIndex();
 
-        //restClient.management().token().post(Token.class,new Token(username,password));
+        restClient.management().token().get(username,password);
 
         ApiResponse appResponse = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
         appUuid = ( String ) appResponse.getEntities().get( 0 ).get( "uuid" );
