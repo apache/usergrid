@@ -36,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
+import net.tanesha.recaptcha.ReCaptchaException;
 import org.apache.usergrid.rest.RootResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,14 +155,15 @@ public class UsersResource extends ServiceResource {
 
                 if(!reCaptchaResponse.isValid()){
                     errorMsg = "Incorrect Captcha, try again...";
-                    throw new Exception("Incorrect Captcha");
+                    throw new Exception("reCAPTCHA error message: "+reCaptchaResponse.getErrorMessage());
                 }
             }
             user = management.getAppUserByIdentifier(getApplicationId(), Identifier.fromEmail(email));
             if (user == null) {
                 errorMsg = "We don't recognize that email, try again...";
-                throw new Exception("Unrecognized email address");
+                throw new Exception("Unrecognized email address "+email);
             }
+            logger.info(String.format("Starting AppUser Password Reset Flow for %s on %s", user.getUuid(), getApplicationId()));
             management.startAppUserPasswordResetFlow( getApplicationId(), user );
             return handleViewable("resetpw_email_success", this);
         }
@@ -169,7 +171,8 @@ public class UsersResource extends ServiceResource {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "resetpw_email_form", e );
+            logger.error(String.format("Exception in password reset form. (%s) %s ", e.getClass().getCanonicalName(), e.getMessage()));
+            return handleViewable( "resetpw_email_form", this );
         }
     }
 
