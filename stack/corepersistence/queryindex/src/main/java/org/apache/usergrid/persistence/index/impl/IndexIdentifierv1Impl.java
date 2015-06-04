@@ -23,16 +23,17 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.inject.Inject;
 
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexIdentifier;
 
 
 /**
  * Class is used to generate an index name and alias name
  */
-public class IndexIdentifierImpl implements IndexIdentifier {
+public class IndexIdentifierv1Impl implements IndexIdentifier {
     private final IndexFig config;
 
     @Inject
-    public IndexIdentifierImpl(IndexFig config) {
+    public IndexIdentifierv1Impl(IndexFig config) {
         this.config = config;
     }
 

@@ -26,7 +26,6 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -63,7 +62,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
     private final IndexAlias alias;
-    private final IndexBufferConsumer producer;
     private final IndexFig indexFig;
     private final Timer addTimer;
     private final Timer updateAliasTimer;
@@ -91,21 +89,20 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private Timer mappingTimer;
     private Meter refreshIndexMeter;
 
-//    private final Timer indexTimer;
-
 
     @Inject
     public EsEntityIndexImpl( final EsProvider provider,
                               final IndexCache indexCache,
-                              final IndexFig indexFig, final IndexIdentifier indexIdentifier,
-                             final IndexBufferConsumer producer, final IndexRefreshCommand indexRefreshCommand,
-                              final MetricsFactory metricsFactory) {
+                              final IndexFig indexFig,
+                              final IndexIdentifier indexIdentifier,
+                              final IndexRefreshCommand indexRefreshCommand,
+                              final MetricsFactory metricsFactory
+    ) {
 
         this.indexFig = indexFig;
         this.indexIdentifier = indexIdentifier;
 
         this.esProvider = provider;
-        this.producer = producer;
         this.indexRefreshCommand = indexRefreshCommand;
         this.alias = indexIdentifier.getAlias();
         this.aliasCache = indexCache;
