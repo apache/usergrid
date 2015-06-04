@@ -20,6 +20,9 @@ package org.apache.usergrid.persistence;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+
 
 /**
  * For each in a set of source refs executes a sub-query and provides a unified iterator over
@@ -122,6 +125,13 @@ public class MultiQueryIterator implements ResultsIterator {
         public String getType() {
             return type;
         }
+
+
+        @Override
+        public Id asId() {
+            return new SimpleId(uuid, type);
+        }
+
 
         public void setType( String type ) {
             this.type = type;
