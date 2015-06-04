@@ -17,8 +17,10 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.persistence.index;
 
+
+import org.apache.usergrid.persistence.index.impl.IndexAlias;
 
 /**
  * Identifier for where an index is in underlying server
