@@ -307,10 +307,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void deleteApplication(UUID applicationId) throws Exception {
 
         // find application_info for application to delete
-        String collectionFromName = CpNamingUtils.APPLICATION_INFO;
-        String collectionToName = CpNamingUtils.DELETED_APPLICATION_INFO;
 
-        migrateAppInfo(applicationId, collectionFromName, collectionToName).toBlocking()
+        migrateAppInfo(applicationId, CpNamingUtils.APPLICATION_INFO, CpNamingUtils.DELETED_APPLICATION_INFO).toBlocking()
             .lastOrDefault(null);
     }
 
@@ -387,11 +385,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
         final Edge createEdge = CpNamingUtils.createCollectionEdge(managementAppId, collectionToName, applicationId);
 
-        final Observable compactObservable = managementGraphManager.compactNode(applicationId);
+        //TODO T.N. Removing this causes a failure
+//        final Observable compactObservable = managementGraphManager.compactNode(applicationId);
 
         final Observable deleteNodeGraph = managementGraphManager
-            .markNode(applicationId, CpNamingUtils.createGraphOperationTimestamp())
-            .flatMap(id -> compactObservable);
+            .markNode( applicationId, CpNamingUtils.createGraphOperationTimestamp() );
+//            .flatMap(id -> compactObservable);
 
         final Observable createNodeGraph = managementGraphManager.writeEdge(createEdge);
 
