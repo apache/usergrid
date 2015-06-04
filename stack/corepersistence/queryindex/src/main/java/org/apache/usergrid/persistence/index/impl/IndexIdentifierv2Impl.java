@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
 
-import com.netflix.astyanax.Keyspace;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexIdentifier;
@@ -32,21 +32,23 @@ import org.apache.usergrid.persistence.index.IndexIdentifier;
  * Class is used to generate an index name and alias name
  */
 public class IndexIdentifierv2Impl implements IndexIdentifier {
-    private final IndexFig config;
+    private final CassandraFig cassandraFig;
+    private final IndexFig indexFig;
     private final String prefix;
 
     @Inject
-    public IndexIdentifierv2Impl(final Keyspace keyspace, final IndexFig config) {
-        this.config = config;
-        this.prefix = getPrefix(keyspace, config);
+    public IndexIdentifierv2Impl(final CassandraFig cassandraFig, final IndexFig config) {
+        this.cassandraFig = cassandraFig;
+        this.indexFig = config;
+        this.prefix = getPrefix();
     }
 
-    private String getPrefix(Keyspace keyspace, IndexFig config) {
+    private String getPrefix() {
         //remove usergrid
-        final String indexPrefixConfig = StringUtils.isNotEmpty(config.getIndexPrefix())
-            ? config.getIndexPrefix().toLowerCase()  ////use lowercase value
+        final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
+            ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
             : "usergrid"; // default to something so its not null
-        final String keyspaceName = keyspace.getKeyspaceName().toLowerCase();
+        final String keyspaceName = cassandraFig.getApplicationKeyspace().toLowerCase();
         //check for repetition
         final boolean removePrefix = indexPrefixConfig.contains("usergrid") && keyspaceName.contains("usergrid");
         return !removePrefix
@@ -60,7 +62,7 @@ public class IndexIdentifierv2Impl implements IndexIdentifier {
      */
     @Override
     public IndexAlias getAlias() {
-        return new IndexAlias(config,prefix);
+        return new IndexAlias(indexFig,prefix);
     }
 
     /**

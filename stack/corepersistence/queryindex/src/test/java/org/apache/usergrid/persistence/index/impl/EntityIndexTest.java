@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.base.Optional;
 import com.netflix.astyanax.Keyspace;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
 import org.junit.Rule;
 import org.junit.Test;
@@ -90,7 +91,7 @@ public class EntityIndexTest extends BaseIT {
     public IndexFig fig;
 
     @Inject
-    public Keyspace keyspace;
+    public CassandraFig cassandraFig;
 
     @Inject
     @Rule
@@ -1268,8 +1269,8 @@ public class EntityIndexTest extends BaseIT {
         String indexv1Name = identifierv1.getIndex("somesuffixv1");
         String indexv2Name = identifierv2.getIndex("somesuffixv2");
         assertFalse(indexv1Name.equals(indexv2Name));
-        assertFalse(indexv1Name.contains(keyspace.getKeyspaceName().toLowerCase()));
-        assertTrue(indexv2Name.contains(keyspace.getKeyspaceName().toLowerCase()));
+        assertFalse(indexv1Name.contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
+        assertTrue(indexv2Name.contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
         assertTrue(indexv1Name.contains(fig.getIndexPrefix()));
         assertTrue(indexv2Name.contains(fig.getIndexPrefix()));
 
