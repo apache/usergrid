@@ -496,7 +496,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user = createAdminUserInternal( username, name, email, password, activated, disabled, userProperties );
             }
 
-            organization = createOrganizationInternal( organizationName, user, true, organizationProperties );
+            organization = createOrganizationInternal( null, organizationName, user, true, organizationProperties );
         }
         finally {
             emailLock.unlock();
@@ -508,14 +508,16 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private OrganizationInfo createOrganizationInternal( String organizationName, UserInfo user, boolean activated )
-            throws Exception {
-        return createOrganizationInternal( organizationName, user, activated, null );
+    private OrganizationInfo createOrganizationInternal(
+            UUID orgUuid, String organizationName, UserInfo user, boolean activated) throws Exception {
+        return createOrganizationInternal( orgUuid, organizationName, user, activated, null );
     }
 
 
-    private OrganizationInfo createOrganizationInternal( String organizationName, UserInfo user, boolean activated,
-                                                         Map<String, Object> properties ) throws Exception {
+    private OrganizationInfo createOrganizationInternal(
+            UUID orgUuid, String organizationName, UserInfo user, boolean activated,
+            Map<String, Object> properties ) throws Exception {
+
         if ( ( organizationName == null ) || ( user == null ) ) {
             return null;
         }
@@ -524,7 +526,13 @@ public class ManagementServiceImpl implements ManagementService {
 
         Group organizationEntity = new Group();
         organizationEntity.setPath( organizationName );
-        organizationEntity = em.create( organizationEntity );
+
+        if ( orgUuid == null ) {
+            organizationEntity = em.create( organizationEntity );
+        } else {
+            em.create( orgUuid, Group.ENTITY_TYPE, organizationEntity.getProperties() );
+            organizationEntity = em.get( orgUuid, Group.class );
+        }
 
         em.addToCollection( organizationEntity, "users", new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
 
@@ -536,20 +544,29 @@ public class ManagementServiceImpl implements ManagementService {
                 new OrganizationInfo( organizationEntity.getUuid(), organizationName, properties );
         updateOrganization( organization );
 
-        logger.info( "createOrganizationInternal: {}", organizationName );
-        postOrganizationActivity( organization.getUuid(), user, "create", organizationEntity, "Organization",
-                organization.getName(),
-                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
-                        + ")</a> created a new organization account named " + organizationName, null );
+        if ( orgUuid == null ) { // no import ID specified, so do the activation email flow stuff
 
-        startOrganizationActivationFlow( organization );
+            logger.info( "createOrganizationInternal: {}", organizationName );
+            postOrganizationActivity( organization.getUuid(), user, "create", organizationEntity, "Organization",
+                    organization.getName(),
+                    "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
+                            + ")</a> created a new organization account named " + organizationName, null );
+
+            startOrganizationActivationFlow( organization );
+        }
 
         return organization;
     }
 
 
     @Override
-    public OrganizationInfo createOrganization( String organizationName, UserInfo user, boolean activated )
+    public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
+            throws Exception {
+        return createOrganization( organizationName, user, activated );
+    }
+
+    @Override
+    public OrganizationInfo createOrganization(UUID orgUuid, String organizationName, UserInfo user, boolean activated)
             throws Exception {
 
         if ( ( organizationName == null ) || ( user == null ) ) {
@@ -563,7 +580,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         try {
             groupLock.lock();
-            return createOrganizationInternal( organizationName, user, activated );
+            return createOrganizationInternal( orgUuid, organizationName, user, activated );
         }
         finally {
             groupLock.unlock();

@@ -1,6 +1,3 @@
-/**
- * Created by ApigeeCorporation on 4/9/15.
- */
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -26,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.collect.BiMap;
 import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +37,6 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.utils.JsonUtils;
 
 
 /**
@@ -47,8 +44,10 @@ import org.apache.usergrid.utils.JsonUtils;
  */
 public class ExportAdmins extends ExportingToolBase {
 
-    static final Logger logger = LoggerFactory.getLogger( Export.class );
+    static final Logger logger = LoggerFactory.getLogger( ExportAdmins.class );
 
+    public static final String ADMIN_USERS_PREFIX = "admin-users";
+    public static final String ADMIN_USER_METADATA_PREFIX = "admin-user-metadata";
 
     @Override
     public void runTool( CommandLine line ) throws Exception {
@@ -61,30 +60,29 @@ public class ExportAdmins extends ExportingToolBase {
         outputDir = createOutputParentDir();
         logger.info( "Export directory: " + outputDir.getAbsolutePath() );
 
-        exportApplicationsForOrg( null );
+        exportAdminUsers();
     }
 
 
-    private void exportApplicationsForOrg( Map.Entry<UUID, String> organization ) throws Exception {
+    private void exportAdminUsers() throws Exception {
+
+        int count = 0;
 
         EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
 
-        // Get the JSon serializer.
-        JsonGenerator jg = getJsonGenerator( createOutputFile( "application", em.getApplication().getName() ) );
+        // write one JSON file for management application users
 
-        jg.writeStartArray();
+        JsonGenerator usersFile =
+                getJsonGenerator( createOutputFile( ADMIN_USERS_PREFIX, em.getApplication().getName() ) );
+        usersFile.writeStartArray();
 
-        // Create a GENERATOR for the application collections.
-        JsonGenerator collectionsJg =
-                getJsonGenerator( createOutputFile( "collections", em.getApplication().getName() ) );
-        collectionsJg.writeStartObject();
+        // write one JSON file for metadata: collections, connections and dictionaries of those users
 
-        Map<String, Object> metadata = em.getApplicationCollectionMetadata();
-        echo( JsonUtils.mapToFormattedJsonString( metadata ) );
+        JsonGenerator metadataFile =
+                getJsonGenerator( createOutputFile( ADMIN_USER_METADATA_PREFIX, em.getApplication().getName() ) );
+        metadataFile.writeStartObject();
 
-        // Loop through the collections. This is the only way to loop
-        // through the entities in the application (former namespace).
-        // for ( String collectionName : metadata.keySet() ) {
+        // query for and loop through all users in management application
 
         Query query = new Query();
         query.setLimit( MAX_ENTITY_FETCH );
@@ -95,33 +93,37 @@ public class ExportAdmins extends ExportingToolBase {
         while ( entities.size() > 0 ) {
 
             for ( Entity entity : entities ) {
-                // Export the entity first and later the collections for
-                // this entity.
-                jg.writeObject( entity );
+
+                // write user to application file
+                usersFile.writeObject( entity );
                 echo( entity );
 
-                saveCollectionMembers( collectionsJg, em, null, entity );
+                // write user's collections, connections, etc. to collections file
+                saveEntityMetadata( metadataFile, em, null, entity );
+
+                logger.debug("Exported user {}", entity.getProperty( "email" ));
+
+                count++;
+                if ( count % 1000 == 0 ) {
+                    logger.info("Exported {} admin users", count);
+                }
+
             }
 
-            //we're done
             if ( entities.getCursor() == null ) {
                 break;
             }
-
             query.setCursor( entities.getCursor() );
-
             entities = em.searchCollection( em.getApplicationRef(), "users", query );
         }
-        //}
 
-        // Close writer for the collections for this application.
-        collectionsJg.writeEndObject();
-        collectionsJg.close();
+        metadataFile.writeEndObject();
+        metadataFile.close();
 
-        // Close writer and file for this application.
-        jg.writeEndArray();
-        jg.close();
-        // }
+        usersFile.writeEndArray();
+        usersFile.close();
+
+        logger.info("Exported total of {} admin users", count);
     }
 
 
@@ -132,8 +134,20 @@ public class ExportAdmins extends ExportingToolBase {
      * @param application Application name
      * @param entity entity
      */
-    private void saveCollectionMembers( JsonGenerator jg, EntityManager em, String application, Entity entity )
-            throws Exception {
+    private void saveEntityMetadata(
+            JsonGenerator jg, EntityManager em, String application, Entity entity) throws Exception {
+
+        saveCollections( jg, em, entity );
+        saveConnections( entity, em, jg );
+        saveOrganizations( entity, em, jg );
+        saveDictionaries( entity, em, jg );
+
+        // End the object if it was Started
+        jg.writeEndObject();
+    }
+
+
+    private void saveCollections(JsonGenerator jg, EntityManager em, Entity entity) throws Exception {
 
         Set<String> collections = em.getCollections( entity );
 
@@ -164,16 +178,8 @@ public class ExportAdmins extends ExportingToolBase {
             // End collection array.
             jg.writeEndArray();
         }
-
-        // Write connections
-        saveConnections( entity, em, jg );
-
-        // Write dictionaries
-        saveDictionaries( entity, em, jg );
-
-        // End the object if it was Started
-        jg.writeEndObject();
     }
+
 
     /**
      * Persists the connection for this entity.
@@ -207,8 +213,9 @@ public class ExportAdmins extends ExportingToolBase {
         jg.writeEndObject();
     }
 
+
     /**
-     * Persists the connection for this entity.
+     * Persists the outgoing connections for this entity.
      */
     private void saveConnections( Entity entity, EntityManager em, JsonGenerator jg ) throws Exception {
 
@@ -232,5 +239,34 @@ public class ExportAdmins extends ExportingToolBase {
         }
         jg.writeEndObject();
     }
+
+
+    /**
+     * Persists the incoming connections for this entity.
+     */
+    private void saveOrganizations(Entity entity, EntityManager em, JsonGenerator jg) throws Exception {
+
+        final BiMap<UUID, String> orgs = managementService.getOrganizationsForAdminUser( entity.getUuid() );
+
+        jg.writeFieldName( "organizations" );
+
+        jg.writeStartArray();
+
+        for ( UUID uuid : orgs.keySet() ) {
+
+             jg.writeStartObject();
+
+             jg.writeFieldName( "uuid" );
+             jg.writeObject( uuid );
+
+             jg.writeFieldName( "name" );
+             jg.writeObject( orgs.get( uuid ) );
+
+             jg.writeEndObject();
+        }
+
+        jg.writeEndArray();
+    }
+
 }
 
