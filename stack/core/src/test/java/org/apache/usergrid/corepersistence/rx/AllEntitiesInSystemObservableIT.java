@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.rx;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
@@ -96,6 +97,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );
         final GraphManager gm = managerCache.getGraphManager( scope );
 
+        AtomicLong counter = new AtomicLong();
         allEntitiesInSystemObservableImpl.getData().doOnNext( new Action1<EntityIdScope>() {
             @Override
             public void call( final EntityIdScope entityIdScope ) {
@@ -104,13 +106,13 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
                 assertNotNull(entityIdScope.getId());
 
                 // we should only emit each node once
-                if ( entityIdScope.getId().getType().equals( type1 ) ) {
-                    assertTrue( "Element should be present on removal",
-                        type1Identities.remove(entityIdScope.getId() ) );
-                }
-                else if ( entityIdScope.getId().getType().equals( type2 ) ) {
-                    assertTrue( "Element should be present on removal",
-                        type2Identities.remove(entityIdScope.getId() ) );
+                final Id id = entityIdScope.getId();
+                if ( id.getType().equals( type1 ) ) {
+                    boolean removed =  type1Identities.remove(id);
+                    assertTrue( "Element(a:"+counter.incrementAndGet()+") should be present on removal",type1Identities.size() ==0 || removed);
+                } else if ( id.getType().equals( type2 ) ) {
+                    boolean removed = type2Identities.remove(id );
+                    assertTrue( "Element(b:"+counter.incrementAndGet()+") should be present on removal",type2Identities.size() ==0 || removed );
                 }
             }
         } ).toBlocking().lastOrDefault( null );
