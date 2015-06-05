@@ -82,22 +82,20 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     @Inject
     public EsIndexBufferConsumerImpl( final IndexFig config, final EsProvider provider,
                                       final MetricsFactory metricsFactory, final IndexFig indexFig ) {
-
-        this.flushTimer = metricsFactory.getTimer( EsIndexBufferConsumerImpl.class, "buffer.flush" );
-        this.flushMeter = metricsFactory.getMeter( EsIndexBufferConsumerImpl.class, "buffer.meter" );
-        this.indexSizeCounter = metricsFactory.getCounter( EsIndexBufferConsumerImpl.class, "buffer.size" );
-        this.indexErrorCounter = metricsFactory.getCounter( EsIndexBufferConsumerImpl.class, "error.count" );
-        this.offerTimer = metricsFactory.getTimer( EsIndexBufferConsumerImpl.class, "index.buffer.producer.timer" );
+        this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.flush");
+        this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index_buffer.flush");
+        this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.size");
+        this.indexErrorCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.error");
+        this.offerTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.producer");
 
         //wire up the gauge of inflight messages
-        metricsFactory.addGauge( EsIndexBufferConsumerImpl.class, "inflight.meter", () -> inFlight.longValue() );
+        metricsFactory.addGauge(EsIndexBufferConsumerImpl.class, "index_buffer.inflight", () -> inFlight.longValue());
 
 
         this.config = config;
-        this.failureMonitor = new FailureMonitorImpl( config, provider );
+        this.failureMonitor = new FailureMonitorImpl(config, provider);
         this.client = provider.getClient();
-        this.produceTimer =
-            metricsFactory.getTimer( EsIndexBufferConsumerImpl.class, "index.buffer.consumer.messageFetch" );
+        this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.consumer_messageFetch");
         this.indexFig = indexFig;
 
         this.bufferProducer = new BufferProducer();

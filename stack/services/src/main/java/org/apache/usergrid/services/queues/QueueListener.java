@@ -18,12 +18,8 @@ package org.apache.usergrid.services.queues;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
-import com.google.common.cache.*;
 import com.google.inject.Injector;
 
-import org.apache.usergrid.corepersistence.CpSetup;
-
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -32,10 +28,9 @@ import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
+
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
@@ -78,7 +73,8 @@ public abstract class QueueListener  {
     private String queueName;
     public QueueManager TEST_QUEUE_MANAGER;
     private int consecutiveCallsToRemoveDevices;
-
+    private Meter meter;
+    private Timer timer;
 
     /**
      * Initializes the QueueListener.
@@ -93,6 +89,8 @@ public abstract class QueueListener  {
         this.emf = injector.getInstance( EntityManagerFactory.class ); //emf;
         this.metricsService = injector.getInstance(MetricsFactory.class);
         this.properties = props;
+        meter = metricsService.getMeter(QueueListener.class, "execute.commit");
+        timer = metricsService.getTimer(QueueListener.class, "execute.dequeue");
 
     }
 
@@ -160,8 +158,6 @@ public abstract class QueueListener  {
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         LOG.info("QueueListener: Starting execute process.");
-        Meter meter = metricsService.getMeter(QueueListener.class, "queue");
-        com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "dequeue");
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         LOG.info("getting from queue {} ", queueName);
         QueueScope queueScope = new QueueScopeImpl( queueName);

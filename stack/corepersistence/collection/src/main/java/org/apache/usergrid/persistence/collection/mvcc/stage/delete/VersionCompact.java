@@ -69,7 +69,7 @@ public class VersionCompact
         this.serializationFig = serializationFig;
         this.keyspace = keyspace;
         this.mvccEntitySerializationStrategy = mvccEntitySerializationStrategy;
-        this.compactTimer = metricsFactory.getTimer( VersionCompact.class, "compact" );
+        this.compactTimer = metricsFactory.getTimer( VersionCompact.class, "version.compact" );
     }
 
 
