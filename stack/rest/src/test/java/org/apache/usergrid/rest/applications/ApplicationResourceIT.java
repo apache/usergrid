@@ -93,6 +93,33 @@ public class ApplicationResourceIT extends AbstractRestIT {
     }
 
     /**
+     * Retrieve an collection using the application client credentials
+     */
+    @Test
+    public void applicationCollectionWithAppCredentials() throws Exception {
+
+        //retrieve the credentials
+        Credentials appCredentials = getAppCredentials();
+
+        //retrieve the app using only the org credentials
+        ApiResponse apiResponse = this.app().collection( "roles" ).getResource( false )
+                                      .queryParam("grant_type", "client_credentials")
+                                      .queryParam("client_id", appCredentials.getClientId())
+                                      .queryParam("client_secret", appCredentials.getClientSecret())
+                                      .accept(MediaType.APPLICATION_JSON)
+                                      .type(MediaType.APPLICATION_JSON_TYPE)
+                                      .get(ApiResponse.class);
+        //assert that a valid response is returned without error
+        assertNotNull(apiResponse);
+        assertNull(apiResponse.getError());
+
+        Collection roles = new Collection(apiResponse);
+        //assert that we have the correct number of default roles
+        assertEquals(3, roles.getNumOfEntities());
+    }
+
+
+    /**
      * Verifies that we return JSON even when no accept header is specified.
      * (for backwards compatibility)
      */
