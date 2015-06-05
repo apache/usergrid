@@ -26,6 +26,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -94,13 +95,13 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     public EsEntityIndexImpl( final EsProvider provider,
                               final IndexCache indexCache,
                               final IndexFig indexFig,
-                              final IndexIdentifier indexIdentifier,
                               final IndexRefreshCommand indexRefreshCommand,
-                              final MetricsFactory metricsFactory
+                              final MetricsFactory metricsFactory,
+                              @Assisted final IndexLocationStrategy indexLocationStrategy
     ) {
 
         this.indexFig = indexFig;
-        this.indexIdentifier = indexIdentifier;
+        this.indexIdentifier = indexLocationStrategy.getIndexIdentifier();
 
         this.esProvider = provider;
         this.indexRefreshCommand = indexRefreshCommand;
