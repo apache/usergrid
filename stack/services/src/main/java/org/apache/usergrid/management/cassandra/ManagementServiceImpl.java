@@ -1480,7 +1480,12 @@ public class ManagementServiceImpl implements ManagementService {
                 path = path.toLowerCase();
             }
 
-            organizations.put( entity.getUuid(), path );
+            try {
+                organizations.put( entity.getUuid(), path );
+            } catch (IllegalArgumentException e) {
+                logger.warn("Error adding " + entity.getUuid() + ":" + path + " to BiMap: " + e.getMessage() );
+            }
+
         }
 
         return organizations;
