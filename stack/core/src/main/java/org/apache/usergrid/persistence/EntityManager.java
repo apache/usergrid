@@ -247,6 +247,8 @@ public interface EntityManager {
     public Set<Object> getDictionaryAsSet( EntityRef entityRef, String dictionaryName )
             throws Exception;
 
+
+
     /**
      * Adds the specified value to the named entity list property. Lists are a special type of
      * entity property that can contain an unordered set of non-duplicate values.
@@ -330,6 +332,7 @@ public interface EntityManager {
      */
     public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity )
             throws Exception;
+
 
 
     /**
@@ -697,4 +700,20 @@ public interface EntityManager {
 
 
     public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
+
+
+    /**
+     * Get the outgoing edge types where the entity ref is the source in the graph
+     * @param entityRef
+     * @return
+     */
+    Set<String> getConnectionsAsSource(final EntityRef entityRef);
+
+
+    /**
+     * Get the outgoing edge types where the entity ref is the target node in the graph
+     * @param entityRef
+     * @return
+     */
+    Set<String> getConnectionsAsTarget(final EntityRef entityRef);
 }

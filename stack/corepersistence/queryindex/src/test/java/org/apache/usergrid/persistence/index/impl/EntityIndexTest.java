@@ -29,6 +29,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.index.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,15 +43,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexEdge;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -86,6 +79,18 @@ public class EntityIndexTest extends BaseIT {
 
     @Inject
     public EntityIndex ei;
+
+    @Inject
+    public IndexIdentifierv1Impl identifierv1;
+
+    @Inject
+    public IndexIdentifierv2Impl identifierv2;
+
+    @Inject
+    public IndexFig fig;
+
+    @Inject
+    public CassandraFig cassandraFig;
 
     @Inject
     @Rule
@@ -1256,6 +1261,18 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 0, noMatchesContainsOrResults.size() );
+    }
+
+    @Test
+    public void testIndexIdentifier(){
+        String indexv1Name = identifierv1.getIndex("somesuffixv1");
+        String indexv2Name = identifierv2.getIndex("somesuffixv2");
+        assertFalse(indexv1Name.equals(indexv2Name));
+        assertFalse(indexv1Name.contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
+        assertTrue(indexv2Name.contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
+        assertTrue(indexv1Name.contains(fig.getIndexPrefix()));
+        assertTrue(indexv2Name.contains(fig.getIndexPrefix()));
+
     }
 }
 
