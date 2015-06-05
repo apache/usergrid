@@ -256,53 +256,37 @@ public class CpEntityManager implements EntityManager {
 
         //Timer Setup
         this.metricsFactory = metricsFactory;
-        this.aggCounterTimer =this.metricsFactory.getTimer( CpEntityManager.class,
-            "cp.entity.get.aggregate.counters.timer" );
-        this.entCreateTimer =this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.create.timer" );
-        this.entCreateBatchTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.create.batch.timer");
-        this.esDeletePropertyTimer =this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.es.delete.property.timer");
-        this.entAddDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.add.dictionary.timer");
-        this.entAddDictionarySetTimer = this.metricsFactory.getTimer( CpEntityManager.class,
-            "cp.entity.add.dictionary.set.timer" );
-        this.entAddDictionaryMapTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.add.dictionary.map.timer");
-        this.entRemoveDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.remove.dictionary.timer");
-        this.entCreateRoleTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.create.role.timer");
-        this.entCreateRolePermissionsTimer =this.metricsFactory
-            .getTimer( CpEntityManager.class,
-                "cp.entity.create.role.permissions.timer" );
-        this.entGrantGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.grant.group.permission.timer");
-        this.entRevokeGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.revoke.group.permission.timer");
-        this.entIncrementAggregateCountersTimer =this.metricsFactory.getTimer( CpEntityManager.class,
-                "cp.entity.increment.aggregate.counters.timer" );
-        this.entGetAggregateCountersQueryTimer = this.metricsFactory.getTimer( CpEntityManager.class,
-                "cp.entity.get.aggregate.counters.query.timer" );
-        this.entGetEntityCountersTimer = this.metricsFactory.getTimer( CpEntityManager.class,
-                "cp.entity.get.entity.counters.timer" );
-        this.esIndexEntityCollectionTimer = this.metricsFactory
-            .getTimer( CpEntityManager.class, "cp.entity.es.index.entity.to.collection.timer" );
-        this.entRevokeRolePermissionsTimer =
-            this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.revoke.role.permissions.timer");
-        this.entGetRepairedEntityTimer = this.metricsFactory
-            .getTimer( CpEntityManager.class, "get.repaired.entity.timer" );
+        this.aggCounterTimer = this.metricsFactory.getTimer(CpEntityManager.class, "aggregate_counters.get");
+        this.entIncrementAggregateCountersTimer = this.metricsFactory.getTimer(CpEntityManager.class, "aggregate_counters.increment");
+        this.entGetAggregateCountersQueryTimer = this.metricsFactory.getTimer(CpEntityManager.class, "aggregate_counters_query.get");
 
-        this.updateEntityMeter =this.metricsFactory.getMeter(CpEntityManager.class,"cp.entity.update.meter");
-        this.updateEntityTimer =this.metricsFactory.getTimer(CpEntityManager.class, "cp.entity.update.timer");
+        this.entCreateTimer = this.metricsFactory.getTimer(CpEntityManager.class, "entity.create");
+        this.updateEntityMeter = this.metricsFactory.getMeter(CpEntityManager.class, "entity.update");
+        this.updateEntityTimer = this.metricsFactory.getTimer(CpEntityManager.class, "entity.update");
+
+        this.entCreateBatchTimer = this.metricsFactory.getTimer(CpEntityManager.class, "batch.create");
+
+        this.esDeletePropertyTimer = this.metricsFactory.getTimer(CpEntityManager.class, "es_property.delete");
+        this.entAddDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary.add");
+        this.entAddDictionarySetTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary_set.add");
+        this.entAddDictionaryMapTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary_map.add");
+        this.entRemoveDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary.remove");
+
+        this.entCreateRoleTimer = this.metricsFactory.getTimer(CpEntityManager.class, "role.create");
+        this.entRevokeRolePermissionsTimer = this.metricsFactory.getTimer(CpEntityManager.class, "role.revoke_permissions");
+        this.entCreateRolePermissionsTimer = this.metricsFactory.getTimer(CpEntityManager.class, "role.create_permissions");
+
+        this.entGrantGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class, "group.grant_permission");
+        this.entRevokeGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class, "group.revoke_permission");
+
+        this.entGetEntityCountersTimer = this.metricsFactory.getTimer(CpEntityManager.class, "entity_counters.get");
+        this.esIndexEntityCollectionTimer = this.metricsFactory.getTimer(CpEntityManager.class, "es.index_entity_to_collection");
+        this.entGetRepairedEntityTimer = this.metricsFactory.getTimer(CpEntityManager.class, "repaired_entity.get");
+
 
         // set to false for now
         this.skipAggregateCounters = false;
-
-
     }
-
-
 
 
     /**

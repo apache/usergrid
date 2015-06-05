@@ -70,9 +70,9 @@ public class QueueJob extends OnlyOnceJob {
     @PostConstruct
     void init() {
         metricsService = this.smf.getApplicationContext().getBean( Injector.class ).getInstance(MetricsFactory.class);
-        histogram = metricsService.getHistogram( QueueJob.class, "cycle" );
-        requests = metricsService.getMeter( QueueJob.class, "requests" );
-        execution = metricsService.getTimer( QueueJob.class, "execution" );
+        histogram = metricsService.getHistogram( QueueJob.class, "queuejob.cycle" );
+        requests = metricsService.getMeter( QueueJob.class, "queuejob.requests" );
+        execution = metricsService.getTimer( QueueJob.class, "queuejob.execution" );
     }
 
 

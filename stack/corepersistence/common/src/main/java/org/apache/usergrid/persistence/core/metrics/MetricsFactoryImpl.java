@@ -49,26 +49,25 @@ public class MetricsFactoryImpl implements MetricsFactory {
     private MetricRegistry registry;
     private GraphiteReporter graphiteReporter;
     private JmxReporter jmxReporter;
-    private static final Logger LOG = LoggerFactory.getLogger( MetricsFactoryImpl.class );
+    private static final Logger LOG = LoggerFactory.getLogger(MetricsFactoryImpl.class);
 
 
     @Inject
-    public MetricsFactoryImpl( MetricsFig metricsFig ) {
+    public MetricsFactoryImpl(MetricsFig metricsFig) {
         registry = new MetricRegistry();
         String metricsHost = metricsFig.getHost();
-        if ( !metricsHost.equals( "false" ) ) {
-            Graphite graphite = new Graphite( new InetSocketAddress( metricsHost, 2003 ) );
-            graphiteReporter = GraphiteReporter.forRegistry( registry ).prefixedWith( "usergrid-metrics" )
-                                               .convertRatesTo( TimeUnit.SECONDS )
-                                               .convertDurationsTo( TimeUnit.MILLISECONDS ).filter( MetricFilter.ALL )
-                                               .build( graphite );
-            graphiteReporter.start( 30, TimeUnit.SECONDS );
-        }
-        else {
-            LOG.warn( "MetricsService:Logger not started." );
+        if (!metricsHost.equals("false")) {
+            Graphite graphite = new Graphite(new InetSocketAddress(metricsHost, 2003));
+            graphiteReporter = GraphiteReporter.forRegistry(registry).prefixedWith("usergrid-metrics")
+                .convertRatesTo(TimeUnit.SECONDS)
+                .convertDurationsTo(TimeUnit.MILLISECONDS).filter(MetricFilter.ALL)
+                .build(graphite);
+            graphiteReporter.start(30, TimeUnit.SECONDS);
+        } else {
+            LOG.warn("MetricsService:Logger not started.");
         }
 
-        jmxReporter = JmxReporter.forRegistry( registry ).build();
+        jmxReporter = JmxReporter.forRegistry(registry).build();
         jmxReporter.start();
     }
 
@@ -80,34 +79,33 @@ public class MetricsFactoryImpl implements MetricsFactory {
 
 
     @Override
-    public Timer getTimer( Class<?> klass, String name ) {
-        return getRegistry().timer( MetricRegistry.name( klass, name ) );
+    public Timer getTimer(Class<?> klass, String name) {
+        return getRegistry().timer(MetricRegistry.name(klass, name + ".timer"));
     }
 
 
     @Override
-    public Histogram getHistogram( Class<?> klass, String name ) {
-        return getRegistry().histogram( MetricRegistry.name( klass, name ) );
+    public Histogram getHistogram(Class<?> klass, String name) {
+        return getRegistry().histogram(MetricRegistry.name(klass, name + ".histogram"));
     }
 
 
     @Override
-    public Counter getCounter( Class<?> klass, String name ) {
-        return getRegistry().counter( MetricRegistry.name( klass, name ) );
+    public Counter getCounter(Class<?> klass, String name) {
+        return getRegistry().counter(MetricRegistry.name(klass, name + ".counter"));
     }
 
 
     @Override
-    public Meter getMeter( Class<?> klass, String name ) {
-        return getRegistry().meter( MetricRegistry.name( klass, name ) );
+    public Meter getMeter(Class<?> klass, String name) {
+        return getRegistry().meter(MetricRegistry.name(klass, name + ".meter"));
     }
 
 
     @Override
-    public void addGauge( final Class<?> clazz, final String name, final Gauge<?> gauge ) {
+    public void addGauge(final Class<?> clazz, final String name, final Gauge<?> gauge) {
 
-        this.getRegistry().register( MetricRegistry.name( clazz, name ), gauge );
+        this.getRegistry().register(MetricRegistry.name(clazz, name), gauge);
     }
-
 
 }

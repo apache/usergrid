@@ -109,14 +109,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         this.indexRefreshCommand = indexRefreshCommand;
         this.alias = indexIdentifier.getAlias();
         this.aliasCache = indexCache;
-        this.addTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "add.timer");
-        this.updateAliasTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "update.alias.timer");
-        this.mappingTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "create.mapping.timer");
-
-        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
+        this.addTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.add");
+        this.updateAliasTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.update_alias");
+        this.mappingTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.create_mapping");
+        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class, "index.refresh_index");
 
     }
 
@@ -149,19 +145,19 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
                 final AdminClient admin = esProvider.getClient().admin();
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("index.number_of_shards", numberOfShards)
-                        .put("index.number_of_replicas", numberOfReplicas)
+                    .put("index.number_of_replicas", numberOfReplicas)
 
                         //dont' allow unmapped queries, and don't allow dynamic mapping
-                        .put("index.query.parse.allow_unmapped_fields", false )
-                        .put("index.mapper.dynamic", false)
-                        .put( "action.write_consistency", writeConsistency )
-                        .build();
+                        .put("index.query.parse.allow_unmapped_fields", false)
+                    .put("index.mapper.dynamic", false)
+                    .put("action.write_consistency", writeConsistency)
+                    .build();
 
                 //Added For Graphite Metrics
                 Timer.Context timeNewIndexCreation = addTimer.time();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
                         .setSettings(settings)
-                        .execute()
+                    .execute()
                         .actionGet();
                 timeNewIndexCreation.stop();
 
