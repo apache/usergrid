@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
@@ -340,6 +342,12 @@ public class ConnectionRefImpl implements ConnectionRef {
     @Override
     public String getType() {
         return CONNECTION_ENTITY_TYPE;
+    }
+
+
+    @Override
+    public Id asId() {
+        return new SimpleId(id,  CONNECTION_ENTITY_TYPE );
     }
 
 

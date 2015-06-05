@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -81,6 +82,10 @@ import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundExcept
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -123,6 +128,8 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionTypeSearch;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getConnectionNameFromEdgeName;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
@@ -864,6 +871,9 @@ public class CpEntityManager implements EntityManager {
 
         return convertMvccEntityToEntity( fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get() );
     }
+
+
+
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
@@ -2856,7 +2866,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public IndexBucketLocator getIndexBucketLocator() {
 
-        throw new UnsupportedOperationException( "Not supported yet." );
+        throw new UnsupportedOperationException( "Not supported ever." );
     }
 
 
@@ -2871,6 +2881,32 @@ public class CpEntityManager implements EntityManager {
         managerCache.invalidate();
     }
 
+
+    @Override
+    public Set<String> getConnectionsAsSource( final EntityRef entityRef ) {
+
+        Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
+
+        final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+
+        final SearchEdgeType searchByEdgeType = createConnectionTypeSearch( entityRef.asId() );
+
+        return graphManager.getEdgeTypesFromSource( searchByEdgeType ).map( edgeName -> getConnectionNameFromEdgeName( edgeName ) ).collect(
+            () -> new HashSet<String>(), ( r, s ) -> r.add( s ) ).toBlocking().last();
+    }
+
+
+    @Override
+    public Set<String> getConnectionsAsTarget( final EntityRef entityRef ) {
+        Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
+
+        final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+
+        final SearchEdgeType searchByEdgeType = createConnectionTypeSearch( entityRef.asId() );
+
+        return graphManager.getEdgeTypesToTarget( searchByEdgeType ).map(
+                    edgeName -> getConnectionNameFromEdgeName( edgeName ) ).collect( () -> new HashSet<String>(  ), ( r, s ) -> r.add(s) ).toBlocking().last();
+    }
 
 
 
