@@ -37,10 +37,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
@@ -227,6 +224,11 @@ public class ExportImportAdminsTest {
 
         List<UserInfo> org2_users = setup.getMgmtSvc().getAdminUsersForOrganization( org_uuid_2 );
         assertEquals("org2 has two users", 2, org2_users.size() );
-    }
 
+        UserInfo user1info = setup.getMgmtSvc().getAdminUserByUuid( user_uuid_1 );
+        Map<String, Object> user1_data = setup.getMgmtSvc().getAdminUserOrganizationData( user1info, false );
+        Map<String, Object> user1_data_orgs = (Map<String, Object>)user1_data.get("organizations");
+        assertEquals( 2, user1_data_orgs.size());
+
+    }
 }
