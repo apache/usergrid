@@ -1169,7 +1169,7 @@ public class GraphManagerIT {
         gm.deleteEdge( edge2 ).toBlocking().lastOrDefault( null );
 
         edges = gm.loadEdgesFromSource(
-                    createSearchByEdgeUnfiltered( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
+            createSearchByEdgeUnfiltered( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
 
 
         results = edges.toBlocking().getIterator();
@@ -1714,6 +1714,14 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
 
+        //read filtered, should not be returned
+        results =
+            gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) ).toBlocking()
+              .getIterator();
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
         results = gm.loadEdgesFromSourceByType(
             createSearchByEdgeAndIdUnfiltered( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) )
                     .toBlocking().getIterator();
@@ -1722,6 +1730,16 @@ public class GraphManagerIT {
         assertEquals( "Edges correct", edge1, results.next() );
 
         assertFalse( "No more edges", results.hasNext() );
+
+        //read filtered, should not be returned.
+
+        results = gm.loadEdgesFromSourceByType(
+            createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
 
         results = gm.loadEdgesFromSourceByType(
             createSearchByEdgeAndIdUnfiltered( sourceId, edge2.getType(), maxVersion, targetId2.getType(), null ) )
@@ -1732,9 +1750,16 @@ public class GraphManagerIT {
 
         assertFalse( "No more edges", results.hasNext() );
 
+        //read filtered, should not be returned
+        results = gm.loadEdgesFromSourceByType(
+            createSearchByEdgeAndId( sourceId, edge2.getType(), maxVersion, targetId2.getType(), null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
         //now delete them
-
-
         gm.compactNode( sourceId ).toBlocking().last();
 
         results = gm.loadEdgesFromSource( createSearchByEdgeUnfiltered( sourceId, edge1.getType(), maxVersion, null ) )
@@ -1832,6 +1857,15 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
 
+        //now test they come back when unfiltered
+
+        results = gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
         //get our 2 edges
         results = gm.loadEdgesToTargetByType(
             createSearchByEdgeAndIdUnfiltered( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) )
@@ -1842,6 +1876,15 @@ public class GraphManagerIT {
 
         assertFalse( "No more edges", results.hasNext() );
 
+
+        //search filtered
+        results = gm.loadEdgesToTargetByType(
+            createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
         //now delete one of the edges
         results = gm.loadEdgesToTargetByType(
             createSearchByEdgeAndIdUnfiltered( targetId, edge2.getType(), maxVersion, sourceId2.getType(), null ) )
@@ -1849,6 +1892,15 @@ public class GraphManagerIT {
 
 
         assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //search filtered
+        results = gm.loadEdgesToTargetByType(
+            createSearchByEdgeAndId( targetId, edge2.getType(), maxVersion, sourceId2.getType(), null ) ).toBlocking()
+                    .getIterator();
+
 
         assertFalse( "No more edges", results.hasNext() );
 
