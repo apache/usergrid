@@ -80,11 +80,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     private final ApplicationScope applicationScope;
     private final IndexIdentifier indexIdentifier;
     private final Timer searchTimer;
-    private final Timer cursorTimer;
-    private final MapManager mapManager;
     private final AliasedEntityIndex entityIndex;
     private final IndexBufferConsumer indexBatchBufferProducer;
-    private final IndexFig indexFig;
     private final EsProvider esProvider;
     private final IndexAlias alias;
     private final Timer deleteApplicationTimer;
@@ -97,25 +94,20 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
 
     @Inject
-    public EsApplicationEntityIndexImpl(  ApplicationScope appScope, final AliasedEntityIndex entityIndex,
-                                         final IndexFig config, final IndexBufferConsumer indexBatchBufferProducer,
+    public EsApplicationEntityIndexImpl(  final AliasedEntityIndex entityIndex,
+                                         final IndexFig config,
+                                          final IndexBufferConsumer indexBatchBufferProducer,
                                          final EsProvider provider,
-                                         final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
-                                         final IndexFig indexFig,
-                                         final IndexIdentifier indexIdentifier ) {
+                                         final MetricsFactory metricsFactory,
+                                         final IndexLocationStrategy indexLocationStrategy
+    ) {
         this.entityIndex = entityIndex;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
-        this.indexFig = indexFig;
-        this.indexIdentifier = indexIdentifier;
-        ValidationUtils.validateApplicationScope( appScope );
-        this.applicationScope = appScope;
-        final MapScope mapScope = new MapScopeImpl( appScope.getApplication(), "cursorcache" );
+        this.indexIdentifier = indexLocationStrategy.getIndexIdentifier();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.esProvider = provider;
 
-        mapManager = mapManagerFactory.createMapManager( mapScope );
         this.searchTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.timer" );
-        this.cursorTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.cursor.timer" );
         this.cursorTimeout = config.getQueryCursorTimeout();
         this.queryTimeout = config.getWriteTimeout();
 
@@ -126,8 +118,9 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         this.alias = indexIdentifier.getAlias();
 
-        this.searchRequest = new SearchRequestBuilderStrategy( esProvider, appScope, alias, cursorTimeout );
-        this.searchRequestBuilderStrategyV2 = new SearchRequestBuilderStrategyV2( esProvider, appScope, alias, cursorTimeout  );
+        this.applicationScope = indexLocationStrategy.getApplicationScope();
+        this.searchRequest = new SearchRequestBuilderStrategy( esProvider, applicationScope, alias, cursorTimeout );
+        this.searchRequestBuilderStrategyV2 = new SearchRequestBuilderStrategyV2( esProvider, applicationScope, alias, cursorTimeout  );
     }
 
 

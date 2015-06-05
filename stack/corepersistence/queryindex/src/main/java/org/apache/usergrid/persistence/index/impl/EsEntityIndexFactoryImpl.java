@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutionException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -41,41 +40,37 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     private final EsProvider provider;
     private final IndexBufferConsumer indexBatchBufferProducer;
     private final MetricsFactory metricsFactory;
-    private final MapManagerFactory mapManagerFactory;
-    private final IndexFig indexFig;
     private final AliasedEntityIndex entityIndex;
-    private final IndexIdentifier indexIdentifier;
 
-    private LoadingCache<ApplicationScope, ApplicationEntityIndex> eiCache =
-        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, ApplicationEntityIndex>() {
-            public ApplicationEntityIndex load( ApplicationScope scope ) {
+    private LoadingCache<IndexLocationStrategy, ApplicationEntityIndex> eiCache =
+        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<IndexLocationStrategy, ApplicationEntityIndex>() {
+            public ApplicationEntityIndex load( IndexLocationStrategy locationStrategy ) {
                 return new EsApplicationEntityIndexImpl(
-                    scope,entityIndex,config, indexBatchBufferProducer, provider, metricsFactory, mapManagerFactory, indexFig, indexIdentifier
+                    entityIndex,config, indexBatchBufferProducer, provider, metricsFactory, locationStrategy
                 );
             }
         } );
 
     @Inject
-    public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider,
+    public EsEntityIndexFactoryImpl( final IndexFig indexFig, final EsProvider provider,
                                      final IndexBufferConsumer indexBatchBufferProducer,
-                                     final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
-                                     final IndexFig indexFig, final AliasedEntityIndex entityIndex, final IndexIdentifier indexIdentifier ){
-        this.config = config;
+                                     final MetricsFactory metricsFactory,
+                                     final AliasedEntityIndex entityIndex
+
+    ){
+        this.config = indexFig;
         this.provider = provider;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.metricsFactory = metricsFactory;
-        this.mapManagerFactory = mapManagerFactory;
-        this.indexFig = indexFig;
         this.entityIndex = entityIndex;
-        this.indexIdentifier = indexIdentifier;
     }
 
 
 
     @Override
-    public ApplicationEntityIndex createApplicationEntityIndex(final ApplicationScope appScope) {
+    public ApplicationEntityIndex createApplicationEntityIndex(final IndexLocationStrategy indexLocationStrategy) {
         try{
-            return eiCache.get(appScope);
+            return eiCache.get(indexLocationStrategy);
         }catch (ExecutionException ee){
             throw new RuntimeException(ee);
         }
