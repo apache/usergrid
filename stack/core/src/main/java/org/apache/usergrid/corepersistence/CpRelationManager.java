@@ -414,7 +414,7 @@ public class CpRelationManager implements RelationManager {
                     });
                 }
             })
-            .toBlocking().lastOrDefault(null);
+            .toBlocking().lastOrDefault( null );
 
         //check if we need to reverse our edges
 
@@ -622,7 +622,7 @@ public class CpRelationManager implements RelationManager {
 
         final IdBuilder pipelineBuilder =
             pipelineBuilderFactory.create( applicationScope ).withCursor( query.getCursor() )
-                                  .withLimit( query.getLimit() ).fromId(cpHeadEntity.getId());
+                                  .withLimit( query.getLimit() ).fromId( cpHeadEntity.getId() );
 
 
         final EntityBuilder results;
@@ -791,18 +791,10 @@ public class CpRelationManager implements RelationManager {
 
         final SearchByEdge search = createConnectionSearchByEdge( sourceId, connectionType, targetEntity.getId() );
 
-        //delete all the edges
-        final Edge lastEdge =
-            gm.loadEdgeVersions( search ).flatMap( returnedEdge -> gm.markEdge( returnedEdge ) ).toBlocking()
+        //delete all the edges and queue their processing
+        gm.loadEdgeVersions( search ).flatMap( returnedEdge -> gm.markEdge( returnedEdge ) ).doOnNext(
+                returnedEdge -> indexService.queueDeleteEdge( applicationScope, returnedEdge ) ).toBlocking()
               .lastOrDefault( null );
-
-        if ( lastEdge != null ) {
-            final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
-            final EntityIndexBatch batch = ei.createBatch();
-
-            SearchEdge indexScope = createSearchEdgeFromSource( lastEdge );
-            batch.deindex( indexScope, targetEntity );
-        }
     }
 
 
