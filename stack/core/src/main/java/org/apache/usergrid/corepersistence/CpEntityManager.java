@@ -1724,7 +1724,7 @@ public class CpEntityManager implements EntityManager {
             getRolePermissionsKey( roleName ), permission, ByteBuffer.allocate( 0 ), timestamp );
         //Adding graphite metrics
         Timer.Context timeGrantRolePermission = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.create.role.permission.timer").time();
+            "role.create_permission").time();
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
         timeGrantRolePermission.stop();
     }
