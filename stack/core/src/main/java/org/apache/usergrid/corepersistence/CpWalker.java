@@ -34,8 +34,6 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import com.google.common.base.Optional;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getNameFromEdgeType;
@@ -98,7 +96,7 @@ public class CpWalker {
         final String edgeType;
         if ( collectionName == null ) {
             // only search edge types that end with collections suffix
-            edgeType = CpNamingUtils.EDGE_COLL_SUFFIX;
+            edgeType = CpNamingUtils.EDGE_COLL_PREFIX;
 
         } else {
             // only search edges to one collection

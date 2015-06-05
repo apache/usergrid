@@ -29,8 +29,10 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.impl.IndexEdgeImpl;
@@ -49,10 +51,20 @@ import org.apache.usergrid.utils.UUIDUtils;
 public class CpNamingUtils {
 
     /** Edge types for collection suffix */
-    public static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
+    public static final String EDGE_COLL_PREFIX = "zzzcollzzz";
+
+    /**
+     * The length used when we trim a string
+     */
+    private static final int EDGE_COLL_PREFIX_LENGTH = EDGE_COLL_PREFIX.length() + 1;
 
     /** Edge types for connection suffix */
-    public static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
+    public static final String EDGE_CONN_PREFIX = "zzzconnzzz";
+
+    /**
+     * The length used when we trim a string on edge names
+     */
+    private static final int EDGE_CONN_PREFIX_LENGTH = EDGE_CONN_PREFIX.length()+1;
 
     /** App where we store management info */
     public static final UUID MANAGEMENT_APPLICATION_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-11ddb1de66c8" );
@@ -82,9 +94,18 @@ public class CpNamingUtils {
      * @param connectionType The type of connection made
      */
     public static String getEdgeTypeFromConnectionType( String connectionType ) {
-        return ( EDGE_CONN_SUFFIX + "|" + connectionType ).toLowerCase();
+        return ( EDGE_CONN_PREFIX + "|" + connectionType ).toLowerCase();
     }
 
+
+    /**
+     * Get the name of the collection from the edge name
+     * @param edgeName
+     * @return
+     */
+    public static String getConnectionNameFromEdgeName(final String edgeName){
+        return edgeName.substring( EDGE_CONN_PREFIX_LENGTH );
+    }
 
     /**
      * Generate a standard edges from for a collection
@@ -92,8 +113,18 @@ public class CpNamingUtils {
      * To be used only for searching DO NOT use for creation. Use the createCollectionEdge instead.
      */
     public static String getEdgeTypeFromCollectionName( String collectionName ) {
-        return ( EDGE_COLL_SUFFIX + "|" + collectionName ).toLowerCase();
+        return ( EDGE_COLL_PREFIX + "|" + collectionName ).toLowerCase();
     }
+
+    /**
+       * Get the name of the collection from the edge name
+       * @param edgeName
+       * @return
+       */
+      public static String getCollectionNameFromEdgeName(final String edgeName){
+          return edgeName.substring( EDGE_COLL_PREFIX_LENGTH );
+      }
+
 
 
     /**
@@ -211,6 +242,17 @@ public class CpNamingUtils {
     }
 
 
+
+    /**
+     * Create a search edge based on the type
+     *
+     * @param sourceId The id in the search
+     */
+    public static SearchEdgeType createConnectionTypeSearch( final Id sourceId ) {
+        return new SimpleSearchEdgeType( sourceId, EDGE_CONN_PREFIX, null );
+    }
+
+
     /**
      * Get the application scope from the given uuid
      *
@@ -264,7 +306,7 @@ public class CpNamingUtils {
 
 
     private static boolean isCollectionEdgeType( String type ) {
-        return type.startsWith( EDGE_COLL_SUFFIX );
+        return type.startsWith( EDGE_COLL_PREFIX );
     }
 
 

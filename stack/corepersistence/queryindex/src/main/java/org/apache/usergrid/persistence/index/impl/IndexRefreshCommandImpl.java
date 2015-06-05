@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -35,11 +36,6 @@ import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.StringUtils;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
-import org.apache.usergrid.persistence.index.IndexEdge;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
-import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -51,7 +47,6 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 
 import rx.Observable;
-import rx.util.async.Async;
 
 
 /**

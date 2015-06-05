@@ -24,10 +24,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 
 import com.google.common.cache.CacheBuilder;

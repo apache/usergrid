@@ -18,6 +18,7 @@ package org.apache.usergrid.services;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,6 +29,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.shiro.subject.Subject;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
@@ -42,9 +47,6 @@ import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceInvocationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
-
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.shiro.subject.Subject;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.apache.usergrid.services.ServiceParameter.filter;
@@ -484,7 +486,8 @@ public abstract class AbstractService implements Service {
 
 
     public Set<Object> getConnectedTypesSet( EntityRef ref ) throws Exception {
-        Set<Object> connections = em.getDictionaryAsSet( ref, Schema.DICTIONARY_CONNECTED_TYPES );
+        final Set<String> connections = em.getConnectionsAsSource( ref );
+
         if ( connections == null ) {
             return null;
         }
@@ -494,7 +497,7 @@ public abstract class AbstractService implements Service {
                 connections.removeAll( privateConnections );
             }
             if ( connections.size() > 0 ) {
-                return new LinkedHashSet<Object>( connections );
+                return new HashSet<Object>( connections );
             }
         }
         return null;
@@ -502,7 +505,8 @@ public abstract class AbstractService implements Service {
 
 
     public Set<Object> getConnectingTypesSet( EntityRef ref ) throws Exception {
-        Set<Object> connections = em.getDictionaryAsSet( ref, Schema.DICTIONARY_CONNECTING_TYPES );
+        final Set<String> connections = em.getConnectionsAsTarget( ref );
+
         if ( connections == null ) {
             return null;
         }
