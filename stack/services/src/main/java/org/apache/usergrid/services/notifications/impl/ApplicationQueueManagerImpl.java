@@ -54,6 +54,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     private final JobScheduler jobScheduler;
     private final MetricsFactory metricsFactory;
     private final String queueName;
+    private final Meter queueMeter;
+    private final Meter sendMeter;
 
     HashMap<Object, ProviderAdapter> notifierHashMap; // only retrieve notifiers once
 
@@ -64,6 +66,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
         this.queueName = getQueueNames(properties);
+        queueMeter = metricsFactory.getMeter(ApplicationQueueManagerImpl.class, "notification.queue");
+        sendMeter = metricsFactory.getMeter(NotificationsService.class, "queue.send");
 
     }
 
@@ -77,7 +81,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             em.update(notification);
             return;
         }
-        final Meter queueMeter = metricsFactory.getMeter(ApplicationQueueManagerImpl.class,"queue");
+
         long startTime = System.currentTimeMillis();
 
         if (notification.getCanceled() == Boolean.TRUE) {
@@ -175,13 +179,13 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             //process up to 10 concurrently
             Observable o = rx.Observable.create( new IteratorObservable<Entity>( iterator ) )
 
-                                        .flatMap( entity -> Observable.just( entity ).map( entityListFunct )
-                                                                      .doOnError( throwable -> {
-                                                                          LOG.error( "Failed while writing",
-                                                                              throwable );
-                                                                      } ).subscribeOn( Schedulers.io() )
+                                        .flatMap(entity -> Observable.just(entity).map(entityListFunct)
+                                            .doOnError(throwable -> {
+                                                LOG.error("Failed while writing",
+                                                    throwable);
+                                            }).subscribeOn(Schedulers.io())
 
-                                            , 10 );
+                                            , 10);
 
             o.toBlocking().lastOrDefault( null );
             LOG.info( "notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
@@ -260,7 +264,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     @Override
     public Observable sendBatchToProviders(final List<QueueMessage> messages, final String queuePath) {
         LOG.info("sending batch of {} notifications.", messages.size());
-        final Meter sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");
 
         final Map<Object, ProviderAdapter> notifierMap = getAdapterMap();
         final ApplicationQueueManagerImpl proxy = this;

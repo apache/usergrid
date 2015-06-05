@@ -133,13 +133,13 @@ public class IndexLoadTestsIT extends BaseIT {
         final Id applicationId = new SimpleId( applicationUUID, "application" );
 
 
-        batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "write.tps" );
+        batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "batch.write_tps" );
 
-        batchWriteTimer = metricsFactory.getTimer( IndexLoadTestsIT.class, "write.timer" );
+        batchWriteTimer = metricsFactory.getTimer( IndexLoadTestsIT.class, "batch.write" );
 
         queryTps = metricsFactory.getMeter( IndexLoadTestsIT.class, "query.tps" );
 
-        queryTimer = metricsFactory.getTimer( IndexLoadTestsIT.class, "query.timer" );
+        queryTimer = metricsFactory.getTimer( IndexLoadTestsIT.class, "query.test" );
 
         reporter =
             Slf4jReporter.forRegistry( metricsFactory.getRegistry() ).outputTo( log ).convertRatesTo( TimeUnit.SECONDS )

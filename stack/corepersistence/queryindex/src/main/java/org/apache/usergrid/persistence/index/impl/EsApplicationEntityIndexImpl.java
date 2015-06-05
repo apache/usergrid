@@ -113,16 +113,14 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.esProvider = provider;
 
-        mapManager = mapManagerFactory.createMapManager( mapScope );
-        this.searchTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.timer" );
-        this.cursorTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.cursor.timer" );
+        mapManager = mapManagerFactory.createMapManager(mapScope);
+        this.searchTimer = metricsFactory.getTimer(EsApplicationEntityIndexImpl.class, "base.search");
+        this.cursorTimer = metricsFactory.getTimer(EsApplicationEntityIndexImpl.class, "cursor.search");
         this.cursorTimeout = config.getQueryCursorTimeout();
         this.queryTimeout = config.getWriteTimeout();
 
-        this.deleteApplicationTimer =
-                metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "delete.application" );
-        this.deleteApplicationMeter =
-                metricsFactory.getMeter( EsApplicationEntityIndexImpl.class, "delete.application.meter" );
+        this.deleteApplicationTimer = metricsFactory.getTimer(EsApplicationEntityIndexImpl.class, "application.delete");
+        this.deleteApplicationMeter = metricsFactory.getMeter(EsApplicationEntityIndexImpl.class, "application.delete");
 
         this.alias = indexIdentifier.getAlias();
 

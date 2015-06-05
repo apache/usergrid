@@ -69,7 +69,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                                     final IndexCache indexCache ) {
 
 
-        this.timer = metricsFactory.getTimer( IndexRefreshCommandImpl.class, "index.refresh.timer" );
+        this.timer = metricsFactory.getTimer( IndexRefreshCommandImpl.class, "index.refresh" );
         this.alias = indexIdentifier.getAlias();
         this.esProvider = esProvider;
         this.producer = producer;

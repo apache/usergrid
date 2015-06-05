@@ -58,7 +58,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
                                         final MetricsFactory metricsFactory, final String query ) {
         this.entityIndexFactory = entityIndexFactory;
         this.query = query;
-        this.searchTimer = metricsFactory.getTimer( AbstractElasticSearchFilter.class, "query" );
+        this.searchTimer = metricsFactory.getTimer( AbstractElasticSearchFilter.class, "query.search" );
     }
 
 
