@@ -22,7 +22,10 @@ package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
+
+import java.util.UUID;
 
 
 /**
@@ -42,12 +45,10 @@ public interface EntityIndex extends CPManager {
      */
      void addIndex(final String indexSuffix, final int shards, final int replicas, final String writeConsistency);
 
-
     /**
      * Refresh the index.
      */
      Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync();
-
 
 
     /**
@@ -66,6 +67,47 @@ public interface EntityIndex extends CPManager {
      * if a write and read alias already exist
      */
     void initialize();
+
+
+    /**
+     * Create the index batch.
+     */
+    EntityIndexBatch createBatch();
+
+    /**
+     * Search on every document in the specified search edge.  Also search by the types if specified
+     * @param searchEdge The edge to search on
+     * @param searchTypes The search types to search
+     * @param query The query to execute
+     * @param limit The limit of values to return
+     * @param offset The offset to query on
+     * @return
+     */
+    CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                             final int limit, final int offset );
+
+
+    /**
+     * Same as search, just iterates all documents that match the index edge exactly.
+     * @param edge The edge to search on
+     * @param entityId The entity that the searchEdge is connected to.
+     * @return
+     */
+    CandidateResults getAllEdgeDocuments( final IndexEdge edge, final Id entityId );
+
+    /**
+     * Returns all entity documents that match the entityId and come before the marked version
+     * @param entityId The entityId to match when searching
+     * @param markedVersion The version that has been marked for deletion. All version before this one must be deleted.
+     * @return
+     */
+    CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion );
+
+    /**
+     * delete all application records
+     * @return
+     */
+    Observable deleteApplication();
 
 }
 

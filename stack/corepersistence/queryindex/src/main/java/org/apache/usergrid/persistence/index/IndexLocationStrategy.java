@@ -17,17 +17,31 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
-
 /**
  * Classy class class.
  */
 public interface IndexLocationStrategy {
-    IndexIdentifier getIndexIdentifier();
-    ApplicationScope getApplicationScope();
-    void validateApplicationScope();//        ValidationUtils.validateApplicationScope( appScope );
+    /**
+     * get the alias name
+     * @return
+     */
+    IndexAlias getAlias();
 
+    /**
+     * get index name from suffix
+     * @param suffix
+     * @return
+     */
+    String getIndex( String suffix );
+
+    /**
+     * return unique string
+     * @return
+     */
+    String toString();
+
+    ApplicationScope getApplicationScope();
 }

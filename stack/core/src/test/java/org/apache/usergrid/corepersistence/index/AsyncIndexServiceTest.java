@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.junit.Before;
 import org.junit.Rule;
@@ -81,8 +82,12 @@ public abstract class AsyncIndexServiceTest {
     @Inject
     public EntityIndexFactory entityIndexFactory;
 
+
     @Inject
-    public EntityIndex entityIndex;
+    public IndexLocationStrategyFactory indexLocationStrategyFactory;
+
+    @Inject
+    public EntityManagerFactory emf;
 
 
     private AsyncEventService asyncEventService;
@@ -140,17 +145,17 @@ public abstract class AsyncIndexServiceTest {
 
         asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity );
 
-        entityIndex.refreshAsync().toBlocking().last();
+        emf.refreshIndex(applicationScope.getApplication().getUuid());
 
         //        Thread.sleep( 1000000000000l );
 
-        final ApplicationEntityIndex applicationEntityIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final AliasedEntityIndex AliasedEntityIndex =
+            entityIndexFactory.createEntityIndex( indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
         //query until it's available
-        final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
+        final CandidateResults collectionResults = getResults( AliasedEntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ),  1, 100 );
 
         assertEquals( 1, collectionResults.size() );
@@ -162,7 +167,7 @@ public abstract class AsyncIndexServiceTest {
 
 
         //query until it's available
-        final CandidateResults connectionResults = getResults( applicationEntityIndex, connectionSearchEdge,
+        final CandidateResults connectionResults = getResults( AliasedEntityIndex, connectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1, 100 );
 
         assertEquals( 1, connectionResults.size() );
@@ -171,13 +176,13 @@ public abstract class AsyncIndexServiceTest {
     }
 
 
-    private CandidateResults getResults( final ApplicationEntityIndex applicationEntityIndex,
+    private CandidateResults getResults( final AliasedEntityIndex AliasedEntityIndex,
                                          final SearchEdge searchEdge, final SearchTypes searchTypes, final int expectedSize, final int attempts ) {
 
 
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                applicationEntityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
+                AliasedEntityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

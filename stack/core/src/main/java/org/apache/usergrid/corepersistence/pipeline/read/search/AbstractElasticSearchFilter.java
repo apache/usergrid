@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
     private static final Logger log = LoggerFactory.getLogger( AbstractElasticSearchFilter.class );
 
     private final EntityIndexFactory entityIndexFactory;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final String query;
     private final Timer searchTimer;
 
@@ -55,8 +57,11 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
      * Create a new instance of our command
      */
     public AbstractElasticSearchFilter( final EntityIndexFactory entityIndexFactory,
-                                        final MetricsFactory metricsFactory, final String query ) {
+                                        final MetricsFactory metricsFactory,
+                                        final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                        final String query ) {
         this.entityIndexFactory = entityIndexFactory;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.query = query;
         this.searchTimer = metricsFactory.getTimer( AbstractElasticSearchFilter.class, "query" );
     }
@@ -66,8 +71,8 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
     public Observable<FilterResult<Candidate>> call( final Observable<FilterResult<Id>> observable ) {
 
         //get the graph manager
-        final ApplicationEntityIndex applicationEntityIndex =
-            entityIndexFactory.createApplicationEntityIndex( pipelineContext.getApplicationScope() );
+        final AliasedEntityIndex applicationEntityIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(pipelineContext.getApplicationScope()) );
 
 
         final int limit = pipelineContext.getLimit();

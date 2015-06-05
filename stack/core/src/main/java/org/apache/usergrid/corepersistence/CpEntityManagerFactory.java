@@ -26,9 +26,11 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
+import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -60,10 +62,6 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -93,15 +91,11 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
-    private final EntityIndexFactory entityIndexFactory;
     private final EntityManagerFig entityManagerFig;
 
     private ApplicationContext applicationContext;
 
     private Setup setup = null;
-
-    /** Have we already initialized the index for the management app? */
-    private AtomicBoolean indexInitialized = new AtomicBoolean(  );
 
     // cache of already instantiated entity managers
     private LoadingCache<UUID, EntityManager> entityManagers
@@ -119,7 +113,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CounterUtils counterUtils;
     private Injector injector;
     private final ReIndexService reIndexService;
-    private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
     private final AsyncEventService indexService;
     private final PipelineBuilderFactory pipelineBuilderFactory;
@@ -133,8 +126,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
-        this.entityIndex = injector.getInstance(EntityIndex.class);
-        this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
@@ -142,7 +133,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
-
 
     }
 
@@ -267,7 +257,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager(applicationId);
         appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
-     //   entityIndex.refreshAsync();//.toBlocking().last();
 
 
         // create application info entity in the management app
@@ -383,7 +372,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         }
         final Id managementAppId = CpNamingUtils.getManagementApplicationId();
-        final ApplicationEntityIndex aei = entityIndexFactory.createApplicationEntityIndex(applicationScope);
+        final AliasedEntityIndex aei = getManagementIndex();
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
         final Edge createEdge = CpNamingUtils.createCollectionEdge(managementAppId, collectionToName, applicationId);
 
@@ -405,7 +394,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                         managementEm.delete(oldAppEntity);
                         applicationIdCache.evictAppId(oldAppEntity.getName());
                     }
-                    entityIndex.refreshAsync().toBlocking().last();
+                    AliasedEntityIndex ei = getManagementIndex();
+                    ei.refreshAsync().toBlocking().last();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -670,28 +660,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     /**
      * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
      */
-    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex() {
-
-        // refresh special indexes without calling EntityManager refresh because stack overflow
-        maybeCreateIndexes();
-
-        return entityIndex.refreshAsync().toBlocking().first();
-    }
-
-    private void maybeCreateIndexes() {
-        if ( indexInitialized.getAndSet( true ) ) {
-            return;
-        }
-
-//        entityIndex.initializeIndex();
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex(UUID applicationId) {
+        return getEntityManager(applicationId).refreshIndex();
     }
 
 
-    private List<ApplicationEntityIndex> getManagementIndexes() {
 
-        return Arrays.asList(
+    private AliasedEntityIndex getManagementIndex() {
+
+        return
             managerCache.getEntityIndex( // management app
-                CpNamingUtils.getApplicationScope(getManagementAppId())));
+                CpNamingUtils.getApplicationScope(getManagementAppId()));
     }
 
 
@@ -713,11 +692,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     @Override
-    public void addIndex(final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
-        entityIndex.addIndex( indexSuffix, shards, replicas, writeConsistency);
-    }
-
-    @Override
     public Health getEntityStoreHealth() {
 
         // could use any collection scope here, does not matter
@@ -728,27 +702,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    @Override
-    public UUID createApplication(String organizationName, String name) throws Exception {
-        throw new UnsupportedOperationException("Not supported in v2");
-    }
-
-
-    @Override
-    public UUID createApplication(
-        String organizationName, String name, Map<String, Object> properties) throws Exception {
-        throw new UnsupportedOperationException("Not supported in v2");
-    }
-
-    @Override
-    public UUID initializeApplication(
-        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception {
-        throw new UnsupportedOperationException("Not supported in v2");
-    }
-
 
     @Override
     public Health getIndexHealth() {
-        return entityIndex.getIndexHealth();
+
+       return getManagementIndex().getIndexHealth();
+    }
+
+    @Override
+    public void initializeManagementIndex(){
+        getManagementIndex().initialize();
     }
 }

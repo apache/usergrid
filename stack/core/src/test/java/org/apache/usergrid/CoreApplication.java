@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import com.google.inject.Injector;
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -55,9 +56,8 @@ public class CoreApplication implements Application, TestRule {
     protected CoreITSetup setup;
     protected EntityManager em;
     protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
-    private EntityIndex entityIndex;
     private EntityIndexFactory entityIndexFactory;
-    private ApplicationEntityIndex applicationIndex;
+    private AliasedEntityIndex applicationIndex;
     private EntityManager managementEm;
 
 
@@ -177,9 +177,11 @@ public class CoreApplication implements Application, TestRule {
 
         em = setup.getEmf().getEntityManager(id);
         Injector injector = setup.getInjector();
-        entityIndex = injector.getInstance(EntityIndex.class);
+        IndexLocationStrategyFactory indexLocationStrategyFactory = injector.getInstance(IndexLocationStrategyFactory.class);
         entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
-        applicationIndex =  entityIndexFactory.createApplicationEntityIndex(CpNamingUtils.getApplicationScope(id));
+        applicationIndex =  entityIndexFactory.createEntityIndex(
+            indexLocationStrategyFactory.getIndexLocationStrategy(CpNamingUtils.getApplicationScope(id))
+        );
         assertNotNull(em);
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
@@ -230,7 +232,7 @@ public class CoreApplication implements Application, TestRule {
     @Override
     public synchronized void refreshIndex() {
         //Insert test entity and find it
-        entityIndex.refreshAsync().toBlocking().first();
+        setup.getEmf().refreshIndex(em.getApplicationId());
     }
 
 

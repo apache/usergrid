@@ -62,8 +62,6 @@ public abstract class AbstractContextResource {
     };
     protected static final ObjectMapper mapper = new ObjectMapper();
 
-    private EntityIndex entityIndex;
-
 
     protected AbstractContextResource parent;
 
@@ -198,9 +196,8 @@ public abstract class AbstractContextResource {
         return new ApiResponse(properties);
     }
 
-    protected EntityIndex getEntityIndex(){
-        entityIndex = entityIndex == null ? injector.getInstance(EntityIndex.class) : entityIndex;
-        return entityIndex;
+    protected EntityManagerFactory getEmf(){
+        return emf;
     }
     /**
      * Next three new methods necessary to work around inexplicable problems with EntityHolder.

@@ -68,13 +68,13 @@ public class GroupServiceIT extends AbstractServiceIT {
         app.createGroupRole( group.getUuid(), "admin", 0 );
         app.createGroupRole( group.getUuid(), "author", 0 );
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(app.getId());
 
 
         app.grantGroupRolePermission( group.getUuid(), "admin", "users:access:*" );
         app.grantGroupRolePermission( group.getUuid(), "admin", "groups:access:*" );
         app.grantGroupRolePermission( group.getUuid(), "author", "assets:access:*" );
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(app.getId());
 
         app.testDataRequest( ServiceAction.GET, "groups", group.getUuid(), "rolenames" );
         app.testDataRequest( ServiceAction.GET, "groups", group.getUuid(), "roles", "admin", "permissions" );

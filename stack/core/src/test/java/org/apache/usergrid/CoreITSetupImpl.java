@@ -148,14 +148,13 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     }
 
     @Override
-    public void refresh(){
+    public void refresh(UUID appId){
         try {
             Thread.sleep(50);
         } catch (InterruptedException ie){
 
         }
-
-        emf.refreshIndex();
+        emf.refreshIndex(appId);
 
         try {
             Thread.sleep(50);

@@ -23,14 +23,11 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,19 +38,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexEdge;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.value.Location;
@@ -84,22 +70,32 @@ public class GeoPagingTest extends BaseIT {
     @Inject
     public EntityIndexFactory eif;
 
-    @Inject
-    public EntityIndex ei;
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
+    @Inject
+    public IndexFig fig;
 
-
+    @Inject
+    public CassandraFig cassandraFig;
 
     @Inject
     @Rule
     public ElasticSearchRule elasticSearchRule;
+    private AliasedEntityIndex entityIndex;
+    private SimpleId appId;
 
 
+    @Before
+    public void setup(){
+        appId = new SimpleId(UUID.randomUUID(), "application" );
 
+        IndexLocationStrategy strategy =new TestIndexIdentifier(cassandraFig,fig,new ApplicationScopeImpl(appId));
+
+        entityIndex = eif.createEntityIndex( strategy );
+    }
 
 
     /**
@@ -111,10 +107,8 @@ public class GeoPagingTest extends BaseIT {
         int maxRangeLimit = 9;
         Entity[] cats = new Entity[maxRangeLimit + 1];
 
-        final ApplicationEntityIndex
-                applicationEntityIndex = eif.createApplicationEntityIndex( new ApplicationScopeImpl( createId( "application" ) ) );
 
-        final EntityIndexBatch batch = applicationEntityIndex.createBatch();
+        final EntityIndexBatch batch = entityIndex.createBatch();
 
 
         final IndexEdge edge = new IndexEdgeImpl(createId("root"), "testType", SearchEdge.NodeType.SOURCE,  1000  );
@@ -136,14 +130,14 @@ public class GeoPagingTest extends BaseIT {
 
         batch.execute().toBlocking().last();
 
-        ei.refreshAsync().toBlocking().last();
+        entityIndex.refreshAsync().toBlocking().last();
 
 
 
         final String query =  "select * where location within 1500000 of 37, -75" ;
 
         final CandidateResults
-                candidates = applicationEntityIndex.search( edge, SearchTypes.fromTypes( "cat" ), query, 100, 0 );
+                candidates = entityIndex.search( edge, SearchTypes.fromTypes( "cat" ), query, 100, 0 );
 
         assertNotNull( candidates );
 

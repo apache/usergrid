@@ -208,10 +208,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
         EntityManager em = emf.getEntityManager(emf.getManagementAppId());
         node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
 
-        IndexRefreshCommand.IndexRefreshCommandInfo didRefresh = emf.refreshIndex();
-        node.put("refreshIndexTime", didRefresh.getExecutionTime());
-        node.put("refreshIndexSuccess", didRefresh.hasFinished());
-
         dumpMetrics(node);
         response.setProperty( "status", node );
         return new JSONWithPadding( response, callback );

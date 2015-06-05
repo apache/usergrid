@@ -19,11 +19,6 @@
 package org.apache.usergrid.persistence.index;
 
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.index.impl.IndexLocationStrategy;
-
-
 public interface EntityIndexFactory {
 
     /**
@@ -31,7 +26,7 @@ public interface EntityIndexFactory {
      * @param indexLocationStrategy
      * @return
      */
-    ApplicationEntityIndex createApplicationEntityIndex( IndexLocationStrategy indexLocationStrategy );
+    AliasedEntityIndex createEntityIndex( IndexLocationStrategy indexLocationStrategy );
 
     /**
      * Invalidate the cache of our factory, and force the generation of new entity index instances

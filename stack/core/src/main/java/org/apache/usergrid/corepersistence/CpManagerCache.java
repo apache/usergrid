@@ -16,13 +16,16 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -39,18 +42,23 @@ public class CpManagerCache implements ManagerCache {
     private final EntityIndexFactory eif;
     private final GraphManagerFactory gmf;
     private final MapManagerFactory mmf;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
 
     // TODO: consider making these cache sizes and timeouts configurable
 
 
     @Inject
-    public CpManagerCache( final EntityCollectionManagerFactory ecmf, final EntityIndexFactory eif,
-                           final GraphManagerFactory gmf, final MapManagerFactory mmf ) {
+    public CpManagerCache( final EntityCollectionManagerFactory ecmf,
+                           final EntityIndexFactory eif,
+                           final GraphManagerFactory gmf,
+                           final MapManagerFactory mmf,
+                           final IndexLocationStrategyFactory indexLocationStrategyFactory) {
 
         this.ecmf = ecmf;
         this.eif = eif;
         this.gmf = gmf;
         this.mmf = mmf;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
     }
 
 
@@ -62,8 +70,9 @@ public class CpManagerCache implements ManagerCache {
 
 
     @Override
-    public ApplicationEntityIndex getEntityIndex( ApplicationScope appScope ) {
-        return eif.createApplicationEntityIndex( appScope );
+    public AliasedEntityIndex getEntityIndex( ApplicationScope applicationScope) {
+        IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        return eif.createEntityIndex( indexLocationStrategy );
     }
 
 

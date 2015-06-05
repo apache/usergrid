@@ -34,6 +34,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -231,12 +235,13 @@ public class CpEntityManager implements EntityManager {
      * @param applicationId
      */
     public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
-                            final MetricsFactory metricsFactory, final EntityManagerFig entityManagerFig,
+                            final MetricsFactory metricsFactory,
+                            final EntityManagerFig entityManagerFig,
                             final PipelineBuilderFactory pipelineBuilderFactory ,
-                            final GraphManagerFactory graphManagerFactory,final UUID applicationId ) {
+                            final GraphManagerFactory graphManagerFactory,
+                            final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
-
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
@@ -2909,6 +2914,20 @@ public class CpEntityManager implements EntityManager {
     }
 
 
+    @Override
+    public void addIndex(final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
+        managerCache.getEntityIndex(applicationScope).addIndex( indexSuffix, shards, replicas, writeConsistency);
+    }
+
+    /**
+     * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
+     */
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex() {
+
+        // refresh special indexes without calling EntityManager refresh because stack overflow
+
+        return managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
+    }
 
 
 }

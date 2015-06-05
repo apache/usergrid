@@ -41,18 +41,9 @@ public class ElasticSearchRule extends ExternalResource {
     private static final Logger logger = LoggerFactory.getLogger( ElasticSearchRule.class );
 
 
-    private  EntityIndex entityIndex;
-
-    @Inject
-    public void setMigrationManager( final EntityIndex entityIndex )  {
-      this.entityIndex = entityIndex;
-    }
-
-
     @Override
     protected void before() throws MigrationException {
         logger.info( "Initializing index" );
 
-        entityIndex.initialize();
     }
 }

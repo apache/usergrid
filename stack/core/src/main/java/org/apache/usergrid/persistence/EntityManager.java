@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -716,4 +717,15 @@ public interface EntityManager {
      * @return
      */
     Set<String> getConnectionsAsTarget(final EntityRef entityRef);
+
+    /**
+     * Add a new index to the application for scale
+     * @param suffix unique indentifier for additional index
+     * @param shards number of shards
+     * @param replicas number of replicas
+     * @param writeConsistency only "one, quorum, or all"
+     */
+    void addIndex(final String suffix,final int shards,final int replicas, final String writeConsistency);
+
+    IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
 }

@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.IndexAlias;
 
 
 /**
