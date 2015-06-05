@@ -27,6 +27,7 @@ import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
 
 import java.util.Properties;
+import java.util.UUID;
 
 
 public interface ServiceITSetup extends CoreITSetup {
@@ -44,7 +45,7 @@ public interface ServiceITSetup extends CoreITSetup {
 
     ImportService getImportService();
 
-    void refreshIndex();
+    void refreshIndex(UUID appid);
 
     /**
      * Convenience method to set a property in the Properties object returned by getProps();

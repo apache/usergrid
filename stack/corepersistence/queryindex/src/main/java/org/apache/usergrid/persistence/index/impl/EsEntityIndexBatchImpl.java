@@ -37,26 +37,27 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private static final Logger log = LoggerFactory.getLogger( EsEntityIndexBatchImpl.class );
 
-    private final ApplicationScope applicationScope;
 
     private final IndexAlias alias;
-    private final IndexIdentifier indexIdentifier;
 
+    private final IndexLocationStrategy indexIdentifier;
     private final IndexBufferConsumer indexBatchBufferProducer;
 
     private final AliasedEntityIndex entityIndex;
+    private final ApplicationScope applicationScope;
     private IndexOperationMessage container;
 
 
-    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope,
+    public EsEntityIndexBatchImpl( final IndexLocationStrategy locationStrategy,
                                    final IndexBufferConsumer indexBatchBufferProducer,
-                                   final AliasedEntityIndex entityIndex,
-                                   IndexIdentifier indexIdentifier ) {
+                                   final AliasedEntityIndex entityIndex
+    ) {
+        this.indexIdentifier = locationStrategy;
 
-        this.applicationScope = applicationScope;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.entityIndex = entityIndex;
-        this.indexIdentifier = indexIdentifier;
+        this.applicationScope = indexIdentifier.getApplicationScope();
+
         this.alias = indexIdentifier.getAlias();
         //constrained
         this.container = new IndexOperationMessage();

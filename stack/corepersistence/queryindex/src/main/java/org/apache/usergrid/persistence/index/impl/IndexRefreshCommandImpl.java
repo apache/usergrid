@@ -55,7 +55,6 @@ import rx.Observable;
 public class IndexRefreshCommandImpl implements IndexRefreshCommand {
     private static final Logger logger = LoggerFactory.getLogger( IndexRefreshCommandImpl.class );
 
-    private final IndexAlias alias;
     private final IndexCache indexCache;
     private final EsProvider esProvider;
     private final IndexBufferConsumer producer;
@@ -64,13 +63,15 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
     @Inject
-    public IndexRefreshCommandImpl( IndexIdentifier indexIdentifier, EsProvider esProvider,
-                                    IndexBufferConsumer producer, IndexFig indexFig, MetricsFactory metricsFactory,
+    public IndexRefreshCommandImpl(
+                                    final EsProvider esProvider,
+                                    final IndexBufferConsumer producer,
+                                    final IndexFig indexFig,
+                                    final MetricsFactory metricsFactory,
                                     final IndexCache indexCache ) {
 
 
         this.timer = metricsFactory.getTimer( IndexRefreshCommandImpl.class, "index.refresh.timer" );
-        this.alias = indexIdentifier.getAlias();
         this.esProvider = esProvider;
         this.producer = producer;
         this.indexFig = indexFig;
@@ -79,7 +80,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
     @Override
-    public Observable<IndexRefreshCommandInfo> execute( String[] indexes ) {
+    public Observable<IndexRefreshCommandInfo> execute(IndexAlias alias, String[] indexes ) {
 
         final long start = System.currentTimeMillis();
 

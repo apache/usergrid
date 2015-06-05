@@ -199,4 +199,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_WRITE_TIMEOUT )
     long getWriteTimeout();
 
+    @Default( "usergrid_management" )
+    @Key( "elasticsearch.managment_index" )
+    String getManagementAppIndexName();
 }

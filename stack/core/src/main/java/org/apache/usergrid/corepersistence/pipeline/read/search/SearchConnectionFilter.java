@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
@@ -44,11 +45,13 @@ public class SearchConnectionFilter extends AbstractElasticSearchFilter {
      * Create a new instance of our command
      */
     @Inject
-    public SearchConnectionFilter( final EntityIndexFactory entityIndexFactory, final MetricsFactory metricsFactory,
+    public SearchConnectionFilter( final EntityIndexFactory entityIndexFactory,
+                                   final MetricsFactory metricsFactory,
+                                   final IndexLocationStrategyFactory indexLocationStrategyFactory,
                                    @Assisted( "query" ) final String query,
                                    @Assisted( "connectionName" ) final String connectionName,
                                    @Assisted( "connectedEntityType" ) final Optional<String> connectedEntityType ) {
-        super( entityIndexFactory, metricsFactory, query );
+        super( entityIndexFactory, metricsFactory, indexLocationStrategyFactory, query );
 
         this.connectionName = connectionName;
         this.connectedEntityType = connectedEntityType;

@@ -23,7 +23,6 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.*;
 
 import com.google.common.cache.CacheBuilder;
@@ -37,38 +36,49 @@ import com.google.inject.Inject;
 public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
     private final IndexFig config;
+    private final IndexCache indexCache;
     private final EsProvider provider;
-    private final IndexBufferConsumer indexBatchBufferProducer;
+    private final IndexBufferConsumer indexBufferConsumer;
     private final MetricsFactory metricsFactory;
-    private final AliasedEntityIndex entityIndex;
+    private final IndexRefreshCommand refreshCommand;
 
-    private LoadingCache<IndexLocationStrategy, ApplicationEntityIndex> eiCache =
-        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<IndexLocationStrategy, ApplicationEntityIndex>() {
-            public ApplicationEntityIndex load( IndexLocationStrategy locationStrategy ) {
-                return new EsApplicationEntityIndexImpl(
-                    entityIndex,config, indexBatchBufferProducer, provider, metricsFactory, locationStrategy
+    private LoadingCache<IndexLocationStrategy, AliasedEntityIndex> eiCache =
+        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<IndexLocationStrategy, AliasedEntityIndex>() {
+            public AliasedEntityIndex load( IndexLocationStrategy locationStrategy ) {
+                AliasedEntityIndex index =  new EsEntityIndexImpl(
+                    provider,
+                    indexCache,
+                    config,
+                    refreshCommand,
+                    metricsFactory,
+                    indexBufferConsumer,
+                    locationStrategy
                 );
+                return index;
             }
         } );
 
     @Inject
-    public EsEntityIndexFactoryImpl( final IndexFig indexFig, final EsProvider provider,
-                                     final IndexBufferConsumer indexBatchBufferProducer,
+    public EsEntityIndexFactoryImpl( final IndexFig indexFig,
+                                     final IndexCache indexCache,
+                                     final EsProvider provider,
+                                     final IndexBufferConsumer indexBufferConsumer,
                                      final MetricsFactory metricsFactory,
-                                     final AliasedEntityIndex entityIndex
+                                     final IndexRefreshCommand refreshCommand
 
     ){
         this.config = indexFig;
+        this.indexCache = indexCache;
         this.provider = provider;
-        this.indexBatchBufferProducer = indexBatchBufferProducer;
+        this.indexBufferConsumer = indexBufferConsumer;
         this.metricsFactory = metricsFactory;
-        this.entityIndex = entityIndex;
+        this.refreshCommand = refreshCommand;
     }
 
 
 
     @Override
-    public ApplicationEntityIndex createApplicationEntityIndex(final IndexLocationStrategy indexLocationStrategy) {
+    public AliasedEntityIndex createEntityIndex(final IndexLocationStrategy indexLocationStrategy) {
         try{
             return eiCache.get(indexLocationStrategy);
         }catch (ExecutionException ee){

@@ -23,9 +23,10 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.index.*;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,13 +38,6 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexEdge;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.IndexTestFig;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -111,12 +105,29 @@ public class IndexLoadTestsIT extends BaseIT {
 
     private Slf4jReporter reporter;
 
+    @Inject
+    public IndexFig fig;
+
+    @Inject
+    public CassandraFig cassandraFig;
+    @Inject
+    public EntityIndexFactory eif;
 
     @Inject
     @Rule
     public ElasticSearchRule elasticSearchRule;
+    private SimpleId appId;
+    private EntityIndex entityIndex;
 
 
+    public void before(){
+        appId = new SimpleId(UUID.randomUUID(), "application" );
+
+        IndexLocationStrategy strategy = new TestIndexIdentifier(cassandraFig,fig,new ApplicationScopeImpl(appId));
+
+
+        entityIndex = eif.createEntityIndex( strategy );
+    }
 
 
     @Before
@@ -182,20 +193,19 @@ public class IndexLoadTestsIT extends BaseIT {
 
         final SearchEdge searchEdge = new SearchEdgeImpl( applicationId, "test",  SearchEdge.NodeType.SOURCE );
 
-        final ApplicationEntityIndex appEntityIndex = entityIndexFactory.createApplicationEntityIndex( scope );
 
 
         //create our index if it doesn't exist
 
         //delay our verification for indexing to happen
         final Observable<DataLoadResult> dataLoadResults =
-            createStreamFromWorkers( appEntityIndex, searchEdge, uniqueIdentifier ).buffer( indexTestFig.getBufferSize() )
+            createStreamFromWorkers( searchEdge, uniqueIdentifier ).buffer( indexTestFig.getBufferSize() )
                 //perform a delay to let ES index from our batches
                 .delay( indexTestFig.getValidateWait(), TimeUnit.MILLISECONDS )
                     //do our search in parallel, otherwise this test will take far too long
                 .flatMap( entitiesToValidate -> {
-                    return Observable.from( entitiesToValidate ).map( entityObservable -> {
-
+                    return Observable.from( entitiesToValidate ).map( thisentityObservable -> {
+                        Entity entityObservable = (Entity) thisentityObservable;
 
                         final int workerIndex = ( int ) entityObservable.getField( FIELD_WORKER_INDEX ).getValue();
                         final int ordinal = ( int ) entityObservable.getField( FIELD_ORDINAL ).getValue();
@@ -205,7 +215,7 @@ public class IndexLoadTestsIT extends BaseIT {
 
 
                         //execute our search
-                        final CandidateResults results = appEntityIndex
+                        final CandidateResults results = entityIndex
                             .search( searchEdge, SearchTypes.fromTypes( searchEdge.getEdgeName() ),
                                 "select * where " + FIELD_WORKER_INDEX + "  = " + workerIndex + " AND " + FIELD_ORDINAL
                                     + " = " + ordinal + " AND " + FIELD_UNIQUE_IDENTIFIER + " = '" + uniqueIdentifier
@@ -256,17 +266,17 @@ public class IndexLoadTestsIT extends BaseIT {
     }
 
 
-    public Observable<Entity> createStreamFromWorkers( final ApplicationEntityIndex entityIndex, final SearchEdge indexEdge,
+    public Observable<Entity> createStreamFromWorkers(  final SearchEdge indexEdge,
                                                        final String uniqueIdentifier ) {
 
         //create a sequence of observables.  Each index will be it's own worker thread using the Schedulers.newthread()
         return Observable.range( 0, indexTestFig.getNumberOfWorkers() ).flatMap(
-            integer -> createWriteObservable( entityIndex, indexEdge, uniqueIdentifier, integer )
+            integer -> createWriteObservable(  indexEdge, uniqueIdentifier, integer )
                 .subscribeOn( Schedulers.newThread() ) );
     }
 
 
-    private Observable<Entity> createWriteObservable( final ApplicationEntityIndex entityIndex, final SearchEdge indexEdge,
+    private Observable<Entity> createWriteObservable(  final SearchEdge indexEdge,
                                                       final String uniqueIdentifier, final int workerIndex ) {
 
 

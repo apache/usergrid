@@ -19,9 +19,11 @@
  */
 package org.apache.usergrid;
 
+import java.util.UUID;
+
 /**
  * abstract refresh implementation
  */
 public interface TestEntityIndex {
-    void refresh();
+    void refresh(UUID appId);
 }
