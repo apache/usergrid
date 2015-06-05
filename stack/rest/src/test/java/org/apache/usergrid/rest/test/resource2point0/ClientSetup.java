@@ -112,9 +112,15 @@ public class ClientSetup implements TestRule {
 
         organization = restClient.management().orgs().post(new Organization( orgName,username,username+"@usergrid.com",username,username, null  ));
 
+        refreshIndex();
+
         restClient.management().token().post(new Token(username,username));
 
+        refreshIndex();
+
         restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
+
+        refreshIndex();
 
     }
 
