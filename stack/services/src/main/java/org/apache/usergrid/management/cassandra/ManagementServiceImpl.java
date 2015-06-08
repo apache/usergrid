@@ -562,7 +562,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
             throws Exception {
-        return createOrganization( organizationName, user, activated );
+        return createOrganization( null, organizationName, user, activated );
     }
 
     @Override
