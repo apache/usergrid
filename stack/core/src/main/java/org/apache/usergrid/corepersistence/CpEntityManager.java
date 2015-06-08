@@ -690,7 +690,7 @@ public class CpEntityManager implements EntityManager {
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
         //for devices we don't have time uuids
-        UUID timeUUID =  UUIDUtils.isTimeBased(entityRef.getUuid()) ? entityRef.getUuid() : UUIDUtils.newTimeUUID();
+        UUID timeUUID = UUIDUtils.newTimeUUID();
 
         //Step 1 & 2 of delete
         return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, timeUUID.timestamp() ) );

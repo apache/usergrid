@@ -168,14 +168,13 @@ public class CpNamingUtils {
     public static Edge createCollectionEdge( final Id sourceId, final String collectionName, final Id entityId ) {
         final String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
-        final UUID entityIdUUID = entityId.getUuid();
 
         //if they don't use a time based uuid (such as in devices) we need to create a timestamp from "now" since
         // this is when the entity
         //will be added to the collection
-        final UUID timeStampUuid = UUIDUtils.isTimeBased( entityIdUUID ) ? entityIdUUID : UUIDGenerator.newTimeUUID();
+        final UUID timeStampUuid =  UUIDGenerator.newTimeUUID();
 
-        long uuidTimestamp = UUIDUtils.getUUIDLong( timeStampUuid );
+        final long uuidTimestamp = UUIDUtils.getUUIDLong( timeStampUuid );
 
         // create graph edge connection from head entity to member entity
         return new SimpleEdge( sourceId, edgeType, entityId, uuidTimestamp );
