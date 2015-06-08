@@ -373,7 +373,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
 
-        JsonNode node = resource().path("/test-organization/test-app/bars")
+        JsonNode node = resource().path("/test-organization/test-app/foos")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
