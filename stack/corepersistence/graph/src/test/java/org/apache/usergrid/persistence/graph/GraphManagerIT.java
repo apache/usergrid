@@ -1529,6 +1529,81 @@ public class GraphManagerIT {
 
 
     @Test
+    public void markCreateSourceNode() {
+
+        final GraphManager gm = emf.createEdgeManager( scope );
+
+        Id sourceId = new SimpleId( "source" );
+        Id targetId1 = new SimpleId( "target" );
+
+        Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
+
+        gm.writeEdge( edge1 ).toBlocking().singleOrDefault( null );
+
+
+        final long maxVersion = System.currentTimeMillis();
+
+        Iterator<Edge> results =
+            gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) ).toBlocking()
+              .getIterator();
+
+
+        assertEquals( "Edge found", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = gm.loadEdgesFromSourceByType(
+            createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //mark the source node
+        gm.markNode( sourceId, edge1.getTimestamp() ).toBlocking().last();
+
+
+        //now re-read, nothing should be there since they're marked
+
+        results =
+            gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) ).toBlocking()
+              .getIterator();
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = gm.loadEdgesFromSourceByType(
+            createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //now re-create the node
+        Edge edge2 = createEdge( sourceId, "test", targetId1, edge1.getTimestamp() + 1 );
+
+        gm.writeEdge( edge2 ).toBlocking().singleOrDefault( null );
+
+
+        //now search to ensure we get it back
+
+        results = gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge2.getType(), edge2.getTimestamp(), null ) )
+                    .toBlocking().getIterator();
+
+
+        assertEquals( "Edge found", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+    }
+
+
+    @Test
     public void markTargetNode() {
 
         final GraphManager gm = emf.createEdgeManager( scope );
@@ -1639,6 +1714,105 @@ public class GraphManagerIT {
 
 
         assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        gm.compactNode( targetId ).toBlocking().last();
+        //nothing should be left.
+
+        results = gm.loadEdgesToTarget( createSearchByEdgeUnfiltered( targetId, edge1.getType(), maxVersion, null ) )
+                    .toBlocking().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = gm.loadEdgesToTargetByType(
+            createSearchByEdgeAndIdUnfiltered( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) )
+                    .toBlocking().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+        results = gm.loadEdgesToTargetByType(
+            createSearchByEdgeAndIdUnfiltered( targetId, edge2.getType(), maxVersion, sourceId2.getType(), null ) )
+                    .toBlocking().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+    }
+
+
+    @Test
+    public void markCreateTargetNode() {
+
+        final GraphManager gm = emf.createEdgeManager( scope );
+
+        Id sourceId1 = new SimpleId( "source" );
+        Id targetId = new SimpleId( "target" );
+
+        Edge edge1 = createEdge( sourceId1, "test", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( edge1 ).toBlocking().singleOrDefault( null );
+
+
+        final long maxVersion = System.currentTimeMillis();
+
+        Iterator<Edge> results =
+            gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) ).toBlocking()
+              .getIterator();
+
+
+        assertEquals( "Edge found", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = gm.loadEdgesToTargetByType(
+            createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //mark the source node
+        gm.markNode( targetId, edge1.getTimestamp() ).toBlocking().last();
+
+
+        //now re-read, nothing should be there since they're marked
+
+        results = gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) ).toBlocking()
+                    .getIterator();
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = gm.loadEdgesToTargetByType(
+            createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) ).toBlocking()
+                    .getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        Edge edge2 = createEdge( sourceId1, "test", targetId, edge1.getTimestamp() + 1 );
+
+        gm.writeEdge( edge2 ).toBlocking().singleOrDefault( null );
+
+
+        //now search to ensure we get it back
+
+        results = gm.loadEdgesToTarget( createSearchByEdge( targetId, edge2.getType(), edge2.getTimestamp(), null ) )
+                    .toBlocking().getIterator();
+
+
+        assertEquals( "Edge found", edge2, results.next() );
 
         assertFalse( "No more edges", results.hasNext() );
     }
