@@ -55,46 +55,48 @@ public class SNSQueueManagerImpl implements QueueManager {
     private static SmileFactory smileFactory = new SmileFactory();
 
     private final LoadingCache<String, String> writeTopicArnMap = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .build(new CacheLoader<String, String>() {
-            @Override
-            public String load(String queueName)
-                throws Exception {
+            .maximumSize(1000)
+            .build(new CacheLoader<String, String>() {
+                @Override
+                public String load(String queueName)
+                        throws Exception {
 
-                String primaryTopicArn = setupMultiRegion(queueName);
-
-                return primaryTopicArn;
-            }
-        });
-
-    private final LoadingCache<String, Queue> readQueueUrlMap = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .build(new CacheLoader<String, Queue>() {
-            @Override
-            public Queue load(String queueName) throws Exception {
-
-                Queue queue = null;
-
-                try {
-                    GetQueueUrlResult result = sqs.getQueueUrl(queueName);
-                    queue = new Queue(result.getQueueUrl());
-                } catch (QueueDoesNotExistException queueDoesNotExistException) {
-                    logger.error("Queue {} does not exist, creating", queueName);
-                } catch (Exception e) {
-                    logger.error("failed to get queue from service", e);
-                    throw e;
-                }
-
-                if (queue == null) {
                     String primaryTopicArn = setupMultiRegion(queueName);
 
-                    String url = AmazonNotificationUtils.getQueueArnByName(queueName, sqs);
-                    queue = new Queue(url);
+                    return primaryTopicArn;
                 }
+            });
 
-                return queue;
-            }
-        });
+    private final LoadingCache<String, Queue> readQueueUrlMap = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(new CacheLoader<String, Queue>() {
+                @Override
+                public Queue load(String queueName) throws Exception {
+
+                    Queue queue = null;
+
+                    try {
+                        GetQueueUrlResult result = sqs.getQueueUrl(queueName);
+                        queue = new Queue(result.getQueueUrl());
+                    } catch (QueueDoesNotExistException queueDoesNotExistException) {
+                        logger.error("Queue {} does not exist, creating", queueName);
+                    } catch (Exception e) {
+                        logger.error("failed to get queue from service", e);
+                        throw e;
+                    }
+
+                    if (queue == null) {
+                        String url = AmazonNotificationUtils.createQueue(queueName, sqs, fig);
+                        queue = new Queue(url);
+                    }
+
+                    if (fig.isMultiRegion()) {
+                        String primaryTopicArn = setupMultiRegion(queueName);
+                    }
+
+                    return queue;
+                }
+            });
 
 
     @Inject
@@ -116,7 +118,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
     private String setupMultiRegion(final String queueName)
-        throws Exception {
+            throws Exception {
 
         logger.info("Setting up SNS/SQS...");
 
@@ -322,8 +324,8 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.debug("Commit message {} to queue {}", queueMessage.getMessageId(), url);
 
         sqs.deleteMessage(new DeleteMessageRequest()
-            .withQueueUrl(url)
-            .withReceiptHandle(queueMessage.getHandle()));
+                .withQueueUrl(url)
+                .withReceiptHandle(queueMessage.getHandle()));
     }
 
 
@@ -357,7 +359,7 @@ public class SNSQueueManagerImpl implements QueueManager {
      */
 
     private Object fromString(final String s, final Class klass)
-        throws IOException, ClassNotFoundException {
+            throws IOException, ClassNotFoundException {
 
         Object o = mapper.readValue(s, klass);
         return o;
