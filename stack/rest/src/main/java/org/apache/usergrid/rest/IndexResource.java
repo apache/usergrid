@@ -52,7 +52,7 @@ import com.sun.jersey.api.json.JSONWithPadding;
 
 
 /**
- * Classy class class.
+ * system/index/otherstuff
  */
 @Component
 @Scope( "singleton" )

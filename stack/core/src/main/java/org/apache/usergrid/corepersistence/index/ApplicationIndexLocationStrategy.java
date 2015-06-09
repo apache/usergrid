@@ -27,7 +27,7 @@ import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.utils.StringUtils;
 
 /**
- * Classy class class.
+ * Strategy for getting the application index name.
  */
 class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     private final CassandraFig cassandraFig;
