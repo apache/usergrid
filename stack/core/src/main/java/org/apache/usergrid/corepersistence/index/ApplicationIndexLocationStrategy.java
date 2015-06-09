@@ -34,6 +34,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
     private final String prefix;
+    private final String aliasPrefix;
 
     public ApplicationIndexLocationStrategy(final CassandraFig cassandraFig,
                                             final IndexFig indexFig,
@@ -43,9 +44,11 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
         this.prefix = getPrefix();
+        this.aliasPrefix = prefix + "_" + applicationScope.getApplication().getUuid();
     }
 
     private String getPrefix() {
+        //TODO: add hash buckets by app scope
         //remove usergrid
         final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
             ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
@@ -64,7 +67,8 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      */
     @Override
     public IndexAlias getAlias() {
-        return new IndexAlias(indexFig,prefix);
+        //TODO: include appid
+        return new IndexAlias(indexFig,aliasPrefix);
     }
 
     /**
@@ -90,6 +94,16 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     @Override
     public ApplicationScope getApplicationScope() {
         return applicationScope;
+    }
+
+    @Override
+    public int getNumberOfShards() {
+        return indexFig.getNumberOfShards();
+    }
+
+    @Override
+    public int getNumberOfReplicas() {
+        return indexFig.getNumberOfReplicas();
     }
 
     @Override

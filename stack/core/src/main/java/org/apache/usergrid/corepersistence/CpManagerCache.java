@@ -71,7 +71,8 @@ public class CpManagerCache implements ManagerCache {
 
     @Override
     public AliasedEntityIndex getEntityIndex( ApplicationScope applicationScope) {
-        IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        IndexLocationStrategy indexLocationStrategy
+            = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         return eif.createEntityIndex( indexLocationStrategy );
     }
 
