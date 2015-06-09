@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
@@ -62,6 +63,7 @@ public class IndexResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( IndexResource.class );
     private static final String UPDATED_FIELD = "updated";
+
 
 
     public IndexResource() {
@@ -199,7 +201,7 @@ public class IndexResource extends AbstractContextResource {
 
 
     @RequireSystemAccess
-    @POST
+    @PUT
     @Path( "rebuild/management" )
     public JSONWithPadding rebuildInternalIndexesPut( final Map<String, Object> payload,
                                                       @QueryParam( "callback" ) @DefaultValue( "callback" )
@@ -250,7 +252,8 @@ public class IndexResource extends AbstractContextResource {
 
 
     private ReIndexRequestBuilder createRequest() {
-        return createRequest();
+        //TODO: wire this up through spring, and in the future guice.
+        return new ReIndexRequestBuilderImpl();
     }
 
 
