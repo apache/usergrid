@@ -90,4 +90,14 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
     public ApplicationScope getApplicationScope() {
         return applicationScope;
     }
+
+    @Override
+    public int getNumberOfShards() {
+        return indexFig.getNumberOfShards();
+    }
+
+    @Override
+    public int getNumberOfReplicas() {
+        return indexFig.getNumberOfReplicas();
+    }
 }

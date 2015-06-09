@@ -35,12 +35,14 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     private final Id managementAppId;
     private final String prefix;
     private final IndexFig indexFig;
+    private final CoreIndexFig coreIndexFig;
 
-    public ManagementIndexLocationStrategy(IndexFig indexFig){
+    public ManagementIndexLocationStrategy(final IndexFig indexFig, final CoreIndexFig coreIndexFig){
         this.indexFig = indexFig;
+        this.coreIndexFig = coreIndexFig;
         this.managementAppId = CpNamingUtils.getManagementApplicationId();
         //remove usergrid
-        this.prefix = indexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
+        this.prefix = coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
 
 
     }
@@ -61,6 +63,16 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     @Override
     public ApplicationScope getApplicationScope() {
         return new ApplicationScopeImpl(managementAppId);
+    }
+
+    @Override
+    public int getNumberOfShards() {
+        return coreIndexFig.getManagementNumberOfShards();
+    }
+
+    @Override
+    public int getNumberOfReplicas() {
+        return coreIndexFig.getManagementNumberOfReplicas();
     }
 
     @Override

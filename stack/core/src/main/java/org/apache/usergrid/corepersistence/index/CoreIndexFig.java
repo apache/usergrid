@@ -17,47 +17,30 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.corepersistence.index;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.GuicyFig;
+import org.safehaus.guicyfig.Key;
+
 /**
- * location strategy for index 
+ * configuration for index in core
  */
-public interface IndexLocationStrategy {
-    /**
-     * get the alias name
-     * @return
-     */
-    IndexAlias getAlias();
+public interface CoreIndexFig extends GuicyFig {
 
-    /**
-     * get index name from suffix
-     * @param suffix
-     * @return
-     */
-    String getIndex( String suffix );
+    String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS = "elasticsearch.management_number_shards";
 
-    /**
-     * return unique string
-     * @return
-     */
-    String toString();
+    String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS = "elasticsearch.management_number_replicas";
 
-    /**
-     * only used by search types
-     * @return
-     */
-    ApplicationScope getApplicationScope();
+    @Default( "6" )
+    @Key( ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS )
+    int getManagementNumberOfShards();
 
-    /**
-     * number of shards for default
-     * @return
-     */
-    int getNumberOfShards();
+    @Default( "1" )
+    @Key( ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS )
+    int getManagementNumberOfReplicas();
 
-    /**
-     * default replicas
-     * @return
-     */
-    int getNumberOfReplicas();
+    @Default( "usergrid_management" )
+    @Key( "elasticsearch.managment_index" )
+    String getManagementAppIndexName();
 }

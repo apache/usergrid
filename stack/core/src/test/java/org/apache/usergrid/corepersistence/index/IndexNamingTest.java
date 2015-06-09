@@ -37,6 +37,7 @@ import org.junit.runner.RunWith;
 
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -52,6 +53,10 @@ public class IndexNamingTest {
     @Inject
     public IndexFig indexFig;
 
+
+    @Inject
+    public CoreIndexFig indexProcessorFig;
+
     @Inject
     public IndexLocationStrategyFactory indexLocationStrategyFactory;
 
@@ -64,20 +69,29 @@ public class IndexNamingTest {
     public void setup(){
         this.applicationScope = CpNamingUtils.getApplicationScope(UUID.randomUUID());
         this.managementApplicationScope = CpNamingUtils.getApplicationScope(CpNamingUtils.getManagementApplicationId().getUuid());
-        this.managementLocationStrategy = new ManagementIndexLocationStrategy(indexFig);
+        this.managementLocationStrategy = new ManagementIndexLocationStrategy(indexFig, indexProcessorFig);
         this.applicationLocationStrategy = new ApplicationIndexLocationStrategy(cassandraFig,indexFig,applicationScope);
     }
 
     @Test
     public void managementNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
-        assertTrue(indexLocationStrategy.getIndex(null).equals(managementLocationStrategy.getIndex(null)));
+        assertEquals(indexLocationStrategy.getIndex(null),managementLocationStrategy.getIndex(null));
+        assertEquals(indexLocationStrategy.getIndex(null),indexProcessorFig.getManagementAppIndexName());
 
     }
     @Test
     public void applicationNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
-        assertTrue(indexLocationStrategy.getIndex(null).equals(applicationLocationStrategy.getIndex(null)));
+        assertEquals(indexLocationStrategy.getIndex(null),applicationLocationStrategy.getIndex(null));
+
+        assertTrue(indexLocationStrategy.getIndex(null).contains(indexFig.getIndexPrefix()));
+        assertTrue(indexLocationStrategy.getIndex(null).contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
+        assertTrue(indexLocationStrategy.getAlias().getReadAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
+        assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
+        assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains("write"));
+        assertTrue(indexLocationStrategy.getAlias().getReadAlias().contains("read"));
+
     }
 
 }

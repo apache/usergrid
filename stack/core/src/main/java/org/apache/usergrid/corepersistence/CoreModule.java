@@ -146,6 +146,9 @@ public class CoreModule  extends AbstractModule {
 
         install(new GuicyFigModule(IndexProcessorFig.class));
 
+        install(new GuicyFigModule(CoreIndexFig.class));
+
+
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
 

@@ -26,5 +26,10 @@ import org.apache.usergrid.persistence.index.IndexLocationStrategy;
  * Retrieve index locations by app scope
  */
 public interface IndexLocationStrategyFactory {
+    /**
+     * given app scope find the location strategy
+     * @param applicationScope
+     * @return
+     */
     IndexLocationStrategy getIndexLocationStrategy(ApplicationScope applicationScope);
 }

@@ -132,7 +132,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
                               final IndexRefreshCommand indexRefreshCommand,
                               final MetricsFactory metricsFactory,
                               final IndexBufferConsumer indexBatchBufferProducer,
-                              @Assisted final IndexLocationStrategy indexLocationStrategy
+                              final IndexLocationStrategy indexLocationStrategy
     ) {
 
         this.indexFig = indexFig;
@@ -146,7 +146,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         this.applicationScope = indexLocationStrategy.getApplicationScope();
         this.cursorTimeout = indexFig.getQueryCursorTimeout();
         this.queryTimeout = indexFig.getWriteTimeout();
-        this.searchRequest = new SearchRequestBuilderStrategy( esProvider, applicationScope, alias, cursorTimeout );
+        this.searchRequest
+            = new SearchRequestBuilderStrategy( esProvider, applicationScope, alias, cursorTimeout );
         this.searchRequestBuilderStrategyV2 = new SearchRequestBuilderStrategyV2( esProvider, applicationScope, alias, cursorTimeout  );
 
         this.addTimer = metricsFactory
@@ -166,8 +167,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
     @Override
     public void initialize() {
-        final int numberOfShards = indexFig.getNumberOfShards();
-        final int numberOfReplicas = indexFig.getNumberOfReplicas();
+        final int numberOfShards = indexLocationStrategy.getNumberOfShards();
+        final int numberOfReplicas = indexLocationStrategy.getNumberOfReplicas();
 
         if (shouldInitialize()) {
             addIndex( null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
