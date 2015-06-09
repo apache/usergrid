@@ -81,16 +81,19 @@ public class RegistrationIT extends AbstractRestIT {
 
     public Entity postAddAdminToOrg(String organizationName, String email, String password) throws IOException {
 
-        this.management().token().setToken(this.getAdminToken());
+       // this.management().token().setToken(this.getAdminToken());
+//
+//        ApiResponse user = this
+//            .management()
+//            .orgs()
+//            .organization(organizationName)
+//            .users()
+//            .post(new User().chainPut("email", email).chainPut("password", password));
 
-        ApiResponse user = this
-            .management()
-            .orgs()
-            .organization(organizationName)
-            .users()
-            .post(new User().chainPut("email", email).chainPut("password", password));
+        ApiResponse user = this.pathResource( "management/orgs/" + organizationName + "/users", this.getAdminToken() )
+            .post( new User().chainPut( "email", email ).chainPut( "password", password ) );
 
-        assertNotNull(user);
+        assertNotNull( user );
         return new Entity(user);
     }
 

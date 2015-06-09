@@ -136,8 +136,15 @@ public class AbstractRestIT extends JerseyTest {
 
     protected NamedResource pathResource(String path){ return clientSetup.restClient.pathResource(path);}
 
+    protected NamedResource pathResource(String path, Token token){ return clientSetup.restClient.pathResource(path,token);}
+
     protected String getOrgAppPath(String additionalPath){
         return clientSetup.orgName + "/" + clientSetup.appName + "/" + (additionalPath !=null ? additionalPath : "");
+    }
+
+    protected String getManagementUsersPath(String additionalPath){
+        return "management/users/"+clientSetup.getUsername()
+            + (additionalPath !=null ? ("/" + additionalPath) : "");
     }
 
     protected ClientContext context(){
@@ -171,14 +178,21 @@ public class AbstractRestIT extends JerseyTest {
 
 
     protected Token getAdminToken(String username, String password){
-        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
-                new Token(username, password),null
-        );
+        //needs to be a post with a payload.
+        return this.clientSetup.getRestClient().pathResource( "management/token" ).post( Token.class,new Token(username, password),null);
+//        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
+//                new Token(username, password),null
+//        );
     }
 
+    //TODO: add ability to pass in or use existing tokens
     protected Token getAdminToken(){
-        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
-                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null
-        );
+        return this.clientSetup.getRestClient().pathResource( "management/token" )
+                               .post( Token.class,
+                                   new Token( this.clientSetup.getUsername(), this.clientSetup.getUsername() ), null );
+
+        //        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
+//                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null
+//        );
     }
 }

@@ -72,9 +72,9 @@ public class OrganizationsIT extends AbstractRestIT {
 //        this.refreshIndex();
 
         //Creates token
-        Token token =
-                clientSetup.getRestClient().management().token().post(false,Token.class, new Token( "password",
-                        organization.getUsername(), organization.getPassword() ) ,null);
+        Token token = getAdminToken( organization.getUsername(),organization.getPassword());
+//                clientSetup.getRestClient().management().token().post(false,Token.class, new Token( "password",
+//                        organization.getUsername(), organization.getPassword() ) ,null);
         this.management().token().setToken(token);
 
         assertNotNull( token );
@@ -111,8 +111,8 @@ public class OrganizationsIT extends AbstractRestIT {
         assertNotNull( orgCreatedResponse );
 
         //Ensure that the token from the newly created organization works.
-        Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
+       // Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
+        Token tokenReturned = getAdminToken( organization.getUsername(),organization.getPassword()) ;
         this.management().token().setToken(tokenReturned);
         assertNotNull( tokenReturned );
 
@@ -131,10 +131,9 @@ public class OrganizationsIT extends AbstractRestIT {
 
         // Post to get token of what should be a non existent user due to the failure of creation above
 
-        tokenPayload = new Token( "password", organization.getName() + "test", organization.getPassword() );
         Token tokenError = null;
         try {
-            tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
+            tokenError = getAdminToken( organization.getUsername() + "test", organization.getPassword() );
             fail( "Should not have created user" );
         }
         catch ( UniformInterfaceException ex ) {
@@ -186,10 +185,11 @@ public class OrganizationsIT extends AbstractRestIT {
         }
 
         //try to get the token from the organization that failed to be created to verify it was not made.
-        tokenPayload = new Token( "password", organization.getUsername()+"test", organization.getPassword()+"test" );
+        //tokenPayload = new Token( "password", organization.getUsername()+"test", organization.getPassword()+"test" );
         Token tokenError = null;
         try {
-            tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
+            tokenError = getAdminToken(organization.getUsername()+"test", organization.getPassword()+"test"  );
+                //clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created organization" );
         }
         catch ( UniformInterfaceException ex ) {
@@ -270,8 +270,7 @@ public class OrganizationsIT extends AbstractRestIT {
         assertEquals(organization.getOrganization(), organizationReturned.getName());
 
         //get token from organization that was created to verify it exists. also sets the current context.
-        Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null);
+        Token tokenReturned = getAdminToken( organization.getName(),  organization.getPassword());
 
         assertNotNull( tokenReturned );
 
@@ -309,7 +308,6 @@ public class OrganizationsIT extends AbstractRestIT {
      */
     @Test
     public void testCreateOrgUserAndReturnCorrectUsername() throws Exception {
-        RestClient restClient = clientSetup.getRestClient();
 
         //Create adminUser values
         Entity adminUserPayload = new Entity();
@@ -320,7 +318,9 @@ public class OrganizationsIT extends AbstractRestIT {
         adminUserPayload.put("password", username);
 
         //create adminUser
-        ApiResponse adminUserEntityResponse = management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class, adminUserPayload);
+        ApiResponse adminUserEntityResponse = this.pathResource( "management/orgs/"+clientSetup.getOrganizationName()+"/users",this.getAdminToken() )
+                                                  .post( adminUserPayload);
+           // management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class, adminUserPayload);
 
         Entity adminUserResponse = new Entity(adminUserEntityResponse);
         //verify that the response contains the correct data

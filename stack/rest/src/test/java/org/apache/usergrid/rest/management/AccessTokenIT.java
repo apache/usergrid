@@ -234,8 +234,10 @@ public class AccessTokenIT extends AbstractRestIT {
         Token token2 = getAdminToken();
 
         // using a superuser token, revoke all tokens associated with the admin user
-        management().token().setToken( clientSetup.getSuperuserToken() );
-        management().users().user( clientSetup.getUsername() ).revokeTokens().post(true , ApiResponse.class, null,null);
+        this.pathResource( "management/users/"+clientSetup.getUsername()+"/revoketokens",clientSetup.getSuperuserToken() )
+            .post( ApiResponse.class );
+
+       // management().users().user( clientSetup.getUsername() ).revokeTokens().post(true , ApiResponse.class, null,null);
 
         refreshIndex();
 
@@ -275,16 +277,21 @@ public class AccessTokenIT extends AbstractRestIT {
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "token", token1.getAccessToken() );
 
-        management().token().setToken( clientSetup.getSuperuserToken() );
-        management().users().user( clientSetup.getUsername() ).revokeToken().post( false, ApiResponse.class,null,queryParameters );
+        this.pathResource( getManagementUsersPath( "revoketoken" ), clientSetup.getSuperuserToken()).post(
+            ApiResponse.class, null, queryParameters );
+
+//        management().token().setToken( clientSetup.getSuperuserToken() );
+//        management().users().user( clientSetup.getUsername() ).revokeToken().post( false, ApiResponse.class,null,queryParameters );
 
         refreshIndex();
 
 
         //test that token 1 doesn't work
         try {
-            management().token().setToken( token1 );
-            management().users().user( clientSetup.getUsername() ).get();
+//            management().token().setToken( token1 );
+//            management().users().user( clientSetup.getUsername() ).get();
+
+            this.pathResource( getManagementUsersPath( null ),token1 ).get( ApiResponse.class,null );
             fail( "Token1 should have been revoked" );
         }
         catch ( UniformInterfaceException uie ) {
@@ -294,8 +301,10 @@ public class AccessTokenIT extends AbstractRestIT {
 
         //test that token 2 still works
         try {
-            management().token().setToken( token2 );
-            management().users().user( clientSetup.getUsername() ).get();
+            this.pathResource( getManagementUsersPath( null ),token2).get( ApiResponse.class,null );
+
+            //            management().token().setToken( token2 );
+//            management().users().user( clientSetup.getUsername() ).get();
         }
         catch ( UniformInterfaceException uie ) {
             fail( "Token2 shouldn't have been revoked" );

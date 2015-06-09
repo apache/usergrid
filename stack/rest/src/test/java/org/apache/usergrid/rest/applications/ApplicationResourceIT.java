@@ -442,14 +442,17 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertNotNull(entity);
         refreshIndex();
         //Retrieve an authentication token for the user
-        Token tokenResponse = this.app().getResource(false).path(String.format("/%s/%s/token", orgName, appName))
-            .queryParam("grant_type", "password")
-            .queryParam("username", username)
-            .queryParam("password", "password")
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .get(Token.class);
+        Token tokenResponse = this.pathResource( getOrgAppPath( "token" ) ).post(Token.class,new Token( username,"password" ) );
 
+
+//        Token tokenResponse = this.app().getResource(false).path(String.format("/%s/%s/token", orgName, appName))
+//            .queryParam("grant_type", "password")
+//            .queryParam("username", username)
+//            .queryParam("password", "password")
+//            .accept(MediaType.APPLICATION_JSON)
+//            .type(MediaType.APPLICATION_JSON_TYPE)
+//            .get(Token.class);
+//
         String token = tokenResponse.getAccessToken();
         assertNotNull(token);
 
@@ -457,6 +460,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         long expires_in = tokenResponse.getExpirationDate();
         assertEquals(604800, expires_in);
 
+        //TODO: broken because of put appDelete.
         //Set the default TTL of the application to a date far in the future
         this.app().getResource(false)
             .queryParam("access_token", token)

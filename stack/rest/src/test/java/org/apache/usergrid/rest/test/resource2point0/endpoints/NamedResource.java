@@ -50,12 +50,34 @@ public class NamedResource implements UrlResource {
      */
     protected final UrlResource parent;
 
+    protected final Token token;
+
 
     public NamedResource( final String name, final ClientContext context, final UrlResource parent ) {
         this.name = name;
         this.context = context;
         this.parent = parent;
+        this.token = null;
+
     }
+
+    public NamedResource (final Token token, final String name, final UrlResource parent,String emptyForSignatureReasons) {
+        this.name = name;
+        this.token=token;
+        this.parent=parent;
+        this.context=null;
+
+    }
+
+
+    public WebResource appendAccessTokenToCall(){
+        WebResource resource = parent.getResource().path( getPath() );
+        if ( token == null )
+            return resource;
+        else
+            return resource.queryParam("access_token",token.getAccessToken());
+    }
+
 
 
     @Override
@@ -164,12 +186,12 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public ApiResponse  post(Map map) {
-        return post(true,ApiResponse.class,map,null);
+        return post(ApiResponse.class,map,null);
 
     }
     //For edge cases like Organizations and Tokens
     public ApiResponse  post(boolean useToken, Map map, QueryParameters queryParameters) {
-        return post(true,ApiResponse.class,map,queryParameters);
+        return post(ApiResponse.class,map,queryParameters);
 
     }
     /**
@@ -181,7 +203,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type) {
-        return post(true,type,null,null);
+        return post(type,null,null);
 
     }
 
@@ -195,7 +217,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Entity requestEntity) {
-        return post(true,type,requestEntity,null);
+        return post(type,requestEntity,null);
 
     }
 
@@ -209,7 +231,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Map requestEntity) {
-        return post(true,type,requestEntity,null);
+        return post(type,requestEntity,null);
 
     }
 
@@ -231,9 +253,26 @@ public class NamedResource implements UrlResource {
     }
 
 
-    //Used for empty posts
-    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters ) {
-        WebResource resource = getResource(useToken);
+    //Can be used for both emmpty and non empty posts
+//    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters ) {
+//        WebResource resource = getResource(useToken);
+//        resource = addParametersToResource(resource, queryParameters);
+//        WebResource.Builder builder = resource
+//            .type(MediaType.APPLICATION_JSON_TYPE)
+//            .accept( MediaType.APPLICATION_JSON );
+//
+//        if(entity!=null){
+//            builder.entity(entity);
+//        }
+//        GenericType<T> gt = new GenericType<>((Class) type);
+//        return builder
+//            .post(gt.getRawClass());
+//
+//    }
+
+
+    public <T> T post( Class<T> type, Map entity, final QueryParameters queryParameters ) {
+        WebResource resource = appendAccessTokenToCall();
         resource = addParametersToResource(resource, queryParameters);
         WebResource.Builder builder = resource
             .type(MediaType.APPLICATION_JSON_TYPE)
@@ -247,7 +286,6 @@ public class NamedResource implements UrlResource {
             .post(gt.getRawClass());
 
     }
-
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {
@@ -263,7 +301,15 @@ public class NamedResource implements UrlResource {
 
 
     public <T> T get(Class<T> type,QueryParameters queryParameters) {
-        return get(type,queryParameters,true);
+        WebResource resource = appendAccessTokenToCall();
+        if(queryParameters!=null) {
+            resource = addParametersToResource(resource, queryParameters);
+        }
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return resource.type(MediaType.APPLICATION_JSON_TYPE)
+                       .accept( MediaType.APPLICATION_JSON )
+                       .get( gt.getRawClass() );
+
     }
 
     public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken) {
@@ -277,6 +323,7 @@ public class NamedResource implements UrlResource {
             .get( gt.getRawClass() );
 
     }
+
 
     public String getMatrix() {
         return "";

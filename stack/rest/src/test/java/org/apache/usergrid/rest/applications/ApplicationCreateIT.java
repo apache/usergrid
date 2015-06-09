@@ -50,15 +50,16 @@ public class ApplicationCreateIT extends AbstractRestIT {
 
         String orgName = clientSetup.getOrganizationName();
         String appName = clientSetup.getAppName() + "_new_app";
+        String orgAppManagementEndpoint = "management/orgs/"+orgName+"/apps";
         Token orgAdminToken = getAdminToken(clientSetup.getUsername(), clientSetup.getPassword());
+
 
         Map applicationMap = new HashMap<String, Object>(  );
         applicationMap.put( "name", appName );
 
-        this.management().token().setToken(orgAdminToken);
-        this.management().orgs().organization( orgName ).apps().post(applicationMap );
+        this.pathResource( orgAppManagementEndpoint,orgAdminToken ).post(applicationMap);
 
-        Entity response = this.management().orgs().organization( orgName ).addToPath( "apps" ).addToPath( appName ).get();
+        Entity response = this.pathResource( orgAppManagementEndpoint+"/"+appName,orgAdminToken ).get(Entity.class,null);
 
         assertNotNull( response );
     }

@@ -91,12 +91,10 @@ public class AdminUsersIT extends AbstractRestIT {
         this.refreshIndex();
 
         //Get the token using the new password
-        Token adminToken = management.token().post( false, Token.class, new Token( username, "testPassword" ) ,null );
-        management.token().setToken( adminToken );
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post(false, Token.class, new Token( username, password ),null);
+            getAdminToken( username,password );
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -156,17 +154,18 @@ public class AdminUsersIT extends AbstractRestIT {
         Map<String, Object> passwordPayload = new HashMap<String, Object>();
         passwordPayload.put( "newpassword", "testPassword" );
 
-        management.token().setToken( clientSetup.getSuperuserToken());
-        management.users().user( username ).password().post( passwordPayload );
+        this.pathResource( "management/users/"+username+"/password",this.clientSetup.getSuperuserToken() )
+            .post( passwordPayload );
 
         this.refreshIndex();
 
-        assertNotNull(management.token().post( false,Token.class, new Token( username, "testPassword" ) ,null ));
+
+       assertNotNull( getAdminToken( username,"testPassword" ) );
 
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( false,Token.class, new Token( username, password) ,null);
+           getAdminToken( username,password );
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -615,7 +614,8 @@ public class AdminUsersIT extends AbstractRestIT {
 //        management().token().setToken( organizationToken );
 
         //Create admin user
-        management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
+       // management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
+        this.pathResource( "management/orgs/"+clientSetup.getOrganizationName()+"/users",this.getAdminToken() ).post( adminUserPayload );
 
         refreshIndex();
 
