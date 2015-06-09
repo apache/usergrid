@@ -183,8 +183,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                             .doOnError(throwable -> {
                                                 LOG.error("Failed while writing",
                                                     throwable);
-                                            }).subscribeOn(Schedulers.io())
-
+                                            })
                                             , 10);
 
             o.toBlocking().lastOrDefault( null );
