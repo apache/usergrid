@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.utils.StringUtils;
 
 /**
- * Classy class class.
+ * Strategy for getting the management index name
  */
 class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     private final Id managementAppId;
