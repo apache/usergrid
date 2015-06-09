@@ -18,6 +18,10 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import javax.ws.rs.core.MediaType;
+
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -30,7 +34,24 @@ public class SystemResource extends NamedResource {
         super( "system",context, parent );
     }
 
+    //Dirty hack for path resource in new branch of two-dot-o
+    public SystemResource(final String name,final ClientContext context, final UrlResource parent ) {
+        super( name,context, parent );
+    }
+
+
     public DatabaseResource database() {
         return new DatabaseResource(context, this);
+    }
+
+    public SystemResource addToPath( String pathPart ) {
+        return new SystemResource( pathPart, context, this );
+    }
+
+    public ApiResponse put(){
+        ApiResponse
+            response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                                        .put(ApiResponse.class);
+        return response;
     }
 }
