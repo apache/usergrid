@@ -410,19 +410,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
         final Edge createEdge = CpNamingUtils.createCollectionEdge(managementAppId, createCollectionName, createApplicationId);
 
-        //TODO T.N. Removing this causes a failure
-//        final Observable compactObservable = managementGraphManager.compactNode(applicationId);
-
-        final Observable deleteNodeGraph = managementGraphManager
-            .markNode( deleteApplicationId, CpNamingUtils.createGraphOperationTimestamp() );
-//            .flatMap(id -> compactObservable);
-
         final Observable createNodeGraph = managementGraphManager.writeEdge(createEdge);
 
         final Observable deleteAppFromIndex = aei.deleteApplication();
 
         return Observable
-            .merge( copyConnections, createNodeGraph, deleteNodeGraph, deleteAppFromIndex )
+            .merge( copyConnections, createNodeGraph, deleteAppFromIndex )
             .doOnCompleted( () -> {
                 try {
                     if ( oldAppEntity != null ) {
@@ -430,6 +423,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                         applicationIdCache.evictAppId( oldAppEntity.getName() );
                     }
                     entityIndex.refreshAsync().toBlocking().last();
+
                 }
                 catch ( Exception e ) {
                     throw new RuntimeException( e );
