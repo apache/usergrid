@@ -1,6 +1,31 @@
-Usergrid 1.0.1
+Usergrid 1.0.2
 --------------------------------------------------------------------------------
 
+
+Usergrid 1.0.2
+--------------------------------------------------------------------------------
+
+Usergrid 1.0.2 is a minor release with bug fixes and small improvements.
+Here are the highlights:
+
+Bugs fixed
+
+* S3 upload fails on OpenJDK and Java 8 (fixed by JClouds upgrade)
+* Asset data deleted when connection to Asset deleted
+* Portal stores app password as clear-text
+
+Improvements
+
+* Cassandra key-space names are now configurable
+
+New features
+
+* ExportAdmins: a new tool to export Admin Users, credentials and organizations
+* ImportAdmins: a new tool to import Admin Users, credentials and organizations
+* Central SSO: Usergrid-Usergrid SSO via new /management/externaltoken end-point
+
+Here's the full list of JIRA issues resolved:
+https://issues.apache.org/jira/issues/?jql=project%3Dusergrid%20and%20fixVersion%3D1.0.2
 
 Usergrid 1.0.1
 --------------------------------------------------------------------------------
@@ -28,4 +53,3 @@ Here are the highlights:
 * Stack - Build now works with latest versions of Maven.
 * Stack - Build now supports property for configurable argline parameters. 
 * Stack - Build now sets java.awt.headless to prevent forkedbooter popups.
-
