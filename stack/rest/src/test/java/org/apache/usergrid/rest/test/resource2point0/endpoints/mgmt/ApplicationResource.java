@@ -46,9 +46,9 @@ public class ApplicationResource extends NamedResource {
     }
 
 
-    public void post(Application application) {
-        getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(application);
+    public Application post(Application application) {
+        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON).post(Application.class,application);
     }
 
     public Entity post(Entity payload){
