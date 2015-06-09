@@ -300,11 +300,13 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
             logger.debug( "SystemFilter.authorize" );
             try {
                 if ( !request.isUserInRole( "sysadmin" ) ) {
+                    logger.debug( "You are not the system admin." );
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                             SecurityException.REALM );
                 }
             }
             catch ( IllegalStateException e ) {
+                logger.debug( "This is an invalid state",e );
                 if ( ( request.getUserPrincipal() == null ) || !"sysadmin"
                         .equals( request.getUserPrincipal().getName() ) ) {
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
