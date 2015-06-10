@@ -36,6 +36,7 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     private final String prefix;
     private final IndexFig indexFig;
     private final CoreIndexFig coreIndexFig;
+    private final IndexAlias alias;
 
     public ManagementIndexLocationStrategy(final IndexFig indexFig, final CoreIndexFig coreIndexFig){
         this.indexFig = indexFig;
@@ -43,12 +44,11 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
         this.managementAppId = CpNamingUtils.getManagementApplicationId();
         //remove usergrid
         this.prefix = coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
-
-
+        this.alias = new ManagementIndexAlias(indexFig,prefix);
     }
     @Override
     public IndexAlias getAlias() {
-        return new IndexAlias(indexFig,prefix);
+        return alias;
     }
 
     @Override
@@ -92,5 +92,29 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
         int result = managementAppId.hashCode();
         result = 31 * result + prefix.hashCode();
         return result;
+    }
+
+    public class ManagementIndexAlias implements IndexAlias{
+
+        private final String readAlias;
+        private final String writeAlias;
+
+        /**
+         *
+         * @param indexFig config
+         * @param aliasPrefix alias prefix, e.g. app_id etc..
+         */
+        public ManagementIndexAlias(IndexFig indexFig,String aliasPrefix) {
+            this.writeAlias = aliasPrefix + "_write_" + indexFig.getAliasPostfix();
+            this.readAlias = aliasPrefix + "_read_" + indexFig.getAliasPostfix();
+        }
+
+        public String getReadAlias() {
+            return readAlias;
+        }
+
+        public String getWriteAlias() {
+            return writeAlias;
+        }
     }
 }

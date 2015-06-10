@@ -34,7 +34,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
     private final String prefix;
-    private final String aliasPrefix;
+    private final IndexAlias alias;
 
     public ApplicationIndexLocationStrategy(final CassandraFig cassandraFig,
                                             final IndexFig indexFig,
@@ -44,7 +44,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
         this.prefix = getPrefix();
-        this.aliasPrefix = prefix + "_" + applicationScope.getApplication().getUuid();
+        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, prefix);
     }
 
     private String getPrefix() {
@@ -68,7 +68,8 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     @Override
     public IndexAlias getAlias() {
         //TODO: include appid
-        return new IndexAlias(indexFig,aliasPrefix);
+
+        return alias;
     }
 
     /**
@@ -123,5 +124,29 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         int result = applicationScope.hashCode();
         result = 31 * result + prefix.hashCode();
         return result;
+    }
+
+    public class ApplicationIndexAlias implements IndexAlias {
+
+        private final String readAlias;
+        private final String writeAlias;
+
+        /**
+         *
+         * @param indexFig config
+         * @param aliasPrefix alias prefix, e.g. app_id etc..
+         */
+        public ApplicationIndexAlias(IndexFig indexFig, ApplicationScope applicationScope, String aliasPrefix) {
+            this.writeAlias = aliasPrefix + "_" + applicationScope.getApplication().getUuid() + "_write_" + indexFig.getAliasPostfix();
+            this.readAlias = aliasPrefix + "_" +  applicationScope.getApplication().getUuid() + "_read_" + indexFig.getAliasPostfix();
+        }
+
+        public String getReadAlias() {
+            return readAlias;
+        }
+
+        public String getWriteAlias() {
+            return writeAlias;
+        }
     }
 }

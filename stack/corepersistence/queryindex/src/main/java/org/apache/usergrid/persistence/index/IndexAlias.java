@@ -23,25 +23,12 @@ import org.apache.usergrid.persistence.index.IndexFig;
 /**
  * Abstraction for Index alias names
  */
-public class IndexAlias{
-    private final String readAlias;
-    private final String writeAlias;
+public interface IndexAlias{
 
-    /**
-     *
-     * @param indexFig config
-     * @param aliasPrefix alias prefix, e.g. app_id etc..
-     */
-    public IndexAlias(IndexFig indexFig,String aliasPrefix) {
-        this.writeAlias = aliasPrefix + "_write_" + indexFig.getAliasPostfix();
-        this.readAlias = aliasPrefix + "_read_" + indexFig.getAliasPostfix();
-    }
 
-    public String getReadAlias() {
-        return readAlias;
-    }
 
-    public String getWriteAlias() {
-        return writeAlias;
-    }
+    public String getReadAlias();
+
+    public String getWriteAlias();
 }
+
