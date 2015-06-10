@@ -63,7 +63,7 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
      */
     @Override
     public IndexAlias getAlias() {
-        return new IndexAlias(indexFig,prefix);
+        return new TestIndexAlias(indexFig,prefix);
     }
 
     /**
@@ -99,5 +99,28 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
     @Override
     public int getNumberOfReplicas() {
         return indexFig.getNumberOfReplicas();
+    }
+
+    private class TestIndexAlias implements IndexAlias {
+        private final String readAlias;
+        private final String writeAlias;
+
+        /**
+         *
+         * @param indexFig config
+         * @param aliasPrefix alias prefix, e.g. app_id etc..
+         */
+        public TestIndexAlias(IndexFig indexFig,String aliasPrefix) {
+            this.writeAlias = aliasPrefix + "_write_" + indexFig.getAliasPostfix();
+            this.readAlias = aliasPrefix + "_read_" + indexFig.getAliasPostfix();
+        }
+
+        public String getReadAlias() {
+            return readAlias;
+        }
+
+        public String getWriteAlias() {
+            return writeAlias;
+        }
     }
 }
