@@ -83,6 +83,7 @@ import rx.functions.Func1;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionSearchEdge;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionSearchByEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
@@ -688,33 +689,16 @@ public class CpRelationManager implements RelationManager {
             } );
         }
 
-        Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
-        org.apache.usergrid.persistence.model.entity.Entity targetEntity = ( ( CpEntityManager ) em ).load( entityId );
-
-        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
+        final Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
+        final org.apache.usergrid.persistence.model.entity.Entity targetEntity = ( ( CpEntityManager ) em ).load( entityId );
 
         // create graph edge connection from head entity to member entity
-        Edge edge = new SimpleEdge( cpHeadEntity.getId(), edgeType, targetEntity.getId(), System.currentTimeMillis() );
+        final Edge edge = createConnectionEdge( cpHeadEntity.getId(), connectionType, targetEntity.getId() );
 
-        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        final GraphManager gm = managerCache.getGraphManager( applicationScope );
         gm.writeEdge( edge ).toBlocking().last();
 
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        EntityIndexBatch batch = ei.createBatch();
-
-        // Index the new connection in app|source|type context
-        IndexEdge edgeIndex = generateScopeFromSource( edge );
-
-        batch.index( edgeIndex, targetEntity );
-
-        batch.execute();
-
-        // Index the new connection in app|scope|all-types context
-        //TODO REMOVE INDEX CODE
-        //        IndexScope allTypesIndexScope = new IndexScopeImpl( cpHeadEntity.getId(), CpNamingUtils.ALL_TYPES,
-        // entityType );
-        //        batch.index( allTypesIndexScope, targetEntity );
-
+        indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
         return connection;
     }
