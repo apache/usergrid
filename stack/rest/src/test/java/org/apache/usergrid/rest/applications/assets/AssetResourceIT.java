@@ -81,6 +81,7 @@ public class AssetResourceIT extends AbstractRestIT {
         resource().path( orgAppPath + "/assets/" + id.toString() + "/data" )
                 .queryParam( "access_token", access_token ).type( MediaType.APPLICATION_OCTET_STREAM_TYPE ).put( data );
 
+        refreshIndex();
         InputStream is = resource().path( orgAppPath + "/assets/" + id.toString() + "/data" )
                 .queryParam( "access_token", access_token ).get( InputStream.class );
 
