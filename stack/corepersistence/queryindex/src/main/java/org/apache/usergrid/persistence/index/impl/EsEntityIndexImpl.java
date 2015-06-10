@@ -20,8 +20,8 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
+import com.google.common.base.*;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -160,7 +160,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final int numberOfReplicas = indexLocationStrategy.getNumberOfReplicas();
 
         if (shouldInitialize()) {
-            addIndex( null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
+            addIndex( Optional.absent(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
         }
     }
 
@@ -171,10 +171,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     }
 
     @Override
-    public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
+    public void addIndex(final com.google.common.base.Optional<String> indexNameOverride, final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
         try {
             //get index name with suffix attached
-            String indexName = indexLocationStrategy.getIndex(indexSuffix);
+            final String indexName = indexNameOverride.or(indexLocationStrategy.getIndex()) ;
 
             //Create index
             try {
@@ -214,7 +214,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
             //may have been set via other administrative endpoint
 
-            addAlias(indexSuffix);
+            addAlias();
 
 
 
@@ -229,11 +229,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
     @Override
-    public void addAlias(final String indexSuffix) {
+    public void addAlias() {
         Timer.Context timer = updateAliasTimer.time();
         try {
             Boolean isAck;
-            String indexName = indexLocationStrategy.getIndex(indexSuffix);
+            String indexName = indexLocationStrategy.getIndex();
             final AdminClient adminClient = esProvider.getClient().admin();
 
             String[] indexNames = getIndexes(AliasType.Write);
@@ -715,7 +715,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         try {
            final ActionFuture<ClusterHealthResponse> future =  esProvider.getClient().admin().cluster().health(
-               new ClusterHealthRequest( new String[] { indexLocationStrategy.getIndex( null ) } ) );
+               new ClusterHealthRequest( new String[] { indexLocationStrategy.getIndex(  ) } ) );
 
             //only wait 2 seconds max
             ClusterHealthResponse chr = future.actionGet(2000);

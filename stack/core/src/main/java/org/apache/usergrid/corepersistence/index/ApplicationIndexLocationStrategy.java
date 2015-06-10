@@ -33,7 +33,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
-    private final String prefix;
+    private final String indexName;
     private final IndexAlias alias;
 
     public ApplicationIndexLocationStrategy(final CassandraFig cassandraFig,
@@ -43,12 +43,11 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
-        this.prefix = getPrefix();
-        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, prefix);
+        this.indexName = getPrefix();        //TODO: add hash buckets by app scope
+        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexName);
     }
 
     private String getPrefix() {
-        //TODO: add hash buckets by app scope
         //remove usergrid
         final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
             ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
@@ -74,22 +73,17 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
 
     /**
      * Get index name, send in additional parameter to add incremental indexes
-     * @param suffix
      * @return
      */
     @Override
-    public String getIndex(String suffix) {
-        if (suffix != null) {
-            return prefix + "_" + suffix;
-        } else {
-            return prefix;
-        }
+    public String getIndex() {
+        return indexName;
     }
 
 
     @Override
     public String toString() {
-        return "index id: "+prefix;
+        return "index id: "+indexName;
     }
 
     @Override
@@ -115,14 +109,14 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         ApplicationIndexLocationStrategy that = (ApplicationIndexLocationStrategy) o;
 
         if (!applicationScope.equals(that.applicationScope)) return false;
-        return prefix.equals(that.prefix);
+        return indexName.equals(that.indexName);
 
     }
 
     @Override
     public int hashCode() {
         int result = applicationScope.hashCode();
-        result = 31 * result + prefix.hashCode();
+        result = 31 * result + indexName.hashCode();
         return result;
     }
 

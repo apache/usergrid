@@ -32,7 +32,7 @@ import org.apache.usergrid.utils.StringUtils;
  * Strategy for getting the management index name
  */
 class ManagementIndexLocationStrategy implements IndexLocationStrategy {
-    private final String prefix;
+    private final String indexName;
     private final IndexFig indexFig;
     private final CoreIndexFig coreIndexFig;
     private final IndexAlias alias;
@@ -43,8 +43,8 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
         this.coreIndexFig = coreIndexFig;
         this.applicationScope = CpNamingUtils.getApplicationScope( CpNamingUtils.getManagementApplicationId().getUuid());
         //remove usergrid
-        this.prefix = coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
-        this.alias = new ManagementIndexAlias(indexFig,prefix);
+        this.indexName = coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
+        this.alias = new ManagementIndexAlias(indexFig,indexName);
     }
     @Override
     public IndexAlias getAlias() {
@@ -52,12 +52,8 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     }
 
     @Override
-    public String getIndex(String suffix) {
-        if (suffix != null) {
-            return prefix + "_" + suffix;
-        } else {
-            return prefix;
-        }
+    public String getIndex() {
+        return indexName;
     }
 
     @Override
@@ -83,14 +79,14 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
         ManagementIndexLocationStrategy that = (ManagementIndexLocationStrategy) o;
 
         if (!applicationScope.equals(that.applicationScope)) return false;
-        return prefix.equals(that.prefix);
+        return indexName.equals(that.indexName);
 
     }
 
     @Override
     public int hashCode() {
         int result = applicationScope.hashCode();
-        result = 31 * result + prefix.hashCode();
+        result = 31 * result + indexName.hashCode();
         return result;
     }
 

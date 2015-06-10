@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.index;
 
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -43,7 +44,7 @@ public interface EntityIndex extends CPManager {
      * @param replicas
      * @param writeConsistency
      */
-     void addIndex(final String indexSuffix, final int shards, final int replicas, final String writeConsistency);
+     void addIndex(final Optional<String> indexSuffix, final int shards, final int replicas, final String writeConsistency);
 
     /**
      * Refresh the index.
@@ -124,9 +125,8 @@ public interface EntityIndex extends CPManager {
 
     /**
      * Add alias to index, will remove old index from write alias
-     * @param indexSuffix must be different than current index
      */
-    void addAlias( final String indexSuffix );
+    void addAlias( );
 
     /**
      * type of alias

@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 /**
- * location strategy for index 
+ * location strategy for index
  */
 public interface IndexLocationStrategy {
     /**
@@ -32,10 +32,9 @@ public interface IndexLocationStrategy {
 
     /**
      * get index name from suffix
-     * @param suffix
      * @return
      */
-    String getIndex( String suffix );
+    String getIndex( );
 
     /**
      * return unique string

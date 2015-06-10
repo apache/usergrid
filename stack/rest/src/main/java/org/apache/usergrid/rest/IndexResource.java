@@ -35,6 +35,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.slf4j.Logger;
@@ -248,8 +249,8 @@ public class IndexResource extends AbstractContextResource {
         }
 
         EntityManager em = emf.getEntityManager(appId);
-        em.addIndex( config.get( "indexSuffix" ).toString(), ( int ) config.get( "shards" ),
-            ( int ) config.get( "replicas" ), ( String ) config.get( "writeConsistency" ) );
+        em.addIndex(Optional.of(config.get("indexSuffix").toString()), (int) config.get("shards"),
+            (int) config.get("replicas"), (String) config.get("writeConsistency"));
         response.setAction( "Add index to alias" );
 
         return new JSONWithPadding( response, callback );

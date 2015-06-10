@@ -34,6 +34,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
@@ -2897,8 +2898,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public void addIndex(final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
-        managerCache.getEntityIndex(applicationScope).addIndex( indexSuffix, shards, replicas, writeConsistency);
+    public void addIndex(final Optional<String> newIndexName,final int shards,final int replicas, final String writeConsistency){
+        managerCache.getEntityIndex(applicationScope).addIndex( newIndexName, shards, replicas, writeConsistency);
     }
 
     /**
