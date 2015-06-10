@@ -26,7 +26,7 @@ public interface EntityIndexFactory {
      * @param indexLocationStrategy
      * @return
      */
-    AliasedEntityIndex createEntityIndex( IndexLocationStrategy indexLocationStrategy );
+    EntityIndex createEntityIndex( IndexLocationStrategy indexLocationStrategy );
 
     /**
      * Invalidate the cache of our factory, and force the generation of new entity index instances

@@ -372,7 +372,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         }
         final Id managementAppId = CpNamingUtils.getManagementApplicationId();
-        final AliasedEntityIndex aei = getManagementIndex();
+        final EntityIndex aei = getManagementIndex();
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
         final Edge createEdge = CpNamingUtils.createCollectionEdge(managementAppId, collectionToName, applicationId);
 
@@ -394,7 +394,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                         managementEm.delete(oldAppEntity);
                         applicationIdCache.evictAppId(oldAppEntity.getName());
                     }
-                    AliasedEntityIndex ei = getManagementIndex();
+                    EntityIndex ei = getManagementIndex();
                     ei.refreshAsync().toBlocking().last();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -666,7 +666,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
 
-    private AliasedEntityIndex getManagementIndex() {
+    private EntityIndex getManagementIndex() {
 
         return
             managerCache.getEntityIndex( // management app

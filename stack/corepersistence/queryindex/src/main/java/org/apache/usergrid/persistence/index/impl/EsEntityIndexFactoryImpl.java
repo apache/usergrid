@@ -42,10 +42,10 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     private final MetricsFactory metricsFactory;
     private final IndexRefreshCommand refreshCommand;
 
-    private LoadingCache<IndexLocationStrategy, AliasedEntityIndex> eiCache =
-        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<IndexLocationStrategy, AliasedEntityIndex>() {
-            public AliasedEntityIndex load( IndexLocationStrategy locationStrategy ) {
-                AliasedEntityIndex index =  new EsEntityIndexImpl(
+    private LoadingCache<IndexLocationStrategy, EntityIndex> eiCache =
+        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<IndexLocationStrategy, EntityIndex>() {
+            public EntityIndex load( IndexLocationStrategy locationStrategy ) {
+                EntityIndex index =  new EsEntityIndexImpl(
                     provider,
                     indexCache,
                     config,
@@ -79,7 +79,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
 
     @Override
-    public AliasedEntityIndex createEntityIndex(final IndexLocationStrategy indexLocationStrategy) {
+    public EntityIndex createEntityIndex(final IndexLocationStrategy indexLocationStrategy) {
         try{
             return eiCache.get(indexLocationStrategy);
         }catch (ExecutionException ee){

@@ -80,7 +80,7 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
 
-        final AliasedEntityIndex applicationIndex =
+        final EntityIndex applicationIndex =
             entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
 
         final Observable<FilterResult<Id>> searchIdSetObservable =

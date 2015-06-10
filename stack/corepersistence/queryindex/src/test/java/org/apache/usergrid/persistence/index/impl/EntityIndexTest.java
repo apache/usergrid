@@ -87,7 +87,7 @@ public class EntityIndexTest extends BaseIT {
     @Inject
     @Rule
     public ElasticSearchRule elasticSearchRule;
-    private AliasedEntityIndex entityIndex;
+    private EntityIndex entityIndex;
     private SimpleId appId;
 
     @Before

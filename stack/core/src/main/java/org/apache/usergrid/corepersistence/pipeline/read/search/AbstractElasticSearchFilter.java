@@ -71,7 +71,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
     public Observable<FilterResult<Candidate>> call( final Observable<FilterResult<Id>> observable ) {
 
         //get the graph manager
-        final AliasedEntityIndex applicationEntityIndex =
+        final EntityIndex applicationEntityIndex =
             entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(pipelineContext.getApplicationScope()) );
 
 

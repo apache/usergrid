@@ -82,7 +82,7 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.parseInde
  * Implements index using ElasticSearch Java API.
  */
 @Singleton
-public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
+public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
@@ -165,8 +165,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     }
 
     private boolean shouldInitialize() {
-        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
-        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
+        String[] reads = getIndexes(EntityIndex.AliasType.Read);
+        String[] writes = getIndexes(EntityIndex.AliasType.Write);
         return reads.length==0  || writes.length==0;
     }
 

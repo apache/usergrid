@@ -149,13 +149,13 @@ public abstract class AsyncIndexServiceTest {
 
         //        Thread.sleep( 1000000000000l );
 
-        final AliasedEntityIndex AliasedEntityIndex =
+        final EntityIndex EntityIndex =
             entityIndexFactory.createEntityIndex( indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
         //query until it's available
-        final CandidateResults collectionResults = getResults( AliasedEntityIndex, collectionSearchEdge,
+        final CandidateResults collectionResults = getResults( EntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ),  1, 100 );
 
         assertEquals( 1, collectionResults.size() );
@@ -167,7 +167,7 @@ public abstract class AsyncIndexServiceTest {
 
 
         //query until it's available
-        final CandidateResults connectionResults = getResults( AliasedEntityIndex, connectionSearchEdge,
+        final CandidateResults connectionResults = getResults( EntityIndex, connectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1, 100 );
 
         assertEquals( 1, connectionResults.size() );
@@ -176,13 +176,13 @@ public abstract class AsyncIndexServiceTest {
     }
 
 
-    private CandidateResults getResults( final AliasedEntityIndex AliasedEntityIndex,
+    private CandidateResults getResults( final EntityIndex EntityIndex,
                                          final SearchEdge searchEdge, final SearchTypes searchTypes, final int expectedSize, final int attempts ) {
 
 
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                AliasedEntityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
+                EntityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

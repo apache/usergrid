@@ -84,7 +84,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
 
-        final AliasedEntityIndex applicationIndex =
+        final EntityIndex applicationIndex =
             entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         //buffer them to get a page size we can make 1 network hop

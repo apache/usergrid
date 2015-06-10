@@ -22,7 +22,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
@@ -70,7 +70,7 @@ public class CpManagerCache implements ManagerCache {
 
 
     @Override
-    public AliasedEntityIndex getEntityIndex( ApplicationScope applicationScope) {
+    public EntityIndex getEntityIndex( ApplicationScope applicationScope) {
         IndexLocationStrategy indexLocationStrategy
             = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         return eif.createEntityIndex( indexLocationStrategy );
