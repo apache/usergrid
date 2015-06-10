@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexAlias;
 
 
@@ -34,7 +34,7 @@ public interface IndexCache {
      * @param aliasType
      * @return
      */
-    String[] getIndexes(IndexAlias alias, AliasedEntityIndex.AliasType aliasType);
+    String[] getIndexes(IndexAlias alias, EntityIndex.AliasType aliasType);
 
     /**
      * invalidate cache

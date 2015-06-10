@@ -35,7 +35,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.slf4j.Logger;

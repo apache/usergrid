@@ -90,7 +90,7 @@ public class IndexServiceImpl implements IndexService {
                                                           final Entity entity ) {
         //bootstrap the lower modules from their caches
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
-        final AliasedEntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
+        final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
 
 
         final Id entityId = entity.getId();
@@ -138,7 +138,7 @@ public class IndexServiceImpl implements IndexService {
             throw new IllegalArgumentException("target not equal to entity + "+entity.getId());
         } ).flatMap( indexEdge -> {
 
-            final AliasedEntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+            final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
             final EntityIndexBatch batch = ei.createBatch();
 
@@ -165,7 +165,7 @@ public class IndexServiceImpl implements IndexService {
 
         final Observable<IndexOperationMessage> batches =
             Observable.just( edge ).flatMap( edgeValue -> {
-                final AliasedEntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+                final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
                 EntityIndexBatch batch = ei.createBatch();
 
 
@@ -202,7 +202,7 @@ public class IndexServiceImpl implements IndexService {
                                                                   final Id entityId, final UUID markedVersion ) {
 
         //bootstrap the lower modules from their caches
-        final AliasedEntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+        final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         CandidateResults crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion );
 

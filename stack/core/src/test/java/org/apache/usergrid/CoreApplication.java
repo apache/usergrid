@@ -57,7 +57,7 @@ public class CoreApplication implements Application, TestRule {
     protected EntityManager em;
     protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
     private EntityIndexFactory entityIndexFactory;
-    private AliasedEntityIndex applicationIndex;
+    private EntityIndex applicationIndex;
     private EntityManager managementEm;
 
 

@@ -186,7 +186,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                 }
             }).doOnCompleted(() -> {
                 //clean up our data
-                String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
+                String[] aliases = indexCache.getIndexes(alias, EntityIndex.AliasType.Read);
                 DeIndexOperation deIndexRequest =
                     new DeIndexOperation(aliases, appScope, edge, entity.getId(), entity.getVersion());
 

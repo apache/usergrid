@@ -109,6 +109,32 @@ public interface EntityIndex extends CPManager {
      */
     Observable deleteApplication();
 
+    /**
+     * Get the indexes for an alias
+     * @param aliasType name of alias
+     * @return list of index names
+     */
+    String[] getIndexes( final AliasType aliasType );
+
+    /**
+     * get all unique indexes
+     * @return
+     */
+    String[] getUniqueIndexes();
+
+    /**
+     * Add alias to index, will remove old index from write alias
+     * @param indexSuffix must be different than current index
+     */
+    void addAlias( final String indexSuffix );
+
+    /**
+     * type of alias
+     */
+    enum AliasType {
+        Read, Write
+    }
+
 }
 
 

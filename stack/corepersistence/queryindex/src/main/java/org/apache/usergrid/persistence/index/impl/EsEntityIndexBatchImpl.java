@@ -43,14 +43,14 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final IndexLocationStrategy indexIdentifier;
     private final IndexBufferConsumer indexBatchBufferProducer;
 
-    private final AliasedEntityIndex entityIndex;
+    private final EntityIndex entityIndex;
     private final ApplicationScope applicationScope;
     private IndexOperationMessage container;
 
 
     public EsEntityIndexBatchImpl( final IndexLocationStrategy locationStrategy,
                                    final IndexBufferConsumer indexBatchBufferProducer,
-                                   final AliasedEntityIndex entityIndex
+                                   final EntityIndex entityIndex
     ) {
         this.indexIdentifier = locationStrategy;
 
