@@ -28,12 +28,16 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 
+import org.junit.Ignore;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 public class BasicIT extends AbstractRestIT {
@@ -72,18 +76,15 @@ public class BasicIT extends AbstractRestIT {
         assertNotNull( returnedUser );
     }
 
-
     @Test
-    public void testNonexistentUserAccessViaGuest() throws IOException {
+    public void serviceResourceNotFoundReturns404() throws Exception {
 
-        try {
-            WebResource resource = resource();
-            resource.path( "/test-organization/test-app/users/foobarNonexistent" );
-            resource.accept( MediaType.APPLICATION_JSON );
-            mapper.readTree( resource.get( String.class ));
-        }
-        catch ( UniformInterfaceException e ) {
-            assertEquals( "Guests should not be able to get a 404", 401, e.getResponse().getStatus() );
-        }
+            try {
+                clientSetup.getRestClient().pathResource( getOrgAppPath( "users/JOE" ),this.getAdminToken() )
+                           .get( ApiResponse.class,null );
+                fail("A get on a nonexistant object should fail");
+            }catch ( UniformInterfaceException e ) {
+                    assertEquals( "Guests should not be able to get a 404", 404, e.getResponse().getStatus() );
+            }
     }
 }

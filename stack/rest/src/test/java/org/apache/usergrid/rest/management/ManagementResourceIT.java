@@ -67,10 +67,10 @@ public class ManagementResourceIT extends AbstractRestIT {
      * Test if we can reset our password as an admin
      */
     @Test
-    public void setSelfAdminPasswordAsAdwmin() {
+    public void setSelfAdminPasswordAsAdmin() {
         UUID uuid =  UUIDUtils.newTimeUUID();
 
-        this.pathResource( "management/orgs/"+clientSetup.getOrganizationName()+"/users" )
+        this.pathResource( "management/orgs/"+clientSetup.getOrganizationName()+"/users",this.getAdminToken() )
             .post( new User("test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test") );
         //management.token().setToken(clientSetup.getSuperuserToken());
         //management.orgs().organization(clientSetup.getOrganizationName()).users().post(ApiResponse.class, new User("test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test"));

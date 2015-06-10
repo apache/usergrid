@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
+
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.representation.Form;
 import org.jclouds.openstack.v2_0.domain.Extension;
 
@@ -188,10 +190,12 @@ public class NamedResource implements UrlResource {
     public ApiResponse  post(Map map) {
         return post(ApiResponse.class,map,null);
 
+
     }
     //For edge cases like Organizations and Tokens
     public ApiResponse  post(boolean useToken, Map map, QueryParameters queryParameters) {
         return post(ApiResponse.class,map,queryParameters);
+
 
     }
     /**
@@ -204,6 +208,7 @@ public class NamedResource implements UrlResource {
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type) {
         return post(type,null,null);
+
 
     }
 
@@ -219,6 +224,7 @@ public class NamedResource implements UrlResource {
     public <T> T post(Class<T> type, Entity requestEntity) {
         return post(type,requestEntity,null);
 
+
     }
 
     /**
@@ -232,6 +238,7 @@ public class NamedResource implements UrlResource {
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Map requestEntity) {
         return post(type,requestEntity,null);
+
 
     }
 
@@ -270,9 +277,28 @@ public class NamedResource implements UrlResource {
 //
 //    }
 
-
-    public <T> T post( Class<T> type, Map entity, final QueryParameters queryParameters ) {
+    public <T> T post( Class<T> type,Boolean superUser) {
         WebResource resource = appendAccessTokenToCall();
+
+        if(superUser) {
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser", "superpassword" );
+            resource.addFilter( httpBasicAuthFilter );
+        }
+
+        WebResource.Builder builder = resource
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept( MediaType.APPLICATION_JSON );
+
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return builder
+            .post(gt.getRawClass());
+    }
+
+
+        public <T> T post( Class<T> type, Map entity, final QueryParameters queryParameters ) {
+        WebResource resource = appendAccessTokenToCall();
+
         resource = addParametersToResource(resource, queryParameters);
         WebResource.Builder builder = resource
             .type(MediaType.APPLICATION_JSON_TYPE)
@@ -286,6 +312,7 @@ public class NamedResource implements UrlResource {
             .post(gt.getRawClass());
 
     }
+
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {

@@ -183,6 +183,7 @@ public class AbstractRestIT extends JerseyTest {
 //        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
 //                new Token(username, password),null
 //        );
+
     }
 
     //TODO: add ability to pass in or use existing tokens
@@ -194,5 +195,6 @@ public class AbstractRestIT extends JerseyTest {
         //        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
 //                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null
 //        );
+
     }
 }

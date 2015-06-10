@@ -32,8 +32,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+
+import static org.junit.Assert.assertNotNull;
+
 
 /**
  * test index creation
@@ -41,8 +45,8 @@ import static org.junit.Assert.fail;
 public class IndexResourceIT extends AbstractRestIT {
 
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+//    @Rule
+//    public TestContextSetup context = new TestContextSetup( this );
     //Used for all MUUserResourceITTests
     private Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
 
@@ -50,33 +54,70 @@ public class IndexResourceIT extends AbstractRestIT {
 
     }
 
-    @Ignore( "will finish when tests are working from rest" )
+//    @Ignore( "will finish when tests are working from rest" )
+//    @Test
+//    public void TestAddIndex() throws Exception{
+//
+//        String superToken = superAdminToken();
+//
+//        Map<String, Object> data = new HashMap<String, Object>();
+//        data.put( "replicas", 0 );
+//        data.put( "shards", 1 );
+//        data.put( "writeConsistency", "one" );
+//
+//        UUID appId = this.context.getAppUuid();
+//
+//        // change the password as admin. The old password isn't required
+//        JsonNode node = null;
+//        try {
+//            node = mapper.readTree(resource().path("/system/index/" + appId)
+//                    .queryParam("access_token", superToken)
+//                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE)
+//                    .post(String.class, data));
+//        } catch (Exception e) {
+//            LOG.error("failed", e);
+//            fail(e.toString());
+//        }
+//        assertNull( getError( node ) );
+//
+//        refreshIndex("test-organization", "test-app");
+//
+//    }
+
+
+    /**
+     * checks that reindex endpoint is case insensitive
+     */
     @Test
-    public void TestAddIndex() throws Exception{
+    public void testCaseReindexEndpoint() {
 
-        String superToken = superAdminToken();
+        //Create Collection
+        Map payload = new HashMap<>(  );
+        payload.put( "name","wazer wifle!!" );
+        ApiResponse collectionResponse = clientSetup.getRestClient()
+            .pathResource( getOrgAppPath( "belp" ),this.getAdminToken() ).post( payload );
 
-        Map<String, Object> data = new HashMap<String, Object>();
-        data.put( "replicas", 0 );
-        data.put( "shards", 1 );
-        data.put( "writeConsistency", "one" );
+        assertNotNull( collectionResponse );
 
-        UUID appId = this.context.getAppUuid();
+        //try reindex endpoint with ALl mixed case characters
+        Token superUserToken = clientSetup.getRestClient().management().token().get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
 
-        // change the password as admin. The old password isn't required
-        JsonNode node = null;
-        try {
-            node = mapper.readTree(resource().path("/system/index/" + appId)
-                    .queryParam("access_token", superToken)
-                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE)
-                    .post(String.class, data));
-        } catch (Exception e) {
-            LOG.error("failed", e);
-            fail(e.toString());
-        }
-        assertNull( getError( node ) );
+        QueryParameters queryParameters = new QueryParameters();
+        //queryParameters.addParam( "access_token",this.clientSetup.getSuperuserToken().getAccessToken());
+        ApiResponse result = clientSetup.getRestClient()
+                                   .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/bElp")
+            .post(ApiResponse.class,true);
+                                  // .post( false, ApiResponse.class, null, queryParameters, true );
 
-        refreshIndex("test-organization", "test-app");
+        assertNotNull(result);
+
+        //try the reindex endpoint with all lowercase Characters
+        queryParameters = new QueryParameters();
+       // queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        result = clientSetup.getRestClient()
+                                        .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/belp")
+                            .post(ApiResponse.class,true );
+        assertNotNull( result );
 
     }
 }
