@@ -22,8 +22,9 @@ package org.apache.usergrid.rest;
 
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
+
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -89,8 +90,9 @@ public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2poin
         assertNotNull( result );
 
     }
-    @Test
+
     @Ignore
+    @Test
     public void TestAddIndex() throws Exception{
 
 
