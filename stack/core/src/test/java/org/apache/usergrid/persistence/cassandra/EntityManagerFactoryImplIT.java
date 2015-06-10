@@ -209,6 +209,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         apps = setup.getEmf().getApplications();
         found = findApps.call(deletedAppId, apps);
+
         assertTrue("Restored app not found in apps collection", found);
 
         // TODO: this assertion should work!

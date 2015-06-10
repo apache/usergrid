@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -64,9 +65,6 @@ public interface EntityManagerFactory {
          */
     Entity createApplicationV2( String organizationName, String name ) throws Exception;
 
-    @Deprecated
-    UUID createApplication( String organizationName, String name ) throws Exception;
-
     /**
      * Creates a Application entity. All entities except for applications must be attached to a
      * Application.
@@ -81,9 +79,6 @@ public interface EntityManagerFactory {
     Entity createApplicationV2(
         String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
-    @Deprecated
-    UUID createApplication(
-        String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
     /**
      * Delete Application.
@@ -92,15 +87,15 @@ public interface EntityManagerFactory {
      */
     void deleteApplication( UUID applicationId ) throws Exception;
 
-    /**
-     *
-     * @param applicationUUID
-     * @param collectionFromName
-     * @param collectionToName
-     * @return
-     * @throws Exception
-     */
-    Observable migrateAppInfo( UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception;
+//    /**
+//     *
+//     * @param applicationUUID
+//     * @param collectionFromName
+//     * @param collectionToName
+//     * @return
+//     * @throws Exception
+//     */
+//    Observable migrateAppInfo( UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception;
 
     /**
      * Restore deleted application.
@@ -157,14 +152,11 @@ public interface EntityManagerFactory {
     public Entity initializeApplicationV2(
         String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
 
-    @Deprecated
-    public UUID initializeApplication(
-        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
+
 
     public UUID getManagementAppId();
 
-    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
-
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex(UUID applicationId);
 
     /**
      * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph
@@ -174,22 +166,16 @@ public interface EntityManagerFactory {
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    /**
-     * Add a new index to the application for scale
-     * @param suffix unique indentifier for additional index
-     * @param shards number of shards
-     * @param replicas number of replicas
-     * @param writeConsistency only "one, quorum, or all"
-     */
-    public void addIndex(final String suffix,final int shards,final int replicas, final String writeConsistency);
 
     public Health getEntityStoreHealth();
 
     public Health getIndexHealth();
 
+    void initializeManagementIndex();
+
     public interface ProgressObserver {
 
-     public void onProgress( EntityRef entity);
+        public void onProgress(EntityRef entity);
 
     }
 }

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,7 +71,7 @@ public class OrganizationIT {
         //createOrganization( orgName, user, false );
         assertNotNull( organization );
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser(
             organization.getOwner().getUuid() );
         assertEquals("wrong number of organizations", 1, userOrganizations.size());
@@ -83,7 +84,7 @@ public class OrganizationIT {
         assertNotNull(applicationInfo.getId());
 
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(applicationInfo.getId());
 
         Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getOrganization().getUuid() );
         assertEquals( "wrong number of applications", 1, applications.size() );
@@ -97,7 +98,7 @@ public class OrganizationIT {
 
         setup.getMgmtSvc().activateOrganization( organization2 );
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( organization.getOwner().getUuid().toString(), "test" );
         assertNotNull( u );
@@ -215,7 +216,7 @@ public class OrganizationIT {
         OrganizationInfo organization2 = setup.getMgmtSvc().createOrganization(uniqueOrg(), user, false );
         assertNotNull( organization2 );
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser( user.getUuid() );
         assertEquals( "wrong number of organizations", 2, userOrganizations.size() );
 

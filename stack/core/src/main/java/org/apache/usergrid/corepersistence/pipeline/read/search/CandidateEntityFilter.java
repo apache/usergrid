@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 import java.util.*;
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
@@ -54,13 +55,16 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
 
 
     @Inject
     public CandidateEntityFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                  final EntityIndexFactory entityIndexFactory ) {
+                                  final EntityIndexFactory entityIndexFactory,
+                                  final IndexLocationStrategyFactory indexLocationStrategyFactory) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
     }
 
 
@@ -80,8 +84,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
 
-        final ApplicationEntityIndex applicationIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex applicationIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         //buffer them to get a page size we can make 1 network hop
         final Observable<FilterResult<Entity>> searchIdSetObservable = candidateResultsObservable.buffer( pipelineContext.getLimit() )

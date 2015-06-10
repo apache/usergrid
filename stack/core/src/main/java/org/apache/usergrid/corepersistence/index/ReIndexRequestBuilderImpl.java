@@ -62,7 +62,7 @@ public class ReIndexRequestBuilderImpl implements ReIndexRequestBuilder {
             this.withCollectionName = Optional.absent();
         }
         else {
-            this.withCollectionName = Optional.fromNullable( CpNamingUtils.getEdgeTypeFromCollectionName( collectionName ) );
+            this.withCollectionName = Optional.fromNullable( CpNamingUtils.getEdgeTypeFromCollectionName( collectionName.toLowerCase() ) );
         }
         return this;
     }

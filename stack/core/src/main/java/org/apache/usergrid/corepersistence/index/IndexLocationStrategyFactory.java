@@ -17,34 +17,19 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.corepersistence.index;
 
-import rx.Observable;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 
 /**
- * Classy class class.
+ * Retrieve index locations by app scope
  */
-public interface IndexRefreshCommand {
-
-    Observable<IndexRefreshCommandInfo> execute(IndexAlias alias, String[] indexes);
-
-    class IndexRefreshCommandInfo{
-        private final boolean hasFinished;
-        private final long executionTime;
-
-        public IndexRefreshCommandInfo(boolean hasFinished, long executionTime){
-            this.hasFinished = hasFinished;
-            this.executionTime = executionTime;
-        }
-
-        public boolean hasFinished() {
-            return hasFinished;
-        }
-
-        public long getExecutionTime() {
-            return executionTime;
-        }
-    }
+public interface IndexLocationStrategyFactory {
+    /**
+     * given app scope find the location strategy
+     * @param applicationScope
+     * @return
+     */
+    IndexLocationStrategy getIndexLocationStrategy(ApplicationScope applicationScope);
 }
-
-

@@ -199,7 +199,7 @@ public class RolesServiceIT extends AbstractServiceIT {
         ServiceResults results = app.invokeService( ServiceAction.DELETE, "roles", "manager" );
         assertEquals( 1, results.size() );
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(app.getId());
 
         // check role is gone
         Role role = app.get( app.getAlias( "role", "manager" ), Role.class );

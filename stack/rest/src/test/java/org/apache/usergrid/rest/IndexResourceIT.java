@@ -20,8 +20,10 @@
 
 package org.apache.usergrid.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.Ignore;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -32,13 +34,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+
+import static org.junit.Assert.assertNotNull;
+
 
 /**
  * test index creation
  */
-public class IndexResourceIT extends AbstractRestIT {
+public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
 
 
     @Rule
@@ -49,34 +57,67 @@ public class IndexResourceIT extends AbstractRestIT {
     public IndexResourceIT(){
 
     }
-
-    @Ignore( "will finish when tests are working from rest" )
     @Test
+    public void testCaseReindexEndpoint() {
+
+        //Create Collection
+        Map payload = new HashMap<>(  );
+        payload.put( "name","wazer wifle!!" );
+        ApiResponse collectionResponse = clientSetup.getRestClient()
+            .pathResource( getOrgAppPath( "storelatlons" ) ).post( payload );
+
+        assertNotNull( collectionResponse );
+
+        //try reindex endpoint with ALl mixed case characters
+        Token superUserToken = clientSetup.getRestClient().management().token().get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
+
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token",superUserToken.getAccessToken());
+        ApiResponse result = clientSetup.getRestClient()
+            .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/StOrElaTloNs" )
+            .post( false, ApiResponse.class, null, queryParameters, true );
+
+        assertNotNull(result);
+
+        //try the reindex endpoint with all lowercase Characters
+        queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        result = clientSetup.getRestClient()
+            .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/storelatlons" )
+            .post( false, ApiResponse.class,null,queryParameters,true);
+
+        assertNotNull( result );
+
+    }
+    @Test
+    @Ignore
     public void TestAddIndex() throws Exception{
 
-        String superToken = superAdminToken();
 
         Map<String, Object> data = new HashMap<String, Object>();
         data.put( "replicas", 0 );
         data.put( "shards", 1 );
         data.put( "writeConsistency", "one" );
 
-        UUID appId = this.context.getAppUuid();
+        String appId = this.clientSetup.getAppUuid();
 
         // change the password as admin. The old password isn't required
-        JsonNode node = null;
+        org.apache.usergrid.rest.test.resource2point0.model.ApiResponse node = null;
         try {
-            node = mapper.readTree(resource().path("/system/index/" + appId)
-                    .queryParam("access_token", superToken)
-                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE)
-                    .post(String.class, data));
+
+            WebResource resource = this.clientSetup.getRestClient().pathResource("/system/index/" + appId).getResource();
+
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword() );
+            resource.addFilter( httpBasicAuthFilter );
+
+            node = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .get( org.apache.usergrid.rest.test.resource2point0.model.ApiResponse.class);
         } catch (Exception e) {
             LOG.error("failed", e);
             fail(e.toString());
         }
-        assertNull( getError( node ) );
-
-        refreshIndex("test-organization", "test-app");
+        assertNotNull( node );
 
     }
 }
