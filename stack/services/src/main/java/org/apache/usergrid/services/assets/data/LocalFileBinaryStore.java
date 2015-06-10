@@ -17,6 +17,16 @@
 package org.apache.usergrid.services.assets.data;
 
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -25,22 +35,21 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.utils.StringUtils;
-
-import org.apache.commons.io.FileUtils;
-
 
 /** A binary store implementation using the local file system */
 public class LocalFileBinaryStore implements BinaryStore {
 
+    private Logger LOG = LoggerFactory.getLogger( LocalFileBinaryStore.class );
+
     private String reposLocation = FileUtils.getTempDirectoryPath();
+
+    private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
 
     @Autowired
     private Properties properties;
+
+    @Autowired
+    private EntityManagerFactory emf;
 
     /** Control where to store the file repository. In the system's temp dir by default. */
     public void setReposLocation( String reposLocation ) {
@@ -69,37 +78,43 @@ public class LocalFileBinaryStore implements BinaryStore {
 
         FileUtils.copyInputStreamToFile( inputStream, file );
 
-        long maxSizeBytes = 50 * FileUtils.ONE_MB;
         long size = FileUtils.sizeOf( file );
 
+        // determine max size file allowed, default to 50mb
+        long maxSizeBytes = 50 * FileUtils.ONE_MB;
         String maxSizeMbString = properties.getProperty( "usergrid.binary.max-size-mb", "50" );
-        Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
-
-
-        if ( StringUtils.isNumeric( maxSizeMbString )) {
+        if (StringUtils.isNumeric( maxSizeMbString )) {
             maxSizeBytes = Long.parseLong( maxSizeMbString ) * FileUtils.ONE_MB;
         }
 
+        // always allow files up to 5mb
+        if (maxSizeBytes < 5 * FileUtils.ONE_MB ) {
+            maxSizeBytes = 5 * FileUtils.ONE_MB;
+        }
+
+        EntityManager em = emf.getEntityManager( appId );
+        Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
+
         if ( size > maxSizeBytes ) {
             try {
-                fileMetadata.put( "error", "Asset size " + file.length()
-                    + " is larger than max size of " + maxSizeBytes );
-                //em.update( entity );
-                //tempFile.delete();
+                fileMetadata.put( "error", "Asset size " + size
+                        + " is larger than max size of " + maxSizeBytes );
+                em.update( entity );
 
             } catch ( Exception e ) {
-                //LOG.error( "Error updating entity with error message", e);
+                LOG.error( "Error updating entity with error message", e);
             }
-
+            return;
         }
-        else {
-            fileMetadata.put( AssetUtils.CONTENT_LENGTH, size );
-            fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
 
-            // if we were successful, write the mime type
-            if ( file.exists() ) {
-                AssetMimeHandler.get().getMimeType( entity, file );
-            }
+        fileMetadata.put( AssetUtils.CONTENT_LENGTH, size );
+        fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
+        fileMetadata.put( AssetUtils.E_TAG, RandomStringUtils.randomAlphanumeric( 10 ) );
+
+        try {
+            em.update( entity );
+        } catch (Exception e) {
+            throw new IOException("Unable to update entity filedata", e);
         }
     }
 

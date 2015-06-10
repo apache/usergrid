@@ -71,7 +71,10 @@ public interface ManagementService {
     public ApplicationInfo createApplication( UUID organizationId, String applicationName,
                                               Map<String, Object> properties ) throws Exception;
 
-    public OrganizationInfo createOrganization( String organizationName, UserInfo user, boolean activated )
+    public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
+            throws Exception;
+
+    public OrganizationInfo createOrganization(UUID orgUuid, String organizationName, UserInfo user, boolean activated)
             throws Exception;
 
     public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
