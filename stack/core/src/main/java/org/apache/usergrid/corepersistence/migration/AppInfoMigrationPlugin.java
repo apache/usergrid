@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.*;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -211,7 +212,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         final ApplicationScope managementAppScope = getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         final EntityCollectionManager managementCollectionManager = entityCollectionManagerFactory.createCollectionManager(managementAppScope);
 
-        Observable<Edge> edgesObservable = getApplicationInfoEdges();
+        Observable<Edge> edgesObservable = getApplicationInfoEdges(appId);
         //get the graph for all app infos
         Observable<org.apache.usergrid.persistence.model.entity.Entity> entityObs =
                 edgesObservable.flatMap(edge -> {
@@ -275,18 +276,17 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         return entityObs;
     }
 
-    Observable<Edge> edgesObservable;
-    public Observable<Edge> getApplicationInfoEdges() {
+    public Observable<Edge> getApplicationInfoEdges(final UUID applicationId) {
         final ApplicationScope managementAppScope = getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         final GraphManager gm = graphManagerFactory.createEdgeManager(managementAppScope);
 
         String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.APPLICATION_INFOS);
 
 
-        final SimpleSearchByEdgeType simpleSearchByEdgeType =  new SimpleSearchByEdgeType(
-            CpNamingUtils.generateApplicationId(CpNamingUtils.MANAGEMENT_APPLICATION_ID), edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+        final SimpleSearchByEdge simpleSearchByEdgeType =  new SimpleSearchByEdge(
+            CpNamingUtils.generateApplicationId(CpNamingUtils.MANAGEMENT_APPLICATION_ID), edgeType, CpNamingUtils.generateApplicationId( applicationId ), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
             Optional.absent());
-        edgesObservable = edgesObservable !=null ? edgesObservable : gm.loadEdgesFromSource( simpleSearchByEdgeType );
-        return edgesObservable;
+
+        return gm.loadEdgeVersions(simpleSearchByEdgeType  );
     }
 }

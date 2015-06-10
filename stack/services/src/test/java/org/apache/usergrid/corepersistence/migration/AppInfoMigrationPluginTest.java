@@ -31,8 +31,13 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,10 +48,16 @@ import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.apache.usergrid.TestHelper.*;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionSearchEdge;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateApplicationId;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeTypeFromCollectionName;
 import static org.junit.Assert.*;
 
 
@@ -86,6 +97,9 @@ public class AppInfoMigrationPluginTest {
 
         List<UUID> appIds = new ArrayList<>();
 
+        /***
+         * Create all 10 apps in the new format
+         */
         for ( int i=0; i<10; i++ ) {
 
             UUID appId = setup.getMgmtSvc().createApplication(
@@ -121,6 +135,11 @@ public class AppInfoMigrationPluginTest {
         EntityManager systemAppEm = setup.getEmf().getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
 
         int count = 0;
+
+        /**
+         * Now to ensure the process is idempotent, we "move" half of our app infos into the old system and remove them.
+         * Once they're migrated, we should get all 10
+         */
         for ( UUID appId : appIds ) {
 
             final Entity applicationInfo = getApplicationInfo( appId );
@@ -151,7 +170,7 @@ public class AppInfoMigrationPluginTest {
 
         // test that applications are now broken
 
-        checkApplicationsBroken(orgName, deletedApps);
+        checkApplicationsBroken(deletedApps);
 
         // run the migration, which should restore the application_info entities
 
@@ -173,15 +192,17 @@ public class AppInfoMigrationPluginTest {
 
         final Results applicationInfoResults =  rootEm.searchCollection(
             new SimpleEntityRef("application", mgmtAppId), "application_infos", Query.fromQL("select *"));
-        int appCount =  Observable.from(applicationInfoResults.getEntities()).filter(entity -> !entity.getName().startsWith("org.") && !entity.getName().startsWith("usergrid")).toList().toBlocking().last().size();
-        assertEquals( appIds.size() - deletedApps.size(),appCount );
+        int appCount =  Observable.from( applicationInfoResults.getEntities() ).filter(
+            entity -> !entity.getName().startsWith( "org." ) && !entity.getName().startsWith( "usergrid" ) ).doOnNext(
+            entity -> logger.info("counting entity {}", entity) ).count().toBlocking().last();
+        assertEquals( appIds.size() ,appCount );
 
         // test that 10 applications are no longer broken
 
         checkApplicationsOk( orgName );
     }
 
-    private void checkApplicationsBroken( String orgName, List<Entity> deletedApps ) throws Exception {
+    private void checkApplicationsBroken( List<Entity> deletedApps ) throws Exception {
 
         logger.debug("\n\nChecking applications broken\n");
 
