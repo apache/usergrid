@@ -16,17 +16,13 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.corepersistence.index.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.IndexService;
-import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
-import org.apache.usergrid.corepersistence.index.ReIndexService;
-import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
 import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
@@ -146,8 +142,12 @@ public class CoreModule  extends AbstractModule {
 
         bind( ReIndexService.class).to( ReIndexServiceImpl.class );
 
+        bind( IndexLocationStrategyFactory.class ).to( IndexLocationStrategyFactoryImpl.class );
 
-        install( new GuicyFigModule( IndexProcessorFig.class ) );
+        install(new GuicyFigModule(IndexProcessorFig.class));
+
+        install(new GuicyFigModule(CoreIndexFig.class));
+
 
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );

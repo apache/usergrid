@@ -35,12 +35,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
@@ -50,7 +53,7 @@ import com.sun.jersey.api.json.JSONWithPadding;
 
 
 /**
- * Classy class class.
+ * system/index/otherstuff
  */
 @Component
 @Scope( "singleton" )
@@ -62,6 +65,7 @@ public class IndexResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( IndexResource.class );
     private static final String UPDATED_FIELD = "updated";
+
 
 
     public IndexResource() {
@@ -199,7 +203,7 @@ public class IndexResource extends AbstractContextResource {
 
 
     @RequireSystemAccess
-    @POST
+    @PUT
     @Path( "rebuild/management" )
     public JSONWithPadding rebuildInternalIndexesPut( final Map<String, Object> payload,
                                                       @QueryParam( "callback" ) @DefaultValue( "callback" )
@@ -217,7 +221,10 @@ public class IndexResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @POST
-    public JSONWithPadding addIndex( @Context UriInfo ui, Map<String, Object> config,
+    @Path(RootResource.APPLICATION_ID_PATH)
+    public JSONWithPadding addIndex( @Context UriInfo ui,
+                                     @PathParam( "applicationId" ) final String applicationIdStr,
+                                     Map<String, Object> config,
                                      @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
@@ -234,9 +241,14 @@ public class IndexResource extends AbstractContextResource {
         if ( !config.containsKey( "indexSuffix" ) ) {
             throw new IllegalArgumentException( "Please add an indexSuffix to your post" );
         }
+        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
 
+        if(appId == null){
+            throw new IllegalArgumentException("app id was not parsed");
+        }
 
-        emf.addIndex( config.get( "indexSuffix" ).toString(), ( int ) config.get( "shards" ),
+        EntityManager em = emf.getEntityManager(appId);
+        em.addIndex( config.get( "indexSuffix" ).toString(), ( int ) config.get( "shards" ),
             ( int ) config.get( "replicas" ), ( String ) config.get( "writeConsistency" ) );
         response.setAction( "Add index to alias" );
 
@@ -250,7 +262,8 @@ public class IndexResource extends AbstractContextResource {
 
 
     private ReIndexRequestBuilder createRequest() {
-        return createRequest();
+        //TODO: wire this up through spring, and in the future guice.
+        return new ReIndexRequestBuilderImpl();
     }
 
 

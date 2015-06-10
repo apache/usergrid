@@ -17,37 +17,47 @@
  *  * directory of this distribution.
  *
  */
-
 package org.apache.usergrid.persistence.index;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 /**
- * EntityIndex with aliases for multiple indexes
+ * location strategy for index 
  */
-public interface AliasedEntityIndex extends EntityIndex{
-
+public interface IndexLocationStrategy {
     /**
-     * Get the indexes for an alias
-     * @param aliasType name of alias
-     * @return list of index names
-     */
-    String[] getIndexes( final AliasType aliasType );
-
-    /**
-     * get all unique indexes
+     * get the alias name
      * @return
      */
-    String[] getUniqueIndexes();
+    IndexAlias getAlias();
 
     /**
-     * Add alias to index, will remove old index from write alias
-     * @param indexSuffix must be different than current index
+     * get index name from suffix
+     * @param suffix
+     * @return
      */
-    void addAlias( final String indexSuffix );
+    String getIndex( String suffix );
 
     /**
-     * type of alias
+     * return unique string
+     * @return
      */
-    enum AliasType {
-        Read, Write
-    }
+    String toString();
+
+    /**
+     * only used by search types
+     * @return
+     */
+    ApplicationScope getApplicationScope();
+
+    /**
+     * number of shards for default
+     * @return
+     */
+    int getNumberOfShards();
+
+    /**
+     * default replicas
+     * @return
+     */
+    int getNumberOfReplicas();
 }

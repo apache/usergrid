@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
-import org.apache.usergrid.persistence.index.impl.IndexAlias;
+import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 
 

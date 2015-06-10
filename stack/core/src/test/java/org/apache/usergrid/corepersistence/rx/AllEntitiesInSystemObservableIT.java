@@ -97,8 +97,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-
-        AtomicLong counter = new AtomicLong();
+        final AtomicLong counter = new AtomicLong();
         allEntitiesInSystemObservableImpl.getData().doOnNext( new Action1<EntityIdScope>() {
             @Override
             public void call( final EntityIdScope entityIdScope ) {
@@ -117,7 +116,6 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
                 }
             }
         } ).toBlocking().lastOrDefault( null );
-
 
         // there should now be no type1 or type2 entities
 

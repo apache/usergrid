@@ -142,8 +142,8 @@ public class QueueListener  {
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         LOG.info("QueueListener: Starting execute process.");
-        Meter meter = metricsService.getMeter(QueueListener.class, "queue");
-        com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "dequeue");
+        Meter meter = metricsService.getMeter(QueueListener.class, "execute.commit");
+        com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "execute.dequeue");
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         LOG.info("getting from queue {} ", queueName);
         QueueScope queueScope = new QueueScopeImpl( queueName ) {};

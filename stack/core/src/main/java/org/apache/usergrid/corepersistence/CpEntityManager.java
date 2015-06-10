@@ -34,6 +34,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -129,6 +133,7 @@ import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionTypeSearch;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createGraphOperationTimestamp;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getConnectionNameFromEdgeName;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
@@ -231,12 +236,13 @@ public class CpEntityManager implements EntityManager {
      * @param applicationId
      */
     public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
-                            final MetricsFactory metricsFactory, final EntityManagerFig entityManagerFig,
+                            final MetricsFactory metricsFactory,
+                            final EntityManagerFig entityManagerFig,
                             final PipelineBuilderFactory pipelineBuilderFactory ,
-                            final GraphManagerFactory graphManagerFactory,final UUID applicationId ) {
+                            final GraphManagerFactory graphManagerFactory,
+                            final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
-
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
@@ -263,53 +269,37 @@ public class CpEntityManager implements EntityManager {
 
         //Timer Setup
         this.metricsFactory = metricsFactory;
-        this.aggCounterTimer =this.metricsFactory.getTimer( CpEntityManager.class,
-            "cp.entity.get.aggregate.counters.timer" );
-        this.entCreateTimer =this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.create.timer" );
-        this.entCreateBatchTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.create.batch.timer");
-        this.esDeletePropertyTimer =this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.es.delete.property.timer");
-        this.entAddDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.add.dictionary.timer");
-        this.entAddDictionarySetTimer = this.metricsFactory.getTimer( CpEntityManager.class,
-            "cp.entity.add.dictionary.set.timer" );
-        this.entAddDictionaryMapTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.add.dictionary.map.timer");
-        this.entRemoveDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.remove.dictionary.timer");
-        this.entCreateRoleTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.create.role.timer");
-        this.entCreateRolePermissionsTimer =this.metricsFactory
-            .getTimer( CpEntityManager.class,
-                "cp.entity.create.role.permissions.timer" );
-        this.entGrantGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.grant.group.permission.timer");
-        this.entRevokeGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.revoke.group.permission.timer");
-        this.entIncrementAggregateCountersTimer =this.metricsFactory.getTimer( CpEntityManager.class,
-                "cp.entity.increment.aggregate.counters.timer" );
-        this.entGetAggregateCountersQueryTimer = this.metricsFactory.getTimer( CpEntityManager.class,
-                "cp.entity.get.aggregate.counters.query.timer" );
-        this.entGetEntityCountersTimer = this.metricsFactory.getTimer( CpEntityManager.class,
-                "cp.entity.get.entity.counters.timer" );
-        this.esIndexEntityCollectionTimer = this.metricsFactory
-            .getTimer( CpEntityManager.class, "cp.entity.es.index.entity.to.collection.timer" );
-        this.entRevokeRolePermissionsTimer =
-            this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.revoke.role.permissions.timer");
-        this.entGetRepairedEntityTimer = this.metricsFactory
-            .getTimer( CpEntityManager.class, "get.repaired.entity.timer" );
+        this.aggCounterTimer = this.metricsFactory.getTimer(CpEntityManager.class, "aggregate_counters.get");
+        this.entIncrementAggregateCountersTimer = this.metricsFactory.getTimer(CpEntityManager.class, "aggregate_counters.increment");
+        this.entGetAggregateCountersQueryTimer = this.metricsFactory.getTimer(CpEntityManager.class, "aggregate_counters_query.get");
 
-        this.updateEntityMeter =this.metricsFactory.getMeter(CpEntityManager.class,"cp.entity.update.meter");
-        this.updateEntityTimer =this.metricsFactory.getTimer(CpEntityManager.class, "cp.entity.update.timer");
+        this.entCreateTimer = this.metricsFactory.getTimer(CpEntityManager.class, "entity.create");
+        this.updateEntityMeter = this.metricsFactory.getMeter(CpEntityManager.class, "entity.update");
+        this.updateEntityTimer = this.metricsFactory.getTimer(CpEntityManager.class, "entity.update");
+
+        this.entCreateBatchTimer = this.metricsFactory.getTimer(CpEntityManager.class, "batch.create");
+
+        this.esDeletePropertyTimer = this.metricsFactory.getTimer(CpEntityManager.class, "es_property.delete");
+        this.entAddDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary.add");
+        this.entAddDictionarySetTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary_set.add");
+        this.entAddDictionaryMapTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary_map.add");
+        this.entRemoveDictionaryTimer = this.metricsFactory.getTimer(CpEntityManager.class, "dictionary.remove");
+
+        this.entCreateRoleTimer = this.metricsFactory.getTimer(CpEntityManager.class, "role.create");
+        this.entRevokeRolePermissionsTimer = this.metricsFactory.getTimer(CpEntityManager.class, "role.revoke_permissions");
+        this.entCreateRolePermissionsTimer = this.metricsFactory.getTimer(CpEntityManager.class, "role.create_permissions");
+
+        this.entGrantGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class, "group.grant_permission");
+        this.entRevokeGroupPermissionTimer = this.metricsFactory.getTimer(CpEntityManager.class, "group.revoke_permission");
+
+        this.entGetEntityCountersTimer = this.metricsFactory.getTimer(CpEntityManager.class, "entity_counters.get");
+        this.esIndexEntityCollectionTimer = this.metricsFactory.getTimer(CpEntityManager.class, "es.index_entity_to_collection");
+        this.entGetRepairedEntityTimer = this.metricsFactory.getTimer(CpEntityManager.class, "repaired_entity.get");
+
 
         // set to false for now
         this.skipAggregateCounters = false;
-
-
     }
-
-
 
 
     /**
@@ -689,11 +679,8 @@ public class CpEntityManager implements EntityManager {
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
-        //for devices we don't have time uuids
-        UUID timeUUID =  UUIDUtils.isTimeBased(entityRef.getUuid()) ? entityRef.getUuid() : UUIDUtils.newTimeUUID();
-
         //Step 1 & 2 of delete
-        return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, timeUUID.timestamp() ) );
+        return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, createGraphOperationTimestamp() ) );
 
     }
 
@@ -1740,7 +1727,7 @@ public class CpEntityManager implements EntityManager {
             getRolePermissionsKey( roleName ), permission, ByteBuffer.allocate( 0 ), timestamp );
         //Adding graphite metrics
         Timer.Context timeGrantRolePermission = this.metricsFactory.getTimer(CpEntityManager.class,
-            "cp.entity.create.role.permission.timer").time();
+            "role.create_permission").time();
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
         timeGrantRolePermission.stop();
     }
@@ -2909,6 +2896,20 @@ public class CpEntityManager implements EntityManager {
     }
 
 
+    @Override
+    public void addIndex(final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
+        managerCache.getEntityIndex(applicationScope).addIndex( indexSuffix, shards, replicas, writeConsistency);
+    }
+
+    /**
+     * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
+     */
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex() {
+
+        // refresh special indexes without calling EntityManager refresh because stack overflow
+
+        return managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
+    }
 
 
 }

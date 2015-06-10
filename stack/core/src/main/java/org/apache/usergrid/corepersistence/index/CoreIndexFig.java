@@ -17,34 +17,30 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.corepersistence.index;
 
-import rx.Observable;
+import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.GuicyFig;
+import org.safehaus.guicyfig.Key;
 
 /**
- * Classy class class.
+ * configuration for index in core
  */
-public interface IndexRefreshCommand {
+public interface CoreIndexFig extends GuicyFig {
 
-    Observable<IndexRefreshCommandInfo> execute(IndexAlias alias, String[] indexes);
+    String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS = "elasticsearch.management_number_shards";
 
-    class IndexRefreshCommandInfo{
-        private final boolean hasFinished;
-        private final long executionTime;
+    String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS = "elasticsearch.management_number_replicas";
 
-        public IndexRefreshCommandInfo(boolean hasFinished, long executionTime){
-            this.hasFinished = hasFinished;
-            this.executionTime = executionTime;
-        }
+    @Default( "6" )
+    @Key( ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS )
+    int getManagementNumberOfShards();
 
-        public boolean hasFinished() {
-            return hasFinished;
-        }
+    @Default( "1" )
+    @Key( ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS )
+    int getManagementNumberOfReplicas();
 
-        public long getExecutionTime() {
-            return executionTime;
-        }
-    }
+    @Default( "usergrid_management" )
+    @Key( "elasticsearch.managment_index" )
+    String getManagementAppIndexName();
 }
-
-

@@ -96,7 +96,7 @@ public class EsIndexCacheImpl implements IndexCache {
      * Get indexes for an alias
      */
     @Override
-    public String[] getIndexes(IndexAlias alias, AliasedEntityIndex.AliasType aliasType) {
+    public String[] getIndexes(IndexAlias alias, EntityIndex.AliasType aliasType) {
         String[] indexes;
         try {
             indexes = aliasIndexCache.get( getAliasName( alias, aliasType ) );
@@ -125,8 +125,8 @@ public class EsIndexCacheImpl implements IndexCache {
      * @param aliasType
      * @return
      */
-    private String getAliasName( IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
-        return aliasType == AliasedEntityIndex.AliasType.Read ? alias.getReadAlias() : alias.getWriteAlias();
+    private String getAliasName( IndexAlias alias, EntityIndex.AliasType aliasType ) {
+        return aliasType == EntityIndex.AliasType.Read ? alias.getReadAlias() : alias.getWriteAlias();
     }
 
 

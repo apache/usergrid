@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
@@ -34,6 +35,7 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createColle
 
 public class SearchCollectionFilter extends AbstractElasticSearchFilter {
 
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final String collectionName;
     private final String entityType;
 
@@ -46,11 +48,14 @@ public class SearchCollectionFilter extends AbstractElasticSearchFilter {
      * @param entityType The entity type
      */
     @Inject
-    public SearchCollectionFilter( final EntityIndexFactory entityIndexFactory, final MetricsFactory metricsFactory,
+    public SearchCollectionFilter( final EntityIndexFactory entityIndexFactory,
+                                   final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                   final MetricsFactory metricsFactory,
                                    @Assisted( "query" ) final String query,
                                    @Assisted( "collectionName" ) final String collectionName,
                                    @Assisted( "entityType" ) final String entityType ) {
-        super( entityIndexFactory, metricsFactory, query );
+        super( entityIndexFactory, metricsFactory, indexLocationStrategyFactory, query );
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.collectionName = collectionName;
         this.entityType = entityType;
     }

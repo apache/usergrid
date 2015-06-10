@@ -23,9 +23,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -38,44 +36,52 @@ import com.google.inject.Inject;
 public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
     private final IndexFig config;
+    private final IndexCache indexCache;
     private final EsProvider provider;
-    private final IndexBufferConsumer indexBatchBufferProducer;
+    private final IndexBufferConsumer indexBufferConsumer;
     private final MetricsFactory metricsFactory;
-    private final MapManagerFactory mapManagerFactory;
-    private final IndexFig indexFig;
-    private final AliasedEntityIndex entityIndex;
-    private final IndexIdentifier indexIdentifier;
+    private final IndexRefreshCommand refreshCommand;
 
-    private LoadingCache<ApplicationScope, ApplicationEntityIndex> eiCache =
-        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, ApplicationEntityIndex>() {
-            public ApplicationEntityIndex load( ApplicationScope scope ) {
-                return new EsApplicationEntityIndexImpl(
-                    scope,entityIndex,config, indexBatchBufferProducer, provider, metricsFactory, mapManagerFactory, indexFig, indexIdentifier
+    private LoadingCache<IndexLocationStrategy, EntityIndex> eiCache =
+        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<IndexLocationStrategy, EntityIndex>() {
+            public EntityIndex load( IndexLocationStrategy locationStrategy ) {
+                EntityIndex index =  new EsEntityIndexImpl(
+                    provider,
+                    indexCache,
+                    config,
+                    refreshCommand,
+                    metricsFactory,
+                    indexBufferConsumer,
+                    locationStrategy
                 );
+                index.initialize();
+                return index;
             }
         } );
 
     @Inject
-    public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider,
-                                     final IndexBufferConsumer indexBatchBufferProducer,
-                                     final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
-                                     final IndexFig indexFig, final AliasedEntityIndex entityIndex, final IndexIdentifier indexIdentifier ){
-        this.config = config;
+    public EsEntityIndexFactoryImpl( final IndexFig indexFig,
+                                     final IndexCache indexCache,
+                                     final EsProvider provider,
+                                     final IndexBufferConsumer indexBufferConsumer,
+                                     final MetricsFactory metricsFactory,
+                                     final IndexRefreshCommand refreshCommand
+
+    ){
+        this.config = indexFig;
+        this.indexCache = indexCache;
         this.provider = provider;
-        this.indexBatchBufferProducer = indexBatchBufferProducer;
+        this.indexBufferConsumer = indexBufferConsumer;
         this.metricsFactory = metricsFactory;
-        this.mapManagerFactory = mapManagerFactory;
-        this.indexFig = indexFig;
-        this.entityIndex = entityIndex;
-        this.indexIdentifier = indexIdentifier;
+        this.refreshCommand = refreshCommand;
     }
 
 
 
     @Override
-    public ApplicationEntityIndex createApplicationEntityIndex(final ApplicationScope appScope) {
+    public EntityIndex createEntityIndex(final IndexLocationStrategy indexLocationStrategy) {
         try{
-            return eiCache.get(appScope);
+            return eiCache.get(indexLocationStrategy);
         }catch (ExecutionException ee){
             throw new RuntimeException(ee);
         }

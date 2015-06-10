@@ -40,7 +40,7 @@ import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -84,6 +84,9 @@ public class IndexServiceTest {
 
     @Inject
     public EntityIndexFactory entityIndexFactory;
+
+    @Inject
+    public IndexLocationStrategyFactory indexLocationStrategyFactory;
 
     @Inject
     public  IndexFig indexFig;
@@ -172,13 +175,13 @@ public class IndexServiceTest {
 
         assertEquals(1, batches);
 
-        final ApplicationEntityIndex applicationEntityIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex EntityIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         //query until the collection edge is available
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
-        final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
+        final CandidateResults collectionResults = getResults( EntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1);
 
         assertEquals( 1, collectionResults.size() );
@@ -189,7 +192,7 @@ public class IndexServiceTest {
         //query until the connection edge is available
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
 
-        final CandidateResults connectionResults = getResults( applicationEntityIndex, connectionSearchEdge,
+        final CandidateResults connectionResults = getResults( EntityIndex, connectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
         assertEquals( 1, connectionResults.size() );
@@ -259,14 +262,14 @@ public class IndexServiceTest {
 
         assertEquals(expectedSize, batches);
 
-        final ApplicationEntityIndex applicationEntityIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex EntityIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
 
         //query until it's available
-        final CandidateResults collectionResults = getResults( applicationEntityIndex, collectionSearchEdge,
+        final CandidateResults collectionResults = getResults( EntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
         assertEquals( 1, collectionResults.size() );
@@ -278,7 +281,7 @@ public class IndexServiceTest {
 
 
         //query until it's available
-        final CandidateResults connectionResults = getResults( applicationEntityIndex, connectionSearchEdge,
+        final CandidateResults connectionResults = getResults( EntityIndex, connectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
         assertEquals( 1, connectionResults.size() );
@@ -290,7 +293,7 @@ public class IndexServiceTest {
 
 
         //query until it's available
-        final CandidateResults lastConnectionResults = getResults( applicationEntityIndex, lastConnectionSearchEdge,
+        final CandidateResults lastConnectionResults = getResults( EntityIndex, lastConnectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ),  1 );
 
         assertEquals( 1, lastConnectionResults.size() );
@@ -313,8 +316,8 @@ public class IndexServiceTest {
         ApplicationScope applicationScope =
             new ApplicationScopeImpl( new SimpleId( UUID.randomUUID(), "application" ) );
 
-        final ApplicationEntityIndex applicationEntityIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex EntityIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -341,7 +344,7 @@ public class IndexServiceTest {
         assertEquals( 1, indexOperationMessage.getDeIndexRequests().size() );
 
         //ensure that no edges remain
-        final CandidateResults connectionResultsEmpty = applicationEntityIndex.search( connectionSearchEdge,
+        final CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
             SearchTypes.fromTypes( "things" ),"select *",10,0 );
 
         assertEquals(0,connectionResultsEmpty.size());
@@ -353,8 +356,8 @@ public class IndexServiceTest {
         ApplicationScope applicationScope =
             new ApplicationScopeImpl( new SimpleId( UUID.randomUUID(), "application" ) );
 
-        final ApplicationEntityIndex applicationEntityIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex EntityIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -373,14 +376,14 @@ public class IndexServiceTest {
 
         //query until results are available for collections
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
-        getResults( applicationEntityIndex, collectionSearchEdge,
+        getResults( EntityIndex, collectionSearchEdge,
             SearchTypes.fromTypes( testEntity.getId().getType() ), 1 );
 
         for(int i = 0; i < edgeCount; i++) {
             //query until results are available for connections
 
             final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearchEdges.get( i ) );
-            getResults( applicationEntityIndex, connectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
+            getResults( EntityIndex, connectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
                  1 );
         }
 
@@ -399,7 +402,7 @@ public class IndexServiceTest {
             assertEquals( 1, indexOperationMessage.getDeIndexRequests().size() );
 
             //ensure that no edges remain
-            final CandidateResults connectionResultsEmpty = applicationEntityIndex.search( connectionSearchEdge,
+            final CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
                 SearchTypes.fromTypes( "things" ),"select *",10,0 );
 
             assertEquals(0,connectionResultsEmpty.size());
@@ -419,8 +422,8 @@ public class IndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        final ApplicationEntityIndex applicationEntityIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex EntityIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         final Edge collectionEdge =
             createEntityandCollectionEdge( applicationScope, graphManager, testEntity );
@@ -437,12 +440,12 @@ public class IndexServiceTest {
 
         //query until results are available for collections
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
-        getResults( applicationEntityIndex, collectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
+        getResults( EntityIndex, collectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
             1 );
 
         //query until results are available for connections
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
-        getResults( applicationEntityIndex, connectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
+        getResults( EntityIndex, connectionSearchEdge, SearchTypes.fromTypes( testEntity.getId().getType() ),
             1 );
 
         return connectionSearch;
@@ -492,7 +495,7 @@ public class IndexServiceTest {
     }
 
 
-    private CandidateResults getResults( final ApplicationEntityIndex applicationEntityIndex,
+    private CandidateResults getResults( final EntityIndex EntityIndex,
                                          final SearchEdge searchEdge, final SearchTypes searchTypes,
                                          final int expectedSize ) {
         final int attempts = 100;
@@ -500,7 +503,7 @@ public class IndexServiceTest {
         String ql = "select *";
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                applicationEntityIndex.search( searchEdge, searchTypes, ql , 100, 0 );
+                EntityIndex.search( searchEdge, searchTypes, ql , 100, 0 );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

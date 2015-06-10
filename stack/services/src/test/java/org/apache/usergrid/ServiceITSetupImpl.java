@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 
 import java.util.Properties;
+import java.util.UUID;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
@@ -180,8 +181,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
         return appInfoMigrationPlugin;
     }
 
-    @Override
-    public void refreshIndex(){
-        this.getEntityIndex().refresh();
+    public void refreshIndex(UUID appid){
+        this.getEntityIndex().refresh(appid);
     }
 }

@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,11 +36,6 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -55,13 +52,16 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
 
 
     @Inject
     public CandidateIdFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                              final EntityIndexFactory entityIndexFactory ) {
+                              final EntityIndexFactory entityIndexFactory,
+                              final IndexLocationStrategyFactory indexLocationStrategyFactory) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
     }
 
 
@@ -80,8 +80,8 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
 
-        final ApplicationEntityIndex applicationIndex =
-            entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex applicationIndex =
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
 
         final Observable<FilterResult<Id>> searchIdSetObservable =
             filterResultObservable.buffer( pipelineContext.getLimit() ).flatMap( candidateResults -> {
