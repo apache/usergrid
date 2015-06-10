@@ -272,16 +272,14 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
           return $rootScope.$broadcast('alert', 'error',
             'error creating collection');
         }
-        entity.destroy(function() {
-          self.getTopCollections(function(err, collections) {
-            if (err) {
-              $rootScope.$broadcast('alert', 'error',
-                'error creating collection');
-            } else {
-              $rootScope.$broadcast('collection-created',
-                collections);
-            }
-          });
+        self.getTopCollections(function(err, collections) {
+          if (err) {
+            $rootScope.$broadcast('alert', 'error',
+              'error creating collection');
+          } else {
+            $rootScope.$broadcast('collection-created',
+              collections);
+          }
         });
       });
     },
