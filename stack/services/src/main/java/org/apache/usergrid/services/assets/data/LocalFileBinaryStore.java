@@ -22,17 +22,35 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.Entity;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 /** A binary store implementation using the local file system */
 public class LocalFileBinaryStore implements BinaryStore {
 
+    private Logger LOG = LoggerFactory.getLogger( LocalFileBinaryStore.class );
+
     private String reposLocation = FileUtils.getTempDirectoryPath();
+
+    private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
+
+    @Autowired
+    private Properties properties;
+
+    @Autowired
+    private EntityManagerFactory emf;
 
 
     /** Control where to store the file repository. In the system's temp dir by default. */
@@ -64,9 +82,42 @@ public class LocalFileBinaryStore implements BinaryStore {
 
         long size = FileUtils.sizeOf( file );
 
+        // determine max size file allowed, default to 50mb
+        long maxSizeBytes = 50 * FileUtils.ONE_MB;
+        String maxSizeMbString = properties.getProperty( "usergrid.binary.max-size-mb", "50" );
+        if (StringUtils.isNumeric( maxSizeMbString )) {
+            maxSizeBytes = Long.parseLong( maxSizeMbString ) * FileUtils.ONE_MB;
+        }
+
+        // always allow files up to 5mb
+        if (maxSizeBytes < 5 * FileUtils.ONE_MB ) {
+            maxSizeBytes = 5 * FileUtils.ONE_MB;
+        }
+
+        EntityManager em = emf.getEntityManager( appId );
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
+
+        if ( size > maxSizeBytes ) {
+            try {
+                fileMetadata.put( "error", "Asset size " + size
+                        + " is larger than max size of " + maxSizeBytes );
+                em.update( entity );
+
+            } catch ( Exception e ) {
+                LOG.error( "Error updating entity with error message", e);
+            }
+            return;
+        }
+
         fileMetadata.put( AssetUtils.CONTENT_LENGTH, size );
         fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
+        fileMetadata.put( AssetUtils.E_TAG, RandomStringUtils.randomAlphanumeric( 10 ) );
+
+        try {
+            em.update( entity );
+        } catch (Exception e) {
+            throw new IOException("Unable to update entity filedata", e);
+        }
 
         // if we were successful, write the mime type
         if ( file.exists() ) {

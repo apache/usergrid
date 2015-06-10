@@ -32,6 +32,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -49,33 +56,66 @@ public class IndexResourceIT extends AbstractRestIT {
     public IndexResourceIT(){
 
     }
-
-    @Ignore( "will finish when tests are working from rest" )
+//TODO: convert over and recheck intention of test.
+//    @Ignore( "will finish when tests are working from rest" )
+//    @Test
+//    public void TestAddIndex() throws Exception{
+//        String superToken = superAdminToken();
+//
+//        Map<String, Object> data = new HashMap<String, Object>();
+//        data.put( "replicas", 0 );
+//        data.put( "shards", 1 );
+//        data.put( "writeConsistency", "one" );
+//
+//        UUID appId = this.context.getAppUuid();
+//
+//        // change the password as admin. The old password isn't required
+//        JsonNode node = null;
+//        try {
+//            node = mapper.readTree(resource().path("/system/index/" + appId)
+//                    .queryParam("access_token", superToken)
+//                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE)
+//                    .post(String.class, data));
+//        } catch (Exception e) {
+//            LOG.error("failed", e);
+//            fail(e.toString());
+//        }
+//        assertNull( getError( node ) );
+//
+//        refreshIndex("test-organization", "test-app");
+//
+//    }
     @Test
-    public void TestAddIndex() throws Exception{
-        String superToken = superAdminToken();
+    public void testCaseReindexEndpoint() {
 
-        Map<String, Object> data = new HashMap<String, Object>();
-        data.put( "replicas", 0 );
-        data.put( "shards", 1 );
-        data.put( "writeConsistency", "one" );
+        //Create Collection
+        Map payload = new HashMap<>(  );
+        payload.put( "name","wazer wifle!!" );
+        Entity payloadEntity = new Entity( payload );
+        Entity collectionResponse = this.clientSetup.getRestClient().org( clientSetup.getOrganizationName() )
+                                                         .app( clientSetup.getAppName())
+                                                         .collection( "belp").post(payloadEntity);
 
-        UUID appId = this.context.getAppUuid();
+        assertNotNull( collectionResponse );
 
-        // change the password as admin. The old password isn't required
-        JsonNode node = null;
-        try {
-            node = mapper.readTree(resource().path("/system/index/" + appId)
-                    .queryParam("access_token", superToken)
-                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE)
-                    .post(String.class, data));
-        } catch (Exception e) {
-            LOG.error("failed", e);
-            fail(e.toString());
-        }
-        assertNull( getError( node ) );
+        //try reindex endpoint with ALl mixed case characters
+        Token superUserToken = clientSetup.getRestClient().management().token().post(new Token( clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword() )); //.get(new Token(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword()));
 
-        refreshIndex("test-organization", "test-app");
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token",superUserToken.getAccessToken());
+        org.apache.usergrid.rest.test.resource2point0.model.ApiResponse result = this.clientSetup.getRestClient().system()
+                                             .addToPath( "index" ).addToPath( "rebuild" )
+                                             .addToPath( clientSetup.getAppUuid() ).addToPath( "bElp" ).put();
+
+        assertNotNull(result);
+
+        queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token",superUserToken.getAccessToken());
+        result = this.clientSetup.getRestClient().system()
+                                 .addToPath( "index" ).addToPath( "rebuild" )
+                                 .addToPath( clientSetup.getAppUuid() ).addToPath( "belp" ).put();
+
+        assertNotNull( result );
 
     }
 }

@@ -178,7 +178,7 @@ public class IndexResource extends AbstractContextResource {
 
             public void run() {
 
-                logger.info( "Started rebuilding application {} in collection {}", appId, collectionName );
+                logger.info( "Started rebuilding application {} in collection {}", appId, collectionName.toLowerCase() );
 
                 try {
                     rebuildCollection( appId, collectionName, reverse );
@@ -188,11 +188,11 @@ public class IndexResource extends AbstractContextResource {
                     throw new RuntimeException("Error rebuilding collection");
                 }
 
-                logger.info( "Completed rebuilding application {} in collection {}", appId, collectionName );
+                logger.info( "Completed rebuilding application {} in collection {}", appId, collectionName.toLowerCase() );
             }
         };
 
-        rebuild.setName( String.format( "Index rebuild for app %s and collection %s", appId, collectionName ) );
+        rebuild.setName( String.format( "Index rebuild for app %s and collection %s", appId, collectionName.toLowerCase() ) );
         rebuild.setDaemon( true );
         rebuild.start();
 
@@ -294,9 +294,9 @@ public class IndexResource extends AbstractContextResource {
 
         };
 
-        logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
+        logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName.toLowerCase() );
 
-        emf.rebuildCollectionIndex(applicationId, collectionName, reverse, po);
+        emf.rebuildCollectionIndex(applicationId, collectionName.toLowerCase(), reverse, po);
         emf.refreshIndex();
     }
 
