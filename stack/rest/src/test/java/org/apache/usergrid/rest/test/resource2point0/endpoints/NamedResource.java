@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
+
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.representation.Form;
 import org.jclouds.openstack.v2_0.domain.Extension;
 
@@ -164,12 +166,12 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public ApiResponse  post(Map map) {
-        return post(true,ApiResponse.class,map,null);
+        return post(true,ApiResponse.class,map,null,false);
 
     }
     //For edge cases like Organizations and Tokens
     public ApiResponse  post(boolean useToken, Map map, QueryParameters queryParameters) {
-        return post(true,ApiResponse.class,map,queryParameters);
+        return post(useToken,ApiResponse.class,map,queryParameters,false);
 
     }
     /**
@@ -181,7 +183,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type) {
-        return post(true,type,null,null);
+        return post(true,type,null,null,false);
 
     }
 
@@ -195,7 +197,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Entity requestEntity) {
-        return post(true,type,requestEntity,null);
+        return post(true,type,requestEntity,null,false);
 
     }
 
@@ -209,7 +211,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Map requestEntity) {
-        return post(true,type,requestEntity,null);
+        return post(true,type,requestEntity,null,false);
 
     }
 
@@ -232,7 +234,7 @@ public class NamedResource implements UrlResource {
 
 
     //Used for empty posts
-    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters ) {
+    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters) {
         WebResource resource = getResource(useToken);
         resource = addParametersToResource(resource, queryParameters);
         WebResource.Builder builder = resource
@@ -248,6 +250,29 @@ public class NamedResource implements UrlResource {
 
     }
 
+    //Used for empty posts
+    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters, boolean useBasicAuthentication ) {
+        WebResource resource = getResource(useToken);
+        resource = addParametersToResource(resource, queryParameters);
+        WebResource.Builder builder = resource
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept( MediaType.APPLICATION_JSON );
+
+        if(entity!=null){
+            builder.entity(entity);
+        }
+
+        if(useBasicAuthentication){
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+            resource.addFilter( httpBasicAuthFilter );
+        }
+
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return builder
+            .post(gt.getRawClass());
+
+    }
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {

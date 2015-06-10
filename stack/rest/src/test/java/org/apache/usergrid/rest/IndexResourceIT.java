@@ -36,6 +36,12 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+
+import static org.junit.Assert.assertNotNull;
+
 
 /**
  * test index creation
@@ -43,14 +49,46 @@ import static org.junit.Assert.fail;
 public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
 
 
-
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
     //Used for all MUUserResourceITTests
     private Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
 
     public IndexResourceIT(){
 
     }
+    @Test
+    public void testCaseReindexEndpoint() {
 
+        //Create Collection
+        Map payload = new HashMap<>(  );
+        payload.put( "name","wazer wifle!!" );
+        ApiResponse collectionResponse = clientSetup.getRestClient()
+            .pathResource( getOrgAppPath( "storelatlons" ) ).post( payload );
+
+        assertNotNull( collectionResponse );
+
+        //try reindex endpoint with ALl mixed case characters
+        Token superUserToken = clientSetup.getRestClient().management().token().get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
+
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token",superUserToken.getAccessToken());
+        ApiResponse result = clientSetup.getRestClient()
+            .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/StOrElaTloNs" )
+            .post( false, ApiResponse.class, null, queryParameters, true );
+
+        assertNotNull(result);
+
+        //try the reindex endpoint with all lowercase Characters
+        queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        result = clientSetup.getRestClient()
+            .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/storelatlons" )
+            .post( false, ApiResponse.class,null,queryParameters,true);
+
+        assertNotNull( result );
+
+    }
     @Test
     @Ignore
     public void TestAddIndex() throws Exception{

@@ -115,10 +115,10 @@ public class ManagementResource extends AbstractContextResource {
 
 
     // names for metrics to be collected
-    private static final String SSO_TOKENS_REJECTED = "sso_tokens_rejected";
-    private static final String SSO_TOKENS_VALIDATED = "sso_tokens_validated";
-    private static final String SSO_CREATED_LOCAL_ADMINS = "sso_created_local_admins";
-    private static final String SSO_PROCESSING_TIME = "sso_processing_time";
+    private static final String SSO_TOKENS_REJECTED = "sso.tokens_rejected";
+    private static final String SSO_TOKENS_VALIDATED = "sso.tokens_validated";
+    private static final String SSO_CREATED_LOCAL_ADMINS = "sso.created_local_admins";
+    private static final String SSO_PROCESSING_TIME = "sso.processing_time";
 
     // usergrid configuration property names needed
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";

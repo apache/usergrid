@@ -88,10 +88,10 @@ public class JobSchedulerService extends AbstractScheduledService {
 
         MetricsFactory metricsFactory = injector.getInstance( MetricsFactory.class );
 
-        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
-        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
-        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
-        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
+        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "scheduler.job_execution_timer" );
+        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "scheduler.running_workers" );
+        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "scheduler.successful_jobs" );
+        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "scheduler.failed_jobs" );
 
         try {
             LOG.info( "Running one check iteration ..." );

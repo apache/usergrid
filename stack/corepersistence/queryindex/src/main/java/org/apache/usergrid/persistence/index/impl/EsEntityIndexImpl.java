@@ -109,8 +109,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             ImmutableMap.<String, Object>builder().put(IndexingUtils.ENTITY_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
 
-    private final Timer deleteApplicationTimer;
-    private final Meter deleteApplicationMeter;
     private final ApplicationScope applicationScope;
     private final SearchRequestBuilderStrategy searchRequest;
     private final SearchRequestBuilderStrategyV2 searchRequestBuilderStrategyV2;
@@ -118,7 +116,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private final long queryTimeout;
     private final IndexBufferConsumer indexBatchBufferProducer;
     private final FailureMonitorImpl failureMonitor;
-    private final Timer searchTimer;
 
     private IndexCache aliasCache;
     private Timer mappingTimer;
@@ -147,22 +144,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         this.cursorTimeout = indexFig.getQueryCursorTimeout();
         this.queryTimeout = indexFig.getWriteTimeout();
         this.searchRequest
-            = new SearchRequestBuilderStrategy( esProvider, applicationScope, alias, cursorTimeout );
+            = new SearchRequestBuilderStrategy(esProvider, applicationScope, alias, cursorTimeout );
         this.searchRequestBuilderStrategyV2 = new SearchRequestBuilderStrategyV2( esProvider, applicationScope, alias, cursorTimeout  );
 
-        this.addTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "add.timer");
-        this.updateAliasTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "update.alias.timer");
-        this.mappingTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "create.mapping.timer");
-        this.deleteApplicationTimer =
-            metricsFactory.getTimer( EsEntityIndexImpl.class, "delete.application" );
-        this.deleteApplicationMeter =
-            metricsFactory.getMeter( EsEntityIndexImpl.class, "delete.application.meter" );
-        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
-        this.searchTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "search.timer" );
-        initialize();
+        this.addTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.add");
+        this.updateAliasTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.update_alias");
+        this.mappingTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.create_mapping");
+        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class, "index.refresh_index");
+
     }
 
     @Override
@@ -192,19 +181,19 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
                 final AdminClient admin = esProvider.getClient().admin();
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("index.number_of_shards", numberOfShards)
-                        .put("index.number_of_replicas", numberOfReplicas)
+                    .put("index.number_of_replicas", numberOfReplicas)
 
                         //dont' allow unmapped queries, and don't allow dynamic mapping
-                        .put("index.query.parse.allow_unmapped_fields", false )
-                        .put("index.mapper.dynamic", false)
-                        .put( "action.write_consistency", writeConsistency )
-                        .build();
+                        .put("index.query.parse.allow_unmapped_fields", false)
+                    .put("index.mapper.dynamic", false)
+                    .put("action.write_consistency", writeConsistency)
+                    .build();
 
                 //Added For Graphite Metrics
                 Timer.Context timeNewIndexCreation = addTimer.time();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
                         .setSettings(settings)
-                        .execute()
+                    .execute()
                         .actionGet();
                 timeNewIndexCreation.stop();
 
@@ -412,9 +401,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
         try {
             //Added For Graphite Metrics
-            Timer.Context timeSearch = searchTimer.time();
             searchResponse = srb.execute().actionGet();
-            timeSearch.stop();
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with Elasticsearch", t );
@@ -459,7 +446,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
         try {
             //Added For Graphite Metrics
-            Timer.Context timeSearch = searchTimer.time();
 
             //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
             //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
@@ -489,7 +475,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
 
             }
-            timeSearch.stop();
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with Elasticsearch", t );
@@ -535,7 +520,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
         try {
             //Added For Graphite Metrics
-            Timer.Context timeSearch = searchTimer.time();
 
             //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
             //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
@@ -567,7 +551,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
 
             }
-            timeSearch.stop();
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with Elasticsearch", t );
@@ -584,11 +567,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
      * Completely delete an index.
      */
     public Observable deleteApplication() {
-        deleteApplicationMeter.mark();
         String idString = applicationId( applicationScope.getApplication() );
         final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
         final String[] indexes = getUniqueIndexes();
-        Timer.Context timer = deleteApplicationTimer.time();
         //Added For Graphite Metrics
         return Observable.from( indexes ).flatMap( index -> {
 
@@ -609,7 +590,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
                 }
             } );
             return Observable.from( response );
-        } ).doOnError( t -> logger.error( "Failed on delete application", t ) ).doOnCompleted( () -> timer.stop() );
+        } ).doOnError( t -> logger.error( "Failed on delete application", t ) );
     }
 
 

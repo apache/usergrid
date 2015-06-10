@@ -161,13 +161,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         this.applicationScope = applicationScope;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
-        this.writeTimer = metricsFactory.getTimer( EntityCollectionManagerImpl.class, "write" );
-        this.deleteTimer = metricsFactory.getTimer( EntityCollectionManagerImpl.class, "delete" );
-        this.fieldIdTimer = metricsFactory.getTimer( EntityCollectionManagerImpl.class, "fieldId" );
-        this.fieldEntityTimer = metricsFactory.getTimer( EntityCollectionManagerImpl.class, "fieldEntity" );
-        this.updateTimer = metricsFactory.getTimer( EntityCollectionManagerImpl.class, "update" );
-        this.loadTimer = metricsFactory.getTimer( EntityCollectionManagerImpl.class, "load" );
-        this.getLatestTimer = metricsFactory.getTimer( EntityCollectionManagerImpl.class, "latest" );
+        this.writeTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.write");
+        this.deleteTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.delete");
+        this.fieldIdTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldId");
+        this.fieldEntityTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldEntity");
+        this.updateTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.update");
+        this.loadTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.load");
+        this.getLatestTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.latest");
     }
 
 
@@ -202,7 +202,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
         Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId ) ).map( markStart )
-                                     .doOnNext( markCommit ).compose( uniqueCleanup ).map(
+            .doOnNext( markCommit ).compose( uniqueCleanup ).map(
                 entityEvent -> entityEvent.getEvent().getId() );
 
 
@@ -279,7 +279,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         return Observable.from( entries ).map( logEntry -> new CollectionIoEvent<>( applicationScope, logEntry ) )
-                         .compose( versionCompact ).map( event -> event.getEvent() );
+            .compose( versionCompact ).map( event -> event.getEvent() );
     }
 
 
@@ -386,13 +386,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
             Observable<CollectionIoEvent<MvccEntity>> uniqueObservable =
                 Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() )
-                          .doOnNext( writeVerifyUnique );
+                    .doOnNext( writeVerifyUnique );
 
 
             // optimistic verification
             Observable<CollectionIoEvent<MvccEntity>> optimisticObservable =
                 Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() )
-                          .doOnNext( writeOptimisticVerify );
+                    .doOnNext( writeOptimisticVerify );
 
             final Observable<CollectionIoEvent<MvccEntity>> zip =
                 Observable.zip( uniqueObservable, optimisticObservable, ( unique, optimistic ) -> optimistic );

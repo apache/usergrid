@@ -54,6 +54,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
                     indexBufferConsumer,
                     locationStrategy
                 );
+                index.initialize();
                 return index;
             }
         } );
