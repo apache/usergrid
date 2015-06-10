@@ -64,7 +64,7 @@ public abstract class ToolBase {
 
     static final Logger logger = LoggerFactory.getLogger( ToolBase.class );
 
-    protected static final String PATH_REPLACEMENT = "USERGIRD-PATH-BACKSLASH";
+    protected static final String PATH_REPLACEMENT = "-";
 
     protected EmbeddedServerHelper embedded = null;
 
@@ -80,6 +80,10 @@ public abstract class ToolBase {
 
 
     public void startTool( String[] args ) {
+        startTool( args, true );
+    }
+
+    public void startTool( String[] args, boolean exit ) {
         CommandLineParser parser = new GnuParser();
         CommandLine line = null;
         try {
@@ -105,7 +109,9 @@ public abstract class ToolBase {
         catch ( Exception e ) {
             e.printStackTrace();
         }
-        System.exit( 0 );
+        if ( exit ) {
+            System.exit( 0 );
+        }
     }
 
 
