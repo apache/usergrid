@@ -55,46 +55,48 @@ public class SNSQueueManagerImpl implements QueueManager {
     private static SmileFactory smileFactory = new SmileFactory();
 
     private final LoadingCache<String, String> writeTopicArnMap = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .build(new CacheLoader<String, String>() {
-            @Override
-            public String load(String queueName)
-                throws Exception {
+            .maximumSize(1000)
+            .build(new CacheLoader<String, String>() {
+                @Override
+                public String load(String queueName)
+                        throws Exception {
 
-                String primaryTopicArn = setupMultiRegion(queueName);
-
-                return primaryTopicArn;
-            }
-        });
-
-    private final LoadingCache<String, Queue> readQueueUrlMap = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .build(new CacheLoader<String, Queue>() {
-            @Override
-            public Queue load(String queueName) throws Exception {
-
-                Queue queue = null;
-
-                try {
-                    GetQueueUrlResult result = sqs.getQueueUrl(queueName);
-                    queue = new Queue(result.getQueueUrl());
-                } catch (QueueDoesNotExistException queueDoesNotExistException) {
-                    logger.error("Queue {} does not exist, creating", queueName);
-                } catch (Exception e) {
-                    logger.error("failed to get queue from service", e);
-                    throw e;
-                }
-
-                if (queue == null) {
                     String primaryTopicArn = setupMultiRegion(queueName);
 
-                    String url = AmazonNotificationUtils.getQueueArnByName(queueName, sqs);
-                    queue = new Queue(url);
+                    return primaryTopicArn;
                 }
+            });
 
-                return queue;
-            }
-        });
+    private final LoadingCache<String, Queue> readQueueUrlMap = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(new CacheLoader<String, Queue>() {
+                @Override
+                public Queue load(String queueName) throws Exception {
+
+                    Queue queue = null;
+
+                    try {
+                        GetQueueUrlResult result = sqs.getQueueUrl(queueName);
+                        queue = new Queue(result.getQueueUrl());
+                    } catch (QueueDoesNotExistException queueDoesNotExistException) {
+                        logger.error("Queue {} does not exist, creating", queueName);
+                    } catch (Exception e) {
+                        logger.error("failed to get queue from service", e);
+                        throw e;
+                    }
+
+                    if (queue == null) {
+                        String url = AmazonNotificationUtils.createQueue(queueName, sqs, fig);
+                        queue = new Queue(url);
+                    }
+
+                    if (fig.isMultiRegion()) {
+                        String primaryTopicArn = setupMultiRegion(queueName);
+                    }
+
+                    return queue;
+                }
+            });
 
 
     @Inject
@@ -116,15 +118,27 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
     private String setupMultiRegion(final String queueName)
-        throws Exception {
+            throws Exception {
+
+        logger.info("Setting up SNS/SQS...");
 
         String primaryTopicArn = AmazonNotificationUtils.getTopicArn(queueName, sns, true);
 
+        if (logger.isDebugEnabled()) logger.debug("SNS/SQS Setup: primaryTopicArn=" + primaryTopicArn);
+
         String primaryQueueArn = AmazonNotificationUtils.getQueueArnByName(queueName, sqs);
 
+        if (logger.isDebugEnabled()) logger.debug("SNS/SQS Setup: primaryQueueArn=" + primaryQueueArn);
+
         if (primaryQueueArn == null) {
+            if (logger.isDebugEnabled())
+                logger.debug("SNS/SQS Setup: primaryQueueArn is null, setting creating queue...");
+
             String queueUrl = AmazonNotificationUtils.createQueue(queueName, sqs, fig);
             primaryQueueArn = AmazonNotificationUtils.getQueueArnByUrl(queueUrl, sqs);
+
+            if (logger.isDebugEnabled())
+                logger.debug("SNS/SQS Setup: New Queue URL=[{}] ARN=[{}]", queueUrl, primaryQueueArn);
         }
 
         AmazonNotificationUtils.subscribeQueueToTopic(primaryTopicArn, primaryQueueArn, sns);
@@ -132,6 +146,10 @@ public class SNSQueueManagerImpl implements QueueManager {
         if (fig.isMultiRegion()) {
 
             String multiRegion = fig.getRegionList();
+
+            if (logger.isDebugEnabled())
+                logger.debug("MultiRegion Setup specified, regions: {}", multiRegion);
+
             String[] regionNames = multiRegion.split(",");
 
             final Set<String> arrQueueArns = new HashSet<>(regionNames.length + 1);
@@ -213,45 +231,55 @@ public class SNSQueueManagerImpl implements QueueManager {
 
     @Override
     public rx.Observable<QueueMessage> getMessages(final int limit,
-                                          final int transactionTimeout,
-                                          final int waitTime,
-                                          final Class klass) {
+                                                   final int transactionTimeout,
+                                                   final int waitTime,
+                                                   final Class klass) {
 
         if (sqs == null) {
             logger.error("SQS is null - was not initialized properly");
             return rx.Observable.empty();
         }
 
-
         String url = getReadQueue().getUrl();
 
-        if (logger.isDebugEnabled()) logger.debug("Getting {} messages from {}", limit, url);
+        if (logger.isDebugEnabled()) logger.debug("Getting up to {} messages from {}", limit, url);
 
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(url);
         receiveMessageRequest.setMaxNumberOfMessages(limit);
         receiveMessageRequest.setVisibilityTimeout(transactionTimeout / 1000);
         receiveMessageRequest.setWaitTimeSeconds(waitTime / 1000);
-        ReceiveMessageResult result = sqs.receiveMessage(receiveMessageRequest);
-        List<Message> messages = result.getMessages();
 
-        if (logger.isDebugEnabled()) logger.debug("Received {} messages from {}", messages.size(), url);
+        try {
+            ReceiveMessageResult result = sqs.receiveMessage(receiveMessageRequest);
+            List<Message> messages = result.getMessages();
 
-        List<QueueMessage> queueMessages = new ArrayList<>(messages.size());
+            if (logger.isDebugEnabled()) logger.debug("Received {} messages from {}", messages.size(), url);
 
-        for (Message message : messages) {
-            Object body;
+            List<QueueMessage> queueMessages = new ArrayList<>(messages.size());
 
-            try {
-                body = fromString(message.getBody(), klass);
-            } catch (Exception e) {
-                logger.error("failed to deserialize message", e);
-                throw new RuntimeException(e);
+            for (Message message : messages) {
+                Object body;
+
+                try {
+                    body = fromString(message.getBody(), klass);
+                } catch (Exception e) {
+                    logger.error(String.format("failed to deserialize message: %s", message.getBody()), e);
+                    throw new RuntimeException(e);
+                }
+
+                QueueMessage queueMessage = new QueueMessage(message.getMessageId(), message.getReceiptHandle(), body, message.getAttributes().get("type"));
+                queueMessages.add(queueMessage);
             }
 
-            QueueMessage queueMessage = new QueueMessage(message.getMessageId(), message.getReceiptHandle(), body, message.getAttributes().get("type"));
-            queueMessages.add(queueMessage);
+            return rx.Observable.from(queueMessages);
+
+        } catch (com.amazonaws.services.sqs.model.QueueDoesNotExistException dne) {
+            logger.error(String.format("Queue does not exist! [%s]", url), dne);
+        } catch (Exception e) {
+            logger.error(String.format("Programming error getting messages from queue=[%s] exist!", url), e);
         }
-        return rx.Observable.from( queueMessages);
+
+        return rx.Observable.from(new ArrayList<>(0));
     }
 
     @Override
@@ -292,11 +320,12 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public void commitMessage(final QueueMessage queueMessage) {
         String url = getReadQueue().getUrl();
-        if (logger.isDebugEnabled()) logger.debug("Commit message {} to queue {}", queueMessage.getMessageId(), url);
+        if (logger.isDebugEnabled())
+            logger.debug("Commit message {} to queue {}", queueMessage.getMessageId(), url);
 
         sqs.deleteMessage(new DeleteMessageRequest()
-            .withQueueUrl(url)
-            .withReceiptHandle(queueMessage.getHandle()));
+                .withQueueUrl(url)
+                .withReceiptHandle(queueMessage.getHandle()));
     }
 
 
@@ -328,8 +357,9 @@ public class SNSQueueManagerImpl implements QueueManager {
     /**
      * Read the object from Base64 string.
      */
+
     private Object fromString(final String s, final Class klass)
-        throws IOException, ClassNotFoundException {
+            throws IOException, ClassNotFoundException {
 
         Object o = mapper.readValue(s, klass);
         return o;

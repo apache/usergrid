@@ -106,14 +106,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
         this.queue = queueManagerFactory.getQueueManager(queueScope);
         this.indexProcessorFig = indexProcessorFig;
 
-        this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "write");
-        this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "read");
-        this.messageProcessingTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "message.processing");
-        this.indexErrorCounter = metricsFactory.getCounter(AmazonAsyncEventService.class, "error");
+        this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.write");
+        this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.read");
+        this.messageProcessingTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.message_processing");
+        this.indexErrorCounter = metricsFactory.getCounter(AmazonAsyncEventService.class, "async_event.error");
 
 
         //wire up the gauge of inflight message
-        metricsFactory.addGauge(AmazonAsyncEventService.class, "inflight.meter", new Gauge<Long>() {
+        metricsFactory.addGauge(AmazonAsyncEventService.class, "async-event.inflight", new Gauge<Long>() {
             @Override
             public Long getValue() {
                 return inFlight.longValue();

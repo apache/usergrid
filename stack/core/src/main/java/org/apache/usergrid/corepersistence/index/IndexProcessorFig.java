@@ -69,7 +69,7 @@ public interface IndexProcessorFig extends GuicyFig {
     long getFailureRetryTime();
 
     //give us 60 seconds to process the message
-    @Default( "100000" )
+    @Default( "10000" )
     @Key( INDEX_QUEUE_READ_TIMEOUT )
     int getIndexQueueTimeout();
 

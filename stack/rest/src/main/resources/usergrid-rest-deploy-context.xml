@@ -33,6 +33,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:/usergrid-default.properties</value>
+				<value>file:/usr/share/tomcat7/lib/usergrid-deployment.properties</value>
 			</list>
 		</property>
 	</bean>

@@ -457,7 +457,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertNotNull(response.get("email").toString());
 
         // now revoke the tokens
-        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class,null, null);
+        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class,null, null,false);
 
         // the tokens shouldn't work
 
