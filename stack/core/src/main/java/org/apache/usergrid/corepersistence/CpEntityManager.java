@@ -133,6 +133,7 @@ import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionTypeSearch;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createGraphOperationTimestamp;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getConnectionNameFromEdgeName;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
@@ -678,11 +679,8 @@ public class CpEntityManager implements EntityManager {
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
-        //for devices we don't have time uuids
-        UUID timeUUID =  UUIDUtils.isTimeBased(entityRef.getUuid()) ? entityRef.getUuid() : UUIDUtils.newTimeUUID();
-
         //Step 1 & 2 of delete
-        return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, timeUUID.timestamp() ) );
+        return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, createGraphOperationTimestamp() ) );
 
     }
 
