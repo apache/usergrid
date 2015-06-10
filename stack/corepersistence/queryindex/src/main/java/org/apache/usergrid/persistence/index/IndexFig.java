@@ -140,6 +140,8 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_NUMBER_OF_REPLICAS )
     int getNumberOfReplicas();
 
+
+
     @Default( "20" )
     @Key( ELASTICSEARCH_FAIL_REFRESH )
     int getFailRefreshCount();
@@ -198,5 +200,6 @@ public interface IndexFig extends GuicyFig {
     @Default( "5000" )
     @Key( ELASTICSEARCH_WRITE_TIMEOUT )
     long getWriteTimeout();
+
 
 }

@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,24 +32,14 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexEdge;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
 
 import com.codahale.metrics.Timer;
@@ -76,17 +67,19 @@ public class IndexServiceImpl implements IndexService {
     private final EntityIndexFactory entityIndexFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final Timer indexTimer;
     private final Timer addTimer;
 
 
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
-                             final EdgesObservable edgesObservable, final IndexFig indexFig, final MetricsFactory metricsFactory ) {
+                             final EdgesObservable edgesObservable, final IndexFig indexFig, final IndexLocationStrategyFactory indexLocationStrategyFactory, final MetricsFactory metricsFactory ) {
         this.graphManagerFactory = graphManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
         this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
@@ -97,7 +90,7 @@ public class IndexServiceImpl implements IndexService {
                                                           final Entity entity ) {
         //bootstrap the lower modules from their caches
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
-        final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
 
 
         final Id entityId = entity.getId();
@@ -145,7 +138,7 @@ public class IndexServiceImpl implements IndexService {
             throw new IllegalArgumentException("target not equal to entity + "+entity.getId());
         } ).flatMap( indexEdge -> {
 
-            final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+            final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
             final EntityIndexBatch batch = ei.createBatch();
 
@@ -172,7 +165,7 @@ public class IndexServiceImpl implements IndexService {
 
         final Observable<IndexOperationMessage> batches =
             Observable.just( edge ).flatMap( edgeValue -> {
-                final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+                final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
                 EntityIndexBatch batch = ei.createBatch();
 
 
@@ -209,7 +202,7 @@ public class IndexServiceImpl implements IndexService {
                                                                   final Id entityId, final UUID markedVersion ) {
 
         //bootstrap the lower modules from their caches
-        final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( applicationScope );
+        final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         CandidateResults crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion );
 

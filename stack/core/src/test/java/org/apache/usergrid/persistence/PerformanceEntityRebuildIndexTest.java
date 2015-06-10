@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +38,7 @@ import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -329,11 +330,14 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private void deleteIndex( UUID appUuid ) {
 
         Injector injector = SpringResource.getInstance().getBean( Injector.class );
+        IndexLocationStrategyFactory indexLocationStrategyFactory = injector.getInstance(IndexLocationStrategyFactory.class);
         EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
 
         Id appId = new SimpleId( appUuid, Schema.TYPE_APPLICATION );
         ApplicationScope scope = new ApplicationScopeImpl( appId );
-        ApplicationEntityIndex ei = eif.createApplicationEntityIndex( scope );
+        EntityIndex ei = eif.createEntityIndex(
+            indexLocationStrategyFactory.getIndexLocationStrategy(scope)
+        );
 
         ei.deleteApplication().toBlocking().lastOrDefault( null );
         app.refreshIndex();

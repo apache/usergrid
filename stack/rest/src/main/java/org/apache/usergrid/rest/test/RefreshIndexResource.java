@@ -31,6 +31,7 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.EntityManager;
 
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -65,8 +66,13 @@ public class RefreshIndexResource extends AbstractContextResource {
                 throw new UnsupportedOperationException();
             }
 
+            UUID appid = UUIDUtils.tryExtractUUID(appIdString);
+            if(appid == null){
+                throw new IllegalArgumentException("app id is null");
+            }
             // refresh the system apps or app lookup below may fail
-            getEntityIndex().refreshAsync().toBlocking().first();
+            EntityManager em = this.getEmf().getEntityManager(appid);
+            em.refreshIndex();
 
         } catch (Exception e) {
             logger.error("Error in refresh", e);

@@ -239,7 +239,7 @@ public class ImportCollectionIT {
             for ( Entity importedThing : importedThings ) {
                 emApp1.delete( importedThing );
             }
-            setup.getEntityIndex().refresh();
+            setup.getEntityIndex().refresh(appId2);
 
 
             importedThings = emApp2.getCollection(
@@ -532,7 +532,7 @@ public class ImportCollectionIT {
         if ( retries >= maxRetries ) {
             throw new RuntimeException("Max retries reached");
         }
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(em.getApplicationId());
 
 
         return importEntity.getUuid();
@@ -547,7 +547,7 @@ public class ImportCollectionIT {
 
         logger.debug("\n\nExporting {} collection from application {}\n",
             collectionName, em.getApplication().getName() );
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(em.getApplicationId());
 
 
         ExportService exportService = setup.getExportService();
@@ -591,7 +591,7 @@ public class ImportCollectionIT {
         logger.debug("\n\nCreating new {} collection in application {}\n",
             type, em.getApplication().getName());
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(em.getApplicationId());
 
 
         List<Entity> created = new ArrayList<>();
@@ -613,7 +613,7 @@ public class ImportCollectionIT {
         em.createConnection(new SimpleEntityRef(type, created.get(1).getUuid()),
             "related", new SimpleEntityRef(type, created.get(0).getUuid()));
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(em.getApplicationId());
 
     }
 

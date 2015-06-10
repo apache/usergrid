@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,7 +46,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.SearchEdge;
@@ -496,7 +497,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         ApplicationScope as = new ApplicationScopeImpl(
             new SimpleId( em.getApplicationId(), TYPE_APPLICATION ) );
-        ApplicationEntityIndex ei = eif.createApplicationEntityIndex(as);
+        IndexLocationStrategyFactory indexLocationStrategyFactory = SpringResource.getInstance().getBean( Injector.class ).getInstance(IndexLocationStrategyFactory.class);
+        EntityIndex ei = eif.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(as));
 
         final Id rootId = createId(em.getApplicationId(), TYPE_APPLICATION);
         SearchEdge is = CpNamingUtils.createCollectionSearchEdge( rootId, collName );

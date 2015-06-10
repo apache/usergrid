@@ -80,7 +80,6 @@ public class AmazonNotificationUtils {
         }
 
         if (queueUrl != null) {
-            String queueArn = null;
 
             try {
                 GetQueueAttributesRequest queueAttributesRequest = new GetQueueAttributesRequest(queueUrl)
@@ -103,8 +102,6 @@ public class AmazonNotificationUtils {
     public static String getQueueArnByUrl(final String queueUrl,
                                           final AmazonSQSClient sqs)
         throws Exception {
-
-        String queueArn = null;
 
         try {
             GetQueueAttributesRequest queueAttributesRequest = new GetQueueAttributesRequest(queueUrl)
@@ -154,6 +151,9 @@ public class AmazonNotificationUtils {
                                      final boolean createOnMissing)
         throws Exception {
 
+        if (logger.isDebugEnabled())
+            logger.debug("Looking up Topic ARN: {}", queueName);
+
         ListTopicsResult listTopicsResult = sns.listTopics();
         String topicArn = null;
 
@@ -162,14 +162,23 @@ public class AmazonNotificationUtils {
 
             if (queueName.equals(arn.substring(arn.lastIndexOf(':')))) {
                 topicArn = arn;
+
+                logger.info("Found existing topic arn=[{}] for queue=[{}]", topicArn, queueName);
             }
         }
 
         if (topicArn == null && createOnMissing) {
+            logger.info("Creating topic for queue=[{}]...", queueName);
+
             CreateTopicResult createTopicResult = sns.createTopic(queueName);
             topicArn = createTopicResult.getTopicArn();
-            logger.info("Created topic with name {} and arn {}", queueName, topicArn);
+
+            logger.info("Successfully created topic with name {} and arn {}", queueName, topicArn);
         }
+
+        if (logger.isDebugEnabled())
+            logger.debug("Returning Topic ARN=[{}] for Queue=[{}]", topicArn, queueName);
+
 
         return topicArn;
     }

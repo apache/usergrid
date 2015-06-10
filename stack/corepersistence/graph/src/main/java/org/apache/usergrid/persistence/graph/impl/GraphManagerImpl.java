@@ -122,24 +122,24 @@ public class GraphManagerImpl implements GraphManager {
         this.edgeDeleteListener = edgeDeleteListener;
         this.nodeDeleteListener = nodeDeleteListener;
 
-        this.writeEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "write.edge" );
-        this.markEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "mark.edge" );
-        this.deleteEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "delete.edge" );
-        this.markNodeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "mark.node" );
-        this.deleteNodeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "delete.node" );
-        this.loadEdgesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.from" );
-        this.loadEdgesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.to" );
-        this.loadEdgesVersionsTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.versions" );
-        this.loadEdgesFromSourceByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.from.type" );
-        this.loadEdgesToTargetByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "load.to.type" );
+        this.markNodeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "node.mark" );
+        this.deleteNodeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "node.delete" );
+        this.writeEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.write" );
 
-        this.getEdgeTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.edge.from" );
+        this.markEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.mark" );
+        this.deleteEdgeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.delete" );
+        this.loadEdgesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.load_from" );
+        this.loadEdgesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.load_to" );
+        this.loadEdgesVersionsTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.load_versions" );
+        this.loadEdgesFromSourceByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.load_from_type" );
+        this.loadEdgesToTargetByTypeTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.load_to_type" );
+        this.getEdgeTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.get_edge_from" );
+        this.getEdgeTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "edge.get_to" );
 
-        this.getIdTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.idtype.from" );
+        this.getIdTypesFromSourceTimer = metricsFactory.getTimer( GraphManagerImpl.class, "idtype.get_from" );
+        this.getIdTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "idtype.get_to" );
 
-        this.getEdgeTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.edge.to" );
 
-        this.getIdTypesToTargetTimer = metricsFactory.getTimer( GraphManagerImpl.class, "get.idtype.to" );
     }
 
 

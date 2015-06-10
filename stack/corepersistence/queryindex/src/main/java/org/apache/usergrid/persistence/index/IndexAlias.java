@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.persistence.index;
 
 
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -23,20 +23,12 @@ import org.apache.usergrid.persistence.index.IndexFig;
 /**
  * Abstraction for Index alias names
  */
-public class IndexAlias{
-    private final String readAlias;
-    private final String writeAlias;
+public interface IndexAlias{
 
-    public IndexAlias(IndexFig indexFig,String indexBase) {
-        this.writeAlias = indexBase + "_write_" + indexFig.getAliasPostfix();
-        this.readAlias = indexBase + "_read_" + indexFig.getAliasPostfix();
-    }
 
-    public String getReadAlias() {
-        return readAlias;
-    }
 
-    public String getWriteAlias() {
-        return writeAlias;
-    }
+    public String getReadAlias();
+
+    public String getWriteAlias();
 }
+

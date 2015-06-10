@@ -192,13 +192,13 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity e = app.testRequest(ServiceAction.POST, 1,"users",user.getUuid(), "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(app.getId());
 
         // perform push //
         Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
         notification = scheduleNotificationAndWait(notification);
 
-        setup.getEntityIndex().refresh();
+        setup.getEntityIndex().refresh(app.getId());
 
         checkReceipts(notification, 1);
     }

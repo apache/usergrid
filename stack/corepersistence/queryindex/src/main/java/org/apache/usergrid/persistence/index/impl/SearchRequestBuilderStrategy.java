@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import org.apache.usergrid.persistence.index.IndexAlias;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.BoolFilterBuilder;

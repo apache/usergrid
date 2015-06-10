@@ -20,8 +20,10 @@
 
 package org.apache.usergrid.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.Ignore;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -32,6 +34,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
@@ -42,52 +46,17 @@ import static org.junit.Assert.assertNotNull;
 /**
  * test index creation
  */
-public class IndexResourceIT extends AbstractRestIT {
+public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
 
 
-//    @Rule
-//    public TestContextSetup context = new TestContextSetup( this );
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
     //Used for all MUUserResourceITTests
     private Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
 
     public IndexResourceIT(){
 
     }
-
-//    @Ignore( "will finish when tests are working from rest" )
-//    @Test
-//    public void TestAddIndex() throws Exception{
-//
-//        String superToken = superAdminToken();
-//
-//        Map<String, Object> data = new HashMap<String, Object>();
-//        data.put( "replicas", 0 );
-//        data.put( "shards", 1 );
-//        data.put( "writeConsistency", "one" );
-//
-//        UUID appId = this.context.getAppUuid();
-//
-//        // change the password as admin. The old password isn't required
-//        JsonNode node = null;
-//        try {
-//            node = mapper.readTree(resource().path("/system/index/" + appId)
-//                    .queryParam("access_token", superToken)
-//                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE)
-//                    .post(String.class, data));
-//        } catch (Exception e) {
-//            LOG.error("failed", e);
-//            fail(e.toString());
-//        }
-//        assertNull( getError( node ) );
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//    }
-
-
-    /**
-     * checks that reindex endpoint is case insensitive
-     */
     @Test
     public void testCaseReindexEndpoint() {
 
@@ -109,6 +78,7 @@ public class IndexResourceIT extends AbstractRestIT {
             .post(ApiResponse.class,true);
                                   // .post( false, ApiResponse.class, null, queryParameters, true );
 
+
         assertNotNull(result);
 
         //try the reindex endpoint with all lowercase Characters
@@ -118,6 +88,37 @@ public class IndexResourceIT extends AbstractRestIT {
                                         .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/belp")
                             .post(ApiResponse.class,true );
         assertNotNull( result );
+
+    }
+    @Ignore
+    @Test
+    public void TestAddIndex() throws Exception{
+
+
+        Map<String, Object> data = new HashMap<String, Object>();
+        data.put( "replicas", 0 );
+        data.put( "shards", 1 );
+        data.put( "writeConsistency", "one" );
+
+        String appId = this.clientSetup.getAppUuid();
+
+        // change the password as admin. The old password isn't required
+        org.apache.usergrid.rest.test.resource2point0.model.ApiResponse node = null;
+        try {
+
+            WebResource resource = this.clientSetup.getRestClient().pathResource("/system/index/" + appId).getResource();
+
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword() );
+            resource.addFilter( httpBasicAuthFilter );
+
+            node = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .get( org.apache.usergrid.rest.test.resource2point0.model.ApiResponse.class);
+        } catch (Exception e) {
+            LOG.error("failed", e);
+            fail(e.toString());
+        }
+        assertNotNull( node );
 
     }
 }

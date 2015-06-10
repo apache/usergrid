@@ -165,7 +165,7 @@ public class ClientSetup implements TestRule {
     }
 
     public void refreshIndex() {
-        this.restClient.refreshIndex(getOrganizationName(),getAppName());
+        this.restClient.refreshIndex(getOrganizationName(),getAppName(),getAppUuid());
     }
 
     public RestClient getRestClient(){

@@ -35,6 +35,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -51,7 +53,7 @@ import com.sun.jersey.api.json.JSONWithPadding;
 
 
 /**
- * Classy class class.
+ * system/index/otherstuff
  */
 @Component
 @Scope( "singleton" )
@@ -219,7 +221,10 @@ public class IndexResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @POST
-    public JSONWithPadding addIndex( @Context UriInfo ui, Map<String, Object> config,
+    @Path(RootResource.APPLICATION_ID_PATH)
+    public JSONWithPadding addIndex( @Context UriInfo ui,
+                                     @PathParam( "applicationId" ) final String applicationIdStr,
+                                     Map<String, Object> config,
                                      @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
@@ -236,9 +241,14 @@ public class IndexResource extends AbstractContextResource {
         if ( !config.containsKey( "indexSuffix" ) ) {
             throw new IllegalArgumentException( "Please add an indexSuffix to your post" );
         }
+        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
 
+        if(appId == null){
+            throw new IllegalArgumentException("app id was not parsed");
+        }
 
-        emf.addIndex( config.get( "indexSuffix" ).toString(), ( int ) config.get( "shards" ),
+        EntityManager em = emf.getEntityManager(appId);
+        em.addIndex( config.get( "indexSuffix" ).toString(), ( int ) config.get( "shards" ),
             ( int ) config.get( "replicas" ), ( String ) config.get( "writeConsistency" ) );
         response.setAction( "Add index to alias" );
 

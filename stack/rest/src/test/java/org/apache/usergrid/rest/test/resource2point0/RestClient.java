@@ -29,6 +29,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 import javax.ws.rs.core.MediaType;
+import java.util.UUID;
 
 
 /**
@@ -98,12 +99,13 @@ public class RestClient implements UrlResource {
     public TokenResource token(){
         return new TokenResource(context,this);
     }
-    public void refreshIndex(String orgname, String appName) {
+    public void refreshIndex(String orgname, String appName, String appid) {
         //TODO: add error checking and logging
         this.getResource().path( "/refreshindex" )
                 .queryParam( "org_name", orgname )
                 .queryParam( "app_name",appName )
-                .accept( MediaType.APPLICATION_JSON ).post();
+                .queryParam("app_id", appid)
+            .accept( MediaType.APPLICATION_JSON ).post();
     }
 
     public NamedResource pathResource(String path){

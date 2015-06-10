@@ -88,7 +88,7 @@ public class ApplicationCreatorIT {
         customCreator.setSampleAppName(sampleAppName);
         ApplicationInfo appInfo = customCreator.createSampleFor( orgOwner.getOrganization() );
         if(appInfo == null){
-            setup.refreshIndex();
+            setup.refreshIndex(setup.getEmf().getManagementAppId());
         }
         assertNotNull( appInfo );
         assertEquals( expectedName, appInfo.getName() );
