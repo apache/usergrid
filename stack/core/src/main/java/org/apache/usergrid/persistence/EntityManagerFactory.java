@@ -87,15 +87,15 @@ public interface EntityManagerFactory {
      */
     void deleteApplication( UUID applicationId ) throws Exception;
 
-    /**
-     *
-     * @param applicationUUID
-     * @param collectionFromName
-     * @param collectionToName
-     * @return
-     * @throws Exception
-     */
-    Observable migrateAppInfo( UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception;
+//    /**
+//     *
+//     * @param applicationUUID
+//     * @param collectionFromName
+//     * @param collectionToName
+//     * @return
+//     * @throws Exception
+//     */
+//    Observable migrateAppInfo( UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception;
 
     /**
      * Restore deleted application.
