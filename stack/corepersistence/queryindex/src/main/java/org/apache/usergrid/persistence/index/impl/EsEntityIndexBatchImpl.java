@@ -93,7 +93,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         String[] indexes = entityIndex.getUniqueIndexes();
         //get the default index if no alias exists yet
         if ( indexes == null || indexes.length == 0 ) {
-            indexes = new String[] { indexIdentifier.getIndex( null ) };
+            indexes = new String[] { indexIdentifier.getIndex(  ) };
         }
 
         if ( log.isDebugEnabled() ) {

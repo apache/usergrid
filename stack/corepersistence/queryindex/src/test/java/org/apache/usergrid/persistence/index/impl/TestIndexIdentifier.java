@@ -68,16 +68,13 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
 
     /**
      * Get index name, send in additional parameter to add incremental indexes
-     * @param suffix
      * @return
      */
     @Override
-    public String getIndex(String suffix) {
-        if (suffix != null) {
-            return prefix + "_" + suffix;
-        } else {
-            return prefix;
-        }
+    public String getIndex() {
+
+        return prefix;
+
     }
 
 

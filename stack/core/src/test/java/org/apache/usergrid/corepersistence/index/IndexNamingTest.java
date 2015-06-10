@@ -76,17 +76,17 @@ public class IndexNamingTest {
     @Test
     public void managementNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
-        assertEquals(indexLocationStrategy.getIndex(null),managementLocationStrategy.getIndex(null));
-        assertEquals(indexLocationStrategy.getIndex(null),indexProcessorFig.getManagementAppIndexName());
+        assertEquals(indexLocationStrategy.getIndex(),managementLocationStrategy.getIndex());
+        assertEquals(indexLocationStrategy.getIndex(),indexProcessorFig.getManagementAppIndexName());
 
     }
     @Test
     public void applicationNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
-        assertEquals(indexLocationStrategy.getIndex(null),applicationLocationStrategy.getIndex(null));
+        assertEquals(indexLocationStrategy.getIndex(),applicationLocationStrategy.getIndex());
 
-        assertTrue(indexLocationStrategy.getIndex(null).contains(indexFig.getIndexPrefix()));
-        assertTrue(indexLocationStrategy.getIndex(null).contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
+        assertTrue(indexLocationStrategy.getIndex().contains(indexFig.getIndexPrefix()));
+        assertTrue(indexLocationStrategy.getIndex().contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getReadAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains("write"));

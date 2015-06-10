@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
@@ -725,7 +726,7 @@ public interface EntityManager {
      * @param replicas number of replicas
      * @param writeConsistency only "one, quorum, or all"
      */
-    void addIndex(final String suffix,final int shards,final int replicas, final String writeConsistency);
+    void addIndex(final Optional<String> newIndexName,final int shards,final int replicas, final String writeConsistency);
 
     IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
 }
