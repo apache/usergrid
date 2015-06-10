@@ -383,12 +383,13 @@ public class AssetResourceIT extends AbstractRestIT {
         // create the entity that will be the asset, an image
 
         Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
-        JsonNode node = resource().path(orgAppPath + "/foos")
-            .header( "Authorization", "Bearer " + access_token )
-            //.queryParam("access_token", access_token)
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .post(JsonNode.class, payload);
+
+        JsonNode node = resource().path("/test-organization/test-app/foos")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+
         JsonNode idNode = node.get("entities").get(0).get("uuid");
         uuid = idNode.textValue();
 
