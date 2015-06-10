@@ -210,7 +210,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
 
-        Thread.sleep(INDEXING_WAIT);
+        refreshIndex();
+
 
         // restore the app
 
@@ -221,7 +222,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .put();
 
-        Thread.sleep(INDEXING_WAIT);
+        refreshIndex();
 
         // test that we can see the application in the list of applications
 
