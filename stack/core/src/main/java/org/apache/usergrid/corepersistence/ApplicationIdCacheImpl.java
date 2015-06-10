@@ -81,6 +81,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             Optional<UUID> optionalUuid = appCache.get( applicationName.toLowerCase() );
             if(!optionalUuid.isPresent()){
                 appCache.invalidate(applicationName.toLowerCase());
+                return Optional.absent();
             }
             logger.debug("Returning for key {} value {}", applicationName, optionalUuid );
             return optionalUuid;

@@ -161,6 +161,18 @@ public class CpNamingUtils {
         return new SearchEdgeImpl( edge.getTargetNode(), edge.getType(), SearchEdge.NodeType.SOURCE );
     }
 
+    public static SearchByEdge createEdgeFromCollectionName(Id source, String connectionName, Id target) {
+        final String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(connectionName);
+
+        return new SimpleSearchByEdge(source, edgeType, target, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent());
+    }
+
+    public static SearchByEdge createEdgeFromConnectionType(Id source, String connectionType, Id target) {
+        final String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType(connectionType);
+
+        return new SimpleSearchByEdge(source, edgeType, target, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent());
+    }
+
 
     /**
      * TODO move sourceId to ApplicationScope
