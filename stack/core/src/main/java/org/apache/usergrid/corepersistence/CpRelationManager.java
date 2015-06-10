@@ -259,16 +259,15 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
 
         logger.debug( "isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
-            edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
+            connectionType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
         } );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<Edge> edges = gm.loadEdgeVersions(
-            new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
-                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent() ) );
+           CpNamingUtils.createEdgeFromConnectionType(new SimpleId(headEntity.getUuid(), headEntity.getType()), connectionType, entityId)
+        );
 
         return edges.toBlocking().firstOrDefault( null ) != null;
     }
@@ -280,16 +279,15 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
         logger.debug( "isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
-            edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
+            collectionName, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
         } );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<Edge> edges = gm.loadEdgeVersions(
-            new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
-                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
+            CpNamingUtils.createEdgeFromCollectionName(new SimpleId(headEntity.getUuid(), headEntity.getType()), collectionName, entityId)
+         );
 
         return edges.toBlocking().firstOrDefault( null ) != null;
     }
@@ -520,9 +518,12 @@ public class CpRelationManager implements RelationManager {
 
 
         //run our delete
-        final Edge collectionToItemEdge =
-            createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
-        gm.markEdge( collectionToItemEdge ).toBlocking().last();
+        gm.loadEdgeVersions(
+               CpNamingUtils.createEdgeFromCollectionName(cpHeadEntity.getId(), collectionName, memberEntity.getId())
+            )
+            .flatMap(edge -> gm.markEdge(edge))
+            .flatMap(edge -> gm.deleteEdge(edge))
+            .toBlocking().lastOrDefault(null);
 
 
         /**
