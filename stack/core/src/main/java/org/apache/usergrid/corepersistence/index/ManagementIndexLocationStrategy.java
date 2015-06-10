@@ -32,16 +32,16 @@ import org.apache.usergrid.utils.StringUtils;
  * Strategy for getting the management index name
  */
 class ManagementIndexLocationStrategy implements IndexLocationStrategy {
-    private final Id managementAppId;
     private final String prefix;
     private final IndexFig indexFig;
     private final CoreIndexFig coreIndexFig;
     private final IndexAlias alias;
+    private final ApplicationScope applicationScope;
 
     public ManagementIndexLocationStrategy(final IndexFig indexFig, final CoreIndexFig coreIndexFig){
         this.indexFig = indexFig;
         this.coreIndexFig = coreIndexFig;
-        this.managementAppId = CpNamingUtils.getManagementApplicationId();
+        this.applicationScope = CpNamingUtils.getApplicationScope( CpNamingUtils.getManagementApplicationId().getUuid());
         //remove usergrid
         this.prefix = coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
         this.alias = new ManagementIndexAlias(indexFig,prefix);
@@ -62,7 +62,7 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
 
     @Override
     public ApplicationScope getApplicationScope() {
-        return new ApplicationScopeImpl(managementAppId);
+        return applicationScope;
     }
 
     @Override
@@ -82,14 +82,14 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
 
         ManagementIndexLocationStrategy that = (ManagementIndexLocationStrategy) o;
 
-        if (!managementAppId.equals(that.managementAppId)) return false;
+        if (!applicationScope.equals(that.applicationScope)) return false;
         return prefix.equals(that.prefix);
 
     }
 
     @Override
     public int hashCode() {
-        int result = managementAppId.hashCode();
+        int result = applicationScope.hashCode();
         result = 31 * result + prefix.hashCode();
         return result;
     }
