@@ -1947,8 +1947,8 @@ public class CpEntityManager implements EntityManager {
         EntityRef userRef = userRef( userId );
         EntityRef roleRef = getRoleRef( roleName );
         addToDictionary( userRef, DICTIONARY_ROLENAMES, roleName, roleName );
+        //adding will add reverse collection in addToCollection         for role-> users
         addToCollection( userRef, COLLECTION_ROLES, roleRef );
-        addToCollection( roleRef, COLLECTION_USERS, userRef );
     }
 
 
