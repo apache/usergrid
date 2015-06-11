@@ -135,6 +135,7 @@ public class CoreModule  extends AbstractModule {
 
         //bind the event handlers
         bind( EventBuilder.class).to( EventBuilderImpl.class );
+        bind(ApplicationIndexBucketLocator.class);
 
         //bind the queue provider
         bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );

@@ -19,8 +19,12 @@
  */
 package org.apache.usergrid.corepersistence.index;
 
+import com.google.common.hash.Funnel;
+import com.google.common.hash.PrimitiveSink;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
+import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
@@ -33,32 +37,24 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
+    private final ApplicationIndexBucketLocator applicationIndexBucketLocator;
     private final String indexName;
     private final IndexAlias alias;
 
     public ApplicationIndexLocationStrategy(final CassandraFig cassandraFig,
                                             final IndexFig indexFig,
-                                            final ApplicationScope applicationScope){
+                                            final ApplicationScope applicationScope,
+                                            final ApplicationIndexBucketLocator applicationIndexBucketLocator){
 
         this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
-        this.indexName = getPrefix();        //TODO: add hash buckets by app scope
-        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexName);
+        this.applicationIndexBucketLocator = applicationIndexBucketLocator;
+        String prefix = getPrefix();        //TODO: add hash buckets by app scope
+        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, prefix);
+        this.indexName = prefix + "_" + applicationIndexBucketLocator.getBucket(applicationScope);
     }
 
-    private String getPrefix() {
-        //remove usergrid
-        final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
-            ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
-            : ""; // default to something so its not null
-        final String keyspaceName = cassandraFig.getApplicationKeyspace().toLowerCase();
-        //check for repetition
-        final boolean removePrefix = indexPrefixConfig.length()==0 || keyspaceName.contains(indexPrefixConfig) ;
-        return !removePrefix
-            ? indexPrefixConfig + "_" + keyspaceName
-            : keyspaceName;
-    }
 
     /**
      * Get the alias name
@@ -76,7 +72,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      * @return
      */
     @Override
-    public String getIndex() {
+    public String getInitialIndexName() {
         return indexName;
     }
 
@@ -120,6 +116,20 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         return result;
     }
 
+    private String getPrefix() {
+        //remove usergrid
+        final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
+            ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
+            : ""; // default to something so its not null
+        final String keyspaceName = cassandraFig.getApplicationKeyspace().toLowerCase();
+        //check for repetition
+        final boolean removePrefix = indexPrefixConfig.length()==0 || keyspaceName.contains(indexPrefixConfig) ;
+        return !removePrefix
+            ? indexPrefixConfig + "_" + keyspaceName
+            : keyspaceName;
+    }
+
+
     public class ApplicationIndexAlias implements IndexAlias {
 
         private final String readAlias;
@@ -143,4 +153,6 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
             return writeAlias;
         }
     }
+
+
 }

@@ -52,7 +52,7 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     }
 
     @Override
-    public String getIndex() {
+    public String getInitialIndexName() {
         return indexName;
     }
 

@@ -43,4 +43,13 @@ public interface CoreIndexFig extends GuicyFig {
     @Default( "usergrid_management" )
     @Key( "elasticsearch.managment_index" )
     String getManagementAppIndexName();
+
+    @Default( "5" )
+    @Key( "elasticsearch.index_bucket_count" )
+    int getNumberOfIndexBuckets();
+
+
+    @Default( "0" )
+    @Key( "elasticsearch.index_bucket_seed" )
+    int getBucketSeed();
 }

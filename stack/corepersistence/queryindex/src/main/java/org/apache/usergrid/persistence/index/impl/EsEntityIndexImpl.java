@@ -27,7 +27,6 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -174,7 +173,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public void addIndex(final com.google.common.base.Optional<String> indexNameOverride, final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
         try {
             //get index name with suffix attached
-            final String indexName = indexNameOverride.or(indexLocationStrategy.getIndex()) ;
+            final String indexName = indexNameOverride.or(indexLocationStrategy.getInitialIndexName()) ;
 
             //Create index
             try {
@@ -233,7 +232,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         Timer.Context timer = updateAliasTimer.time();
         try {
             Boolean isAck;
-            String indexName = indexLocationStrategy.getIndex();
+            String indexName = indexLocationStrategy.getInitialIndexName();
             final AdminClient adminClient = esProvider.getClient().admin();
 
             String[] indexNames = getIndexes(AliasType.Write);
@@ -356,12 +355,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync() {
 
         refreshIndexMeter.mark();
-        return indexRefreshCommand.execute(alias,getUniqueIndexes());
+        return indexRefreshCommand.execute(alias, getIndexes());
     }
 
 
 
-    public String[] getUniqueIndexes() {
+    public String[] getIndexes() {
         Set<String> indexSet = new HashSet<>();
         List<String> reads =  Arrays.asList(getIndexes(AliasType.Read));
         List<String> writes = Arrays.asList(getIndexes(AliasType.Write));
@@ -569,7 +568,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public Observable deleteApplication() {
         String idString = applicationId( applicationScope.getApplication() );
         final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
-        final String[] indexes = getUniqueIndexes();
+        final String[] indexes = getIndexes();
         //Added For Graphite Metrics
         return Observable.from( indexes ).flatMap( index -> {
 
@@ -714,8 +713,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public Health getIndexHealth() {
 
         try {
+            String[] indexNames = this.getIndexes();
            final ActionFuture<ClusterHealthResponse> future =  esProvider.getClient().admin().cluster().health(
-               new ClusterHealthRequest( new String[] { indexLocationStrategy.getIndex(  ) } ) );
+               new ClusterHealthRequest( indexNames  ) );
 
             //only wait 2 seconds max
             ClusterHealthResponse chr = future.actionGet(2000);
