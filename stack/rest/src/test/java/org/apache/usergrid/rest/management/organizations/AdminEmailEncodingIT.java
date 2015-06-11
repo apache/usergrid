@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import static junit.framework.TestCase.assertNotNull;
@@ -119,7 +118,7 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
         //Instruct the test framework to use the new token
         this.app().token().setToken(tokenReturned);
         //Create an application within the organization
-        clientSetup.getRestClient().management().orgs().organization(organization.getName()).app().post(new Application(app));
+        clientSetup.getRestClient().management().orgs().org( organization.getName() ).app().post(new Application(app));
 
         //retrieve the new management user by username and ensure the username and email address matches the input
         Entity me = clientSetup.getRestClient().management().users().entity(username).get();
