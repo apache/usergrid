@@ -66,8 +66,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // delete the app
 
         try {
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteId.toString()).getResource()
+            clientSetup.getRestClient() .management().orgs()
+                .org(orgName).apps().app(appToDeleteId.toString()).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .delete();
 
@@ -77,8 +77,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             logger.error("Error", e);
         }
 
-        clientSetup.getRestClient()
-            .org(orgName).app(appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org(orgName).apps().app(appToDeleteId.toString() ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
@@ -86,8 +86,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // test that we can no longer get the app
 
         try {
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteName).getResource()
+            clientSetup.getRestClient().management().orgs()
+                .org(orgName).apps().app(appToDeleteName).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .type(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
@@ -142,7 +142,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         refreshIndex();
 
         ManagementResponse orgAppResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).apps().getOrganizationApplications();
+            .management().orgs().org( orgName ).apps().getOrganizationApplications();
 
         for ( String appName : orgAppResponse.getData().keySet() ) {
             if ( orgAppResponse.getData().get( appName ).equals( appToDeleteId.toString() )) {
@@ -153,8 +153,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // test that we cannot delete the application a second time
 
         try {
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteId.toString()).getResource()
+            clientSetup.getRestClient().management().orgs()
+                .org(orgName).apps().app(appToDeleteId.toString()).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .delete();
 
@@ -167,7 +167,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // test that we can create a new application with the same name
 
         ApiResponse appCreateAgainResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().getResource()
+            .management().orgs().org( orgName ).app().getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .type( MediaType.APPLICATION_JSON )
             .post( ApiResponse.class, new Application( appToDeleteName ) );
@@ -229,7 +229,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         logger.debug("\n\nGetting app list from management end-point\n");
 
         ManagementResponse orgAppResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).apps().getOrganizationApplications();
+            .management().orgs().org( orgName ).apps().getOrganizationApplications();
 
         boolean found = false;
         for ( String appName : orgAppResponse.getData().keySet() ) {
@@ -328,10 +328,9 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // delete the app
 
-        clientSetup.getRestClient()
-            .org( orgName ).app(appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( appToDeleteId.toString() ).getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .delete();
 
         // create new app with same name
@@ -342,8 +341,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         try {
 
-            clientSetup.getRestClient()
-                .org(orgName).app( newAppId.toString() ).getResource()
+            clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( newAppId.toString() ).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
                 .delete();
@@ -360,7 +358,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         String orgName, String appName, Token orgAdminToken, List<Entity> entities) {
 
         ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().getResource()
+            .management().orgs().org( orgName ).app().getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .type( MediaType.APPLICATION_JSON )
             .post( ApiResponse.class, new Application( appName ) );
