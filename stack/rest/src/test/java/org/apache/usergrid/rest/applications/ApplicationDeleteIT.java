@@ -29,12 +29,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.jcip.annotations.NotThreadSafe;
+
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
 import static org.junit.Assert.fail;
 
-
+@NotThreadSafe
 public class ApplicationDeleteIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationDeleteIT.class);
