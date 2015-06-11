@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementRe
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +41,13 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
     public static final int INDEXING_WAIT = 3000;
 
-    UUID appid ;
+    Token orgAdminToken;
+    String orgName;
     @Before
     public void setup(){
-        appid = UUID.randomUUID();
+        orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+        orgName = clientSetup.getOrganization().getName();
+
     }
 
     /**
@@ -61,12 +65,9 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // create app with a collection of "things"
 
-        String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + appid;
-        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
-
         List<Entity> entities = new ArrayList<>();
 
+        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
         UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
 
         // delete the app
@@ -195,13 +196,9 @@ public class ApplicationDeleteIT extends AbstractRestIT {
      */
     @Test
     public void testAppRestore() throws Exception {
+        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
 
         // create app with a collection of "things"
-
-        String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + appid;
-        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
-
         List<Entity> entities = new ArrayList<>();
 
         UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
@@ -275,13 +272,9 @@ public class ApplicationDeleteIT extends AbstractRestIT {
      */
     @Test
     public void testAppRestoreConflict() throws Exception {
+        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
 
         // create app with a collection of "things"
-
-        String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + appid;
-        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
-
         List<Entity> entities = new ArrayList<>();
 
         UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
@@ -293,6 +286,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
+        refreshIndex();
 
         // create new app with same name
 
@@ -321,11 +315,11 @@ public class ApplicationDeleteIT extends AbstractRestIT {
      */
     @Test
     public void testAppDeleteConflict() throws Exception {
+        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
 
         // create app with a collection of "things"
 
         String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + appid;
         Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
 
         List<Entity> entities = new ArrayList<>();
@@ -339,7 +333,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
-
+        refreshIndex();
         // create new app with same name
 
         UUID newAppId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
@@ -390,6 +384,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
             entities.add( createResponse.getEntities().get(0) );
         }
+        refreshIndex();
         return appId;
     }
 }
