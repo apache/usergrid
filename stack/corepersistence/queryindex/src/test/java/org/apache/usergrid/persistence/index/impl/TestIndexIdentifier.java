@@ -71,7 +71,7 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
      * @return
      */
     @Override
-    public String getIndex() {
+    public String getInitialIndexName() {
 
         return prefix;
 

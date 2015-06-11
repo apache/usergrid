@@ -34,7 +34,7 @@ public interface IndexLocationStrategy {
      * get index name from suffix
      * @return
      */
-    String getIndex( );
+    String getInitialIndexName();
 
     /**
      * return unique string

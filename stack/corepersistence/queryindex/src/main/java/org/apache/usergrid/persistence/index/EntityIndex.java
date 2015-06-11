@@ -121,7 +121,7 @@ public interface EntityIndex extends CPManager {
      * get all unique indexes
      * @return
      */
-    String[] getUniqueIndexes();
+    String[] getIndexes();
 
     /**
      * Add alias to index, will remove old index from write alias

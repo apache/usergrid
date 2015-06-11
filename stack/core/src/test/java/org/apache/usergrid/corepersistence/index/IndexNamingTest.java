@@ -25,12 +25,10 @@ import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,17 +74,17 @@ public class IndexNamingTest {
     @Test
     public void managementNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
-        assertEquals(indexLocationStrategy.getIndex(),managementLocationStrategy.getIndex());
-        assertEquals(indexLocationStrategy.getIndex(),indexProcessorFig.getManagementAppIndexName());
+        assertEquals(indexLocationStrategy.getInitialIndexName(),managementLocationStrategy.getInitialIndexName());
+        assertEquals(indexLocationStrategy.getInitialIndexName(),indexProcessorFig.getManagementAppIndexName());
 
     }
     @Test
     public void applicationNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
-        assertEquals(indexLocationStrategy.getIndex(),applicationLocationStrategy.getIndex());
+        assertEquals(indexLocationStrategy.getInitialIndexName(),applicationLocationStrategy.getInitialIndexName());
 
-        assertTrue(indexLocationStrategy.getIndex().contains(indexFig.getIndexPrefix()));
-        assertTrue(indexLocationStrategy.getIndex().contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
+        assertTrue(indexLocationStrategy.getInitialIndexName().contains(indexFig.getIndexPrefix()));
+        assertTrue(indexLocationStrategy.getInitialIndexName().contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getReadAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains("write"));
