@@ -427,6 +427,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Update the default auth token TTL for an application
      */
     @Test
+    @Ignore
     public void updateAccessTokenTtl() throws Exception {
 
         String orgName = clientSetup.getOrganizationName().toLowerCase();
