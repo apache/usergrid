@@ -488,68 +488,6 @@ public class ApplicationResource extends ServiceResource {
     }
 
 
-    /**
-     * Put on application URL will restore application if it was deleted.
-     */
-    @PUT
-    @RequireOrganizationAccess
-    @Override
-    public JSONWithPadding executePut(  @Context UriInfo ui, String body,
-        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
-
-        if ( applicationId == null ) {
-            throw new IllegalArgumentException("Application ID not specified in request");
-        }
-
-        management.restoreApplication( applicationId );
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "restore" );
-        response.setApplication( services.getApplication() );
-        response.setParams( ui.getQueryParameters() );
-
-        return new JSONWithPadding( response, callback );
-    }
-
-
-    @DELETE
-    @RequireOrganizationAccess
-    @Override
-    public JSONWithPadding executeDelete(  @Context UriInfo ui,
-        @QueryParam("callback") @DefaultValue("callback") String callback,
-        @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
-
-        if (!"confirm_delete_of_application_and_data".equals( confirmDelete ) ) {
-            throw new IllegalArgumentException(
-                "Cannot delete application without app_delete_confirm parameter");
-        }
-
-        Properties props = management.getProperties();
-
-        // for now, only works in test mode
-        String testProp = ( String ) props.get( "usergrid.test" );
-        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-            throw new UnsupportedOperationException();
-        }
-
-        if ( applicationId == null ) {
-            throw new IllegalArgumentException("Application ID not specified in request");
-        }
-
-        management.deleteApplication( applicationId );
-
-        LOG.debug( "ApplicationResource.delete() deleted appId = {}", applicationId);
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "delete" );
-        response.setApplication(services.getApplication());
-        response.setParams(ui.getQueryParameters());
-
-        LOG.debug( "ApplicationResource.delete() sending response ");
-
-        return new JSONWithPadding( response, callback );
-    }
-
 
     String errorMsg = "";
     String applicationName;
