@@ -36,7 +36,7 @@ public class ApplicationIndexBucketLocator{
     /**
      * Number of buckets to hash across.
      */
-    private final int[] numberOfBuckets ;
+    private final int numberOfBuckets ;
     /**
      * How to funnel keys for buckets
      */
@@ -50,12 +50,10 @@ public class ApplicationIndexBucketLocator{
      */
     private final int indexBucketSeed;
 
-    private final CoreIndexFig indexFig;
 
     @Inject
     public ApplicationIndexBucketLocator(CoreIndexFig indexFig){
-        this.indexFig = indexFig;
-        numberOfBuckets = new int[indexFig.getNumberOfIndexBuckets()];
+        numberOfBuckets = indexFig.getNumberOfIndexBuckets();
         mapKeyFunnel = (key, into) -> into.putString( key, StringHashUtils.UTF8 );
         indexBucketSeed = indexFig.getBucketSeed();
         bucketLocator = new ExpandingShardLocator<>(mapKeyFunnel, numberOfBuckets);

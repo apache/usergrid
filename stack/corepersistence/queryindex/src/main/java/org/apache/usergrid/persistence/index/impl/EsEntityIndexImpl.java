@@ -163,6 +163,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
     }
 
+    /**
+     * if there are aliases then we must have an index...weak knowledge
+     * @return
+     */
     private boolean shouldInitialize() {
         String[] reads = getIndexes();
         return reads.length==0;
@@ -175,7 +179,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                          final String writeConsistency
     ) {
         try {
-            //get index name with suffix attached
+            //get index name with bucket attached
             final String indexName = indexNameOverride.or( indexLocationStrategy.getIndexBucketName() ) ;
 
             //Create index
@@ -269,15 +273,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return aliasCache.getIndexes(alias, aliasType);
     }
 
-    /**
-     * Get our index info from ES, but clear our cache first
-     * @param aliasType
-     * @return
-     */
-    public String[] getIndexesFromEs(final AliasType aliasType){
-        aliasCache.invalidate(alias);
-        return getIndexes(aliasType);
-    }
 
     /**
      * Tests writing a document to a new index to ensure it's working correctly. See this post:
