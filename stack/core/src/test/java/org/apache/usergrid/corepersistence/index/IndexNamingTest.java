@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.UseModules;
@@ -58,6 +59,9 @@ public class IndexNamingTest {
     @Inject
     public IndexLocationStrategyFactory indexLocationStrategyFactory;
 
+    @Inject
+    public ApplicationIndexBucketLocator bucketLocator;
+
     private ApplicationScope applicationScope;
     private ApplicationScope managementApplicationScope;
     private ApplicationIndexLocationStrategy applicationLocationStrategy;
@@ -68,23 +72,23 @@ public class IndexNamingTest {
         this.applicationScope = CpNamingUtils.getApplicationScope(UUID.randomUUID());
         this.managementApplicationScope = CpNamingUtils.getApplicationScope(CpNamingUtils.getManagementApplicationId().getUuid());
         this.managementLocationStrategy = new ManagementIndexLocationStrategy(indexFig, indexProcessorFig);
-        this.applicationLocationStrategy = new ApplicationIndexLocationStrategy(cassandraFig,indexFig,applicationScope);
+        this.applicationLocationStrategy = new ApplicationIndexLocationStrategy(cassandraFig,indexFig,applicationScope,bucketLocator);
     }
 
     @Test
     public void managementNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
-        assertEquals(indexLocationStrategy.getInitialIndexName(),managementLocationStrategy.getInitialIndexName());
-        assertEquals(indexLocationStrategy.getInitialIndexName(),indexProcessorFig.getManagementAppIndexName());
+        assertEquals(indexLocationStrategy.getIndexRootName(),managementLocationStrategy.getIndexRootName());
+        assertEquals(indexLocationStrategy.getIndexRootName(),indexProcessorFig.getManagementAppIndexName());
 
     }
     @Test
     public void applicationNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
-        assertEquals(indexLocationStrategy.getInitialIndexName(),applicationLocationStrategy.getInitialIndexName());
+        assertEquals(indexLocationStrategy.getIndexRootName(),applicationLocationStrategy.getIndexRootName());
 
-        assertTrue(indexLocationStrategy.getInitialIndexName().contains(indexFig.getIndexPrefix()));
-        assertTrue(indexLocationStrategy.getInitialIndexName().contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
+        assertTrue(indexLocationStrategy.getIndexRootName().contains(indexFig.getIndexPrefix()));
+        assertTrue(indexLocationStrategy.getIndexRootName().contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getReadAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains("write"));
