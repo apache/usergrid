@@ -106,7 +106,7 @@ public class IndexNamingTest {
         //always hashes to same bucket
         assertTrue(names.size()==1);
          names = new HashSet<>();
-        for(int i=0;i<10;i++){
+        for(int i=0;i<100;i++){
             IndexLocationStrategy indexLocationStrategyBucket =
                 new ApplicationIndexLocationStrategy(
                     cassandraFig,
@@ -116,7 +116,7 @@ public class IndexNamingTest {
             names.add(indexLocationStrategyBucket.getIndexBucketName());
         }
         //always hashes to diff't bucket
-        assertTrue(names.size()>1);
+        assertTrue(names.size()==indexProcessorFig.getNumberOfIndexBuckets());
 
     }
 
