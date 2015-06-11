@@ -20,7 +20,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 import com.google.common.hash.Funnel;
-import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -48,18 +47,20 @@ public class ApplicationIndexBucketLocator{
     /**
      * Startseed for buckets
      */
-    private final int indexBucketSeed;
+    private final int indexBucketOffset;
 
 
     @Inject
     public ApplicationIndexBucketLocator(CoreIndexFig indexFig){
         numberOfBuckets = indexFig.getNumberOfIndexBuckets();
         mapKeyFunnel = (key, into) -> into.putString( key, StringHashUtils.UTF8 );
-        indexBucketSeed = indexFig.getBucketSeed();
+        indexBucketOffset = indexFig.getBucketOffset();
         bucketLocator = new ExpandingShardLocator<>(mapKeyFunnel, numberOfBuckets);
     }
 
     public int getBucket(ApplicationScope applicationScope){
-        return indexBucketSeed  + bucketLocator.getCurrentBucket(applicationScope.getApplication().getUuid().toString());
+        //potentially add offset to remove old buckets
+        //if set is 1-5 then +5 would change range to 6-10
+        return indexBucketOffset + bucketLocator.getCurrentBucket(applicationScope.getApplication().getUuid().toString());
     }
 }
