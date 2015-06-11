@@ -2850,7 +2850,6 @@ public class CpEntityManager implements EntityManager {
         return applicationId;
     }
 
-
     @Override
     public IndexBucketLocator getIndexBucketLocator() {
 

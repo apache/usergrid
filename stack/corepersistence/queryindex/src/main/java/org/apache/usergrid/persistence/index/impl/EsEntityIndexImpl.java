@@ -164,26 +164,28 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     }
 
     private boolean shouldInitialize() {
-        String[] reads = getIndexes(EntityIndex.AliasType.Read);
-        String[] writes = getIndexes(EntityIndex.AliasType.Write);
-        return reads.length==0  || writes.length==0;
+        String[] reads = getIndexes();
+        return reads.length==0;
     }
 
     @Override
-    public void addIndex(final com.google.common.base.Optional<String> indexNameOverride, final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
+    public void addIndex(final Optional<String> indexNameOverride,
+                         final int numberOfShards,
+                         final int numberOfReplicas,
+                         final String writeConsistency
+    ) {
         try {
             //get index name with suffix attached
-            final String indexName = indexNameOverride.or(indexLocationStrategy.getInitialIndexName()) ;
+            final String indexName = indexNameOverride.or( indexLocationStrategy.getIndexBucketName() ) ;
 
             //Create index
             try {
                 final AdminClient admin = esProvider.getClient().admin();
                 Settings settings = ImmutableSettings.settingsBuilder()
-                        .put("index.number_of_shards", numberOfShards)
+                    .put("index.number_of_shards", numberOfShards)
                     .put("index.number_of_replicas", numberOfReplicas)
-
                         //dont' allow unmapped queries, and don't allow dynamic mapping
-                        .put("index.query.parse.allow_unmapped_fields", false)
+                    .put("index.query.parse.allow_unmapped_fields", false)
                     .put("index.mapper.dynamic", false)
                     .put("action.write_consistency", writeConsistency)
                     .build();
@@ -215,8 +217,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             addAlias();
 
-
-
             testNewIndex();
 
         } catch (IndexAlreadyExistsException expected) {
@@ -226,13 +226,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
     }
 
-
-    @Override
-    public void addAlias() {
+    private void addAlias() {
         Timer.Context timer = updateAliasTimer.time();
         try {
             Boolean isAck;
-            String indexName = indexLocationStrategy.getInitialIndexName();
+            String indexName = indexLocationStrategy.getIndexRootName();
             final AdminClient adminClient = esProvider.getClient().admin();
 
             String[] indexNames = getIndexes(AliasType.Write);

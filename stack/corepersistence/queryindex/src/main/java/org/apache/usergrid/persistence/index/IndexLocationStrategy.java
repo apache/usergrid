@@ -31,10 +31,17 @@ public interface IndexLocationStrategy {
     IndexAlias getAlias();
 
     /**
-     * get index name from suffix
+     * get index name
      * @return
      */
-    String getInitialIndexName();
+    String getIndexRootName();
+
+
+
+
+    default String getIndexBucketName() {
+        return getIndexRootName();
+    }
 
     /**
      * return unique string

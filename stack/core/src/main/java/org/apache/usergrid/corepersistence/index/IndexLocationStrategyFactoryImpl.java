@@ -32,20 +32,22 @@ import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 public class IndexLocationStrategyFactoryImpl implements IndexLocationStrategyFactory {
     private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
+    private final ApplicationIndexBucketLocator applicationLocatorBucketStrategy;
     private final CoreIndexFig coreIndexFig;
 
     @Inject
-    public IndexLocationStrategyFactoryImpl(final CassandraFig cassandraFig, final IndexFig indexFig, final CoreIndexFig coreIndexFig){
+    public IndexLocationStrategyFactoryImpl(final CassandraFig cassandraFig, final IndexFig indexFig, final ApplicationIndexBucketLocator applicationLocatorBucketStrategy, final CoreIndexFig coreIndexFig){
 
         this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
+        this.applicationLocatorBucketStrategy = applicationLocatorBucketStrategy;
         this.coreIndexFig = coreIndexFig;
     }
     public IndexLocationStrategy getIndexLocationStrategy(ApplicationScope applicationScope){
         if(CpNamingUtils.getManagementApplicationId().equals(applicationScope.getApplication())){
             return new ManagementIndexLocationStrategy(indexFig,coreIndexFig);
         }
-        return new ApplicationIndexLocationStrategy(cassandraFig,indexFig,applicationScope);
+        return new ApplicationIndexLocationStrategy(cassandraFig,indexFig,applicationScope, applicationLocatorBucketStrategy);
     }
 
 }

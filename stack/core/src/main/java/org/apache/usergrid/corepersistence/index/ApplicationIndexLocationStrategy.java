@@ -19,12 +19,8 @@
  */
 package org.apache.usergrid.corepersistence.index;
 
-import com.google.common.hash.Funnel;
-import com.google.common.hash.PrimitiveSink;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
-import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
@@ -38,8 +34,9 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
     private final ApplicationIndexBucketLocator applicationIndexBucketLocator;
-    private final String indexName;
+    private final String indexBucketName;
     private final IndexAlias alias;
+    private final String indexRootName;
 
     public ApplicationIndexLocationStrategy(final CassandraFig cassandraFig,
                                             final IndexFig indexFig,
@@ -50,9 +47,10 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
         this.applicationIndexBucketLocator = applicationIndexBucketLocator;
-        String prefix = getPrefix();        //TODO: add hash buckets by app scope
-        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, prefix);
-        this.indexName = prefix + "_" + applicationIndexBucketLocator.getBucket(applicationScope);
+        this.indexRootName  = getPrefix();        //TODO: add hash buckets by app scope
+        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexRootName);
+
+        this.indexBucketName = indexRootName + "_" + applicationIndexBucketLocator.getBucket(applicationScope);
     }
 
 
@@ -72,14 +70,22 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      * @return
      */
     @Override
-    public String getInitialIndexName() {
-        return indexName;
+    public String getIndexRootName() {
+        return indexBucketName;
     }
 
+    /**
+     * Get index name, send in additional parameter to add incremental indexes
+     * @return
+     */
+    @Override
+    public String getIndexBucketName() {
+        return indexBucketName;
+    }
 
     @Override
     public String toString() {
-        return "index id: "+indexName;
+        return "index id: "+ indexBucketName;
     }
 
     @Override
@@ -105,14 +111,14 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         ApplicationIndexLocationStrategy that = (ApplicationIndexLocationStrategy) o;
 
         if (!applicationScope.equals(that.applicationScope)) return false;
-        return indexName.equals(that.indexName);
+        return indexBucketName.equals(that.indexBucketName);
 
     }
 
     @Override
     public int hashCode() {
         int result = applicationScope.hashCode();
-        result = 31 * result + indexName.hashCode();
+        result = 31 * result + indexBucketName.hashCode();
         return result;
     }
 
