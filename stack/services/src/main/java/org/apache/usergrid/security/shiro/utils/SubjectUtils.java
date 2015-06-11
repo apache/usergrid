@@ -243,7 +243,6 @@ public class SubjectUtils {
         String applicationName = null;
         UUID applicationId = null;
         BiMap<UUID, String> applications = getApplications();
-        Set<String> values= applications.values();
 
         if ( applications == null ) {
             return null;
