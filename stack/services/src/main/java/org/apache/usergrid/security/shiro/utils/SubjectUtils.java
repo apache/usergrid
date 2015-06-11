@@ -250,12 +250,7 @@ public class SubjectUtils {
         }
         if ( identifier.isName() ) {
             applicationName = identifier.getName().toLowerCase();
-            for (String value: values ){
-                if(value.toLowerCase().equals( applicationName )){
-                    applicationId = applications.inverse().get( value );
-                    break;
-                }
-            }
+            applicationId = applications.inverse().get( applicationName );
         }
         else if ( identifier.isUUID() ) {
             applicationId = identifier.getUUID();
