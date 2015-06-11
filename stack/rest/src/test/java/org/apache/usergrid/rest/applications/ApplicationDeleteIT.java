@@ -24,6 +24,7 @@ import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,11 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
     public static final int INDEXING_WAIT = 3000;
 
+    UUID appid ;
+    @Before
+    public void setup(){
+        appid = UUID.randomUUID();
+    }
 
     /**
      * Test most common use cases.
@@ -56,7 +62,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // create app with a collection of "things"
 
         String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        String appToDeleteName = clientSetup.getAppName() + appid;
         Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
 
         List<Entity> entities = new ArrayList<>();
@@ -193,7 +199,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // create app with a collection of "things"
 
         String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        String appToDeleteName = clientSetup.getAppName() + appid;
         Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
 
         List<Entity> entities = new ArrayList<>();
@@ -273,7 +279,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // create app with a collection of "things"
 
         String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        String appToDeleteName = clientSetup.getAppName() + appid;
         Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
 
         List<Entity> entities = new ArrayList<>();
@@ -319,7 +325,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // create app with a collection of "things"
 
         String orgName = clientSetup.getOrganization().getName();
-        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        String appToDeleteName = clientSetup.getAppName() + appid;
         Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
 
         List<Entity> entities = new ArrayList<>();
