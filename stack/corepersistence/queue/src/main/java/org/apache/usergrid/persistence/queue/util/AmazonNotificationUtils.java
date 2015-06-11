@@ -127,6 +127,7 @@ public class AmazonNotificationUtils {
             SubscribeRequest subscribeRequest = new SubscribeRequest(topicArn, "sqs", queueArn);
             SubscribeResult subscribeResult = sns.subscribe(subscribeRequest);
             String subscriptionArn = subscribeResult.getSubscriptionArn();
+            sns.setSubscriptionAttributes(subscriptionArn, "RawMessageDelivery", "true");
 
             logger.info("Successfully subscribed SQS Queue {} to SNS arn {} with Subscription arn {}", queueArn, topicArn,
                 subscriptionArn);
