@@ -726,7 +726,7 @@ public interface EntityManager {
      * @param replicas number of replicas
      * @param writeConsistency only "one, quorum, or all"
      */
-    void addIndex(final Optional<String> newIndexName,final int shards,final int replicas, final String writeConsistency);
+    void addIndex(final String newIndexName,final int shards,final int replicas, final String writeConsistency);
 
     IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
 }
