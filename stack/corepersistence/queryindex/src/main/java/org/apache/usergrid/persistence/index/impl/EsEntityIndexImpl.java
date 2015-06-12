@@ -159,7 +159,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final int numberOfReplicas = indexLocationStrategy.getNumberOfReplicas();
 
         if (shouldInitialize()) {
-            addIndex( Optional.absent(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
+            addIndex( indexLocationStrategy.getIndexBucketName(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
         }
     }
 
@@ -168,19 +168,19 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
      * @return
      */
     private boolean shouldInitialize() {
-        String[] reads = getIndexes();
-        return reads.length==0;
+        String[] writes = getIndexes(AliasType.Write);
+        return writes.length==0;
     }
 
     @Override
-    public void addIndex(final Optional<String> indexNameOverride,
+    public void addIndex(final String indexName,
                          final int numberOfShards,
                          final int numberOfReplicas,
                          final String writeConsistency
     ) {
         try {
             //get index name with bucket attached
-            final String indexName = indexNameOverride.or( indexLocationStrategy.getIndexBucketName() ) ;
+            Preconditions.checkNotNull(indexName,"must have an indexname");
 
             //Create index
             try {
@@ -219,7 +219,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
             //may have been set via other administrative endpoint
 
-            addAlias();
+            addAlias(indexName);
 
             testNewIndex();
 
@@ -230,11 +230,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
     }
 
-    private void addAlias() {
+    private void addAlias(String indexName) {
         Timer.Context timer = updateAliasTimer.time();
         try {
             Boolean isAck;
-            String indexName = indexLocationStrategy.getIndexRootName();
+
             final AdminClient adminClient = esProvider.getClient().admin();
 
             String[] indexNames = getIndexes(AliasType.Write);

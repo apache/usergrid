@@ -249,7 +249,7 @@ public class IndexResource extends AbstractContextResource {
         }
 
         EntityManager em = emf.getEntityManager(appId);
-        em.addIndex(Optional.of(config.get("indexSuffix").toString()), (int) config.get("shards"),
+        em.addIndex(config.get("indexSuffix").toString(), (int) config.get("shards"),
             (int) config.get("replicas"), (String) config.get("writeConsistency"));
         response.setAction( "Add index to alias" );
 

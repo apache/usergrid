@@ -45,7 +45,7 @@ public interface EntityIndex extends CPManager {
      * @param writeConsistency
      */
      void addIndex(
-         final Optional<String> indexSuffix,
+         final String indexSuffix,
          final int shards,
          final int replicas,
          final String writeConsistency
