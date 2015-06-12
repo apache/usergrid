@@ -83,7 +83,7 @@ public class IndexNamingTest {
         clusterName = clusterFig.getClusterName();
         this.applicationScope = CpNamingUtils.getApplicationScope(UUID.randomUUID());
         this.managementApplicationScope = CpNamingUtils.getApplicationScope(CpNamingUtils.getManagementApplicationId().getUuid());
-        this.managementLocationStrategy = new ManagementIndexLocationStrategy(clusterFig,indexFig, indexProcessorFig);
+        this.managementLocationStrategy = new ManagementIndexLocationStrategy(clusterFig,cassandraFig,indexFig, indexProcessorFig);
         this.applicationLocationStrategy = new ApplicationIndexLocationStrategy(clusterFig, cassandraFig,indexFig,applicationScope,bucketLocator);
     }
 
@@ -91,9 +91,9 @@ public class IndexNamingTest {
     public void managementNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
         assertEquals(indexLocationStrategy.getIndexRootName(),managementLocationStrategy.getIndexRootName());
-        assertEquals(indexLocationStrategy.getIndexRootName(),clusterName + "_" + indexProcessorFig.getManagementAppIndexName());
+        assertEquals(indexLocationStrategy.getIndexRootName(),clusterName + "_" + keyspacename + "_" + indexProcessorFig.getManagementAppIndexName());
         assertEquals(indexLocationStrategy.getIndexRootName(), indexLocationStrategy.getIndexBucketName());
-        assertEquals(indexLocationStrategy.getIndexBucketName(),clusterName + "_"+indexProcessorFig.getManagementAppIndexName());
+        assertEquals(indexLocationStrategy.getIndexBucketName(),clusterName + "_" + keyspacename + "_" +indexProcessorFig.getManagementAppIndexName());
 
     }
     @Test
