@@ -53,7 +53,7 @@ public class ExportResourceIT extends AbstractRestIT {
     public void exportApplicationUUIDRetTest() throws Exception {
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() ).addToPath( "export" );
         }
         catch ( UniformInterfaceException uie ) {
@@ -72,7 +72,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
 
 
-            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
                         .addToPath( "users" ).addToPath( "export" ).post(ApiResponse.class,payloadBuilder() );
         }
@@ -97,7 +97,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
         try {
-            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
         catch ( UniformInterfaceException uie ) {
@@ -111,7 +111,7 @@ public class ExportResourceIT extends AbstractRestIT {
         exportEntity = null;
         try {
 
-            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
         catch ( UniformInterfaceException uie ) {
@@ -139,7 +139,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
         try {
-            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .app().addToPath( clientSetup.getAppUuid() )
                                        .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
@@ -155,7 +155,7 @@ public class ExportResourceIT extends AbstractRestIT {
         refreshIndex();
         try {
 
-            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
         catch ( UniformInterfaceException uie ) {
@@ -174,7 +174,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         ApiResponse exportEntity = null;
 
-        exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+        exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                    .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
                                    .addToPath( "users" ).addToPath( "export" )
                                    .post( ApiResponse.class, payloadBuilder() );
@@ -185,7 +185,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
         exportEntity = null;
         try {
-            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
         catch ( UniformInterfaceException uie ) {
@@ -205,7 +205,7 @@ public class ExportResourceIT extends AbstractRestIT {
     public void exportGetWrongUUID() throws Exception {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).addToPath( fake.toString() ).get( ApiResponse.class );
             fail( "Should not have been able to get fake uuid" );
         }
@@ -221,7 +221,7 @@ public class ExportResourceIT extends AbstractRestIT {
     @Test
     public void exportPostApplicationNullPointerProperties() throws Exception {
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                                        .app().addToPath( clientSetup.getAppUuid() )
                                        .addToPath( "export" ).post( ApiResponse.class,
                 new HashMap<String, Object>() );
@@ -237,7 +237,7 @@ public class ExportResourceIT extends AbstractRestIT {
     @Test
     public void exportPostOrganizationNullPointerProperties() throws Exception {
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .addToPath( "export" ).post( ApiResponse.class, new HashMap<String, Object>()  );
             fail( "Should not have passed, The payload is empty." );
         }
@@ -251,7 +251,7 @@ public class ExportResourceIT extends AbstractRestIT {
     @Test
     public void exportPostCollectionNullPointer() throws Exception {
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
                         .addToPath( "export" ).post( ApiResponse.class, new HashMap<String, Object>()  );
@@ -269,7 +269,7 @@ public class ExportResourceIT extends AbstractRestIT {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
                         .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
@@ -286,7 +286,7 @@ public class ExportResourceIT extends AbstractRestIT {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
@@ -302,7 +302,7 @@ public class ExportResourceIT extends AbstractRestIT {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
         }
@@ -320,7 +320,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_info" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -340,7 +340,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_info" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "export" ).post( ApiResponse.class,
                 payload );
@@ -361,7 +361,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_info" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
                         .addToPath( "export" ).post( ApiResponse.class,
@@ -383,7 +383,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_provider" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -403,7 +403,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_provider" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "export" ).post( ApiResponse.class,
                 payload );
@@ -424,7 +424,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_provider" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
                         .addToPath( "export" ).post( ApiResponse.class,
@@ -448,7 +448,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -464,7 +464,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_access_id");
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -480,7 +480,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "bucket_location" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
 
@@ -500,7 +500,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
@@ -517,7 +517,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_access_id" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
@@ -534,7 +534,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "bucket_location" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
             fail( "Should not have passed as we were missing an important part of the payload" );
@@ -555,7 +555,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
@@ -573,7 +573,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_access_id" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
                         .addToPath( "export" ).post( ApiResponse.class, payload );
@@ -591,7 +591,7 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "bucket_location" );
 
         try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
+            management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() )
                         .addToPath( "collection" ).addToPath( "users" )
                         .addToPath( "export" ).post( ApiResponse.class, payload );

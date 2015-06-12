@@ -18,39 +18,37 @@
 package org.apache.usergrid.rest.applications;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+
+import javax.ws.rs.core.MediaType;
+
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.jcip.annotations.NotThreadSafe;
 
-import javax.ws.rs.core.MediaType;
-import java.util.*;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 import static org.junit.Assert.fail;
 
-@NotThreadSafe
+
 public class ApplicationDeleteIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationDeleteIT.class);
 
     public static final int INDEXING_WAIT = 3000;
 
-    Token orgAdminToken;
-    String orgName;
-    @Before
-    public void setup(){
-        orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
-        orgName = clientSetup.getOrganization().getName();
-
-    }
 
     /**
      * Test most common use cases.
@@ -67,27 +65,32 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // create app with a collection of "things"
 
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+
         List<Entity> entities = new ArrayList<>();
 
-        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
         UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
 
         // delete the app
 
         try {
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteId.toString()).getResource()
+            clientSetup.getRestClient() .management().orgs()
+                .org(orgName).apps().app(appToDeleteId.toString()).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .delete();
 
             fail("Delete must fail without app_delete_confirm parameter");
 
-        } catch ( Exception e ) {
-            logger.error("Error", e);
+        } catch (  UniformInterfaceException expected  ) {
+            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
+            Assert.assertEquals("Cannot delete application without app_delete_confirm parameter", node.get("error_description").textValue());
         }
 
-        clientSetup.getRestClient()
-            .org(orgName).app(appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org(orgName).apps().app(appToDeleteId.toString() ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
@@ -95,8 +98,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // test that we can no longer get the app
 
         try {
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteName).getResource()
+            clientSetup.getRestClient().management().orgs()
+                .org(orgName).apps().app(appToDeleteName).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .type(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
@@ -104,10 +107,25 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             fail("Must not be able to get deleted app");
 
         } catch ( UniformInterfaceException expected ) {
-            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            Assert.assertEquals("Error must be 404", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
-            Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
+            Assert.assertEquals("entity_not_found", node.get("error").textValue());
         }
+
+
+        try {
+            clientSetup.getRestClient().org( orgName ).app( appToDeleteName ).getResource()
+                       .queryParam( "access_token", orgAdminToken.getAccessToken() ).type( MediaType.APPLICATION_JSON )
+                       .get( ApiResponse.class );
+
+            fail( "Must not be able to get deleted app" );
+        }
+        catch ( UniformInterfaceException expected ) {
+            Assert.assertEquals( "Error must be 404", 404, expected.getResponse().getStatus() );
+            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ) );
+            Assert.assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
+        }
+
 
         // test that we can no longer get deleted app's collection
 
@@ -121,7 +139,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             fail("Must not be able to get deleted app's collection");
 
         } catch ( UniformInterfaceException expected ) {
-            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            Assert.assertEquals("Error must be 400", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
             Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
         }
@@ -140,7 +158,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         } catch ( UniformInterfaceException expected ) {
             // TODO: why not a 404?
-            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            Assert.assertEquals("Error must be 400", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
             Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
         }
@@ -151,7 +169,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         refreshIndex();
 
         ManagementResponse orgAppResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).apps().getOrganizationApplications();
+            .management().orgs().org( orgName ).apps().getOrganizationApplications();
 
         for ( String appName : orgAppResponse.getData().keySet() ) {
             if ( orgAppResponse.getData().get( appName ).equals( appToDeleteId.toString() )) {
@@ -162,21 +180,22 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // test that we cannot delete the application a second time
 
         try {
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteId.toString()).getResource()
-                .queryParam("access_token", orgAdminToken.getAccessToken())
-                .delete();
+            clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( appToDeleteId.toString() )
+                       .getResource().queryParam( "access_token", orgAdminToken.getAccessToken() )
+                       .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" ).delete();
 
-        } catch ( UniformInterfaceException expected ) {
-            Assert.assertEquals("Error must be 404", 404, expected.getResponse().getStatus() );
-            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
-            Assert.assertEquals("not_found", node.get("error").textValue());
+            fail("Can't delete a non existent app twice");
+        }
+        catch ( UniformInterfaceException expected ) {
+            Assert.assertEquals( "Error must be 404", 404, expected.getResponse().getStatus() );
+            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ) );
+            Assert.assertEquals( "entity_not_found", node.get( "error" ).textValue() );
         }
 
         // test that we can create a new application with the same name
 
         ApiResponse appCreateAgainResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().getResource()
+            .management().orgs().org( orgName ).app().getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .type( MediaType.APPLICATION_JSON )
             .post( ApiResponse.class, new Application( appToDeleteName ) );
@@ -198,9 +217,13 @@ public class ApplicationDeleteIT extends AbstractRestIT {
      */
     @Test
     public void testAppRestore() throws Exception {
-        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
 
         // create app with a collection of "things"
+
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+
         List<Entity> entities = new ArrayList<>();
 
         UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
@@ -209,8 +232,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         logger.debug("\n\nDeleting app\n");
 
-        clientSetup.getRestClient()
-            .org(orgName).app( appToDeleteName ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org(orgName).apps().app( appToDeleteName ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
@@ -222,8 +245,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         logger.debug("\n\nRestoring app\n");
 
-        clientSetup.getRestClient()
-            .org(orgName).app( appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org(orgName).apps().app( appToDeleteId.toString() ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .put();
 
@@ -234,7 +257,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         logger.debug("\n\nGetting app list from management end-point\n");
 
         ManagementResponse orgAppResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).apps().getOrganizationApplications();
+            .management().orgs().org( orgName ).apps().getOrganizationApplications();
 
         boolean found = false;
         for ( String appName : orgAppResponse.getData().keySet() ) {
@@ -274,21 +297,24 @@ public class ApplicationDeleteIT extends AbstractRestIT {
      */
     @Test
     public void testAppRestoreConflict() throws Exception {
-        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
 
         // create app with a collection of "things"
+
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+
         List<Entity> entities = new ArrayList<>();
 
         UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
 
         // delete the app
 
-        clientSetup.getRestClient()
-            .org( orgName ).app(appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org( orgName ).apps().app(appToDeleteId.toString() ).getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
-        refreshIndex();
 
         // create new app with same name
 
@@ -298,8 +324,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         try {
 
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteId.toString()).getResource()
+            clientSetup.getRestClient() .management().orgs()
+                .org(orgName).apps().app(appToDeleteId.toString()).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .put();
 
@@ -317,11 +343,11 @@ public class ApplicationDeleteIT extends AbstractRestIT {
      */
     @Test
     public void testAppDeleteConflict() throws Exception {
-        String         appToDeleteName = clientSetup.getAppName() + UUID.randomUUID();
 
         // create app with a collection of "things"
 
         String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
         Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
 
         List<Entity> entities = new ArrayList<>();
@@ -330,12 +356,11 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // delete the app
 
-        clientSetup.getRestClient()
-            .org( orgName ).app(appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( appToDeleteId.toString() ).getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .delete();
-        refreshIndex();
+
         // create new app with same name
 
         UUID newAppId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
@@ -344,8 +369,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         try {
 
-            clientSetup.getRestClient()
-                .org(orgName).app( newAppId.toString() ).getResource()
+            clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( newAppId.toString() ).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
                 .delete();
@@ -362,7 +386,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         String orgName, String appName, Token orgAdminToken, List<Entity> entities) {
 
         ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().getResource()
+            .management().orgs().org( orgName ).app().getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .type( MediaType.APPLICATION_JSON )
             .post( ApiResponse.class, new Application( appName ) );
@@ -386,7 +410,6 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
             entities.add( createResponse.getEntities().get(0) );
         }
-        refreshIndex();
         return appId;
     }
 }
