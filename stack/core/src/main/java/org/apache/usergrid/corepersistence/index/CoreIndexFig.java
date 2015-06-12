@@ -28,6 +28,7 @@ import org.safehaus.guicyfig.Key;
  */
 public interface CoreIndexFig extends GuicyFig {
 
+    String MANAGEMENT_APP_NAME = "management";
     String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS = "elasticsearch.management_number_shards";
 
     String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS = "elasticsearch.management_number_replicas";
@@ -40,9 +41,9 @@ public interface CoreIndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS )
     int getManagementNumberOfReplicas();
 
-    @Default( "usergrid_management" )
-    @Key( "elasticsearch.managment_index" )
-    String getManagementAppIndexName();
+    default String getManagementAppIndexName(){
+        return MANAGEMENT_APP_NAME;
+    }
 
     @Default( "5" )
     @Key( "elasticsearch.index_bucket_count" )
