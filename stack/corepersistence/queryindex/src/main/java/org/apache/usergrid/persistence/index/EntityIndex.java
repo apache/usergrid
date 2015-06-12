@@ -44,7 +44,12 @@ public interface EntityIndex extends CPManager {
      * @param replicas
      * @param writeConsistency
      */
-     void addIndex(final Optional<String> indexSuffix, final int shards, final int replicas, final String writeConsistency);
+     void addIndex(
+         final String indexSuffix,
+         final int shards,
+         final int replicas,
+         final String writeConsistency
+     );
 
     /**
      * Refresh the index.
@@ -121,12 +126,8 @@ public interface EntityIndex extends CPManager {
      * get all unique indexes
      * @return
      */
-    String[] getUniqueIndexes();
+    String[] getIndexes();
 
-    /**
-     * Add alias to index, will remove old index from write alias
-     */
-    void addAlias( );
 
     /**
      * type of alias

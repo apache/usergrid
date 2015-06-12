@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +58,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
     /** @Deprecated Tests legacy API */
     @Test
+    @Ignore
     public void verifyBinaryCrud() throws Exception {
 
         userRepo.load();
@@ -100,6 +102,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
+    @Ignore
     public void octetStreamOnDynamicEntity() throws Exception {
 
         this.refreshIndex();
@@ -148,6 +151,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
+    @Ignore
     public void multipartPostFormOnDynamicEntity() throws Exception {
 
         this.refreshIndex();
@@ -201,6 +205,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
+    @Ignore
     public void multipartPutFormOnDynamicEntity() throws Exception {
 
         this.refreshIndex();
@@ -267,6 +272,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
+    @Ignore
     public void largeFileInS3() throws Exception {
 
         this.refreshIndex();
@@ -313,6 +319,7 @@ public class AssetResourceIT extends AbstractRestIT {
     }
 
     @Test
+    @Ignore
     public void fileTooLargeShouldResultInError() throws Exception {
 
         this.refreshIndex();
@@ -371,6 +378,7 @@ public class AssetResourceIT extends AbstractRestIT {
      * Deleting a connection to an asset should not delete the asset or the asset's data
      */
     @Test
+    @Ignore
     public void deleteConnectionToAsset() throws IOException {
 
         this.refreshIndex();

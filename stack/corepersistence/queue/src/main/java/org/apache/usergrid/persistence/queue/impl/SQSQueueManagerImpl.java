@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.queue.util.AmazonNotificationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,7 @@ public class SQSQueueManagerImpl implements QueueManager {
     private final QueueScope scope;
     private ObjectMapper mapper;
     protected final QueueFig fig;
+    private final ClusterFig clusterFig;
     protected final AmazonSQSClient sqs;
 
     private static SmileFactory smileFactory = new SmileFactory();
@@ -133,10 +135,11 @@ public class SQSQueueManagerImpl implements QueueManager {
 
 
     @Inject
-    public SQSQueueManagerImpl(@Assisted QueueScope scope, final QueueFig fig) {
+    public SQSQueueManagerImpl(@Assisted QueueScope scope, final QueueFig fig, final ClusterFig clusterFig) {
 
         this.scope = scope;
         this.fig = fig;
+        this.clusterFig = clusterFig;
         try {
 
             smileFactory.delegateToTextual(true);
@@ -155,7 +158,7 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     protected String getName() {
 
-        String name = fig.getPrefix() + "_" + scope.getName();
+        String name = clusterFig.getClusterName() + "_" + scope.getName();
 
         Preconditions.checkArgument(name.length() <= 80, "Your name must be < than 80 characters");
 

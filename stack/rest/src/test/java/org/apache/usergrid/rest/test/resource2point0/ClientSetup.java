@@ -23,6 +23,7 @@ package org.apache.usergrid.rest.test.resource2point0;
 
 import java.io.IOException;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
@@ -162,7 +163,11 @@ public class ClientSetup implements TestRule {
     }
 
     public void refreshIndex() {
-        this.restClient.refreshIndex(getOrganizationName(),getAppName(),getAppUuid());
+        this.restClient.refreshIndex(getOrganizationName(),getAppName(), CpNamingUtils.getManagementApplicationId().getUuid().toString());
+
+        if(!CpNamingUtils.getManagementApplicationId().getUuid().toString().equals(getAppUuid())) {
+            this.restClient.refreshIndex(getOrganizationName(), getAppName(), getAppUuid());
+        }
     }
 
     public RestClient getRestClient(){
