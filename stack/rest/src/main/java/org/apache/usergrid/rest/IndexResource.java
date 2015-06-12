@@ -57,16 +57,15 @@ import com.sun.jersey.api.json.JSONWithPadding;
  * system/index/otherstuff
  */
 @Component
-@Scope( "singleton" )
-@Produces( {
-    MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-    "application/ecmascript", "text/jscript"
-} )
+@Scope("singleton")
+@Produces({
+        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript"
+})
 public class IndexResource extends AbstractContextResource {
 
-    private static final Logger logger = LoggerFactory.getLogger( IndexResource.class );
+    private static final Logger logger = LoggerFactory.getLogger(IndexResource.class);
     private static final String UPDATED_FIELD = "updated";
-
 
 
     public IndexResource() {
@@ -76,189 +75,189 @@ public class IndexResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @POST
-    @Path( "rebuild" )
-    public JSONWithPadding rebuildIndexesPost( @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-        throws Exception {
+    @Path("rebuild")
+    public JSONWithPadding rebuildIndexesPost(@QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
 
-        logger.info( "Rebuilding all applications" );
+        logger.info("Rebuilding all applications");
 
         final ReIndexRequestBuilder request = createRequest();
 
-        return executeAndCreateResponse( request, callback );
+        return executeAndCreateResponse(request, callback);
     }
 
 
     @RequireSystemAccess
     @PUT
-    @Path( "rebuild" )
-    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-        throws Exception {
+    @Path("rebuild")
+    public JSONWithPadding rebuildIndexesPut(final Map<String, Object> payload,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
 
-        logger.info( "Resuming rebuilding all applications" );
+        logger.info("Resuming rebuilding all applications");
         final ReIndexRequestBuilder request = createRequest();
 
-        return executeResumeAndCreateResponse( payload, request, callback );
+        return executeResumeAndCreateResponse(payload, request, callback);
     }
 
 
     @RequireSystemAccess
     @POST
-    @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexesPut( @PathParam( "applicationId" ) String applicationIdStr,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                                              @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
+    @Path("rebuild/" + RootResource.APPLICATION_ID_PATH)
+    public JSONWithPadding rebuildIndexesPut(@PathParam("applicationId") String applicationIdStr,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback,
+                                             @QueryParam("delay") @DefaultValue("10") final long delay)
 
-        throws Exception {
-
-
-        logger.info( "Rebuilding application {}", applicationIdStr );
+            throws Exception {
 
 
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        logger.info("Rebuilding application {}", applicationIdStr);
 
-        final ReIndexRequestBuilder request = createRequest().withApplicationId( appId );
 
-        return executeAndCreateResponse( request, callback );
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
+
+        final ReIndexRequestBuilder request = createRequest().withApplicationId(appId);
+
+        return executeAndCreateResponse(request, callback);
     }
 
 
     @RequireSystemAccess
     @PUT
-    @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
-                                              @PathParam( "applicationId" ) String applicationIdStr,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                                              @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
+    @Path("rebuild/" + RootResource.APPLICATION_ID_PATH)
+    public JSONWithPadding rebuildIndexesPut(final Map<String, Object> payload,
+                                             @PathParam("applicationId") String applicationIdStr,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback,
+                                             @QueryParam("delay") @DefaultValue("10") final long delay)
 
-        throws Exception {
+            throws Exception {
 
-        logger.info( "Resuming rebuilding application {}", applicationIdStr );
+        logger.info("Resuming rebuilding application {}", applicationIdStr);
 
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
-        final ReIndexRequestBuilder request = createRequest().withApplicationId( appId );
+        final ReIndexRequestBuilder request = createRequest().withApplicationId(appId);
 
-        return executeResumeAndCreateResponse( payload, request, callback );
+        return executeResumeAndCreateResponse(payload, request, callback);
     }
 
 
     @RequireSystemAccess
     @POST
-    @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexesPost( @PathParam( "applicationId" ) final String applicationIdStr,
-                                               @PathParam( "collectionName" ) final String collectionName,
-                                               @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
-                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-        throws Exception {
+    @Path("rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}")
+    public JSONWithPadding rebuildIndexesPost(@PathParam("applicationId") final String applicationIdStr,
+                                              @PathParam("collectionName") final String collectionName,
+                                              @QueryParam("reverse") @DefaultValue("false") final Boolean reverse,
+                                              @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
 
-        logger.info( "Rebuilding collection {} in  application {}", collectionName, applicationIdStr );
+        logger.info("Rebuilding collection {} in  application {}", collectionName, applicationIdStr);
 
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
         final ReIndexRequestBuilder request =
-            createRequest().withApplicationId( appId ).withCollection( collectionName );
+                createRequest().withApplicationId(appId).withCollection(collectionName);
 
-        return executeAndCreateResponse( request, callback );
+        return executeAndCreateResponse(request, callback);
     }
 
 
     @RequireSystemAccess
     @PUT
-    @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
-                                              @PathParam( "applicationId" ) final String applicationIdStr,
-                                              @PathParam( "collectionName" ) final String collectionName,
-                                              @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-        throws Exception {
+    @Path("rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}")
+    public JSONWithPadding rebuildIndexesPut(final Map<String, Object> payload,
+                                             @PathParam("applicationId") final String applicationIdStr,
+                                             @PathParam("collectionName") final String collectionName,
+                                             @QueryParam("reverse") @DefaultValue("false") final Boolean reverse,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-        logger.info( "Resuming rebuilding collection {} in  application {}", collectionName, applicationIdStr );
+        logger.info("Resuming rebuilding collection {} in  application {}", collectionName, applicationIdStr);
 
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
         final ReIndexRequestBuilder request =
-            createRequest().withApplicationId( appId ).withCollection( collectionName );
+                createRequest().withApplicationId(appId).withCollection(collectionName);
 
-        return executeResumeAndCreateResponse( payload, request, callback );
+        return executeResumeAndCreateResponse(payload, request, callback);
     }
 
 
     @RequireSystemAccess
     @POST
-    @Path( "rebuild/management" )
+    @Path("rebuild/management")
     public JSONWithPadding rebuildInternalIndexesPost(
-        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
 
         final UUID managementAppId = emf.getManagementAppId();
 
-        logger.info( "Rebuilding management application with id {} ", managementAppId );
-        final ReIndexRequestBuilder request = createRequest().withApplicationId( managementAppId );
+        logger.info("Rebuilding management application with id {} ", managementAppId);
+        final ReIndexRequestBuilder request = createRequest().withApplicationId(managementAppId);
 
-        return executeAndCreateResponse( request, callback );
+        return executeAndCreateResponse(request, callback);
     }
 
 
     @RequireSystemAccess
     @PUT
-    @Path( "rebuild/management" )
-    public JSONWithPadding rebuildInternalIndexesPut( final Map<String, Object> payload,
-                                                      @QueryParam( "callback" ) @DefaultValue( "callback" )
-                                                      String callback ) throws Exception {
+    @Path("rebuild/management")
+    public JSONWithPadding rebuildInternalIndexesPut(final Map<String, Object> payload,
+                                                     @QueryParam("callback") @DefaultValue("callback")
+                                                     String callback) throws Exception {
 
 
         final UUID managementAppId = emf.getManagementAppId();
 
-        logger.info( "Resuming rebuilding management application with id {} ", managementAppId );
-        final ReIndexRequestBuilder request = createRequest().withApplicationId( managementAppId );
+        logger.info("Resuming rebuilding management application with id {} ", managementAppId);
+        final ReIndexRequestBuilder request = createRequest().withApplicationId(managementAppId);
 
-        return executeResumeAndCreateResponse( payload, request, callback );
+        return executeResumeAndCreateResponse(payload, request, callback);
     }
 
 
     @RequireSystemAccess
     @POST
     @Path(RootResource.APPLICATION_ID_PATH)
-    public JSONWithPadding addIndex( @Context UriInfo ui,
-                                     @PathParam( "applicationId" ) final String applicationIdStr,
-                                     Map<String, Object> config,
-                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-        throws Exception {
+    public JSONWithPadding addIndex(@Context UriInfo ui,
+                                    @PathParam("applicationId") final String applicationIdStr,
+                                    Map<String, Object> config,
+                                    @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
         Preconditions
-            .checkNotNull( config, "Payload for config is null, please pass {replicas:int, shards:int} in body" );
+                .checkNotNull(config, "Payload for config is null, please pass {replicas:int, shards:int} in body");
 
         ApiResponse response = createApiResponse();
 
-        if ( !config.containsKey( "replicas" ) || !config.containsKey( "shards" ) ||
-            !( config.get( "replicas" ) instanceof Integer ) || !( config.get( "shards" ) instanceof Integer ) ) {
-            throw new IllegalArgumentException( "body must contains 'replicas' of type int and 'shards' of type int" );
+        if (!config.containsKey("replicas") || !config.containsKey("shards") ||
+                !(config.get("replicas") instanceof Integer) || !(config.get("shards") instanceof Integer)) {
+            throw new IllegalArgumentException("body must contains 'replicas' of type int and 'shards' of type int");
         }
 
-        if ( !config.containsKey( "indexSuffix" ) ) {
-            throw new IllegalArgumentException( "Please add an indexSuffix to your post" );
+        if (!config.containsKey("indexSuffix")) {
+            throw new IllegalArgumentException("Please add an indexSuffix to your post");
         }
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
-        if(appId == null){
+        if (appId == null) {
             throw new IllegalArgumentException("app id was not parsed");
         }
 
         EntityManager em = emf.getEntityManager(appId);
         em.addIndex(Optional.of(config.get("indexSuffix").toString()), (int) config.get("shards"),
-            (int) config.get("replicas"), (String) config.get("writeConsistency"));
-        response.setAction( "Add index to alias" );
+                (int) config.get("replicas"), (String) config.get("writeConsistency"));
+        response.setAction("Add index to alias");
 
-        return new JSONWithPadding( response, callback );
+        return new JSONWithPadding(response, callback);
     }
 
 
     private ReIndexService getReIndexService() {
-        return injector.getInstance( ReIndexService.class );
+        return injector.getInstance(ReIndexService.class);
     }
 
 
@@ -268,40 +267,42 @@ public class IndexResource extends AbstractContextResource {
     }
 
 
-    private JSONWithPadding executeResumeAndCreateResponse( final Map<String, Object> payload,
-                                                            final ReIndexRequestBuilder request,
-                                                            final String callback ) {
+    private JSONWithPadding executeResumeAndCreateResponse(final Map<String, Object> payload,
+                                                           final ReIndexRequestBuilder request,
+                                                           final String callback) {
 
-        Preconditions.checkArgument( payload.containsKey( UPDATED_FIELD ),
-            "You must specified the field \"updated\" in the payload" );
+        Preconditions.checkNotNull(payload, "Payload is null!");
+
+        Preconditions.checkArgument(payload.containsKey(UPDATED_FIELD),
+                "You must specified the field \"updated\" in the payload");
 
         //add our updated timestamp to the request
-        if ( !payload.containsKey( UPDATED_FIELD ) ) {
-            final long timestamp = ( long ) payload.get( UPDATED_FIELD );
-            request.withStartTimestamp( timestamp );
+        if (!payload.containsKey(UPDATED_FIELD)) {
+            final long timestamp = (long) payload.get(UPDATED_FIELD);
+            request.withStartTimestamp(timestamp);
         }
 
-        return executeAndCreateResponse( request, callback );
+        return executeAndCreateResponse(request, callback);
     }
 
 
     /**
      * Execute the request and return the response.
      */
-    private JSONWithPadding executeAndCreateResponse( final ReIndexRequestBuilder request, final String callback ) {
+    private JSONWithPadding executeAndCreateResponse(final ReIndexRequestBuilder request, final String callback) {
 
 
-        final ReIndexService.ReIndexStatus status = getReIndexService().rebuildIndex( request );
+        final ReIndexService.ReIndexStatus status = getReIndexService().rebuildIndex(request);
 
         final ApiResponse response = createApiResponse();
 
-        response.setAction( "rebuild indexes" );
-        response.setProperty( "jobId", status.getJobId() );
-        response.setProperty( "status", status.getStatus() );
-        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
-        response.setProperty( "numberQueued", status.getNumberProcessed() );
+        response.setAction("rebuild indexes");
+        response.setProperty("jobId", status.getJobId());
+        response.setProperty("status", status.getStatus());
+        response.setProperty("lastUpdatedEpoch", status.getLastUpdated());
+        response.setProperty("numberQueued", status.getNumberProcessed());
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return new JSONWithPadding(response, callback);
     }
 }
