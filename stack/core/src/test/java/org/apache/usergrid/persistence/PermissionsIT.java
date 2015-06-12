@@ -147,6 +147,7 @@ public class PermissionsIT extends AbstractCoreIT {
 
         em.deleteGroupRole( group.getUuid(), "author" );
         app.refreshIndex();
+        Thread.sleep(1000);
 
         roles = em.getGroupRoles( group.getUuid() );
         assertEquals( "proper number of group roles not set", 1, roles.size() );

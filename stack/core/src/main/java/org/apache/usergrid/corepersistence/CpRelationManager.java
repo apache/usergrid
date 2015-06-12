@@ -346,8 +346,9 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
+        Preconditions.checkNotNull(itemRef,"itemref is null");
         CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
-        if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
+        if ( ( collection != null && collection.getType()!=null ) && !collection.getType().equals( itemRef.getType() ) ) {
             return null;
         }
 
