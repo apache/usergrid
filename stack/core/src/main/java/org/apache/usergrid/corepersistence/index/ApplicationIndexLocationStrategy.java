@@ -80,7 +80,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      * @return
      */
     @Override
-    public String getIndexBucketName() {
+    public String getIndexInitialName() {
         return indexBucketName;
     }
 

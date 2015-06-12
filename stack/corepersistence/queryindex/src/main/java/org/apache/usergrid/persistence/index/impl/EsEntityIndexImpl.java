@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.index.impl;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.*;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -159,7 +158,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final int numberOfReplicas = indexLocationStrategy.getNumberOfReplicas();
 
         if (shouldInitialize()) {
-            addIndex( indexLocationStrategy.getIndexBucketName(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
+            addIndex( indexLocationStrategy.getIndexInitialName(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
         }
     }
 

@@ -52,7 +52,7 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
         return   keyspaceName;
     }
     @Override
-    public String getIndexBucketName() {
+    public String getIndexInitialName() {
         return getIndexRootName();
     }
 
