@@ -31,7 +31,7 @@ import org.safehaus.guicyfig.Key;
 public interface ClusterFig extends GuicyFig{
 
     @Default( "ug" )
-    @Key( "elasticsearch.index_prefix" ) //"usergrid.cluster_name"
+    @Key( "usergrid.cluster_name" ) //"usergrid.cluster_name"
     String getClusterName();
 
 }
