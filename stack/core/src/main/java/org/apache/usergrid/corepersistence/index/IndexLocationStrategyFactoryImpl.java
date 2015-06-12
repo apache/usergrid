@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.index;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
@@ -30,13 +31,16 @@ import org.apache.usergrid.persistence.index.IndexLocationStrategy;
  * Parse app id and get the correct strategy
  */
 public class IndexLocationStrategyFactoryImpl implements IndexLocationStrategyFactory {
+    private final ClusterFig clusterFig;
     private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
     private final ApplicationIndexBucketLocator applicationLocatorBucketStrategy;
     private final CoreIndexFig coreIndexFig;
 
+
     @Inject
-    public IndexLocationStrategyFactoryImpl(final CassandraFig cassandraFig, final IndexFig indexFig, final ApplicationIndexBucketLocator applicationLocatorBucketStrategy, final CoreIndexFig coreIndexFig){
+    public IndexLocationStrategyFactoryImpl(ClusterFig clusterFig, final CassandraFig cassandraFig, final IndexFig indexFig, final ApplicationIndexBucketLocator applicationLocatorBucketStrategy, final CoreIndexFig coreIndexFig){
+        this.clusterFig = clusterFig;
 
         this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
@@ -45,9 +49,9 @@ public class IndexLocationStrategyFactoryImpl implements IndexLocationStrategyFa
     }
     public IndexLocationStrategy getIndexLocationStrategy(ApplicationScope applicationScope){
         if(CpNamingUtils.getManagementApplicationId().equals(applicationScope.getApplication())){
-            return new ManagementIndexLocationStrategy(indexFig,coreIndexFig);
+            return new ManagementIndexLocationStrategy(clusterFig,indexFig,coreIndexFig);
         }
-        return new ApplicationIndexLocationStrategy(cassandraFig,indexFig,applicationScope, applicationLocatorBucketStrategy);
+        return new ApplicationIndexLocationStrategy(clusterFig,cassandraFig,indexFig,applicationScope, applicationLocatorBucketStrategy);
     }
 
 }

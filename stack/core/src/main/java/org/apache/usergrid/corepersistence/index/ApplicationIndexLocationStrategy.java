@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -30,6 +31,7 @@ import org.apache.usergrid.utils.StringUtils;
  * Strategy for getting the application index name.
  */
 class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
+    private final ClusterFig clusterFig;
     private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
@@ -38,18 +40,19 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
     private final IndexAlias alias;
     private final String indexRootName;
 
-    public ApplicationIndexLocationStrategy(final CassandraFig cassandraFig,
+    public ApplicationIndexLocationStrategy(final ClusterFig clusterFig,
+                                            final CassandraFig cassandraFig,
                                             final IndexFig indexFig,
                                             final ApplicationScope applicationScope,
                                             final ApplicationIndexBucketLocator applicationIndexBucketLocator){
+        this.clusterFig = clusterFig;
 
         this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
         this.applicationIndexBucketLocator = applicationIndexBucketLocator;
-        this.indexRootName  =cassandraFig.getApplicationKeyspace().toLowerCase();        //TODO: add hash buckets by app scope
+        this.indexRootName  = clusterFig.getClusterName() + "_" + cassandraFig.getApplicationKeyspace().toLowerCase();
         this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexRootName);
-
         this.indexBucketName = indexRootName + "_" + applicationIndexBucketLocator.getBucket(applicationScope);
     }
 
@@ -60,8 +63,6 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      */
     @Override
     public IndexAlias getAlias() {
-        //TODO: include appid
-
         return alias;
     }
 
@@ -71,7 +72,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      */
     @Override
     public String getIndexRootName() {
-        return indexBucketName;
+        return indexRootName;
     }
 
     /**
