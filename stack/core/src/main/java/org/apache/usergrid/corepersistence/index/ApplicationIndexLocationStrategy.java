@@ -47,7 +47,7 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
         this.applicationIndexBucketLocator = applicationIndexBucketLocator;
-        this.indexRootName  = getPrefix();        //TODO: add hash buckets by app scope
+        this.indexRootName  =cassandraFig.getApplicationKeyspace().toLowerCase();        //TODO: add hash buckets by app scope
         this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexRootName);
 
         this.indexBucketName = indexRootName + "_" + applicationIndexBucketLocator.getBucket(applicationScope);
@@ -120,19 +120,6 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         int result = applicationScope.hashCode();
         result = 31 * result + indexBucketName.hashCode();
         return result;
-    }
-
-    private String getPrefix() {
-        //remove usergrid
-        final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
-            ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
-            : ""; // default to something so its not null
-        final String keyspaceName = cassandraFig.getApplicationKeyspace().toLowerCase();
-        //check for repetition
-        final boolean removePrefix = indexPrefixConfig.length()==0 || keyspaceName.contains(indexPrefixConfig) ;
-        return !removePrefix
-            ? indexPrefixConfig + "_" + keyspaceName
-            : keyspaceName;
     }
 
 

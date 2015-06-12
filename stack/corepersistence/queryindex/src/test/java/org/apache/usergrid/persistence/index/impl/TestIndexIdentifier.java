@@ -46,15 +46,10 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
 
     private String getPrefix() {
         //remove usergrid
-        final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
-            ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
-            : ""; // default to something so its not null
+
         final String keyspaceName = cassandraFig.getApplicationKeyspace().toLowerCase();
         //check for repetition
-        final boolean removePrefix = indexPrefixConfig.length()>0 && !keyspaceName.contains(indexPrefixConfig) ;
-        return !removePrefix
-            ? indexPrefixConfig + "_" + keyspaceName
-            : keyspaceName;
+        return   keyspaceName;
     }
 
     /**
