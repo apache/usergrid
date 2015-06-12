@@ -680,7 +680,8 @@ public class ManagementServiceImpl implements ManagementService {
      * (and that organization is needed) if so.
      */
     private String buildAppName( String applicationName, OrganizationInfo organization ) {
-        return applicationName.contains( "/" ) ? applicationName : organization.getName() + "/" + applicationName;
+        return org.apache.commons.lang.StringUtils.lowerCase(
+                applicationName.contains( "/" ) ? applicationName : organization.getName() + "/" + applicationName);
     }
 
 
