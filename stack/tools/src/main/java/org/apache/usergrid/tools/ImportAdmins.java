@@ -229,7 +229,7 @@ public class ImportAdmins extends ToolBase {
             double rateLast = (double) processed / (timeDelta / 1000);
             rateAverageSum += rateLast;
 
-            long timeRemaining = sizeLast / (long) (rateAverageSum / iterationCounter);
+            long timeRemaining = (long) ( sizeLast / (rateAverageSum / iterationCounter) );
 
             logger.info(
                     String.format("++PROGRESS (%s): sizeLast=%s nowSize=%s processed=%s rateLast=%s/s rateAvg=%s/s timeRemaining=%s(s)",
