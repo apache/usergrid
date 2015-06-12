@@ -155,7 +155,7 @@ public class IndexNamingTest {
                 );
             names.add(indexLocationStrategyBucket.getIndexInitialName());
         }
-        Pattern regex = Pattern.compile(clusterName+"_"+keyspacename+"_\\d+");
+        Pattern regex = Pattern.compile(clusterName+"_"+keyspacename+"_applications_\\d+");
         //always hashes to same bucket
         assertTrue(names.size() == 1);
         names = new HashSet<>();
