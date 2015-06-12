@@ -38,6 +38,9 @@ import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.providers.SignInAsProvider;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.services.ServiceManager;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -49,6 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
@@ -72,6 +76,8 @@ import org.apache.usergrid.persistence.core.util.Health;
     "text/jscript"
 })
 public class ApplicationResource extends AbstractContextResource {
+
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationResource.class);
 
     @Autowired
     protected ExportService exportService;
@@ -102,20 +108,6 @@ public class ApplicationResource extends AbstractContextResource {
         return this;
     }
 
-
-    @RequireOrganizationAccess
-    @DELETE
-    public JSONWithPadding deleteApplicationFromOrganizationByApplicationId(
-            @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "delete application from organization" );
-
-        management.deleteOrganizationApplication( organization.getUuid(), applicationId );
-
-        return new JSONWithPadding( response, callback );
-    }
 
 
     @RequireOrganizationAccess
@@ -393,4 +385,67 @@ public class ApplicationResource extends AbstractContextResource {
 
         return Response.status( SC_OK ).entity( null ).build();
     }
+
+
+
+    /**
+     * Put on application URL will restore application if it was deleted.
+     */
+    @PUT
+    @RequireOrganizationAccess
+    public JSONWithPadding executePut(  @Context UriInfo ui, String body,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
+        if ( applicationId == null ) {
+            throw new IllegalArgumentException("Application ID not specified in request");
+        }
+
+        management.restoreApplication( applicationId );
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "restore" );
+        response.setApplication( emf.getEntityManager( applicationId ).getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @DELETE
+    @RequireOrganizationAccess
+    public JSONWithPadding executeDelete(  @Context UriInfo ui,
+        @QueryParam("callback") @DefaultValue("callback") String callback,
+        @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
+
+        if (!"confirm_delete_of_application_and_data".equals( confirmDelete ) ) {
+            throw new IllegalArgumentException(
+                "Cannot delete application without app_delete_confirm parameter");
+        }
+
+        Properties props = management.getProperties();
+
+        // for now, only works in test mode
+        String testProp = ( String ) props.get( "usergrid.test" );
+        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
+            throw new UnsupportedOperationException();
+        }
+
+        if ( applicationId == null ) {
+            throw new IllegalArgumentException("Application ID not specified in request");
+        }
+
+        management.deleteApplication( applicationId );
+
+        logger.debug( "ApplicationResource.delete() deleted appId = {}", applicationId);
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "delete" );
+        response.setApplication(emf.getEntityManager( applicationId ).getApplication());
+        response.setParams(ui.getQueryParameters());
+
+        logger.debug( "ApplicationResource.delete() sending response ");
+
+        return new JSONWithPadding( response, callback );
+    }
+
 }

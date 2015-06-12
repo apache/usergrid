@@ -1892,12 +1892,8 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        EntityRef mgmtAppRef = new SimpleEntityRef( Schema.TYPE_APPLICATION, smf.getManagementAppId() );
 
-        final Results results = em.searchCollection(mgmtAppRef, CpNamingUtils.DELETED_APPLICATION_INFOS,
-            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
-
-        Entity entity = results.getEntity();
+        final Entity entity = em.get( new SimpleEntityRef( CpNamingUtils.DELETED_APPLICATION_INFO, applicationId ) );
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
