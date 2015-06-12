@@ -337,7 +337,6 @@ public class ExportAdmins extends ExportingToolBase {
 
                     // write user to application file
                     usersFile.writeObject( task.adminUser );
-                    //usersFile.writeEndObject();
                     echo( task.adminUser );
 
                     // write metadata to metadata file
@@ -364,6 +363,8 @@ public class ExportAdmins extends ExportingToolBase {
 
             usersFile.writeEndArray();
             usersFile.close();
+
+            logger.info("Exported TOTAL {} admin users", count);
         }
 
 
@@ -387,6 +388,8 @@ public class ExportAdmins extends ExportingToolBase {
 
                 jg.writeEndArray();
             }
+
+            jg.writeEndObject();
         }
 
 
