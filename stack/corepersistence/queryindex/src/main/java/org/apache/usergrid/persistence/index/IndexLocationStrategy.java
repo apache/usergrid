@@ -37,7 +37,11 @@ public interface IndexLocationStrategy {
     String getIndexRootName();
 
 
-     String getIndexBucketName() ;
+    /**
+     * get the initial index name, to create the first instance of the index
+     * @return
+     */
+     String getIndexInitialName() ;
 
     /**
      * return unique string

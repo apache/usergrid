@@ -23,7 +23,6 @@ import com.google.inject.Inject;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -90,15 +89,34 @@ public class IndexNamingTest {
     @Test
     public void managementNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
+        //check that factory works
         assertEquals(indexLocationStrategy.getIndexRootName(),managementLocationStrategy.getIndexRootName());
+        //check that root name is as expected
         assertEquals(indexLocationStrategy.getIndexRootName(),clusterName + "_" + keyspacename + "_" + indexProcessorFig.getManagementAppIndexName());
-        assertEquals(indexLocationStrategy.getIndexRootName(), indexLocationStrategy.getIndexBucketName());
-        assertEquals(indexLocationStrategy.getIndexBucketName(),clusterName + "_" + keyspacename + "_" +indexProcessorFig.getManagementAppIndexName());
+        //check bucket name is as expected
+        assertEquals(indexLocationStrategy.getIndexRootName(), indexLocationStrategy.getIndexInitialName());
+        assertEquals(indexLocationStrategy.getIndexInitialName(),clusterName + "_" + keyspacename + "_" +indexProcessorFig.getManagementAppIndexName());
 
     }
+
+    @Test
+    public void managementAliasName(){
+        IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
+
+        assertEquals(
+            indexLocationStrategy.getAlias().getReadAlias(),
+            clusterName + "_" + keyspacename+ "_" + indexProcessorFig.getManagementAppIndexName() + "_read_" + indexFig.getAliasPostfix()
+        );
+        assertEquals(
+            indexLocationStrategy.getAlias().getWriteAlias(),
+            clusterName + "_" + keyspacename + "_" + indexProcessorFig.getManagementAppIndexName()  + "_write_" + indexFig.getAliasPostfix()
+        );
+    }
+
     @Test
     public void applicationRootNaming(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+
         assertEquals(
             indexLocationStrategy.getIndexRootName(),
             applicationLocationStrategy.getIndexRootName()
@@ -108,6 +126,12 @@ public class IndexNamingTest {
             indexLocationStrategy.getIndexRootName(),
             clusterName + "_" + keyspacename
         );
+
+    }
+
+    @Test
+    public void applicationAliasName(){
+        IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         assertEquals(
             indexLocationStrategy.getAlias().getReadAlias(),
             clusterName + "_" + keyspacename+"_"+ applicationScope.getApplication().getUuid().toString().toLowerCase() + "_read_" + indexFig.getAliasPostfix()
@@ -116,7 +140,6 @@ public class IndexNamingTest {
             indexLocationStrategy.getAlias().getWriteAlias(),
             clusterName + "_" + keyspacename+"_"+ applicationScope.getApplication().getUuid().toString().toLowerCase() + "_write_" + indexFig.getAliasPostfix()
         );
-
     }
 
     @Test
@@ -128,7 +151,7 @@ public class IndexNamingTest {
                     clusterFig, cassandraFig, indexFig,applicationScope,
                     new ApplicationIndexBucketLocator(indexProcessorFig)
                 );
-            names.add(indexLocationStrategyBucket.getIndexBucketName());
+            names.add(indexLocationStrategyBucket.getIndexInitialName());
         }
         String expectedName = clusterName+"_"+keyspacename+"_\\d+";
         Pattern regex = Pattern.compile(expectedName);
@@ -143,7 +166,7 @@ public class IndexNamingTest {
                     indexFig,
                     new ApplicationScopeImpl(CpNamingUtils.generateApplicationId(UUID.randomUUID())),
                     new ApplicationIndexBucketLocator(indexProcessorFig));
-            String name = indexLocationStrategyBucket.getIndexBucketName();
+            String name = indexLocationStrategyBucket.getIndexInitialName();
             assertTrue("failed to match correct name",regex.matcher(name).matches());
             names.add(name);
         }
