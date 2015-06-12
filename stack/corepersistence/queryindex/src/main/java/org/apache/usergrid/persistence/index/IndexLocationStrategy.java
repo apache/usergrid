@@ -37,9 +37,7 @@ public interface IndexLocationStrategy {
     String getIndexRootName();
 
 
-    default String getIndexBucketName() {
-        return getIndexRootName();
-    }
+     String getIndexBucketName() ;
 
     /**
      * return unique string
