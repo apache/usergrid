@@ -135,19 +135,6 @@ public class ApplicationsResource extends AbstractContextResource {
 
 
     @RequireOrganizationAccess
-    @Path(RootResource.APPLICATION_ID_PATH)
-    @PUT
-    public ApplicationResource restoreApplicationFromOrganizationByApplicationId(
-        @Context UriInfo ui,
-        @PathParam( "applicationId" )
-        String applicationIdStr ) throws Exception {
-
-        return getSubResource( ApplicationResource.class )
-            .init( organization, UUID.fromString( applicationIdStr ) );
-    }
-
-
-    @RequireOrganizationAccess
     @Path( "{applicationName}" )
     public ApplicationResource applicationFromOrganizationByApplicationName(
         @Context UriInfo ui, @PathParam( "applicationName" ) String applicationName ) throws Exception {

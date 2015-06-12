@@ -18,17 +18,27 @@
 package org.apache.usergrid.rest.applications;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+
+import javax.ws.rs.core.MediaType;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.ws.rs.core.MediaType;
-import java.util.*;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 import static org.junit.Assert.fail;
 
@@ -73,8 +83,10 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
             fail("Delete must fail without app_delete_confirm parameter");
 
-        } catch ( Exception e ) {
-            logger.error("Error", e);
+        } catch (  UniformInterfaceException expected  ) {
+            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
+            Assert.assertEquals("Cannot delete application without app_delete_confirm parameter", node.get("error_description").textValue());
         }
 
         clientSetup.getRestClient().management().orgs()
@@ -95,10 +107,25 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             fail("Must not be able to get deleted app");
 
         } catch ( UniformInterfaceException expected ) {
-            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            Assert.assertEquals("Error must be 404", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
-            Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
+            Assert.assertEquals("entity_not_found", node.get("error").textValue());
         }
+
+
+        try {
+            clientSetup.getRestClient().org( orgName ).app( appToDeleteName ).getResource()
+                       .queryParam( "access_token", orgAdminToken.getAccessToken() ).type( MediaType.APPLICATION_JSON )
+                       .get( ApiResponse.class );
+
+            fail( "Must not be able to get deleted app" );
+        }
+        catch ( UniformInterfaceException expected ) {
+            Assert.assertEquals( "Error must be 404", 404, expected.getResponse().getStatus() );
+            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ) );
+            Assert.assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
+        }
+
 
         // test that we can no longer get deleted app's collection
 
@@ -112,7 +139,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             fail("Must not be able to get deleted app's collection");
 
         } catch ( UniformInterfaceException expected ) {
-            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            Assert.assertEquals("Error must be 400", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
             Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
         }
@@ -131,7 +158,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         } catch ( UniformInterfaceException expected ) {
             // TODO: why not a 404?
-            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
+            Assert.assertEquals("Error must be 400", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
             Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
         }
@@ -153,15 +180,16 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // test that we cannot delete the application a second time
 
         try {
-            clientSetup.getRestClient().management().orgs()
-                .org(orgName).apps().app(appToDeleteId.toString()).getResource()
-                .queryParam("access_token", orgAdminToken.getAccessToken())
-                .delete();
+            clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( appToDeleteId.toString() )
+                       .getResource().queryParam( "access_token", orgAdminToken.getAccessToken() )
+                       .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" ).delete();
 
-        } catch ( UniformInterfaceException expected ) {
-            Assert.assertEquals("Error must be 404", 404, expected.getResponse().getStatus() );
-            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ));
-            Assert.assertEquals("not_found", node.get("error").textValue());
+            fail("Can't delete a non existent app twice");
+        }
+        catch ( UniformInterfaceException expected ) {
+            Assert.assertEquals( "Error must be 404", 404, expected.getResponse().getStatus() );
+            JsonNode node = mapper.readTree( expected.getResponse().getEntity( String.class ) );
+            Assert.assertEquals( "entity_not_found", node.get( "error" ).textValue() );
         }
 
         // test that we can create a new application with the same name
@@ -204,8 +232,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         logger.debug("\n\nDeleting app\n");
 
-        clientSetup.getRestClient()
-            .org(orgName).app( appToDeleteName ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org(orgName).apps().app( appToDeleteName ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
@@ -217,8 +245,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         logger.debug("\n\nRestoring app\n");
 
-        clientSetup.getRestClient()
-            .org(orgName).app( appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org(orgName).apps().app( appToDeleteId.toString() ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .put();
 
@@ -282,8 +310,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // delete the app
 
-        clientSetup.getRestClient()
-            .org( orgName ).app(appToDeleteId.toString() ).getResource()
+        clientSetup.getRestClient().management().orgs()
+            .org( orgName ).apps().app(appToDeleteId.toString() ).getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
@@ -296,8 +324,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         try {
 
-            clientSetup.getRestClient()
-                .org(orgName).app(appToDeleteId.toString()).getResource()
+            clientSetup.getRestClient() .management().orgs()
+                .org(orgName).apps().app(appToDeleteId.toString()).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .put();
 
