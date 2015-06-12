@@ -103,13 +103,14 @@ public class IndexNamingTest {
     public void managementAliasName(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(managementApplicationScope);
 
+        String managementAppIndexName = indexProcessorFig.getManagementAppIndexName();
         assertEquals(
             indexLocationStrategy.getAlias().getReadAlias(),
-            clusterName + "_" + keyspacename+ "_" + indexProcessorFig.getManagementAppIndexName() + "_read_" + indexFig.getAliasPostfix()
+            clusterName + "_" + keyspacename+ "_" + managementAppIndexName + "_read_" + indexFig.getAliasPostfix()
         );
         assertEquals(
             indexLocationStrategy.getAlias().getWriteAlias(),
-            clusterName + "_" + keyspacename + "_" + indexProcessorFig.getManagementAppIndexName()  + "_write_" + indexFig.getAliasPostfix()
+            clusterName + "_" + keyspacename + "_" + managementAppIndexName + "_write_" + indexFig.getAliasPostfix()
         );
     }
 
@@ -132,13 +133,14 @@ public class IndexNamingTest {
     @Test
     public void applicationAliasName(){
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        String applicationId = applicationScope.getApplication().getUuid().toString().toLowerCase();
         assertEquals(
             indexLocationStrategy.getAlias().getReadAlias(),
-            clusterName + "_" + keyspacename+"_"+ applicationScope.getApplication().getUuid().toString().toLowerCase() + "_read_" + indexFig.getAliasPostfix()
+            clusterName + "_" + keyspacename+"_"+ applicationId + "_read_" + indexFig.getAliasPostfix()
         );
         assertEquals(
             indexLocationStrategy.getAlias().getWriteAlias(),
-            clusterName + "_" + keyspacename+"_"+ applicationScope.getApplication().getUuid().toString().toLowerCase() + "_write_" + indexFig.getAliasPostfix()
+            clusterName + "_" + keyspacename+"_"+ applicationId + "_write_" + indexFig.getAliasPostfix()
         );
     }
 
@@ -153,11 +155,11 @@ public class IndexNamingTest {
                 );
             names.add(indexLocationStrategyBucket.getIndexInitialName());
         }
-        String expectedName = clusterName+"_"+keyspacename+"_\\d+";
-        Pattern regex = Pattern.compile(expectedName);
+        Pattern regex = Pattern.compile(clusterName+"_"+keyspacename+"_\\d+");
         //always hashes to same bucket
         assertTrue(names.size() == 1);
         names = new HashSet<>();
+        //get 100 names you should get 5 unique values in the set since app id is the same
         for(int i=0;i<100;i++){
             IndexLocationStrategy indexLocationStrategyBucket =
                 new ApplicationIndexLocationStrategy(
