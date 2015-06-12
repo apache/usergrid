@@ -132,7 +132,7 @@ public class RegistrationIT extends AbstractRestIT {
                     .queryParam("access_token", t).accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_FORM_URLENCODED).put(String.class, form);
             } catch (UniformInterfaceException e) {
-                assertEquals("Should receive a 400 Not Found", 400, e.getResponse().getStatus());
+                assertEquals("Should receive a 404 Not Found", 404, e.getResponse().getStatus());
             }
         } finally {
             setTestProperties(originalProperties);
