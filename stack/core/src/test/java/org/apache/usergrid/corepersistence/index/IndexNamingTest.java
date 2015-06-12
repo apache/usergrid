@@ -38,6 +38,7 @@ import org.junit.runner.RunWith;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -85,6 +86,7 @@ public class IndexNamingTest {
         assertEquals(indexLocationStrategy.getIndexRootName(),managementLocationStrategy.getIndexRootName());
         assertEquals(indexLocationStrategy.getIndexRootName(),indexProcessorFig.getManagementAppIndexName());
         assertEquals(indexLocationStrategy.getIndexRootName(), indexLocationStrategy.getIndexBucketName());
+        assertEquals(indexLocationStrategy.getIndexBucketName(),indexProcessorFig.getManagementAppIndexName());
 
     }
     @Test
@@ -92,7 +94,6 @@ public class IndexNamingTest {
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         assertEquals(indexLocationStrategy.getIndexRootName(),applicationLocationStrategy.getIndexRootName());
 
-        assertTrue(indexLocationStrategy.getIndexRootName().contains(indexFig.getIndexPrefix()));
         assertTrue(indexLocationStrategy.getIndexRootName().contains(cassandraFig.getApplicationKeyspace().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getReadAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
         assertTrue(indexLocationStrategy.getAlias().getWriteAlias().contains(applicationScope.getApplication().getUuid().toString().toLowerCase()));
@@ -103,8 +104,10 @@ public class IndexNamingTest {
             IndexLocationStrategy indexLocationStrategyBucket = new ApplicationIndexLocationStrategy(cassandraFig,indexFig,applicationScope, new ApplicationIndexBucketLocator(indexProcessorFig));
             names.add(indexLocationStrategyBucket.getIndexBucketName());
         }
+        String expectedName = cassandraFig.getApplicationKeyspace().toLowerCase()+"_\\d+";
+        Pattern regex = Pattern.compile(expectedName);
         //always hashes to same bucket
-        assertTrue(names.size()==1);
+        assertTrue(names.size() == 1);
          names = new HashSet<>();
         for(int i=0;i<100;i++){
             IndexLocationStrategy indexLocationStrategyBucket =
@@ -113,7 +116,9 @@ public class IndexNamingTest {
                     indexFig,
                     new ApplicationScopeImpl(CpNamingUtils.generateApplicationId(UUID.randomUUID())),
                     new ApplicationIndexBucketLocator(indexProcessorFig));
-            names.add(indexLocationStrategyBucket.getIndexBucketName());
+            String name = indexLocationStrategyBucket.getIndexBucketName();
+            assertTrue("failed to match correct name",regex.matcher(name).matches());
+            names.add(name);
         }
         //always hashes to diff't bucket
         assertTrue(names.size()==indexProcessorFig.getNumberOfIndexBuckets());
