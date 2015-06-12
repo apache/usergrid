@@ -32,6 +32,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.Queue;
 import org.apache.usergrid.persistence.queue.util.AmazonNotificationUtils;
@@ -49,6 +50,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueScope scope;
     private ObjectMapper mapper;
     private final QueueFig fig;
+    private final ClusterFig clusterFig;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
 
@@ -100,9 +102,10 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Inject
-    public SNSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig) {
+    public SNSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig, ClusterFig clusterFig) {
         this.scope = scope;
         this.fig = fig;
+        this.clusterFig = clusterFig;
 
         try {
             smileFactory.delegateToTextual(true);
@@ -205,7 +208,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     private String getName() {
-        String name = fig.getPrefix() + "_" + scope.getName();
+        String name = clusterFig.getClusterName() + "_" + scope.getName();
 
         Preconditions.checkArgument(name.length() <= 80, "Your name must be < than 80 characters");
 

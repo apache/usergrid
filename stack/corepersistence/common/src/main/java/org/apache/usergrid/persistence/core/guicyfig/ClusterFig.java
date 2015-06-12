@@ -17,51 +17,22 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.persistence.core.guicyfig;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
+import org.safehaus.guicyfig.GuicyFig;
+import org.safehaus.guicyfig.Key;
+
 /**
- * location strategy for index
+ * Configuration for environment
  */
-public interface IndexLocationStrategy {
-    /**
-     * get the alias name
-     * @return
-     */
-    IndexAlias getAlias();
+@FigSingleton
+public interface ClusterFig extends GuicyFig{
 
-    /**
-     * get index name
-     * @return
-     */
-    String getIndexRootName();
+    @Default( "ug" )
+    @Key( "elasticsearch.index_prefix" ) //"usergrid.cluster_name"
+    String getClusterNameInternal();
+    default String getClusterName(){return getClusterNameInternal().toLowerCase();}
 
-
-    default String getIndexBucketName() {
-        return getIndexRootName();
-    }
-
-    /**
-     * return unique string
-     * @return
-     */
-    String toString();
-
-    /**
-     * only used by search types
-     * @return
-     */
-    ApplicationScope getApplicationScope();
-
-    /**
-     * number of shards for default
-     * @return
-     */
-    int getNumberOfShards();
-
-    /**
-     * default replicas
-     * @return
-     */
-    int getNumberOfReplicas();
 }
