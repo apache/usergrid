@@ -21,13 +21,11 @@ package org.apache.usergrid.persistence.index.impl;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.*;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -160,31 +158,37 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final int numberOfReplicas = indexLocationStrategy.getNumberOfReplicas();
 
         if (shouldInitialize()) {
-            addIndex( Optional.absent(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
+            addIndex( indexLocationStrategy.getIndexInitialName(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
         }
     }
 
+    /**
+     * if there are aliases then we must have an index...weak knowledge
+     * @return
+     */
     private boolean shouldInitialize() {
-        String[] reads = getIndexes(EntityIndex.AliasType.Read);
-        String[] writes = getIndexes(EntityIndex.AliasType.Write);
-        return reads.length==0  || writes.length==0;
+        String[] writes = getIndexes(AliasType.Write);
+        return writes.length==0;
     }
 
     @Override
-    public void addIndex(final com.google.common.base.Optional<String> indexNameOverride, final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
+    public void addIndex(final String indexName,
+                         final int numberOfShards,
+                         final int numberOfReplicas,
+                         final String writeConsistency
+    ) {
         try {
-            //get index name with suffix attached
-            final String indexName = indexNameOverride.or(indexLocationStrategy.getIndex()) ;
+            //get index name with bucket attached
+            Preconditions.checkNotNull(indexName,"must have an indexname");
 
             //Create index
             try {
                 final AdminClient admin = esProvider.getClient().admin();
                 Settings settings = ImmutableSettings.settingsBuilder()
-                        .put("index.number_of_shards", numberOfShards)
+                    .put("index.number_of_shards", numberOfShards)
                     .put("index.number_of_replicas", numberOfReplicas)
-
                         //dont' allow unmapped queries, and don't allow dynamic mapping
-                        .put("index.query.parse.allow_unmapped_fields", false)
+                    .put("index.query.parse.allow_unmapped_fields", false)
                     .put("index.mapper.dynamic", false)
                     .put("action.write_consistency", writeConsistency)
                     .build();
@@ -214,9 +218,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
             //may have been set via other administrative endpoint
 
-            addAlias();
-
-
+            addAlias(indexName);
 
             testNewIndex();
 
@@ -227,13 +229,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
     }
 
-
-    @Override
-    public void addAlias() {
+    private void addAlias(String indexName) {
         Timer.Context timer = updateAliasTimer.time();
         try {
             Boolean isAck;
-            String indexName = indexLocationStrategy.getIndex();
+
             final AdminClient adminClient = esProvider.getClient().admin();
 
             String[] indexNames = getIndexes(AliasType.Write);
@@ -272,15 +272,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return aliasCache.getIndexes(alias, aliasType);
     }
 
-    /**
-     * Get our index info from ES, but clear our cache first
-     * @param aliasType
-     * @return
-     */
-    public String[] getIndexesFromEs(final AliasType aliasType){
-        aliasCache.invalidate(alias);
-        return getIndexes(aliasType);
-    }
 
     /**
      * Tests writing a document to a new index to ensure it's working correctly. See this post:
@@ -356,12 +347,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync() {
 
         refreshIndexMeter.mark();
-        return indexRefreshCommand.execute(alias,getUniqueIndexes());
+        return indexRefreshCommand.execute(alias, getIndexes());
     }
 
 
 
-    public String[] getUniqueIndexes() {
+    public String[] getIndexes() {
         Set<String> indexSet = new HashSet<>();
         List<String> reads =  Arrays.asList(getIndexes(AliasType.Read));
         List<String> writes = Arrays.asList(getIndexes(AliasType.Write));
@@ -569,7 +560,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public Observable deleteApplication() {
         String idString = applicationId( applicationScope.getApplication() );
         final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
-        final String[] indexes = getUniqueIndexes();
+        final String[] indexes = getIndexes();
         //Added For Graphite Metrics
         return Observable.from( indexes ).flatMap( index -> {
 
@@ -714,8 +705,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public Health getIndexHealth() {
 
         try {
+            String[] indexNames = this.getIndexes();
            final ActionFuture<ClusterHealthResponse> future =  esProvider.getClient().admin().cluster().health(
-               new ClusterHealthRequest( new String[] { indexLocationStrategy.getIndex(  ) } ) );
+               new ClusterHealthRequest( indexNames  ) );
 
             //only wait 2 seconds max
             ClusterHealthResponse chr = future.actionGet(2000);

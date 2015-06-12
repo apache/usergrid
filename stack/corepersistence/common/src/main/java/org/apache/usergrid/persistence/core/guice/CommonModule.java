@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactoryImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFig;
@@ -55,49 +56,49 @@ public class CommonModule extends AbstractModule {
     @Override
     protected void configure() {
         //noinspection unchecked
-        install( new GuicyFigModule( MigrationManagerFig.class, CassandraFig.class ) );
+        install(new GuicyFigModule(MigrationManagerFig.class, CassandraFig.class));
 
         // bind our keyspace to the AstyanaxKeyspaceProvider
-        bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class ).asEagerSingleton();
+        bind(Keyspace.class).toProvider(AstyanaxKeyspaceProvider.class).asEagerSingleton();
 
         // bind our migration manager
-        bind( MigrationManager.class ).to( MigrationManagerImpl.class );
-
+        bind(MigrationManager.class).to(MigrationManagerImpl.class);
 
 
         //do multibindings for migrations
-        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder(binder(), Migration.class);
+        migrationBinding.addBinding().to(Key.get(MigrationInfoSerialization.class));
 
-        bind( TimeService.class ).to( TimeServiceImpl.class );
+        bind(TimeService.class).to(TimeServiceImpl.class);
 
-        bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
+        bind(CassandraConfig.class).to(CassandraConfigImpl.class);
 
         /**
          * Data migration beans
          */
-        bind( MigrationInfoSerialization.class ).to( MigrationInfoSerializationImpl.class );
+        bind(MigrationInfoSerialization.class).to(MigrationInfoSerializationImpl.class);
 
-        bind( DataMigrationManager.class ).to( DataMigrationManagerImpl.class );
+        bind(DataMigrationManager.class).to(DataMigrationManagerImpl.class);
 
-        bind( MetricsFactory.class ).to( MetricsFactoryImpl.class );
+        bind(MetricsFactory.class).to(MetricsFactoryImpl.class);
 
-        bind (MigrationInfoCache.class).to( MigrationInfoCacheImpl.class );
+        bind(MigrationInfoCache.class).to(MigrationInfoCacheImpl.class);
         install(new GuicyFigModule(MetricsFig.class));
 
 
         //do multibindings for migrations
         //create the empty multibinder so other plugins can use it
-         Multibinder.newSetBinder( binder(), MigrationPlugin.class);
+        Multibinder.newSetBinder(binder(), MigrationPlugin.class);
 
 
         /**
          * RX java scheduler configuration
          */
 
-        install ( new GuicyFigModule( RxSchedulerFig.class ));
+        install(new GuicyFigModule(RxSchedulerFig.class));
+        install(new GuicyFigModule(ClusterFig.class));
 
-        bind( RxTaskScheduler.class).to( RxTaskSchedulerImpl.class );
+        bind(RxTaskScheduler.class).to(RxTaskSchedulerImpl.class);
     }
 
 

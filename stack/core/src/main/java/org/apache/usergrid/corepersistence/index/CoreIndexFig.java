@@ -40,7 +40,18 @@ public interface CoreIndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS )
     int getManagementNumberOfReplicas();
 
-    @Default( "usergrid_management" )
+    @Default( "management" )
     @Key( "elasticsearch.managment_index" )
     String getManagementAppIndexName();
+
+    @Default( "5" )
+    @Key( "elasticsearch.index_bucket_count" )
+    int getNumberOfIndexBuckets();
+
+
+    //offset the bucket by a certain amount to remove older buckets from range e.g
+    // if range was 1-5 offset should be 5 to remove 1-5 from set
+    @Default( "0" )
+    @Key( "elasticsearch.index_bucket_offset" )
+    int getBucketOffset();
 }

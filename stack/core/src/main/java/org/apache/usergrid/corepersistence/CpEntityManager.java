@@ -2850,7 +2850,6 @@ public class CpEntityManager implements EntityManager {
         return applicationId;
     }
 
-
     @Override
     public IndexBucketLocator getIndexBucketLocator() {
 
@@ -2898,7 +2897,7 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public void addIndex(final Optional<String> newIndexName,final int shards,final int replicas, final String writeConsistency){
+    public void addIndex(final String newIndexName,final int shards,final int replicas, final String writeConsistency){
         managerCache.getEntityIndex(applicationScope).addIndex( newIndexName, shards, replicas, writeConsistency);
     }
 
