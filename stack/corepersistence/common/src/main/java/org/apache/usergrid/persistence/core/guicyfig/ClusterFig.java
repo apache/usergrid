@@ -32,7 +32,6 @@ public interface ClusterFig extends GuicyFig{
 
     @Default( "ug" )
     @Key( "elasticsearch.index_prefix" ) //"usergrid.cluster_name"
-    String getClusterNameInternal();
-    default String getClusterName(){return getClusterNameInternal().toLowerCase();}
+    String getClusterName();
 
 }

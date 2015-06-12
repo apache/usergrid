@@ -51,6 +51,10 @@ public class TestIndexIdentifier implements IndexLocationStrategy {
         //check for repetition
         return   keyspaceName;
     }
+    @Override
+    public String getIndexBucketName() {
+        return getIndexRootName();
+    }
 
     /**
      * Get the alias name

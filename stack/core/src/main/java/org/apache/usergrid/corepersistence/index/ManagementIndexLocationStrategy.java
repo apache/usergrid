@@ -58,7 +58,10 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     public String getIndexRootName() {
         return indexName;
     }
-
+    @Override
+    public String getIndexBucketName() {
+        return getIndexRootName();
+    }
     @Override
     public ApplicationScope getApplicationScope() {
         return applicationScope;
