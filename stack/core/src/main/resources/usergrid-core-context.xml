@@ -54,7 +54,7 @@
 		<constructor-arg value="${cassandra.url}" />
         <!-- set the pool size if it's available.  If not go with 50 -->
         <property name="maxActive" value="${cassandra.connections:20}"/>
-        <property name="clockResolution" ref="microsecondsTimeResolution" />
+        <!-- Fails on Java 8: <property name="clockResolution" ref="microsecondsTimeResolution" />-->
         <property name="opTimer" ref="taggedOpTimer"/>
         <property name="loadBalancingPolicy" ref="loadBalancingPolicy"/>
 	</bean>
