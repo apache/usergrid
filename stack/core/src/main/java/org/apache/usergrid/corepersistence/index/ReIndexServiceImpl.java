@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.List;
 
 
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,17 +71,24 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
     private final AllApplicationsObservable allApplicationsObservable;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final AllEntityIdsObservable allEntityIdsObservable;
     private final IndexProcessorFig indexProcessorFig;
     private final MapManager mapManager;
     private final AsyncEventService indexService;
+    private final EntityIndexFactory entityIndexFactory;
 
 
     @Inject
-    public ReIndexServiceImpl( final AllEntityIdsObservable allEntityIdsObservable,
+    public ReIndexServiceImpl( final EntityIndexFactory entityIndexFactory,
+                               final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                               final AllEntityIdsObservable allEntityIdsObservable,
                                final MapManagerFactory mapManagerFactory,
                                final AllApplicationsObservable allApplicationsObservable,
-                               final IndexProcessorFig indexProcessorFig, final AsyncEventService indexService ) {
+                               final IndexProcessorFig indexProcessorFig,
+                               final AsyncEventService indexService ) {
+        this.entityIndexFactory = entityIndexFactory;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.allEntityIdsObservable = allEntityIdsObservable;
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;
@@ -101,7 +109,6 @@ public class ReIndexServiceImpl implements ReIndexService {
         final CursorSeek<Edge> cursorSeek = getResumeEdge( cursor );
 
         final Optional<ApplicationScope> appId = reIndexRequestBuilder.getApplicationScope();
-
 
         Preconditions.checkArgument( !(cursor.isPresent() && appId.isPresent()),
             "You cannot specify an app id and a cursor.  When resuming with cursor you must omit the appid" );
@@ -208,19 +215,25 @@ public class ReIndexServiceImpl implements ReIndexService {
     private Observable<ApplicationScope> getApplications( final Optional<EdgeScope> cursor,
                                                           final Optional<ApplicationScope> appId ) {
         //cursor is present use it and skip until we hit that app
-        if ( cursor.isPresent() ) {
+        if (cursor.isPresent()) {
 
             final EdgeScope cursorValue = cursor.get();
             //we have a cursor and an application scope that was used.
             return allApplicationsObservable.getData().skipWhile(
-                applicationScope -> !cursorValue.getApplicationScope().equals( applicationScope ) );
+                applicationScope -> !cursorValue.getApplicationScope().equals(applicationScope));
         }
         //this is intentional.  If
-        else if ( appId.isPresent() ) {
-            return Observable.just( appId.get() );
+        else if (appId.isPresent()) {
+            return Observable.just(appId.get());
         }
 
-        return allApplicationsObservable.getData();
+        return allApplicationsObservable.getData()
+            .doOnNext(appScope -> {
+                //make sure index is initialized on rebuild
+                entityIndexFactory.createEntityIndex(
+                    indexLocationStrategyFactory.getIndexLocationStrategy(appScope)
+                ).initialize();
+            });
     }
 
 
