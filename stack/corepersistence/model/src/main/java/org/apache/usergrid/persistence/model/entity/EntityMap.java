@@ -2,6 +2,7 @@ package org.apache.usergrid.persistence.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.*;
 import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
@@ -51,6 +52,14 @@ public class EntityMap extends HashMap<String,Object> {
     public void setVersion(UUID version){
         if(version!=null) {
             put(VERSION_KEY, version);
+        }
+    }
+
+    public static EntityMap fromEntity(com.google.common.base.Optional<Entity> entity) {
+        if(entity.isPresent()){
+            return fromEntity(entity.get());
+        }else{
+            return null;
         }
     }
 
