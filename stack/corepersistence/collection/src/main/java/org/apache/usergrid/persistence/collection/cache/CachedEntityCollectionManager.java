@@ -57,6 +57,7 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
     private Action1<Entity> cacheAdd = new Action1<Entity>() {
         @Override
         public void call( final Entity entity ) {
+
             entityCache.put( entity.getId(), entity );
         }
     };
