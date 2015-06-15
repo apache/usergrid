@@ -57,7 +57,8 @@ public class EntityMap extends HashMap<String,Object> {
 
     public static EntityMap fromEntity(com.google.common.base.Optional<Entity> entity) {
         if(entity.isPresent()){
-            return fromEntity(entity.get());
+            EntityMap map =  fromEntity(entity.get());
+            return map;
         }else{
             return null;
         }

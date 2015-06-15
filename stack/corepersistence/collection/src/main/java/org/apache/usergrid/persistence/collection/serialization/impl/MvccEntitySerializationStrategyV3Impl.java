@@ -107,8 +107,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
+        EntityMap map = entity.getEntity().isPresent() ?   EntityMap.fromEntity(entity.getEntity().get()) : null;
         return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE,
-                entitySerializer.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getVersion(), EntityMap.fromEntity( entity.getEntity() ),VERSION ) ) ) );
+                entitySerializer.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getVersion(),map,VERSION ) ) ) );
     }
 
 
@@ -182,7 +183,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
                     try {
                         return keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( rowKeys )
-                                       .withColumnSlice( COL_VALUE ).execute().getResult();
+                            .withColumnSlice( COL_VALUE ).execute().getResult();
                     }
                     catch ( ConnectionException e ) {
                         throw new CollectionRuntimeException( null, applicationScope,
@@ -384,13 +385,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         public void setSerailizationVersion(int serailizationVersion) {
             this.serailizationVersion = serailizationVersion;
         }
-
-        @JsonIgnore
-        public Optional<Entity> getOptionalEntity() {
-            return this.getEntity() != null
-                ? Optional.of(Entity.fromMap(this.getEntity()))
-                : Optional.<Entity>absent();
-        }
     }
 
 
@@ -426,11 +420,12 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 //TODO fix this
                 return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent() );
             }
-
-            Optional<Entity> entity = deSerialized.getOptionalEntity();
+            EntityMap entityMap =  deSerialized.getEntity();
+            Optional<Entity> entity = Optional.absent();
             //Inject the id into it.
-            if ( entity.isPresent() ) {
-                EntityUtils.setId( entity.get(), id );
+            if ( entityMap!=null ) {
+                entity = Optional.of( Entity.fromMap(entityMap));
+                EntityUtils.setId(entity.get() , id );
             }
 
             return new MvccEntityImpl( id, deSerialized.getVersion(), deSerialized.getStatus(), entity );
@@ -473,7 +468,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             wrapper.setSerailizationVersion(VERSION);
 
             //mark this version as empty
-            if ( !wrapper.getOptionalEntity().isPresent() ) {
+            if ( wrapper.getEntity() == null ) {
                 //we're empty
                 try {
                     return ByteBuffer.wrap(MAPPER.writeValueAsBytes(wrapper));
@@ -532,7 +527,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 }
 
                 // it's been deleted, remove it
-                if (!entityWrapper.getOptionalEntity().isPresent()) {
+                if ( entityWrapper.getEntity() == null) {
                     return new EntityWrapper( MvccEntity.Status.DELETED, entityWrapper.getVersion(), null,VERSION );
                 }
             }
