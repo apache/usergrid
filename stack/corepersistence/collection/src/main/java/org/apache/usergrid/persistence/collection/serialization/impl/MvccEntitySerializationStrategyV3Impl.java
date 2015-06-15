@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -29,7 +30,6 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
-import org.apache.usergrid.persistence.core.astyanax.FieldBufferSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
@@ -75,7 +75,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
     private static final MultiTennantColumnFamily<ScopedRowKey<Id>, Boolean> CF_ENTITY_DATA =
             new MultiTennantColumnFamily<>( "Entity_Version_Data_V3", ROW_KEY_SER, BooleanSerializer.get() );
 
-    private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
 
     private static final Boolean COL_VALUE = Boolean.TRUE;
 
@@ -386,6 +385,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         public void setSerailizationVersion(int serailizationVersion) {
             this.serailizationVersion = serailizationVersion;
         }
+
+        @JsonIgnore
+        public Optional<Entity> getOptionalEntity() {
+            return this.getEntity() != null
+                ? Optional.of(Entity.fromMap(this.getEntity()))
+                : Optional.<Entity>absent();
+        }
     }
 
 
@@ -422,9 +428,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent() );
             }
 
-            Optional<Entity> entity = deSerialized.getEntity() != null
-                ? Optional.of(Entity.fromMap(deSerialized.getEntity()))
-                : Optional.<Entity>absent();
+            Optional<Entity> entity = deSerialized.getOptionalEntity();
             //Inject the id into it.
             if ( entity.isPresent() ) {
                 EntityUtils.setId( entity.get(), id );
@@ -467,12 +471,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 return null;
             }
 
-
             wrapper.setSerailizationVersion(VERSION);
 
-
             //mark this version as empty
-            if ( wrapper.getEntity() == null ) {
+            if ( !wrapper.getOptionalEntity().isPresent() ) {
                 //we're empty
                 wrapper.setStatus(MvccEntity.Status.DELETED);
                 try {
