@@ -349,7 +349,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             this.setSerailizationVersion(serailizationVersion);
         }
 
-        @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+        @JsonSerialize()
         public MvccEntity.Status getStatus() {
             return status;
         }
@@ -358,7 +358,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             this.status = status;
         }
 
-        @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+        @JsonSerialize()
         public UUID getVersion() {
             return version;
         }
@@ -366,7 +366,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         public void setVersion(UUID version){
             this.version = version;
         }
-
 
         @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
         public EntityMap getEntity() {
@@ -377,7 +376,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             this.entity = entity;
         }
 
-        @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+        @JsonSerialize()
         public int getSerailizationVersion() {
             return serailizationVersion;
         }
@@ -476,7 +475,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             //mark this version as empty
             if ( !wrapper.getOptionalEntity().isPresent() ) {
                 //we're empty
-                wrapper.setStatus(MvccEntity.Status.DELETED);
                 try {
                     return ByteBuffer.wrap(MAPPER.writeValueAsBytes(wrapper));
                 }catch (JsonProcessingException jpe){
@@ -485,14 +483,11 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             }
 
             //we have an entity
-
             if ( wrapper.getStatus() != MvccEntity.Status.COMPLETE ) {
                 throw new UnsupportedOperationException( "Only states " + MvccEntity.Status.DELETED + " and " + MvccEntity.Status.COMPLETE + " are supported" );
             }
 
-
             wrapper.setStatus(MvccEntity.Status.COMPLETE);
-
 
             //Convert to internal entity map
             final byte[] wrapperBytes;
@@ -537,7 +532,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 }
 
                 // it's been deleted, remove it
-                if ( MvccEntity.Status.DELETED == entityWrapper.getStatus()) {
+                if (!entityWrapper.getOptionalEntity().isPresent()) {
                     return new EntityWrapper( MvccEntity.Status.DELETED, entityWrapper.getVersion(), null,VERSION );
                 }
             }
