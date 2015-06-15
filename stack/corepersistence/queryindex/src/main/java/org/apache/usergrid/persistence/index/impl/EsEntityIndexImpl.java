@@ -157,6 +157,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final int numberOfShards = indexLocationStrategy.getNumberOfShards();
         final int numberOfReplicas = indexLocationStrategy.getNumberOfReplicas();
 
+        aliasCache.invalidate(alias);
         if (shouldInitialize()) {
             addIndex( indexLocationStrategy.getIndexInitialName(), numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
         }
