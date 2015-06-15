@@ -23,6 +23,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
 import org.apache.shiro.codec.Base64;
+
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
@@ -107,6 +109,41 @@ public class ApplicationResourceIT extends AbstractRestIT {
                                       .queryParam("client_id", appCredentials.getClientId())
                                       .queryParam("client_secret", appCredentials.getClientSecret())
                                       .accept(MediaType.APPLICATION_JSON)
+                                      .type(MediaType.APPLICATION_JSON_TYPE)
+                                      .get(ApiResponse.class);
+        //assert that a valid response is returned without error
+        assertNotNull(apiResponse);
+        assertNull(apiResponse.getError());
+
+        Collection roles = new Collection(apiResponse);
+        //assert that we have the correct number of default roles
+        assertEquals(3, roles.getNumOfEntities());
+    }
+
+    /**
+     * Retrieve an collection using the application client credentials
+     */
+    @Test
+    public void applicationCollectionWithAppToken() throws Exception {
+
+        Credentials appCredentials = getAppCredentials();
+
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam("grant_type", "client_credentials");
+        queryParameters.addParam("client_id", appCredentials.getClientId());
+        queryParameters.addParam("client_secret", appCredentials.getClientSecret());
+
+        Entity testUser = new Entity(  );
+        testUser.chainPut( "name","temp" ).chainPut( "password","temp1" );
+        
+        Token appToken = this.app().token().post(new Token("client_credentials",appCredentials.getClientId(),appCredentials.getClientSecret() ));
+
+
+        //retrieve the credentials
+
+        //retrieve the app using only the org credentials
+        ApiResponse apiResponse = this.app().collection( "roles" ).getResource( true, appToken )
+                                      .accept( MediaType.APPLICATION_JSON )
                                       .type(MediaType.APPLICATION_JSON_TYPE)
                                       .get(ApiResponse.class);
         //assert that a valid response is returned without error
