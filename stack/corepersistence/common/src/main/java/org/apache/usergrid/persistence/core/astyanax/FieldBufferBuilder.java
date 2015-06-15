@@ -22,11 +22,7 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 import java.util.UUID;
 
-import com.netflix.astyanax.serializers.ByteSerializer;
-import com.netflix.astyanax.serializers.BytesArraySerializer;
-import com.netflix.astyanax.serializers.IntegerSerializer;
-import com.netflix.astyanax.serializers.LongSerializer;
-import com.netflix.astyanax.serializers.UUIDSerializer;
+import com.netflix.astyanax.serializers.*;
 
 
 /**
@@ -39,6 +35,8 @@ public class FieldBufferBuilder {
     private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
     private static final ByteSerializer BYTE_SERIALIZER = ByteSerializer.get();
     private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
+    private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
+
 
     private final FieldBuffer buffer;
 
@@ -64,6 +62,16 @@ public class FieldBufferBuilder {
      */
     public FieldBufferBuilder addUUID( final UUID value ) {
         buffer.add( UUID_SERIALIZER.toByteBuffer( value ) );
+        return this;
+    }
+
+    /**
+     * add a string to buffer
+     * @param value
+     * @return
+     */
+    public FieldBufferBuilder addString( final String value ) {
+        buffer.add( STRING_SERIALIZER.toByteBuffer( value ) );
         return this;
     }
 

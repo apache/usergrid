@@ -25,10 +25,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import com.netflix.astyanax.serializers.ByteSerializer;
-import com.netflix.astyanax.serializers.BytesArraySerializer;
-import com.netflix.astyanax.serializers.IntegerSerializer;
-import com.netflix.astyanax.serializers.UUIDSerializer;
+import com.netflix.astyanax.serializers.*;
 
 
 /**
@@ -41,6 +38,7 @@ public class FieldBufferParser {
     private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
     private static final ByteSerializer BYTE_SERIALIZER = ByteSerializer.get();
     private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
+    private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
     private final Iterator<ByteBuffer> fields;
 
@@ -57,6 +55,13 @@ public class FieldBufferParser {
         return INTEGER_SERIALIZER.fromByteBuffer( getNext() );
     }
 
+
+    /**
+     * Return the value as an String
+     */
+    public String readString() {
+        return STRING_SERIALIZER.fromByteBuffer( getNext() );
+    }
 
     /**
      * Return the value as a byte array

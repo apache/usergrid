@@ -1,6 +1,7 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -396,9 +399,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
     public final class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
 
-        private final SmileFactory SMILE_FACTORY = new SmileFactory();
+        private final JsonFactory  JSON_FACTORY = new JsonFactory();
 
-        private final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
+        private final ObjectMapper MAPPER = new ObjectMapper( JSON_FACTORY );
 
 
         private SerializationFig serializationFig;
@@ -440,7 +443,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 builder.addByte( STATE_DELETED );
 
 
-                return FIELD_BUFFER_SERIALIZER.toByteBuffer( builder.build() );
+                return FIELD_BUFFER_SERIALIZER.toByteBuffer(builder.build());
             }
 
 
@@ -457,25 +460,28 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             //Get Entity
             final Entity entity = wrapper.entity.get();
             //Convert to internal entity map
-            final EntityMap entityMap = EntityMap.fromEntity( entity );
-            final byte[] entityBytes;
+            final String entityString;
             try {
-                entityBytes = MAPPER.writeValueAsBytes( entityMap );
+                final EntityMap entityMap = EntityMap.fromEntity( entity );
+                entityString = MAPPER.writeValueAsString(entityMap);
             }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Unable to serialize entity", e );
+            catch ( JsonProcessingException jpe ) {
+                throw new RuntimeException( "Unable to serialize entity", jpe );
             }
 
 
             final int maxEntrySize = serializationFig.getMaxEntitySize();
 
-            if ( entityBytes.length > maxEntrySize ) {
-                throw new EntityTooLargeException( entity, maxEntrySize, entityBytes.length,
+            if ( entityString.length() > maxEntrySize ) {
+                throw new EntityTooLargeException( entity, maxEntrySize, entityString.length(),
                         "Your entity cannot exceed " + maxEntrySize + " bytes. The entity you tried to save was "
-                                + entityBytes.length + " bytes" );
+                                + entityString.length() + " bytes" );
+            }
+            if( log.isDebugEnabled() ){
+                log.debug("Entity(" + entityString + ") Version("+wrapper.version+") State("+wrapper.status+")");
             }
 
-            builder.addBytes( entityBytes );
+            builder.addString(entityString);
 
             return FIELD_BUFFER_SERIALIZER.toByteBuffer( builder.build() );
         }
@@ -523,18 +529,14 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
             EntityMap storedEntity;
 
-            byte[] array = parser.readBytes();
-            try {
+            String entityString = parser.readString();
 
-                //                String[] byteValues = s.substring(1, s.length() - 1).split(",");
-                //                byte[] bytes = new byte[byteValues.length];
-                //
-                //                for (int i=0, len=bytes.length; i<len; i++) {
-                //                    bytes[i] = Byte.parseByte(byteValues[i].trim());
-                //                }
-                //
-                //                s = new String(bytes);
-                storedEntity = MAPPER.readValue( array, EntityMap.class );
+            if( log.isDebugEnabled() ){
+                log.debug("Entity(" + entityString + ") Version("+version+") State("+state+")");
+            }
+
+            try {
+                storedEntity = MAPPER.readValue( entityString, EntityMap.class );
             }
             catch ( Exception e ) {
                 throw new DataCorruptionException( "Unable to read entity data", e );
