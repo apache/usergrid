@@ -107,7 +107,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
-        EntityMap map = entity.getEntity().isPresent() ?   EntityMap.fromEntity(entity.getEntity().get()) : null;
+        EntityMap map =  EntityMap.fromEntity(entity.getEntity());
         return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE,
                 entitySerializer.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getVersion(),map,VERSION ) ) ) );
     }
@@ -320,75 +320,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     /**
-     * Simple callback to perform puts and deletes with a common row setup code
-     */
-    private static interface RowOp {
-
-        /**
-         * The operation to perform on the row
-         */
-        void doOp( ColumnListMutation<Boolean> colMutation );
-    }
-
-
-    /**
-     * Simple bean wrapper for state and entity
-     */
-    public static class EntityWrapper {
-        private MvccEntity.Status status;
-        private UUID version;
-        private EntityMap entity;
-        private int serailizationVersion;
-
-
-        public EntityWrapper( ) {
-        }
-        public EntityWrapper( final MvccEntity.Status status, final UUID version, final EntityMap entity, final int serailizationVersion ) {
-            this.setStatus(status);
-            this.setVersion( version);
-            this.setEntity(entity);
-            this.setSerailizationVersion(serailizationVersion);
-        }
-
-        @JsonSerialize()
-        public MvccEntity.Status getStatus() {
-            return status;
-        }
-
-        public void setStatus(MvccEntity.Status status) {
-            this.status = status;
-        }
-
-        @JsonSerialize()
-        public UUID getVersion() {
-            return version;
-        }
-
-        public void setVersion(UUID version){
-            this.version = version;
-        }
-
-        @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-        public EntityMap getEntity() {
-            return entity;
-        }
-
-        public void setEntity(EntityMap entity){
-            this.entity = entity;
-        }
-
-        @JsonSerialize()
-        public int getSerailizationVersion() {
-            return serailizationVersion;
-        }
-
-        public void setSerailizationVersion(int serailizationVersion) {
-            this.serailizationVersion = serailizationVersion;
-        }
-    }
-
-
-    /**
      * Converts raw columns the to MvccEntity representation
      */
     private static final class MvccColumnParser implements ColumnParser<Boolean, MvccEntity> {
@@ -410,6 +341,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
             try {
                 deSerialized = column.getValue( entityJsonSerializer );
+
             }
             catch ( DataCorruptionException e ) {
                 log.error(
@@ -420,18 +352,14 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 //TODO fix this
                 return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent() );
             }
-            EntityMap entityMap =  deSerialized.getEntity();
-            Optional<Entity> entity = Optional.absent();
+            Optional<Entity> entity = Optional.fromNullable(Entity.fromMap(deSerialized.getEntity()));
             //Inject the id into it.
-            if ( entityMap!=null ) {
-                entity = Optional.of( Entity.fromMap(entityMap));
+            if ( entity.isPresent() ) {
                 EntityUtils.setId(entity.get() , id );
             }
-
             return new MvccEntityImpl( id, deSerialized.getVersion(), deSerialized.getStatus(), entity );
         }
     }
-
 
     /**
      * We should only ever create this once, since this impl is a singleton
@@ -445,9 +373,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
         private SerializationFig serializationFig;
-
-
-
 
 
         public EntitySerializer( final SerializationFig serializationFig ) {
@@ -477,7 +402,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 }
             }
 
-            //we have an entity
+            //we have an entity but status is not complete don't allow it
             if ( wrapper.getStatus() != MvccEntity.Status.COMPLETE ) {
                 throw new UnsupportedOperationException( "Only states " + MvccEntity.Status.DELETED + " and " + MvccEntity.Status.COMPLETE + " are supported" );
             }
@@ -526,10 +451,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                     throw new UnsupportedOperationException( "A version of type " + entityWrapper.getSerailizationVersion() + " is unsupported" );
                 }
 
-                // it's been deleted, remove it
-                if ( entityWrapper.getEntity() == null) {
-                    return new EntityWrapper( MvccEntity.Status.DELETED, entityWrapper.getVersion(), null,VERSION );
-                }
+
             }
             catch ( Exception e ) {
                 if( log.isDebugEnabled() ){
@@ -538,8 +460,82 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 throw new DataCorruptionException( "Unable to read entity data", e );
             }
 
+            // it's been deleted, remove it
+            if ( entityWrapper.getEntity() == null) {
+                return new EntityWrapper( MvccEntity.Status.DELETED, entityWrapper.getVersion(), null,VERSION );
+            }
+
+            entityWrapper.setStatus(MvccEntity.Status.COMPLETE);
+
             // it's partial by default
             return entityWrapper;
         }
+    }
+
+    /**
+     * Simple bean wrapper for state and entity
+     */
+    public static class EntityWrapper {
+        private MvccEntity.Status status;
+        private UUID version;
+        private EntityMap entity;
+        private int serailizationVersion;
+
+
+        public EntityWrapper( ) {
+        }
+        public EntityWrapper( final MvccEntity.Status status, final UUID version, final EntityMap entity, final int serailizationVersion ) {
+            this.setStatus(status);
+            this.setVersion( version);
+            this.setEntity(entity);
+            this.setSerailizationVersion(serailizationVersion);
+        }
+
+        @JsonIgnore()
+        public MvccEntity.Status getStatus() {
+            return status;
+        }
+
+        public void setStatus(MvccEntity.Status status) {
+            this.status = status;
+        }
+
+        @JsonSerialize()
+        public UUID getVersion() {
+            return version;
+        }
+
+        public void setVersion(UUID version){
+            this.version = version;
+        }
+
+        @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+        public EntityMap getEntity() {
+            return entity;
+        }
+
+        public void setEntity(EntityMap entity){
+            this.entity = entity;
+        }
+
+        @JsonSerialize()
+        public int getSerailizationVersion() {
+            return serailizationVersion;
+        }
+
+        public void setSerailizationVersion(int serailizationVersion) {
+            this.serailizationVersion = serailizationVersion;
+        }
+    }
+
+    /**
+     * Simple callback to perform puts and deletes with a common row setup code
+     */
+    private static interface RowOp {
+
+        /**
+         * The operation to perform on the row
+         */
+        void doOp( ColumnListMutation<Boolean> colMutation );
     }
 }
