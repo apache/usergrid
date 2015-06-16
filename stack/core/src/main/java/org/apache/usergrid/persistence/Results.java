@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
-import org.apache.usergrid.persistence.query.ir.SearchVisitor;
+import org.apache.usergrid.persistence.query.ir.result.SearchVisitorFactory;
 import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.StringUtils;
 
@@ -85,7 +85,7 @@ public class Results implements Iterable<Entity> {
     String dataName;
 
     private QueryProcessor queryProcessor;
-    private SearchVisitor searchVisitor;
+    private SearchVisitorFactory searchVisitorFactory;
 
 
     public Results() {
@@ -1273,8 +1273,8 @@ public class Results implements Iterable<Entity> {
     }
 
 
-    public void setSearchVisitor( SearchVisitor searchVisitor ) {
-        this.searchVisitor = searchVisitor;
+    public void setSearchVisitorFactory( SearchVisitorFactory searchVisitor ) {
+        this.searchVisitorFactory = searchVisitor;
     }
 
 
@@ -1288,6 +1288,6 @@ public class Results implements Iterable<Entity> {
         q.setCursor( getCursor() );
         queryProcessor.setQuery( q );
 
-        return queryProcessor.getResults( searchVisitor );
+        return queryProcessor.getResults( searchVisitorFactory );
     }
 }

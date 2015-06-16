@@ -19,7 +19,6 @@ package org.apache.usergrid.persistence.cassandra;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
@@ -47,14 +46,15 @@ import org.apache.usergrid.persistence.query.ir.OrNode;
 import org.apache.usergrid.persistence.query.ir.OrderByNode;
 import org.apache.usergrid.persistence.query.ir.QueryNode;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
-import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 import org.apache.usergrid.persistence.query.ir.SliceNode;
 import org.apache.usergrid.persistence.query.ir.UuidIdentifierNode;
 import org.apache.usergrid.persistence.query.ir.WithinNode;
+import org.apache.usergrid.persistence.query.ir.result.GatherIterator;
 import org.apache.usergrid.persistence.query.ir.result.ResultIterator;
 import org.apache.usergrid.persistence.query.ir.result.ResultsLoader;
 import org.apache.usergrid.persistence.query.ir.result.ResultsLoaderFactory;
 import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
+import org.apache.usergrid.persistence.query.ir.result.SearchVisitorFactory;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;
@@ -138,6 +138,7 @@ public class QueryProcessor {
         if ( rootOperand != null ) {
             // visit the tree
 
+            //TODO, evaluate for each shard and generate a tree in this class?
             TreeEvaluator visitor = new TreeEvaluator();
 
             rootOperand.visit( visitor );
@@ -259,16 +260,16 @@ public class QueryProcessor {
     /**
      * Return the iterator results, ordered if required
      */
-    public Results getResults( SearchVisitor visitor ) throws Exception {
+    public Results getResults( final SearchVisitorFactory searchVisitorFactory ) throws Exception {
         // if we have no order by just load the results
 
         if ( rootNode == null ) {
             return null;
         }
 
-        rootNode.visit( visitor );
+        //use the gather iterator to collect all the
 
-        ResultIterator itr = visitor.getResults();
+        ResultIterator itr = new GatherIterator(rootNode, searchVisitorFactory.createVisitors()  );
 
         List<ScanColumn> entityIds = new ArrayList<ScanColumn>( Math.min( size, Query.MAX_LIMIT ) );
 
@@ -304,7 +305,7 @@ public class QueryProcessor {
 
         results.setQuery( query );
         results.setQueryProcessor( this );
-        results.setSearchVisitor( visitor );
+        results.setSearchVisitorFactory( searchVisitorFactory );
 
         return results;
     }

@@ -47,16 +47,14 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 public class IndexBucketScanner implements IndexScanner {
 
     private final CassandraService cass;
-    private final IndexBucketLocator indexBucketLocator;
     private final UUID applicationId;
     private final Object keyPrefix;
     private final ApplicationCF columnFamily;
     private final Object finish;
     private final boolean reversed;
     private final int pageSize;
-    private final String[] indexPath;
-    private final IndexType indexType;
     private final boolean skipFirst;
+    private final String bucket;
 
     /** Pointer to our next start read */
     private Object start;
@@ -65,18 +63,17 @@ public class IndexBucketScanner implements IndexScanner {
     private Object scanStart;
 
     /** Iterator for our results from the last page load */
-    private TreeSet<HColumn<ByteBuffer, ByteBuffer>> lastResults;
+    private List<HColumn<ByteBuffer, ByteBuffer>> lastResults;
 
     /** True if our last load loaded a full page size. */
     private boolean hasMore = true;
 
 
 
-    public IndexBucketScanner( CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily,
-                               UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish,
-                               boolean reversed, int pageSize, boolean skipFirst, String... indexPath) {
+    public IndexBucketScanner( CassandraService cass, ApplicationCF columnFamily,
+                               UUID applicationId, Object keyPrefix, Object start, Object finish,
+                               boolean reversed, int pageSize, boolean skipFirst, String bucket) {
         this.cass = cass;
-        this.indexBucketLocator = locator;
         this.applicationId = applicationId;
         this.keyPrefix = keyPrefix;
         this.columnFamily = columnFamily;
@@ -84,11 +81,10 @@ public class IndexBucketScanner implements IndexScanner {
         this.finish = finish;
         this.reversed = reversed;
         this.skipFirst = skipFirst;
+        this.bucket = bucket;
 
         //we always add 1 to the page size.  This is because we pop the last column for the next page of results
         this.pageSize = pageSize+1;
-        this.indexPath = indexPath;
-        this.indexType = indexType;
         this.scanStart = start;
     }
 
@@ -117,13 +113,7 @@ public class IndexBucketScanner implements IndexScanner {
             return false;
         }
 
-        List<String> keys = indexBucketLocator.getBuckets( applicationId, indexType, indexPath );
-
-        List<Object> cassKeys = new ArrayList<Object>( keys.size() );
-
-        for ( String bucket : keys ) {
-            cassKeys.add( key( keyPrefix, bucket ) );
-        }
+       final Object rowKey =  key( keyPrefix, bucket );
 
         //if we skip the first we need to set the load to page size +2, since we'll discard the first
         //and start paging at the next entity, otherwise we'll just load the page size we need
@@ -138,8 +128,10 @@ public class IndexBucketScanner implements IndexScanner {
             selectSize++;
         }
 
-        TreeSet<HColumn<ByteBuffer, ByteBuffer>> resultsTree = IndexMultiBucketSetLoader
-                .load( cass, columnFamily, applicationId, cassKeys, start, finish, selectSize, reversed );
+
+        final List<HColumn<ByteBuffer, ByteBuffer>>
+                resultsTree = cass.getColumns( cass.getApplicationKeyspace( applicationId ), columnFamily, rowKey,
+                start, finish, selectSize, reversed );
 
         //remove the first element, it's from a cursor value and we don't want to retain it
 
@@ -150,7 +142,7 @@ public class IndexBucketScanner implements IndexScanner {
 
 
             // set the bytebuffer for the next pass
-            start = resultsTree.pollLast().getName();
+            start = resultsTree.get( resultsTree.size() - 1 ).getName();
         }
         else {
             hasMore = false;
@@ -158,7 +150,7 @@ public class IndexBucketScanner implements IndexScanner {
 
         //remove the first element since it needs to be skipped AFTER the size check. Otherwise it will fail
         if ( firstPageSkipFirst ) {
-            resultsTree.pollFirst();
+            resultsTree.remove( 0 );
         }
 
         lastResults = resultsTree;
@@ -173,7 +165,7 @@ public class IndexBucketScanner implements IndexScanner {
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
+    public Iterator<List<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
         return this;
     }
 
@@ -210,8 +202,8 @@ public class IndexBucketScanner implements IndexScanner {
      */
     @Override
     @Metered(group = "core", name = "IndexBucketScanner_load")
-    public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next() {
-        NavigableSet<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
+    public List<HColumn<ByteBuffer, ByteBuffer>> next() {
+        List<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 
         lastResults = null;
 
