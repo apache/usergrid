@@ -278,7 +278,7 @@ public class Realm extends AuthorizingRealm {
 
                 application = ( ( ApplicationPrincipal ) principal ).getApplication();
                 grant( info, principal, "applications:admin,access,get,put,post,delete:" + application.getId() );
-                applicationSet.put( application.getId(), application.getName() );
+                applicationSet.put( application.getId(), application.getName().toLowerCase());
             }
             else if ( principal instanceof AdminUserPrincipal ) {
                 // AdminUserPrincipals are through basic auth and sessions
