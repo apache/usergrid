@@ -20,7 +20,6 @@ public class MapToEntityConverter{
             EntityMap entityMap = (EntityMap) map;
             Id id = entityMap.getId();
             UUID version = entityMap.getVersion();
-            entityMap.clearFields();
             entity =  id!=null ? new Entity(id,version) : new Entity();
         }else{
             entity = new Entity();
@@ -33,6 +32,9 @@ public class MapToEntityConverter{
 
         for ( String fieldName : map.keySet() ) {
 
+            if(isReservedField(fieldName)){
+                continue;
+            }
             Object value = map.get(fieldName);
 
             if ( value instanceof String ) {
@@ -83,6 +85,10 @@ public class MapToEntityConverter{
         }
 
         return entity;
+    }
+
+    private boolean isReservedField(String fieldName) {
+        return fieldName.equals(EntityMap.ID_KEY) || fieldName.equals(EntityMap.TYPE_KEY)  || fieldName.equals(EntityMap.VERSION_KEY);
     }
 
     private  ListField listToListField( String fieldName, List list ) {
