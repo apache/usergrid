@@ -23,11 +23,13 @@ public class EntityMap extends HashMap<String,Object> {
         super();
     }
 
+    
     public EntityMap(Id id,UUID version){
         super();
         setId(id);
         setVersion( version );
     }
+
 
     @JsonIgnore
     public Id getId(){
