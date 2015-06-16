@@ -491,6 +491,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             this.setSerailizationVersion(serailizationVersion);
         }
 
+        /**
+         * do not store status because its based on either the entity being null (deleted) or not null (complete)
+         * @return
+         */
         @JsonIgnore()
         public MvccEntity.Status getStatus() {
             return status;
