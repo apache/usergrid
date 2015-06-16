@@ -14,27 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.cassandra.index;
+package org.apache.usergrid.persistence.query.ir.result;
 
 
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 
-import me.prettyprint.hector.api.beans.HColumn;
+import org.apache.usergrid.persistence.cassandra.QueryProcessor;
+import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 
 
-/**
- * Interface for scanning all index buckets.
- *
- * @author tnine
- */
-public interface IndexScanner
-        extends Iterable<List<HColumn<ByteBuffer, ByteBuffer>>>, Iterator<List<HColumn<ByteBuffer, ByteBuffer>>> {
+public class CollectionSearchVisitorFactory implements SearchVisitorFactory {
 
-    /** Reset the scanner back to the start */
-    public void reset();
 
-    public int getPageSize();
+    @Override
+    public Collection<SearchVisitor> createVisitors() {
+//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
+        return null;
+    }
 }

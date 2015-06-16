@@ -56,14 +56,17 @@ public abstract class SearchVisitor implements NodeVisitor {
 
     protected final Stack<ResultIterator> results = new Stack<ResultIterator>();
 
+    protected final String bucket;
+
 
     /**
      * @param queryProcessor
      */
-    public SearchVisitor( QueryProcessor queryProcessor ) {
+    public SearchVisitor( QueryProcessor queryProcessor, final String bucket ) {
         this.query = queryProcessor.getQuery();
         this.queryProcessor = queryProcessor;
         this.em = queryProcessor.getEntityManager();
+        this.bucket = bucket;
     }
 
 

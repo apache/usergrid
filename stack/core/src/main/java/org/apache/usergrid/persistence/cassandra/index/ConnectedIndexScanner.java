@@ -63,7 +63,7 @@ public class ConnectedIndexScanner implements IndexScanner {
     /**
      * Iterator for our results from the last page load
      */
-    private LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>> lastResults;
+    private List<HColumn<ByteBuffer, ByteBuffer>> lastResults;
 
     /**
      * True if our last load loaded a full page size.
@@ -131,16 +131,6 @@ public class ConnectedIndexScanner implements IndexScanner {
         }
 
 
-        lastResults = new LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>>();
-
-
-        //cleanup columns for later logic
-        //pointer to the first col we load
-        HColumn<ByteBuffer, ByteBuffer> first = null;
-
-        //pointer to the last column we load
-        HColumn<ByteBuffer, ByteBuffer> last = null;
-
         //go through each connection type until we exhaust the result sets
         while ( currentConnectionType != null ) {
 
@@ -157,16 +147,7 @@ public class ConnectedIndexScanner implements IndexScanner {
 
             final int resultSize = results.size();
 
-            if(resultSize > 0){
-
-                last = results.get( resultSize -1 );
-
-                if(first == null ){
-                    first = results.get( 0 );
-                }
-            }
-
-            lastResults.addAll( results );
+            lastResults = results;
 
 
             // we loaded a full page, there might be more
@@ -193,14 +174,13 @@ public class ConnectedIndexScanner implements IndexScanner {
         }
 
         //remove the first element, we need to skip it
-        if ( skipFirst && first != null) {
-            lastResults.remove( first  );
+        if ( skipFirst && lastResults.size() > 0) {
+            lastResults.remove( 0  );
         }
 
-        if ( hasMore && last != null ) {
+        if ( hasMore && lastResults.size() > 0 ) {
             // set the bytebuffer for the next pass
-            start = last.getName();
-            lastResults.remove( last );
+            lastResults.remove( lastResults.size() - 1 );
         }
 
         return lastResults != null && lastResults.size() > 0;
@@ -213,7 +193,7 @@ public class ConnectedIndexScanner implements IndexScanner {
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
+    public Iterator<List<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
         return this;
     }
 
@@ -250,8 +230,8 @@ public class ConnectedIndexScanner implements IndexScanner {
      */
     @Override
     @Metered( group = "core", name = "IndexBucketScanner_load" )
-    public Set<HColumn<ByteBuffer, ByteBuffer>> next() {
-        Set<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
+    public List<HColumn<ByteBuffer, ByteBuffer>> next() {
+        List<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 
         lastResults = null;
 

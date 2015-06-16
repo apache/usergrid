@@ -328,6 +328,8 @@ public abstract class GeoIndexSearcher {
 
             // add buckets for each geoCell
 
+            //TODO, use merge logic here
+
             for ( String indexBucket : locator.getBuckets( appId, IndexType.GEO, geoCell ) ) {
                 keys.add( key( key, DICTIONARY_GEOCELL, geoCell, indexBucket ) );
             }
