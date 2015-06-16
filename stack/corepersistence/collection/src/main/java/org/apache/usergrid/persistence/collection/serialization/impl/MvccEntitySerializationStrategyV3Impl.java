@@ -109,7 +109,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         Optional<EntityMap> map =  EntityMap.fromEntity(entity.getEntity());
         return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE,
-                entitySerializer.toByteBuffer( new EntityWrapper(entityId,entity.getVersion(), entity.getStatus(), VERSION, map.isPresent() ? map.get() : null ) ) ) );
+                entitySerializer.toByteBuffer( new EntityWrapper(entityId,entity.getVersion(), entity.getStatus(), map.isPresent() ? map.get() : null ) ) ) );
     }
 
 
@@ -265,7 +265,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         return doWrite(applicationScope, entityId, version, colMutation ->
                 colMutation.putColumn(COL_VALUE,
-                    entitySerializer.toByteBuffer(new EntityWrapper(entityId, version, MvccEntity.Status.DELETED, VERSION, null))
+                    entitySerializer.toByteBuffer(new EntityWrapper(entityId, version, MvccEntity.Status.DELETED, null))
                 )
         );
     }
@@ -388,8 +388,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 return null;
             }
 
-            wrapper.setSerailizationVersion(VERSION);
-
             //mark this version as empty
             if ( wrapper.getEntityMap() == null ) {
                 //we're empty
@@ -445,10 +443,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             try {
                 entityWrapper = MAPPER.readValue(byteBuffer.array(), EntityWrapper.class);
 
-                if ( VERSION != entityWrapper.getSerailizationVersion()) {
-                    throw new UnsupportedOperationException( "A version of type " + entityWrapper.getSerailizationVersion() + " is unsupported" );
-                }
-
             }
             catch ( Exception e ) {
                 if( log.isDebugEnabled() ){
@@ -459,7 +453,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
             // it's been deleted, remove it
             if ( entityWrapper.getEntityMap() == null) {
-                return new EntityWrapper( entityWrapper.getId(), entityWrapper.getVersion(),MvccEntity.Status.DELETED, VERSION,null );
+                return new EntityWrapper( entityWrapper.getId(), entityWrapper.getVersion(),MvccEntity.Status.DELETED,null );
             }
 
             entityWrapper.setStatus(MvccEntity.Status.COMPLETE);
@@ -477,17 +471,15 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         private MvccEntity.Status status;
         private UUID version;
         private EntityMap entityMap;
-        private int serailizationVersion;
 
 
         public EntityWrapper( ) {
         }
-        public EntityWrapper( final Id id , final UUID version, final MvccEntity.Status status, final int serailizationVersion, final EntityMap entity ) {
+        public EntityWrapper( final Id id , final UUID version, final MvccEntity.Status status, final EntityMap entity ) {
             this.setStatus(status);
             this.version=  version;
             this.entityMap = entity;
             this.id = id;
-            this.setSerailizationVersion(serailizationVersion);
         }
 
         /**
@@ -519,14 +511,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             return entityMap;
         }
 
-        @JsonSerialize()
-        public int getSerailizationVersion() {
-            return serailizationVersion;
-        }
-
-        public void setSerailizationVersion(int serailizationVersion) {
-            this.serailizationVersion = serailizationVersion;
-        }
 
         @JsonIgnore
         public Optional<Entity> getOptionalEntity() {
