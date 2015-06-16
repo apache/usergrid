@@ -258,13 +258,16 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
     @Override
     public MutationBatch mark( final ApplicationScope applicationScope, final Id entityId, final UUID version ) {
-        Preconditions.checkNotNull( applicationScope, "applicationScope is required" );
-        Preconditions.checkNotNull( entityId, "entity id is required" );
-        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkNotNull(applicationScope, "applicationScope is required");
+        Preconditions.checkNotNull(entityId, "entity id is required");
+        Preconditions.checkNotNull(version, "version is required");
 
 
-        return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE, entitySerializer.toByteBuffer(
-            new EntityWrapper(entityId, version, MvccEntity.Status.COMPLETE,VERSION, null ) ) ) );
+        return doWrite(applicationScope, entityId, version, colMutation ->
+                colMutation.putColumn(COL_VALUE,
+                    entitySerializer.toByteBuffer(new EntityWrapper(entityId, version, MvccEntity.Status.DELETED, VERSION, null))
+                )
+        );
     }
 
 
