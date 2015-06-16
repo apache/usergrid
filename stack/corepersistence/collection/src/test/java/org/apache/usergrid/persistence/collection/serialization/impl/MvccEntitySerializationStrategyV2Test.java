@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +101,8 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
         final Id id = entity.getId();
         ValidationUtils.verifyIdentity( id );
         final UUID version = UUIDGenerator.newTimeUUID();
+        EntityUtils.setVersion(entity,version);
+
         final MvccEntity.Status status = MvccEntity.Status.COMPLETE;
 
         final MvccEntity mvccEntity = new MvccEntityImpl( id, version, status, entity );
@@ -187,6 +190,8 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
             final Id id = entity.getId();
             ValidationUtils.verifyIdentity( id );
             final UUID version = UUIDGenerator.newTimeUUID();
+            EntityUtils.setVersion(entity,version);
+
             final MvccEntity.Status status = MvccEntity.Status.COMPLETE;
 
             final MvccEntity mvccEntity = new MvccEntityImpl( id, version, status, entity );

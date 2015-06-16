@@ -107,9 +107,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
-        EntityMap map =  EntityMap.fromEntity(entity.getEntity());
+        Optional<EntityMap> map =  EntityMap.fromEntity(entity.getEntity());
         return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE,
-                entitySerializer.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getVersion(),map,VERSION ) ) ) );
+                entitySerializer.toByteBuffer( new EntityWrapper(entityId,entity.getVersion(), entity.getStatus(), VERSION, map.isPresent() ? map.get() : null ) ) ) );
     }
 
 
@@ -264,7 +264,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
         return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE, entitySerializer.toByteBuffer(
-            new EntityWrapper( MvccEntity.Status.COMPLETE, version, null,VERSION ) ) ) );
+            new EntityWrapper(entityId, version, MvccEntity.Status.COMPLETE,VERSION, null ) ) ) );
     }
 
 
@@ -341,7 +341,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
             try {
                 deSerialized = column.getValue( entityJsonSerializer );
-
             }
             catch ( DataCorruptionException e ) {
                 log.error(
@@ -352,11 +351,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 //TODO fix this
                 return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent() );
             }
-            Optional<Entity> entity = Optional.fromNullable(Entity.fromMap(deSerialized.getEntity()));
-            //Inject the id into it.
-            if ( entity.isPresent() ) {
-                EntityUtils.setId(entity.get() , id );
-            }
+            Optional<Entity> entity = deSerialized.getOptionalEntity() ;
             return new MvccEntityImpl( id, deSerialized.getVersion(), deSerialized.getStatus(), entity );
         }
     }
@@ -393,7 +388,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             wrapper.setSerailizationVersion(VERSION);
 
             //mark this version as empty
-            if ( wrapper.getEntity() == null ) {
+            if ( wrapper.getEntityMap() == null ) {
                 //we're empty
                 try {
                     return ByteBuffer.wrap(MAPPER.writeValueAsBytes(wrapper));
@@ -417,7 +412,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 final int maxEntrySize = serializationFig.getMaxEntitySize();
 
                 if (wrapperBytes.length > maxEntrySize) {
-                    throw new EntityTooLargeException(Entity.fromMap(wrapper.getEntity()), maxEntrySize, wrapperBytes.length,
+                    throw new EntityTooLargeException(Entity.fromMap(wrapper.getEntityMap()), maxEntrySize, wrapperBytes.length,
                         "Your entity cannot exceed " + maxEntrySize + " bytes. The entity you tried to save was "
                             + wrapperBytes.length + " bytes");
                 }
@@ -451,7 +446,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                     throw new UnsupportedOperationException( "A version of type " + entityWrapper.getSerailizationVersion() + " is unsupported" );
                 }
 
-
             }
             catch ( Exception e ) {
                 if( log.isDebugEnabled() ){
@@ -461,8 +455,8 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             }
 
             // it's been deleted, remove it
-            if ( entityWrapper.getEntity() == null) {
-                return new EntityWrapper( MvccEntity.Status.DELETED, entityWrapper.getVersion(), null,VERSION );
+            if ( entityWrapper.getEntityMap() == null) {
+                return new EntityWrapper( entityWrapper.getId(), entityWrapper.getVersion(),MvccEntity.Status.DELETED, VERSION,null );
             }
 
             entityWrapper.setStatus(MvccEntity.Status.COMPLETE);
@@ -476,18 +470,20 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
      * Simple bean wrapper for state and entity
      */
     public static class EntityWrapper {
+        private Id id;
         private MvccEntity.Status status;
         private UUID version;
-        private EntityMap entity;
+        private EntityMap entityMap;
         private int serailizationVersion;
 
 
         public EntityWrapper( ) {
         }
-        public EntityWrapper( final MvccEntity.Status status, final UUID version, final EntityMap entity, final int serailizationVersion ) {
+        public EntityWrapper( final Id id , final UUID version, final MvccEntity.Status status, final int serailizationVersion, final EntityMap entity ) {
             this.setStatus(status);
-            this.setVersion( version);
-            this.setEntity(entity);
+            this.version=  version;
+            this.entityMap = entity;
+            this.id = id;
             this.setSerailizationVersion(serailizationVersion);
         }
 
@@ -505,21 +501,19 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         }
 
         @JsonSerialize()
+        public Id getId() {
+            return id;
+        }
+
+        @JsonSerialize()
         public UUID getVersion() {
             return version;
         }
 
-        public void setVersion(UUID version){
-            this.version = version;
-        }
 
         @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-        public EntityMap getEntity() {
-            return entity;
-        }
-
-        public void setEntity(EntityMap entity){
-            this.entity = entity;
+        public EntityMap getEntityMap() {
+            return entityMap;
         }
 
         @JsonSerialize()
@@ -529,6 +523,18 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         public void setSerailizationVersion(int serailizationVersion) {
             this.serailizationVersion = serailizationVersion;
+        }
+
+        @JsonIgnore
+        public Optional<Entity> getOptionalEntity() {
+            Optional<Entity> entityReturn = Optional.fromNullable(Entity.fromMap(getEntityMap()));
+            //Inject the id into it.
+            if (entityReturn.isPresent()) {
+                EntityUtils.setId(entityReturn.get(), getId());
+                EntityUtils.setVersion(entityReturn.get(), getVersion());
+            }
+            ;
+            return entityReturn;
         }
     }
 
