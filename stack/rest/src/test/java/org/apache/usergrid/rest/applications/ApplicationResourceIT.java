@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications;
 
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -28,6 +29,7 @@ import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 
 import org.apache.shiro.codec.Base64;
 
@@ -65,16 +67,45 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertNotNull( node.get( "entities" ) );
     }
 
+    //TODO: write a test so that its mixed case.
     @Test
     public void applicationWithAppCredentials() throws Exception {
 
-        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
+        String orgName = "MiXedApplicationResourceTest";
+        String appName = "mgmt-org-app-test";
 
+        //create new org
+        Map payload = hashMap( "email", "test-user-1@mockserver.com" ).map( "username", "ApplicationAppCredsTest" )
+                                                                      .map( "name", "App Creds User" )
+                                                                      .map( "password", "password" )
+                                                                      .map( "organization",
+                                                                              orgName );
+
+        resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+
+        //create new app
+        Map<String, String> data = new HashMap<String, String>();
+        data.put( "name", appName );
+
+        JsonNode appdata = resource().path( "/management/orgs/" + orgName + "/applications" )
+                                     .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+
+
+        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo(orgName+"/"+appName );//"test-organization/test-app" );
+
+        //don't know what kind of creds these are but they sure aren't app creds...
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
 
-        JsonNode node = resource().path( "/test-organization/test-app/users" ).queryParam( "client_id", clientId )
-                .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
+        JsonNode applicationCredentials = resource().path( "/"+orgName.toLowerCase()+"/"+appName+"/credentials" ).queryParam( "client_id", clientId )
+
+                                                    .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
+                                                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+        JsonNode node = resource().path( "/"+orgName.toLowerCase()+"/"+appName+"/users" ).queryParam( "client_id", applicationCredentials.get( "credentials" ).get( "client_id" ).asText())
+                .queryParam( "client_secret", applicationCredentials.get( "credentials" ).get( "client_secret" ).asText() ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
 
         assertNotNull( node.get( "entities" ) );
