@@ -58,15 +58,8 @@ public class EntityToMapConverter {
      */
 
     public EntityMap toMap( EntityObject entityObject ) {
-        EntityMap map = null;
-        if ( entityObject instanceof Entity ) {
-            Entity entity = ( Entity ) entityObject;
-            map = new EntityMap( entity.getId(), entity.getVersion() );
-        }
-        else {
-            map = new EntityMap();
-        }
-        return toMap( entityObject, map );
+        EntityMap map = new EntityMap();
+        return toMap(entityObject, map);
     }
 
 

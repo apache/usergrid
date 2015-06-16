@@ -15,16 +15,7 @@ public class MapToEntityConverter{
 
     public  Entity fromMap( Map<String, Object> map,  boolean topLevel ) {
 
-        Entity entity ;
-        if(map instanceof EntityMap){
-            EntityMap entityMap = (EntityMap) map;
-            Id id = entityMap.getId();
-            UUID version = entityMap.getVersion();
-            entity =  id!=null ? new Entity(id,version) : new Entity();
-        }else{
-            entity = new Entity();
-        }
-
+        Entity  entity = new Entity();
         return fromMap( entity, map, topLevel );
     }
 
@@ -32,9 +23,6 @@ public class MapToEntityConverter{
 
         for ( String fieldName : map.keySet() ) {
 
-            if(isReservedField(fieldName)){
-                continue;
-            }
             Object value = map.get(fieldName);
 
             if ( value instanceof String ) {
@@ -87,9 +75,6 @@ public class MapToEntityConverter{
         return entity;
     }
 
-    private boolean isReservedField(String fieldName) {
-        return fieldName.equals(EntityMap.ID_KEY) || fieldName.equals(EntityMap.TYPE_KEY)  || fieldName.equals(EntityMap.VERSION_KEY);
-    }
 
     private  ListField listToListField( String fieldName, List list ) {
 
