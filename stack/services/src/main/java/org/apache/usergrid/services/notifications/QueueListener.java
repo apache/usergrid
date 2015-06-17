@@ -237,7 +237,7 @@ public class QueueListener  {
                             }
                         }
                     })
-                    .toBlocking().last();
+                    .toBlocking().lastOrDefault(null);
 
 
         }
