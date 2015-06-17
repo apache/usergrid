@@ -51,7 +51,7 @@ public class InOrderIterator implements ResultIterator {
     /** Add a uuid to the list */
     public void add( UUID... ids ) {
         for ( UUID current : ids ) {
-            uuids.add( new UUIDIndexSliceParser.UUIDColumn( current, ByteBuffer.allocate( 0 ) ) );
+            uuids.add( new UUIDColumn( current, 1 ) );
         }
     }
 

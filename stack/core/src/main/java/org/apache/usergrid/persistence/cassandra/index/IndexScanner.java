@@ -33,8 +33,19 @@ public interface IndexScanner
         extends Iterable<List<HColumn<ByteBuffer, ByteBuffer>>>, Iterator<List<HColumn<ByteBuffer, ByteBuffer>>> {
 
     /** Reset the scanner back to the start */
-    public void reset();
+    void reset();
 
-    public int getPageSize();
+    /**
+     * Return the page size of the index
+     * @return
+     */
+    int getPageSize();
+
+    /**
+     * Return true if this iterator iterates in reverse
+     * @return
+     */
+    boolean isReversed();
+
 
 }
