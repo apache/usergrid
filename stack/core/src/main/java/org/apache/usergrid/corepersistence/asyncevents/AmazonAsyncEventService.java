@@ -376,7 +376,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                             Timer.Context timer = readTimer.time();
 
                             try {
-                                drainList = take().toList().toBlocking().last();
+                                drainList = take().toList().toBlocking().lastOrDefault(null);
 
                                 //emit our list in it's entity to hand off to a worker pool
                                 subscriber.onNext(drainList);
