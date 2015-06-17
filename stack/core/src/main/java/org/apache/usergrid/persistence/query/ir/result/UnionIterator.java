@@ -21,14 +21,12 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.cassandra.CursorCache;
-import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
@@ -38,8 +36,6 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.*;
  * @author tnine
  */
 public class UnionIterator extends MultiIterator {
-
-    private static final ScanColumnComparator COMP = new ScanColumnComparator();
 
     private SortedColumnList list;
 
@@ -133,14 +129,11 @@ public class UnionIterator extends MultiIterator {
      */
     public static final class SortedColumnList {
 
-        private static final ScanColumnComparator COMP = new ScanColumnComparator();
-
         private final int maxSize;
 
         private final List<ScanColumn> list;
 
-
-        private ScanColumn min;
+        private UUIDColumn min;
 
 
         public SortedColumnList( final int maxSize, final UUID minUuid ) {
@@ -149,7 +142,7 @@ public class UnionIterator extends MultiIterator {
             this.maxSize = maxSize;
 
             if ( minUuid != null ) {
-                min = new AbstractScanColumn( minUuid, null ) {};
+                min = new UUIDColumn( minUuid) ;
             }
         }
 
@@ -159,11 +152,11 @@ public class UnionIterator extends MultiIterator {
          */
         public void add( ScanColumn col ) {
             //less than our min, don't add
-            if ( COMP.compare( min, col ) >= 0 ) {
+            if ( min != null && min.compareTo( col ) >= 0 ) {
                 return;
             }
 
-            int index = Collections.binarySearch( this.list, col, COMP );
+            int index = Collections.binarySearch( this.list, col );
 
             //already present
             if ( index > -1 ) {
@@ -221,7 +214,8 @@ public class UnionIterator extends MultiIterator {
                 return;
             }
 
-            min = this.list.get( size - 1 );
+            final UUID oldMin = this.list.get( size - 1 ).getUUID();
+            min = new UUIDColumn( oldMin );
         }
 
 
@@ -235,30 +229,6 @@ public class UnionIterator extends MultiIterator {
         public void reset(){
             clear();
             this.min = null;
-        }
-    }
-
-
-    /**
-     * Simple comparator for comparing scan columns.  Orders them by time uuid
-     */
-    private static class ScanColumnComparator implements Comparator<ScanColumn> {
-
-        @Override
-        public int compare( final ScanColumn o1, final ScanColumn o2 ) {
-            if ( o1 == null ) {
-                if ( o2 == null ) {
-                    return 0;
-                }
-
-                return -1;
-            }
-
-            else if ( o2 == null ) {
-                return 1;
-            }
-
-            return UUIDUtils.compare( o1.getUUID(), o2.getUUID() );
         }
     }
 }

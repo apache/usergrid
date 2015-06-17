@@ -38,7 +38,7 @@ public class StaticIdIterator implements ResultIterator {
      *
      */
     public StaticIdIterator( UUID id ) {
-        final ScanColumn col = new UUIDIndexSliceParser.UUIDColumn( id, ByteBuffer.allocate( 0 ) );
+        final ScanColumn col = new UUIDColumn( id );
 
         ids = Collections.singleton( col );
     }

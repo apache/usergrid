@@ -14,21 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.ir.result;
+package org.apache.usergrid.persistence.cassandra.index;
 
 
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 
-import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.TypeParser;
+
+import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 
 
-/**
- * Interface to parse and compare range slices
- *
- * @author tnine
- */
-public interface SliceParser {
+public abstract class DynamicCompositeComparator implements Comparator<ByteBuffer> {
+    @SuppressWarnings("rawtypes")
+    protected final AbstractType dynamicComposite;
 
-    /** Parse the slice and return it's parse type.  If null is returned, the column should be considered discarded */
-    public ScanColumn parse(final  ByteBuffer columnNameBytes, final DynamicCompositeComparator cfComparator  );
+
+    protected DynamicCompositeComparator( ApplicationCF cf ) {
+        // should never happen, this will blow up during development if this fails
+        try {
+            dynamicComposite = TypeParser.parse( cf.getComparator() );
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
 }

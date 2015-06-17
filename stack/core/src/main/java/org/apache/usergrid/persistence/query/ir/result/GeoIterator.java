@@ -308,6 +308,7 @@ public class GeoIterator implements ResultIterator {
     private class LocationScanColumn implements ScanColumn {
 
         private final EntityLocationRef location;
+        private ScanColumn child;
 
 
         public LocationScanColumn( EntityLocationRef location ) {
@@ -329,6 +330,18 @@ public class GeoIterator implements ResultIterator {
 
 
         @Override
+        public void setChild( final ScanColumn childColumn ) {
+             this.child = childColumn;
+        }
+
+
+        @Override
+        public ScanColumn getChild() {
+            return this.child;
+        }
+
+
+        @Override
         public boolean equals( Object o ) {
             if ( this == o ) {
                 return true;
@@ -346,6 +359,17 @@ public class GeoIterator implements ResultIterator {
         @Override
         public int hashCode() {
             return location.getUuid().hashCode();
+        }
+
+
+        @Override
+        public int compareTo( final ScanColumn o ) {
+
+            if(!(o instanceof LocationScanColumn)){
+                throw new UnsupportedOperationException( "Cannot compare another ScanColumn that is not an instance of LocationScanColumn" );
+            }
+
+            return this.location.compareTo( ((LocationScanColumn)o).location );
         }
     }
 }

@@ -42,7 +42,7 @@ public class ConnectionSearchVisitorFactory implements SearchVisitorFactory {
     private final String[] prefix;
 
 
-    private ConnectionSearchVisitorFactory( final CassandraService cassandraService,
+    public ConnectionSearchVisitorFactory( final CassandraService cassandraService,
                                             final IndexBucketLocator indexBucketLocator,
                                             final QueryProcessor queryProcessor, final UUID applicationId,
                                             final EntityRef headEntity, ConnectionRefImpl connectionRef,

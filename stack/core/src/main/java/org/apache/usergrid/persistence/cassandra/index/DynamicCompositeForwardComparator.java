@@ -14,36 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.ir.result;
+package org.apache.usergrid.persistence.cassandra.index;
 
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
-import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 
 
-/** An interface that represents a column */
-public interface ScanColumn extends Comparable<ScanColumn> {
-
-    /** Get the uuid from the column */
-    UUID getUUID();
-
-    /** Get the cursor value of this column */
-    ByteBuffer getCursorValue();
+class DynamicCompositeForwardComparator extends DynamicCompositeComparator {
 
     /**
-     * Append the child column used in tree iterator to this column, along with the comparator used to compare them
-     *
-     * for instance, a term search of A = 1 AND B = 2 would generate a ScanColumn of A-- child -> B
-     * @param childColumn
+     * @param cf
      */
-    void setChild( final ScanColumn childColumn );
+    protected DynamicCompositeForwardComparator( ApplicationCF cf ) {
+        super( cf );
+    }
 
-    /**
-     * Returns the childl column if present, can return null
-     * @return
-     */
-    ScanColumn getChild();
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public int compare( ByteBuffer o1, ByteBuffer o2 ) {
+        return dynamicComposite.compare( o1, o2 );
+    }
 }

@@ -58,7 +58,9 @@ import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.result.CollectionResultsLoaderFactory;
+import org.apache.usergrid.persistence.query.ir.result.CollectionSearchVisitorFactory;
 import org.apache.usergrid.persistence.query.ir.result.ConnectionResultsLoaderFactory;
+import org.apache.usergrid.persistence.query.ir.result.ConnectionSearchVisitorFactory;
 import org.apache.usergrid.persistence.query.ir.result.ConnectionTypesIterator;
 import org.apache.usergrid.persistence.query.ir.result.SearchCollectionVisitor;
 import org.apache.usergrid.persistence.query.ir.result.SearchConnectionVisitor;
@@ -1720,9 +1722,11 @@ public class RelationManagerImpl implements RelationManager {
         // we have something to search with, visit our tree and evaluate the
         // results
         QueryProcessor qp = new QueryProcessor( query, collection, em, factory );
-        SearchCollectionVisitor visitor = new SearchCollectionVisitor( this, qp );
 
-        return qp.getResults( visitor );
+        CollectionSearchVisitorFactory collectionSearchVisitorFactory = new CollectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, collectionName );
+//        SearchCollectionVisitor visitor = new SearchCollectionVisitor( this, qp );
+
+        return qp.getResults( collectionSearchVisitorFactory );
     }
 
 
@@ -1914,9 +1918,12 @@ public class RelationManagerImpl implements RelationManager {
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
         QueryProcessor qp = new QueryProcessor( query, null, em, factory );
-        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, true );
 
-        return qp.getResults( visitor );
+        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, true, "" );
+
+//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, true );
+
+        return qp.getResults( collectionSearchVisitorFactory );
     }
 
 
@@ -1956,9 +1963,13 @@ public class RelationManagerImpl implements RelationManager {
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
         QueryProcessor qp = new QueryProcessor( query, null, em, factory );
-        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, false );
 
-        return qp.getResults( visitor );
+
+        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, false, "" );
+
+//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, false );
+
+        return qp.getResults( collectionSearchVisitorFactory );
 	}
 
 
@@ -1995,9 +2006,12 @@ public class RelationManagerImpl implements RelationManager {
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
         QueryProcessor qp = new QueryProcessor( query, null, em, factory );
-        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, true );
 
-        return qp.getResults( visitor );
+        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, false, "" );
+
+//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, true );
+
+        return qp.getResults( collectionSearchVisitorFactory );
     }
 
 

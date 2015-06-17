@@ -267,11 +267,12 @@ public class QueryProcessor {
             return null;
         }
 
-        //use the gather iterator to collect all the
+        //use the gather iterator to collect all the          '
+        final int resultSetSize = Math.min( size, Query.MAX_LIMIT );
 
-        ResultIterator itr = new GatherIterator(rootNode, searchVisitorFactory.createVisitors()  );
+        ResultIterator itr = new GatherIterator(resultSetSize, rootNode, searchVisitorFactory.createVisitors()  );
 
-        List<ScanColumn> entityIds = new ArrayList<ScanColumn>( Math.min( size, Query.MAX_LIMIT ) );
+        List<ScanColumn> entityIds = new ArrayList<ScanColumn>( );
 
         CursorCache resultsCursor = new CursorCache();
 

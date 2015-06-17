@@ -94,7 +94,7 @@ public class AbstractScanColumnTest {
     private class TestScanColumn extends AbstractScanColumn {
 
         protected TestScanColumn( final UUID uuid, final ByteBuffer buffer ) {
-            super( uuid, buffer );
+            super( uuid, buffer, cfComparator );
         }
     }
 }

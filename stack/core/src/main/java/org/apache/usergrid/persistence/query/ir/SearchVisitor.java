@@ -162,7 +162,7 @@ public abstract class SearchVisitor implements NodeVisitor {
 
         final int nodeId = node.getId();
 
-        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId, queryProcessor.getCursorCache(nodeId  ) );
+        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId, queryProcessor.getCursorCache( nodeId ) );
 
         if ( left != null ) {
             union.addIterator( left );
