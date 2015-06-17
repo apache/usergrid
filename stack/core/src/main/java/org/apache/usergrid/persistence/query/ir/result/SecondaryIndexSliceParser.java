@@ -18,9 +18,8 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 import java.util.UUID;
-
-import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
 
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
@@ -37,23 +36,34 @@ public class SecondaryIndexSliceParser implements SliceParser {
      * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff, final DynamicCompositeComparator cfComparator ) {
+    public ScanColumn parse( ByteBuffer buff, final boolean isReversed) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
-        return new SecondaryIndexColumn( ( UUID ) composite.get( 2 ), composite.get( 1 ), buff, cfComparator );
-    }
+        throw new UnsupportedOperationException( "Implement me with static comparators" );
 
+//        return new SecondaryIndexColumn( ( UUID ) composite.get( 2 ), composite.get( 1 ), buff, null );
+    }
 
 
 
     public static class SecondaryIndexColumn extends AbstractScanColumn {
 
         private final Object value;
+        private final Comparator<Object> valueComparator;
 
 
-        public SecondaryIndexColumn( final UUID uuid, final Object value, final ByteBuffer columnNameBuffer, final DynamicCompositeComparator cfComparator  ) {
-            super( uuid, columnNameBuffer, cfComparator );
+        /**
+         * Create the secondary index column
+         * @param uuid
+         * @param value
+         * @param columnNameBuffer
+         * @param valueComparator The comparator for the values
+         */
+        public SecondaryIndexColumn( final UUID uuid, final Object value, final ByteBuffer columnNameBuffer,
+                                  final Comparator<Object> valueComparator ) {
+            super( uuid, columnNameBuffer );
             this.value = value;
+            this.valueComparator = valueComparator;
         }
 
 
@@ -63,7 +73,9 @@ public class SecondaryIndexSliceParser implements SliceParser {
         }
 
 
-
-
+        @Override
+        public int compareTo( final ScanColumn o ) {
+            throw new UnsupportedOperationException( "Impelment me" );
+        }
     }
 }

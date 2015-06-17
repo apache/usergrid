@@ -46,7 +46,7 @@ public class ConnectionIndexSliceParser implements SliceParser {
      * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff, final DynamicCompositeComparator cfComparator ) {
+    public ScanColumn parse( ByteBuffer buff, final boolean isReversed ) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
         String connectedType = ( String ) composite.get( 1 );
@@ -63,10 +63,11 @@ public class ConnectionIndexSliceParser implements SliceParser {
             return null;
         }
 
-        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff , cfComparator);
+        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff );
         //    return composite;
         //    return null;
     }
+
 
 
 
@@ -75,8 +76,8 @@ public class ConnectionIndexSliceParser implements SliceParser {
         private final String connectedType;
 
 
-        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column, final DynamicCompositeComparator cfComparator ) {
-            super( uuid, column, cfComparator );
+        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column) {
+            super( uuid, column );
             this.connectedType = connectedType;
         }
 
@@ -84,6 +85,16 @@ public class ConnectionIndexSliceParser implements SliceParser {
         /** Get the target type from teh column */
         public String getTargetType() {
             return connectedType;
+        }
+
+
+        @Override
+        public int compareTo( final ScanColumn o ) {
+            if(o == null){
+                return 1;
+            }
+
+            return connectedType.compareTo( ((ConnectionColumn)o).connectedType );
         }
     }
 }

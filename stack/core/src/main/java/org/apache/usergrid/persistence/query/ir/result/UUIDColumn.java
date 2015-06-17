@@ -13,10 +13,14 @@ import org.apache.usergrid.utils.UUIDUtils;
 class UUIDColumn implements  ScanColumn{
 
     private final UUID uuid;
+    private final int compareReversed;
     private ScanColumn child;
 
 
-    UUIDColumn( final UUID uuid ) {this.uuid = uuid;}
+    UUIDColumn( final UUID uuid, final int compareReversed ) {
+        this.uuid = uuid;
+        this.compareReversed = compareReversed;
+    }
 
 
     @Override
@@ -45,6 +49,8 @@ class UUIDColumn implements  ScanColumn{
 
     @Override
     public int compareTo( final ScanColumn other ) {
-        return UUIDUtils.compare( uuid, other.getUUID() );
+
+        return  UUIDUtils.compare( uuid, other.getUUID() ) * compareReversed;
+
     }
 }

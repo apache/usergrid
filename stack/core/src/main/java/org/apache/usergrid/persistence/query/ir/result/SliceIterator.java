@@ -48,6 +48,8 @@ public class SliceIterator implements ResultIterator {
     private final SliceParser parser;
     private final IndexScanner scanner;
     private final int pageSize;
+    private final boolean isReversed;
+
 
     /**
      * Pointer to the uuid set until it's returned
@@ -82,6 +84,7 @@ public class SliceIterator implements ResultIterator {
         this.pageSize = scanner.getPageSize();
         this.cols = new LinkedHashMap<UUID, ScanColumn>( this.pageSize );
         this.parsedCols = new LinkedHashSet<ScanColumn>( this.pageSize );
+        this.isReversed = scanner.isReversed();
     }
 
 
@@ -126,7 +129,7 @@ public class SliceIterator implements ResultIterator {
 
             ByteBuffer colName = results.next().getName().duplicate();
 
-            ScanColumn parsed = parser.parse( colName );
+            ScanColumn parsed = parser.parse( colName, isReversed );
 
             //skip this value, the parser has discarded it
             if ( parsed == null ) {

@@ -19,9 +19,8 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
-import org.apache.cassandra.utils.ByteBufferUtil;
 
-import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+import org.apache.cassandra.utils.ByteBufferUtil;
 
 
 /**
@@ -33,14 +32,12 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
     private final UUID uuid;
     private final ByteBuffer buffer;
-    private final DynamicCompositeComparator cfComparator;
     private ScanColumn child;
 
 
-    protected AbstractScanColumn( final UUID uuid, final ByteBuffer columnNameBuffer, final DynamicCompositeComparator cfComparator ) {
+    protected AbstractScanColumn( final UUID uuid, final ByteBuffer columnNameBuffer ) {
         this.uuid = uuid;
         this.buffer = columnNameBuffer;
-        this.cfComparator = cfComparator;
     }
 
 
@@ -52,7 +49,7 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
     @Override
     public ByteBuffer getCursorValue() {
-        return buffer == null ? null :buffer.duplicate();
+        return buffer == null ? null : buffer.duplicate();
     }
 
 
@@ -67,8 +64,7 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
         AbstractScanColumn that = ( AbstractScanColumn ) o;
 
-        return uuid.equals(that.uuid);
-
+        return uuid.equals( that.uuid );
     }
 
 
@@ -89,7 +85,7 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
     @Override
     public void setChild( final ScanColumn childColumn ) {
-      this.child = childColumn;
+        this.child = childColumn;
     }
 
 
@@ -99,23 +95,23 @@ public abstract class AbstractScanColumn implements ScanColumn {
     }
 
 
-    @Override
-    public int compareTo( final ScanColumn otherScanColumn ) {
+    /**
+     * Comparator for comparing children.  A null safe call
+     * @param otherScanColumn
+     * @return
+     */
+    protected int compareChildren( final ScanColumn otherScanColumn ) {
 
-        if(otherScanColumn == null){
+        if ( otherScanColumn == null ) {
             return 1;
         }
 
+        final ScanColumn otherChild = otherScanColumn.getChild();
 
-        final int compare = cfComparator.compare( buffer, otherScanColumn.getCursorValue() );
-
-        //equal, recurse.  otherScanColumn is implicitly not null from above check
-        if(compare == 0 && child != null){
-            return child.compareTo( otherScanColumn.getChild() );
+        if ( child != null && otherChild != null ) {
+            return child.compareTo( otherChild );
         }
 
-
         return 0;
-
     }
 }

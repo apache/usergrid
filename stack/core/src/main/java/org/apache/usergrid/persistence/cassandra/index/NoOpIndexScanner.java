@@ -91,4 +91,10 @@ public class NoOpIndexScanner implements IndexScanner {
     public int getPageSize() {
         return 0;
     }
+
+
+    @Override
+    public boolean isReversed() {
+        return false;
+    }
 }

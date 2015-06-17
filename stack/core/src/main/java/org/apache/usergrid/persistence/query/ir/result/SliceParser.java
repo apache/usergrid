@@ -30,5 +30,5 @@ import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparato
 public interface SliceParser {
 
     /** Parse the slice and return it's parse type.  If null is returned, the column should be considered discarded */
-    public ScanColumn parse(final  ByteBuffer columnNameBytes, final DynamicCompositeComparator cfComparator  );
+    ScanColumn parse( final ByteBuffer columnNameBytes, final boolean isReversed );
 }

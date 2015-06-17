@@ -18,9 +18,6 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
 
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
@@ -31,12 +28,11 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.*;
  */
 public class UUIDIndexSliceParser implements SliceParser {
 
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
-     */
-    @Override
-    public ScanColumn parse( ByteBuffer buff, final DynamicCompositeComparator cfComparator ) {
-        return new UUIDColumn( ue.fromByteBuffer( buff.duplicate() ) );
-    }
 
+
+    @Override
+    public ScanColumn parse( final ByteBuffer columnNameBytes, final boolean isReversed ) {
+        final int compare = isReversed? -1: 1;
+        return new UUIDColumn( ue.fromByteBuffer( columnNameBytes.duplicate() ), compare );
+    }
 }

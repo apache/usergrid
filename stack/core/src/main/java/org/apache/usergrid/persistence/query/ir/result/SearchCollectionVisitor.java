@@ -95,7 +95,7 @@ public class SearchCollectionVisitor extends SearchVisitor {
         UUID startId = null;
 
         if ( slice.hasCursor() ) {
-            startId = UUID_PARSER.parse( slice.getCursor(), null ).getUUID();
+            startId = UUID_PARSER.parse( slice.getCursor(), false ).getUUID();
         }
 
 

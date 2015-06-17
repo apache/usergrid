@@ -29,6 +29,6 @@ import java.util.UUID;
 public class IteratorHelper {
 
     public static ScanColumn uuidColumn( UUID value ) {
-        return new UUIDIndexSliceParser.UUIDColumn( value, ByteBuffer.allocate( 0 ) );
+        return new UUIDColumn( value, 1 );
     }
 }

@@ -229,4 +229,10 @@ public class IndexBucketScanner implements IndexScanner {
     public int getPageSize() {
         return pageSize;
     }
+
+
+    @Override
+    public boolean isReversed() {
+        return this.reversed;
+    }
 }

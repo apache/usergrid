@@ -142,7 +142,7 @@ public class UnionIterator extends MultiIterator {
             this.maxSize = maxSize;
 
             if ( minUuid != null ) {
-                min = new UUIDColumn( minUuid) ;
+                min = new UUIDColumn( minUuid, 1 ) ;
             }
         }
 
@@ -215,7 +215,7 @@ public class UnionIterator extends MultiIterator {
             }
 
             final UUID oldMin = this.list.get( size - 1 ).getUUID();
-            min = new UUIDColumn( oldMin );
+            min = new UUIDColumn( oldMin, 1 );
         }
 
 
