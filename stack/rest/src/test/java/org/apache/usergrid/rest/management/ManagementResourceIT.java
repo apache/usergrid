@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -46,6 +47,7 @@ import static org.junit.Assert.*;
 /**
  * @author tnine
  */
+@NotThreadSafe // due to use of /testproperties end-point
 public class ManagementResourceIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ManagementResourceIT.class);
@@ -67,10 +69,10 @@ public class ManagementResourceIT extends AbstractRestIT {
      * Test if we can reset our password as an admin
      */
     @Test
-    public void setSelfAdminPasswordAsAdwmin() {
+    public void setSelfAdminPasswordAsAdmin() {
         UUID uuid =  UUIDUtils.newTimeUUID();
         management.token().setToken(clientSetup.getSuperuserToken());
-        management.orgs().org( clientSetup.getOrganizationName() ).users().post(ApiResponse.class, new User("test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test"));
+        management.orgs().org( clientSetup.getOrganizationName() ).users().post( ApiResponse.class, new User( "test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test" ) );
         Map<String, Object> data = new HashMap<>();
         data.put( "newpassword", "foo" );
         data.put( "oldpassword", "test" );
@@ -94,7 +96,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         String name = "someguy2";
         String email = "someguy" + "@usergrid.com";
         String password = "password";
-        String orgName = "someneworg";
+        String orgName = "someneworg" + UUIDUtils.newTimeUUID();
 
         Entity payload =
                 new Entity().chainPut("company", "Apigee" );
@@ -288,7 +290,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         long ttl = 2000;
 
-        Token token = management.token().get(new QueryParameters().addParam("grant_type", "password").addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()).addParam("ttl", String.valueOf(ttl)));
+        Token token = management.token().get(new QueryParameters().addParam( "grant_type", "password" ).addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()).addParam("ttl", String.valueOf(ttl)));
 
 
         long startTime = System.currentTimeMillis();
@@ -498,7 +500,6 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore
     public void testValidateExternalToken() throws Exception {
 
         // create a new admin user, get access token
@@ -509,7 +510,12 @@ public class ManagementResourceIT extends AbstractRestIT {
             new Organization( username, username, username+"@example.com", username, "password", null ) );
 
         refreshIndex();
-        QueryParameters queryParams = new QueryParameters().addParam("username", username ).addParam("password", "password").addParam("grant_type", "password");
+
+        refreshIndex();
+        QueryParameters queryParams = new QueryParameters()
+            .addParam( "username", username )
+            .addParam( "password", "password" )
+            .addParam( "grant_type", "password" );
         Token accessInfoNode = management.token().get(queryParams);
         String accessToken = accessInfoNode.getAccessToken();
 
@@ -524,48 +530,53 @@ public class ManagementResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( props );
 
-        // attempt to validate the token, must be valid
-        queryParams = new QueryParameters().addParam("access_token", suToken ).addParam("ext_access_token", accessToken).addParam("ttl", "1000");
-
-        Entity validatedNode = management.externaltoken().get(Entity.class,queryParams);
-        String validatedAccessToken = validatedNode.get( "access_token" ).toString();
-        assertEquals( accessToken, validatedAccessToken );
-
-        // attempt to validate an invalid token, must fail
-
         try {
-            queryParams = new QueryParameters().addParam("access_token", suToken ).addParam("ext_access_token", "rubbish_token").addParam("ttl", "1000");
 
-            validatedNode = management.externaltoken().get(Entity.class,queryParams);
+            // attempt to validate the token, must be valid
+            queryParams = new QueryParameters()
+                .addParam( "ext_access_token", accessToken )
+                .addParam( "ttl", "1000" );
 
-            fail("Validation should have failed");
-        } catch ( UniformInterfaceException actual ) {
-            assertEquals( 404, actual.getResponse().getStatus() );
-            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
-            logger.error( "ERROR: " + errorMsg );
-            assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
-        }
+            Entity validatedNode = management.externaltoken().get( Entity.class, queryParams );
+            String validatedAccessToken = validatedNode.get( "access_token" ).toString();
+            assertEquals( accessToken, validatedAccessToken );
 
+            // attempt to validate an invalid token, must fail
 
+            try {
+                queryParams = new QueryParameters()
+                    .addParam( "access_token", suToken )
+                    .addParam( "ext_access_token", "rubbish_token" )
+                    .addParam( "ttl", "1000" );
 
-        // TODO: how do we test the create new user and organization case?
+                validatedNode = management.externaltoken().get( Entity.class, queryParams );
 
+                fail( "Validation should have failed" );
+            } catch (UniformInterfaceException actual) {
+                assertEquals( 404, actual.getResponse().getStatus() );
+                String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+                logger.error( "ERROR: " + errorMsg );
+                assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
+            }
 
+            // TODO: how do we test the create new user and organization case?
 
-        // unset the Usergrid Central SSO URL so it does not interfere with other tests
+        } finally {
 
-        props.put( USERGRID_CENTRAL_URL, "" );
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
+            // unset the Usergrid Central SSO URL so it does not interfere with other tests
+
+            props.put( USERGRID_CENTRAL_URL, "" );
+            resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( props );
+        }
 
     }
 
 
     @Test
-    @Ignore
     public void testSuperuserOnlyWhenValidateExternalTokensEnabled() throws Exception {
 
         // create an org and an admin user
@@ -586,51 +597,55 @@ public class ManagementResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( props );
 
-        // calls to login as an Admin User must now fail
-
         try {
+            // calls to login as an Admin User must now fail
 
-            Map<String, Object> loginInfo = new HashMap<String, Object>() {{
-                put("username", username );
-                put("password", "password");
-                put("grant_type", "password");
-            }};
-            JsonNode accessInfoNode = resource().path("/management/token")
+            try {
+
+                Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+                    put( "username", username );
+                    put( "password", "password" );
+                    put( "grant_type", "password" );
+                }};
+                JsonNode accessInfoNode = resource().path( "/management/token" )
                     .type( MediaType.APPLICATION_JSON_TYPE )
                     .post( JsonNode.class, loginInfo );
-            fail("Login as Admin User must fail when validate external tokens is enabled");
+                fail( "Login as Admin User must fail when validate external tokens is enabled" );
 
-        } catch ( UniformInterfaceException actual ) {
-            assertEquals( 400, actual.getResponse().getStatus() );
-            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
-            logger.error( "ERROR: " + errorMsg );
-            assertTrue( errorMsg.contains( "Admin Users must login via" ));
+            } catch (UniformInterfaceException actual) {
+                assertEquals( 400, actual.getResponse().getStatus() );
+                String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+                logger.error( "ERROR: " + errorMsg );
+                assertTrue( errorMsg.contains( "Admin Users must login via" ) );
 
-        } catch ( Exception e ) {
-            fail( "We expected a UniformInterfaceException" );
-        }
+            } catch (Exception e) {
+                fail( "We expected a UniformInterfaceException" );
+            }
 
-        // login as superuser must succeed
+            // login as superuser must succeed
 
-        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
-            put("username", "superuser");
-            put("password", "superpassword");
-            put("grant_type", "password");
-        }};
-        JsonNode accessInfoNode = resource().path("/management/token")
+            Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+                put( "username", "superuser" );
+                put( "password", "superpassword" );
+                put( "grant_type", "password" );
+            }};
+            JsonNode accessInfoNode = resource().path( "/management/token" )
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( JsonNode.class, loginInfo );
-        String accessToken = accessInfoNode.get( "access_token" ).textValue();
-        assertNotNull( accessToken );
+            String accessToken = accessInfoNode.get( "access_token" ).textValue();
+            assertNotNull( accessToken );
 
-        // turn off validate external tokens by un-setting the usergrid.central.url
+        } finally {
 
-        props.put( USERGRID_CENTRAL_URL, "" );
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
+            // turn off validate external tokens by un-setting the usergrid.central.url
+
+            props.put( USERGRID_CENTRAL_URL, "" );
+            resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( props );
+        }
     }
 
 }
