@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
 
@@ -35,11 +37,13 @@ public class SecondaryIndexSliceParser implements SliceParser {
      * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff ) {
+    public ScanColumn parse( ByteBuffer buff, final DynamicCompositeComparator cfComparator ) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
-        return new SecondaryIndexColumn( ( UUID ) composite.get( 2 ), composite.get( 1 ), buff );
+        return new SecondaryIndexColumn( ( UUID ) composite.get( 2 ), composite.get( 1 ), buff, cfComparator );
     }
+
+
 
 
     public static class SecondaryIndexColumn extends AbstractScanColumn {
@@ -47,8 +51,8 @@ public class SecondaryIndexSliceParser implements SliceParser {
         private final Object value;
 
 
-        public SecondaryIndexColumn( UUID uuid, Object value, ByteBuffer buff ) {
-            super( uuid, buff );
+        public SecondaryIndexColumn( final UUID uuid, final Object value, final ByteBuffer columnNameBuffer, final DynamicCompositeComparator cfComparator  ) {
+            super( uuid, columnNameBuffer, cfComparator );
             this.value = value;
         }
 
@@ -57,5 +61,9 @@ public class SecondaryIndexSliceParser implements SliceParser {
         public Object getValue() {
             return this.value;
         }
+
+
+
+
     }
 }

@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
@@ -33,15 +35,8 @@ public class UUIDIndexSliceParser implements SliceParser {
      * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff ) {
-        return new UUIDColumn( ue.fromByteBuffer( buff.duplicate() ), buff );
+    public ScanColumn parse( ByteBuffer buff, final DynamicCompositeComparator cfComparator ) {
+        return new UUIDColumn( ue.fromByteBuffer( buff.duplicate() ) );
     }
 
-
-    public static class UUIDColumn extends AbstractScanColumn {
-
-        public UUIDColumn( UUID uuid, ByteBuffer buffer ) {
-            super( uuid, buffer );
-        }
-    }
 }

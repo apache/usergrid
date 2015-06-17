@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
 
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
@@ -45,7 +46,7 @@ public class ConnectionIndexSliceParser implements SliceParser {
      * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff ) {
+    public ScanColumn parse( ByteBuffer buff, final DynamicCompositeComparator cfComparator ) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
         String connectedType = ( String ) composite.get( 1 );
@@ -62,10 +63,11 @@ public class ConnectionIndexSliceParser implements SliceParser {
             return null;
         }
 
-        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff );
+        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff , cfComparator);
         //    return composite;
         //    return null;
     }
+
 
 
     public static class ConnectionColumn extends AbstractScanColumn {
@@ -73,8 +75,8 @@ public class ConnectionIndexSliceParser implements SliceParser {
         private final String connectedType;
 
 
-        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column ) {
-            super( uuid, column );
+        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column, final DynamicCompositeComparator cfComparator ) {
+            super( uuid, column, cfComparator );
             this.connectedType = connectedType;
         }
 

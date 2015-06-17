@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 import org.apache.cassandra.utils.ByteBufferUtil;
 
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+
 
 /**
  *
@@ -31,11 +33,14 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
     private final UUID uuid;
     private final ByteBuffer buffer;
+    private final DynamicCompositeComparator cfComparator;
+    private ScanColumn child;
 
 
-    protected AbstractScanColumn( UUID uuid, ByteBuffer buffer ) {
+    protected AbstractScanColumn( final UUID uuid, final ByteBuffer columnNameBuffer, final DynamicCompositeComparator cfComparator ) {
         this.uuid = uuid;
-        this.buffer = buffer;
+        this.buffer = columnNameBuffer;
+        this.cfComparator = cfComparator;
     }
 
 
@@ -79,5 +84,38 @@ public abstract class AbstractScanColumn implements ScanColumn {
                 "uuid=" + uuid +
                 ", buffer=" + ByteBufferUtil.bytesToHex( buffer ) +
                 '}';
+    }
+
+
+    @Override
+    public void setChild( final ScanColumn childColumn ) {
+      this.child = childColumn;
+    }
+
+
+    @Override
+    public ScanColumn getChild() {
+        return child;
+    }
+
+
+    @Override
+    public int compareTo( final ScanColumn otherScanColumn ) {
+
+        if(otherScanColumn == null){
+            return 1;
+        }
+
+
+        final int compare = cfComparator.compare( buffer, otherScanColumn.getCursorValue() );
+
+        //equal, recurse.  otherScanColumn is implicitly not null from above check
+        if(compare == 0 && child != null){
+            return child.compareTo( otherScanColumn.getChild() );
+        }
+
+
+        return 0;
+
     }
 }

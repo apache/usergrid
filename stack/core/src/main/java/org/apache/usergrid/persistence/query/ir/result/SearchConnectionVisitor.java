@@ -82,7 +82,7 @@ public class SearchConnectionVisitor extends SearchVisitor {
         // operation
         queryProcessor.applyCursorAndSort( slice );
 
-        IndexScanner columns = null;
+        final IndexScanner columns;
 
         if ( slice.isComplete() ) {
             columns = new NoOpIndexScanner();

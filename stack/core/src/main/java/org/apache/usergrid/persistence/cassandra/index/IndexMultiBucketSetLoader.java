@@ -27,9 +27,6 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 
-import org.apache.cassandra.db.marshal.AbstractType;
-import org.apache.cassandra.db.marshal.TypeParser;
-
 import me.prettyprint.hector.api.beans.HColumn;
 
 
@@ -83,57 +80,5 @@ public class IndexMultiBucketSetLoader {
         }
 
         return resultsTree;
-    }
-
-
-    private static abstract class DynamicCompositeComparator implements Comparator<ByteBuffer> {
-        @SuppressWarnings("rawtypes")
-        protected final AbstractType dynamicComposite;
-
-
-        protected DynamicCompositeComparator( ApplicationCF cf ) {
-            // should never happen, this will blow up during development if this fails
-            try {
-                dynamicComposite = TypeParser.parse( cf.getComparator() );
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( e );
-            }
-        }
-    }
-
-
-    private static class DynamicCompositeForwardComparator extends DynamicCompositeComparator {
-
-        /**
-         * @param cf
-         */
-        protected DynamicCompositeForwardComparator( ApplicationCF cf ) {
-            super( cf );
-        }
-
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public int compare( ByteBuffer o1, ByteBuffer o2 ) {
-            return dynamicComposite.compare( o1, o2 );
-        }
-    }
-
-
-    private static class DynamicCompositeReverseComparator extends DynamicCompositeComparator {
-        /**
-         * @param cf
-         */
-        protected DynamicCompositeReverseComparator( ApplicationCF cf ) {
-            super( cf );
-        }
-
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public int compare( ByteBuffer o1, ByteBuffer o2 ) {
-            return dynamicComposite.compare( o2, o1 );
-        }
     }
 }
