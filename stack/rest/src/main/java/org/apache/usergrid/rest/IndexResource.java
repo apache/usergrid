@@ -21,6 +21,7 @@
 package org.apache.usergrid.rest;
 
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +39,7 @@ import javax.ws.rs.core.UriInfo;
 import com.google.common.base.Optional;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.index.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -272,12 +274,18 @@ public class IndexResource extends AbstractContextResource {
                                                             final ReIndexRequestBuilder request,
                                                             final String callback ) {
 
-        Preconditions.checkArgument( payload.containsKey( UPDATED_FIELD ),
-            "You must specified the field \"updated\" in the payload" );
+        Map<String,Object> newPayload = payload;
+        if(newPayload == null ||  !payload.containsKey( UPDATED_FIELD )){
+            newPayload = new HashMap<>(1);
+            newPayload.put(UPDATED_FIELD,0);
+        }
+
+        Preconditions.checkArgument(newPayload.get(UPDATED_FIELD) instanceof Number,
+                "You must specified the field \"updated\" in the payload and it must be a timestamp" );
 
         //add our updated timestamp to the request
-        if ( !payload.containsKey( UPDATED_FIELD ) ) {
-            final long timestamp = ( long ) payload.get( UPDATED_FIELD );
+        if ( newPayload.containsKey( UPDATED_FIELD ) ) {
+            final long timestamp = ConversionUtils.getLong(newPayload.get(UPDATED_FIELD));
             request.withStartTimestamp( timestamp );
         }
 
