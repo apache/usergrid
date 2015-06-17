@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.management;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Timer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -53,7 +54,6 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -596,7 +596,7 @@ public class ManagementResource extends AbstractContextResource {
             JsonNode accessInfoNode = getMeFromUgCentral( extAccessToken );
 
             JsonNode userNode = accessInfoNode.get( "user" );
-            String username = userNode.get( "username" ).getTextValue();
+            String username = userNode.get( "username" ).textValue();
 
             // if user does not exist locally then we need to fix that
 
@@ -608,12 +608,12 @@ public class ManagementResource extends AbstractContextResource {
                 // create local user and and organizations they have on the central Usergrid instance
                 logger.info("User {} does not exist locally, creating", username );
 
-                String name  = userNode.get( "name" ).getTextValue();
-                String email = userNode.get( "email" ).getTextValue();
+                String name  = userNode.get( "name" ).textValue();
+                String email = userNode.get( "email" ).textValue();
                 String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
 
                 JsonNode orgsNode = userNode.get( "organizations" );
-                Iterator<String> fieldNames = orgsNode.getFieldNames();
+                Iterator<String> fieldNames = orgsNode.fieldNames();
 
                 if ( !fieldNames.hasNext() ) {
                     // no organizations for user exist in response from central Usergrid SSO
