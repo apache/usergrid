@@ -18,10 +18,13 @@ package org.apache.usergrid.persistence.query.ir;
 
 
 import java.util.Stack;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
@@ -58,16 +61,35 @@ public abstract class SearchVisitor implements NodeVisitor {
 
     protected final String bucket;
 
+    protected final EntityRef headEntity;
+    protected final CassandraService cassandraService;
+    protected final IndexBucketLocator indexBucketLocator;
+    protected final UUID applicationId;
+
 
     /**
+     * @param cassandraService
+     * @param indexBucketLocator
+     * @param applicationId
+     * @param headEntity
      * @param queryProcessor
      */
-    public SearchVisitor( QueryProcessor queryProcessor, final String bucket ) {
+    public SearchVisitor( final CassandraService cassandraService, final IndexBucketLocator indexBucketLocator,
+                          final UUID applicationId, final EntityRef headEntity, QueryProcessor queryProcessor, final String bucket ) {
+
+
+        this.cassandraService = cassandraService;
+        this.indexBucketLocator = indexBucketLocator;
+        this.applicationId = applicationId;
+        this.headEntity = headEntity;
         this.query = queryProcessor.getQuery();
         this.queryProcessor = queryProcessor;
         this.em = queryProcessor.getEntityManager();
         this.bucket = bucket;
     }
+
+
+
 
 
     /** Return the results if they exist, null otherwise */
