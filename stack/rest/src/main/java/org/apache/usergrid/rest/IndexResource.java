@@ -280,12 +280,12 @@ public class IndexResource extends AbstractContextResource {
             newPayload.put(UPDATED_FIELD,0);
         }
 
-        Preconditions.checkArgument(payload.get(UPDATED_FIELD) instanceof Number,
+        Preconditions.checkArgument(newPayload.get(UPDATED_FIELD) instanceof Number,
                 "You must specified the field \"updated\" in the payload and it must be a timestamp" );
 
         //add our updated timestamp to the request
-        if ( payload.containsKey( UPDATED_FIELD ) ) {
-            final long timestamp = ConversionUtils.getLong(payload.get(UPDATED_FIELD));
+        if ( newPayload.containsKey( UPDATED_FIELD ) ) {
+            final long timestamp = ConversionUtils.getLong(newPayload.get(UPDATED_FIELD));
             request.withStartTimestamp( timestamp );
         }
 
