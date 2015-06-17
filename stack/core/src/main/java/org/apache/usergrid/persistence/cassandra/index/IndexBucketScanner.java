@@ -71,8 +71,8 @@ public class IndexBucketScanner implements IndexScanner {
 
 
     public IndexBucketScanner( CassandraService cass, ApplicationCF columnFamily,
-                               UUID applicationId, Object keyPrefix, Object start, Object finish,
-                               boolean reversed, int pageSize, boolean skipFirst, String bucket) {
+                               UUID applicationId, Object keyPrefix, String bucket,  Object start, Object finish,
+                               boolean reversed, int pageSize, boolean skipFirst) {
         this.cass = cass;
         this.applicationId = applicationId;
         this.keyPrefix = keyPrefix;

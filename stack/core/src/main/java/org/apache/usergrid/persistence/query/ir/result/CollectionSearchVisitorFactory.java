@@ -17,19 +17,62 @@
 package org.apache.usergrid.persistence.query.ir.result;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.IndexBucketLocator;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 
 
+/**
+ * Creates collection visitors per shard
+ */
 public class CollectionSearchVisitorFactory implements SearchVisitorFactory {
+
+    private final CassandraService cassandraService;
+    private final IndexBucketLocator indexBucketLocator;
+    private final QueryProcessor queryProcessor;
+    private final UUID applicationId;
+    private final EntityRef headEntity;
+    private final String collectionName;
+
+
+    public CollectionSearchVisitorFactory( final CassandraService cassandraService,
+                                           final IndexBucketLocator indexBucketLocator,
+                                           final QueryProcessor queryProcessor, final UUID applicationId,
+                                           final EntityRef headEntity, final String collectionName ) {
+        this.cassandraService = cassandraService;
+        this.indexBucketLocator = indexBucketLocator;
+        this.queryProcessor = queryProcessor;
+        this.applicationId = applicationId;
+        this.headEntity = headEntity;
+        this.collectionName = collectionName;
+    }
 
 
     @Override
     public Collection<SearchVisitor> createVisitors() {
-//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
-        return null;
+        final List<String> buckets =
+                indexBucketLocator.getBuckets( applicationId, IndexBucketLocator.IndexType.CONNECTION, collectionName );
+
+
+        final List<SearchVisitor> visitors = new ArrayList<SearchVisitor>( buckets.size() );
+
+        for ( final String bucket : buckets ) {
+
+            final SearchVisitor searchVisitor =
+                    new SearchCollectionVisitor( cassandraService, indexBucketLocator, queryProcessor, applicationId,
+                            headEntity, bucket );
+            visitors.add( searchVisitor );
+        }
+
+
+        return visitors;
     }
 }
