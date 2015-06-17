@@ -51,7 +51,7 @@ public class OrgResource  extends NamedResource {
     }
 
 
-    public OrganizationResource organization (final String orgname){
+    public OrganizationResource org( final String orgname ){
         return new OrganizationResource( orgname,context,this );
     }
 

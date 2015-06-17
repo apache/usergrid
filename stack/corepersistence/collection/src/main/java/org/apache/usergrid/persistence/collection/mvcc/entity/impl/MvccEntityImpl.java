@@ -45,7 +45,7 @@ public class MvccEntityImpl implements MvccEntity {
     }
 
 
-    public MvccEntityImpl( 
+    public MvccEntityImpl(
             final Id entityId, final UUID version, final Status status, final Optional<Entity> entity ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );

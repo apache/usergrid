@@ -70,7 +70,7 @@ public class ManagementResourceIT extends AbstractRestIT {
     public void setSelfAdminPasswordAsAdwmin() {
         UUID uuid =  UUIDUtils.newTimeUUID();
         management.token().setToken(clientSetup.getSuperuserToken());
-        management.orgs().organization(clientSetup.getOrganizationName()).users().post(ApiResponse.class, new User("test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test"));
+        management.orgs().org( clientSetup.getOrganizationName() ).users().post(ApiResponse.class, new User("test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test"));
         Map<String, Object> data = new HashMap<>();
         data.put( "newpassword", "foo" );
         data.put( "oldpassword", "test" );
@@ -110,7 +110,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         String returnVal = "";
 
         try {
-            returnVal = this.management().orgs().organization(orgName).get(String.class);
+            returnVal = this.management().orgs().org( orgName ).get(String.class);
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -122,7 +122,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         // this admin should have access to test org
         status = null;
         try {
-            this.management().orgs().organization(this.clientSetup.getOrganizationName()).get( String.class );
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -134,7 +134,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         status = null;
         try {
-            this.management().orgs().organization(this.clientSetup.getOrganizationName()).get( String.class );
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -246,7 +246,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
         // POST /applications
-        ApiResponse apiResponse = management().orgs().organization(clientSetup.getOrganizationName()).app().post(new Application("mgmt-org-app"));
+        ApiResponse apiResponse = management().orgs().org( clientSetup.getOrganizationName() ).app().post(new Application("mgmt-org-app"));
 
 
         refreshIndex();
@@ -268,7 +268,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         // GET /applications/mgmt-org-app
 
 
-        Entity app = management().orgs().organization(clientSetup.getOrganizationName()).app().addToPath("mgmt-org-app").get();
+        Entity app = management().orgs().org( clientSetup.getOrganizationName() ).app().addToPath("mgmt-org-app").get();
 
 
         assertEquals(this.clientSetup.getOrganizationName().toLowerCase(), app.get("organizationName").toString());
@@ -327,7 +327,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "securityLevel", 5 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-        management.orgs().organization(clientSetup.getOrganizationName())
+        management.orgs().org( clientSetup.getOrganizationName() )
             .put(payload);
 
 

@@ -38,7 +38,6 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_NODENAME = "elasticsearch.node_name";
 
-    String ELASTICSEARCH_INDEX_PREFIX = "elasticsearch.index_prefix";
 
     String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch.alias_postfix";
 
@@ -101,10 +100,6 @@ public interface IndexFig extends GuicyFig {
     @Default( "usergrid" )
     @Key( ELASTICSEARCH_CLUSTER_NAME )
     String getClusterName();
-
-    @Default( "usergrid" ) // no underbars allowed
-    @Key( ELASTICSEARCH_INDEX_PREFIX )
-    String getIndexPrefix();
 
     @Default( "alias" ) // no underbars allowed
     @Key( ELASTICSEARCH_ALIAS_POSTFIX )

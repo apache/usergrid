@@ -215,7 +215,7 @@ public abstract class QueueListener  {
                                 LOG.info("sleep interrupted");
                             }
                         }
-                    }).toBlocking().last();
+                    }).toBlocking().lastOrDefault(null);
         }
     }
 

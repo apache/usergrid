@@ -15,17 +15,7 @@ public class MapToEntityConverter{
 
     public  Entity fromMap( Map<String, Object> map,  boolean topLevel ) {
 
-        Entity entity ;
-        if(map instanceof EntityMap){
-            EntityMap entityMap = (EntityMap) map;
-            Id id = entityMap.getId();
-            UUID version = entityMap.getVersion();
-            entityMap.clearFields();
-            entity =  id!=null ? new Entity(id,version) : new Entity();
-        }else{
-            entity = new Entity();
-        }
-
+        Entity  entity = new Entity();
         return fromMap( entity, map, topLevel );
     }
 
@@ -84,6 +74,7 @@ public class MapToEntityConverter{
 
         return entity;
     }
+
 
     private  ListField listToListField( String fieldName, List list ) {
 

@@ -95,7 +95,7 @@ public class Entity extends EntityObject {
      * @param map
      */
     public static Entity fromMap(EntityMap map){
-        return mapToEntityConverter.fromMap(map,true);
+        return map != null ? mapToEntityConverter.fromMap(map,true) : null;
     }
 
     @JsonIgnore
