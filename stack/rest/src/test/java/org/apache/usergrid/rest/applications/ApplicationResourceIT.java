@@ -130,7 +130,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         //Create the organization resource
         OrganizationResource orgResource = clientSetup.getRestClient()
-            .management().orgs().organization(clientSetup.getOrganizationName());
+            .management().orgs().org( clientSetup.getOrganizationName() );
 
         //retrieve the credentials
         Credentials orgCredentials = new Credentials( orgResource.credentials().get(ApiResponse.class));
@@ -442,13 +442,13 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertNotNull(entity);
         refreshIndex();
         //Retrieve an authentication token for the user
-        Token tokenResponse = this.app().getResource(false).path(String.format("/%s/%s/token", orgName, appName))
+        Token tokenResponse = this.app().getResource(false).path("token")
             .queryParam("grant_type", "password")
             .queryParam("username", username)
             .queryParam("password", "password")
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .get(Token.class);
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .get( Token.class );
 
         String token = tokenResponse.getAccessToken();
         assertNotNull(token);
@@ -756,7 +756,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      */
     public Credentials getOrgCredentials() throws IOException {
         String orgName = clientSetup.getOrganizationName().toLowerCase();
-        return new Credentials( clientSetup.getRestClient().management().orgs().organization(orgName).credentials().get(ApiResponse.class,null,true) );
+        return new Credentials( clientSetup.getRestClient().management().orgs().org( orgName ).credentials().get(ApiResponse.class,null,true) );
 
     }
 }

@@ -65,6 +65,8 @@ public class PathQueryIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
+        Thread.sleep(1000);
+
         // pick an arbitrary user, ensure it has 5 devices
         Results devices = em.getCollection( users.get( 10 ), "devices", null, 20, Level.IDS, false );
         assertEquals( 5, devices.size() );
@@ -91,6 +93,7 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.setCollection( "devices" );
         deviceQuery.setLimit( pageSize );
         int expectedDeviceQuerySize = 3;
+
 
         PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>(
                 new SimpleEntityRef( em.getApplicationRef()), userQuery );
@@ -200,6 +203,7 @@ public class PathQueryIT extends AbstractCoreIT {
 
         assertEquals( expectedGroupQuerySize * expectedUserQuerySize, userSet.size() );
 
+        Thread.sleep(1000);
 
 // ORIGINAL TEST, restore
         PathQuery groupsPQ2 = new PathQuery(new SimpleEntityRef( em.getApplicationRef() ), groupQuery );

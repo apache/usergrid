@@ -16,20 +16,12 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
-import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -66,11 +58,14 @@ import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -364,39 +359,45 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final ApplicationScope deleteApplicationScope = new ApplicationScopeImpl(deleteApplicationId);
 
         Entity oldAppEntity = managementEm.get(new SimpleEntityRef( deleteTypeName, applicationUUID));
-        Observable copyConnections = Observable.empty();
-        if (oldAppEntity != null) {
-            // ensure that there is not already a deleted app with the same name
 
-            final EntityRef alias = managementEm.getAlias( createCollectionName, oldAppEntity.getName());
-            if (alias != null) {
-                throw new ConflictException("Cannot delete app with same name as already deleted app");
-            }
-            // make a copy of the app to delete application_info entity
-            // and put it in a deleted_application_info collection
-
-            final Entity newAppEntity = managementEm.create(new SimpleId(applicationUUID, createTypeName ), oldAppEntity.getProperties());
-
-            // copy its connections too
-
-            final Set<String> connectionTypes = managementEm.getConnectionTypes(oldAppEntity);
-            copyConnections = Observable.from(connectionTypes).doOnNext(connType -> {
-                try {
-                    final Results connResults =
-                        managementEm.getTargetEntities(oldAppEntity, connType, null, Query.Level.ALL_PROPERTIES);
-                    connResults.getEntities().forEach(entity -> {
-                        try {
-                            managementEm.createConnection(newAppEntity, connType, entity);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-
+        if(oldAppEntity == null){
+            throw new EntityNotFoundException( String.format("Could not find application with UUID '%s'", applicationUUID) );
         }
+
+
+        // ensure that there is not already a deleted app with the same name
+
+        final EntityRef alias = managementEm.getAlias( createCollectionName, oldAppEntity.getName() );
+        if ( alias != null ) {
+            throw new ConflictException( "Cannot delete app with same name as already deleted app" );
+        }
+        // make a copy of the app to delete application_info entity
+        // and put it in a deleted_application_info collection
+
+        final Entity newAppEntity =
+            managementEm.create( new SimpleId( applicationUUID, createTypeName ), oldAppEntity.getProperties() );
+
+        // copy its connections too
+
+        final Set<String> connectionTypes = managementEm.getConnectionTypes( oldAppEntity );
+        Observable copyConnections = Observable.from( connectionTypes ).doOnNext( connType -> {
+            try {
+                final Results connResults =
+                    managementEm.getTargetEntities( oldAppEntity, connType, null, Query.Level.ALL_PROPERTIES );
+                connResults.getEntities().forEach( entity -> {
+                    try {
+                        managementEm.createConnection( newAppEntity, connType, entity );
+                    }
+                    catch ( Exception e ) {
+                        throw new RuntimeException( e );
+                    }
+                } );
+            }
+            catch ( Exception e ) {
+                throw new RuntimeException( e );
+            }
+        } );
+
         final Id managementAppId = CpNamingUtils.getManagementApplicationId();
         final EntityIndex aei = getManagementIndex();
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);

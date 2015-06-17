@@ -24,7 +24,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
@@ -86,7 +85,7 @@ public class RegistrationIT extends AbstractRestIT {
         ApiResponse user = this
             .management()
             .orgs()
-            .organization(organizationName)
+            .org( organizationName )
             .users()
             .post(new User().chainPut("email", email).chainPut("password", password));
 
@@ -133,7 +132,7 @@ public class RegistrationIT extends AbstractRestIT {
                     .queryParam("access_token", t).accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_FORM_URLENCODED).put(String.class, form);
             } catch (UniformInterfaceException e) {
-                assertEquals("Should receive a 400 Not Found", 400, e.getResponse().getStatus());
+                assertEquals("Should receive a 404 Not Found", 404, e.getResponse().getStatus());
             }
         } finally {
             setTestProperties(originalProperties);
@@ -207,7 +206,7 @@ public class RegistrationIT extends AbstractRestIT {
             this
                 .management()
                 .orgs()
-                .organization(this.clientSetup.getOrganizationName())
+                .org( this.clientSetup.getOrganizationName() )
                 .users()
                 .getResource( false )
                 .queryParam( "access_token", token )

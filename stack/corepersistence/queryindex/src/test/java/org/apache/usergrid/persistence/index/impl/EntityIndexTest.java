@@ -246,7 +246,7 @@ public class EntityIndexTest extends BaseIT {
 
         testQueries(searchEdge, searchTypes);
 
-        entityIndex.addIndex(Optional.of(UUID.randomUUID()+"_v2"), 1, 0, "one");
+        entityIndex.addIndex(UUID.randomUUID()+"_v2", 1, 0, "one");
 
         insertJsonBlob( entityType, searchEdge, "/sample-large.json", 101, 100);
 
@@ -270,7 +270,7 @@ public class EntityIndexTest extends BaseIT {
         insertJsonBlob(  entityType, searchEdge, "/sample-large.json", 1, 0 );
 
 
-        entityIndex.addIndex(Optional.of(UUID.randomUUID()+ "v2"), 1, 0, "one" );
+        entityIndex.addIndex(UUID.randomUUID()+ "v2", 1, 0, "one" );
         entityIndex.refreshAsync().toBlocking().first();
 
         insertJsonBlob(  entityType, searchEdge, "/sample-large.json", 1, 1 );

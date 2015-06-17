@@ -56,9 +56,9 @@ public class ApplicationCreateIT extends AbstractRestIT {
         applicationMap.put( "name", appName );
 
         this.management().token().setToken(orgAdminToken);
-        this.management().orgs().organization( orgName ).apps().post(applicationMap );
+        this.management().orgs().org( orgName ).apps().post(applicationMap );
 
-        Entity response = this.management().orgs().organization( orgName ).addToPath( "apps" ).addToPath( appName ).get();
+        Entity response = this.management().orgs().org( orgName ).addToPath( "apps" ).addToPath( appName ).get();
 
         assertNotNull( response );
     }
@@ -84,7 +84,7 @@ public class ApplicationCreateIT extends AbstractRestIT {
         // test that we get all applications back from the management end-point
 
         ManagementResponse orgAppResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).apps().getOrganizationApplications();
+            .management().orgs().org( orgName ).apps().getOrganizationApplications();
 
         int count = 0;
         for ( String name : orgAppResponse.getData().keySet() ) {
@@ -100,7 +100,7 @@ public class ApplicationCreateIT extends AbstractRestIT {
         String orgName, String appName, Token orgAdminToken, List<Entity> entities) {
 
         ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().post( new Application( appName ) );
+            .management().orgs().org( orgName ).app().post( new Application( appName ) );
         UUID appId = appCreateResponse.getEntities().get(0).getUuid();
 
         refreshIndex();

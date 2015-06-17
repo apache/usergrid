@@ -23,10 +23,10 @@ package org.apache.usergrid.rest.test.resource2point0;
 
 import java.io.IOException;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -36,8 +36,6 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -122,11 +120,11 @@ public class ClientSetup implements TestRule {
         restClient.management().token().get(username,password);
 
         // refreshIndex();
-        clientCredentials = restClient.management().orgs().organization( orgName ).credentials().get(Credentials.class);
+        clientCredentials = restClient.management().orgs().org( orgName ).credentials().get(Credentials.class);
         //refreshIndex();
 
 
-        ApiResponse appResponse = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
+        ApiResponse appResponse = restClient.management().orgs().org( organization.getName() ).app().post(new Application(appName));
         appUuid = ( String ) appResponse.getEntities().get( 0 ).get( "uuid" );
         refreshIndex();
 
@@ -165,7 +163,11 @@ public class ClientSetup implements TestRule {
     }
 
     public void refreshIndex() {
-        this.restClient.refreshIndex(getOrganizationName(),getAppName(),getAppUuid());
+        this.restClient.refreshIndex(getOrganizationName(),getAppName(), CpNamingUtils.getManagementApplicationId().getUuid().toString());
+
+        if(!CpNamingUtils.getManagementApplicationId().getUuid().toString().equals(getAppUuid())) {
+            this.restClient.refreshIndex(getOrganizationName(), getAppName(), getAppUuid());
+        }
     }
 
     public RestClient getRestClient(){

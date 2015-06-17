@@ -73,7 +73,6 @@ public class EntityToMapConverter {
 
         outputEntity.put( ENTITY_TYPE_FIELDNAME, getType( applicationScope, entityId ) );
 
-
         outputEntity.put( APPLICATION_ID_FIELDNAME, applicationId( applicationScope.getApplication() ) );
 
         outputEntity.put( EDGE_NODE_ID_FIELDNAME, nodeId( indexEdge.getNodeId() ) );
@@ -84,18 +83,13 @@ public class EntityToMapConverter {
 
         outputEntity.put( EDGE_TIMESTAMP_FIELDNAME, indexEdge.getTimestamp()  );
 
-
         //add the context for filtering later
         outputEntity.put( EDGE_SEARCH_FIELDNAME, IndexingUtils.createContextName( applicationScope, indexEdge ) );
 
-
-
         //migrate the entity to map since we're ultimately going to use maps once we get rid of the Field objects
         final EntityMap entityMap = EntityMap.fromEntity( entity );
-        entityMap.clearFields();
 
         //now visit our entity
-
         final FieldParser parser = new EntityMappingParser();
 
         final List<EntityField> fieldsToIndex =   parser.parse( entityMap );

@@ -495,7 +495,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         orgPropertiesPayload.put("properties", props);
 
-        management().orgs().organization( clientSetup.getOrganizationName() ).put( orgPropertiesPayload );
+        management().orgs().org( clientSetup.getOrganizationName() ).put( orgPropertiesPayload );
 
         //Creates a payload with the same password to verify we cannot change the password to itself.
          Map<String, Object> payload = new HashMap<>(  );
@@ -615,12 +615,12 @@ public class AdminUsersIT extends AbstractRestIT {
 //        management().token().setToken( organizationToken );
 
         //Create admin user
-        management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
+        management().orgs().org( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
 
         refreshIndex();
 
         //Retrieves the admin users
-        ApiResponse adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get(ApiResponse.class);
+        ApiResponse adminUsers = management().orgs().org( clientSetup.getOrganizationName() ).users().get(ApiResponse.class);
 
         assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getData() ).size());
 

@@ -55,4 +55,11 @@ public class ApplicationsResource extends NamedResource {
         return mapper.readValue(
             new StringReader(responseString), ManagementResponse.class);
     }
+
+
+
+    public ApplicationResource app( final String appName ){
+        return new ApplicationResource( appName,context,this );
+    }
+
 }

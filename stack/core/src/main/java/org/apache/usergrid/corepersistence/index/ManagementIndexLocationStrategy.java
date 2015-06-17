@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.IndexAlias;
@@ -33,17 +35,21 @@ import org.apache.usergrid.utils.StringUtils;
  */
 class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     private final String indexName;
+    private final ClusterFig clusterFig;
+    private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
     private final CoreIndexFig coreIndexFig;
     private final IndexAlias alias;
     private final ApplicationScope applicationScope;
 
-    public ManagementIndexLocationStrategy(final IndexFig indexFig, final CoreIndexFig coreIndexFig){
+    public ManagementIndexLocationStrategy(final ClusterFig clusterFig, CassandraFig cassandraFig, final IndexFig indexFig, final CoreIndexFig coreIndexFig){
+        this.clusterFig = clusterFig;
+        this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
         this.coreIndexFig = coreIndexFig;
         this.applicationScope = CpNamingUtils.getApplicationScope( CpNamingUtils.getManagementApplicationId().getUuid());
         //remove usergrid
-        this.indexName = coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
+        this.indexName = clusterFig.getClusterName() + "_" + cassandraFig .getApplicationKeyspace().toLowerCase() + "_" + coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
         this.alias = new ManagementIndexAlias(indexFig,indexName);
     }
     @Override
@@ -52,10 +58,13 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
     }
 
     @Override
-    public String getIndex() {
+    public String getIndexRootName() {
         return indexName;
     }
-
+    @Override
+    public String getIndexInitialName() {
+        return getIndexRootName();
+    }
     @Override
     public ApplicationScope getApplicationScope() {
         return applicationScope;

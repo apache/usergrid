@@ -40,7 +40,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private final IndexAlias alias;
 
-    private final IndexLocationStrategy indexIdentifier;
+    private final IndexLocationStrategy indexLocationStrategy;
     private final IndexBufferConsumer indexBatchBufferProducer;
 
     private final EntityIndex entityIndex;
@@ -52,13 +52,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                                    final IndexBufferConsumer indexBatchBufferProducer,
                                    final EntityIndex entityIndex
     ) {
-        this.indexIdentifier = locationStrategy;
+        this.indexLocationStrategy = locationStrategy;
 
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.entityIndex = entityIndex;
-        this.applicationScope = indexIdentifier.getApplicationScope();
+        this.applicationScope = indexLocationStrategy.getApplicationScope();
 
-        this.alias = indexIdentifier.getAlias();
+        this.alias = indexLocationStrategy.getAlias();
         //constrained
         this.container = new IndexOperationMessage();
     }
@@ -90,10 +90,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyIdentity( id );
         ValidationUtils.verifyVersion( version );
 
-        String[] indexes = entityIndex.getUniqueIndexes();
+        String[] indexes = entityIndex.getIndexes();
         //get the default index if no alias exists yet
         if ( indexes == null || indexes.length == 0 ) {
-            indexes = new String[] { indexIdentifier.getIndex(  ) };
+           throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
         }
 
         if ( log.isDebugEnabled() ) {

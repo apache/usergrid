@@ -232,7 +232,11 @@ public class CoreApplication implements Application, TestRule {
     @Override
     public synchronized void refreshIndex() {
         //Insert test entity and find it
-        setup.getEmf().refreshIndex(em.getApplicationId());
+        setup.getEmf().refreshIndex(CpNamingUtils.getManagementApplicationId().getUuid());
+
+        if(!em.getApplicationId().equals(CpNamingUtils.getManagementApplicationId().getUuid())) {
+            setup.getEmf().refreshIndex(em.getApplicationId());
+        }
     }
 
 

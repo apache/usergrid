@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -30,35 +31,31 @@ import org.apache.usergrid.utils.StringUtils;
  * Strategy for getting the application index name.
  */
 class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
+    private final ClusterFig clusterFig;
     private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
-    private final String indexName;
+    private final ApplicationIndexBucketLocator applicationIndexBucketLocator;
+    private final String indexBucketName;
     private final IndexAlias alias;
+    private final String indexRootName;
 
-    public ApplicationIndexLocationStrategy(final CassandraFig cassandraFig,
+    public ApplicationIndexLocationStrategy(final ClusterFig clusterFig,
+                                            final CassandraFig cassandraFig,
                                             final IndexFig indexFig,
-                                            final ApplicationScope applicationScope){
+                                            final ApplicationScope applicationScope,
+                                            final ApplicationIndexBucketLocator applicationIndexBucketLocator){
+        this.clusterFig = clusterFig;
 
         this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
-        this.indexName = getPrefix();        //TODO: add hash buckets by app scope
-        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexName);
+        this.applicationIndexBucketLocator = applicationIndexBucketLocator;
+        this.indexRootName  = clusterFig.getClusterName() + "_" + cassandraFig.getApplicationKeyspace().toLowerCase();
+        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexRootName);
+        this.indexBucketName = indexRootName + "_applications_" + applicationIndexBucketLocator.getBucket(applicationScope);
     }
 
-    private String getPrefix() {
-        //remove usergrid
-        final String indexPrefixConfig = StringUtils.isNotEmpty(indexFig.getIndexPrefix())
-            ? indexFig.getIndexPrefix().toLowerCase()  ////use lowercase value
-            : ""; // default to something so its not null
-        final String keyspaceName = cassandraFig.getApplicationKeyspace().toLowerCase();
-        //check for repetition
-        final boolean removePrefix = indexPrefixConfig.length()==0 || keyspaceName.contains(indexPrefixConfig) ;
-        return !removePrefix
-            ? indexPrefixConfig + "_" + keyspaceName
-            : keyspaceName;
-    }
 
     /**
      * Get the alias name
@@ -66,8 +63,6 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      */
     @Override
     public IndexAlias getAlias() {
-        //TODO: include appid
-
         return alias;
     }
 
@@ -76,14 +71,22 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
      * @return
      */
     @Override
-    public String getIndex() {
-        return indexName;
+    public String getIndexRootName() {
+        return indexRootName;
     }
 
+    /**
+     * Get index name, send in additional parameter to add incremental indexes
+     * @return
+     */
+    @Override
+    public String getIndexInitialName() {
+        return indexBucketName;
+    }
 
     @Override
     public String toString() {
-        return "index id: "+indexName;
+        return "index id: "+ indexBucketName;
     }
 
     @Override
@@ -109,16 +112,17 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         ApplicationIndexLocationStrategy that = (ApplicationIndexLocationStrategy) o;
 
         if (!applicationScope.equals(that.applicationScope)) return false;
-        return indexName.equals(that.indexName);
+        return indexBucketName.equals(that.indexBucketName);
 
     }
 
     @Override
     public int hashCode() {
         int result = applicationScope.hashCode();
-        result = 31 * result + indexName.hashCode();
+        result = 31 * result + indexBucketName.hashCode();
         return result;
     }
+
 
     public class ApplicationIndexAlias implements IndexAlias {
 
@@ -143,4 +147,6 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
             return writeAlias;
         }
     }
+
+
 }

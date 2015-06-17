@@ -19,9 +19,7 @@ package org.apache.usergrid.rest.management;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Ignore;
@@ -82,7 +80,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //this.refreshIndex();
 
         //Assert that the get returns the correct org and owner.
-        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization()).get();
+        Organization returnedOrg = clientSetup.getRestClient().management().orgs().org( organization.getOrganization() ).get();
 
         assertTrue( returnedOrg != null && returnedOrg.getName().equals( organization.getOrganization() ) );
 
@@ -278,7 +276,7 @@ public class OrganizationsIT extends AbstractRestIT {
         this.management().token().setToken(tokenReturned);
 
         //Assert that the get returns the correct org and owner.
-        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
+        Organization returnedOrg = clientSetup.getRestClient().management().orgs().org( organization.getOrganization() ).get();
 
         assertTrue(returnedOrg != null && returnedOrg.getName().equals(organization.getOrganization()));
 
@@ -295,7 +293,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         try {
             //Delete default organization
-            clientSetup.getRestClient().management().orgs().organization( clientSetup.getOrganizationName() ).delete();
+            clientSetup.getRestClient().management().orgs().org( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
         }catch(UniformInterfaceException uie){
             assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
@@ -320,7 +318,7 @@ public class OrganizationsIT extends AbstractRestIT {
         adminUserPayload.put("password", username);
 
         //create adminUser
-        ApiResponse adminUserEntityResponse = management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class, adminUserPayload);
+        ApiResponse adminUserEntityResponse = management().orgs().org( clientSetup.getOrganizationName() ).users().post(ApiResponse.class, adminUserPayload);
 
         Entity adminUserResponse = new Entity(adminUserEntityResponse);
         //verify that the response contains the correct data
@@ -357,12 +355,12 @@ public class OrganizationsIT extends AbstractRestIT {
         orgPayload.put( "properties", properties );
 
         //update the organization.
-        management().orgs().organization( clientSetup.getOrganizationName() ).put(orgPayload);
+        management().orgs().org( clientSetup.getOrganizationName() ).put(orgPayload);
 
         this.refreshIndex();
 
         //retrieve the organization
-        Organization orgResponse = management().orgs().organization( clientSetup.getOrganizationName() ).get();
+        Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
         assertEquals(5, orgResponse.getProperties().get("puppies" ));
 
@@ -371,11 +369,11 @@ public class OrganizationsIT extends AbstractRestIT {
         orgPayload.put("properties", properties );
 
         //update the organization.
-        management().orgs().organization( clientSetup.getOrganizationName()).put(orgPayload);
+        management().orgs().org( clientSetup.getOrganizationName() ).put(orgPayload);
 
         this.refreshIndex();
 
-        orgResponse = management().orgs().organization( clientSetup.getOrganizationName() ).get();
+        orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
         assertEquals( 6, orgResponse.getProperties().get( "puppies" ));
 
