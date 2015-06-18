@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.cassandra.CursorCache;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.exceptions.QueryIterationException;
@@ -127,9 +128,9 @@ public class SliceIterator implements ResultIterator {
 
         while ( results.hasNext() ) {
 
-            ByteBuffer colName = results.next().getName().duplicate();
+            final ByteBuffer colName = results.next().getName().duplicate();
 
-            ScanColumn parsed = parser.parse( colName, isReversed );
+            final ScanColumn parsed = parser.parse( colName, isReversed );
 
             //skip this value, the parser has discarded it
             if ( parsed == null ) {
@@ -215,22 +216,22 @@ public class SliceIterator implements ResultIterator {
             //this is a bug
             if ( scanner.hasNext() ) {
                 logger.error(
-                        "An iterator attempted to access a slice that was not iterated over.  This will result in the" +
-                                " cursor construction failing" );
+                        "An iterator attempted to access a slice that was not iterated over.  This will result in the"
+                                + " cursor construction failing" );
                 throw new QueryIterationException(
-                        "An iterator attempted to access a slice that was not iterated over.  This will result in the" +
-                                " cursor construction failing" );
+                        "An iterator attempted to access a slice that was not iterated over.  This will result in the"
+                                + " cursor construction failing" );
             }
 
             final ByteBuffer sliceCursor = slice.getCursor();
 
             //we've never loaded anything, just re-use the existing slice
-            if (last == null && sliceCursor != null ) {
+            if ( last == null && sliceCursor != null ) {
                 bytes = sliceCursor;
             }
 
             //use the last column we loaded.  This way our scan returns nothing next time since start == finish
-            else if(last != null) {
+            else if ( last != null ) {
                 bytes = last.getCursorValue();
             }
         }

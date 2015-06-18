@@ -14,25 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.ir.result;
+package org.apache.usergrid.persistence.cassandra.index;
 
 
 import java.nio.ByteBuffer;
 
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
- * Parser for reading and writing secondary index composites
- *
- * @author tnine
+ * Parse our index values into byte buffer
  */
-public class UUIDIndexSliceParser implements SliceParser {
+public interface StartToBytes<T> {
 
-
-
-    @Override
-    public ScanColumn parse( final ByteBuffer columnNameBytes, final boolean isReversed ) {
-        final int compare = isReversed? -1: 1;
-        return new UUIDColumn( ue.fromByteBuffer( columnNameBytes.duplicate() ), columnNameBytes,  compare );
-    }
+    /**
+     * Convert the start scanning type to bytes
+     * @param toBytes
+     * @return
+     */
+    ByteBuffer toBytes(final T toBytes);
 }

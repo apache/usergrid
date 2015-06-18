@@ -7,6 +7,7 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeStartToBytes;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
@@ -77,7 +78,7 @@ public class SearchCollectionVisitor extends SearchVisitor {
         // perform the search
         else {
             columns =
-                    searchIndexBuckets( indexKey, slice, collection.getName(), queryProcessor.getPageSizeHint( node ) );
+                    searchIndexBuckets( indexKey, slice, queryProcessor.getPageSizeHint( node ) );
         }
 
         return columns;
@@ -100,10 +101,10 @@ public class SearchCollectionVisitor extends SearchVisitor {
 
 
         IndexScanner indexScanner = cassandraService
-                .getIdList( cassandraService.getApplicationKeyspace( applicationId ),
+                .getIdList(
                         key( headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName ), startId, null,
-                        queryProcessor.getPageSizeHint( node ), query.isReversed(), indexBucketLocator, applicationId,
-                        collectionName, node.isForceKeepFirst() );
+                        queryProcessor.getPageSizeHint( node ), query.isReversed(), bucket,  applicationId,
+                        node.isForceKeepFirst() );
 
         this.results.push( new SliceIterator( slice, indexScanner, UUID_PARSER ) );
     }
@@ -149,10 +150,9 @@ public class SearchCollectionVisitor extends SearchVisitor {
      *
      * @param indexKey The index key to read
      * @param slice Slice set in the query
-     * @param collectionName The name of the collection to search
      * @param pageSize The page size to load when iterating
      */
-    private IndexScanner searchIndexBuckets( Object indexKey, QuerySlice slice, String collectionName, int pageSize )
+    private IndexScanner searchIndexBuckets( Object indexKey, QuerySlice slice, int pageSize )
             throws Exception {
 
         DynamicComposite[] range = slice.getRange();
@@ -160,7 +160,7 @@ public class SearchCollectionVisitor extends SearchVisitor {
         Object keyPrefix = key( indexKey, slice.getPropertyName() );
 
         IndexScanner scanner =
-                new IndexBucketScanner( cassandraService, ENTITY_INDEX, applicationId, keyPrefix, bucket, range[0],
+                new IndexBucketScanner( cassandraService, ENTITY_INDEX, DynamicCompositeStartToBytes.INSTANCE, applicationId, keyPrefix, bucket, range[0],
                         range[1], slice.isReversed(), pageSize, slice.hasCursor() );
 
         return scanner;

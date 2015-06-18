@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
+import org.apache.usergrid.persistence.cassandra.index.UUIDStartToBytes;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
@@ -1027,29 +1028,27 @@ public class CassandraService {
      *
      * @throws Exception the exception
      */
-       public IndexScanner getIdList( Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
-                                      IndexBucketLocator locator, UUID applicationId, String collectionName, boolean keepFirst )
+       public IndexScanner getIdList( Object key, UUID start, UUID finish, int count, boolean reversed,
+                                      final String bucket, UUID applicationId, boolean keepFirst )
                throws Exception {
 
-           //TODO, refactor this
-           throw new UnsupportedOperationException( "Implement me" );
+           if ( count <= 0 ) {
+               count = DEFAULT_COUNT;
+           }
 
-   //        if ( count <= 0 ) {
-   //            count = DEFAULT_COUNT;
-   //        }
-   //
-   //        if ( NULL_ID.equals( start ) ) {
-   //            start = null;
-   //        }
-   //
-   //
-   //        final boolean skipFirst = start != null && !keepFirst;
-   //
-   //        IndexScanner scanner =
-   //                new IndexBucketScanner( this, locator, ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key, start,
-   //                        finish, reversed, count, skipFirst, collectionName );
-   //
-   //        return scanner;
+           if ( NULL_ID.equals( start ) ) {
+               start = null;
+           }
+
+
+           final boolean skipFirst = start != null && !keepFirst;
+
+
+           IndexScanner scanner =
+                   new IndexBucketScanner<UUID>( this, ENTITY_ID_SETS, UUIDStartToBytes.INSTANCE, applicationId, key, bucket, start,
+                           finish, reversed, count, skipFirst );
+
+           return scanner;
        }
 
 
@@ -1064,4 +1063,5 @@ public class CassandraService {
     	}
     	cluster = null;
     }
+
 }

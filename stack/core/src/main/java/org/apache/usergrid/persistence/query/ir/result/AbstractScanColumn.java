@@ -30,9 +30,9 @@ import org.apache.cassandra.utils.ByteBufferUtil;
  */
 public abstract class AbstractScanColumn implements ScanColumn {
 
-    private final UUID uuid;
-    private final ByteBuffer buffer;
-    private ScanColumn child;
+    protected final UUID uuid;
+    protected final ByteBuffer buffer;
+    protected ScanColumn child;
 
 
     protected AbstractScanColumn( final UUID uuid, final ByteBuffer columnNameBuffer ) {
@@ -58,13 +58,13 @@ public abstract class AbstractScanColumn implements ScanColumn {
         if ( this == o ) {
             return true;
         }
-        if ( !( o instanceof AbstractScanColumn ) ) {
+        if ( !( o instanceof ScanColumn ) ) {
             return false;
         }
 
-        AbstractScanColumn that = ( AbstractScanColumn ) o;
+        ScanColumn that = ( ScanColumn ) o;
 
-        return uuid.equals( that.uuid );
+        return uuid.equals( that.getUUID() );
     }
 
 
@@ -94,24 +94,4 @@ public abstract class AbstractScanColumn implements ScanColumn {
         return child;
     }
 
-
-    /**
-     * Comparator for comparing children.  A null safe call
-     * @param otherScanColumn
-     * @return
-     */
-    protected int compareChildren( final ScanColumn otherScanColumn ) {
-
-        if ( otherScanColumn == null ) {
-            return 1;
-        }
-
-        final ScanColumn otherChild = otherScanColumn.getChild();
-
-        if ( child != null && otherChild != null ) {
-            return child.compareTo( otherChild );
-        }
-
-        return 0;
-    }
 }

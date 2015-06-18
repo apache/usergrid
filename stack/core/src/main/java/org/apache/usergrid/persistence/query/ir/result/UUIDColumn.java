@@ -4,53 +4,35 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cassandra.Serializers;
 import org.apache.usergrid.utils.UUIDUtils;
 
 
 /**
  * Used as a comparator for columns
  */
-class UUIDColumn implements  ScanColumn{
+class UUIDColumn extends AbstractScanColumn{
 
-    private final UUID uuid;
     private final int compareReversed;
-    private ScanColumn child;
 
-
-    UUIDColumn( final UUID uuid, final int compareReversed ) {
-        this.uuid = uuid;
+    protected UUIDColumn( final UUID uuid, final ByteBuffer columnNameBuffer, final int compareReversed  ) {
+        super( uuid, columnNameBuffer );
         this.compareReversed = compareReversed;
     }
 
 
-    @Override
-    public UUID getUUID() {
-        return uuid;
+    public UUIDColumn( final UUID uuid, final int compareReversed ) {
+        super(uuid, Serializers.ue.toByteBuffer( uuid ));
+        this.compareReversed = compareReversed;
     }
 
 
-    @Override
-    public ByteBuffer getCursorValue() {
-        return null;
-    }
-
-
-    @Override
-    public void setChild( final ScanColumn childColumn ) {
-        this.child = childColumn;
-    }
-
-
-    @Override
-    public ScanColumn getChild() {
-        return child;
-    }
 
 
     @Override
     public int compareTo( final ScanColumn other ) {
-
         return  UUIDUtils.compare( uuid, other.getUUID() ) * compareReversed;
-
     }
+
+
 }

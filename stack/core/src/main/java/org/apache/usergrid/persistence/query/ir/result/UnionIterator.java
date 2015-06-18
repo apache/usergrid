@@ -133,7 +133,7 @@ public class UnionIterator extends MultiIterator {
 
         private final List<ScanColumn> list;
 
-        private UUIDColumn min;
+//        private UUIDColumn min;
 
 
         public SortedColumnList( final int maxSize, final UUID minUuid ) {
@@ -141,9 +141,9 @@ public class UnionIterator extends MultiIterator {
             this.list = new ArrayList<ScanColumn>( maxSize );
             this.maxSize = maxSize;
 
-            if ( minUuid != null ) {
-                min = new UUIDColumn( minUuid, 1 ) ;
-            }
+//            if ( minUuid != null ) {
+//                min = new UUIDColumn( minUuid, 1 ) ;
+//            }
         }
 
 
@@ -152,9 +152,9 @@ public class UnionIterator extends MultiIterator {
          */
         public void add( ScanColumn col ) {
             //less than our min, don't add
-            if ( min != null && min.compareTo( col ) >= 0 ) {
-                return;
-            }
+//            if ( min != null && min.compareTo( col ) >= 0 ) {
+//                return;
+//            }
 
             int index = Collections.binarySearch( this.list, col );
 
@@ -215,7 +215,7 @@ public class UnionIterator extends MultiIterator {
             }
 
             final UUID oldMin = this.list.get( size - 1 ).getUUID();
-            min = new UUIDColumn( oldMin, 1 );
+//            min = new UUIDColumn( oldMin, 1 );
         }
 
 
@@ -228,7 +228,7 @@ public class UnionIterator extends MultiIterator {
 
         public void reset(){
             clear();
-            this.min = null;
+//            this.min = null;
         }
     }
 }
