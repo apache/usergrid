@@ -160,11 +160,6 @@ public class OrgResource  extends NamedResource {
         throw new UnsupportedOperationException("service doesn't exist");
     }
 
-    public void delete(){
-        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(MediaType.APPLICATION_JSON)
-            .delete(ApiResponse.class);
-    }
     public CredentialsResource credentials(){
         return new CredentialsResource(  context ,this );
     }
