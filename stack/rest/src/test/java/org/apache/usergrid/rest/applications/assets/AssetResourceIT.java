@@ -58,7 +58,6 @@ public class AssetResourceIT extends AbstractRestIT {
 
     /** @Deprecated Tests legacy API */
     @Test
-    @Ignore
     public void verifyBinaryCrud() throws Exception {
 
         userRepo.load();
@@ -102,7 +101,6 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore
     public void octetStreamOnDynamicEntity() throws Exception {
 
         this.refreshIndex();
@@ -111,8 +109,10 @@ public class AssetResourceIT extends AbstractRestIT {
 
         String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
 
-        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" ).queryParam( "access_token", access_token )
-            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
             .post( String.class, payload ) );
 
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
@@ -120,21 +120,28 @@ public class AssetResourceIT extends AbstractRestIT {
         assertNotNull( uuid );
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
-        resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
-                .type( MediaType.APPLICATION_OCTET_STREAM_TYPE ).put( data );
+        resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+            .put( data );
 
         // get entity
-        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON_TYPE )
+            .get( String.class ));
+        LOG.info( "Node: " + mapToFormattedJsonString( node ) );
+
         Assert.assertEquals( "image/jpeg", node.findValue( AssetUtils.CONTENT_TYPE ).textValue() );
         Assert.assertEquals( 7979, node.findValue( "content-length" ).intValue() );
         idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         assertEquals( uuid, idNode.textValue() );
 
         // get data by UUID
-        InputStream is =
-                resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        InputStream is = resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+            .get( InputStream.class );
 
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
@@ -151,7 +158,6 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore
     public void multipartPostFormOnDynamicEntity() throws Exception {
 
         this.refreshIndex();
@@ -199,13 +205,14 @@ public class AssetResourceIT extends AbstractRestIT {
         assertEquals( 5324800, foundData.length );
 
         // delete
-        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+        node = mapper.readTree( resource().path( orgAppPath + "/foos/" + uuid )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON_TYPE )
+            .delete( String.class ));
     }
 
 
     @Test
-    @Ignore
     public void multipartPutFormOnDynamicEntity() throws Exception {
 
         this.refreshIndex();
@@ -214,9 +221,11 @@ public class AssetResourceIT extends AbstractRestIT {
 
         String orgAppPath = clientSetup.getOrganizationName() + "/" + clientSetup.getAppName();
 
-        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload ));
+        JsonNode node = mapper.readTree( resource().path( orgAppPath + "/foos" )
+            .queryParam( "access_token", access_token )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .post( String.class, payload ));
 
         JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
         String uuid = idNode.textValue();
@@ -272,7 +281,6 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore
     public void largeFileInS3() throws Exception {
 
         this.refreshIndex();
@@ -319,7 +327,6 @@ public class AssetResourceIT extends AbstractRestIT {
     }
 
     @Test
-    @Ignore
     public void fileTooLargeShouldResultInError() throws Exception {
 
         this.refreshIndex();
@@ -378,7 +385,6 @@ public class AssetResourceIT extends AbstractRestIT {
      * Deleting a connection to an asset should not delete the asset or the asset's data
      */
     @Test
-    @Ignore
     public void deleteConnectionToAsset() throws IOException {
 
         this.refreshIndex();
@@ -393,7 +399,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
 
-        JsonNode node = resource().path("/test-organization/test-app/foos")
+        JsonNode node = resource().path(orgAppPath + "/foos")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
