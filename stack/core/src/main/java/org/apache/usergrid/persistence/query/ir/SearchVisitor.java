@@ -49,8 +49,6 @@ import org.apache.usergrid.persistence.query.ir.result.UnionIterator;
  */
 public abstract class SearchVisitor implements NodeVisitor {
 
-    private static final SecondaryIndexSliceParser COLLECTION_PARSER = new SecondaryIndexSliceParser();
-
     protected final Query query;
 
     protected final QueryProcessor queryProcessor;
@@ -162,7 +160,7 @@ public abstract class SearchVisitor implements NodeVisitor {
 
         final int nodeId = node.getId();
 
-        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId, queryProcessor.getCursorCache( nodeId ) );
+        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId );
 
         if ( left != null ) {
             union.addIterator( left );
@@ -211,7 +209,7 @@ public abstract class SearchVisitor implements NodeVisitor {
             if ( subResults == null ) {
                 QuerySlice firstFieldSlice = new QuerySlice( slice.getPropertyName(), -1 );
                 subResults =
-                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), COLLECTION_PARSER );
+                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), new SecondaryIndexSliceParser() );
             }
 
             orderIterator = new OrderByIterator( slice, orderByNode.getSecondarySorts(), subResults, em,
@@ -230,7 +228,7 @@ public abstract class SearchVisitor implements NodeVisitor {
                 scanner = secondaryIndexScan( orderByNode, slice );
             }
 
-            SliceIterator joinSlice = new SliceIterator( slice, scanner, COLLECTION_PARSER);
+            SliceIterator joinSlice = new SliceIterator( slice, scanner, new SecondaryIndexSliceParser());
 
             IntersectionIterator union = new IntersectionIterator( queryProcessor.getPageSizeHint( orderByNode ) );
             union.addIterator( joinSlice );
@@ -261,7 +259,7 @@ public abstract class SearchVisitor implements NodeVisitor {
         for ( QuerySlice slice : node.getAllSlices() ) {
             IndexScanner scanner = secondaryIndexScan( node, slice );
 
-            intersections.addIterator( new SliceIterator( slice, scanner, COLLECTION_PARSER) );
+            intersections.addIterator( new SliceIterator( slice, scanner, new SecondaryIndexSliceParser()) );
         }
 
         results.push( intersections );

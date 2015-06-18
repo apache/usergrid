@@ -18,19 +18,16 @@ package org.apache.usergrid.persistence.cassandra.index;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NavigableSet;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
+import org.apache.cassandra.utils.FBUtilities;
+
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 
+import com.google.common.primitives.UnsignedBytes;
 import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.beans.HColumn;
@@ -44,7 +41,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
  *
  * @author tnine
  */
-public class IndexBucketScanner implements IndexScanner {
+public class IndexBucketScanner<T> implements IndexScanner {
 
     private final CassandraService cass;
     private final UUID applicationId;
@@ -55,12 +52,13 @@ public class IndexBucketScanner implements IndexScanner {
     private final int pageSize;
     private final boolean skipFirst;
     private final String bucket;
+    private final StartToBytes<T> scanStartSerializer;
 
     /** Pointer to our next start read */
-    private Object start;
+    private ByteBuffer start;
 
     /** Set to the original value to start scanning from */
-    private Object scanStart;
+    private T initialStartValue;
 
     /** Iterator for our results from the last page load */
     private List<HColumn<ByteBuffer, ByteBuffer>> lastResults;
@@ -70,14 +68,14 @@ public class IndexBucketScanner implements IndexScanner {
 
 
 
-    public IndexBucketScanner( CassandraService cass, ApplicationCF columnFamily,
-                               UUID applicationId, Object keyPrefix, String bucket,  Object start, Object finish,
+    public IndexBucketScanner( CassandraService cass, ApplicationCF columnFamily, StartToBytes<T> scanStartSerializer,
+                               UUID applicationId, Object keyPrefix, String bucket,  T start, T finish,
                                boolean reversed, int pageSize, boolean skipFirst) {
         this.cass = cass;
+        this.scanStartSerializer = scanStartSerializer;
         this.applicationId = applicationId;
         this.keyPrefix = keyPrefix;
         this.columnFamily = columnFamily;
-        this.start = start;
         this.finish = finish;
         this.reversed = reversed;
         this.skipFirst = skipFirst;
@@ -85,7 +83,10 @@ public class IndexBucketScanner implements IndexScanner {
 
         //we always add 1 to the page size.  This is because we pop the last column for the next page of results
         this.pageSize = pageSize+1;
-        this.scanStart = start;
+
+        //the initial value set when we started scanning
+        this.initialStartValue = start;
+        this.start = scanStartSerializer.toBytes( initialStartValue );
     }
 
 
@@ -95,7 +96,7 @@ public class IndexBucketScanner implements IndexScanner {
     @Override
     public void reset() {
         hasMore = true;
-        start = scanStart;
+        start = scanStartSerializer.toBytes( initialStartValue );
     }
 
 
@@ -122,12 +123,10 @@ public class IndexBucketScanner implements IndexScanner {
         //we purposefully use instance equality.  If it's a pointer to the same value, we need to increase by 1
         //since we'll be skipping the first value
 
-        final boolean firstPageSkipFirst = this.skipFirst &&  start == scanStart;
 
-        if(firstPageSkipFirst){
-            selectSize++;
-        }
-
+        final boolean shouldCheckFirst =
+                //we should skip the value it's a cursor resume OR it's a previous page from a stateful iterator
+                (this.skipFirst &&  initialStartValue != null) || start != null;
 
         final List<HColumn<ByteBuffer, ByteBuffer>>
                 resultsTree = cass.getColumns( cass.getApplicationKeyspace( applicationId ), columnFamily, rowKey,
@@ -140,7 +139,6 @@ public class IndexBucketScanner implements IndexScanner {
         if ( resultsTree.size() == selectSize ) {
             hasMore = true;
 
-
             // set the bytebuffer for the next pass
             start = resultsTree.get( resultsTree.size() - 1 ).getName();
         }
@@ -149,13 +147,51 @@ public class IndexBucketScanner implements IndexScanner {
         }
 
         //remove the first element since it needs to be skipped AFTER the size check. Otherwise it will fail
-        if ( firstPageSkipFirst ) {
-            resultsTree.remove( 0 );
+        //we only want to skip if our byte value are the same as our expected start.  Since we aren't stateful you can't
+        //be sure your start even comes back, and you don't want to erroneously remove columns
+        if ( shouldCheckFirst && resultsTree.size() > 0  && start != null) {
+            final int startIndex = start.position();
+            final int startLength = start.remaining();
+
+
+
+            final ByteBuffer returnedBuffer = resultsTree.get( 0 ).getName();
+            final int returnedIndex = returnedBuffer.position();
+            final int returnedLength = returnedBuffer.remaining();
+
+
+            final int compare = FBUtilities.compareUnsigned( start.array(), returnedBuffer.array(),  startIndex, returnedIndex, startLength, returnedLength ) ;
+
+            //the byte buffers are the same as our seek (which may or may not be the case in the first seek)
+            if(compare == 0){
+                resultsTree.remove( 0 );
+            }
         }
 
         lastResults = resultsTree;
 
         return lastResults != null && lastResults.size() > 0;
+    }
+
+
+    /**
+     * Returns true if the 2 byte buffers contain the same bytes, false otherwise
+     * @param first
+     * @param second
+     * @return
+     */
+    private boolean compareBuffer(final ByteBuffer first, final ByteBuffer second){
+        int firstLength = first.remaining();
+        int firstPosition = first.position();
+
+        int secondLength = second.remaining();
+        int secondPosition = second.position();
+
+        final int compare = FBUtilities.compareUnsigned( first.array(), second.array(),  firstPosition, secondPosition, firstLength, secondLength);
+
+        return compare == 0;
+
+
     }
 
 
@@ -235,4 +271,5 @@ public class IndexBucketScanner implements IndexScanner {
     public boolean isReversed() {
         return this.reversed;
     }
+
 }

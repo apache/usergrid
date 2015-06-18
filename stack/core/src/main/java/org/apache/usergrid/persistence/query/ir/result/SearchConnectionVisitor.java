@@ -13,6 +13,7 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 import org.apache.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeStartToBytes;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
@@ -205,7 +206,7 @@ public class SearchConnectionVisitor extends SearchVisitor {
 
 
           IndexScanner scanner =
-                  new IndexBucketScanner( cassandraService, ENTITY_INDEX, applicationId,
+                  new IndexBucketScanner( cassandraService, ENTITY_INDEX,  DynamicCompositeStartToBytes.INSTANCE, applicationId,
                           keyPrefix, shardBucket, range[0], range[1], slice.isReversed(), pageSize, slice.hasCursor());
 
           return scanner;

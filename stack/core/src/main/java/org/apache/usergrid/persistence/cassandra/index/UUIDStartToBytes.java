@@ -14,25 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.ir.result;
+package org.apache.usergrid.persistence.cassandra.index;
 
 
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
+
 
 /**
- * Parser for reading and writing secondary index composites
- *
- * @author tnine
+ * Converts a UUID to bytes
  */
-public class UUIDIndexSliceParser implements SliceParser {
+public class UUIDStartToBytes implements StartToBytes<UUID> {
 
+    public static final UUIDStartToBytes INSTANCE = new UUIDStartToBytes();
 
+    private UUIDStartToBytes(){}
+
+    private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
 
     @Override
-    public ScanColumn parse( final ByteBuffer columnNameBytes, final boolean isReversed ) {
-        final int compare = isReversed? -1: 1;
-        return new UUIDColumn( ue.fromByteBuffer( columnNameBytes.duplicate() ), columnNameBytes,  compare );
+    public ByteBuffer toBytes( final UUID toBytes ) {
+        return UUID_SERIALIZER.toByteBuffer( toBytes );
     }
 }

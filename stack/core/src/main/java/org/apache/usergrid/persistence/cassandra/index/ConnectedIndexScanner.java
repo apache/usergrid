@@ -174,11 +174,11 @@ public class ConnectedIndexScanner implements IndexScanner {
         }
 
         //remove the first element, we need to skip it
-        if ( skipFirst && lastResults.size() > 0) {
+        if ( skipFirst && lastResults != null && lastResults.size() > 0) {
             lastResults.remove( 0  );
         }
 
-        if ( hasMore && lastResults.size() > 0 ) {
+        if ( hasMore && lastResults !=null && lastResults.size() > 0 ) {
             // set the bytebuffer for the next pass
             lastResults.remove( lastResults.size() - 1 );
         }

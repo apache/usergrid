@@ -448,7 +448,7 @@ public class QueryProcessor {
                 node = newSliceNode();
             }
             else {
-                node = getUnionNode( op );
+                node = getUnionNode( );
             }
 
             String fieldName = op.getProperty().getIndexedValue();
@@ -485,7 +485,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setFinish( propertyName, op.getLiteral().getValue(), false );
+            getUnionNode( ).setFinish( propertyName, op.getLiteral().getValue(), false );
         }
 
 
@@ -502,7 +502,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setFinish( propertyName, op.getLiteral().getValue(), true );
+            getUnionNode( ).setFinish( propertyName, op.getLiteral().getValue(), true );
         }
 
 
@@ -519,7 +519,7 @@ public class QueryProcessor {
             //checkIndexed( fieldName );
 
             Literal<?> literal = op.getLiteral();
-            SliceNode node = getUnionNode( op );
+            SliceNode node = getUnionNode( );
 
             // this is an edge case. If we get more edge cases, we need to push
             // this down into the literals and let the objects
@@ -554,7 +554,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setStart( propertyName, op.getLiteral().getValue(), false );
+            getUnionNode( ).setStart( propertyName, op.getLiteral().getValue(), false );
         }
 
 
@@ -570,7 +570,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setStart( propertyName, op.getLiteral().getValue(), true );
+            getUnionNode( ).setStart( propertyName, op.getLiteral().getValue(), true );
         }
 
 
@@ -578,9 +578,8 @@ public class QueryProcessor {
          * Return the current leaf node to add to if it exists. This means that we can compress multiple 'AND'
          * operations and ranges into a single node. Otherwise a new node is created and pushed to the stack
          *
-         * @param current The current operand node
          */
-        private SliceNode getUnionNode( EqualityOperand current ) {
+        private SliceNode getUnionNode( ) {
 
             /**
              * we only create a new slice node in 3 situations 1. No nodes exist 2.

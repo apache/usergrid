@@ -1,11 +1,16 @@
 package org.apache.usergrid.persistence.query.ir.result;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -21,18 +26,20 @@ import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 public class GatherIterator implements ResultIterator {
 
 
-    private final Collection<SearchVisitor> searchVisitors;
     private final QueryNode rootNode;
     private final int pageSize;
 
 
-    private Set<ScanColumn> next;
+    private Iterator<ScanColumn> mergedIterators;
+    private Map<UUID, ResultIterator> cursorMap;
+    private List<ResultIterator> iterators;
 
 
     public GatherIterator(final int pageSize, final QueryNode rootNode, final Collection<SearchVisitor> searchVisitors) {
         this.pageSize = pageSize;
         this.rootNode = rootNode;
-        this.searchVisitors = searchVisitors;
+        this.cursorMap = new HashMap<UUID, ResultIterator>( pageSize );
+        createIterators( searchVisitors );
     }
 
 
@@ -45,6 +52,14 @@ public class GatherIterator implements ResultIterator {
     @Override
     public void finalizeCursor( final CursorCache cache, final UUID lastValue ) {
         //find the last value in the tree, and return it's cursor
+        final ResultIterator sourceIterator = cursorMap.get( lastValue );
+
+        if(sourceIterator == null){
+            throw new IllegalArgumentException( "Could not find the iterator that provided the candidate with uuid " + lastValue );
+        }
+
+        //delegate to the source iterator
+        sourceIterator.finalizeCursor( cache, lastValue );
     }
 
 
@@ -56,12 +71,11 @@ public class GatherIterator implements ResultIterator {
 
     @Override
     public boolean hasNext() {
-
-        if(next() == null){
-            advance();
+        if(mergedIterators == null || !mergedIterators.hasNext()){
+            mergeIterators();
         }
 
-        return next != null;
+        return mergedIterators.hasNext();
     }
 
 
@@ -71,38 +85,76 @@ public class GatherIterator implements ResultIterator {
             throw new NoSuchElementException( "No more elements" );
         }
 
-        final Set<ScanColumn> results = next;
-        next = null;
-        return results;
+        return getNextPage();
+    }
+
+    private void createIterators(final Collection<SearchVisitor> searchVisitors ){
+
+        this.iterators = new ArrayList<ResultIterator>( searchVisitors.size() );
+
+        for(SearchVisitor visitor: searchVisitors){
+
+            try {
+                rootNode.visit( visitor );
+            }
+            catch ( Exception e ) {
+                throw new RuntimeException( "Unable to process query", e );
+            }
+
+            final ResultIterator iterator = visitor.getResults();
+
+            iterators.add( iterator );
+
+        }
+
     }
 
 
     /**
-     * Advance the iterator
+     * Get the next page of results
+     * @return
      */
-    private void advance(){
-        //TODO make this concurrent
+    private Set<ScanColumn> getNextPage(){
 
+        //try to take from our PageSize
+        LinkedHashSet<ScanColumn> resultSet = new LinkedHashSet<ScanColumn>( pageSize );
 
-        final TreeSet<ScanColumn> results = new TreeSet<ScanColumn>(  );
-
-
-        for(SearchVisitor visitor: searchVisitors){
-              merge(results, visitor);
+        for(int i = 0; i < pageSize && mergedIterators.hasNext(); i ++){
+            resultSet.add( mergedIterators.next() );
         }
 
-        this.next = results;
+
+        return resultSet;
     }
+
+    /**
+     * Advance the iterator
+     */
+    private void mergeIterators(){
+        //TODO make this concurrent
+
+        //clear the cursor map
+        cursorMap.clear();
+
+        TreeSet<ScanColumn> merged = new TreeSet<ScanColumn>(  );
+
+        for(ResultIterator iterator: this.iterators){
+              merge(merged, iterator);
+        }
+
+        mergedIterators = merged.iterator();
+
+    }
+
+
 
 
     /**
      * Merge this interator into our final column results
      * @param results
-     * @param visitor
+     * @param iterator
      */
-    private void merge(final TreeSet<ScanColumn> results, final SearchVisitor visitor){
-
-        final ResultIterator iterator = visitor.getResults();
+    private void merge(final TreeSet<ScanColumn> results, final ResultIterator iterator){
 
 
         //nothing to do, return
@@ -110,19 +162,24 @@ public class GatherIterator implements ResultIterator {
             return;
         }
 
-
         final Iterator<ScanColumn> nextPage = iterator.next().iterator();
-
 
         //only take from the iterator what we need to create a full page.
         for(int i = 0 ; i < pageSize && nextPage.hasNext(); i ++){
-            results.add( nextPage.next() );
+            final ScanColumn next = nextPage.next();
 
-            //results are too large, trim them
-            if(results.size() > pageSize){
-                results.pollLast();
-            }
+            results.add(next);
+            cursorMap.put( next.getUUID(), iterator );
+
+//            //results are too large, trim them
+//            if(results.size() > pageSize){
+//               final ScanColumn toRemove =  results.pollLast();
+//                cursorMap.remove( toRemove.getUUID() );
+//            }
+
         }
 
     }
+
+
 }
