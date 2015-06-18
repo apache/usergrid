@@ -23,14 +23,12 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
-
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +59,11 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Before
     public void setup() {
         management= clientSetup.getRestClient().management();
-        Token token = management.token().get(new QueryParameters().addParam("grant_type", "password").addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()));
+        Token token = management.token()
+            .get( new QueryParameters()
+                .addParam( "grant_type", "password" )
+                .addParam( "username", clientSetup.getEmail() )
+                .addParam( "password", clientSetup.getPassword() ) );
         management.token().setToken(token);
     }
 
@@ -72,11 +74,17 @@ public class ManagementResourceIT extends AbstractRestIT {
     public void setSelfAdminPasswordAsAdmin() {
         UUID uuid =  UUIDUtils.newTimeUUID();
         management.token().setToken(clientSetup.getSuperuserToken());
-        management.orgs().org( clientSetup.getOrganizationName() ).users().post( ApiResponse.class, new User( "test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test" ) );
+        management.orgs()
+            .org( clientSetup.getOrganizationName() )
+            .users()
+            .post( ApiResponse.class, new User( "test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test" ) );
         Map<String, Object> data = new HashMap<>();
         data.put( "newpassword", "foo" );
         data.put( "oldpassword", "test" );
-        management.users().user("test"+uuid).password().post(Entity.class, data);
+        management.users()
+            .user( "test" + uuid )
+            .password()
+            .post( Entity.class, data );
         Token token = management.token().post(Token.class, new Token( "test"+uuid, "foo" ) );
         management.token().setToken( token );
         data.clear();
@@ -205,7 +213,10 @@ public class ManagementResourceIT extends AbstractRestIT {
         userFeed = getUserFeed( lastUser );
         assertNotNull( userFeed );
         assertTrue( userFeed.size() > 1 );
-        String serialized = ((Entity)userFeed.get(0)).get("content").toString()+ ((Entity)userFeed.get(1)).get("content").toString();
+        String serialized = ((Entity)userFeed.get(0))
+            .get( "content" )
+            .toString()+ ((Entity)userFeed.get(1))
+            .get( "content" ).toString();
         assertTrue( serialized.indexOf( postFollowContent ) >= 0 );
         assertTrue( serialized.indexOf( preFollowContent ) >= 0 );
     }
@@ -226,7 +237,13 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     private void follow( String user, String followUser ) {
         //post follow
-        Entity entity = this.app().collection("users").entity(user).collection("following").collection("users").entity(followUser).post();
+        Entity entity = this.app()
+            .collection( "users" )
+            .entity( user )
+            .collection( "following" )
+            .collection( "users" )
+            .entity( followUser )
+            .post();
     }
 
 
@@ -238,23 +255,30 @@ public class ManagementResourceIT extends AbstractRestIT {
         actorMap.put( "displayName", name );
         actorMap.put( "username", user );
         activityPayload.put("actor", actorMap);
-        Entity entity = this.app().collection("users").entity(user).collection("activities").post(new Entity(activityPayload));
+        Entity entity = this.app()
+            .collection( "users" )
+            .entity( user )
+            .collection( "activities" )
+            .post( new Entity( activityPayload ) );
     }
 
 
     @Test
     public void mgmtCreateAndGetApplication() throws Exception {
 
-
-
         // POST /applications
-        ApiResponse apiResponse = management().orgs().org( clientSetup.getOrganizationName() ).app().post(new Application("mgmt-org-app"));
+        ApiResponse apiResponse = management()
+            .orgs()
+            .org( clientSetup.getOrganizationName() )
+            .app()
+            .post( new Application( "mgmt-org-app" ) );
 
 
         refreshIndex();
 
         Entity appdata = apiResponse.getEntities().get(0);
-        assertEquals((clientSetup.getOrganizationName() + "/mgmt-org-app").toLowerCase(), appdata.get("name").toString().toLowerCase());
+        assertEquals((clientSetup.getOrganizationName() + "/mgmt-org-app")
+            .toLowerCase(), appdata.get("name") .toString() .toLowerCase());
         assertNotNull(appdata.get("metadata"));
         Map metadata =(Map) appdata.get( "metadata" );
         assertNotNull(metadata.get("collections"));
@@ -290,7 +314,11 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         long ttl = 2000;
 
-        Token token = management.token().get(new QueryParameters().addParam( "grant_type", "password" ).addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()).addParam("ttl", String.valueOf(ttl)));
+        Token token = management.token().get( new QueryParameters()
+            .addParam( "grant_type", "password" )
+            .addParam( "username", clientSetup.getEmail() )
+            .addParam( "password", clientSetup.getPassword() )
+            .addParam( "ttl", String.valueOf( ttl ) ) );
 
 
         long startTime = System.currentTimeMillis();
@@ -319,7 +347,11 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     @Test
     public void token() throws Exception {
-        Token myToken = management.token().get(new QueryParameters().addParam("grant_type", "password").addParam("username", clientSetup.getEmail()).addParam("password", clientSetup.getPassword()));
+        Token myToken = management.token()
+            .get( new QueryParameters()
+                .addParam( "grant_type", "password" )
+                .addParam( "username", clientSetup.getEmail() )
+                .addParam( "password", clientSetup.getPassword() ) );
 
         String token = myToken.getAccessToken();
         assertNotNull( token );
@@ -329,8 +361,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "securityLevel", 5 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-        management.orgs().org( clientSetup.getOrganizationName() )
-            .put(payload);
+        management.orgs().org( clientSetup.getOrganizationName() ).put( payload );
 
 
         // ensure the organization property is included
@@ -341,9 +372,11 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     @Test
     public void meToken() throws Exception {
-        QueryParameters queryParameters = new QueryParameters().addParam("grant_type", "password")
-                                  .addParam("username", clientSetup.getUsername()).addParam("password",clientSetup.getPassword());
-        Token myToken = management.me().get(Token.class,queryParameters);
+        QueryParameters queryParameters = new QueryParameters()
+            .addParam( "grant_type", "password" )
+            .addParam( "username", clientSetup.getUsername() )
+            .addParam( "password", clientSetup.getPassword() );
+        Token myToken = management.me().get( Token.class, queryParameters );
 
 
         String token = myToken.getAccessToken();
@@ -372,10 +405,11 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     @Test
     public void meTokenPost() throws Exception {
-        Map<String, String> payload =
-                hashMap( "grant_type", "password" ).map( "username", clientSetup.getUsername() ).map( "password",clientSetup.getPassword() );
+        Map<String, String> payload = hashMap( "grant_type", "password" )
+            .map( "username", clientSetup.getUsername() )
+            .map( "password", clientSetup.getPassword() );
 
-        JsonNode node = management.me().post(JsonNode.class, payload);
+        JsonNode node = management.me().post( JsonNode.class, payload );
 
         logNode( node );
         String token = node.get( "access_token" ).textValue();
@@ -410,13 +444,14 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void ttlNan() throws Exception {
 
-        Map<String, String> payload =
-                hashMap( "grant_type", "password" ).map("username", clientSetup.getUsername()).map( "password",clientSetup.getPassword() )
-                                                   .map("ttl", "derp");
+        Map<String, String> payload = hashMap( "grant_type", "password" )
+            .map( "username", clientSetup.getUsername() )
+            .map( "password", clientSetup.getPassword() )
+            .map( "ttl", "derp" );
 
         Status responseStatus = null;
         try {
-           management.token().post(JsonNode.class, payload);
+           management.token().post( JsonNode.class, payload );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -429,14 +464,15 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void ttlOverMax() throws Exception {
 
-        Map<String, String> payload =
-                hashMap( "grant_type", "password" ).map( "username", clientSetup.getUsername()).map( "password", clientSetup.getPassword() )
-                                                   .map( "ttl", Long.MAX_VALUE + "" );
+        Map<String, String> payload = hashMap( "grant_type", "password" )
+            .map( "username", clientSetup.getUsername() )
+            .map( "password", clientSetup.getPassword() )
+            .map( "ttl", Long.MAX_VALUE + "" );
 
         Status responseStatus = null;
 
         try {
-            management.token().post(JsonNode.class, payload);
+            management.token().post( JsonNode.class, payload );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -459,7 +495,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertNotNull(response.get("email").toString());
 
         // now revoke the tokens
-        response = management.users().user(clientSetup.getUsername()).revokeTokens().post(true,Entity.class,null, null,false);
+        response = management.users().user(
+            clientSetup.getUsername()).revokeTokens().post(true,Entity.class,null, null,false);
 
         // the tokens shouldn't work
 
@@ -482,7 +519,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         // now revoke the token3
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "token", token3.getAccessToken() );
-        management.users().user(clientSetup.getUsername()).revokeToken().post( false, Entity.class,null,queryParameters );
+        management.users().user(
+            clientSetup.getUsername()).revokeToken().post( false, Entity.class,null,queryParameters );
 
         // the token3 shouldn't work
         status = null;
@@ -554,7 +592,8 @@ public class ManagementResourceIT extends AbstractRestIT {
                 fail( "Validation should have failed" );
             } catch (UniformInterfaceException actual) {
                 assertEquals( 404, actual.getResponse().getStatus() );
-                String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+                String errorMsg = actual.getResponse().getEntity(
+                    JsonNode.class ).get( "error_description" ).toString();
                 logger.error( "ERROR: " + errorMsg );
                 assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
             }
@@ -614,7 +653,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
             } catch (UniformInterfaceException actual) {
                 assertEquals( 400, actual.getResponse().getStatus() );
-                String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+                String errorMsg = actual.getResponse()
+                    .getEntity( JsonNode.class ).get( "error_description" ).toString();
                 logger.error( "ERROR: " + errorMsg );
                 assertTrue( errorMsg.contains( "Admin Users must login via" ) );
 
