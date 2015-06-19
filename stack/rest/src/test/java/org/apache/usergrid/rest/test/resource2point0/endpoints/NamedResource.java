@@ -215,6 +215,11 @@ public class NamedResource implements UrlResource {
 
     }
 
+    public <T> T post( boolean useToken, Class<T> type, Map requestEntity) {
+        return post(useToken, type, requestEntity, null, false);
+
+    }
+
     /**
      * Used to test POST using form payloads.
      * @param type
@@ -269,8 +274,7 @@ public class NamedResource implements UrlResource {
         }
 
         GenericType<T> gt = new GenericType<>((Class) type);
-        return builder
-            .post(gt.getRawClass());
+        return builder.post( gt.getRawClass() );
 
     }
 
@@ -282,13 +286,13 @@ public class NamedResource implements UrlResource {
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type, boolean useToken) {
-        return get(type,null,useToken);
+        return get( type, null, useToken );
 
     }
 
 
     public <T> T get(Class<T> type,QueryParameters queryParameters) {
-        return get(type,queryParameters,true);
+        return get( type, queryParameters, true );
     }
 
     public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken) {

@@ -562,11 +562,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
         props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
-        resource().path( "/testproperties" )
-                .queryParam("access_token", suToken)
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
+        pathResource( "testproperties" ).post( props );
 
         try {
 
@@ -590,6 +586,7 @@ public class ManagementResourceIT extends AbstractRestIT {
                 validatedNode = management.externaltoken().get( Entity.class, queryParams );
 
                 fail( "Validation should have failed" );
+
             } catch (UniformInterfaceException actual) {
                 assertEquals( 404, actual.getResponse().getStatus() );
                 String errorMsg = actual.getResponse().getEntity(
@@ -605,11 +602,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             // unset the Usergrid Central SSO URL so it does not interfere with other tests
 
             props.put( USERGRID_CENTRAL_URL, "" );
-            resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
+            pathResource( "testproperties" ).post( props );
         }
 
     }
@@ -629,12 +622,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
-        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
+        pathResource( "testproperties" ).post( props );
 
         try {
             // calls to login as an Admin User must now fail
@@ -646,9 +635,7 @@ public class ManagementResourceIT extends AbstractRestIT {
                     put( "password", "password" );
                     put( "grant_type", "password" );
                 }};
-                JsonNode accessInfoNode = resource().path( "/management/token" )
-                    .type( MediaType.APPLICATION_JSON_TYPE )
-                    .post( JsonNode.class, loginInfo );
+                ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
                 fail( "Login as Admin User must fail when validate external tokens is enabled" );
 
             } catch (UniformInterfaceException actual) {
@@ -669,10 +656,8 @@ public class ManagementResourceIT extends AbstractRestIT {
                 put( "password", "superpassword" );
                 put( "grant_type", "password" );
             }};
-            JsonNode accessInfoNode = resource().path( "/management/token" )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, loginInfo );
-            String accessToken = accessInfoNode.get( "access_token" ).textValue();
+            ApiResponse postResponse2 = pathResource( "management/token" ).post( loginInfo );
+            String accessToken = postResponse2.getAccessToken();
             assertNotNull( accessToken );
 
         } finally {
@@ -680,11 +665,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             // turn off validate external tokens by un-setting the usergrid.central.url
 
             props.put( USERGRID_CENTRAL_URL, "" );
-            resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
+            pathResource( "testproperties" ).post( props );
         }
     }
 
