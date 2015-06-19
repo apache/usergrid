@@ -18,32 +18,8 @@ package org.apache.usergrid.rest.applications.assets;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.multipart.FormDataParam;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Asset;
 import org.apache.usergrid.rest.AbstractContextResource;
@@ -52,9 +28,18 @@ import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.multipart.FormDataParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 
 
 /** @deprecated  */
