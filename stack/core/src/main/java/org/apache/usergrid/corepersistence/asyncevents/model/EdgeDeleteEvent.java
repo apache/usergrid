@@ -32,14 +32,4 @@ public final class EdgeDeleteEvent extends AsyncEvent {
     public EdgeDeleteEvent(ApplicationScope applicationScope, Edge edge) {
         super(EventType.EDGE_DELETE, applicationScope, edge);
     }
-
-    @Override
-    public final ApplicationScope getApplicationScope() {
-        return super.getApplicationScope();
-    }
-
-    @Override
-    public final Edge getEdge() {
-        return super.getEdge();
-    }
 }
