@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
@@ -26,6 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -283,8 +285,8 @@ public class NamedResource implements UrlResource {
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type, boolean useToken) {
         return get(type,null,useToken);
-
     }
+
 
 
     public <T> T get(Class<T> type,QueryParameters queryParameters) {
@@ -305,5 +307,49 @@ public class NamedResource implements UrlResource {
 
     public String getMatrix() {
         return "";
+    }
+
+    public ApiResponse post( boolean useToken, FormDataMultiPart multiPartForm ) {
+        WebResource resource = getResource( useToken );
+        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).post( ApiResponse.class, multiPartForm );
+    }
+
+    public ApiResponse post( FormDataMultiPart multiPartForm ) {
+        return post( true, multiPartForm );
+    }
+
+    public ApiResponse put( boolean useToken, byte[] data, MediaType type ) {
+        WebResource resource = getResource(useToken);
+        return resource.type( type ).put( ApiResponse.class, data );
+    }
+
+    public ApiResponse put( byte[] data, MediaType type ) {
+        return put( true, data, type );
+    }
+
+    public ApiResponse put( boolean useToken, FormDataMultiPart multiPartForm ) {
+        WebResource resource = getResource(useToken);
+        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).put( ApiResponse.class, multiPartForm );
+    }
+
+    public ApiResponse put( FormDataMultiPart multiPartForm ) {
+        return put( true, multiPartForm );
+    }
+
+    public InputStream getAssetAsStream( boolean useToken ) {
+        WebResource resource = getResource(useToken);
+        return resource.accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+    }
+
+    public InputStream getAssetAsStream() {
+        return getAssetAsStream( true );
+    }
+
+    public ApiResponse delete( ) {
+        return delete(true);
+    }
+
+    public ApiResponse delete( boolean useToken ) {
+        return getResource(useToken).delete( ApiResponse.class );
     }
 }
