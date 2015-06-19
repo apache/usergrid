@@ -31,9 +31,4 @@ public final class EntityIndexEvent extends AsyncEvent {
     public EntityIndexEvent(EntityIdScope entityIdScope) {
         super(EventType.ENTITY_INDEX, entityIdScope);
     }
-
-    @Override
-    public final EntityIdScope getEntityIdScope() {
-        return super.getEntityIdScope();
-    }
 }

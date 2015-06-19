@@ -18,14 +18,16 @@
 package org.apache.usergrid.persistence.queue.impl;
 
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.*;
+import com.amazonaws.services.sns.util.Topics;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -48,13 +50,15 @@ public class SNSQueueManagerImpl implements QueueManager {
     private static final Logger logger = LoggerFactory.getLogger(SNSQueueManagerImpl.class);
 
     private final QueueScope scope;
-    private ObjectMapper mapper;
     private final QueueFig fig;
     private final ClusterFig clusterFig;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
 
-    private static SmileFactory smileFactory = new SmileFactory();
+
+    private final JsonFactory JSON_FACTORY = new JsonFactory();
+    private final ObjectMapper mapper = new ObjectMapper(JSON_FACTORY);
+
 
     private final LoadingCache<String, String> writeTopicArnMap = CacheBuilder.newBuilder()
             .maximumSize(1000)
@@ -63,9 +67,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                 public String load(String queueName)
                         throws Exception {
 
-                    String primaryTopicArn = setupMultiRegion(queueName);
-
-                    return primaryTopicArn;
+                    return setupTopics(queueName);
                 }
             });
 
@@ -81,20 +83,18 @@ public class SNSQueueManagerImpl implements QueueManager {
                         GetQueueUrlResult result = sqs.getQueueUrl(queueName);
                         queue = new Queue(result.getQueueUrl());
                     } catch (QueueDoesNotExistException queueDoesNotExistException) {
-                        logger.error("Queue {} does not exist, creating", queueName);
+                        logger.error("Queue {} does not exist, will create", queueName);
                     } catch (Exception e) {
                         logger.error("failed to get queue from service", e);
                         throw e;
                     }
 
                     if (queue == null) {
-                        String url = AmazonNotificationUtils.createQueue(queueName, sqs, fig);
+                        String url = AmazonNotificationUtils.createQueue(sqs, queueName, fig);
                         queue = new Queue(url);
                     }
 
-                    if (fig.isMultiRegion()) {
-                        String primaryTopicArn = setupMultiRegion(queueName);
-                    }
+                    setupTopics(queueName);
 
                     return queue;
                 }
@@ -108,10 +108,6 @@ public class SNSQueueManagerImpl implements QueueManager {
         this.clusterFig = clusterFig;
 
         try {
-            smileFactory.delegateToTextual(true);
-            mapper = new ObjectMapper(smileFactory);
-            mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
-
             sqs = createSQSClient(getRegion());
             sns = createSNSClient(getRegion());
 
@@ -120,76 +116,126 @@ public class SNSQueueManagerImpl implements QueueManager {
         }
     }
 
-    private String setupMultiRegion(final String queueName)
+    private String setupTopics(final String queueName)
             throws Exception {
 
-        logger.info("Setting up SNS/SQS...");
+        logger.info("Setting up setupTopics SNS/SQS...");
 
-        String primaryTopicArn = AmazonNotificationUtils.getTopicArn(queueName, sns, true);
+        String primaryTopicArn = AmazonNotificationUtils.getTopicArn(sns, queueName, true);
 
         if (logger.isDebugEnabled()) logger.debug("SNS/SQS Setup: primaryTopicArn=" + primaryTopicArn);
 
-        String primaryQueueArn = AmazonNotificationUtils.getQueueArnByName(queueName, sqs);
+        String queueUrl = AmazonNotificationUtils.getQueueUrlByName(sqs, queueName);
+        String primaryQueueArn = AmazonNotificationUtils.getQueueArnByName(sqs, queueName);
 
         if (logger.isDebugEnabled()) logger.debug("SNS/SQS Setup: primaryQueueArn=" + primaryQueueArn);
 
         if (primaryQueueArn == null) {
             if (logger.isDebugEnabled())
-                logger.debug("SNS/SQS Setup: primaryQueueArn is null, setting creating queue...");
+                logger.debug("SNS/SQS Setup: primaryQueueArn is null, creating queue...");
 
-            String queueUrl = AmazonNotificationUtils.createQueue(queueName, sqs, fig);
-            primaryQueueArn = AmazonNotificationUtils.getQueueArnByUrl(queueUrl, sqs);
+            queueUrl = AmazonNotificationUtils.createQueue(sqs, queueName, fig);
+            primaryQueueArn = AmazonNotificationUtils.getQueueArnByUrl(sqs, queueUrl);
 
             if (logger.isDebugEnabled())
                 logger.debug("SNS/SQS Setup: New Queue URL=[{}] ARN=[{}]", queueUrl, primaryQueueArn);
         }
 
-        AmazonNotificationUtils.subscribeQueueToTopic(primaryTopicArn, primaryQueueArn, sns);
+        try {
+            Topics.subscribeQueue(sns, sqs, primaryTopicArn, queueUrl);
+        } catch (AmazonServiceException e) {
+            logger.error(String.format("Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn), e);
+        }
 
         if (fig.isMultiRegion()) {
 
             String multiRegion = fig.getRegionList();
 
             if (logger.isDebugEnabled())
-                logger.debug("MultiRegion Setup specified, regions: {}", multiRegion);
+                logger.debug("MultiRegion Setup specified, regions: [{}]", multiRegion);
 
             String[] regionNames = multiRegion.split(",");
 
-            final Set<String> arrQueueArns = new HashSet<>(regionNames.length + 1);
-            final Map<String, AmazonSNSClient> topicArns = new HashMap<>(regionNames.length + 1);
+            final Map<String, String> arrQueueArns = new HashMap<>(regionNames.length + 1);
+            final Map<String, String> topicArns = new HashMap<>(regionNames.length + 1);
 
-            arrQueueArns.add(primaryQueueArn);
-            topicArns.put(primaryTopicArn, sns);
+            arrQueueArns.put(primaryQueueArn, fig.getRegion());
+            topicArns.put(primaryTopicArn, fig.getRegion());
 
             for (String regionName : regionNames) {
+
+                regionName = regionName.trim();
 
                 Regions regions = Regions.fromName(regionName);
                 Region region = Region.getRegion(regions);
 
-                AmazonSQSClient sqsClient = createSQSClient(region);
-                AmazonSNSClient snsClient = createSNSClient(region);
+                final AmazonSQSClient sqsClient = createSQSClient(region);
+                final AmazonSNSClient snsClient = createSNSClient(region);
 
-                String topicArn = AmazonNotificationUtils.getTopicArn(queueName, snsClient, true);
+                String topicArn = AmazonNotificationUtils.getTopicArn(snsClient, queueName, true);
 
-                topicArns.put(topicArn, snsClient);
+                topicArns.put(topicArn, regionName);
 
-                String queueArn = AmazonNotificationUtils.getQueueArnByName(queueName, sqsClient);
+                String queueArn = AmazonNotificationUtils.getQueueArnByName(sqsClient, queueName);
 
                 if (queueArn == null) {
-                    String queueUrl = AmazonNotificationUtils.createQueue(queueName, sqsClient, fig);
-                    queueArn = AmazonNotificationUtils.getQueueArnByUrl(queueUrl, sqsClient);
+                    queueUrl = AmazonNotificationUtils.createQueue(sqsClient, queueName, fig);
+                    queueArn = AmazonNotificationUtils.getQueueArnByUrl(sqsClient, queueUrl);
                 }
 
-                arrQueueArns.add(queueArn);
+                arrQueueArns.put(queueArn, regionName);
             }
 
-            for (String queueArn : arrQueueArns) {
-                for (Map.Entry<String, AmazonSNSClient> topicArnEntry : topicArns.entrySet()) {
-                    String topicArn = topicArnEntry.getKey();
-                    AmazonSNSClient snsClient = topicArnEntry.getValue();
-                    AmazonNotificationUtils.subscribeQueueToTopic(topicArn, queueArn, snsClient);
-                }
+            logger.debug("Creating Subscriptions...");
 
+            for (Map.Entry<String, String> queueArnEntry : arrQueueArns.entrySet()) {
+                String queueARN = queueArnEntry.getKey();
+                String strSqsRegion = queueArnEntry.getValue();
+
+                Regions sqsRegions = Regions.fromName(strSqsRegion);
+                Region sqsRegion = Region.getRegion(sqsRegions);
+
+                final AmazonSQSClient sqsClient = createSQSClient(sqsRegion);
+
+                logger.info("Creating subscriptions for QUEUE ARN=[{}]", queueARN);
+
+                for (Map.Entry<String, String> topicArnEntry : topicArns.entrySet()) {
+                    String topicARN = topicArnEntry.getKey();
+
+                    logger.info("Creating subscriptions for TOPIC ARN=[{}]", topicArnEntry.getKey());
+
+                    String strSnsRegion = queueArnEntry.getValue();
+
+                    Regions snsRegions = Regions.fromName(strSnsRegion);
+                    Region snsRegion = Region.getRegion(snsRegions);
+
+                    final AmazonSNSClient snsClient = createSNSClient(snsRegion);
+
+                    try {
+
+                        logger.info("Subscribing Queue ARN/Region=[{} / {}] and Topic ARN/Region=[{} / {}]",
+                                queueARN,
+                                strSqsRegion,
+                                topicARN,
+                                strSnsRegion
+                        );
+
+                        Topics.subscribeQueue(
+                                snsClient,
+                                sqsClient,
+                                topicArnEntry.getKey(),
+                                queueArnEntry.getKey());
+
+                    } catch (Exception e) {
+                        logger.error(String.format("ERROR Subscribing Queue ARN/Region=[%s / %s] and Topic ARN/Region=[%s / %s]",
+                                queueARN,
+                                strSqsRegion,
+                                topicARN,
+                                strSnsRegion), e);
+
+
+                    }
+                }
             }
         }
 
@@ -216,8 +262,10 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
     public Queue getReadQueue() {
+        String queueName = getName();
+
         try {
-            return readQueueUrlMap.get(getName());
+            return readQueueUrlMap.get(queueName);
         } catch (ExecutionException ee) {
             throw new RuntimeException(ee);
         }

@@ -151,9 +151,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         try {
             return queue.getMessages(MAX_TAKE,
-                indexProcessorFig.getIndexQueueVisibilityTimeout(),
-                indexProcessorFig.getIndexQueueTimeout(),
-                AsyncEvent.class);
+                    indexProcessorFig.getIndexQueueVisibilityTimeout(),
+                    indexProcessorFig.getIndexQueueTimeout(),
+                    AsyncEvent.class);
         }
         //stop our timer
         finally {
@@ -194,27 +194,31 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
             if (logger.isDebugEnabled()) logger.debug("Processing {} event", event.getEventType());
 
-            switch (event.getEventType()) {
+            if (event == null || event.getEventType() == null) {
+                logger.error("AsyncEvent type or event is null!");
+            } else {
+                switch (event.getEventType()) {
 
-                case EDGE_DELETE:
-                    handleEdgeDelete(message);
-                    break;
+                    case EDGE_DELETE:
+                        handleEdgeDelete(message);
+                        break;
 
-                case EDGE_INDEX:
-                    handleEdgeIndex(message);
-                    break;
+                    case EDGE_INDEX:
+                        handleEdgeIndex(message);
+                        break;
 
-                case ENTITY_DELETE:
-                    handleEntityDelete(message);
-                    break;
+                    case ENTITY_DELETE:
+                        handleEntityDelete(message);
+                        break;
 
-                case ENTITY_INDEX:
-                    handleEntityIndexUpdate(message);
-                    break;
+                    case ENTITY_INDEX:
+                        handleEntityIndexUpdate(message);
+                        break;
 
-                default:
-                    logger.error("Unknown EventType: {}", event.getEventType());
+                    default:
+                        logger.error("Unknown EventType: {}", event.getEventType());
 
+                }
             }
         }
     }
@@ -245,9 +249,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager(applicationScope);
 
         ecm.load(entityIdScope.getId())
-            .first()
-            .flatMap(entity -> indexService.indexEntity(applicationScope, entity))
-            .doOnNext(ignore -> ack(message)).subscribe();
+                .first()
+                .flatMap(entity -> indexService.indexEntity(applicationScope, entity))
+                .doOnNext(ignore -> ack(message)).subscribe();
     }
 
 
@@ -276,8 +280,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager(applicationScope);
 
         ecm.load(event.getEntityId())
-            .flatMap(entity -> indexService.indexEdge(applicationScope, entity, edge))
-            .doOnNext(ignore -> ack(message)).subscribe();
+                .flatMap(entity -> indexService.indexEdge(applicationScope, entity, edge))
+                .doOnNext(ignore -> ack(message)).subscribe();
     }
 
     @Override
@@ -302,7 +306,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         if (logger.isDebugEnabled()) logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
 
         indexService.deleteIndexEdge(applicationScope, edge)
-            .doOnNext(ignore -> ack(message)).subscribe();
+                .doOnNext(ignore -> ack(message)).subscribe();
     }
 
 
@@ -329,7 +333,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         ack(message);
 
         indexService.deleteEntityIndexes(applicationScope, entityId, UUIDUtils.maxTimeUUID(Long.MAX_VALUE))
-            .doOnNext(ignore -> ack(message)).subscribe();
+                .doOnNext(ignore -> ack(message)).subscribe();
     }
 
 
@@ -363,52 +367,52 @@ public class AmazonAsyncEventService implements AsyncEventService {
         synchronized (mutex) {
 
             Observable<List<QueueMessage>> consumer =
-                Observable.create(new Observable.OnSubscribe<List<QueueMessage>>() {
-                    @Override
-                    public void call(final Subscriber<? super List<QueueMessage>> subscriber) {
+                    Observable.create(new Observable.OnSubscribe<List<QueueMessage>>() {
+                        @Override
+                        public void call(final Subscriber<? super List<QueueMessage>> subscriber) {
 
-                        //name our thread so it's easy to see
-                        Thread.currentThread().setName("QueueConsumer_" + counter.incrementAndGet());
+                            //name our thread so it's easy to see
+                            Thread.currentThread().setName("QueueConsumer_" + counter.incrementAndGet());
 
-                        List<QueueMessage> drainList = null;
+                            List<QueueMessage> drainList = null;
 
-                        do {
-                            Timer.Context timer = readTimer.time();
-
-                            try {
-                                drainList = take().toList().toBlocking().lastOrDefault(null);
-
-                                //emit our list in it's entity to hand off to a worker pool
-                                subscriber.onNext(drainList);
-
-                                //take since  we're in flight
-                                inFlight.addAndGet(drainList.size());
-                            } catch (Throwable t) {
-                                final long sleepTime = indexProcessorFig.getFailureRetryTime();
-
-                                logger.error("Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t);
-
-                                if (drainList != null) {
-                                    inFlight.addAndGet(-1 * drainList.size());
-                                }
-
+                            do {
+                                Timer.Context timer = readTimer.time();
 
                                 try {
-                                    Thread.sleep(sleepTime);
-                                } catch (InterruptedException ie) {
-                                    //swallow
-                                }
+                                    drainList = take().toList().toBlocking().lastOrDefault(null);
 
-                                indexErrorCounter.inc();
-                            } finally {
-                                timer.stop();
+                                    //emit our list in it's entity to hand off to a worker pool
+                                    subscriber.onNext(drainList);
+
+                                    //take since  we're in flight
+                                    inFlight.addAndGet(drainList.size());
+                                } catch (Throwable t) {
+                                    final long sleepTime = indexProcessorFig.getFailureRetryTime();
+
+                                    logger.error("Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t);
+
+                                    if (drainList != null) {
+                                        inFlight.addAndGet(-1 * drainList.size());
+                                    }
+
+
+                                    try {
+                                        Thread.sleep(sleepTime);
+                                    } catch (InterruptedException ie) {
+                                        //swallow
+                                    }
+
+                                    indexErrorCounter.inc();
+                                } finally {
+                                    timer.stop();
+                                }
                             }
+                            while (true);
                         }
-                        while (true);
-                    }
-                })
-                    //this won't block our read loop, just reads and proceeds
-                    .doOnNext(this::handleMessages).subscribeOn(Schedulers.newThread());
+                    })
+                            //this won't block our read loop, just reads and proceeds
+                            .doOnNext(this::handleMessages).subscribeOn(Schedulers.newThread());
 
             //start in the background
 
