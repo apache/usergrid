@@ -56,7 +56,7 @@
         <property name="maxActive" value="${cassandra.connections:20}"/>
         <property name="cassandraThriftSocketTimeout" value="${cassandra.thriftSocketTimeout:0}" />
         <property name="useSocketKeepalive" value="${cassandra.useSocketKeepalive:false}" />
-        <!-- <property name="clockResolution" ref="microsecondsTimeResolution" /> -->
+        <!-- Fails on Java 8: <property name="clockResolution" ref="microsecondsTimeResolution" />-->
         <property name="opTimer" ref="taggedOpTimer"/>
         <property name="loadBalancingPolicy" ref="loadBalancingPolicy"/>
 	</bean>
