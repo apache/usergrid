@@ -19,6 +19,8 @@
 
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -27,13 +29,23 @@ import org.apache.usergrid.persistence.model.entity.Id;
 /**
  * Created by Jeff West on 5/25/15.
  */
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AsyncEvent {
 
+    @JsonProperty
     protected EventType eventType;
 
+    @JsonProperty
     protected EntityIdScope entityIdScope;
+
+    @JsonProperty
     protected ApplicationScope applicationScope;
+
+    @JsonProperty
     protected Id entityId;
+
+    @JsonProperty
     protected Edge edge;
 
     /**
