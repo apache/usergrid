@@ -27,6 +27,7 @@ import com.amazonaws.services.sns.util.Topics;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -312,7 +313,8 @@ public class SNSQueueManagerImpl implements QueueManager {
                 Object body;
 
                 try {
-                    body = fromString(message.getBody(), klass);
+                    JsonNode bodyObj = mapper.readTree(message.getBody()).get("Message");
+                    body = fromString(bodyObj.textValue(), klass);
                 } catch (Exception e) {
                     logger.error(String.format("failed to deserialize message: %s", message.getBody()), e);
                     throw new RuntimeException(e);
