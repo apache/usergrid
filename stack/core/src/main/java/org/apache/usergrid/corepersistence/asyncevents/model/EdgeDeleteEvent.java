@@ -19,12 +19,14 @@
 
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 
 /**
  * Created by Jeff West on 5/25/15.
  */
+@JsonDeserialize(as = AsyncEvent.class)
 public final class EdgeDeleteEvent extends AsyncEvent {
     public EdgeDeleteEvent() {
     }
