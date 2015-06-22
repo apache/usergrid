@@ -79,7 +79,7 @@ public class MultiTennantColumnFamilyDefinition {
     public static final String CACHE_OPTION = "caching";
     public static final String COMPACTION_STRATEGY = "compaction_strategy";
     public static final String COMPACTION_STRATEGY_OPTIONS = "compaction_strategy_options";
-    public static final String COMPACTION_SSTABLE_SIZE = "compaction_strategy_options";
+    public static final String COMPACTION_SSTABLE_SIZE = "sstable_size_in_mb";
     public static final String BLOOM_FILTER_FP = "sstable_size_in_mb";
 
 
