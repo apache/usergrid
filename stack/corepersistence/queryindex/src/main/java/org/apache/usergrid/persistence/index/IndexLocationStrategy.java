@@ -22,6 +22,16 @@ package org.apache.usergrid.persistence.index;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 /**
  * location strategy for index
+  Naming Configuration
+ ---
+ clusterName = config{usergrid.cluster_name}
+ keyspaceName = config{cassandra.keyspace.application}
+ managementName = config{elasticsearch.managment_index}
+ indexRoot = {clusterName}_{keyspaceName}
+ managementIndexName = {indexRoot}_{managementName}
+ managementAliasName = {indexRoot}_{managementName}_read_alias || {indexRoot}_{managementName}_read_alias
+ applicationIndexName = {indexRoot}_applications_{bucketId}
+ applicationAliasName = {indexRoot}_{appId}_read_alias || {indexRoot}_{appId}_write_alias
  */
 public interface IndexLocationStrategy {
     /**
