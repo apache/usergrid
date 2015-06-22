@@ -17,6 +17,10 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.api.representation.Form;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
@@ -24,21 +28,11 @@ import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
-
+import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.representation.Form;
-import org.jclouds.openstack.v2_0.domain.Extension;
 
 
 /**
@@ -78,8 +72,9 @@ public class NamedResource implements UrlResource {
         WebResource resource = parent.getResource().path( getPath() );
         token = token !=null ? token : this.context.getToken();
         //error checking
-        if(token == null)
+        if (token == null) {
             return resource;
+        }
         return  useToken    ? resource.queryParam("access_token",token.getAccessToken()) :  resource;
     }
 
@@ -167,15 +162,17 @@ public class NamedResource implements UrlResource {
      * @return
      */
     //For edge cases like Organizations and Tokens
-    public ApiResponse  post(Map map) {
-        return post(true,ApiResponse.class,map,null,false);
+    public ApiResponse post(Map map) {
+        return post( true, ApiResponse.class, map, null, false );
 
     }
+
     //For edge cases like Organizations and Tokens
-    public ApiResponse  post(boolean useToken, Map map, QueryParameters queryParameters) {
-        return post(useToken,ApiResponse.class,map,queryParameters,false);
+    public ApiResponse post(boolean useToken, Map map, QueryParameters queryParameters) {
+        return post( useToken, ApiResponse.class, map, queryParameters, false );
 
     }
+
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
