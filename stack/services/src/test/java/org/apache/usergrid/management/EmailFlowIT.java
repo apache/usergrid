@@ -302,7 +302,7 @@ public class EmailFlowIT {
         // activation url ok
         String mailContent = ( String ) ( ( MimeMultipart ) activation.getContent() ).getBodyPart( 1 ).getContent();
         LOG.info( mailContent );
-        assertTrue( StringUtils.contains( mailContent, activation_url ) );
+        assertTrue( StringUtils.contains( mailContent.toLowerCase(), activation_url.toLowerCase() ) );
 
         // token ok
         String token = getTokenFromMessage( activation );
@@ -330,7 +330,7 @@ public class EmailFlowIT {
         // resetpwd url ok
         mailContent = ( String ) ( ( MimeMultipart ) reset.getContent() ).getBodyPart( 1 ).getContent();
         LOG.info( mailContent );
-        assertTrue( StringUtils.contains( mailContent, reset_url ) );
+        assertTrue( StringUtils.contains( mailContent.toLowerCase(), reset_url.toLowerCase() ) );
 
         // token ok
         token = getTokenFromMessage( reset );
@@ -392,7 +392,7 @@ public class EmailFlowIT {
         // confirmation url ok
         String mailContent = ( String ) ( ( MimeMultipart ) confirmation.getContent() ).getBodyPart( 1 ).getContent();
         LOG.info( mailContent );
-        assertTrue( StringUtils.contains( mailContent, confirmation_url ) );
+        assertTrue( StringUtils.contains( mailContent.toLowerCase(), confirmation_url.toLowerCase() ) );
 
         // token ok
         String token = getTokenFromMessage( confirmation );

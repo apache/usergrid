@@ -243,15 +243,13 @@ public class SubjectUtils {
         String applicationName = null;
         UUID applicationId = null;
         BiMap<UUID, String> applications = getApplications();
+
         if ( applications == null ) {
             return null;
         }
         if ( identifier.isName() ) {
             applicationName = identifier.getName().toLowerCase();
             applicationId = applications.inverse().get( applicationName );
-            if ( applicationId == null ) {
-                applicationId = applications.inverse().get( identifier.getName() );
-            }
         }
         else if ( identifier.isUUID() ) {
             applicationId = identifier.getUUID();

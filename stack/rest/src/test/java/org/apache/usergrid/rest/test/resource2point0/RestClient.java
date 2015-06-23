@@ -16,19 +16,17 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.*;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.*;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
-import java.util.UUID;
 
 
 /**
