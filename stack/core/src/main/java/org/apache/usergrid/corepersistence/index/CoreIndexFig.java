@@ -41,7 +41,7 @@ public interface CoreIndexFig extends GuicyFig {
     int getManagementNumberOfReplicas();
 
     @Default( "management" )
-    @Key( "elasticsearch.managment_index" )
+    @Key( "elasticsearch.management_index" )
     String getManagementAppIndexName();
 
     @Default( "5" )

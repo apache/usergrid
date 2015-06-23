@@ -3,8 +3,10 @@ package org.apache.usergrid.persistence.queue.util;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.*;
+import com.amazonaws.services.sns.util.Topics;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
+import org.apache.usergrid.persistence.queue.Queue;
 import org.apache.usergrid.persistence.queue.QueueFig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +21,10 @@ public class AmazonNotificationUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(AmazonNotificationUtils.class);
 
-    public static String createQueue(final String queueName,
-                                     final AmazonSQSClient sqs,
+    public static String createQueue(final AmazonSQSClient sqs,
+                                     final String queueName,
                                      final QueueFig fig)
-        throws Exception {
+            throws Exception {
 
         final String deadletterQueueName = String.format("%s_dead", queueName);
         final Map<String, String> deadLetterAttributes = new HashMap<>(2);
@@ -30,24 +32,24 @@ public class AmazonNotificationUtils {
         deadLetterAttributes.put("MessageRetentionPeriod", fig.getDeadletterRetentionPeriod());
 
         CreateQueueRequest createDeadLetterQueueRequest = new CreateQueueRequest()
-            .withQueueName(deadletterQueueName).withAttributes(deadLetterAttributes);
+                .withQueueName(deadletterQueueName).withAttributes(deadLetterAttributes);
 
         final CreateQueueResult deadletterResult = sqs.createQueue(createDeadLetterQueueRequest);
 
         logger.info("Created deadletter queue with url {}", deadletterResult.getQueueUrl());
 
-        final String deadletterArn = AmazonNotificationUtils.getQueueArnByName(deadletterQueueName, sqs);
+        final String deadletterArn = AmazonNotificationUtils.getQueueArnByName(sqs, deadletterQueueName);
 
         String redrivePolicy = String.format("{\"maxReceiveCount\":\"%s\"," +
-            " \"deadLetterTargetArn\":\"%s\"}", fig.getQueueDeliveryLimit(), deadletterArn);
+                " \"deadLetterTargetArn\":\"%s\"}", fig.getQueueDeliveryLimit(), deadletterArn);
 
         final Map<String, String> queueAttributes = new HashMap<>(2);
         deadLetterAttributes.put("MessageRetentionPeriod", fig.getRetentionPeriod());
         deadLetterAttributes.put("RedrivePolicy", redrivePolicy);
 
         CreateQueueRequest createQueueRequest = new CreateQueueRequest().
-            withQueueName(queueName)
-            .withAttributes(queueAttributes);
+                withQueueName(queueName)
+                .withAttributes(queueAttributes);
 
         CreateQueueResult result = sqs.createQueue(createQueueRequest);
 
@@ -59,9 +61,9 @@ public class AmazonNotificationUtils {
     }
 
 
-    public static String getQueueArnByName(final String queueName,
-                                           final AmazonSQSClient sqs)
-        throws Exception {
+    public static String getQueueArnByName(final AmazonSQSClient sqs,
+                                           final String queueName)
+            throws Exception {
 
         String queueUrl = null;
 
@@ -83,7 +85,7 @@ public class AmazonNotificationUtils {
 
             try {
                 GetQueueAttributesRequest queueAttributesRequest = new GetQueueAttributesRequest(queueUrl)
-                    .withAttributeNames("All");
+                        .withAttributeNames("All");
 
                 GetQueueAttributesResult queueAttributesResult = sqs.getQueueAttributes(queueAttributesRequest);
                 Map<String, String> sqsAttributeMap = queueAttributesResult.getAttributes();
@@ -99,13 +101,13 @@ public class AmazonNotificationUtils {
         return null;
     }
 
-    public static String getQueueArnByUrl(final String queueUrl,
-                                          final AmazonSQSClient sqs)
-        throws Exception {
+    public static String getQueueArnByUrl(final AmazonSQSClient sqs,
+                                          final String queueUrl)
+            throws Exception {
 
         try {
             GetQueueAttributesRequest queueAttributesRequest = new GetQueueAttributesRequest(queueUrl)
-                .withAttributeNames("All");
+                    .withAttributeNames("All");
 
             GetQueueAttributesResult queueAttributesResult = sqs.getQueueAttributes(queueAttributesRequest);
             Map<String, String> sqsAttributeMap = queueAttributesResult.getAttributes();
@@ -118,39 +120,10 @@ public class AmazonNotificationUtils {
         }
     }
 
-    public static void subscribeQueueToTopic(final String topicArn,
-                                             final String queueArn,
-                                             final AmazonSNSClient sns)
-        throws Exception {
-
-        try {
-            SubscribeRequest subscribeRequest = new SubscribeRequest(topicArn, "sqs", queueArn);
-            SubscribeResult subscribeResult = sns.subscribe(subscribeRequest);
-            String subscriptionArn = subscribeResult.getSubscriptionArn();
-            sns.setSubscriptionAttributes(subscriptionArn, "RawMessageDelivery", "true");
-
-            logger.info("Successfully subscribed SQS Queue {} to SNS arn {} with Subscription arn {}", queueArn, topicArn,
-                subscriptionArn);
-
-        } catch (AuthorizationErrorException e) {
-            logger.error(String.format("AuthorizationErrorException creating/subscribing SQS Queue [%s] to SNS arn [%s]: %s", queueArn, topicArn, e.getMessage()), e);
-            throw new Exception("AuthorizationErrorException creating/subscribing SQS queue to SNS", e);
-        } catch (SubscriptionLimitExceededException e) {
-            logger.error(String.format("SubscriptionLimitExceededException creating/subscribing SQS Queue [%s] to SNS arn [%s]: %s", queueArn, topicArn, e.getMessage()), e);
-            throw new Exception("SubscriptionLimitExceededException creating/subscribing SQS queue to SNS", e);
-        } catch (AmazonServiceException e) {
-            logger.error(String.format("AmazonServiceException creating/subscribing SQS Queue [%s] to SNS arn [%s]: %s", queueArn, topicArn, e.getMessage()), e);
-            throw new Exception("AmazonServiceException creating/subscribing SQS queue to SNS", e);
-        } catch (Exception e) {
-            logger.error(String.format("Failed creating/subscribing SQS Queue [%s] to SNS arn [%s]: %s", queueArn, topicArn, e.getMessage()), e);
-            throw e;
-        }
-    }
-
-    public static String getTopicArn(final String queueName,
-                                     final AmazonSNSClient sns,
+    public static String getTopicArn(final AmazonSNSClient sns,
+                                     final String queueName,
                                      final boolean createOnMissing)
-        throws Exception {
+            throws Exception {
 
         if (logger.isDebugEnabled())
             logger.debug("Looking up Topic ARN: {}", queueName);
@@ -175,6 +148,8 @@ public class AmazonNotificationUtils {
             topicArn = createTopicResult.getTopicArn();
 
             logger.info("Successfully created topic with name {} and arn {}", queueName, topicArn);
+        } else {
+            logger.error("Error looking up topic ARN for queue=[{}] and createOnMissing=[{}]", queueName, createOnMissing);
         }
 
         if (logger.isDebugEnabled())
@@ -184,4 +159,18 @@ public class AmazonNotificationUtils {
         return topicArn;
     }
 
+    public static String getQueueUrlByName(final AmazonSQSClient sqs,
+                                           final String queueName) {
+
+        try {
+            GetQueueUrlResult result = sqs.getQueueUrl(queueName);
+            return result.getQueueUrl();
+        } catch (QueueDoesNotExistException e) {
+            logger.error("Queue {} does not exist", queueName);
+            throw e;
+        } catch (Exception e) {
+            logger.error("failed to get queue from service", e);
+            throw e;
+        }
+    }
 }
