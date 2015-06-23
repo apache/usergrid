@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.codahale.metrics.Histogram;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -65,7 +66,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final Meter flushMeter;
     private final Timer produceTimer;
     private final IndexFig indexFig;
-    private final AtomicLong counter = new AtomicLong();
 
 
     private final Counter indexSizeCounter;
@@ -74,6 +74,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
 
     private final BufferProducer bufferProducer;
+    private final Histogram roundtripTimer;
 
 
     private AtomicLong inFlight = new AtomicLong();
@@ -87,10 +88,10 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.size");
         this.indexErrorCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.error");
         this.offerTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.producer");
+        this.roundtripTimer = metricsFactory.getHistogram(EsIndexBufferConsumerImpl.class, "index_buffer.message_cycle");
 
         //wire up the gauge of inflight messages
         metricsFactory.addGauge(EsIndexBufferConsumerImpl.class, "index_buffer.inflight", () -> inFlight.longValue());
-
 
         this.config = config;
         this.failureMonitor = new FailureMonitorImpl(config, provider);
@@ -168,9 +169,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
             final Observable<IndexOperation> index = Observable.from( batch.getIndexRequests() );
             final Observable<DeIndexOperation> deIndex = Observable.from( batch.getDeIndexRequests() );
-//            if(indexOperationSetSize +  deIndexOperationSetSize > 0){
-//                batch.done();
-//            }
 
             return Observable.merge( index, deIndex );
         } );
@@ -200,8 +198,11 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         //subscribe to the operations that generate requests on a new thread so that we can execute them quickly
         //mark this as done
-        return processedIndexOperations.doOnNext( processedIndexOp -> processedIndexOp.done()
-        ).doOnError(t -> log.error("Unable to ack futures", t) );
+        return processedIndexOperations.doOnNext( processedIndexOp -> {
+                processedIndexOp.done();
+                roundtripTimer.update(System.currentTimeMillis() - processedIndexOp.getCreationTime());
+            }
+        ).doOnError(t -> log.error("Unable to ack futures", t));
     }
 
 
