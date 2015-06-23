@@ -52,20 +52,7 @@ public class OrganizationResource extends NamedResource {
         return org;
     }
 
-
-    /**
-     * This has not been implemented and will return an error.
-     *
-     * @return
-     */
-    public Organization delete() {
-        Map<String, Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).delete(Organization.class);
-        Organization org = new Organization().mapOrgResponse(response);
-        return org;
-    }
-
-    //Doesn't return anything useful server side so this was made as a void. .
+    // Doesn't return anything useful server side so this was made as a void. .
     public void put(Organization organization) {
         Map<String, Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON).put(Organization.class,
