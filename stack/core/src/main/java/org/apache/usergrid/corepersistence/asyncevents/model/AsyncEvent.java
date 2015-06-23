@@ -51,6 +51,9 @@ public class AsyncEvent implements Serializable {
     @JsonProperty
     protected Edge edge;
 
+    @JsonProperty
+    protected long creationTime;
+
     /**
      * required for jackson, do not delete
      */
@@ -63,12 +66,14 @@ public class AsyncEvent implements Serializable {
 
         this.eventType = eventType;
         this.entityIdScope = entityIdScope;
+        this.creationTime = System.currentTimeMillis();
     }
 
     public AsyncEvent(EventType eventType, ApplicationScope applicationScope, Edge edge) {
         this.eventType = eventType;
         this.applicationScope = applicationScope;
         this.edge = edge;
+        this.creationTime = System.currentTimeMillis();
     }
 
     public AsyncEvent(EventType eventType, ApplicationScope applicationScope, Id entityId, Edge edge) {
@@ -76,6 +81,7 @@ public class AsyncEvent implements Serializable {
         this.applicationScope = applicationScope;
         this.edge = edge;
         this.entityId = entityId;
+        this.creationTime = System.currentTimeMillis();
     }
 
     @JsonSerialize()
@@ -118,6 +124,9 @@ public class AsyncEvent implements Serializable {
     public Edge getEdge() {
         return edge;
     }
+
+    @JsonSerialize()
+    public long getCreationTime() {  return creationTime; }
 
     protected void setEdge(Edge edge) {
         this.edge = edge;

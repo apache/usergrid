@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.codahale.metrics.Histogram;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.CpEntityManager;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
@@ -85,6 +86,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final Counter indexErrorCounter;
     private final AtomicLong counter = new AtomicLong();
     private final AtomicLong inFlight = new AtomicLong();
+    private final Histogram messageCycle;
 
     //the actively running subscription
     private List<Subscription> subscriptions = new ArrayList<>();
@@ -110,6 +112,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.read");
         this.messageProcessingTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.message_processing");
         this.indexErrorCounter = metricsFactory.getCounter(AmazonAsyncEventService.class, "async_event.error");
+        this.messageCycle = metricsFactory.getHistogram(AmazonAsyncEventService.class, "async_event.message_cycle");
 
 
         //wire up the gauge of inflight message
@@ -220,6 +223,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
                 }
             }
+
+            messageCycle.update( System.currentTimeMillis() - event.getCreationTime() );
         }
     }
 
