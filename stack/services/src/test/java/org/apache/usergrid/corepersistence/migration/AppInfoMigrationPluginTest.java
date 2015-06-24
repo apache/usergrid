@@ -150,7 +150,7 @@ public class AppInfoMigrationPluginTest {
             systemAppEm.create("appinfo", new HashMap<String, Object>() {{
                 put("name", appName );
                 put("organizationUuid", finalOrgId );
-                put("applicationUuid", finalAppId );
+                put("appUuid", finalAppId );
             }});
 
             // delete some but not all of the application_info entities

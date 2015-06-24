@@ -149,7 +149,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         try {
             final String orgName = name.split("/")[0];
             final String appName = name.split("/")[1];
-            UUID applicationId = getUuid(oldAppInfoMap,"applicationUuid");
+            UUID applicationId = getUuid(oldAppInfoMap,"appUuid");
 
             //get app info from graph to see if it has been migrated already
             Entity appInfo = getApplicationInfo(applicationId);
