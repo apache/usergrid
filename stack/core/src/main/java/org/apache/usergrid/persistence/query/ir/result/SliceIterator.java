@@ -46,10 +46,10 @@ public class SliceIterator implements ResultIterator {
 
     private final LinkedHashMap<UUID, ScanColumn> cols;
     private final QuerySlice slice;
-    private final SliceParser parser;
-    private final IndexScanner scanner;
+    protected final SliceParser parser;
+    protected final IndexScanner scanner;
     private final int pageSize;
-    private final boolean isReversed;
+    protected final boolean isReversed;
 
 
     /**
@@ -128,9 +128,9 @@ public class SliceIterator implements ResultIterator {
 
         while ( results.hasNext() ) {
 
-            final ByteBuffer colName = results.next().getName().duplicate();
+            final HColumn<ByteBuffer, ByteBuffer> column = results.next();
 
-            final ScanColumn parsed = parser.parse( colName, isReversed );
+            final ScanColumn parsed = parse(column);
 
             //skip this value, the parser has discarded it
             if ( parsed == null ) {
@@ -148,6 +148,21 @@ public class SliceIterator implements ResultIterator {
         lastResult = parsedCols;
 
         return lastResult != null && lastResult.size() > 0;
+    }
+
+
+    /**
+     * Parses the column.  If the column should be discarded, null should be returned
+     * @param column
+     * @return
+     */
+    protected ScanColumn parse( HColumn<ByteBuffer, ByteBuffer> column){
+
+        final ByteBuffer colName = column.getName().duplicate();
+
+        final ScanColumn parsed = parser.parse( colName, isReversed );
+
+        return parsed;
     }
 
 

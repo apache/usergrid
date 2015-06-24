@@ -1910,18 +1910,12 @@ public class RelationManagerImpl implements RelationManager {
 
         ConnectionRefImpl connectionRef =
                 new ConnectionRefImpl( sourceEntity, connectionType, new SimpleEntityRef( connectedEntityType, null ) );
-        //        EntityRef connectedEntity) {
-        //    ConnectionRefImpl connectionRef = new ConnectionRefImpl(new ConnectedEntityRefImpl(connectionType,
-        // connectedEntityType, null, true), sourceEntity );
-
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
         QueryProcessor qp = new QueryProcessor( query, null, em, factory );
 
         ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, true, "" );
-
-//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, true );
 
         return qp.getResults( collectionSearchVisitorFactory );
     }
@@ -1967,8 +1961,6 @@ public class RelationManagerImpl implements RelationManager {
 
         ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, false, "" );
 
-//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, false );
-
         return qp.getResults( collectionSearchVisitorFactory );
 	}
 
@@ -2007,9 +1999,7 @@ public class RelationManagerImpl implements RelationManager {
 
         QueryProcessor qp = new QueryProcessor( query, null, em, factory );
 
-        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, false, "" );
-
-//        SearchConnectionVisitor visitor = new SearchConnectionVisitor( this, qp, connectionRef, true );
+        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, true, "" );
 
         return qp.getResults( collectionSearchVisitorFactory );
     }

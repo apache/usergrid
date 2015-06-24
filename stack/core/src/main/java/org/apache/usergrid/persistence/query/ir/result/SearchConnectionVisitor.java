@@ -53,7 +53,7 @@ public class SearchConnectionVisitor extends SearchVisitor {
      * @param queryProcessor They query processor to use
      * @param applicationId
      * @param connection The connection refernce
-     * @param outgoing The direction to search.  True if we should search from source->target edges.  False if we
+     * @param outgoing The direction to search.  True if we should search from source->target edges.  False if we are searching target<-source
      */
     public SearchConnectionVisitor( final CassandraService cassandraService,
                                     final IndexBucketLocator indexBucketLocator, final QueryProcessor queryProcessor,
@@ -120,6 +120,9 @@ public class SearchConnectionVisitor extends SearchVisitor {
 
     @Override
     public void visit( AllNode node ) throws Exception {
+
+        //todo, use a cache for this...
+
         QuerySlice slice = node.getSlice();
 
         queryProcessor.applyCursorAndSort( slice );
@@ -179,7 +182,10 @@ public class SearchConnectionVisitor extends SearchVisitor {
                 new ConnectedIndexScanner( cassandraService, dictionaryType, applicationId, entityIdToUse, connectionTypes,
                         start, slice.isReversed(), size, skipFirst );
 
-        this.results.push( new SliceIterator( slice, connectionScanner, connectionParser ) );
+        //we have to create our wrapper so validate the data we read is correct for our shard
+        final SliceShardIterator.ShardBucketValidator validator = new SliceShardIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.CONNECTION, "" );
+
+        this.results.push(  new SliceShardIterator( validator, slice, connectionScanner, connectionParser ));
     }
 
 

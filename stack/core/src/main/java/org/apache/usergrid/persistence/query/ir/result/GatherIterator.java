@@ -171,12 +171,6 @@ public class GatherIterator implements ResultIterator {
             results.add(next);
             cursorMap.put( next.getUUID(), iterator );
 
-//            //results are too large, trim them
-//            if(results.size() > pageSize){
-//               final ScanColumn toRemove =  results.pollLast();
-//                cursorMap.remove( toRemove.getUUID() );
-//            }
-
         }
 
     }
