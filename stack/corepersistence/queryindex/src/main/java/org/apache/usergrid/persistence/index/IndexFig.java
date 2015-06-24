@@ -24,8 +24,6 @@ import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
-import org.apache.usergrid.persistence.index.impl.EsProvider;
-
 
 @FigSingleton
 public interface IndexFig extends GuicyFig {
@@ -37,7 +35,6 @@ public interface IndexFig extends GuicyFig {
     String ELASTICSEARCH_CLUSTER_NAME = "elasticsearch.cluster_name";
 
     String ELASTICSEARCH_NODENAME = "elasticsearch.node_name";
-
 
     String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch.alias_postfix";
 
@@ -59,84 +56,89 @@ public interface IndexFig extends GuicyFig {
 
     String INDEX_WRITE_CONSISTENCY_LEVEL = "elasticsearch.write_consistency_level";
 
-    /**
-     * The number of worker threads to flush collapsed batches
-     */
     String INDEX_FLUSH_WORKER_COUNT = "index.flush.workers";
 
-    /**
-     * the number of times we can fail before we refresh the client
-     */
     String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
-
-    String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
-
-
-
-
-    /**
-     * Timeout calls to elasticsearch.
-     * @return
-     */
-    String ELASTICSEARCH_QUERY_TIMEOUT = "elasticsearch.query.timeout";
 
     String ELASTICSEARCH_WRITE_TIMEOUT= "elasticsearch.write.timeout";
 
-    /**
-     * The client type to use.  Valid values are NODE or TRANSPORT
-     */
     String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
 
 
-
+    /**
+     * Comma-separated list of Elasticsearch hosts.
+     */
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
 
+    /**
+     * The port used when connecting to Elasticsearch.
+     */
     @Default( "9300" )
     @Key( ELASTICSEARCH_PORT )
     int getPort();
 
+    /**
+     * The Elasticsearch cluster name.
+     */
     @Default( "usergrid" )
     @Key( ELASTICSEARCH_CLUSTER_NAME )
     String getClusterName();
 
+    /**
+     * Configurable alias name used for the Elasticsearch index.
+     */
     @Default( "alias" ) // no underbars allowed
     @Key( ELASTICSEARCH_ALIAS_POSTFIX )
     String getAliasPostfix();
 
+    /**
+     * Timeout for the cursor returned with query responses.
+     */
     @Default( "2" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 
-    /** How to start ElasticSearch, may be embedded, forked or remote. */
+    /**
+     * How Elasticsearch should be started.  Valid values: embedded, forked, or remote
+     */
     @Default( "remote" )
     @Key( ELASTICSEARCH_STARTUP )
     String getStartUp();
 
-    @Default( "10" )
-    @Key( QUERY_LIMIT_DEFAULT )
-    int getQueryLimitDefault();
-
+    /**
+     * Force an index refresh after every write. Should only be TRUE for testing purposes.
+     */
     @Default( "false" )
     @Key( ELASTICSEARCH_FORCE_REFRESH )
     boolean isForcedRefresh();
 
-    /** Identify the client node with a unique name. */
+    /**
+     * Identify the Elasticsearch client node with a unique name.
+     */
     @Default( "default" )
     @Key( ELASTICSEARCH_NODENAME )
     String getNodeName();
 
+    /**
+     * The number of primary shards to use for the index in Elasticsearch.
+     */
     @Default( "6" )
     @Key( ELASTICSEARCH_NUMBER_OF_SHARDS )
     int getNumberOfShards();
 
+    /**
+     * The number of replicas to use for the index in Elasticsearch.
+     */
     @Default( "1" )
     @Key( ELASTICSEARCH_NUMBER_OF_REPLICAS )
     int getNumberOfReplicas();
 
 
-
+    /**
+     * The number of failures that occur before refreshing an Elasticsearch client.
+     */
     @Default( "20" )
     @Key( ELASTICSEARCH_FAIL_REFRESH )
     int getFailRefreshCount();
@@ -145,53 +147,61 @@ public interface IndexFig extends GuicyFig {
     int getIndexCacheMaxWorkers();
 
     /**
-     * how long to wait before the buffer flushes to send
+     * The maximum time to wait before the buffer flushes and sends index write requests to Elasticsearch.
+     * This is used so the application doesn't wait forever for the buffer to reach its size before writing
+     * data to Elasticsearch.
      */
     @Default( "250" )
     @Key( INDEX_BUFFER_TIMEOUT )
     long getIndexBufferTimeout();
 
     /**
-     * size of the buffer to build up before you send results
+     * The maximum buffer size to use before sending index write requests to Elasticsearch.
      */
     @Default( "1000" )
     @Key( INDEX_BUFFER_SIZE )
     int getIndexBufferSize();
 
+    /**
+     * The number of worker threads used for flushing batches of index write requests
+     * in the buffer for Elasticsearch.
+     */
     @Default("10")
     @Key(INDEX_FLUSH_WORKER_COUNT)
     int getIndexFlushWorkerCount();
 
-
-
     /**
-     * Request batch size for ES
+     * The batch size to use when sending batched index write requests to Elasticsearch.
      */
     @Default( "1000" )
     @Key( INDEX_BATCH_SIZE )
     int getIndexBatchSize();
 
+    /**
+     * The write consistency level for writing into the Elasticsearch index.  The
+     * default value is 'one', and you can configure 'all' and 'quorum'.
+     */
     @Default( "one" )
     @Key( INDEX_WRITE_CONSISTENCY_LEVEL )
     String getWriteConsistencyLevel();
 
     /**
-     * Return the type of client.  Valid values or NODE or TRANSPORT
-     * @return
+     * Return the type of Elasticsearch client.  Valid values are NODE or TRANSPORT.
      */
     @Key( ELASTICSEARCH_CLIENT_TYPE )
     @Default( "NODE")
     String getClientType();
 
+    /**
+     * The maximum number of searches that are allowed during a refresh.
+     */
     @Key("elasticsearch.refresh_search_max")
     @Default("10")
     int maxRefreshSearches();
 
-    @Key("elasticsearch.refresh_wait_ms")
-    @Default("5000")
-    long refreshWaitTime();
-
-
+    /**
+     * The timeout used when writing into the Elasticsearch index. (in milliseconds)
+     */
     @Default( "5000" )
     @Key( ELASTICSEARCH_WRITE_TIMEOUT )
     long getWriteTimeout();
