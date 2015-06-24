@@ -18,6 +18,7 @@ package org.apache.usergrid.persistence.cassandra.index;
 
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -134,14 +135,16 @@ public class ConnectedIndexScanner implements IndexScanner {
         //go through each connection type until we exhaust the result sets
         while ( currentConnectionType != null ) {
 
+            final int lastResultsSize = lastResults == null? 0: lastResults.size();
+
             //only load a delta size to get this next page
-            int selectSize = totalSelectSize - lastResults.size();
+            final int selectSize = totalSelectSize - lastResultsSize;
 
 
-            Object key = key( entityId, dictionaryType, currentConnectionType );
+            final Object key = key( entityId, dictionaryType, currentConnectionType );
 
 
-            List<HColumn<ByteBuffer, ByteBuffer>> results =
+            final List<HColumn<ByteBuffer, ByteBuffer>> results =
                     cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_COMPOSITE_DICTIONARIES, key,
                             start, null, selectSize, reversed );
 
@@ -180,7 +183,7 @@ public class ConnectedIndexScanner implements IndexScanner {
 
         if ( hasMore && lastResults !=null && lastResults.size() > 0 ) {
             // set the bytebuffer for the next pass
-            lastResults.remove( lastResults.size() - 1 );
+            start = lastResults.remove( lastResults.size() - 1 ).getName();
         }
 
         return lastResults != null && lastResults.size() > 0;

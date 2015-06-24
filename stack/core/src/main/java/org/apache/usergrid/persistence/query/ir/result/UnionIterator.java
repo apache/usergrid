@@ -28,6 +28,8 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.cassandra.CursorCache;
 
+import com.fasterxml.uuid.UUIDComparator;
+
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
@@ -131,19 +133,19 @@ public class UnionIterator extends MultiIterator {
 
         private final int maxSize;
 
-        private final List<ScanColumn> list;
+        private final List<UnionScanColumn> list;
 
-//        private UUIDColumn min;
+        private UnionScanColumn min;
 
 
         public SortedColumnList( final int maxSize, final UUID minUuid ) {
             //we need to allocate the extra space if required
-            this.list = new ArrayList<ScanColumn>( maxSize );
+            this.list = new ArrayList<UnionScanColumn>( maxSize );
             this.maxSize = maxSize;
 
-//            if ( minUuid != null ) {
-//                min = new UUIDColumn( minUuid, 1 ) ;
-//            }
+            if ( minUuid != null ) {
+                min = new UnionScanColumn(new UUIDColumn( minUuid, 1 )) ;
+            }
         }
 
 
@@ -151,12 +153,15 @@ public class UnionIterator extends MultiIterator {
          * Add the column to this list
          */
         public void add( ScanColumn col ) {
-            //less than our min, don't add
-//            if ( min != null && min.compareTo( col ) >= 0 ) {
-//                return;
-//            }
 
-            int index = Collections.binarySearch( this.list, col );
+            final UnionScanColumn unionScanColumn = new UnionScanColumn(col);
+
+            //less than our min, don't add
+            if ( min != null && min.compareTo( unionScanColumn ) >= 0 ) {
+                return;
+            }
+
+            int index = Collections.binarySearch( this.list, unionScanColumn );
 
             //already present
             if ( index > -1 ) {
@@ -170,7 +175,7 @@ public class UnionIterator extends MultiIterator {
                 return;
             }
 
-            this.list.add( index, col );
+            this.list.add( index, unionScanColumn );
 
             final int size = this.list.size();
 
@@ -214,8 +219,7 @@ public class UnionIterator extends MultiIterator {
                 return;
             }
 
-            final UUID oldMin = this.list.get( size - 1 ).getUUID();
-//            min = new UUIDColumn( oldMin, 1 );
+            min = this.list.get( size - 1 );
         }
 
 
@@ -228,7 +232,69 @@ public class UnionIterator extends MultiIterator {
 
         public void reset(){
             clear();
-//            this.min = null;
+            this.min = null;
+        }
+    }
+
+    private static class UnionScanColumn implements ScanColumn{
+
+        private final ScanColumn delegate;
+        private ScanColumn child;
+
+
+        private UnionScanColumn( final ScanColumn delegate ) {
+            super();
+            this.delegate = delegate;}
+
+
+        @Override
+        public int compareTo( final ScanColumn o ) {
+            return UUIDComparator.staticCompare( delegate.getUUID(), o.getUUID() );
+        }
+
+
+        @Override
+        public UUID getUUID() {
+            return delegate.getUUID();
+        }
+
+
+        @Override
+        public ByteBuffer getCursorValue() {
+            return ue.toByteBuffer( delegate.getUUID() );
+        }
+
+
+        @Override
+        public void setChild( final ScanColumn childColumn ) {
+           //intentionally a no-op, since child is on the delegate
+        }
+
+
+        @Override
+        public ScanColumn getChild() {
+            return delegate.getChild();
+        }
+
+
+        @Override
+        public boolean equals( final Object o ) {
+            if ( this == o ) {
+                return true;
+            }
+            if ( !( o instanceof UnionScanColumn ) ) {
+                return false;
+            }
+
+            final UnionScanColumn that = ( UnionScanColumn ) o;
+
+            return delegate.getUUID().equals( that.delegate.getUUID() );
+        }
+
+
+        @Override
+        public int hashCode() {
+            return delegate.getUUID().hashCode();
         }
     }
 }

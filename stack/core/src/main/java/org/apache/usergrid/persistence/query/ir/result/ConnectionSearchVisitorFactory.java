@@ -41,7 +41,7 @@ public class ConnectionSearchVisitorFactory implements SearchVisitorFactory {
     private final boolean outgoing;
     private final String[] prefix;
 
-
+                   //cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, false, ""
     public ConnectionSearchVisitorFactory( final CassandraService cassandraService,
                                             final IndexBucketLocator indexBucketLocator,
                                             final QueryProcessor queryProcessor, final UUID applicationId,
