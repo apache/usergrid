@@ -69,7 +69,7 @@ public class SearchCollectionVisitor extends SearchVisitor {
         // change the hash value of the slice
         queryProcessor.applyCursorAndSort( slice );
 
-        IndexScanner columns = null;
+        IndexScanner columns;
 
         // nothing left to search for this range
         if ( slice.isComplete() ) {
@@ -101,9 +101,8 @@ public class SearchCollectionVisitor extends SearchVisitor {
 
 
         IndexScanner indexScanner = cassandraService
-                .getIdList(
-                        key( headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName ), startId, null,
-                        queryProcessor.getPageSizeHint( node ), query.isReversed(), bucket,  applicationId,
+                .getIdList( key( headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName ), startId, null,
+                        queryProcessor.getPageSizeHint( node ), query.isReversed(), bucket, applicationId,
                         node.isForceKeepFirst() );
 
         this.results.push( new SliceIterator( slice, indexScanner, UUID_PARSER ) );
@@ -123,12 +122,17 @@ public class SearchCollectionVisitor extends SearchVisitor {
 
         queryProcessor.applyCursorAndSort( slice );
 
+        final int size = queryProcessor.getPageSizeHint( node );
+
         GeoIterator itr = new GeoIterator(
                 new CollectionGeoSearch( em, indexBucketLocator, cassandraService, headEntity, collection.getName() ),
-                query.getLimit(), slice, node.getPropertyName(), new Point( node.getLattitude(), node.getLongitude() ),
+                size, slice, node.getPropertyName(), new Point( node.getLattitude(), node.getLongitude() ),
                 node.getDistance() );
 
-        results.push( itr );
+
+        final SliceShardFilterIterator.ShardBucketValidator validator = new SliceShardFilterIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.COLLECTION, collection.getName() );
+
+        this.results.push(  new SliceShardFilterIterator( validator, itr, size));
     }
 
 

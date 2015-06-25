@@ -130,7 +130,10 @@ public class SliceIterator implements ResultIterator {
 
             final HColumn<ByteBuffer, ByteBuffer> column = results.next();
 
-            final ScanColumn parsed = parse(column);
+            final ByteBuffer colName = column.getName().duplicate();
+
+            final ScanColumn parsed = parser.parse( colName, isReversed );
+
 
             //skip this value, the parser has discarded it
             if ( parsed == null ) {
@@ -151,19 +154,6 @@ public class SliceIterator implements ResultIterator {
     }
 
 
-    /**
-     * Parses the column.  If the column should be discarded, null should be returned
-     * @param column
-     * @return
-     */
-    protected ScanColumn parse( HColumn<ByteBuffer, ByteBuffer> column){
-
-        final ByteBuffer colName = column.getName().duplicate();
-
-        final ScanColumn parsed = parser.parse( colName, isReversed );
-
-        return parsed;
-    }
 
 
     /*
