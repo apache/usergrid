@@ -1,0 +1,542 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Events and counters &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Organizations &amp; Admins" href="../organizations-admins.html"/>
+        <link rel="next" title="Roles &amp; Permissions" href="roles-and-permissions.html"/>
+        <link rel="prev" title="Applications" href="applications.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> Apache Usergrid</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deploy-local.html">Deploying to local Tomcat &amp; Cassandra</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-cassandra">Install and configure Cassandra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-tomcat">Install and configure Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-war-to-tomcat">Add Usergrid WAR to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-configuration-file-to-tomcat">Add Usergrid configuration file to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#run-usergrid-database-super-user-setup">Run Usergrid Database &amp; Super User Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#build-the-usergrid-console">Build the Usergrid Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#login-to-the-usergrid-console-get-started">Login to the Usergrid Console &amp; get started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#example-usergrid-custom-properties-file">Example <strong>usergrid-custom.properties</strong> file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-up-and-running-locally.html">Getting Up &amp; Running Locally</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#getting-started-with-the-http-api">Getting Started with the HTTP API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../organizations-admins.html">Organizations &amp; Admins</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Events and counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles-and-permissions.html">Roles &amp; Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relationships.html">Relationships</a></li>
+<li class="toctree-l2"><a class="reference internal" href="collections.html">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query-language.html">Query Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-devices.html">Users &amp; Devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groups.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="activity.html">Activity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assets.html">Assets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">SDKs &amp; Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#sdks">SDKs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#tools">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../presentations-and-videos.html">Presentations &amp; Videos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/presentations.html">Presentations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/videos.html">Videos</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../upgrading.html">Upgrading from Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute-code.html">How to Contribute Code &amp; Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#code-contributions">Code Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#website-and-documentation-contributions">Website and Documentation Contributions</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../organizations-admins.html">Organizations &amp; Admins</a> &raquo;</li>
+      
+    <li>Events and counters</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/concepts/events-and-counters.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="events-and-counters">
+<h1>Events and counters<a class="headerlink" href="#events-and-counters" title="Permalink to this headline">¶</a></h1>
+<p>Events are typically used for application logging. For example, they
+could be used to log error messages that a system administrator might
+review at a later time. The event mechanism is optimized to handle large
+numbers of events, so it is an ideal mechanism for logging in your
+application.</p>
+<p>You can link events to specific users, groups, or custom-defined
+categories. When created with these links, events offer a powerful tool
+for running highly targeted, custom reports.</p>
+<p>Events are also the primary way to store custom counter data for
+analytics. See Counters (below) for further details.</p>
+<div class="section" id="event-properties">
+<h2>Event properties<a class="headerlink" href="#event-properties" title="Permalink to this headline">¶</a></h2>
+<p>You can pass various system-defined properties for an event. For
+example, you can specify a user property, with a uuid as its value. This
+will link the event to the user and can be used to query against the
+events queue (see Categorization below). The same is true for the group
+property. Pass it with a uuid as the value and the event will be linked
+to the group.&nbsp;To include a uuid of a user or group, add the uuid to the
+request body, for example:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/events {&quot;timestamp&quot;:0, &quot;category&quot; : &quot;advertising&quot;, &quot;counters&quot; :  {&quot;ad_clicks&quot; : 5},&quot;user&quot; : &quot;1234891-477d-11e1-b2bd-22005a1c4e22&quot;, &quot;group&quot; : &quot;75577d891-347d-2231-b5bd-23400a1c4e22&quot;}
+</pre></div>
+</div>
+<p>The response body would look something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+ &quot;action&quot;: &quot;post&quot;,
+ &quot;application&quot;: &quot;7fb8d891-477d-11e1-b2bd-22000a1c4e22&quot;,
+ &quot;params&quot;: {},
+ &quot;path&quot;: &quot;/events&quot;,
+ &quot;uri&quot;: &quot;https://api.usergrid.com/22000a1c4e22-7fb8d891-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/events&quot;,
+ &quot;entities&quot;: [
+   {
+     &quot;uuid&quot;: &quot;ce07ea3c-68b5-11e1-a586-9227e40e3559&quot;,
+     &quot;user&quot;: &quot;1234891-477d-11e1-b2bd-22005a1c4e22&quot;,
+     &quot;group&quot;: &quot;75577d891-347d-2231-b5bd-23400a1c4e22&quot;,
+     &quot;type&quot;: &quot;event&quot;,
+     &quot;created&quot;: 1331166585282,
+     &quot;modified&quot;: 1331166585282,
+     &quot;counters&quot;: {
+       &quot;ad_clicks&quot;: 5
+     },
+     &quot;metadata&quot;: {
+       &quot;path&quot;: &quot;/events/ce07ea3c-68b5-11e1-a586-9227e40e3559&quot;
+     },
+     &quot;timestamp&quot;: 1331166585282
+   }
+ ],
+ &quot;timestamp&quot;: 1331166585018,
+ &quot;duration&quot;: 919,
+ &quot;organization&quot;: &quot;my-org&quot;,
+ &quot;applicationName&quot;: &quot;my-app&quot;
+}
+</pre></div>
+</div>
+<p>You can also create application-specific event properties in addition to
+these predefined properties. The system-defined properties are reserved.
+You cannot use these names to create other properties for an event
+entity. In addition the events name is reserved for the events
+collection — you can&#8217;t use it to name another collection.</p>
+<p>The System-defined properties are as follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="8%" />
+<col width="81%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Property</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>uuid</td>
+<td>UUID</td>
+<td>Event’s unique entity ID</td>
+</tr>
+<tr class="row-odd"><td>type</td>
+<td>String</td>
+<td>&#8220;event&#8221;</td>
+</tr>
+<tr class="row-even"><td>created</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
+</tr>
+<tr class="row-odd"><td>modified</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
+</tr>
+<tr class="row-even"><td>timestamp</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of application event (mandatory)</td>
+</tr>
+<tr class="row-odd"><td>user</td>
+<td>UUID</td>
+<td>UUID of application user that posted the event</td>
+</tr>
+<tr class="row-even"><td>group</td>
+<td>UUID</td>
+<td>UUID of application group that posted the event</td>
+</tr>
+<tr class="row-odd"><td>category</td>
+<td>string</td>
+<td>Category used for organizing similar events</td>
+</tr>
+<tr class="row-even"><td>counters</td>
+<td>map</td>
+<td>Counter used for tracking number of similar events</td>
+</tr>
+<tr class="row-odd"><td>message</td>
+<td>string</td>
+<td>Message describing event</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="categorizing-events">
+<h3>Categorizing events<a class="headerlink" href="#categorizing-events" title="Permalink to this headline">¶</a></h3>
+<p>As mentioned previously, you can link an event to a user or a group
+using a standard <a class="reference external" href="/docs/relationships">Relationship</a>. This enables
+you to categorize and qualify event data for use in tracking and
+analysis. For example, linking events to users and groups, enables you
+to&nbsp;track how often people use a feature. Not only can you determine the
+total number of users that used the feature, but also which groups
+contain users that made the most use of the feature. Or, you could
+provide a location with the event, so you could see how often a feature
+was used by people in San Francisco versus Los Angeles.</p>
+</div>
+</div>
+<div class="section" id="counters">
+<h2>Counters<a class="headerlink" href="#counters" title="Permalink to this headline">¶</a></h2>
+<p>User-defined counters are used in conjunction with events to keep
+statistics on many aspects of an application. User-defined counters are
+JSON objects that are added to events when they are posted. The act of
+posting an event increments the counter. Once created, user-defined
+counters can be used to get reports.</p>
+<p><strong>Note:</strong> It may take up to 30 seconds for a counter to be updated.</p>
+<div class="section" id="user-defined-counters">
+<h3>User-Defined Counters<a class="headerlink" href="#user-defined-counters" title="Permalink to this headline">¶</a></h3>
+<p>With Apache Usergrid, you can define your own counters. Some of the
+things that you might track with a user-defined counter are:</p>
+<ul class="simple">
+<li>How many times people click on the help button in your application.</li>
+<li>How many times your game is played each day.</li>
+<li>How many times your banner ads are clicked each day.</li>
+</ul>
+<p>You can choose any name for a user-defined counter. For example, the
+counter for the help button might be named “help_button” or
+“help_button_clicks”.</p>
+<p>To create a user-defined counter, you post to the events collection and
+specify the name and increment value of the counter in the request body.
+The increment value is the value that the counter is incremented by for
+each tracked event. An increment value of 1, means that the counter is
+increment by 1 for each tracked event. You&nbsp;could also specify a higher
+increment value, such as 15, which would increment the value by that
+number, or a negative number, which would decrement the value. &nbsp;You can
+also reset the value of the counter, by specifying an increment value of
+0.</p>
+<p>When a counter is incremented by an event, there will be a 20-30 second
+delay between when the event is posted and when the counter is
+incremented.</p>
+<p>As an example, here&#8217;s how to create a user-defined counter named
+“button_clicks” with an increment value of 1:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/events {&quot;counters&quot; : {&quot;button_clicks&quot; : 1},&quot;timestamp&quot; : &quot;0&quot;}
+</pre></div>
+</div>
+<p>The response body would look something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+   &quot;action&quot;: &quot;post&quot;,
+   &quot;path&quot;: &quot;/events&quot;,
+   &quot;uri&quot;: &quot;http://api.usergrid.com/438a1ca1-cf9b-11e0-bcc1-12313f0204bb/events&quot;,
+   &quot;entities&quot;: [
+       {
+           &quot;uuid&quot;: &quot;39d41c46-d8e4-11e0-bcc1-12313f0204bb&quot;,
+           &quot;type&quot;: &quot;event&quot;,
+           &quot;timestamp&quot;: 1315353555546016,
+           &quot;category&quot;:&quot;advertising&quot;,
+           &quot;counters&quot;: {
+               &quot;button_clicks&quot;: 1
+           },
+           &quot;created&quot;: 1315353555546016,
+           &quot;modified&quot;: 1315353555546016,
+           &quot;metadata&quot;: {
+           &quot;path&quot;: &quot;/events/39d41c46-d8e4-11e0-bcc1-12313f0204bb&quot;
+           }
+       }
+   ],
+   &quot;timestamp&quot;: 1315353555537,
+   &quot;duration&quot;: 110,
+   &quot;organization&quot;: &quot;my-org&quot;,
+   &quot;applicationName&quot;: &quot;my-app&quot;
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="counter-hierarchy">
+<h3>Counter hierarchy<a class="headerlink" href="#counter-hierarchy" title="Permalink to this headline">¶</a></h3>
+<p>Counters are hierarchical in their structure and in the way they are
+incremented. Each level of the hierarchy is separated by the dot “.”
+operator. The hierarchical structure can be useful if you want to store
+or view statistics in a hierarchical way. For example, suppose you want
+to log errors that your app generates. One way to do this, is to fire an
+event every time an error occurs, by creating a counter called “errors”.
+However, you can get more detail by adding additional parameters to the
+counter. Imagine that you want to track errors in a specific module and
+function within that module, say module_1, function_1, you could use a
+counter like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">errors</span><span class="o">.</span><span class="n">module_1</span><span class="o">.</span><span class="n">function_1</span>
+</pre></div>
+</div>
+<p>And then for a different function in the same module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">errors</span><span class="o">.</span><span class="n">module_1</span><span class="o">.</span><span class="n">function_2</span>
+</pre></div>
+</div>
+<p>And then for a different function in a different module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">errors</span><span class="o">.</span><span class="n">module_2</span><span class="o">.</span><span class="n">function_3</span>
+</pre></div>
+</div>
+<p>If each of the preceding examples were called once, the resulting values
+would be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">errors</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">errors</span><span class="o">.</span><span class="n">module_1</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">errors</span><span class="o">.</span><span class="n">module_1</span><span class="o">.</span><span class="n">function_1</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">errors</span><span class="o">.</span><span class="n">module_1</span><span class="o">.</span><span class="n">function_2</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">errors</span><span class="o">.</span><span class="n">module_2</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">errors</span><span class="o">.</span><span class="n">module_2</span><span class="o">.</span><span class="n">function_3</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>This tells you that there were 3 errors in the application, with 2 of
+those errors in module_1. You can then drill down further to see errors
+in specific functions.</p>
+</div>
+<div class="section" id="using-counters-in-time-series-queries">
+<h3>Using counters in time series queries<a class="headerlink" href="#using-counters-in-time-series-queries" title="Permalink to this headline">¶</a></h3>
+<p>Knowing the value of a counter is useful. However, you often need to
+know how the value varies over time. Fortunately, the API provides a
+method for you to view this data over any time interval or level of
+granularity.</p>
+<p>For example, let’s say you’re incrementing a counter every time someone
+launches your application. You might be interested in which days of the
+week the application sees the most usage. Using the API, you can examine
+the counter over a set of weeks, with the data split into daily
+intervals. Using this information, you can see which are your peak days
+of usage. You can also view usage across a single day, so you can see if
+your application is used more in the mornings or the evenings. For
+business reporting, you may be more interested in monthly reporting.</p>
+<p>Note that the system is able to provide you with the report data as you
+need it. The data is maintained in real-time so it can be viewed
+instantly.</p>
+</div>
+<div class="section" id="retrieving-counter-data">
+<h3>Retrieving counter data<a class="headerlink" href="#retrieving-counter-data" title="Permalink to this headline">¶</a></h3>
+<p>To retrieve counter data, you issue a GET request to the /counters
+endpoint. This is a special, built-in collection that gives you access
+to all the counters currently in the system. The API also provides a
+number of parameters that you can use to search for counter data, as
+follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="4%" />
+<col width="23%" />
+<col width="74%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>start_time</td>
+<td>An <a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">Epoch(Unix)</a> timestamp in milliseconds</td>
+<td>The beginning of the time period to search</td>
+</tr>
+<tr class="row-odd"><td>end_time</td>
+<td>An <a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">Epoch(Unix)</a> timestamp in milliseconds</td>
+<td>The end of the time period to search</td>
+</tr>
+<tr class="row-even"><td>counter</td>
+<td>string</td>
+<td>The name of a specific counter to search. You can specify more than one counter in a query (for example, counter=counter1&amp;counter=counter2...)</td>
+</tr>
+<tr class="row-odd"><td>resolution</td>
+<td>string</td>
+<td>The interval at which counters are displayed. For example, if the interval is day, and the start time and end time values span 4 days, you will get aggregate counts for each of the 4 days. Possible values are all, minute, five_minutes, half_hour, hour, six_day, day, week, and month.</td>
+</tr>
+</tbody>
+</table>
+<p>For example, to retrieve a time range of values, with a granularity of
+&#8220;day&#8221;, for a counter called &#8220;button_clicks&#8221;, the GET request would look
+like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET /my-org/my-app/counters?start_time=1315119600000&amp;end_time=1315724400000&amp;resolution=day&amp;counter=button_clicks
+</pre></div>
+</div>
+<p>The response body would look something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+ action: &quot;get&quot;,
+    uri: &quot;http://api.usergrid.com/438a1ca1-cf9b-11e0-bcc1-12313f0204bb/counters&quot;,
+    timestamp: 1315354369272,
+    duration: 28,
+    counters: [
+        {
+            name: &quot;button_clicks&quot;,
+            values: [
+                {
+                    value: 2
+                    timestamp: 1315180800000
+                },
+                {
+                    value: 1
+                    timestamp: 1315267200000
+                },
+                {
+                    value: 1
+                    timestamp: 1315353600000
+                }
+            ]
+        }
+    ]
+}
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="roles-and-permissions.html" class="btn btn-neutral float-right" title="Roles &amp; Permissions">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="applications.html" class="btn btn-neutral" title="Applications"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Apache Usergrid.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

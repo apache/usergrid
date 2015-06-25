@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Groups &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Organizations &amp; Admins" href="../organizations-admins.html"/>
+        <link rel="next" title="Activity" href="activity.html"/>
+        <link rel="prev" title="Users &amp; Devices" href="users-devices.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> Apache Usergrid</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deploy-local.html">Deploying to local Tomcat &amp; Cassandra</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-cassandra">Install and configure Cassandra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-tomcat">Install and configure Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-war-to-tomcat">Add Usergrid WAR to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-configuration-file-to-tomcat">Add Usergrid configuration file to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#run-usergrid-database-super-user-setup">Run Usergrid Database &amp; Super User Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#build-the-usergrid-console">Build the Usergrid Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#login-to-the-usergrid-console-get-started">Login to the Usergrid Console &amp; get started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#example-usergrid-custom-properties-file">Example <strong>usergrid-custom.properties</strong> file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-up-and-running-locally.html">Getting Up &amp; Running Locally</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#getting-started-with-the-http-api">Getting Started with the HTTP API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../organizations-admins.html">Organizations &amp; Admins</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events-and-counters.html">Events and counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles-and-permissions.html">Roles &amp; Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relationships.html">Relationships</a></li>
+<li class="toctree-l2"><a class="reference internal" href="collections.html">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query-language.html">Query Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-devices.html">Users &amp; Devices</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="activity.html">Activity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assets.html">Assets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">SDKs &amp; Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#sdks">SDKs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#tools">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../presentations-and-videos.html">Presentations &amp; Videos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/presentations.html">Presentations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/videos.html">Videos</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../upgrading.html">Upgrading from Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute-code.html">How to Contribute Code &amp; Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#code-contributions">Code Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#website-and-documentation-contributions">Website and Documentation Contributions</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../organizations-admins.html">Organizations &amp; Admins</a> &raquo;</li>
+      
+    <li>Groups</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/concepts/groups.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="groups">
+<h1>Groups<a class="headerlink" href="#groups" title="Permalink to this headline">¶</a></h1>
+<p>You can organize app users into groups. Groups have their own Activity
+Feed, their own permissions and be a useful alternative to Roles,
+depending on how you model your data. Groups were originaly designed to
+emulate Facebook Groups, so they will tend to function about the same
+way Facebook Groups would.</p>
+<p>Groups are hierarchical. Every member of the group
+/groups/california/san-francisco is also a member of the group
+/groups/california.</p>
+<p>Groups are also a great way to model things such a topic subscriptions.
+For example, you could allow people to subscribe (i.e. become a member
+of the group and be alerted via Activities) to /groups/memes/dogs/doge
+or subscribe to all /groups/memes/dogs</p>
+<div class="section" id="general-properties">
+<h2>General properties<a class="headerlink" href="#general-properties" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="9%" />
+<col width="80%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Property</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>uuid</td>
+<td>UUID</td>
+<td>Group’s unique entity ID</td>
+</tr>
+<tr class="row-odd"><td>type</td>
+<td>string</td>
+<td>Type of entity, in this case “user”</td>
+</tr>
+<tr class="row-even"><td>created</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
+</tr>
+<tr class="row-odd"><td>modified</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
+</tr>
+<tr class="row-even"><td>path</td>
+<td>string</td>
+<td>Valid slash-delimited group path (mandatory)</td>
+</tr>
+<tr class="row-odd"><td>title</td>
+<td>string</td>
+<td>Display name</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="set-properties">
+<h2>Set properties<a class="headerlink" href="#set-properties" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="15%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Set</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>connections</td>
+<td>string</td>
+<td>Set of connection types (e.g., likes)</td>
+</tr>
+<tr class="row-odd"><td>rolenames</td>
+<td>string</td>
+<td>Set of roles assigned to a group</td>
+</tr>
+<tr class="row-even"><td>credentials</td>
+<td>string</td>
+<td>Set of group credentials</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="collections">
+<h2>Collections<a class="headerlink" href="#collections" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="15%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Collection</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>users</td>
+<td>user</td>
+<td>Collection of users in the group</td>
+</tr>
+<tr class="row-odd"><td>activities</td>
+<td>activity</td>
+<td>Collection of activities a user has performed</td>
+</tr>
+<tr class="row-even"><td>feed</td>
+<td>activity</td>
+<td>Inbox of activity notifications a group has received</td>
+</tr>
+<tr class="row-odd"><td>roles</td>
+<td>role</td>
+<td>Set of roles to which a group belongs</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="activity.html" class="btn btn-neutral float-right" title="Activity">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="users-devices.html" class="btn btn-neutral" title="Users &amp; Devices"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Apache Usergrid.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

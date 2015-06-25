@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — </title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav " role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        </div>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/docs/"><span class="icns icon-book">&nbsp;</span></a></li>
+                <li><a href="http://github.com/usergrid"><span class="icns icon-github-sign">&nbsp;</span></a></li>
+                <li><a href="https://trello.com/b/exQmJIOn/usergrid"><span class="icns icon-trello">&nbsp;</span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid"><span class="icns icon-stackexchange">&nbsp;</span></a></li>
+                <li><a href="http://webchat.freenode.net/?channels=%23usergrid&uio=d4"><span class="icns icon-comments">&nbsp;</span></a></li>
+                <li><a href="https://groups.google.com/forum/#!forum/usergrid"><span class="icns icon-envelope">&nbsp;</span></a></li>
+                <li><a href="https://twitter.com/usergrid"><span class="icns icon-twitter">&nbsp;</span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+* {
+  margin: 0;
+  padding: 0;
+
+  font-family: Georgia, Palatino, Times, 'Times New Roman', sans-serif;
+}
+
+body {
+  background: #fff;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:link,
+a:visited {
+  color: #f30;
+}
+
+a:hover {
+  color: #f90;
+}
+
+#main {
+  position: absolute;
+
+  top: 40px;
+  left: 280px;
+
+  width: 500px;
+}
+
+#main h1 {
+  font-size: 40px;
+  font-weight: normal;
+
+  line-height: 40px;
+
+  letter-spacing: -1px;
+}
+
+#main p {
+  margin: 20px 0;
+
+  font-size: 15px;
+
+  line-height: 20px;
+}
+
+#main ul, #main ol {
+  margin: 20px;
+}
+
+#main li {
+  font-size: 15px;
+
+  line-height: 20px;
+}
+
+#main ul li {
+  list-style-type: square;
+}
+
+#sidebar {
+  position: absolute;
+
+  top: 40px;
+  left: 20px;
+  width: 200px;
+
+  padding: 20px 20px 0 0;
+
+  border-right: 1px solid #ccc;
+
+  text-align: right;
+}
+
+#sidebar h2 {
+  text-transform: uppercase;
+
+  font-size: 13px;
+
+  color: #333;
+
+  letter-spacing: 1px;
+
+  line-height: 20px;
+}
+
+#sidebar ul {
+  list-style-type: none;
+
+  margin: 20px 0;
+}
+
+#sidebar li {
+  font-size: 14px;
+
+  line-height: 20px;
+}
+
+
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <!--<div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Pages</li>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Overview</a></li>
+                    <li><a href="#">Docs</a></li>
+                    <li><a href="#">Team</a></li>
+                    <li><a href="#">Adopters</a></li>
+                </ul>
+            </div>-->
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Code</li>
+                    <li><a href="#">Server Stack</a></li>
+                    <li><a href="#">iOS SDK</a></li>
+                    <li><a href="#">Android SDK</a></li>
+                    <li><a href="#">HTML5/JS SDK</a></li>
+                    <li><a href="#">node.js module</a></li>
+                    <li><a href="#">Ruby on Rails gem</a></li>
+                    <li><a href="#">Ruby gem</a></li>
+                    <li><a href="#">PHP SDK</a></li>
+                    <li><a href="#">Java SDK</a></li>
+                    <li><a href="#">.NET / Windows Phone SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache Tools</li>
+                    <li><a href="#">Mailing List (devs)</a></li>
+                    <li><a href="#">Mailing List (commits)</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html">Podling Listing</a></li>
+                    <li><a href="#">Bug Tracker</a></li>
+                    <li><a href="#">Apache Repository</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Community</li>
+                    
+                    <li><a href="http://github.com/usergrid">Github</a></li>
+                    <li><a href="https://trello.com/b/exQmJIOn/usergrid">Trello</span></a>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid">StackOverflow</a></li>
+                    <li><a href="http://webchat.freenode.net/?channels=%23usergrid&uio=d4">IRC</a></li>
+                    <li><a href="https://groups.google.com/forum/#!forum/usergrid">Mailing-list (users)</a></li>
+                    <li><a href="https://twitter.com/usergrid">Twitter</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="389588441240829952" data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "#usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+
+            <!--<div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div>-->
+        </div>
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the name of Apache TLP sponsor. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.<br/><br/>
+                <span class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</span><br/><br/>
+                Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script type="text/javascript">
+    //IE outdate friendly warning if you don't want remove it
+    var $buoop = {vs:{i:8,f:3.6,o:10.6,s:3.2,n:9}}
+    $buoop.ol = window.onload;
+    window.onload=function(){
+        try {if ($buoop.ol) $buoop.ol();}catch (e) {}
+        var e = document.createElement("script");
+        e.setAttribute("type", "text/javascript");
+        e.setAttribute("src", "http://browser-update.org/update.js");
+        document.body.appendChild(e);
+    }
+</script>
+
+
+</body>
+</html>

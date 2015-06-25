@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Group</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Group</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/group.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#group">Group</a><ul>
+<li>
+<a href="#creating-a-new-group">Creating a new group</a><ul>
+<li><a href="#request-uri">Request URI</a></li>
+<li><a href="#parameters">Parameters</a></li>
+<li><a href="#example---request">Example - Request</a></li>
+<li><a href="#example---response">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#adding-a-user-to-a-group">Adding a user to a group</a><ul>
+<li><a href="#request-uri-1">Request URI</a></li>
+<li><a href="#parameters-1">Parameters</a></li>
+<li><a href="#example---request-1">Example - Request</a></li>
+<li><a href="#example---response-1">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#getting-a-group">Getting a group</a><ul>
+<li><a href="#request-uri-2">Request URI</a></li>
+<li><a href="#parameters-2">Parameters</a></li>
+<li><a href="#example---request-2">Example - Request</a></li>
+<li><a href="#example---response-2">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#updating-a-group">Updating a group</a><ul>
+<li><a href="#request-uri-3">Request URI</a></li>
+<li><a href="#parameters-3">Parameters</a></li>
+<li><a href="#example---request-3">Example - Request</a></li>
+<li><a href="#example---response-3">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#deleting-a-user-from-a-group">Deleting a user from a group</a><ul>
+<li><a href="#request-uri-4">Request URI</a></li>
+<li><a href="#parameters-4">Parameters</a></li>
+<li><a href="#curl-example---request">cURL Example - Request</a></li>
+<li><a href="#example---response-4">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#deleting-a-group">Deleting a group</a><ul>
+<li><a href="#request-uri-5">Request URI</a></li>
+<li><a href="#parameters-5">Parameters</a></li>
+<li><a href="#example---request-4">Example - Request</a></li>
+<li><a href="#example---response-5">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#getting-a-groups-feed">Getting a group’s feed</a><ul>
+<li><a href="#request-uri-6">Request URI</a></li>
+<li><a href="#parameters-6">Parameters</a></li>
+<li><a href="#example---request-5">Example - Request</a></li>
+<li><a href="#example---response-6">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#getting-all-users-in-a-group">Getting all users in a group</a><ul>
+<li><a href="#request-uri-7">Request URI</a></li>
+<li><a href="#parameters-7">Parameters</a></li>
+<li><a href="#example---request-6">Example - Request</a></li>
+<li><a href="#example---response-7">Example - Response</a></li>
+</ul>
+</li>
+<li>
+<a href="#group-properties">Group properties</a><ul>
+<li><a href="#general-properties">General properties</a></li>
+<li><a href="#set-properties">Set properties</a></li>
+<li><a href="#collections">Collections</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="group">Group</h1>
+<p>A group entity organizes users into a group. Using Apache Usergrid APIs you can create, retrieve, update, or delete a group. You can also add or delete a user to or from a group.</p>
+<p>See <a href="#group_properties">Group entity properties</a> for a list of the system-defined properties for group entities. In addition, you can create group properties specific to your application.</p>
+<p><strong>Note:</strong> Although not shown in the API examples below, you need to provide a valid access token with each API call. See <a href="/authenticating-users-and-application-clients">Authenticating users and application clients</a> for details.</p>
+<h2 id="creating-a-new-group">Creating a new group</h2>
+<p>Use the POST method to create a new group. Groups use paths to indicate their unique names. This allows you to create group hierarchies by using slashes. For this reason, you need to specify a path property for a new group.</p>
+<h3 id="request-uri">Request URI</h3>
+<p>POST /{org_id}/{app_id}/groups</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example---request">Example - Request</h3>
+<ul>
+<li><a href="#curl_create_group">cURL</a></li>
+<li><a href="#javascript_create_group">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_create_group">Ruby</a></li>
+<li><a href="#nodejs_create_group">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X POST "https://api.usergrid.com/my-org/my-app/groups" -d '{"path":"mynewgroup"}'</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'POST',
+    endpoint:'groups',
+    body:{ path:'mynewgroup' }
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+app['groups'].post path: 'mynewgroup'</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'POST',
+    endpoint:'groups',
+    body:{ path:'mynewgroup' }
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response">Example - Response</h3>
+<pre><code>{
+"action": "post",
+"application": "7fb8d891-477d-11e1-b2bd-22000a1c4e22",
+"params": {},
+"path": "/groups",
+"uri": "https://api.usergrid.com/22000a1c4e22-7fb8d891-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/groups",
+
+"entities": [
+    {
+      "uuid": "a668717b-67cb-11e1-8223-12313d14bde7",
+      "type": "group",
+      "created": 1331066016571,
+      "modified": 1331066016571,
+      "metadata": {
+        "path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7",
+        "sets": {
+          "rolenames": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/rolenames",
+          "permissions": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/permissions"
+        },
+        "collections": {
+          "activities": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/activities",
+          "feed": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/feed",
+          "roles": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/roles",
+          "users": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users"
+        }
+      },
+      "path": "mynewgroup"
+    }
+ ],
+"timestamp": 1331066016563,
+"duration": 35,
+"organization" : "my-org",
+"applicationName": "my-app"
+}</code></pre>
+<h2 id="adding-a-user-to-a-group">Adding a user to a group</h2>
+<p>Use the POST method to add a user to a group. If the named group does not yet exist, an error message is returned.</p>
+<h3 id="request-uri-1">Request URI</h3>
+<p>POST /{org_id}/{app_id}/groups/{uuid|groupname}/users/{uuid|username}</p>
+<h3 id="parameters-1">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">arg uuid|string groupname</td>
+<td align="left">UUID or name of the group</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string username</td>
+<td align="left">UUID or username of user</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example---request-1">Example - Request</h3>
+<ul>
+<li><a href="#curl_add_user">cURL</a></li>
+<li><a href="#javascript_add_user">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_add_user">Ruby</a></li>
+<li><a href="#nodejs_add_user">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X POST "https://api.usergrid.com/my-org/my-app/groups/mynewgroup/users/john.doe"</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'POST',
+    endpoint:'groups/mynewgroup/users/john.doe'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+app['groups/mynewgroup/users/john.doe'].post nil</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'POST',
+    endpoint:'groups/mynewgroup/users/john.doe'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response-1">Example - Response</h3>
+<pre><code>{
+"action": "post",
+"application": "7fb8d891-477d-11e1-b2bd-22000a1c4e22",
+"params": {},
+"path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users",
+"uri": "https://api.usergrid.com/22000a1c4e22-7fb8d891-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/groups/a668717b-67cb-11e1-8223-12313d14bde7/users",
+
+"entities": [
+      {
+        "uuid": "6fbc8157-4786-11e1-b2bd-22000a1c4e22",
+        "type": "user",
+        "nanme": "John Doe",
+        "created": 1327517852364015,
+        "modified": 1327517852364015,
+        "activated": true,
+        "email": "john.doe@mail.com",
+        "metadata": {
+          "connecting": {
+            "owners":   "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/connecting/owners"
+             },
+          "path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22",
+          "sets": {
+            "rolenames": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/rolenames",
+            "permissions": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/permissions"
+             },
+          "collections": {
+            "activities": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/activities",
+            "devices": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/devices",
+            "feed": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/feed",
+            "groups": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/groups",
+            "roles": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/roles",
+            "following": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/following",
+            "followers": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/followers"
+             }
+        },
+        "picture": "https://www.gravatar.com/avatar/90f823ba15655b8cc8e3b4d63377576f",
+        "username": "john.doe"
+      }
+   ],
+   "timestamp": 1331066031380,
+   "duration": 64,
+   "organization" : "my-org",
+   "applicationName": "my-app"
+}</code></pre>
+<h2 id="getting-a-group">Getting a group</h2>
+<p>Use the GET method to retrieve a group.</p>
+<h3 id="request-uri-2">Request URI</h3>
+<p>GET /{org_id}/{app_id}/groups/{uuid|groupname}</p>
+<h3 id="parameters-2">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">arg uuid|string groupname</td>
+<td align="left">UUID or name of the group</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example---request-2">Example - Request</h3>
+<ul>
+<li><a href="#curl_get_group">cURL</a></li>
+<li><a href="#javascript_get_group">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_get_group">Ruby</a></li>
+<li><a href="#nodejs_get_group">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X GET "https://api.usergrid.com/my-org/my-app/groups/mynewgroup"</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'GET',
+    endpoint:'groups/mynewgroup'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+user = app['mynewgroup'].entity</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'GET',
+    endpoint:'groups/mynewgroup'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response-2">Example - Response</h3>
+<pre><code>{
+"action": "get",
+"application": "7fb8d891-477d-11e1-b2bd-22000a1c4e22",
+"params": {
+      "_": [
+        "1331066049869"
+      ]
+},
+"path": "/groups",
+"uri": "https://api.usergrid.com/22000a1c4e22-7fb8d891-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/groups",
+
+"entities": [
+    {
+      "uuid": "a668717b-67cb-11e1-8223-12313d14bde7",
+      "type": "group",
+      "created": 1331066016571,
+      "modified": 1331066016571,
+      "metadata": {
+        "path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7",
+        "sets": {
+          "rolenames": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/rolenames",
+          "permissions": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/permissions"
+        },
+        "collections": {
+          "activities": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/activities",
+          "feed": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/feed",
+          "roles": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/roles",
+          "users": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users"
+        }
+      },
+      "path": "mynewgroup"
+    }
+],
+"timestamp": 1331066050106,
+"duration": 18,
+"organization" : "my-org",
+"applicationName": "my-app"
+}</code></pre>
+<h2 id="updating-a-group">Updating a group</h2>
+<p>Use the PUT method to update a group.</p>
+<h3 id="request-uri-3">Request URI</h3>
+<p>PUT /{org_id}{app_id}/groups/{uuid|groupname} {request body}</p>
+<h3 id="parameters-3">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">arg uuid|string groupname</td>
+<td align="left">UUID or name of the group</td>
+</tr>
+<tr class="even">
+<td align="left">request body</td>
+<td align="left">Set of entity properties</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example---request-3">Example - Request</h3>
+<ul>
+<li><a href="#curl_update_group">cURL</a></li>
+<li><a href="#javascript_update_group">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_update_group">Ruby</a></li>
+<li><a href="#nodejs_update_group">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X PUT "https://api.usergrid.com/my-org/my-app/groups/mynewgroup" -d '("foo":"bar"}'</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'PUT',
+    endpoint:'groups/mynewgroup',
+    body:{ foo:'bar' }
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+mynewgroup = app['groups/mynewgroup'].put foo: 'bar'</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'PUT',
+    endpoint:'groups/mynewgroup',
+    body:{ foo:'bar' }
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response-3">Example - Response</h3>
+<pre><code>{
+"action": "put",
+"application": "7fb8d891-477d-11e1-b2bd-22000a1c4e22",
+"params": {},
+"path": "/groups",
+"uri": "https://api.usergrid.com/22000a1c4e22-7fb8d891-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/groups",
+
+"entities": [
+    {
+      "uuid": "a668717b-67cb-11e1-8223-12313d14bde7",
+      "type": "group",
+      "created": 1331066016571,
+      "modified": 1331066092191,
+      "foo": "bar",
+      "metadata": {
+        "path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7",
+        "sets": {
+          "rolenames": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/rolenames",
+          "permissions": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/permissions"
+        },
+        "collections": {
+          "activities": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/activities",
+          "feed": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/feed",
+          "roles": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/roles",
+          "users": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users"
+        }
+      },
+      "path": "mynewgroup"
+    }
+],
+"timestamp": 1331066092178,
+"duration": 31,
+"organization" : "my-org",
+"applicationName": "my-app"
+}</code></pre>
+<h2 id="deleting-a-user-from-a-group">Deleting a user from a group</h2>
+<p>Use the DELETE method to delete a user from the specified group.</p>
+<h3 id="request-uri-4">Request URI</h3>
+<p>DELETE /{org_id}/{app_id}/groups/{uuid|groupname}/users/{uuid|username}</p>
+<h3 id="parameters-4">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">arg uuid|string groupname</td>
+<td align="left">UUID or name of the group</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string username</td>
+<td align="left">UUID or username of user to be deleted</td>
+</tr>
+</tbody>
+</table>
+<h3 id="curl-example---request">cURL Example - Request</h3>
+<ul>
+<li><a href="#curl_delete_user_group">cURL</a></li>
+<li><a href="#javascript_delete_user_group">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_delete_user_group">Ruby</a></li>
+<li><a href="#nodejs_delete_user_group">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X DELETE "https://api.usergrid.com//my-org/my-app/groups/mynewgroup/users/john.doe"</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'DELETE',
+    endpoint:'groups/mynewgroup/users/john.doe'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+app['groups/mynewgroup/users/john.doe'].delete</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'DELETE',
+    endpoint:'groups/mynewgroup/users/john.doe'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response-4">Example - Response</h3>
+<pre><code>{
+"action": "delete",
+"application": "7fb8d891-477d-11e1-b2bd-22000a1c4e22",
+"params": {
+      "_": [
+        "1331066118009"
+      ]
+},
+"path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users",
+"uri": "https://api.usergrid.com/22000a1c4e22-7fb8d891-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/groups/a668717b-67cb-11e1-8223-12313d14bde7/users",
+
+"entities": [
+      {
+        "uuid": "6fbc8157-4786-11e1-b2bd-22000a1c4e22",
+        "type": "user",
+        "name": "John Doe",
+        "created": 1327517852364015,
+        "modified": 1327517852364015,
+        "activated": true,
+        "email": "john.doe@mail.com",
+        "metadata": {
+          "connecting": {
+            "owners": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/connecting/owners"
+          },
+          "path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22",
+          "sets": {
+            "rolenames": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/rolenames",
+            "permissions": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/permissions"
+          },
+          "collections": {
+            "activities": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/activities",
+            "devices": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/devices",
+            "feed": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/feed",
+            "groups": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/groups",
+            "roles": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/roles",
+            "following": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/following",
+            "followers": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users/6fbc8157-4786-11e1-b2bd-22000a1c4e22/followers"
+          }
+        },
+        "picture": "https://www.gravatar.com/avatar/90f823ba15655b8cc8e3b4d63377576f",
+        "username": "john.doe"
+      }
+],
+"timestamp": 1331066118193,
+"duration": 236,
+"organization" : "my-org",
+"applicationName": "my-app"
+}</code></pre>
+<h2 id="deleting-a-group">Deleting a group</h2>
+<p>Use the DELETE method to delete a group.</p>
+<h3 id="request-uri-5">Request URI</h3>
+<p>DELETE /{org_id}/{app_id}/groups/{uuid|groupname}</p>
+<h3 id="parameters-5">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">arg uuid|string groupname</td>
+<td align="left">UUID or name of the group</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example---request-4">Example - Request</h3>
+<ul>
+<li><a href="#curl_delete_group">cURL</a></li>
+<li><a href="#javascript_delete_group">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_delete_group">Ruby</a></li>
+<li><a href="#nodejs_delete_group">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X DELETE "https://api.usergrid.com//my-org/my-app/groups/mynewgroup"</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'DELETE',
+    endpoint:'groups/mynewgroup'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+app['groups/mynewgroup'].delete</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'DELETE',
+    endpoint:'groups/mynewgroup'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response-5">Example - Response</h3>
+<pre><code>{
+"action": "delete",
+"application": "7fb8d891-477d-11e1-b2bd-22000a1c4e22",
+"params": {
+    "_": [
+      "1331066144280"
+    ]
+},
+"path": "/groups",
+"uri": "https://api.usergrid.com/22000a1c4e22-7fb8d891-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/groups",
+
+"entities": [
+    {
+      "uuid": "a668717b-67cb-11e1-8223-12313d14bde7",
+      "type": "group",
+      "created": 1331066016571,
+      "modified": 1331066092191,
+      "foo": "bar",
+      "metadata": {
+        "path": "/groups/a668717b-67cb-11e1-8223-12313d14bde7",
+        "sets": {
+          "rolenames": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/rolenames",
+          "permissions": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/permissions"
+        },
+        "collections": {
+          "activities": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/activities",
+          "feed": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/feed",
+          "roles": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/roles",
+          "users": "/groups/a668717b-67cb-11e1-8223-12313d14bde7/users"
+        }
+      },
+      "path": "mynewgroup"
+    }
+],
+"timestamp": 1331066144462,
+"duration": 302,
+"organization" : "my-org",
+"applicationName": "my-app"
+}</code></pre>
+<h2 id="getting-a-groups-feed">Getting a group’s feed</h2>
+<p>Use the GET method to retrieve the feed for a group. This gets a list of all the activities that have been posted to this group, that is, the activities for which this group has a relationship (owns).</p>
+<h3 id="request-uri-6">Request URI</h3>
+<p>GET /{org_id}/{app_id}/groups/{uuid|groupname}/feed</p>
+<h3 id="parameters-6">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">arg uuid|string groupname</td>
+<td align="left">UUID or name of the group</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example---request-5">Example - Request</h3>
+<ul>
+<li><a href="#curl_get_group_feed">cURL</a></li>
+<li><a href="#javascript_get_group_feed">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_get_group_feed">Ruby</a></li>
+<li><a href="#nodejs_get_group_feed">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X GET "https://api.usergrid.com/my-org/my-app/groups/mygroup/feed"</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'GET',
+    endpoint:'groups/mygroup/feed'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+activities = app['groups/mygroup/feed'].collection</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'GET',
+    endpoint:'groups/mygroup/feed'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response-6">Example - Response</h3>
+<pre><code>{
+    "action": "get",
+    "application": "3400ba10-cd0c-11e1-bcf7-12313d1c4491",
+    "params":  {},
+    "path": "/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/feed",
+    "uri": "https://api.usergrid.com/my-org/my-app/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/feed",
+    "entities":  [
+       {
+        "uuid": "563f5d96-37f3-11e2-a0f7-02e81ae640dc",
+        "type": "activity",
+        "created": 1353952903811,
+        "modified": 1353952903811,
+        "actor":  {
+          "displayName": "John Doe",
+          "image":  {
+            "duration": 0,
+            "height": 80,
+            "url": "http://www.gravatar.com/avatar/",
+            "width": 80
+          },
+          "uuid": "1f3567aa-da83-11e1-afad-12313b01d5c1",
+          "email": "john.doe@gmail.com",
+        "username": "john.doe"
+        },
+        "content": "Hello World!",
+        "metadata":  {
+          "cursor": "gGkAAQMAgGkABgE7PeHCgwCAdQAQVj9dljfzEeKg9wLoGuZA3ACAdQAQVkVRCTfzEeKg9wLoGuZA3AA",
+          "path": "/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/feed/563f5d96-37f3-11e2-a0f7-02e81ae640dc"
+        },
+        "published": 1353952903811,
+        "verb": "post"
+      }
+    ],
+  "timestamp": 1353953272756,
+  "duration": 29,
+  "organization": "my-org",
+  "applicationName": "my-app"</code></pre>
+<h2 id="getting-all-users-in-a-group">Getting all users in a group</h2>
+<p>Use the GET method to retrieve all the users in a group.</p>
+<h3 id="request-uri-7">Request URI</h3>
+<p>GET /{org_id}/{app_id}/groups/{uuid|groupname}/users</p>
+<h3 id="parameters-7">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">arg uuid|string org_id</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">arg uuid|string app_id</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">arg uuid|string groupname</td>
+<td align="left">UUID or name of the group</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example---request-6">Example - Request</h3>
+<ul>
+<li><a href="#curl_get_group_users">cURL</a></li>
+<li><a href="#javascript_get_group_users">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_get_group_users">Ruby</a></li>
+<li><a href="#nodejs_get_group_users">Node.js</a></li>
+</ul>
+<!-- -->
+
+<pre><code>curl -X GET "https://api.usergrid.com/my-org/my-app/groups/mygroup/users"</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5) SDK</a>.</p>
+<pre><code>var options = {
+    method:'GET',
+    endpoint:'groups/mygroup/users'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<p>The example assumes use of the <a href="https://github.com/scottganyo/usergrid_iron">Ruby SDK</a>.</p>
+<pre><code>app = Usergrid::Application.new 'https://api.usergrid.com/my-org/my-app/'
+activities = app['groups/mygroup/users'].collection</code></pre>
+<p>The example assumes use of the <a href="https://github.com/apigee/usergrid-node-module">Node.js module</a>.</p>
+<pre><code>var options = {
+    method:'GET',
+    endpoint:'groups/mygroup/users'
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error
+    } else {
+        //success - data will contain raw results from API call
+    }
+});</code></pre>
+<h3 id="example---response-7">Example - Response</h3>
+<pre><code>{
+  "action" : "get",
+  "application" : "e7127751-6985-11e2-8078-02e81aeb2129",
+  "params" : { },
+  "path" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users",
+  "uri" : "http://api.usergrid.com/myorg/sandbox/groups/d20976ff-802f-11e2-b690-02e81ae61238/users",
+  "entities" : [ {
+    "uuid" : "cd789b00-698b-11e2-a6e3-02e81ae236e9",
+    "type" : "user",
+    "name" : "barney",
+    "created" : 1359405994314,
+    "modified" : 1361894320470,
+    "activated" : true,
+    "email" : "barney@apigee.com",
+    "metadata" : {
+      "path" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9",
+      "sets" : {
+        "rolenames" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/rolenames",
+        "permissions" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/permissions"
+      },
+      "collections" : {
+        "activities" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/activities",
+        "devices" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/devices",
+        "feed" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/feed",
+        "groups" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/groups",
+        "roles" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/roles",
+        "following" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/following",
+        "followers" : "/groups/d20976ff-802f-11e2-b690-02e81ae66238/users/cd789b00-698b-11e2-a6e3-02e81aeb26e9/followers"
+      }
+    },
+    "name" : "barney",
+    "picture" : "http://www.gravatar.com/avatar/00767101f6b4f2cf5d02ed510dbcf0b4",
+    "test" : "fred",
+    "username" : "barney"
+  } ],
+  "timestamp" : 1361903248398,
+  "duration" : 24,
+  "organization" : "myorg",
+  "applicationName" : "sandbox"
+}</code></pre>
+<h2 id="group-properties">Group properties</h2>
+<p>The following are the system-defined properties for group entities. The system-defined properties are reserved. You cannot use these names to create other properties for a group entity. In addition the groups name is reserved for the group collection — you can’t use it to name another collection.</p>
+<p>The look-up properties for the entities of type group are UUID and path, that is, you can use the uuid or path property to reference a group in an API call. However, you can search on a group using any property of the group entity. See <a href="/queries-and-parameters">Queries and parameters</a> for details on searching.</p>
+<h3 id="general-properties">General properties</h3>
+<p>Groups have the following general properties.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">uuid</td>
+<td align="left">UUID</td>
+<td align="left">Group’s unique entity ID</td>
+</tr>
+<tr class="even">
+<td align="left">type</td>
+<td align="left">string</td>
+<td align="left">Type of entity, in this case “user”</td>
+</tr>
+<tr class="odd">
+<td align="left">created</td>
+<td align="left">long</td>
+<td align="left">
+<a href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
+</tr>
+<tr class="even">
+<td align="left">modified</td>
+<td align="left">long</td>
+<td align="left">
+<a href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
+</tr>
+<tr class="odd">
+<td align="left">path</td>
+<td align="left">string</td>
+<td align="left">Valid slash-delimited group path (mandatory)</td>
+</tr>
+<tr class="even">
+<td align="left">title</td>
+<td align="left">string</td>
+<td align="left">Display name</td>
+</tr>
+</tbody>
+</table>
+<h3 id="set-properties">Set properties</h3>
+<p>Groups have the following set properties.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Set</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">connections</td>
+<td align="left">string</td>
+<td align="left">Set of connection types (e.g., likes)</td>
+</tr>
+<tr class="even">
+<td align="left">rolenames</td>
+<td align="left">string</td>
+<td align="left">Set of roles assigned to a group</td>
+</tr>
+<tr class="odd">
+<td align="left">credentials</td>
+<td align="left">string</td>
+<td align="left">Set of group credentials</td>
+</tr>
+</tbody>
+</table>
+<h3 id="collections">Collections</h3>
+<p>Groups have the following collections.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Collection</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">users</td>
+<td align="left">user</td>
+<td align="left">Collection of users in the group</td>
+</tr>
+<tr class="even">
+<td align="left">activities</td>
+<td align="left">activity</td>
+<td align="left">Collection of activities a user has performed</td>
+</tr>
+<tr class="odd">
+<td align="left">feed</td>
+<td align="left">activity</td>
+<td align="left">Inbox of activity notifications a group has received</td>
+</tr>
+<tr class="even">
+<td align="left">roles</td>
+<td align="left">role</td>
+<td align="left">Set of roles to which a group belongs</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/group.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>

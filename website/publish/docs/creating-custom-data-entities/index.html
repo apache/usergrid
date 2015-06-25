@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Creating Custom Data Entities</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Creating Custom Data Entities</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/creating-custom-data-entities.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#creating-custom-data-entities">Creating Custom Data Entities</a><ul>
+<li>
+<a href="#creating-a-custom-entity">Creating a custom entity</a><ul>
+<li><a href="#example-requestresponse">Example Request/Response</a></li>
+<li><a href="#request-syntax">Request Syntax</a></li>
+<li><a href="#parameters">Parameters</a></li>
+<li><a href="#example-requestresponse-1">Example Request/Response</a></li>
+<li><a href="#sdk-method">SDK Method</a></li>
+<li><a href="#parameters-1">Parameters</a></li>
+<li><a href="#example-requestresponse-2">Example Request/Response</a></li>
+<li><a href="#sdk-method-1">SDK Method</a></li>
+<li><a href="#parameters-2">Parameters</a></li>
+<li><a href="#example-requestresponse-3">Example Request/Response</a></li>
+<li><a href="#sdk-method-2">SDK Method</a></li>
+<li><a href="#parameters-3">Parameters</a></li>
+<li><a href="#example-requestresponse-4">Example Request/Response</a></li>
+<li><a href="#sdk-method-3">SDK Method</a></li>
+<li><a href="#properties">Properties</a></li>
+<li><a href="#example-requestresponse-5">Example Request/Response</a></li>
+<li><a href="#sdk-method-4">SDK Method</a></li>
+<li><a href="#parameters-4">Parameters</a></li>
+</ul>
+</li>
+<li>
+<a href="#creating-multiple-custom-entities">Creating multiple custom entities</a><ul>
+<li><a href="#example-requestresponse-6">Example Request/Response</a></li>
+<li><a href="#request-syntax-1">Request Syntax</a></li>
+<li><a href="#parameters-5">Parameters</a></li>
+<li><a href="#example-requestresponse-7">Example Request/Response</a></li>
+<li><a href="#sdk-method-5">SDK Method</a></li>
+<li><a href="#parameters-6">Parameters</a></li>
+<li><a href="#example-requestresponse-8">Example Request/Response</a></li>
+<li><a href="#sdk-method-6">SDK Method</a></li>
+<li><a href="#parameters-7">Parameters</a></li>
+<li><a href="#example-requestresponse-9">Example Request/Response</a></li>
+<li><a href="#sdk-method-7">SDK Method</a></li>
+<li><a href="#properties-1">Properties</a></li>
+<li><a href="#example-requestresponse-10">Example Request/Response</a></li>
+<li><a href="#sdk-method-8">SDK Method</a></li>
+<li><a href="#parameters-8">Parameters</a></li>
+</ul>
+</li>
+<li>
+<a href="#creating-an-entity-with-sub-properties">Creating an entity with sub-properties</a><ul>
+<li><a href="#example-requestresponse-11">Example Request/Response</a></li>
+<li><a href="#request-syntax-2">Request Syntax</a></li>
+<li><a href="#parameters-9">Parameters</a></li>
+<li><a href="#example-requestresponse-12">Example Request/Response</a></li>
+<li><a href="#sdk-method-9">SDK Method</a></li>
+<li><a href="#parameters-10">Parameters</a></li>
+<li><a href="#example-requestresponse-13">Example Request/Response</a></li>
+<li><a href="#sdk-method-10">SDK Method</a></li>
+<li><a href="#parameters-11">Parameters</a></li>
+<li><a href="#example-requestresponse-14">Example Request/Response</a></li>
+<li><a href="#sdk-method-11">SDK Method</a></li>
+<li><a href="#parameters-12">Parameters</a></li>
+<li><a href="#example-requestresponse-15">Example Request/Response</a></li>
+<li><a href="#sdk-method-12">SDK Method</a></li>
+<li><a href="#properties-2">Properties</a></li>
+<li><a href="#example-requestresponse-16">Example Request/Response</a></li>
+<li><a href="#sdk-method-13">SDK Method</a></li>
+<li><a href="#parameters-13">Parameters</a></li>
+</ul>
+</li>
+<li><a href="#add-new-comment">Add new comment</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="creating-custom-data-entities">Creating Custom Data Entities</h1>
+<p>This article describes how to create custom data entities and entity properties in Apache Usergrid. Entity types correspond to the name of collection to which they are posted. For example, if you create a new custom “dog” entity, a “dogs” collection will be created if one did not already exist. If a “dogs” collection already exists, the new “dog” entity will be saved in it. All user-defined properties are indexed, and strings that contain multiple words are keyword-indexed.</p>
+<p>The methods cited in this article should be used to create custom data entities. If you are using one of the <a href="/app-services-sdks">Apache Usergrid SDKs</a>, use one of the entity type-specific SDK methods to create <a href="/default-data-entities">default data entities</a>.</p>
+<p><strong>Note:</strong> Although not shown in the API examples below, you need to provide a valid access token with each API call. See <a href="/authenticating-users-and-application-clients">Authenticating users and application clients</a> for details.</p>
+<h2 id="creating-a-custom-entity">Creating a custom entity</h2>
+<p>When a new entity is created, Apache Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type. For example, creating a custom entity of type ‘item’ will automatically create a collection named ‘items’ in which all future ‘item’ entities will be saved.</p>
+<ul>
+<li><a href="#curl_create_entity">cURL</a></li>
+<li><a href="#ios_create_entity">iOS</a></li>
+<li><a href="#android_create_entity">Android</a></li>
+<li><a href="#javascript_create_entity">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_create_entity">Ruby</a></li>
+<li><a href="#nodejs_create_entity">Node.js</a></li>
+</ul>
+<h3 id="example-requestresponse">Example Request/Response</h3>
+<h4 id="request">Request:</h4>
+<pre><code>curl -X POST "https://api.usergrid.com/your-org/your-app/item" -d '{"name":"milk", "price":"3.25"}'</code></pre>
+<h4 id="response">Response:</h4>
+<pre><code>    { 
+        "action" : "post", 
+        "application" : "4a1edb70-d7a8-11e2-9ce3-f315e5aa568a", 
+        "params" : { }, 
+        "path" : "/items", "uri" : "http://api.usergrid.com/my-org/my-app/items", 
+        "entities" : [ { 
+            "uuid" : "83e9b7ea-e8f5-11e2-84df-e94123890c7a", 
+            "type" : "item", 
+            "name" : "milk", 
+            "created" : 1373415195230, 
+            "modified" : 1373415195230, 
+            "metadata" : { 
+                "path" : "/items/83e9b7ea-e8f5-11e2-84df-e94123890c7a" 
+            }, 
+            "name" : "milk", 
+            "price" : "3.25"
+        } ], 
+        "timestamp" : 1373415195225, 
+        "duration" : 635, 
+        "organization" : "my-org", 
+        "applicationName" : "my-app" 
+    }</code></pre>
+<h3 id="request-syntax">Request Syntax</h3>
+<pre><code>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;entity_type&gt; -d '{&lt;property&gt;, &lt;property&gt;, ...}'</code></pre>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">org</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">app</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">entity_type</td>
+<td align="left">Entity type to create. Apache Usergrid will create a corresponding collection if one does not already exist. To add an entity to an existing collections, use the pluralized collection name for entity_type.</td>
+</tr>
+<tr class="even">
+<td align="left">property</td>
+<td align="left">Comma-separated list of entity properties, formatted as key-value pairs: &lt;property&gt;:&lt;value&gt; (for a full list of default properties, see <a href="/default-data-entities">Default Data Entities</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ios">Apache Usergrid iOS SDK</a>.</p>
+<h3 id="example-requestresponse-1">Example Request/Response</h3>
+<h4 id="request-1">Request:</h4>
+<pre><code>-(NSString*)newEntity {
+    
+    //create an entity object   
+    NSMutableDictionary *entity = [[NSMutableDictionary alloc] init ];
+    
+    //Set entity properties
+    [entity setObject:@"item" forKey:@"type"]; //Required. New entity type to create
+    [entity setObject:@"milk" forKey:@"name"];
+    [entity setObject:@"3.25" forKey:@"price"];
+    
+    //we recommend you call ApigeeClient from your AppDelegate. 
+    //for more information see the iOS SDK install guide: http://apigee.com/docs/app-services/content/installing-apigee-sdk-ios
+    //create an instance of AppDelegate
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    
+    //call createEntity to initiate the API call
+    ApigeeClientResponse *response = [appDelegate.dataClient createEntity:entity];
+    
+    @try {      
+        //success       
+    }
+    @catch (NSException * e) {
+        //fail
+    }
+    
+}
+                </code></pre>
+<h4 id="response-1">Response:</h4>
+<pre><code>    { 
+        "action" : "post", 
+        "application" : "4a1edb70-d7a8-11e2-9ce3-f315e5aa568a", 
+        "params" : { }, 
+        "path" : "/items", "uri" : "http://api.usergrid.com/my-org/my-app/items", 
+        "entities" : [ { 
+            "uuid" : "83e9b7ea-e8f5-11e2-84df-e94123890c7a", 
+            "type" : "item", 
+            "name" : "milk", 
+            "created" : 1373415195230, 
+            "modified" : 1373415195230, 
+            "metadata" : { 
+                "path" : "/items/83e9b7ea-e8f5-11e2-84df-e94123890c7a" 
+            }, 
+            "name" : "milk", 
+            "price" : "3.25"
+        } ], 
+        "timestamp" : 1373415195225, 
+        "duration" : 635, 
+        "organization" : "my-org", 
+        "applicationName" : "my-app" 
+    }</code></pre>
+<h3 id="sdk-method">SDK Method</h3>
+<pre><code>(ApigeeClientResponse *)createEntity:(NSDictionary *)newEntity</code></pre>
+<h3 id="parameters-1">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">newEntity</td>
+<td align="left">NSDictionary object that contains the entity properties</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#android">Apache Usergrid Android SDK</a>.</p>
+<h3 id="example-requestresponse-2">Example Request/Response</h3>
+<h4 id="request-2">Request:</h4>
+<pre><code>//Create client entity
+        String ORGNAME = "your-org"; 
+        String APPNAME = "your-app";
+        
+        ApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME,this.getBaseContext());
+        DataClient client = apigeeClient.getDataClient();
+
+//Create properties object
+Map&lt;String, Object&gt; properties = new HashMap&lt;String, Object&gt;();
+properties.put("type", "item");
+properties.put("name", "milk");
+properties.put("price", "3.25");
+
+//call createEntityAsync to initiate the asynchronous API call
+apigeeClient.createEntityAsync(properties, new ApiResponseCallback() {
+    
+    //If createEntityAsync fails, catch the error
+    @Override
+    public void onException(Exception e) { 
+        // Error
+    }
+    
+    //If createEntityAsync is successful, handle the response object
+    @Override
+    public void onResponse(ApiResponse response) {
+        try { 
+            if (response != null) {
+                // Success
+            }
+        } catch (Exception e) { //The API request returned an error
+                // Fail
+        }
+    }
+});             
+                </code></pre>
+<h4 id="response-2">Response:</h4>
+<pre><code>{
+    "action":"post",
+    "application":"f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+    "entities":[{
+        "Client":{
+            "accessToken":null,
+            "apiUrl":"http://api.usergrid.com",
+            "applicationId":"your-app",
+            "clientId":null,
+            "clientSecret":null,
+            "currentOrganization":null,
+            "loggedInUser":null,
+            "organizationId":"your-org"
+        },
+        "type":"item",
+        "uuid":"fd29157a-e980-11e2-afcc-652a12f1ce72",
+        "created":1373475098695,
+        "modified":1373475098695,
+        "metadata":{
+            "path":"/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+        }
+    }],
+
+    "params":{},
+    "path":"/items",
+    "rawResponse":"{
+        "action" : "post",
+        "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+        "params" : { },
+        "path" : "/items",
+        "uri" : "http://api.usergrid.com/your-org/your-app/items",
+        "entities" : [ {
+            "uuid" : "fd29157a-e980-11e2-afcc-652a12f1ce72",
+            "type" : "item",
+            "created" : 1373475098695,
+            "modified" : 1373475098695,
+            "metadata" : {
+                "path" : "/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+            }
+        } ],
+        "timestamp" : 1373475098689,
+        "duration" : 24,
+        "organization" : "your-org",
+        "applicationName" : "your-app"
+    }",
+    "uri":"http://api.usergrid.com/your-org/your-app/items",
+    "timestamp":1373475098689,
+    "entityCount":1,
+    "firstEntity":{
+        "Client":{
+            "accessToken":null,
+            "apiUrl":"http://api.usergrid.com",
+            "applicationId":"your-app",
+            "clientId":null,
+            "clientSecret":null,
+            "currentOrganization":null,
+            "loggedInUser":null,
+            "organizationId":"your-org"
+        },
+        "type":"item",
+        "uuid":"fd29157a-e980-11e2-afcc-652a12f1ce72",
+        "created":1373475098695,
+        "modified":1373475098695,
+        "metadata":{
+            "path":"/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+        }
+    },
+    "lastEntity":{
+        "Client":{
+            "accessToken":null,
+            "apiUrl":"http://api.usergrid.com",
+            "applicationId":"your-app",
+            "clientId":null,
+            "clientSecret":null,
+            "currentOrganization":null,
+            "loggedInUser":null,
+            "organizationId":"your-org"
+        },
+        "type":"item",
+        "uuid":"fd29157a-e980-11e2-afcc-652a12f1ce72",
+        "created":1373475098695,
+        "modified":1373475098695,
+        "metadata":{
+            "path":"/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+        }
+    },
+    "organization":"your-org",
+    "duration":24,
+    "applicationName":"your-app"
+}
+                </code></pre>
+<h3 id="sdk-method-1">SDK Method</h3>
+<p>Asynchronous:</p>
+<pre><code>createEntityAsync(Map&lt;String, Object&gt; properties, ApiResponseCallback callback)</code></pre>
+<p>Synchronous:</p>
+<pre><code>ApiResponse createEntity(Map&lt;String, Object&gt; properties)</code></pre>
+<h3 id="parameters-2">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">properties</td>
+<td align="left">Map object that contains the entity properties. The ‘type’ property is required.</td>
+</tr>
+<tr class="even">
+<td align="left">callback</td>
+<td align="left">Callback function (Asynchronous calls only)</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#javascript">Apache Usergrid JavaScript (HTML5) SDK</a>.</p>
+<h3 id="example-requestresponse-3">Example Request/Response</h3>
+<h4 id="request-3">Request:</h4>
+<pre><code>//Create your client object
+var dataClient = new Usergrid.Client({
+    orgName:'your-org',
+    appName:'your-app'
+});
+
+
+//Set the properties of the entity
+var options = {
+    type:'item', //required
+    name:'milk',
+    price:'3.25'
+};
+
+//Create the entity and process the results
+client.createEntity(options, function (err, result) {
+    if (err) {
+        //error
+    } else {
+        //success          
+    }
+});     
+                 </code></pre>
+<h4 id="response-3">Response:</h4>
+<pre><code>"_client": //Information on the client object used to initiate the call
+    "URI":"https://api.usergrid.com",
+    "orgName":"your-org",
+    "appName":"your-app",
+    "buildCurl":false,
+    "logging":false,
+    "_callTimeout":30000,
+    "_callTimeoutCallback":null,
+    "logoutCallback":null,
+    "_start":1373482218757,
+    "_end":1373482219070,
+"_data": //Information on the successfully created entity
+    "type":"item",
+    "name":"milk",
+    "price":"3.25",
+    "uuid":"9124211a-e991-11e2-ba6c-e55e3ffa12ef",
+    "created":1373482218913,
+    "modified":1373482218913,
+    "metadata":
+        "path":"/items/9124211a-e991-11e2-ba6c-e55e3ffa12ef"                    
+                </code></pre>
+<h3 id="sdk-method-2">SDK Method</h3>
+<pre><code>createEntity(properties, callback)</code></pre>
+<h3 id="parameters-3">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">properties</td>
+<td align="left">Object that contains the entity properties. The <code>type</code> property is required.</td>
+</tr>
+<tr class="even">
+<td align="left">callback</td>
+<td align="left">Callback function</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ruby">Apache Usergrid RubyGem</a>.</p>
+<h3 id="example-requestresponse-4">Example Request/Response</h3>
+<h4 id="request-4">Request:</h4>
+<pre><code>#Create a client object
+usergrid_api = 'https://api.usergrid.com'
+organization = 'your-org'
+application = 'your-app'
+
+client = Usergrid::Application.new "#{usergrid_api}/#{organization}/#{application}"
+
+begin
+    # Call create_entity to initiate the API call
+    # and save the response
+    client.create_entity('item', {'name' =&gt; 'milk', 'price' =&gt; '3.25'})
+rescue
+    #fail
+end
+                </code></pre>
+<h4 id="response-4">Response:</h4>
+<pre><code>    { 
+        "action" : "post", 
+        "application" : "4a1edb70-d7a8-11e2-9ce3-f315e5aa568a", 
+        "params" : { }, 
+        "path" : "/items", "uri" : "http://api.usergrid.com/my-org/my-app/items", 
+        "entities" : [ { 
+            "uuid" : "83e9b7ea-e8f5-11e2-84df-e94123890c7a", 
+            "type" : "item", 
+            "name" : "milk", 
+            "created" : 1373415195230, 
+            "modified" : 1373415195230, 
+            "metadata" : { 
+                "path" : "/items/83e9b7ea-e8f5-11e2-84df-e94123890c7a" 
+            }, 
+            "name" : "milk", 
+            "price" : "3.25"
+        } ], 
+        "timestamp" : 1373415195225, 
+        "duration" : 635, 
+        "organization" : "my-org", 
+        "applicationName" : "my-app" 
+    }</code></pre>
+<h3 id="sdk-method-3">SDK Method</h3>
+<pre><code>create_entity(type, properties)</code></pre>
+<h3 id="properties">Properties</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">Custom entity type to create</td>
+</tr>
+<tr class="even">
+<td align="left">properties</td>
+<td align="left">Object that contains the entity properties</td>
+</tr>
+</tbody>
+</table>
+<p>The example assumes use of the <a href="/app-services-sdks#nodejs">Node.js module</a>.</p>
+<h3 id="example-requestresponse-5">Example Request/Response</h3>
+<h4 id="request-5">Request:</h4>
+<pre><code>//Create a client object
+var dataClient = new Usergrid.client({
+    orgName:'your-org',
+    appName:'your-app'
+});
+
+//Set the properties for your entity
+var properties = {
+    type:"item", //Requried. Type of entity to create.
+    name:"milk",
+    price:"3.25"
+};
+
+//Call createEntity to initiate the API call
+client.createEntity(properties, function(error, result){
+    if(error) {
+        //error
+    } else {
+        //success
+    }
+});
+                </code></pre>
+<h4 id="response-5">Response:</h4>
+<pre><code>{ 
+    type: 'item',
+    name: 'milk',
+    price: '3.25',
+    uuid: '126e29aa-eb40-11e2-85a8-355b0e586a1a',
+    created: 1373667119418,
+    modified: 1373667119418,
+    metadata: { path: '/items/126e29aa-eb40-11e2-85a8-355b0e586a1a' } 
+}           
+                </code></pre>
+<h3 id="sdk-method-4">SDK Method</h3>
+<pre><code>createEntity(properties, callback)</code></pre>
+<h3 id="parameters-4">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">properties</td>
+<td align="left">Object that contains the entity properties. The ‘type’ property is required.</td>
+</tr>
+<tr class="even">
+<td align="left">callback</td>
+<td align="left">Callback function</td>
+</tr>
+</tbody>
+</table>
+<h2 id="creating-multiple-custom-entities">Creating multiple custom entities</h2>
+<ul>
+<li><a href="#curl_create_multiple_entities">cURL</a></li>
+<li><a href="#ios_create_multiple_entities">iOS</a></li>
+<li><a href="#android_create_multiple_entities">Android</a></li>
+<li><a href="#javascript_create_multiple_entities">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_create_multiple_entities">Ruby</a></li>
+<li><a href="#nodejs_create_multiple_entities">Node.js</a></li>
+</ul>
+<h3 id="example-requestresponse-6">Example Request/Response</h3>
+<h4 id="request-6">Request:</h4>
+<pre><code>curl -X POST "https://api.usergrid.com/your-org/your-app/item" -d '[{"name":"milk", "price":"3.25"}, {"name":"bread", "price":"2.50"}]'</code></pre>
+<h4 id="response-6">Response:</h4>
+<pre><code>{
+    "action" : "post",
+    "application" : "f34f4222-a166-11e2-a7f7-02e9sjwsf3d0",
+    "params" : { },
+    "path" : "/items",
+    "uri" : "http://api.usergrid.com/your-org/your-app/items",
+    "entities" : [ {
+        "uuid" : "f3a8061a-ef0b-11e2-9e92-5f4a65c16193",
+        "type" : "item",
+        "name" : "milk",
+        "price" : "3.25",
+        "created" : 1374084538609,
+        "modified" : 1374084538609,
+        "metadata" : {
+            "path" : "/multis/f3a8061a-ef0b-11e2-9e92-5f4a65c16193"
+        },
+        "name" : "milk"
+    }, {
+        "uuid" : "f3be262a-ef0b-11e2-a51b-6715d5ef47a6",
+        "type" : "item",
+        "name" : "bread",
+        "price" : "2.50",
+        "created" : 1374084538754,
+        "modified" : 1374084538754,
+        "metadata" : {
+            "path" : "/items/f3be262a-ef0b-11e2-a51b-6715d5ef47a6"
+        },
+        "name" : "bread"
+    } ],
+    "timestamp" : 1374084538584,
+    "duration" : 388,
+    "organization" : "your-org",
+    "applicationName" : "your-app"
+}</code></pre>
+<h3 id="request-syntax-1">Request Syntax</h3>
+<pre><code>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;entity_type&gt;/ -d '[{&lt;entity&gt;}, {&lt;entity&gt;}, ...]'</code></pre>
+<h3 id="parameters-5">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">org</td>
+<td align="left">Organization UUID or name</td>
+</tr>
+<tr class="even">
+<td align="left">app</td>
+<td align="left">Application UUID or name</td>
+</tr>
+<tr class="odd">
+<td align="left">entity_type</td>
+<td align="left">Custom entity type to create. Apache Usergrid will create a corresponding collection if one does not already exist. To add an entity to an existing collections, use the collection name or colleciton UUID in place of the entity type.</td>
+</tr>
+<tr class="even">
+<td align="left">entity</td>
+<td align="left">Comma-separated list of entity objects to create. Each object should be formatted as a comma-separated list of entity properties, formatted as key-value pairs in the format &lt;property&gt;:&lt;value&gt;</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ios">Apache Usergrid iOS SDK</a>.</p>
+<h3 id="example-requestresponse-7">Example Request/Response</h3>
+<h4 id="request-7">Request:</h4>
+<pre><code>-(NSString*)newMultipleEntities {
+
+    //apiRequest requires us to form the full API request, including base URL, org name, and app name.
+    //Note that we specify the target collection in the URL string
+    NSString * url = @"https://api.usergrid.com/your-org/your-app/items";
+    NSString * http_method = @"POST";
+    NSString * properties = @"[{\"name\":\"milk\",\"price\":\"3.25\"},{\"name\":\"bread\",\"price\":\"2.50\"}]"; //We escape the double quotes in the request body
+    
+    //we recommend you call ApigeeClient from your AppDelegate. 
+    //for more information see the iOS SDK install guide: http://apigee.com/docs/app-services/content/installing-apigee-sdk-ios
+    //create an instance of AppDelegate
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    
+    //call createEntity to initiate the API call
+    ApigeeClientResponse *response = [appDelegate.dataClient apiRequest:url operation:http_method data:properties];
+
+    @try {
+        
+       //success
+        
+    }
+    @catch (NSException * e) {
+        //fail
+    }
+    
+}
+                </code></pre>
+<h4 id="response-7">Response:</h4>
+<pre><code>{
+    "action" : "post",
+    "application" : "f34f4222-a166-11e2-a7f7-02e9sjwsf3d0",
+    "params" : { },
+    "path" : "/items",
+    "uri" : "http://api.usergrid.com/your-org/your-app/items",
+    "entities" : [ {
+        "uuid" : "f3a8061a-ef0b-11e2-9e92-5f4a65c16193",
+        "type" : "item",
+        "name" : "milk",
+        "price" : "3.25",
+        "created" : 1374084538609,
+        "modified" : 1374084538609,
+        "metadata" : {
+            "path" : "/multis/f3a8061a-ef0b-11e2-9e92-5f4a65c16193"
+        },
+        "name" : "milk"
+    }, {
+        "uuid" : "f3be262a-ef0b-11e2-a51b-6715d5ef47a6",
+        "type" : "item",
+        "name" : "bread",
+        "price" : "2.50",
+        "created" : 1374084538754,
+        "modified" : 1374084538754,
+        "metadata" : {
+            "path" : "/items/f3be262a-ef0b-11e2-a51b-6715d5ef47a6"
+        },
+        "name" : "bread"
+    } ],
+    "timestamp" : 1374084538584,
+    "duration" : 388,
+    "organization" : "your-org",
+    "applicationName" : "your-app"
+}</code></pre>
+<h3 id="sdk-method-5">SDK Method</h3>
+<p>The iOS SDK does not have a dedicated method for creating multiple entities. Instead, you can use the generic apiRequest method to form the API request manually.</p>
+<pre><code>(ApigeeClientResponse *)apiRequest: (NSString *)url operation:(NSString *)http_method data:(NSString *)properties</code></pre>
+<h3 id="parameters-6">Parameters</h3>
+<table>
+<col width="50%">
+<col width="50%">
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>url</p></td>
+<td align="left">
+<p>Fully-formed request URL in the format:</p>
+<pre><code>https://api.usergrid.com/&lt;your-o</code></pre>
+<p>rg&gt;/<your-app>/<collection></collection></your-app></p>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><p>http_method</p></td>
+<td align="left"><p>HTTP Method – in this case POST</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>properties</p></td>
+<td align="left"><p>A JSON array, containing a JSON object of entity properties for each entity to be created. The ‘type’ property is required for each entity.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Currently, creating multiple entities is not supported by the <a href="/app-services-sdks#android">App Services Android SDK</a>.</p>
+<p>This example uses the <a href="/app-services-sdks#javascript">Apache Usergrid JavaScript (HTML5) SDK</a>.</p>
+<h3 id="example-requestresponse-8">Example Request/Response</h3>
+<h4 id="request-8">Request:</h4>
+<pre><code>//Create a client object with your organization name and application name.
+var dataClient = new Usergrid.Client({
+    orgName:'your-org',
+    appName:'your-app'
+});
+
+//Set the request options: http method, endpoint, body
+var options = {
+    method:'POST',
+    endpoint:'items', //The collection name
+    body:[{"name":"milk", "price":"3.25"},{"name": "bread", "price":"3.25"}] //note the multiple JSON objects
+};
+
+//Call request() to initiate the API call and process the results
+client.request(options, function (error, response) {
+    if (error) {
+        //error
+    } else {
+        //success        
+    }
+});
+                </code></pre>
+<h4 id="response-8">Response:</h4>
+<pre><code>Object {action: "post", application: "f34f4222-a166-11e2-a7f7-02e81adcf3d0", params: Object, path: "/items", uri: "http://api.usergrid.com/your-org/your-app/items"…}
+    action: "post"
+    application: "f34f4222-a166-11e2-a7f7-02e8js76g3d0" //your Apache Usergrid application uuid
+    applicationName: "your-app"
+    duration: 315
+    entities: Array[2] //array of entities successfully created
+        0: Object //entity 1
+            created: 1374099532148
+            metadata: Object
+            modified: 1374099532148
+            name: "milk"
+            price: "3.25"
+            type: "item"
+            uuid: "dc80834a-ef2e-11e2-8a77-cf8d4c2dbd49"
+            __proto__: Object
+        1: Object //entity 2
+            created: 1374099532344
+            metadata: Object
+            modified: 1374099532344
+            name: "bread"
+            price: "3.25"
+            type: "item"
+            uuid: "dc9e6b8a-ef2e-11e2-8e8b-e39a2d988c4f"
+    length: 2
+    organization: "your-org"
+    params: Object
+    __proto__: Object
+        path: "/items"
+        timestamp: 1374099532139
+        uri: "http://api.usergrid.com/your-org/your-app/items"              
+                </code></pre>
+<h3 id="sdk-method-6">SDK Method</h3>
+<pre><code>request(options, callback)</code></pre>
+<h3 id="parameters-7">Parameters</h3>
+<table>
+<col width="50%">
+<col width="50%">
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>options</p></td>
+<td align="left"><p>Object that contains the following properties: - endpoint: the collection to add the entities to - method: the HTTP method for the request - in this case <em>POST</em> - body: the body of the request – in this case, a JSON-array containing an object with properties for each entity to be created.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>callback</p></td>
+<td align="left"><p>Callback function</p></td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ruby">Apache Usergrid RubyGem</a>.</p>
+<h3 id="example-requestresponse-9">Example Request/Response</h3>
+<pre><code>#Create a client object
+usergrid_api = 'https://api.usergrid.com'
+organization = 'your-org'
+application = 'your-app'
+
+client = Usergrid::Application.new "#{usergrid_api}/#{organization}/#{application}"
+
+begin
+    # Call create_entity to initiate the API call - note the multiple JSON objects
+    # and save the response
+    response = client.create_entity 'multi', [{'name'=&gt; 'milk', 'price' =&gt; '3.25'},{'name'=&gt; 'bread', 'price' =&gt; '2.50'}]
+    new_items=response.entity
+rescue
+    #fail
+end         
+                </code></pre>
+<h4 id="response-9">Response:</h4>
+<pre><code>{
+    "action" : "post",
+    "application" : "f34f4222-a166-11e2-a7f7-02e9sjwsf3d0",
+    "params" : { },
+    "path" : "/items",
+    "uri" : "http://api.usergrid.com/your-org/your-app/items",
+    "entities" : [ {
+        "uuid" : "f3a8061a-ef0b-11e2-9e92-5f4a65c16193",
+        "type" : "item",
+        "name" : "milk",
+        "price" : "3.25",
+        "created" : 1374084538609,
+        "modified" : 1374084538609,
+        "metadata" : {
+            "path" : "/multis/f3a8061a-ef0b-11e2-9e92-5f4a65c16193"
+        },
+        "name" : "milk"
+    }, {
+        "uuid" : "f3be262a-ef0b-11e2-a51b-6715d5ef47a6",
+        "type" : "item",
+        "name" : "bread",
+        "price" : "2.50",
+        "created" : 1374084538754,
+        "modified" : 1374084538754,
+        "metadata" : {
+            "path" : "/items/f3be262a-ef0b-11e2-a51b-6715d5ef47a6"
+        },
+        "name" : "bread"
+    } ],
+    "timestamp" : 1374084538584,
+    "duration" : 388,
+    "organization" : "your-org",
+    "applicationName" : "your-app"
+}</code></pre>
+<h3 id="sdk-method-7">SDK Method</h3>
+<pre><code>create_entity(type, properties)</code></pre>
+<h3 id="properties-1">Properties</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">Custom entity type to create</td>
+</tr>
+<tr class="even">
+<td align="left">properties</td>
+<td align="left">Object that contains the entity properties</td>
+</tr>
+</tbody>
+</table>
+<p>The example uses the <a href="/app-services-sdks#nodejs">Apache Usergrid Node.js module</a>.</p>
+<h3 id="example-requestresponse-10">Example Request/Response</h3>
+<h4 id="request-9">Request:</h4>
+<pre><code>//Create a client object
+var dataClient = new Usergrid.client({
+    orgName:'your-org',
+    appName:'your-app'
+});         
+            
+//Set the request options: http method, endpoint, body
+var options = {
+method:'POST',
+endpoint:'items', //The collection name
+body:[{"name":"milk", "price":"3.25"},{"name": "bread", "price":"3.25"}] //note the multiple JSON objects
+};
+
+//Call request() to initiate the API call and process the results
+client.request(options, function (error, result) {
+    if (error) {
+        //error
+    } else {
+        //success — result will contain raw results from API call        
+    }
+});</code></pre>
+<h4 id="response-10">Response:</h4>
+<pre><code>{
+    "action": "post",
+    "application": "7fb8d891-477d-11e1-b2bd-22000a1c4e221",
+    "params":   {},
+    "path": "/items",
+    "uri": "https://api.usergrid.com/22000a1c4e22-7fsii8t1-477d-11e1-b2bd/7fb8d891-477d-11e1-b2bd-22000a1c4e22/cats",
+    "entities":     [
+        {
+            "uuid": "187d31d9-0742-11e2-a7b5-12313d21509c",
+            "type": "item",
+            "name": "milk",
+            "price" : "3.25"
+            "created": 1348599123463,
+            "modified": 1348599123463,
+            "metadata":     {
+                "path": "/items/187d31d9-0742-11e2-a7b5-12313d21509c"
+                }
+        },
+        {
+            "uuid": "188f815b-0742-11e2-a7b5-12313d21509c",
+            "type": "items",
+            "name": "bread",
+            "price" : "2.50"
+            "created": 1348599123583,
+            "modified": 1348599123583,
+            "metadata":     {
+                            "path": "/cats/187d31d9-0742-11e2-a7b5-12313d21509c"
+            }
+        }
+    ],
+    "timestamp":    1348599123461,
+    "duration": 415,
+    "organization": "your-org",
+    "applicationName": "your-app"
+}
+            </code></pre>
+<h3 id="sdk-method-8">SDK Method</h3>
+<pre><code>request(options, callback)</code></pre>
+<h3 id="parameters-8">Parameters</h3>
+<table>
+<col width="50%">
+<col width="50%">
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>options</p></td>
+<td align="left"><p>Object that contains the following properties: - endpoint: the collection to add the entities to - method: the HTTP method for the request – in this case <em>POST</em> - body: the body of the request. In this case, a JSON-formatted set of objects containing entity properties.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>callback</p></td>
+<td align="left"><p>Callback function</p></td>
+</tr>
+</tbody>
+</table>
+<h2 id="creating-an-entity-with-sub-properties">Creating an entity with sub-properties</h2>
+<p>Any valid JSON object can be stored in an entity, regardless of the level of complexity, including sub-properties. For example, suppose you have an ‘items’ collection that contains an entity named ‘milk’. You might store the different varieties of milk as sub-properties of a ‘varieties’ property:</p>
+<pre><code>{
+    "type" : "item"
+    "name" : "milk"
+    "varieties" : [ {
+        "name" : "1%",
+        "price" : "3.25",
+        "sku" : "0393847575533445"
+    }, {
+        "name" : "whole",
+        "price" : "3.85",
+        "sku" : "0393394956788445"
+    }, {
+        "name" : "skim",
+        "price" : "4.00",
+        "sku" : "0390299933488445"      
+    } ]
+}       
+    </code></pre>
+<p>The following examples show how to create a new entity that contains an entity with sub-properties.</p>
+<h4 id="updating-sub-properties">Updating sub-properties</h4>
+<p>An array of sub-properties is treated as a single object in App Services. This means that sub-properties cannot be updated atomically. All sub-properties of a given property must be updated as a set.</p>
+<p>For more on updating an existing sub-property, see <a href="/updating-data-entities#update_nested">Updating Data Entities</a>.</p>
+<ul>
+<li><a href="#curl_create_subproperties">cURL</a></li>
+<li><a href="#ios_create_subproperties">iOS</a></li>
+<li><a href="#android_create_subproperties">Android</a></li>
+<li><a href="#javascript_create_subproperties">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_create_subproperties">Ruby</a></li>
+<li><a href="#nodejs_create_subproperties">Node.js</a></li>
+</ul>
+<h3 id="example-requestresponse-11">Example Request/Response</h3>
+<h4 id="request-10">Request:</h4>
+<pre><code>//Note the use of square brackets for specifying multiple nested objects
+curl -X POST "https://api.usergrid.com/your-org/your-app/items" -d '{"varieties":[{"name":"1%","price" : "3.25", "sku" : "0393847575533445"},{"name" : "whole", "price" : "3.85", "sku" : "0393394956788445"}, {"name" : "skim", "price" : "4.00", "sku" : "0390299933488445"}]}'</code></pre>
+<h4 id="response-11">Response:</h4>
+<pre><code>{ 
+    "action" : "post", 
+    "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0", 
+    "params" : { }, 
+    "path" : "/items", 
+    "uri" : "http://api.usergrid.com/your-org/your-app/items", 
+    "entities" : [ { 
+        "uuid" : "0d7cf92a-effb-11e2-917d-c5e707256e71", 
+        "type" : "item", 
+        "name" : "milk", 
+        "created" : 1374187231666, 
+        "modified" : 1374187231666, 
+        "metadata" : { 
+            "path" : "/items/0d7cf92a-effb-11e2-917d-c5e707256e71" 
+        }, 
+        "name" : "milk", 
+        "varieties" : [ { 
+            "name" : "1%", 
+            "price" : "3.25", 
+            "SKU" : "0393847575533445" 
+        }, { 
+            "name" : "whole", 
+            "price" : "3.85", 
+            "SKU" : "0393394956788445" 
+        }, { 
+            "name" : "skim", 
+            "price" : "4.00", 
+            "SKU" : "0390299933488445" 
+        } ] 
+    } ], 
+    "timestamp" : 1374187450826, 
+    "duration" : 50, 
+    "organization" : "your-org", 
+    "applicationName" : "your-app" 
+}</code></pre>
+<h3 id="request-syntax-2">Request Syntax</h3>
+<pre><code>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;collection&gt;/ -d '{"name" : &lt;entity_name&gt;, &lt;property&gt; : [{&lt;sub_property&gt;}, {&lt;sub_property&gt;}...]}'</code></pre>
+<h3 id="parameters-9">Parameters</h3>
+<table>
+<col width="15%">
+<col width="82%">
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">org</td>
+<td align="left">Organization UUID or name</td>
+</tr>
+<tr class="even">
+<td align="left">app</td>
+<td align="left">Application UUID or name</td>
+</tr>
+<tr class="odd">
+<td align="left">collection</td>
+<td align="left">The UUID or name of the collection to add the new entity to</td>
+</tr>
+<tr class="even">
+<td align="left">entity_name</td>
+<td align="left">The name of the new entity</td>
+</tr>
+<tr class="odd">
+<td align="left">property</td>
+<td align="left">The name of the entity property that will contain the nested JSON object or array</td>
+</tr>
+<tr class="even">
+<td align="left">sub_property</td>
+<td align="left">Entity properties of the nested object, as a set of key-value pairs in the format:<br><em>{&lt;property&gt; : &lt;value&gt;, &lt;property&gt; : &lt;value&gt; …}</em>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ios">Apache Usergrid iOS SDK</a>.</p>
+<h3 id="example-requestresponse-12">Example Request/Response</h3>
+<h4 id="request-11">Request:</h4>
+<pre><code>-(NSString*)newEntity {
+    
+    //Initialize an object for the new entity to be created
+    NSMutableDictionary *entity = [[NSMutableDictionary alloc] init ];
+    
+    //Initialize an object for each nested variety object
+    NSMutableDictionary *variety_1 = [[NSMutableDictionary alloc] init ];
+    NSMutableDictionary *variety_2 = [[NSMutableDictionary alloc] init ];
+    NSMutableDictionary *variety_3 = [[NSMutableDictionary alloc] init ];
+        
+    //Initialize an array to hold the nested variety objects
+    NSMutableArray *variety_list = [[NSMutableArray alloc] init];
+    
+    [variety_1 setObject:@"1%" forKey:@"name"];
+    [variety_1 setObject:@"3.25" forKey:@"price"];
+    [variety_1 setObject:@"0393847575533445" forKey:@"sku"];    
+    
+    [variety_2 setObject:@"whole" forKey:@"name"];
+    [variety_2 setObject:@"3.85" forKey:@"price"];
+    [variety_2 setObject:@"0393394956788445" forKey:@"sku"];
+    
+    [variety_3 setObject:@"skim" forKey:@"name"];
+    [variety_3 setObject:@"4.00" forKey:@"price"];
+    [variety_3 setObject:@"0390299933488445" forKey:@"sku"];
+    
+    //Add the variety objects to the array
+    [variety_list addObject:variety_1];
+    [variety_list addObject:variety_2];
+    [variety_list addObject:variety_3];
+    
+    //Set the item entity properties
+    [entity setObject:@"item" forKey:@"type"]; //Required. New entity type to create
+    [entity setObject:@"milk" forKey:@"name"];
+    
+    //Set the variety_list array as the value of the 'varieties' property
+    [entity setObject:variety_list forKey:@"varieties"];
+    
+    //we recommend you call ApigeeClient from your AppDelegate. 
+    //for more information see the iOS SDK install guide: http://apigee.com/docs/app-services/content/installing-apigee-sdk-ios
+    //create an instance of AppDelegate
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    
+    //call createEntity to initiate the API call
+    ApigeeClientResponse *response = [appDelegate.dataClient createEntity:entity];
+    
+    @try {
+        //success
+    }
+    @catch (NSException * e) {
+        //fail
+    }
+    
+}
+                </code></pre>
+<h4 id="response-12">Response:</h4>
+<pre><code>{ 
+    "action" : "post", 
+    "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0", 
+    "params" : { }, 
+    "path" : "/items", 
+    "uri" : "http://api.usergrid.com/your-org/your-app/items", 
+    "entities" : [ { 
+        "uuid" : "0d7cf92a-effb-11e2-917d-c5e707256e71", 
+        "type" : "item", 
+        "name" : "milk", 
+        "created" : 1374187231666, 
+        "modified" : 1374187231666, 
+        "metadata" : { 
+            "path" : "/items/0d7cf92a-effb-11e2-917d-c5e707256e71" 
+        }, 
+        "name" : "milk", 
+        "varieties" : [ { 
+            "name" : "1%", 
+            "price" : "3.25", 
+            "SKU" : "0393847575533445" 
+        }, { 
+            "name" : "whole", 
+            "price" : "3.85", 
+            "SKU" : "0393394956788445" 
+        }, { 
+            "name" : "skim", 
+            "price" : "4.00", 
+            "SKU" : "0390299933488445" 
+        } ] 
+    } ], 
+    "timestamp" : 1374187450826, 
+    "duration" : 50, 
+    "organization" : "your-org", 
+    "applicationName" : "your-app" 
+}</code></pre>
+<h3 id="sdk-method-9">SDK Method</h3>
+<pre><code>(ApigeeClientResponse *)createEntity:(NSDictionary *)newEntity</code></pre>
+<h3 id="parameters-10">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">newEntity</td>
+<td align="left">NSMutableDictionary object that contains the entity properties</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#android">Apache Usergrid Android SDK</a>.</p>
+<h3 id="example-requestresponse-13">Example Request/Response</h3>
+<h4 id="request-12">Request:</h4>
+<pre><code>//Create client entity
+        String ORGNAME = "your-org"; 
+        String APPNAME = "your-app";
+        
+        ApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME,this.getBaseContext());
+        DataClient client = apigeeClient.getDataClient();
+
+//Create hashmap object for the properties of the new 'item' entity
+Map&lt;String, Object&gt; properties = new HashMap&lt;String, Object&gt;();
+
+//Create hashmap object for the each nested 'variety' object
+Map&lt;String, Object&gt; variety_1 = new HashMap&lt;String, Object&gt;();
+Map&lt;String, Object&gt; variety_2 = new HashMap&lt;String, Object&gt;();
+Map&lt;String, Object&gt; variety_3 = new HashMap&lt;String, Object&gt;();
+        
+//Add properties for each nested object
+variety_1.put("name","1%");
+variety_1.put("price","3.25");
+variety_1.put("sku","0393847575533445");
+
+variety_2.put("name","whole");
+variety_2.put("price","3.85");
+variety_2.put("sku","0393394956788445");
+
+variety_3.put("name","skim");
+variety_3.put("price","4.00");
+variety_3.put("sku","0390299933488445");
+
+//Create an ArrayList of the 'variety' objects
+ArrayList&lt;Map&lt;String, Object&gt;&gt; variety_list = new ArrayList&lt;Map&lt;String, Object&gt;&gt;();
+variety_list .add(variety_1);
+variety_list .add(variety_2);
+variety_list .add(variety_3);
+
+//Add the required properties for the 'item' entity
+properties.put("name", "milk");
+properties.put("type", "item");
+
+//Add 'variety_list' as the value of the 'varieties' property
+properties.put("varieties", variety_list);
+
+//call createEntityAsync to initiate the asynchronous API call
+dataClient.createEntityAsync(properties, new ApiResponseCallback() {
+    
+    //If createEntityAsync fails, catch the error
+    @Override
+    public void onException(Exception e) { 
+        // Error
+    }
+    
+    //If createEntityAsync is successful, handle the response object
+    @Override
+    public void onResponse(ApiResponse response) {
+        try { 
+            if (response != null) {
+                // Success
+            }
+        } catch (Exception e) { //The API request returned an error
+                // Fail
+        }
+    }
+});             
+                </code></pre>
+<h4 id="response-13">Response:</h4>
+<pre><code>{
+    "action":"post",
+    "application":"f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+    "entities":[{
+        "Client":{
+            "accessToken":null,
+            "apiUrl":"http://api.usergrid.com",
+            "applicationId":"your-app",
+            "clientId":null,
+            "clientSecret":null,
+            "currentOrganization":null,
+            "loggedInUser":null,
+            "organizationId":"your-org"
+        },
+        "type":"item",
+        "uuid":"fd29157a-e980-11e2-afcc-652a12f1ce72",
+        "created":1373475098695,
+        "modified":1373475098695,
+        "metadata":{
+            "path":"/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+        }
+    }],
+
+    "params":{},
+    "path":"/items",
+    "rawResponse":"{
+        "action" : "post",
+        "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+        "params" : { },
+        "path" : "/items",
+        "uri" : "http://api.usergrid.com/your-org/your-app/items",
+        "entities" : [ {
+            "uuid" : "fd29157a-e980-11e2-afcc-652a12f1ce72",
+            "type" : "item",
+            "created" : 1373475098695,
+            "modified" : 1373475098695,
+            "metadata" : {
+                "path" : "/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+            }
+            "varieties": [
+                {
+                    "sku": "0393847575533445",
+                    "price": "3.25",
+                    "name": "1%"
+                },
+                {
+                    "sku": "0393394956788445",
+                    "price": "3.85",
+                    "name": "whole"
+                },
+                {
+                    "sku": "0390299933488445",
+                    "price": "4.00",
+                    "name": "skim"
+                }
+            ]
+        } ],
+        "timestamp" : 1373475098689,
+        "duration" : 24,
+        "organization" : "your-org",
+        "applicationName" : "your-app"
+    }",
+    "uri":"http://api.usergrid.com/your-org/your-app/items",
+    "timestamp":1373475098689,
+    "entityCount":1,
+    "firstEntity":{
+        "Client":{
+            "accessToken":null,
+            "apiUrl":"http://api.usergrid.com",
+            "applicationId":"your-app",
+            "clientId":null,
+            "clientSecret":null,
+            "currentOrganization":null,
+            "loggedInUser":null,
+            "organizationId":"your-org"
+        },
+        "type":"item",
+        "uuid":"fd29157a-e980-11e2-afcc-652a12f1ce72",
+        "created":1373475098695,
+        "modified":1373475098695,
+        "metadata":{
+            "path":"/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+        }
+    },
+    "lastEntity":{
+        "Client":{
+            "accessToken":null,
+            "apiUrl":"http://api.usergrid.com",
+            "applicationId":"your-app",
+            "clientId":null,
+            "clientSecret":null,
+            "currentOrganization":null,
+            "loggedInUser":null,
+            "organizationId":"your-org"
+        },
+        "type":"item",
+        "uuid":"fd29157a-e980-11e2-afcc-652a12f1ce72",
+        "created":1373475098695,
+        "modified":1373475098695,
+        "metadata":{
+            "path":"/items/fd29157a-e980-11e2-afcc-652a12f1ce72"
+        }
+    },
+    "organization":"your-org",
+    "duration":24,
+    "applicationName":"your-app"
+}
+                </code></pre>
+<h3 id="sdk-method-10">SDK Method</h3>
+<p>Asynchronous:</p>
+<pre><code>createEntityAsync(Map&lt;String, Object&gt; properties, ApiResponseCallback callback)</code></pre>
+<p>Synchronous:</p>
+<pre><code>ApiResponse createEntity(Map&lt;String, Object&gt; properties)</code></pre>
+<h3 id="parameters-11">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">properties</td>
+<td align="left">Object that contains the entity properties</td>
+</tr>
+<tr class="even">
+<td align="left">callback</td>
+<td align="left">Callback function (asynchronous calls only)</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#javascript">Apache Usergrid JavaScript (HTML5) SDK</a>.</p>
+<h3 id="example-requestresponse-14">Example Request/Response</h3>
+<h4 id="request-13">Request:</h4>
+<pre><code>//Create a client object with your organization name and application name.
+var dataClient = new Usergrid.Client({
+    orgName:'your-org',
+    appName:'your-app'
+});
+
+
+var options = {
+    method:'POST',
+    endpoint:'items',
+    body:{ 
+        name:'milk', 
+        "varieties" : [
+                
+            {
+                "name" : "1%",
+                "price" : "3.25",
+                "sku" : "0393847575533445"
+            },
+            {
+                "name" : "whole",
+                "price" : "3.85",
+                "sku" : "0393394956788445"
+            },
+            {
+                "name" : "skim",
+                "price" : "4.00",
+                "sku" : "0390299933488445"      
+            }
+        ]       
+    }
+};
+
+client.createEntity(options, function (error, cat) {
+    
+    if (error) {
+        //error
+    } else {
+        //success          
+    }
+});
+                </code></pre>
+<h4 id="response-14">Response:</h4>
+<pre><code>Object {action: "post", application: "f34f4222-a166-11e2-a7f7-02e81adcf3d0", params: Object, path: "/items", uri: "http://api.usergrid.com/your-org/your-app/items"…}
+    action: "post"
+    application: "f34f4222-a166-11e2-a7f7-02e8js76g3d0" //your Apache Usergrid application uuid
+    applicationName: "your-app"
+    duration: 315
+    entities: Array[1] //array of entities successfully created
+        0: Object //entity 1
+            created: 1374099532148
+            metadata: Object
+            modified: 1374099532148
+            name: "milk"
+            price: "3.25"
+            type: "item"
+            uuid: "dc80834a-ef2e-11e2-8a77-cf8d4c2dbd49"
+            varieties: Array[3] //array of variety objects from variety_list
+                0: Object
+                sku: "0393847575533445"
+                name: "1%"
+                price: "3.25"
+                1: Object
+                sku: "0393394956788445"
+                name: "whole"
+                price: "3.85"
+                2: Object
+                sku: "0390299933488445"
+                name: "skim"
+                price: "4.00"
+                length: 3
+    organization: "your-org"
+    params: Object
+    __proto__: Object
+        path: "/items"
+        timestamp: 1374099532139
+        uri: "http://api.usergrid.com/your-org/your-app/items"              
+                </code></pre>
+<h3 id="sdk-method-11">SDK Method</h3>
+<pre><code>request(options, callback)</code></pre>
+<h3 id="parameters-12">Parameters</h3>
+<table>
+<col width="50%">
+<col width="50%">
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>options</p></td>
+<td align="left"><p>Object that contains the following properties: - endpoint: the collection to add the entities to - method: the HTTP method for the request – in this case <em>POST</em> - body: the body of the request. In this case, a JSON-formatted set of objects containing entity properties.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>callback</p></td>
+<td align="left"><p>Callback function</p></td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ruby">Apache Usergrid RubyGem</a>.</p>
+<h3 id="example-requestresponse-15">Example Request/Response</h3>
+<h4 id="request-14">Request:</h4>
+<pre><code>#Create a client object
+usergrid_api = 'https://api.usergrid.com'
+organization = 'your-org'
+application = 'your-app'
+
+client = Usergrid::Application.new "#{usergrid_api}/#{organization}/#{application}"
+
+properties = {
+    name:'milk', 
+    varieties:[{
+        name:'1%',
+        price:'3.25',
+        sku:'0393847575533445'
+    },{
+        name:'whole',
+        price:'3.85',
+        sku:'0393394956788445'
+    },{
+        name:'skim',
+        price:'4.00',
+        sku:'0390299933488445'
+    }]
+}
+
+begin
+    # Call create_entity to initiate the API call
+    # and save the response
+response = client.create_entity 'item', #{properties}
+    new_item=response.entity
+rescue
+    #fail
+end
+                </code></pre>
+<h4 id="response-15">Response:</h4>
+<pre><code>{ 
+    "action" : "post", 
+    "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0", 
+    "params" : { }, 
+    "path" : "/items", 
+    "uri" : "http://api.usergrid.com/your-org/your-app/items", 
+    "entities" : [ { 
+        "uuid" : "0d7cf92a-effb-11e2-917d-c5e707256e71", 
+        "type" : "item", 
+        "name" : "milk", 
+        "created" : 1374187231666, 
+        "modified" : 1374187231666, 
+        "metadata" : { 
+            "path" : "/items/0d7cf92a-effb-11e2-917d-c5e707256e71" 
+        }, 
+        "name" : "milk", 
+        "varieties" : [ { 
+            "name" : "1%", 
+            "price" : "3.25", 
+            "SKU" : "0393847575533445" 
+        }, { 
+            "name" : "whole", 
+            "price" : "3.85", 
+            "SKU" : "0393394956788445" 
+        }, { 
+            "name" : "skim", 
+            "price" : "4.00", 
+            "SKU" : "0390299933488445" 
+        } ] 
+    } ], 
+    "timestamp" : 1374187450826, 
+    "duration" : 50, 
+    "organization" : "your-org", 
+    "applicationName" : "your-app" 
+}</code></pre>
+<h3 id="sdk-method-12">SDK Method</h3>
+<pre><code>create_entity(type, properties)</code></pre>
+<h3 id="properties-2">Properties</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">Entity type to create</td>
+</tr>
+<tr class="even">
+<td align="left">properties</td>
+<td align="left">Object that contains the entity properties</td>
+</tr>
+</tbody>
+</table>
+<p>The example uses the <a href="/app-services-sdks#nodejs">Apache Usergrid Node.js module</a>.</p>
+<h3 id="example-requestresponse-16">Example Request/Response</h3>
+<h4 id="request-15">Request:</h4>
+<pre><code>//Create a client object
+var dataClient = new Usergrid.client({
+    orgName:'your-org',
+    appName:'your-app'
+});
+
+var options = {
+    method:'POST',
+    endpoint:'items',
+    body:{ 
+        name:'milk', 
+        varieties : [
+                
+            {
+                name : "1%",
+                price : "3.25",
+                sku : "0393847575533445"
+            },
+            {
+                name : "whole",
+                price : "3.85",
+                sku : "0393394956788445"
+            },
+            {
+                name : "skim",
+                price : "4.00",
+                sku : "0390299933488445"        
+            }
+        ]       
+    }
+};
+
+client.createEntity(options, function (error, cat) {
+    
+    if (error) {
+        //error
+    } else {
+        //success          
+    }
+});
+            </code></pre>
+<h4 id="response-16">Response:</h4>
+<pre><code>{ action: 'post',
+  application: 'f34f4222-a166-11e2-a7f7-02e81adcf3d0',
+  params: {},
+  path: '/items',
+  uri: 'http://api.usergrid.com/your-org/your-app/items',
+  entities: 
+   [ { uuid: 'b3aad0a4-f322-11e2-a9c1-999e12039f87',
+       type: 'item',
+       name: 'milk',
+       created: 1374534114329,
+       modified: 1374534114329,
+       metadata: [Object],
+       varieties: [Object] } ],
+  timestamp: 1374534114326,
+  duration: 109,
+  organization: 'your-org',
+  applicationName: 'your-app' } 
+                </code></pre>
+<h3 id="sdk-method-13">SDK Method</h3>
+<pre><code>createEntity(properties, callback)</code></pre>
+<h3 id="parameters-13">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">properties</td>
+<td align="left">Object that contains the entity properties</td>
+</tr>
+<tr class="even">
+<td align="left">callback</td>
+<td align="left">Callback function</td>
+</tr>
+</tbody>
+</table>
+<h2 id="add-new-comment">Add new comment</h2>
+<p>Your name</p>
+<p>Email</p>
+<p>Provide your email address if you wish to be contacted offline about your comment.<br>We will not display your email address as part of your comment.</p>
+<p>Comment *</p>
+<p>We’d love your feedback and perspective! Please be as specific as possible.</p>
+<p>Word verification *</p>
+<p><img src="http://173.193.242.189:80/v1/captcha/131019b0bb7096f3fa.png" alt="Type the characters you see in this picture."> (<a href="#">verify using audio</a>)</p>
+<p>Type the characters you see in the picture above; if you can’t read them, submit the form and a new image will be generated. Not case sensitive.</p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/creating-custom-data-entities.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>
