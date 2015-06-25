@@ -14,11 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.tools;
 
 
-import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import org.apache.commons.cli.CommandLine;
@@ -26,7 +24,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.utils.StringUtils;
@@ -34,7 +35,6 @@ import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileWriter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,9 +43,22 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
 
 
 /**
- * Export Admin Users and metadata including organizations.
+ * Export Admin Users and metadata including organizations and passwords.
  *
- * java -jar usergrid-tools.jar ExportAdmins
+ * Usage Example:
+ * 
+ * java -Xmx8000m -Dlog4j.configuration=file:/home/me/log4j.properties -classpath . \
+ *      -jar usergrid-tools-1.0.2.jar ImportAdmins -writeThreads 100 -auditThreads 100 \
+ *      -host casshost -inputDir=/home/me/export-data
+ * 
+ * If you want to provide any property overrides, put properties file named usergrid-custom-tools.properties
+ * in the same directory where you run the above command. For example, you might want to set the Cassandra
+ * client threads and export from a specific set of keyspaces:
+ * 
+ *    cassandra.connections=110
+ *    cassandra.system.keyspace=My_Usergrid
+ *    cassandra.application.keyspace=My_Usergrid_Applications
+ *    cassandra.lock.keyspace=My_Usergrid_Locks
  */
 public class ExportAdmins extends ExportingToolBase {
 
