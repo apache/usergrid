@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Ignore;
+
 import org.apache.usergrid.persistence.cassandra.CursorCache;
 
 import com.google.common.collect.Iterables;
@@ -58,7 +59,7 @@ public class InOrderIterator implements ResultIterator {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Iterable#iterator()
      */
     @Override
@@ -73,7 +74,7 @@ public class InOrderIterator implements ResultIterator {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.Iterator#hasNext()
      */
     @Override
@@ -88,7 +89,7 @@ public class InOrderIterator implements ResultIterator {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.Iterator#next()
      */
     @Override
@@ -112,7 +113,7 @@ public class InOrderIterator implements ResultIterator {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.Iterator#remove()
      */
     @Override

@@ -20,7 +20,7 @@
 package org.apache.usergrid.corepersistence.migration;
 
 
-import org.junit.rules.TestRule;
+import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -41,7 +41,7 @@ import com.google.inject.Injector;
  * <ol> <li>Sets up the system's version to be the DataMigration impl's version -1</li> <li>Creates an application using
  * that version of the schema.</li> <li>Sets the new org and app in the CoreApplication to the app created</li> </ol>
  */
-public class MigrationTestRule implements TestRule {
+public class MigrationTestRule extends ExternalResource {
 
     protected final CoreApplication core;
     protected final DataMigrationManager dataMigrationManager;
@@ -89,8 +89,6 @@ public class MigrationTestRule implements TestRule {
             public void evaluate() throws Throwable {
                 try {
                     resetAndCreateApp( description.getClassName(), description.getMethodName() );
-
-
                     base.evaluate();
                 }finally {
                     resetVersion();

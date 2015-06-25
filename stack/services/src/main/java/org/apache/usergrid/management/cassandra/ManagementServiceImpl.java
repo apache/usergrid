@@ -31,11 +31,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
-
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.management.AccountCreationProps;
@@ -59,6 +57,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
@@ -142,10 +141,7 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USE
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 import static org.apache.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_SECRET;
+import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;
@@ -315,7 +311,11 @@ public class ManagementServiceImpl implements ManagementService {
             }
 
             if ( !getApplicationsForOrganization( organization.getUuid() ).containsValue( test_app_name ) ) {
-                createApplication( organization.getUuid(), test_app_name );
+                try {
+                    createApplication( organization.getUuid(), test_app_name );
+                }catch(ApplicationAlreadyExistsException aaee){
+                    logger.debug("The database setup already found an existing application");
+                }
             }
         }
         else {
@@ -356,8 +356,26 @@ public class ManagementServiceImpl implements ManagementService {
             }
         }
         else {
-            logger.warn(
+            System.out.println(
                     "Missing values for superuser account, check properties.  Skipping superuser account setup..." );
+        }
+    }
+
+
+    @Override
+    public void resetSuperUser(String username, String password, String email) throws Exception {
+        //final AccountCreationProps.SuperUser superUser = properties.getSuperUser();
+        //this.getAdminUser
+        UserInfo user = this.getAdminUserByUsername( username );
+        if ( user == null ) {
+            try {
+                createAdminUser( username, "Super User", email, password, true, false );
+            }catch(Exception e){
+
+            }
+        }
+        else {
+            this.setAdminUserPassword( user.getUuid(), password );
         }
     }
 
@@ -499,7 +517,7 @@ public class ManagementServiceImpl implements ManagementService {
             }
 
             logger.debug("User created");
-            organization = createOrganizationInternal( organizationName, user, true, organizationProperties );
+            organization = createOrganizationInternal( null, organizationName, user, true, organizationProperties );
         }
         finally {
             emailLock.unlock();
@@ -511,14 +529,14 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private OrganizationInfo createOrganizationInternal( String organizationName, UserInfo user, boolean activated )
+    private OrganizationInfo createOrganizationInternal( UUID orgUuid, String organizationName, UserInfo user, boolean activated )
             throws Exception {
         logger.debug("createOrganizationInternal1");
-        return createOrganizationInternal( organizationName, user, activated, null );
+        return createOrganizationInternal( orgUuid, organizationName, user, activated, null );
     }
 
 
-    private OrganizationInfo createOrganizationInternal( String organizationName, UserInfo user, boolean activated,
+    private OrganizationInfo createOrganizationInternal( UUID orgUuid, String organizationName, UserInfo user, boolean activated,
                                                          Map<String, Object> properties ) throws Exception {
 
         logger.info( "createOrganizationInternal2: {}", organizationName );
@@ -536,11 +554,16 @@ public class ManagementServiceImpl implements ManagementService {
 
         Group organizationEntity = new Group();
         organizationEntity.setPath( organizationName );
-        organizationEntity = em.create( organizationEntity );
+
+        if ( orgUuid == null ) {
+            organizationEntity = em.create( organizationEntity );
+        } else {
+            em.create( orgUuid, Group.ENTITY_TYPE, organizationEntity.getProperties() );
+            organizationEntity = em.get( orgUuid, Group.class );
+        }
 
         em.addToCollection( organizationEntity, "users", new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
 
-        em.refreshIndex();
 
         writeUserToken( smf.getManagementAppId(), organizationEntity, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.ORGANIZATION ), user.getUuid(),
@@ -550,21 +573,31 @@ public class ManagementServiceImpl implements ManagementService {
                 new OrganizationInfo( organizationEntity.getUuid(), organizationName, properties );
         updateOrganization( organization );
 
-        postOrganizationActivity( organization.getUuid(), user, "create", organizationEntity, "Organization",
-                organization.getName(),
-                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
-                        + ")</a> created a new organization account named " + organizationName, null );
+        if ( orgUuid == null ) { // no import ID specified, so do the activation email flow stuff
 
-        startOrganizationActivationFlow( organization );
+            logger.info( "createOrganizationInternal: {}", organizationName );
+            postOrganizationActivity( organization.getUuid(), user, "create", organizationEntity, "Organization",
+                    organization.getName(),
+                    "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
+                            + ")</a> created a new organization account named " + organizationName, null );
 
-        em.refreshIndex();
+            startOrganizationActivationFlow( organization );
+        }
+
+
 
         return organization;
     }
 
 
     @Override
-    public OrganizationInfo createOrganization( String organizationName, UserInfo user, boolean activated )
+    public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
+            throws Exception {
+        return createOrganization( null, organizationName, user, activated );
+    }
+
+    @Override
+    public OrganizationInfo createOrganization(UUID orgUuid, String organizationName, UserInfo user, boolean activated)
             throws Exception {
 
         if (  organizationName == null ) {
@@ -584,7 +617,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         try {
             groupLock.lock();
-            return createOrganizationInternal( organizationName, user, activated );
+            return createOrganizationInternal( orgUuid, organizationName, user, activated );
         }
         finally {
             groupLock.unlock();
@@ -685,7 +718,8 @@ public class ManagementServiceImpl implements ManagementService {
      * (and that organization is needed) if so.
      */
     private String buildAppName( String applicationName, OrganizationInfo organization ) {
-        return applicationName.contains( "/" ) ? applicationName : organization.getName() + "/" + applicationName;
+        return org.apache.commons.lang.StringUtils.lowerCase(
+                applicationName.contains( "/" ) ? applicationName : organization.getName() + "/" + applicationName);
     }
 
 
@@ -1426,6 +1460,13 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    @Override
+    public void importTokenForAdminUser(UUID userId, String token, long ttl) throws Exception {
+        tokens.importToken( token, TokenCategory.ACCESS, null,
+                new AuthPrincipalInfo( ADMIN_USER, userId, smf.getManagementAppId() ), null, ttl );
+    }
+
+
     /*
    * (non-Javadoc)
    *
@@ -1478,21 +1519,30 @@ public class ManagementServiceImpl implements ManagementService {
 
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results results = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 10000,
+        Results results = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 1000,
                 Level.ALL_PROPERTIES, false );
 
         String path = null;
 
-        for ( Entity entity : results.getEntities() ) {
+        do {
+            for ( Entity entity : results.getEntities() ) {
 
-            path = ( String ) entity.getProperty( PROPERTY_PATH );
+                path = ( String ) entity.getProperty( PROPERTY_PATH );
 
-            if ( path != null ) {
-                path = path.toLowerCase();
+                if ( path != null ) {
+                    path = path.toLowerCase();
+                }
+
+                try {
+                    organizations.put( entity.getUuid(), path );
+                } catch (IllegalArgumentException e) {
+                    logger.warn("Error adding " + entity.getUuid() + ":" + path + " to BiMap: " + e.getMessage() );
+                }
             }
 
-            organizations.put( entity.getUuid(), path );
-        }
+            results = results.getNextPageResults();
+
+        } while(results != null);
 
         return organizations;
     }
@@ -1524,10 +1574,10 @@ public class ManagementServiceImpl implements ManagementService {
 
         Map<UUID, String> organizations;
 
-        boolean superuser_enabled = getBooleanProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED );
-        String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
-        if ( superuser_enabled && ( superuser_username != null ) && superuser_username.equals( user.getUsername() ) ) {
-            organizations = buildOrgBiMap( getOrganizations( null, 10 ) );
+        AccountCreationProps.SuperUser superUser = properties.getSuperUser();
+        if ( superUser.isEnabled() && superUser.getUsername().equals( user.getUsername() ) ) {
+            int maxOrganizations = this.getAccountCreationProps().getMaxOrganizationsForSuperUserLogin();
+            organizations = buildOrgBiMap( getOrganizations( null, maxOrganizations ) );
         }
         else {
             organizations = getOrganizationsForAdminUser( user.getUuid() );
@@ -1649,7 +1699,7 @@ public class ManagementServiceImpl implements ManagementService {
         properties.put( "appUuid", applicationId );
         Entity appInfo = em.create( applicationId, APPLICATION_INFO, properties );
 
-        em.refreshIndex();
+
 
         writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
@@ -1670,7 +1720,7 @@ public class ManagementServiceImpl implements ManagementService {
                             + ")</a> created a new application named " + applicationName, null );
         }
 
-        em.refreshIndex();
+
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -2376,7 +2426,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( sendEmail ) {
             startOrganizationActivationFlow( organization );
         }
-        em.refreshIndex();
+
     }
 
 
@@ -2610,7 +2660,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    public String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
+    protected String buildUserAppUrl(UUID applicationId, String url, User user, String token) throws Exception {
         ApplicationInfo ai = getApplicationInfo( applicationId );
         OrganizationInfo oi = getOrganizationForApplication( applicationId );
         return String.format( url, oi.getName(), StringUtils.stringOrSubstringAfterFirst( ai.getName(), '/' ),

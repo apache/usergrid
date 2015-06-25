@@ -22,22 +22,24 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 
-@Concurrent()
+
 public class PermissionsIT extends AbstractCoreIT {
 
     private static final Logger logger = LoggerFactory.getLogger( PermissionsIT.class );
@@ -50,7 +52,7 @@ public class PermissionsIT extends AbstractCoreIT {
 
     @Test
     public void testPermissionTimeout() throws Exception {
-        UUID applicationId = setup.createApplication( "permissionsTest", "testPermissionTimeout" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( "permissionsTest", "testPermissionTimeout" + UUIDGenerator.newTimeUUID()  );
 
         assertNotNull( applicationId );
 
@@ -100,7 +102,8 @@ public class PermissionsIT extends AbstractCoreIT {
     public void testPermissions() throws Exception {
         logger.info( "PermissionsIT.testPermissions" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testPermissions" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( "testOrganization"+ UUIDGenerator.newTimeUUID(), "testPermissions" + UUIDGenerator
+            .newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );

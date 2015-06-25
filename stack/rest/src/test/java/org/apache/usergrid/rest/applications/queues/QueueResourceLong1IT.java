@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.app.queue.Queue;
 import org.apache.usergrid.rest.test.resource.app.queue.Transaction;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
+
 public class QueueResourceLong1IT extends AbstractQueueResourceIT {
 
     @Rule

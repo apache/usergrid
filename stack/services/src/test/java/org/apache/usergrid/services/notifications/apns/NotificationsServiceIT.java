@@ -124,7 +124,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.getEntityManager().refreshIndex();
 
-        listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
+        listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(), new Properties());
         listener.TEST_QUEUE_MANAGER = qm;
         listener.DEFAULT_SLEEP = 200;
         listener.start();

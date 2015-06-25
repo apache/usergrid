@@ -29,7 +29,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 
 import static org.junit.Assert.*;
 
@@ -39,7 +39,7 @@ import static org.junit.Assert.*;
  * REST tests for /groups endpoint
  *
  * */
-@Concurrent()
+
 public class GroupResourceIT extends AbstractRestIT {
 
     public GroupResourceIT() throws Exception { }
@@ -532,7 +532,7 @@ public class GroupResourceIT extends AbstractRestIT {
         // update that group by giving it a new title and using UUID in URL
         String evenNewerTitle = "Even New Title";
         group.put("title", newTitle);
-        String uuid = group.getString("uuid");
+        String uuid = group.getAsString("uuid");
         groupResponse = this.app().collection("groups").uniqueID(uuid).put(group);
         assertEquals(groupResponse.get("title"), evenNewerTitle);
         this.refreshIndex();

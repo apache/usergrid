@@ -327,7 +327,7 @@ public class CassandraPersistenceUtils {
         return batch;
     }
 
-
+    //No longer does retries
     public static MutationResult batchExecute( Mutator<?> m, int retries ) {
         return m.execute();
 

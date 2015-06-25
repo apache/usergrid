@@ -61,7 +61,7 @@ limitations under the License.
         <commons.lang.version>3.1</commons.lang.version>
         <elasticsearch.version>1.3.2</elasticsearch.version>
         <fasterxml-uuid.version>3.1.3</fasterxml-uuid.version>
-        <guava.version>15.0</guava.version>
+        <guava.version>18.0</guava.version>
         <guice.version>4.0-beta5</guice.version>
         <guicyfig.version>3.2</guicyfig.version>
         <hystrix.version>1.3.16</hystrix.version>
@@ -75,6 +75,7 @@ limitations under the License.
         <slf4j.version>1.7.2</slf4j.version>
         <surefire.version>2.16</surefire.version>
         <aws.version>1.9.0</aws.version>
+        <metrics.version>3.0.0</metrics.version>
 
     </properties>
 

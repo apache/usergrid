@@ -16,36 +16,55 @@
  */
 package org.apache.usergrid.services.notifications;
 
-import java.util.*;
 
-import com.codahale.metrics.*;
-import com.codahale.metrics.Timer;
-import org.apache.usergrid.corepersistence.CpSetup;
-import org.apache.usergrid.metrics.MetricsFactory;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.mq.Message;
-import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.PathQuery;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
+import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueScope;
-import org.apache.usergrid.persistence.queue.QueueScopeFactory;
-import org.apache.usergrid.services.*;
-import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.entities.Device;
-import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
+import org.apache.usergrid.services.AbstractCollectionService;
+import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.services.ServiceContext;
+import org.apache.usergrid.services.ServiceInfo;
+import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.services.ServiceParameter;
+import org.apache.usergrid.services.ServicePayload;
+import org.apache.usergrid.services.ServiceRequest;
+import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
-import static org.apache.usergrid.utils.InflectionUtils.pluralize;
+import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
+
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
+import com.google.inject.Injector;
 
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+
+import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
 public class NotificationsService extends AbstractCollectionService {
 
@@ -66,7 +85,7 @@ public class NotificationsService extends AbstractCollectionService {
                 MESSAGE_PROPERTY_DEVICE_UUID, UUID.class);
     }
 
-
+//not really a queue manager at all
     private ApplicationQueueManager notificationQueueManager;
     private long gracePeriod;
     private ServiceManagerFactory smf;
@@ -84,14 +103,13 @@ public class NotificationsService extends AbstractCollectionService {
         emf = getApplicationContext().getBean(EntityManagerFactory.class);
 
         Properties props = (Properties)getApplicationContext().getBean("properties");
-        metricsService = getApplicationContext().getBean(MetricsFactory.class);
+        metricsService = getApplicationContext().getBean(Injector.class).getInstance(MetricsFactory.class);
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
-        String name = ApplicationQueueManagerImpl.getQueueNames(props);
-        QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
-        QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), name);
-        queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        String name = ApplicationQueueManagerImpl.getQueueNames( props );
+        QueueScope queueScope = new QueueScopeImpl( name );
+        queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
         QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;

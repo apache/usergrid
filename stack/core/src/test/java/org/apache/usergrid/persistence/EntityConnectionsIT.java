@@ -17,17 +17,19 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
@@ -36,8 +38,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-
-@Concurrent()
 public class EntityConnectionsIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityConnectionsIT.class );
 
@@ -177,7 +177,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
     }
 
 
-    public Map<String, Map<String, List<UUID>>> testEntityConnections( 
+    public Map<String, Map<String, List<UUID>>> testEntityConnections(
         UUID applicationId, UUID entityId, String connectionType,  String entityType, int expectedCount ) throws Exception {
 
         LOG.info( "----------------------------------------------------" );
@@ -189,22 +189,22 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         Results results = em.getConnectedEntities( en, connectionType, null, Level.REFS );
 
         LOG.info( "----------------------------------------------------" );
-        assertEquals( "Expected " + expectedCount + " connections", 
+        assertEquals( "Expected " + expectedCount + " connections",
                 expectedCount, results.getConnections().size() );
         // return connections;
         return null;
     }
 
 
-    public List<UUID> testApplicationCollections( 
+    public List<UUID> testApplicationCollections(
             UUID applicationId, String collectionName, int expectedCount ) throws Exception {
 
-        return testEntityCollections( 
+        return testEntityCollections(
             applicationId, applicationId, "application", collectionName, expectedCount );
     }
 
 
-    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String entityType, 
+    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String entityType,
             String collectionName, int expectedCount ) throws Exception {
 
         LOG.info( "----------------------------------------------------" );
@@ -292,7 +292,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertFalse( em.isConnectionMember( secondUserEntity, "likes", fourpeaks ) );
     }
 
-    
+
     @Test
     public void testGetConnectingEntities() throws Exception {
 
@@ -319,21 +319,120 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         em.refreshIndex();
 
 //        // search for "likes" edges from fred
-//        assertEquals( 1, 
+//        assertEquals( 1,
 //            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
 //
 //        // search for any type of edges from fred
-//        assertEquals( 1, 
+//        assertEquals( 1,
 //            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
 
         // search for "likes" edges to wilman from any type of object
         Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
-        assertEquals( 1, res.size() ); 
+        assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() ); // fred is a user
 
-        // search for "likes" edges to wilman from user type object 
+        // search for "likes" edges to wilman from user type object
         res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
         assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() );
     }
+
+
+
+
+    @Test
+    @Ignore("This is broken, and needs fixed after the refactor")
+    public void testConnectionsIterable() throws Exception {
+        EntityManager em = app.getEntityManager();
+        assertNotNull( em );
+
+        User first = new User();
+        first.setUsername( "first" );
+        first.setEmail( "first@usergrid.com" );
+
+        Entity firstUserEntity = em.create( first );
+
+        assertNotNull( firstUserEntity );
+
+
+        final int connectionCount = 100;
+        final List<Entity> things = new ArrayList<>( connectionCount );
+
+        for(int i = 0; i < connectionCount; i ++){
+            Map<String, Object> data = new HashMap<String, Object>();
+            data.put( "ordinal",  i );
+
+            Entity entity = em.create( "thing", data );
+
+            em.createConnection( firstUserEntity, "likes", entity );
+
+            things.add( entity );
+        }
+
+
+        em.refreshIndex();
+
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.ALL_PROPERTIES ) ;
+
+        PagingResultsIterator itr = new PagingResultsIterator( r );
+
+
+        int checkedIndex = 0;
+        for(; checkedIndex < connectionCount && itr.hasNext(); checkedIndex ++){
+            final Entity returned = ( Entity ) itr.next();
+            final Entity expected = things.get( checkedIndex );
+
+            assertEquals("Entity expected", expected, returned);
+        }
+
+        assertEquals("Checked all entities", connectionCount, checkedIndex  );
+
+
+    }
+//
+//
+//    @Test
+//    public void testGetConnectingEntities() throws Exception {
+//
+//        UUID applicationId = app.getId( );
+//        assertNotNull( applicationId );
+//
+//        EntityManager em = app.getEntityManager();
+//        assertNotNull( em );
+//
+//        User fred = new User();
+//        fred.setUsername( "fred" );
+//        fred.setEmail( "fred@flintstones.com" );
+//        Entity fredEntity = em.create( fred );
+//        assertNotNull( fredEntity );
+//
+//        User wilma = new User();
+//        wilma.setUsername( "wilma" );
+//        wilma.setEmail( "wilma@flintstones.com" );
+//        Entity wilmaEntity = em.create( wilma );
+//        assertNotNull( wilmaEntity );
+//
+//        em.createConnection( fredEntity, "likes", wilmaEntity );
+//
+//        em.refreshIndex();
+//
+////        // search for "likes" edges from fred
+////        assertEquals( 1,
+////            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
+////
+////        // search for any type of edges from fred
+////        assertEquals( 1,
+////            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
+//
+//        // search for "likes" edges to wilman from any type of object
+//        Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
+//        assertEquals( 1, res.size() );
+//        assertEquals( "user", res.getEntity().getType() ); // fred is a user
+//
+//        // search for "likes" edges to wilman from user type object
+//        res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
+//        assertEquals( 1, res.size() );
+//        assertEquals( "user", res.getEntity().getType() );
+//    }
+
 }

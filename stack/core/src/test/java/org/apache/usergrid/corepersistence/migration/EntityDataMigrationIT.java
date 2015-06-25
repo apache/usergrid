@@ -25,11 +25,12 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
@@ -52,14 +53,16 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 
+@NotThreadSafe
 public class EntityDataMigrationIT extends AbstractCoreIT {
 
 
@@ -80,13 +83,13 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = 
-            new MigrationTestRule( app, CpSetup.getInjector() ,EntityDataMigration.class  );
+    public MigrationTestRule migrationTestRule =
+            new MigrationTestRule( app,  SpringResource.getInstance().getBean( Injector.class ) ,EntityDataMigration.class  );
 
     @Before
     public void setup() {
         emf = setup.getEmf();
-        injector = CpSetup.getInjector();
+        injector =  SpringResource.getInstance().getBean( Injector.class );
         entityDataMigration = injector.getInstance( EntityDataMigration.class );
         managerCache = injector.getInstance( ManagerCache.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
@@ -218,7 +221,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         assertEquals( "All entities migrated", 0, savedEntities.size() );
 
 
-        //now visit all entities in the system again, and load them from the EM, 
+        //now visit all entities in the system again, and load them from the EM,
         // ensure we see everything we did in the v1 traversal
         AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
             .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
@@ -227,7 +230,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
                         final AllEntitiesInSystemObservable
                                 .ApplicationEntityGroup entity ) {
 
-                    final EntityManager em = emf.getEntityManager( 
+                    final EntityManager em = emf.getEntityManager(
                             entity.applicationScope.getApplication().getUuid() );
 
                     //add all versions from history to our comparison

@@ -20,14 +20,13 @@ package org.apache.usergrid.mq;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
 
 import static org.apache.usergrid.mq.Queue.getQueueParentPaths;
 import static org.apache.usergrid.mq.Queue.normalizeQueuePath;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
-@Concurrent()
+
 public class QueuePathsTest {
     private static final Logger LOG = LoggerFactory.getLogger( QueuePathsTest.class );
 

@@ -18,9 +18,12 @@
  */
 
 package org.apache.usergrid.persistence.map.impl;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.google.common.base.Preconditions;
@@ -42,6 +45,7 @@ import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -49,6 +53,9 @@ import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
+import com.netflix.astyanax.model.Row;
+import com.netflix.astyanax.model.Rows;
+import com.netflix.astyanax.query.ColumnFamilyQuery;
 import com.netflix.astyanax.serializers.BooleanSerializer;
 import com.netflix.astyanax.serializers.StringSerializer;
 
@@ -70,6 +77,9 @@ public class MapSerializationImpl implements MapSerialization {
         private static final BooleanSerializer BOOLEAN_SERIALIZER = BooleanSerializer.get();
 
         private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
+
+
+    private static final StringResultsBuilder STRING_RESULTS_BUILDER = new StringResultsBuilder();
 
 
         /**
@@ -125,34 +135,113 @@ public class MapSerializationImpl implements MapSerialization {
 
 
     @Override
+    public Map<String, String> getStrings(final MapScope scope,  final Collection<String> keys ) {
+        return getValues( scope, keys, STRING_RESULTS_BUILDER );
+    }
+
+
+    @Override
     public void putString( final MapScope scope, final String key, final String value ) {
-        Preconditions.checkNotNull(scope, "mapscope is required");
+        final RowOp op = new RowOp() {
+            @Override
+            public void putValue(final ColumnListMutation<Boolean> columnListMutation ) {
+                columnListMutation.putColumn( true, value );
+            }
+
+
+            @Override
+            public void putKey(final ColumnListMutation<String> keysMutation ) {
+                keysMutation.putColumn( key, true );
+            }
+        };
+
+
+        writeString( scope, key, value, op );
+    }
+
+
+    @Override
+    public void putString( final MapScope scope, final String key, final String value, final int ttl ) {
+        Preconditions.checkArgument( ttl > 0, "ttl must be > than 0" );
+
+        final RowOp op = new RowOp() {
+            @Override
+            public void putValue( final ColumnListMutation<Boolean> columnListMutation ) {
+                columnListMutation.putColumn( true, value, ttl );
+            }
+
+
+            @Override
+            public void putKey( final ColumnListMutation<String> keysMutation ) {
+                keysMutation.putColumn( key, true, ttl );
+            }
+        };
+
+
+        writeString( scope, key, value, op );
+    }
+
+
+    /**
+     * Write our string index with the specified row op
+     * @param scope
+     * @param key
+     * @param value
+     * @param rowOp
+     */
+    private void writeString( final MapScope scope, final String key, final String value, final RowOp rowOp ) {
+
+        Preconditions.checkNotNull( scope, "mapscope is required" );
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( value, "value is required" );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
 
-        //serialize to the entry
-        batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, value);
+        //serialize to the
+        // entry
+
+
+        rowOp.putValue( batch.withRow( MAP_ENTRIES, entryRowKey ) );
+
 
         //add it to the keys
 
         final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
 
-        final BucketScopedRowKey< String> keyRowKey =
-                BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket);
+        final BucketScopedRowKey<String> keyRowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
 
         //serialize to the entry
-        batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
 
-        executeBatch(batch);
+        rowOp.putKey( batch.withRow( MAP_KEYS, keyRowKey ) );
+
+
+        executeBatch( batch );
     }
 
 
+    /**
+     * Callbacks for performing row operations
+     */
+    private static interface RowOp{
 
+        /**
+         * Callback to do the row
+         * @param columnListMutation The column mutation
+         */
+        void putValue( final ColumnListMutation<Boolean> columnListMutation );
+
+
+        /**
+         * Write the key
+         * @param keysMutation
+         */
+        void putKey( final ColumnListMutation<String> keysMutation );
+
+
+    }
 
     @Override
     public UUID getUuid( final MapScope scope, final String key ) {
@@ -255,18 +344,18 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
 
-        final MultiTennantColumnFamilyDefinition mapEntries = 
+        final MultiTennantColumnFamilyDefinition mapEntries =
                 new MultiTennantColumnFamilyDefinition( MAP_ENTRIES,
-                       BytesType.class.getSimpleName(), 
-                       BytesType.class.getSimpleName(), 
-                       BytesType.class.getSimpleName(), 
+                       BytesType.class.getSimpleName(),
+                       BytesType.class.getSimpleName(),
+                       BytesType.class.getSimpleName(),
                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
-        final MultiTennantColumnFamilyDefinition mapKeys = 
+        final MultiTennantColumnFamilyDefinition mapKeys =
                 new MultiTennantColumnFamilyDefinition( MAP_KEYS,
-                        BytesType.class.getSimpleName(), 
-                        UTF8Type.class.getSimpleName(), 
-                        BytesType.class.getSimpleName(), 
+                        BytesType.class.getSimpleName(),
+                        UTF8Type.class.getSimpleName(),
+                        BytesType.class.getSimpleName(),
                         MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( mapEntries, mapKeys );
@@ -295,6 +384,49 @@ public class MapSerializationImpl implements MapSerialization {
             throw new RuntimeException( "Unable to connect to cassandra", e );
         }
     }
+
+
+    /**
+     * Get multiple values, using the string builder
+     * @param scope
+     * @param keys
+     * @param builder
+     * @param <T>
+     * @return
+     */
+    private <T> T getValues(final MapScope scope, final Collection<String> keys, final ResultsBuilder<T> builder) {
+
+
+        final List<ScopedRowKey<MapEntryKey>> rowKeys = new ArrayList<>( keys.size() );
+
+        for(final String key: keys){
+             //add it to the entry
+            final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+
+            rowKeys.add( entryRowKey );
+
+        }
+
+
+
+          //now get all columns, including the "old row key value"
+          try {
+              final Rows<ScopedRowKey<MapEntryKey>, Boolean>
+                  rows = keyspace.prepareQuery( MAP_ENTRIES ).getKeySlice( rowKeys ).withColumnSlice( true )
+                                                     .execute().getResult();
+
+
+             return builder.buildResults( rows );
+          }
+          catch ( NotFoundException nfe ) {
+              //nothing to return
+              return null;
+          }
+          catch ( ConnectionException e ) {
+              throw new RuntimeException( "Unable to connect to cassandra", e );
+          }
+      }
+
 
 
     private void executeBatch(MutationBatch batch) {
@@ -373,6 +505,41 @@ public class MapSerializationImpl implements MapSerialization {
                 final MapScope mapScope, final String key ) {
 
             return ScopedRowKey.fromKey( mapScope.getApplication(), new MapEntryKey( mapScope.getName(), key ) );
+        }
+    }
+
+
+    /**
+     * Build the results from the row keys
+     * @param <T>
+     */
+    private static interface ResultsBuilder<T> {
+
+        public T buildResults(final  Rows<ScopedRowKey<MapEntryKey>, Boolean> rows);
+    }
+
+    public static class StringResultsBuilder implements ResultsBuilder<Map<String, String>>{
+
+        @Override
+        public Map<String, String> buildResults( final Rows<ScopedRowKey<MapEntryKey>, Boolean> rows ) {
+            final int size = rows.size();
+
+            final Map<String, String> results = new HashMap<>(size);
+
+            for(int i = 0; i < size; i ++){
+
+                final Row<ScopedRowKey<MapEntryKey>, Boolean> row = rows.getRowByIndex( i );
+
+                final String value = row.getColumns().getStringValue( true, null );
+
+                if(value == null){
+                    continue;
+                }
+
+               results.put( row.getKey().getKey().key,  value );
+            }
+
+            return results;
         }
     }
 }

@@ -36,8 +36,6 @@ public class EntityEndpoint extends NamedResource {
         super(identifier, context, parent);
     }
 
-    protected ObjectMapper mapper = new ObjectMapper();
-
 
     /**
      *

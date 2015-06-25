@@ -28,14 +28,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
-import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
+import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -44,39 +43,39 @@ import static org.junit.Assert.assertTrue;
 
 public class UUIDUtilsTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger( UUIDUtilsTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( UUIDUtilsTest.class );
 
 
     @Test
     public void testUUIDUtils() {
         UUID uuid = UUIDUtils.newTimeUUID();
-        LOG.info( "" + uuid );
-        LOG.info( "" + uuid.timestamp() );
-        LOG.info( "" + UUIDUtils.getTimestampInMillis( uuid ) );
+        logger.info("" + uuid);
+        logger.info("" + uuid.timestamp());
+        logger.info("" + UUIDUtils.getTimestampInMillis(uuid));
 
-        LOG.info( "" + UUIDUtils.getTimestampInMillis( UUIDUtils.newTimeUUID() ) );
-        LOG.info( "" + System.currentTimeMillis() );
+        logger.info("" + UUIDUtils.getTimestampInMillis(UUIDUtils.newTimeUUID()));
+        logger.info("" + System.currentTimeMillis());
 
-        LOG.info( "" + UUIDUtils.getTimestampInMicros( UUIDUtils.newTimeUUID() ) );
-        LOG.info( "" + ( System.currentTimeMillis() * 1000 ) );
+        logger.info("" + UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID()));
+        logger.info("" + (System.currentTimeMillis() * 1000));
 
-        LOG.info( "" + UUIDUtils.MIN_TIME_UUID );
-        LOG.info( "" + UUIDUtils.MIN_TIME_UUID.variant() );
-        LOG.info( "" + UUIDUtils.MIN_TIME_UUID.version() );
-        LOG.info( "" + UUIDUtils.MIN_TIME_UUID.clockSequence() );
-        LOG.info( "" + UUIDUtils.MIN_TIME_UUID.timestamp() );
+        logger.info("" + UUIDUtils.MIN_TIME_UUID);
+        logger.info("" + UUIDUtils.MIN_TIME_UUID.variant());
+        logger.info("" + UUIDUtils.MIN_TIME_UUID.version());
+        logger.info("" + UUIDUtils.MIN_TIME_UUID.clockSequence());
+        logger.info("" + UUIDUtils.MIN_TIME_UUID.timestamp());
 
-        LOG.info( "" + UUIDUtils.MAX_TIME_UUID );
-        LOG.info( "" + UUIDUtils.MAX_TIME_UUID.variant() );
-        LOG.info( "" + UUIDUtils.MAX_TIME_UUID.version() );
-        LOG.info( "" + UUIDUtils.MAX_TIME_UUID.clockSequence() );
-        LOG.info( "" + UUIDUtils.MAX_TIME_UUID.timestamp() );
+        logger.info("" + UUIDUtils.MAX_TIME_UUID);
+        logger.info("" + UUIDUtils.MAX_TIME_UUID.variant());
+        logger.info("" + UUIDUtils.MAX_TIME_UUID.version());
+        logger.info("" + UUIDUtils.MAX_TIME_UUID.clockSequence());
+        logger.info("" + UUIDUtils.MAX_TIME_UUID.timestamp());
     }
 
 
     @Test
     public void testAppProvidedTimestamp() {
-        LOG.info( "UUIDUtilsTest.testAppProvidedTimestamp" );
+        logger.info("UUIDUtilsTest.testAppProvidedTimestamp");
         long ts = System.currentTimeMillis();
         System.out.println( ts );
 
@@ -84,7 +83,7 @@ public class UUIDUtilsTest {
 
         int count = 1000000;
 
-        LOG.info( "Generating " + count + " UUIDs..." );
+        logger.info("Generating " + count + " UUIDs...");
         for ( int i = 0; i < count; i++ ) {
             UUID uuid = newTimeUUID( ts );
 
@@ -92,14 +91,18 @@ public class UUIDUtilsTest {
             uuids.add( uuid );
 
             assertEquals( "Incorrect UUID timestamp value", ts, getTimestampInMillis( uuid ) );
+
+            if ( i % 1000 == 0 ) {
+                logger.info("testAppProvidedTimestamp processed " + i);
+            }
         }
-        LOG.info( "UUIDs checked" );
+        logger.info("UUIDs checked");
     }
 
 
     @Test
     public void testAppProvidedTimestampOrdering() {
-        LOG.info( "UUIDUtilsTest.testAppProvidedTimestamp" );
+        logger.info("UUIDUtilsTest.testAppProvidedTimestamp");
         long ts = System.currentTimeMillis();
         System.out.println( ts );
 
@@ -120,13 +123,17 @@ public class UUIDUtilsTest {
 
         List<UUID> uuids = new ArrayList<UUID>( count );
 
-        LOG.info( "Generating " + count + " UUIDs..." );
+        logger.info("Generating " + count + " UUIDs...");
         for ( int i = 0; i < count; i++ ) {
             UUID uuid = newTimeUUID( ts, i );
 
             uuids.add( uuid );
 
             assertEquals( "Incorrect UUID timestamp value", ts, getTimestampInMillis( uuid ) );
+
+            if ( i % 1000 == 0 ) {
+                logger.info("timeUUIDOrdering processed " + i);
+            }
         }
 
         for ( int i = 0; i < count - 1; i++ ) {
@@ -175,7 +182,7 @@ public class UUIDUtilsTest {
 
         Set created = buildTsMicros( count );
 
-        LOG.info( "execution took {}", System.currentTimeMillis() - startTime );
+        logger.info("execution took {}", System.currentTimeMillis() - startTime);
         assertEquals( count, created.size() );
         assertTrue( created.size() > 0 );
     }
@@ -187,11 +194,11 @@ public class UUIDUtilsTest {
         List<Future> jobs = executeFrob();
 
         for ( Future f : jobs ) {
-            LOG.info( "waiting on job..." );
+            logger.info("waiting on job...");
             f.get();
         }
 
-        LOG.info( "execution took {}", System.currentTimeMillis() - startTime );
+        logger.info("execution took {}", System.currentTimeMillis() - startTime);
     }
 
 
@@ -203,7 +210,7 @@ public class UUIDUtilsTest {
             jobs.add( exec.submit( new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
-                    LOG.info( "call invoked" );
+                    logger.info("call invoked");
 
                     int count = 1000 * 100;
                     Set created = buildTsMicros( count );
@@ -211,7 +218,7 @@ public class UUIDUtilsTest {
                     assertEquals( count, created.size() );
                     assertTrue( created.size() > 0 );
 
-                    LOG.info( "run complete" );
+                    logger.info("run complete");
                     return null;
                 }
             } ) );
@@ -352,6 +359,10 @@ public class UUIDUtilsTest {
             current = UUIDUtils.decrement( current );
 
             assertEquals( -1, current.compareTo( previous ) );
+
+            if ( i % 1000 == 0 ) {
+                logger.info("testDecrement processed " + i);
+            }
 
             previous = current;
         }

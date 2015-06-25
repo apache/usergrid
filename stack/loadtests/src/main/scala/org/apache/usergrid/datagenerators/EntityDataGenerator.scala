@@ -21,8 +21,9 @@
  import org.apache.usergrid.settings.Utils
 
  import scala.collection.mutable.ArrayBuffer
+ import scala.util.parsing.json.JSONObject
 
-object EntityDataGenerator {
+ object EntityDataGenerator {
 
   def generateBlockUserLists(numUsers: Int): Map[String, String] = {
 
@@ -43,7 +44,9 @@ object EntityDataGenerator {
 
   def generateUser(userId: String): Map[String,String] = {
 
-    return Map("username" -> "user".concat(userId.toString),
+    return Map(
+
+      "username" -> "user".concat(userId.toString),
       "profileId" -> Utils.generateRandomInt(10000, 1000000).toString,
       "displayName" -> Utils.generateRandomInt(10000, 1000000).toString,
       "showAge" -> Utils.generateRandomInt(0, 1).toString,
@@ -59,10 +62,10 @@ object EntityDataGenerator {
     )
   }
 
-  def generateCustomEntity(entityName: String): Map[String,String] = {
+  def generateCustomEntity(): Map[String,String] = {
 
-    return Map(
-      "name" -> entityName,
+    var entity: Map[String, String] = Map(
+      // "name" -> "fdsa",
       "address" -> Utils.generateRandomInt(10000, 1000000).toString,
       "city" -> Utils.generateRandomInt(10000, 1000000).toString,
       "state" -> Utils.generateRandomInt(10000, 1000000).toString,
@@ -78,6 +81,33 @@ object EntityDataGenerator {
       "bar" -> Utils.generateRandomInt(120, 350).toString,
       "tables" -> Utils.generateRandomInt(50, 100000).toString,
       "outdoor" -> Utils.generateRandomInt(50, 100000).toString
-    )
+      )
+    return Map("entity" -> new JSONObject(entity).toString())
+
   }
+
+   def generateCustomEntityJSONString(): String = {
+
+      var entity: Map[String, String] = Map(
+        // "name" -> "fdsa",
+        "address" -> Utils.generateRandomInt(10000, 1000000).toString,
+        "city" -> Utils.generateRandomInt(10000, 1000000).toString,
+        "state" -> Utils.generateRandomInt(10000, 1000000).toString,
+        "zip" -> Utils.generateRandomInt(10000, 1000000).toString,
+        "phone" -> Utils.generateRandomInt(10000, 1000000).toString,
+        "businessname" -> Utils.generateRandomInt(0, 1).toString,
+        "menu" -> Utils.generateRandomInt(1, 1000000).toString,
+        "specials" -> Utils.generateRandomInt(1, 1000000).toString,
+        "profile" -> "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "description" -> "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+        "directions" -> Utils.generateRandomInt(18, 65).toString,
+        "atmosphere" -> Utils.generateRandomInt(48, 84).toString,
+        "bar" -> Utils.generateRandomInt(120, 350).toString,
+        "tables" -> Utils.generateRandomInt(50, 100000).toString,
+        "outdoor" -> Utils.generateRandomInt(50, 100000).toString
+        )
+
+     return new JSONObject(entity).toString();
+
+    }
 }

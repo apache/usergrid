@@ -37,6 +37,12 @@ public interface CassandraConfig {
     public ConsistencyLevel getReadCL();
 
     /**
+     * Get the currently configured ReadCL that is more consitent than getReadCL
+     * @return
+     */
+    public ConsistencyLevel getConsistentReadCL();
+
+    /**
      * Get the currently configured write CL
      * @return
      */

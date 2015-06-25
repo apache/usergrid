@@ -21,12 +21,13 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
+
 import org.apache.usergrid.utils.UUIDUtils;
 
+import static org.apache.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn;
 
 
 /** @author tnine */

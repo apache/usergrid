@@ -55,8 +55,6 @@ import org.apache.shiro.authz.UnauthorizedException;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.yammer.metrics.Metrics;
-import com.yammer.metrics.annotation.ExceptionMetered;
-import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Gauge;
 import com.yammer.metrics.core.Histogram;
@@ -111,9 +109,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @RequireSystemAccess
     @GET
     @Path("applications")
-    public JSONWithPadding getAllApplications( @Context UriInfo ui,
-                                               @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws URISyntaxException {
+    public JSONWithPadding getAllApplications(
+        @Context UriInfo ui,
+        @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws URISyntaxException {
 
         logger.info( "RootResource.getAllApplications" );
 
@@ -122,7 +121,11 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         Map<String, UUID> applications = null;
         try {
-            applications = emf.getApplications();
+            if ( deleted ) {
+                applications = emf.getDeletedApplications();
+            } else {
+                applications = emf.getApplications();
+            }
             response.setSuccess();
             response.setApplications( applications );
         }
@@ -141,7 +144,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     public JSONWithPadding getAllApplications2( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
             throws URISyntaxException {
-        return getAllApplications( ui, callback );
+        return getAllApplications( ui, false, callback );
     }
 
 
@@ -162,16 +165,16 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     /**
      * Return status of this Usergrid instance in JSON format.
-     * 
+     *
      * By Default this end-point will ignore errors but if you call it with ignore_status=false
      * then it will return HTTP 500 if either the Entity store or the Index for the management
      * application are in a bad state.
-     * 
+     *
      * @param ignoreError Ignore any errors and return status no matter what.
      */
     @GET
     @Path("status")
-    public JSONWithPadding getStatus( 
+    public JSONWithPadding getStatus(
             @QueryParam("ignore_error") @DefaultValue("true") Boolean ignoreError,
             @QueryParam("callback") @DefaultValue("callback") String callback ) {
 
@@ -195,10 +198,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
         node.put( "version", usergridSystemMonitor.getBuildNumber() );
 
         // Hector status, for backwards compatibility
-        node.put( "cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive() ); 
+        node.put( "cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive() );
 
         // Core Persistence Collections module status
-        node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() ); 
+        node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() );
 
         // Core Persistence Query Index module status for Management App Index
         EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
@@ -292,8 +295,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
     public static final String ENTITY_ID_PATH = "{entityId: " + Identifier.UUID_REX + "}";
     public static final String EMAIL_PATH = "{email: " + Identifier.EMAIL_REX + "}";
 
-    @Timed(name = "getApplicationByUuids_timer", group = "rest_timers")
-    @ExceptionMetered(group = "rest_exceptions", name = "getApplicationByUuids_exceptions")
     @Path(ORGANIZATION_ID_PATH+"/"+APPLICATION_ID_PATH)
     public ApplicationResource getApplicationByUuids( @PathParam("organizationId") String organizationIdStr,
                                                       @PathParam("applicationId") String applicationIdStr )
@@ -319,8 +320,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
-    @Timed(name = "getOrganizationByName_timer", group = "rest_timers")
-    @ExceptionMetered(group = "rest_exceptions", name = "getOrganizationByName_exceptions")
     @Path("{organizationName}")
     public OrganizationResource getOrganizationByName( @PathParam("organizationName") String organizationName )
             throws Exception {

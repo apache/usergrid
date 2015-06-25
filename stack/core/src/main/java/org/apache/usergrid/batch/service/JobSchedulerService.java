@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,6 @@ import org.apache.usergrid.batch.JobFactory;
 import org.apache.usergrid.batch.JobNotFoundException;
 import org.apache.usergrid.batch.repository.JobAccessor;
 import org.apache.usergrid.batch.repository.JobDescriptor;
-import org.apache.usergrid.metrics.MetricsFactory;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Timer;
@@ -46,8 +46,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.yammer.metrics.annotation.ExceptionMetered;
-import com.yammer.metrics.annotation.Timed;
 
 
 /**
@@ -81,8 +79,6 @@ public class JobSchedulerService extends AbstractScheduledService {
     public JobSchedulerService() { }
 
 
-    @Timed( name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS,
-            rateUnit = TimeUnit.MINUTES )
     @Override
     protected void runOneIteration() throws Exception {
 
@@ -143,7 +139,6 @@ public class JobSchedulerService extends AbstractScheduledService {
     /**
      * Use the provided BulkJobFactory to build and submit BulkJob items as ListenableFuture objects
      */
-    @ExceptionMetered( name = "BulkJobScheduledService_submitWork_exceptions", group = "scheduler" )
     private void submitWork( final JobDescriptor jobDescriptor ) {
         final Job job;
 

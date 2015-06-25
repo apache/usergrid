@@ -17,19 +17,15 @@
 package org.apache.usergrid.batch;
 
 
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.Test;
-import org.apache.usergrid.batch.repository.JobDescriptor;
-import org.apache.usergrid.cassandra.Concurrent;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.usergrid.batch.repository.JobDescriptor;
+
 import static org.junit.Assert.assertNotNull;
 
-
 /** @author zznate */
-@Concurrent()
 public class UsergridJobFactoryTest {
 
     private static UUID jobId = UUID.randomUUID();

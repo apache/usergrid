@@ -71,10 +71,10 @@ public class FilteringLoader implements ResultsLoader {
      * @param applicationScope The application scope to perform the load
      * @param indexScope The index scope used in the search
      */
-    protected FilteringLoader( 
-            final ManagerCache managerCache, 
-            final ResultsVerifier resultsVerifier,  
-            final ApplicationScope applicationScope, 
+    protected FilteringLoader(
+            final ManagerCache managerCache,
+            final ResultsVerifier resultsVerifier,
+            final ApplicationScope applicationScope,
             final IndexScope indexScope ) {
 
         this.managerCache = managerCache;
@@ -103,25 +103,25 @@ public class FilteringLoader implements ResultsLoader {
         // Maps the entity ids to our candidates
         final Map<Id, CandidateResult> maxCandidateMapping = new HashMap<>( crs.size() );
 
-        // Groups all candidate results by types.  When search connections there will be multiple 
+        // Groups all candidate results by types.  When search connections there will be multiple
         // types, so we want to batch fetch them more efficiently
-        
-        final HashMultimap<String, CandidateResult> groupedByScopes = 
+
+        final HashMultimap<String, CandidateResult> groupedByScopes =
                 HashMultimap.create( crs.size(), crs.size() );
 
         final Iterator<CandidateResult> iter = crs.iterator();
 
 
-        // TODO, in this case we're "optimizing" due to the limitations of collection scope.  
+        // TODO, in this case we're "optimizing" due to the limitations of collection scope.
         // Perhaps  we should change the API to just be an application, then an "owner" scope?
 
-        // Go through the candidates and group them by scope for more efficient retrieval.  
+        // Go through the candidates and group them by scope for more efficient retrieval.
         // Also remove duplicates before we even make a network call
         for ( int i = 0; iter.hasNext(); i++ ) {
 
             final CandidateResult currentCandidate = iter.next();
 
-            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType( 
+            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType(
                     currentCandidate.getId().getType() );
 
             final Id entityId = currentCandidate.getId();
@@ -143,34 +143,48 @@ public class FilteringLoader implements ResultsLoader {
 
             final UUID currentVersion = currentCandidate.getVersion();
 
-            //this is a newer version, we know we already have a stale entity, add it to be cleaned up
-            if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
 
-                //de-index it
-                logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
-                    new Object[] { 
-                        entityId.getUuid(), 
-                        entityId.getType(), 
-                        previousMaxVersion, 
-                        currentVersion } );
+            final CandidateResult toRemove;
+            final CandidateResult toKeep;
 
-                //deindex this document, and remove the previous maxVersion
-                //we have to deindex this from our ownerId, since this is what gave us the reference
-                indexBatch.deindex( indexScope, previousMax );
-                groupedByScopes.remove( collectionType, previousMax );
-
-
-                //TODO, fire the entity repair cleanup task here instead of de-indexing
-
-                //replace the value with a more current version
-                maxCandidateMapping.put( entityId, currentCandidate );
-                orderIndex.put( entityId, i );
-                groupedByScopes.put( collectionType, currentCandidate );
+            //current is newer than previous.  Remove previous and keep current
+            if(UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ){
+                toRemove = previousMax;
+                toKeep = currentCandidate;
             }
+            //previously seen value is newer than current.  Remove the current and keep the previously seen value
+            else{
+                toRemove = currentCandidate;
+                toKeep = previousMax;
+            }
+
+            //this is a newer version, we know we already have a stale entity, add it to be cleaned up
+
+
+            //de-index it
+            logger.warn( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
+                new Object[] {
+                    entityId.getUuid(),
+                    entityId.getType(),
+                    toRemove.getVersion(),
+                    toKeep.getVersion() } );
+
+            //deindex this document, and remove the previous maxVersion
+            //we have to deindex this from our ownerId, since this is what gave us the reference
+            indexBatch.deindex( indexScope, toRemove );
+            groupedByScopes.remove( collectionType, toRemove );
+
+
+            //TODO, fire the entity repair cleanup task here instead of de-indexing
+
+            //replace the value with a more current version
+            maxCandidateMapping.put( entityId, toKeep );
+            orderIndex.put( entityId, i );
+            groupedByScopes.put( collectionType, toKeep );
         }
 
 
-        //now everything is ordered, and older versions are removed.  Batch fetch versions to verify 
+        //now everything is ordered, and older versions are removed.  Batch fetch versions to verify
         // existence and correct versions
 
         final TreeMap<Integer, Id> sortedResults = new TreeMap<>();
@@ -193,10 +207,10 @@ public class FilteringLoader implements ResultsLoader {
 
             //now using the scope, load the collection
 
-            // Get the collection scope and batch load all the versions.  We put all entities in 
-            // app/app for easy retrieval/ unless persistence changes, we never want to read from 
+            // Get the collection scope and batch load all the versions.  We put all entities in
+            // app/app for easy retrieval/ unless persistence changes, we never want to read from
             // any scope other than the app, app, scope name scope
-            final CollectionScope collScope = new CollectionScopeImpl( 
+            final CollectionScope collScope = new CollectionScopeImpl(
                 applicationScope.getApplication(), applicationScope.getApplication(), scopeName);
 
             final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope);
@@ -225,7 +239,7 @@ public class FilteringLoader implements ResultsLoader {
         }
 
 
-         // NOTE DO NOT execute the batch here.  
+         // NOTE DO NOT execute the batch here.
         // It changes the results and we need consistent paging until we aggregate all results
         return resultsVerifier.getResults( sortedResults.values() );
     }

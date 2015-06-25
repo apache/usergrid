@@ -18,6 +18,10 @@
  */
 
 package org.apache.usergrid.persistence.map.impl;
+
+
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
@@ -31,34 +35,47 @@ public interface MapSerialization extends Migration {
     public String getString( final MapScope scope, final String key );
 
     /**
+     * Get strings from the map
+     * @param keys
+     * @return
+     */
+    public Map<String, String> getStrings( final MapScope scope, final Collection<String> keys );
+
+    /**
      * Return the string, null if not found
      */
-    public void putString(final MapScope scope,  final String key, final String value );
+    public void putString( final MapScope scope, final String key, final String value );
+
+    /**
+     * Write the string
+     */
+    public void putString( final MapScope scope, final String key, final String value, final int ttl );
 
 
     /**
      * Return the uuid, null if not found
      */
-    public UUID getUuid(final MapScope scope,  final String key );
+    public UUID getUuid( final MapScope scope, final String key );
 
     /**
      * Return the uuid, null if not found
      */
-    public void putUuid(final MapScope scope,  final String key, final UUID putUuid );
+    public void putUuid( final MapScope scope, final String key, final UUID putUuid );
 
     /**
      * Return the long, null if not found
      */
-    public Long getLong(final MapScope scope,  final String key );
+    public Long getLong( final MapScope scope, final String key );
 
     /**
      * Return the long, null if not found
      */
-    public void putLong(final MapScope scope,  final String key, final Long value );
+    public void putLong( final MapScope scope, final String key, final Long value );
 
     /**
      * Delete the key
      *
      * @param key The key used to delete the entry
      */
-    public void delete(final MapScope scope,  final String key );}
+    public void delete( final MapScope scope, final String key );
+}

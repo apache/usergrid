@@ -46,6 +46,18 @@
             ],
             "ConstraintDescription": "must be valid instance type."
         },
+      "RestIndexWorkers":{
+        "Description": "The number of index workers to ingest ElasticSearch batch operations per tomcat",
+        "Type": "Number",
+        "Default": "8",
+        "MinValue": "3"
+      },
+      "TomcatThreadsPerCore": {
+        "Description": "Number of threads to configure tomcat for per core",
+        "Type": "Number",
+        "Default": "50",
+        "MinValue": "1"
+      },
         "KeyPair": {
           "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
           "Type": "AWS::EC2::KeyPair::KeyName",
@@ -61,7 +73,7 @@
             "Description": "Number of Cass servers to start.",
             "Type": "Number",
             "Default": "6",
-            "MinValue": "3"
+            "MinValue": "2"
         },
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
@@ -78,9 +90,20 @@
         "CassReplicationFactor": {
             "Description": "Cassandra replication factor",
             "Type": "Number",
-            "Default": "3",
+            "Default": "2",
             "MinValue": "1"
         },
+
+      "CassReadConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
+      "CassWriteConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
         "ESClusterName": {
             "Description": "Name to be used for Elasticsearch cluster.",
             "Type": "String",
@@ -90,8 +113,16 @@
             "Description": "Number of ES servers to start.",
             "Type": "Number",
             "Default": "6",
-            "MinValue": "3"
+            "MinValue": "2"
         },
+        "ESNumMasterServers": {
+                   "Description": "Number of ES master servers to start.",
+                   "Type": "Number",
+                   "Default": "1",
+                   "MinValue": "1"
+               },
+
+
         "ESInstanceType": {
             "Description": "Instance type for ES servers",
             "Type": "String",
@@ -264,7 +295,7 @@
                 }
             }
         },
-       "GraphiteAutoScalingLaunchConfiguration":{
+        "GraphiteAutoScalingLaunchConfiguration":{
          "Type":"AWS::AutoScaling::LaunchConfiguration",
          "Properties":{
             "UserData":{
@@ -439,7 +470,7 @@
                 }
             }
         },
-            "OpsCenterUser": {
+        "OpsCenterUser": {
                         "Type": "AWS::IAM::User",
                         "Properties": {
                             "Path": "/",
@@ -460,7 +491,7 @@
                             ]
                         }
                     },
-                    "OpsCenterKey": {
+        "OpsCenterKey": {
                         "Type": "AWS::IAM::AccessKey",
                         "Properties": {
                             "UserName": {
@@ -468,7 +499,7 @@
                             }
                         }
                     },
-                   "OpsCenterAutoScalingLaunchConfiguration":{
+        "OpsCenterAutoScalingLaunchConfiguration":{
                      "Type":"AWS::AutoScaling::LaunchConfiguration",
                      "Properties":{
                         "UserData":{
@@ -594,7 +625,7 @@
 
                      }
                   },
-                    "OpsCenterAutoScalingGroup": {
+        "OpsCenterAutoScalingGroup": {
                         "Type": "AWS::AutoScaling::AutoScalingGroup",
                         "Version": "2014-07-24",
                         "Properties": {
@@ -742,7 +773,7 @@
                 }
             }
         },
-      "CassAutoScalingLaunchConfiguration":{
+        "CassAutoScalingLaunchConfiguration":{
          "Type":"AWS::AutoScaling::LaunchConfiguration",
          "Properties":{
             "UserData":{
@@ -930,7 +961,7 @@
                 }
             }
         },
-      "ESAutoScalingLaunchConfiguration":{
+        "ESMasterAutoScalingLaunchConfiguration":{
          "Type":"AWS::AutoScaling::LaunchConfiguration",
          "Properties":{
             "UserData":{
@@ -962,7 +993,10 @@
                         "\n",
                         "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
                         "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
+                         "export ES_MASTER=true", "\n",
+
                         "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+
                         "\n",
                         "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
                         "\n",
@@ -1045,7 +1079,7 @@
                     ]
             }
       },
-        "ESAutoScalingGroup": {
+        "ESMasterAutoScalingGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Version": "2009-05-15",
             "Properties": {
@@ -1088,13 +1122,13 @@
                        }
                   ],
                 "LaunchConfigurationName": {
-                    "Ref": "ESAutoScalingLaunchConfiguration"
+                    "Ref": "ESMasterAutoScalingLaunchConfiguration"
                 },
                 "MinSize": {
-                    "Ref": "ESNumServers"
+                    "Ref": "ESNumMasterServers"
                 },
                 "MaxSize": {
-                    "Ref": "ESNumServers"
+                    "Ref": "ESNumMasterServers"
                 },
                 "NotificationConfiguration": {
                     "TopicARN": {
@@ -1109,123 +1143,312 @@
                 }
             }
         },
-      "RestAutoScalingLaunchConfiguration":{
-         "Type":"AWS::AutoScaling::LaunchConfiguration",
-         "Properties":{
-            "UserData":{
-               "Fn::Base64":{
-                  "Fn::Join":[
-                     "",
-                     [
-                        "#!/bin/bash -ex\n",
-                        "# REST SERVER STARTUP \n",
-                        "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
-                        "\n",
-                        "mkdir -p /usr/share/usergrid\n",
-                        "\n",
-                        "# create script that sets our environment variables\n",
-                        "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
-                        "alias sudo='sudo -E'\n",
-                        "\n",
-                        "export TYPE=rest\n",
-                        "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n",
-                        "export YOURKIT=", { "Ref":"InstallYourkit" }, "\n",
-                        "export DNS_NAME=", { "Ref":"DnsSubDomain" }, "\n",
-                        "export DNS_DOMAIN=", { "Ref":"DnsDomain" }, "\n",
-                        "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
-                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
-                        "export ELB_NAME=", { "Ref":"RestElasticLoadBalancer" }, "\n",
-                        "\n",
-                        "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
-                        "export EC2_REGION=", { "Ref":"AWS::Region" }, "\n",
-                        "export EC2_URL=https://ec2.amazonaws.com/\n", "\n",
-                        "export REST_SECURITY_GROUP_NAME=", { "Ref":"RestSecurityGroup" }, "\n",
-                        "export DB_SECURITY_GROUP_NAME=", { "Ref":"CassSecurityGroup" }, "\n",
-                        "\n",
-                        "export CASSANDRA_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
-                        "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
-                        "export CASSANDRA_NUM_SERVERS=", { "Ref":"CassNumServers" }, "\n",
-                         "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
-                        "\n",
-                        "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
-                        "\n",
-                        "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
-                        "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
-                         "\n",
-                        "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
-                        "\n",
-                        "export SUPER_USER_EMAIL=", { "Ref":"SuperUserEmail" }, "\n",
-                        "export TEST_ADMIN_USER_EMAIL=", { "Ref":"TestAdminUserEmail" }, "\n",
-                        "\n",
-                        "EOF\n",
-                        "\n",
-                        "# put AWS creds in environment\n",
-                        "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
-                        "export AWS_ACCESS_KEY=", { "Ref":"RestKey" }, "\n",
-                        "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
-                        "EOF\n",
-                        "\n",
-                        "# setup s3cmd (will be installed by init script) \n",
-                        "cat >/etc/s3cfg <<EOF\n",
-                        "access_key=", { "Ref":"RestKey" }, "\n",
-                        "secret_key=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
-                        "EOF\n",
-                        "chmod 644 /etc/s3cfg\n",
-                        "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
-                        "ln -s /etc/s3cfg ~root/.s3cfg\n",
-                        "\n",
-                        "# download usergrid and init script bundle from S3\n",
-                        "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
-                        "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
-                        "apt-get update\n",
-                        "apt-get -y install s3cmd\n",
-                        "cd /usr/share/usergrid\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/ROOT.war\n",
-                        "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "mv ROOT.war webapps/ROOT.war\n",
-                        "chmod 755 ./init_instance/*.sh\n",
-                        "cd ./init_instance\n",
-                        "# Init as a REST intance \n",
-                        "sh ./init_rest_server.sh\n"
-                     ]
-                  ]
-               }
-            },
-            "KeyName":{
-               "Ref":"KeyPair"
-            },
-            "ImageId":{
-               "Fn::FindInMap":[
-                  "AWSRegionArch2AMI",
-                  {
-                     "Ref":"AWS::Region"
-                  },
-                  {
-                     "Fn::FindInMap":[
-                        "AWSInstanceType2Arch",
-                        {
-                           "Ref":"RestInstanceType"
+        "ESAutoScalingLaunchConfiguration":{
+                 "Type":"AWS::AutoScaling::LaunchConfiguration",
+                 "Properties":{
+                    "UserData":{
+                       "Fn::Base64":{
+                          "Fn::Join":[
+                             "",
+                             [
+                                "#!/bin/bash -ex\n",
+                                "# ES NODE STARTUP \n",
+                                "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                                "\n",
+                                "mkdir -p /usr/share/usergrid\n",
+                                "\n",
+                                "# create script that sets our environment variables\n",
+                                "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                                "alias sudo='sudo -E'\n", "\n",
+                                "export TYPE=es\n",
+                                "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
+                                "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                                "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                                "\n",
+                                "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                                "export EC2_REGION=", { "Ref":"AWS::Region" },
+                                "\n",
+                                "export EC2_URL=https://ec2.amazonaws.com/\n",
+                                "\n",
+                                "export ES_SECURITY_GROUP_NAME=", { "Ref":"ESSecurityGroup" }, "\n",
+                                "\n",
+                                "\n",
+                                "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
+                                "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
+                                 "export ES_MASTER=false","\n",
+                                "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                                "\n",
+                                "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                                "\n",
+                                "EOF\n",
+                                "\n",
+                                "# put AWS creds in environment\n",
+                                "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                                "export AWS_ACCESS_KEY=", { "Ref":"ESKey" }, "\n",
+                                "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "ESKey", "SecretAccessKey" ] }, "\n",
+                                "EOF\n",
+                                "\n",
+                                "# setup s3cmd (will be installed by init script) \n",
+                                "cat >/etc/s3cfg <<EOF\n",
+                                "access_key=", { "Ref":"ESKey" }, "\n",
+                                "secret_key=", { "Fn::GetAtt":[ "ESKey", "SecretAccessKey" ] },
+                                "\n",
+                                "EOF\n",
+                                "chmod 644 /etc/s3cfg\n",
+                                "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                                "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                                "\n",
+                                "# download usergrid and init script bundle from S3\n",
+                                "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                                "apt-get update\n",
+                                "apt-get -y install s3cmd\n",
+                                "cd /usr/share/usergrid\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "chmod 755 ./init_instance/*.sh\n",
+                                "cd ./init_instance\n",
+                                "# init as an ES node \n",
+                                "sh ./init_es_server.sh\n"
+                             ]
+                          ]
+                       }
+                    },
+                        "KeyName": {
+                            "Ref": "KeyPair"
                         },
-                        "Arch"
-                     ]
-                  }
-               ]
-            },
-            "InstanceType":{
-               "Ref":"RestInstanceType"
-            },
-            "IamInstanceProfile":{
-               "Ref":"RootInstanceProfile"
-            },
-            "SecurityGroups":[
-               {
-                  "Ref":"RestSecurityGroup"
-               }
-            ]
-         }
-      },
+                        "ImageId": {
+                            "Fn::FindInMap": [
+                                "AWSRegionArch2AMI",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                {
+                                    "Fn::FindInMap": [
+                                        "AWSInstanceType2Arch",
+                                        {
+                                            "Ref": "CassInstanceType"
+                                        },
+                                        "Arch"
+                                    ]
+                                }
+                            ]
+                        },
+                        "InstanceType": {
+                            "Ref": "ESInstanceType"
+                        },
+                        "IamInstanceProfile": {
+                            "Ref": "RootInstanceProfile"
+                        },
+                        "SecurityGroups": [
+                            {
+                                "Ref": "ESSecurityGroup"
+                            }
+                        ],
+
+                         "BlockDeviceMappings": [
+                             {
+                                 "DeviceName": "/dev/sdb",
+                                 "VirtualName": "ephemeral0"
+                             },
+                             {
+                                 "DeviceName": "/dev/sdc",
+                                 "VirtualName": "ephemeral1"
+                              }
+                            ]
+                    }
+              },
+        "ESAutoScalingGroup": {
+                    "Type": "AWS::AutoScaling::AutoScalingGroup",
+                    "Version": "2009-05-15",
+                    "Properties": {
+                      "AvailabilityZones": [
+                              {
+                                  "Fn::FindInMap": [
+                                      "FourAZs",
+                                      {
+                                          "Ref": "AWS::Region"
+                                      },
+                                      "AZ1"
+                                  ]
+                              },
+                              {
+                                  "Fn::FindInMap": [
+                                      "FourAZs",
+                                      {
+                                          "Ref": "AWS::Region"
+                                      },
+                                      "AZ2"
+                                  ]
+                              },
+                              {
+                                   "Fn::FindInMap": [
+                                       "FourAZs",
+                                       {
+                                           "Ref": "AWS::Region"
+                                       },
+                                       "AZ3"
+                                   ]
+                               },
+                              {
+                                   "Fn::FindInMap": [
+                                       "FourAZs",
+                                       {
+                                           "Ref": "AWS::Region"
+                                       },
+                                       "AZ4"
+                                   ]
+                               }
+                          ],
+                        "LaunchConfigurationName": {
+                            "Ref": "ESAutoScalingLaunchConfiguration"
+                        },
+                        "MinSize": {
+                            "Ref": "ESNumServers"
+                        },
+                        "MaxSize": {
+                            "Ref": "ESNumServers"
+                        },
+                        "NotificationConfiguration": {
+                            "TopicARN": {
+                                "Ref": "NotificationTopic"
+                            },
+                            "NotificationTypes": [
+                                "autoscaling:EC2_INSTANCE_LAUNCH",
+                                "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                                "autoscaling:EC2_INSTANCE_TERMINATE",
+                                "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                            ]
+                        }
+                    }
+                },
+        "RestAutoScalingLaunchConfiguration":{
+                 "Type":"AWS::AutoScaling::LaunchConfiguration",
+                 "Properties":{
+                    "UserData":{
+                       "Fn::Base64":{
+                          "Fn::Join":[
+                             "",
+                             [
+                                "#!/bin/bash -ex\n",
+                                "# REST SERVER STARTUP \n",
+                                "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                                "\n",
+                                "mkdir -p /usr/share/usergrid\n",
+                                "\n",
+                                "# create script that sets our environment variables\n",
+                                "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                                "alias sudo='sudo -E'\n",
+                                "\n",
+                                "export TYPE=rest\n",
+                                "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n",
+                                "export YOURKIT=", { "Ref":"InstallYourkit" }, "\n",
+                                "export DNS_NAME=", { "Ref":"DnsSubDomain" }, "\n",
+                                "export DNS_DOMAIN=", { "Ref":"DnsDomain" }, "\n",
+                                "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                                "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                                "export ELB_NAME=", { "Ref":"RestElasticLoadBalancer" }, "\n",
+                                "\n",
+                                "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                                "export EC2_REGION=", { "Ref":"AWS::Region" }, "\n",
+                                "export EC2_URL=https://ec2.amazonaws.com/\n", "\n",
+                                "export REST_SECURITY_GROUP_NAME=", { "Ref":"RestSecurityGroup" }, "\n",
+                                "export DB_SECURITY_GROUP_NAME=", { "Ref":"CassSecurityGroup" }, "\n",
+                                "\n",
+                                "export CASSANDRA_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
+                                "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
+                                "export CASSANDRA_NUM_SERVERS=", { "Ref":"CassNumServers" }, "\n",
+                                "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                                "export TOMCAT_NUM_SERVERS=", { "Ref":"RestMinServers" }, "\n",
+                                "\n",
+                                "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
+                                "\n",
+                                "export CASSANDRA_READ_CONSISTENCY=", { "Ref":"CassReadConsistency" }, "\n",
+                                "\n",
+                                "export CASSANDRA_WRITE_CONSISTENCY=", { "Ref":"CassWriteConsistency" }, "\n",
+                                "\n",
+                               "export INDEX_WORKER_COUNT=", { "Ref":"RestIndexWorkers" }, "\n",
+
+                                "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
+                                "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
+                                 "\n",
+                                "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                                "\n",
+                                "export NUM_THREAD_PROC=", { "Ref":"TomcatThreadsPerCore" }, "\n",
+                                "\n",
+                                "export SUPER_USER_EMAIL=", { "Ref":"SuperUserEmail" }, "\n",
+                                "export TEST_ADMIN_USER_EMAIL=", { "Ref":"TestAdminUserEmail" }, "\n",
+                                "\n",
+                                "EOF\n",
+                                "\n",
+                                "# put AWS creds in environment\n",
+                                "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                                "export AWS_ACCESS_KEY=", { "Ref":"RestKey" }, "\n",
+                                "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
+                                "EOF\n",
+                                "\n",
+                                "# setup s3cmd (will be installed by init script) \n",
+                                "cat >/etc/s3cfg <<EOF\n",
+                                "access_key=", { "Ref":"RestKey" }, "\n",
+                                "secret_key=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
+                                "EOF\n",
+                                "chmod 644 /etc/s3cfg\n",
+                                "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                                "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                                "\n",
+                                "# download usergrid and init script bundle from S3\n",
+                                "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                                "apt-get update\n",
+                                "apt-get -y install s3cmd\n",
+                                "cd /usr/share/usergrid\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/ROOT.war\n",
+                                "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "mv ROOT.war webapps/ROOT.war\n",
+                                "chmod 755 ./init_instance/*.sh\n",
+                                "cd ./init_instance\n",
+                                "# Init as a REST intance \n",
+                                "sh ./init_rest_server.sh\n"
+                             ]
+                          ]
+                       }
+                    },
+                    "KeyName":{
+                       "Ref":"KeyPair"
+                    },
+                    "ImageId":{
+                       "Fn::FindInMap":[
+                          "AWSRegionArch2AMI",
+                          {
+                             "Ref":"AWS::Region"
+                          },
+                          {
+                             "Fn::FindInMap":[
+                                "AWSInstanceType2Arch",
+                                {
+                                   "Ref":"RestInstanceType"
+                                },
+                                "Arch"
+                             ]
+                          }
+                       ]
+                    },
+                    "InstanceType":{
+                       "Ref":"RestInstanceType"
+                    },
+                    "IamInstanceProfile":{
+                       "Ref":"RootInstanceProfile"
+                    },
+                    "SecurityGroups":[
+                       {
+                          "Ref":"RestSecurityGroup"
+                       }
+                    ]
+                 }
+              },
         "RestAutoScalingGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Version": "2009-05-15",

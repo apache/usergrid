@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +24,9 @@ import java.util.List;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.SortDirection;
 import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
@@ -47,13 +47,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-@Concurrent()
+
 public class QueryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( QueryTest.class );
 
 
-    @Test 
+    @Test
     public void testQueryTree() throws Exception {
         LOG.info( "testQuery" );
 
@@ -204,7 +204,7 @@ public class QueryTest {
     }
 
 
-    @Test 
+    @Test
     public void testFromJson() throws QueryParseException {
         String s = "{\"filter\":\"a contains 'ed'\"}";
         Query q = Query.fromJsonString( s );
@@ -217,7 +217,7 @@ public class QueryTest {
     }
 
 
-    @Test 
+    @Test
     public void testCompoundQueryWithNot() throws QueryParseException {
         String s = "name contains 'm' and not name contains 'grover'";
         Query q = Query.fromQL( s );

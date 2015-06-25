@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang.math.NumberUtils;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

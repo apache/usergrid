@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
@@ -48,12 +47,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
-@Concurrent()
-public class
-        CollectionIT extends AbstractCoreIT {
+public class CollectionIT extends AbstractCoreIT {
+
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
     @Rule
@@ -67,7 +64,7 @@ public class
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );
         Entity user = app.create( "user" );
-        assertNotNull( user ); 
+        assertNotNull( user );
 
         user = app.get( user.getUuid(), "user" );
         assertNotNull( user );
@@ -374,7 +371,7 @@ public class
 
         em.refreshIndex();
 
-        Results r = em.searchCollection( group, "users", 
+        Results r = em.searchCollection( group, "users",
             new Query().addEqualityFilter( "nickname", "ed" )
                 .withResultsLevel(Level.LINKED_PROPERTIES ) );
 
@@ -914,7 +911,7 @@ public class
         properties.put( "keywords", "Action, New" );
         Entity thirdGame = em.create( "game", properties );
 
-        em.refreshIndex();
+        em.refreshIndex();//need to track all batches then resolve promises
 
         Query query = Query.fromQL( "select * where keywords contains 'new' and title contains 'extreme'" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
@@ -930,7 +927,7 @@ public class
     public void pagingAfterDelete() throws Exception {
         LOG.debug( "pagingAfterDelete" );
 
-        
+
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
@@ -1497,7 +1494,7 @@ public class
         em.refreshIndex();
 
         location = new LinkedHashMap<String, Object>();
-        location.put( "Place", 
+        location.put( "Place",
             "Via Pietro Maroncelli, 48, 62012 Santa Maria Apparente Province of Macerata, Italy" );
         location.put( "Longitude", 13.693080199999999 );
         location.put( "Latitude", 43.2985019 );
@@ -1516,7 +1513,7 @@ public class
         em.refreshIndex();
 
         // String s = "select * where Flag = 'requested'";
-        // String s = "select * where Flag = 'requested' and NOT Recipient.Username = 
+        // String s = "select * where Flag = 'requested' and NOT Recipient.Username =
         // 'fb_536692245' order by created asc";
 
         String s = "select * where Flag = 'requested' and NOT Recipient.Username "

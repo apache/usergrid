@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.netflix.astyanax.model.ConsistencyLevel;
+import org.apache.usergrid.persistence.core.astyanax.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +36,6 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -72,6 +70,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
                     ENTITY_VERSION_SER );
 
     protected final Keyspace keyspace;
+    private final CassandraFig cassandraFig;
 
 
     /**
@@ -80,7 +79,8 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
      * @param keyspace Keyspace in which to store Unique Values.
      */
     @Inject
-    public UniqueValueSerializationStrategyImpl( final Keyspace keyspace ) {
+    public UniqueValueSerializationStrategyImpl( final Keyspace keyspace, final CassandraFig cassandraFig) {
+        this.cassandraFig = cassandraFig;
         this.keyspace = keyspace;
     }
 
@@ -171,12 +171,17 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     }
 
 
+
     @Override
-    public UniqueValueSet load(final CollectionScope colScope, final Collection<Field> fields )
+    public UniqueValueSet load(final CollectionScope colScope, final Collection<Field> fields ) throws ConnectionException{
+        return load(colScope,ConsistencyLevel.valueOf(cassandraFig.getReadCL()), fields);
+    }
+    @Override
+    public UniqueValueSet load(final CollectionScope colScope, final ConsistencyLevel consistencyLevel, final Collection<Field> fields )
             throws ConnectionException {
 
         Preconditions.checkNotNull( fields, "fields are required" );
-        Preconditions.checkArgument( fields.size() > 0, "More than 1 field msut be specified" );
+        Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
 
 
         final List<ScopedRowKey<CollectionPrefixedKey<Field>>> keys = new ArrayList<>( fields.size() );
@@ -198,7 +203,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
         final UniqueValueSetImpl uniqueValueSet = new UniqueValueSetImpl( fields.size() );
 
         Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion>> results =
-                keyspace.prepareQuery( CF_UNIQUE_VALUES ).getKeySlice( keys )
+                keyspace.prepareQuery( CF_UNIQUE_VALUES ).setConsistencyLevel(consistencyLevel).getKeySlice( keys )
                         .withColumnRange( new RangeBuilder().setLimit( 1 ).build() ).execute().getResult().iterator();
 
 

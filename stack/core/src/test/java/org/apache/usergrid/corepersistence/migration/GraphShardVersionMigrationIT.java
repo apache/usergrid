@@ -24,11 +24,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
@@ -44,14 +45,16 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Injector;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 
+@NotThreadSafe
 public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
     private Injector injector;
@@ -65,13 +68,14 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,GraphShardVersionMigration.class  );
+    public MigrationTestRule migrationTestRule = new MigrationTestRule( app,  SpringResource
+            .getInstance().getBean( Injector.class ) ,GraphShardVersionMigration.class  );
 
 
 
     @Before
     public void setup() {
-        injector = CpSetup.getInjector();
+        injector =  SpringResource.getInstance().getBean( Injector.class );
         graphShardVersionMigration = injector.getInstance( GraphShardVersionMigration.class );
         managerCache = injector.getInstance( ManagerCache.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );

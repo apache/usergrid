@@ -35,7 +35,7 @@
             </list>
         </property>
     </bean>
-	
+
 
     <import resource="usergrid-rest-context.xml"/>
 
@@ -52,10 +52,11 @@
     <!--<constructor-arg name="bucketName" value="xx" />-->
     <!--</bean>-->
 
-    <bean id="setup" class="org.apache.usergrid.corepersistence.HybridSetup">
-        <constructor-arg ref="properties"/>
+    <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
+
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
+        <constructor-arg ref="injector"/>
     </bean>
 
     <!-- refer to a named schemaManager from the DataControl annotation thusly -->

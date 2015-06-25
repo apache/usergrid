@@ -18,13 +18,11 @@ package org.apache.usergrid.services;
 
 
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.Entity;
 
 import static org.junit.Assert.assertNotNull;
 
-
-@Concurrent()
 public class GroupServiceIT extends AbstractServiceIT {
     @Test
     public void testGroups() throws Exception {

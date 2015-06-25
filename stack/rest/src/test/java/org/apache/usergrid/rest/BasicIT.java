@@ -17,37 +17,26 @@
 package org.apache.usergrid.rest;
 
 
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
 import com.fasterxml.jackson.databind.JsonNode;
-
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.security.TestAppUser;
+import org.apache.usergrid.rest.test.security.TestUser;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
-import java.util.UUID;
+import java.util.Map;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-import org.apache.usergrid.rest.test.resource.app.UsersCollection;
-import org.apache.usergrid.rest.test.security.TestAppUser;
-import org.apache.usergrid.rest.test.security.TestUser;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 
 public class BasicIT extends AbstractRestIT {
@@ -79,11 +68,12 @@ public class BasicIT extends AbstractRestIT {
     public void testGenericCollectionEntityNameUuid() throws Exception {
         JsonNode node = null;
         String orgAppPath = "/"+context.getOrgName()+"/"+context.getAppName();
-        TestUser testUser = new TestAppUser( "temp"+ UUIDUtils.newTimeUUID(),"password","temp"+UUIDUtils.newTimeUUID()+"@usergrid.com"  ).create( context );
+        TestUser testUser = new TestAppUser( "temp"+ UUIDUtils.newTimeUUID(),
+            "password","temp"+UUIDUtils.newTimeUUID()+"@usergrid.com"  ).create( context );
 
         //String token = userToken( "ed@anuff.com", "sesame" );
-        WebResource resource =
-                resource().path( orgAppPath+"/suspects" ).queryParam( "access_token", context.getActiveUser().getToken() );
+        WebResource resource = resource().path( orgAppPath+"/suspects" )
+            .queryParam( "access_token", context.getActiveUser().getToken() );
         node = mapper.readTree( resource.accept( MediaType.APPLICATION_JSON ).post( String.class ));
 
 
@@ -94,8 +84,9 @@ public class BasicIT extends AbstractRestIT {
         Map<String, String> payload = hashMap( "hair", "brown" ).map( "sex", "male" ).map( "eyes", "green" )
                 .map( "name", uuid.replace( '-', '0' ) ).map( "build", "thin" ).map( "height", "6 4" );
 
-        node = mapper.readTree( resource.queryParam( "access_token", context.getActiveUser().getToken() ).accept( MediaType.APPLICATION_JSON )
-                       .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+        node = mapper.readTree( resource.queryParam( "access_token",
+            context.getActiveUser().getToken() ).accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         logNode( node );
 
@@ -162,8 +153,8 @@ public class BasicIT extends AbstractRestIT {
 
         logNode( node );
 
-        assertEquals( username,
-                node.get( "data" ).get( "organizations" ).get( orgName.toLowerCase() ).get( "users" ).get( username ).get("name").textValue());
+        assertEquals( username, node.get( "data" ).get( "organizations" ).get( orgName.toLowerCase() )
+                    .get( "users" ).get( username ).get("name").textValue());
 
 
         // test login user with incorrect password
@@ -195,11 +186,13 @@ public class BasicIT extends AbstractRestIT {
         assertTrue( "Error should have been thrown", err_thrown );
 
         // test login user with correct password
-        TestUser testUser = new TestAppUser( "temp"+ UUIDUtils.newTimeUUID(),"password","temp"+UUIDUtils.newTimeUUID()+"@usergrid.com"  ).create( context );
+        TestUser testUser = new TestAppUser( "temp"+ UUIDUtils.newTimeUUID(),"password",
+            "temp"+UUIDUtils.newTimeUUID()+"@usergrid.com"  ).create( context );
 
-        node = mapper.readTree( resource().path( "/"+orgName+"/"+appName+"/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", testUser.getUser() ).queryParam( "password", testUser.getPassword())
-                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+        node = mapper.readTree( resource().path( "/"+orgName+"/"+appName+"/token" )
+            .queryParam( "grant_type", "password" )
+            .queryParam( "username", testUser.getUser() ).queryParam( "password", testUser.getPassword())
+            .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         logNode( node );
 
@@ -234,8 +227,9 @@ public class BasicIT extends AbstractRestIT {
 
         err_thrown = false;
         try {
-            node = mapper.readTree( resource().path( "/"+orgName+"/"+appName+"/users" ).queryParam( "access_token", "blahblahblah" )
-                    .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+            node = mapper.readTree( resource().path( "/"+orgName+"/"+appName+"/users" )
+                .queryParam( "access_token", "blahblahblah" )
+                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             if ( e.getResponse().getStatus() != 401 ) {
@@ -258,7 +252,7 @@ public class BasicIT extends AbstractRestIT {
             err_thrown = true;
         }
         assertTrue( "Error should have been thrown", err_thrown );
-        
+
         // test set app user pin
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
@@ -270,7 +264,7 @@ public class BasicIT extends AbstractRestIT {
                 .post( String.class, formData ));
 
         refreshIndex(orgName, appName);
-        
+
         node = mapper.readTree( resource()
                 .path( "/"+orgName+"/"+appName+"/token" )
                 .queryParam( "grant_type", "pin" )
@@ -340,7 +334,8 @@ public class BasicIT extends AbstractRestIT {
 
         err_thrown = false;
         try {
-            node = mapper.readTree( resource().path(  "/"+orgName+"/"+appName+"/items" ).accept( MediaType.APPLICATION_JSON )
+            node = mapper.readTree( resource().path(  "/"+orgName+"/"+appName+"/items" )
+                .accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException e ) {

@@ -35,6 +35,7 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 
@@ -141,6 +142,10 @@ public class MigrationManagerImpl implements MigrationManager {
             if ( !missingKeyspace ) {
                 throw badRequestException;
             }
+        }catch( NotFoundException nfe){
+            //if we execute this immediately after a drop keyspace in 1.2.x, Cassandra is returning the NFE instead of a BadRequestException
+            //swallow and log, then continue to create the keyspaces.
+            logger.info( "Received a NotFoundException when attempting to describe keyspace.  It does not exist" );
         }
 
 

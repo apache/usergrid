@@ -113,33 +113,41 @@ public class Query {
     }
 
 
+    /**
+     * Creates a deep copy of a query from another query
+     * @param q
+     */
     public Query( Query q ) {
-        if ( q != null ) {
-            type = q.type;
-            sortPredicates = q.sortPredicates != null 
-                    ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
-            startResult = q.startResult;
-            cursor = q.cursor;
-            limit = q.limit;
-            selectAssignments = q.selectAssignments != null 
-                    ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
-            mergeSelectResults = q.mergeSelectResults;
-            //level = q.level;
-            connectionType = q.connectionType;
-            permissions = q.permissions != null ? new ArrayList<String>( q.permissions ) : null;
-            reversed = q.reversed;
-            reversedSet = q.reversedSet;
-            startTime = q.startTime;
-            finishTime = q.finishTime;
-            resolution = q.resolution;
-            pad = q.pad;
-            rootOperand = q.rootOperand;
-            identifiers = q.identifiers != null 
-                    ? new ArrayList<Identifier>( q.identifiers ) : null;
-            counterFilters = q.counterFilters != null 
-                    ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
-            collection = q.collection;
+        if ( q == null ) {
+            return;
         }
+
+        type = q.type;
+        sortPredicates = q.sortPredicates != null
+                ? new ArrayList<>( q.sortPredicates ) : null;
+        startResult = q.startResult;
+        cursor = q.cursor;
+        limit = q.limit;
+        selectAssignments = q.selectAssignments != null
+                ? new LinkedHashMap<>( q.selectAssignments ) : null;
+        mergeSelectResults = q.mergeSelectResults;
+        //level = q.level;
+        connectionType = q.connectionType;
+        permissions = q.permissions != null ? new ArrayList<>( q.permissions ) : null;
+        reversed = q.reversed;
+        reversedSet = q.reversedSet;
+        startTime = q.startTime;
+        finishTime = q.finishTime;
+        resolution = q.resolution;
+        pad = q.pad;
+        rootOperand = q.rootOperand;
+        identifiers = q.identifiers != null
+                ? new ArrayList<>( q.identifiers ) : null;
+        counterFilters = q.counterFilters != null
+                ? new ArrayList<>( q.counterFilters ) : null;
+        collection = q.collection;
+        level = q.level;
+
     }
 
 
@@ -151,8 +159,8 @@ public class Query {
 
         //we have a root operand.  Translate our AST into an ES search
         if ( getRootOperand() != null ) {
-            // In the case of geo only queries, this will return null into the query builder.  
-            // Once we start using tiles, we won't need this check any longer, since a geo query 
+            // In the case of geo only queries, this will return null into the query builder.
+            // Once we start using tiles, we won't need this check any longer, since a geo query
             // will return a tile query + post filter
             QueryVisitor v = new EsQueryVistor();
 
@@ -168,11 +176,11 @@ public class Query {
         }
 
 
-         // Add our filter for context to our query for fast execution.  
+         // Add our filter for context to our query for fast execution.
          // Fast because it utilizes bitsets internally. See this post for more detail.
          // http://www.elasticsearch.org/blog/all-about-elasticsearch-filter-bitsets/
 
-        // TODO evaluate performance when it's an all query.  
+        // TODO evaluate performance when it's an all query.
         // Do we need to put the context term first for performance?
         if ( queryBuilder != null ) {
             queryBuilder = QueryBuilders.boolQuery().must( queryBuilder ).must( QueryBuilders
@@ -200,11 +208,26 @@ public class Query {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
             filterBuilder = v.getFilterBuilder();
-        } 
+        }
 
-        return filterBuilder;	
+        return filterBuilder;
 	}
 
+
+    /**
+     * Create a query instance from the QL.  If the string is null, return an empty query
+     * @param ql
+     * @return
+     */
+    public static Query fromQLNullSafe(final String ql){
+        final Query query = fromQL(ql);
+
+        if(query != null){
+            return query;
+        }
+
+        return new Query();
+    }
 
     public static Query fromQL( String ql ) throws QueryParseException {
         if ( StringUtils.isEmpty(ql) ) {
@@ -215,8 +238,8 @@ public class Query {
         ql = ql.trim();
 
         String qlt = ql.toLowerCase();
-        if (       !qlt.startsWith( "select" ) 
-                && !qlt.startsWith( "insert" ) 
+        if (       !qlt.startsWith( "select" )
+                && !qlt.startsWith( "insert" )
                 && !qlt.startsWith( "update" ) && !qlt.startsWith( "delete" ) ) {
 
             if ( qlt.startsWith( "order by" ) ) {
@@ -278,7 +301,7 @@ public class Query {
     }
 
 
-    public static Query fromQueryParams( Map<String, List<String>> params ) 
+    public static Query fromQueryParams( Map<String, List<String>> params )
             throws QueryParseException {
         Query q = null;
         CounterResolution resolution = null;
@@ -636,7 +659,7 @@ public class Query {
 
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( sort.getPropertyName() ) ) {
-                throw new QueryParseException( String.format( 
+                throw new QueryParseException( String.format(
                     "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
             }
         }
@@ -687,7 +710,7 @@ public class Query {
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( propertyName ) ) {
                 logger.error(
-                        "Attempted to set sort order for " + s.getPropertyName() 
+                        "Attempted to set sort order for " + s.getPropertyName()
                                 + " more than once, discarding..." );
                 return this;
             }
@@ -1110,7 +1133,7 @@ public class Query {
         private final Query.SortDirection direction;
 
 
-        public SortPredicate(@JsonProperty("propertyName")  String propertyName, 
+        public SortPredicate(@JsonProperty("propertyName")  String propertyName,
                 @JsonProperty("direction")  Query.SortDirection direction ) {
 
             if ( propertyName == null ) {

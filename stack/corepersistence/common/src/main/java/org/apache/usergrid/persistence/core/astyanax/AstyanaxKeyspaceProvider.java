@@ -73,7 +73,7 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
 
         AstyanaxContext<Keyspace> context =
                 new AstyanaxContext.Builder().forCluster( cassandraFig.getClusterName() )
-                        .forKeyspace( cassandraFig.getKeyspaceName() )
+                        .forKeyspace( cassandraFig.getApplicationKeyspace())
 
                         /*
                          * TODO tnine Filter this by adding a host supplier.  We will get token discovery from cassandra

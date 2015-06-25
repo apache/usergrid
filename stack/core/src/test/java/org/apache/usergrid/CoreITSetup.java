@@ -20,6 +20,7 @@ package org.apache.usergrid;
 import java.util.UUID;
 
 import org.junit.rules.TestRule;
+
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.IndexBucketLocator;

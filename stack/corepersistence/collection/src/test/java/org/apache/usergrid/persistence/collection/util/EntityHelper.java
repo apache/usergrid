@@ -76,7 +76,7 @@ public class EntityHelper {
      * Verify that all fields in the expected are present in the returned, and have the same values
      * via .equals.  Does not recurse on object values.  Also verifies there are no additional fields
      * in the returned entity
-     * ø
+     *
      * @param expected
      * @param returned
      */

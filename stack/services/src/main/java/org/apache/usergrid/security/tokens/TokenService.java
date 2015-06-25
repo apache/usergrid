@@ -31,6 +31,9 @@ public interface TokenService {
     public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
                                Map<String, Object> state, long duration ) throws Exception;
 
+    public void importToken( String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                               Map<String, Object> state, long duration ) throws Exception;
+
     /** Get the token info for the string version of this token */
     public TokenInfo getTokenInfo( String token ) throws Exception;
 

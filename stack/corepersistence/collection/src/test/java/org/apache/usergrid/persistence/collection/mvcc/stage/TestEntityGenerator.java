@@ -40,31 +40,33 @@ public class TestEntityGenerator {
 
     /**
      * Return an MvccEntityMock with valid inputs from the supplied entity
+     *
      * @param entity
      * @return
      */
-    public static MvccEntity fromEntity(Entity entity){
+    public static MvccEntity fromEntity(Entity entity) {
 
         final MvccEntity mvccEntity = mock(MvccEntity.class);
-        when(mvccEntity.getId()).thenReturn( entity.getId());
-        when(mvccEntity.getVersion()).thenReturn( entity.getVersion() );
-        when( mvccEntity.getEntity() ).thenReturn( Optional.of( entity ) );
+        when(mvccEntity.getId()).thenReturn(entity.getId());
+        when(mvccEntity.getVersion()).thenReturn(entity.getVersion());
+        when(mvccEntity.getEntity()).thenReturn(Optional.of(entity));
 
         return mvccEntity;
     }
 
     /**
      * Return an MvccEntityMock with valid inputs from the supplied entity
+     *
      * @param entity
      * @return
      */
-    public static MvccEntity fromEntityStatus(Entity entity,MvccEntity.Status status){
+    public static MvccEntity fromEntityStatus(Entity entity, MvccEntity.Status status) {
 
         final MvccEntity mvccEntity = mock(MvccEntity.class);
-        when(mvccEntity.getId()).thenReturn( entity.getId());
-        when(mvccEntity.getVersion()).thenReturn( entity.getVersion() );
-        when( mvccEntity.getEntity() ).thenReturn( Optional.of( entity ) );
-        when( mvccEntity.getStatus() ).thenReturn( status );
+        when(mvccEntity.getId()).thenReturn(entity.getId());
+        when(mvccEntity.getVersion()).thenReturn(entity.getVersion());
+        when(mvccEntity.getEntity()).thenReturn(Optional.of(entity));
+        when(mvccEntity.getStatus()).thenReturn(status);
 
         return mvccEntity;
     }
@@ -72,36 +74,38 @@ public class TestEntityGenerator {
 
     /**
      * Generate a valid entity
+     *
      * @return
      */
-    public static Entity generateEntity()  {
-            final Entity entity = new Entity( generateId());
-            final UUID version = UUIDGenerator.newTimeUUID();
+    public static Entity generateEntity() {
+        final Entity entity = new Entity(generateId());
+        final UUID version = UUIDGenerator.newTimeUUID();
 
-            EntityUtils.setVersion( entity, version );
+        EntityUtils.setVersion(entity, version);
 
-            return entity;
-        }
+        return entity;
+    }
 
     /**
-         * Generate a valid entity
-         * @return
-         */
-        public static Entity generateEntity(final Id id, final UUID version)  {
-                final Entity entity = new Entity(id);
+     * Generate a valid entity
+     *
+     * @return
+     */
+    public static Entity generateEntity(final Id id, final UUID version) {
+        final Entity entity = new Entity(id);
 
-                EntityUtils.setVersion( entity, version );
+        EntityUtils.setVersion(entity, version);
 
-                return entity;
-            }
-
+        return entity;
+    }
 
 
     /**
      * Generate an id with type "test" and a new time uuid
+     *
      * @return
      */
-    public static Id generateId(){
+    public static Id generateId() {
         return new SimpleId(UUIDGenerator.newTimeUUID(), "test");
     }
 }

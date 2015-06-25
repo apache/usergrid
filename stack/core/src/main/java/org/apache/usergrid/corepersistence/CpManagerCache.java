@@ -45,14 +45,6 @@ public class CpManagerCache implements ManagerCache {
 
     // TODO: consider making these cache sizes and timeouts configurable
 
-    private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache =
-            CacheBuilder.newBuilder().maximumSize( 1000 )
-                        .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
-                                    public EntityCollectionManager load( CollectionScope scope ) {
-                                        return ecmf.createCollectionManager( scope );
-                                    }
-                                } );
-
     private LoadingCache<ApplicationScope, EntityIndex> eiCache =
             CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, EntityIndex>() {
                                                                      public EntityIndex load( ApplicationScope scope ) {
@@ -89,12 +81,8 @@ public class CpManagerCache implements ManagerCache {
 
     @Override
     public EntityCollectionManager getEntityCollectionManager( CollectionScope scope ) {
-        try {
-            return ecmCache.get( scope );
-        }
-        catch ( ExecutionException ex ) {
-            throw new RuntimeException( "Error getting manager", ex );
-        }
+        //cache is now in the colletion manager level
+        return ecmf.createCollectionManager( scope );
     }
 
 
@@ -133,7 +121,6 @@ public class CpManagerCache implements ManagerCache {
 
     @Override
     public void invalidate() {
-        ecmCache.invalidateAll();
         eiCache.invalidateAll();
         gmCache.invalidateAll();
         mmCache.invalidateAll();

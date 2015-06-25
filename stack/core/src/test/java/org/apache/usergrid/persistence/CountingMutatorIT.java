@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,16 +27,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.hector.CountingMutator;
+import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.junit.Assert.assertEquals;
 
-
-@Concurrent()
 public class CountingMutatorIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( CountingMutatorIT.class );
 
@@ -66,8 +65,8 @@ public class CountingMutatorIT extends AbstractCoreIT {
         //temporarily set our max size to 10 for testing
         CountingMutator.MAX_SIZE = 10;
 
-        UUID applicationId = setup.createApplication( 
-            "testOrganization", "testFlushingMutator-" + RandomStringUtils.randomAlphabetic(20) );
+        UUID applicationId = setup.createApplication(
+            "testOrganization", "testFlushingMutator-" + UUIDGenerator.newTimeUUID() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -100,7 +99,7 @@ public class CountingMutatorIT extends AbstractCoreIT {
 
         //now verify our connections were created properly
 
-        PagingResultsIterator itr = new PagingResultsIterator(em.getConnectingEntities( 
+        PagingResultsIterator itr = new PagingResultsIterator(em.getConnectingEntities(
                 returned, "following", "user", Level.ALL_PROPERTIES, 1000 ));
 
         int count = 0;

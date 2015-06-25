@@ -16,15 +16,15 @@
  */
 package org.apache.usergrid.services;
 
-
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
 
-
-@Concurrent()
 public class ApplicationsServiceIT extends AbstractServiceIT {
+
     @Test
     public void testPermissions() throws Exception {
+
+        clearShiroSubject.clear();
+
         app.createRole( "manager", null, 0 );
         app.createRole( "member", null, 0 );
 

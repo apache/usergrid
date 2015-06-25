@@ -40,7 +40,6 @@ import org.apache.commons.lang.StringUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -118,18 +117,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.apache.usergrid.core.Datastore#getImplementationDescription()
-     */
-    @Override
-    public String getImplementationDescription() {
-        return IMPLEMENTATION_DESCRIPTION;
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.core.Datastore#getEntityDao(java.util.UUID,
      * java.util.UUID)
      */
@@ -181,7 +169,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.core.Datastore#createApplication(java.lang.String)
      */
     @Override
@@ -192,7 +180,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.core.Datastore#createApplication(java.lang.String,
      * java.util.Map)
      */
@@ -203,7 +191,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         String appName = buildAppName( organizationName, name );
 
         HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, appName, PROPERTY_UUID );
+                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, appName, PROPERTY_UUID );
         if ( column != null ) {
             throw new ApplicationAlreadyExistsException( name );
             // UUID uuid = uuid(column.getValue());
@@ -218,11 +206,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         return applicationId;
     }
 
-    
+
     @Override
     public void deleteApplication(UUID applicationId) throws Exception {
         // TODO implement deleteApplication in Usergrid 1 code base (master branch?)
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
 
@@ -247,7 +235,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
 
-        Keyspace ko = cass.getSystemKeyspace();
+        Keyspace ko = cass.getUsergridApplicationKeyspace();
         Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
 
         long timestamp = cass.createTimestamp();
@@ -273,7 +261,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         name = buildAppName( organizationName, name );
 
         HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
+                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
         if ( column != null ) {
             throw new ApplicationAlreadyExistsException( name );
             // UUID uuid = uuid(column.getValue());
@@ -285,11 +273,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    @Metered(group = "core", name = "EntityManagerFactory_lookupApplication_byName")
     public UUID lookupApplication( String name ) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
+                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
         if ( column != null ) {
             return uuid( column.getValue() );
         }
@@ -306,11 +293,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Application getApplication( String name ) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
+                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
         if ( column == null ) {
             return null;
         }
@@ -325,7 +311,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public Map<String, UUID> getApplications() throws Exception {
         Map<String, UUID> applications = new TreeMap<String, UUID>( CASE_INSENSITIVE_ORDER );
-        Keyspace ko = cass.getSystemKeyspace();
+        Keyspace ko = cass.getUsergridApplicationKeyspace();
         RangeSlicesQuery<String, String, UUID> q = createRangeSlicesQuery( ko, se, se, ue );
         q.setKeys( "", "\uFFFF" );
         q.setColumnFamily( APPLICATIONS_CF );
@@ -341,11 +327,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         return applications;
     }
 
-
-    @Override
+   @Override
     public boolean setServiceProperty( String name, String value ) {
         try {
-            cass.setColumn( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name, value );
+            cass.setColumn( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name, value );
             return true;
         }
         catch ( Exception e ) {
@@ -358,7 +343,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public boolean deleteServiceProperty( String name ) {
         try {
-            cass.deleteColumn( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name );
+            cass.deleteColumn( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name );
             return true;
         }
         catch ( Exception e ) {
@@ -371,7 +356,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public boolean updateServiceProperties( Map<String, String> properties ) {
         try {
-            cass.setColumns( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF.getBytes(), properties );
+            cass.setColumns( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF.getBytes(), properties );
             return true;
         }
         catch ( Exception e ) {
@@ -384,7 +369,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public Map<String, String> getServiceProperties() {
         try {
-            return asMap( cass.getAllColumns( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, se, se ) );
+            return asMap( cass.getAllColumns( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF, se, se ) );
         }
         catch ( Exception e ) {
             logger.error( "Unable to load properties: " + e.getMessage() );
@@ -420,7 +405,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public UUID getDefaultAppId() {
-        return DEFAULT_APPLICATION_ID; 
+        return DEFAULT_APPLICATION_ID;
     }
 
     @Override
@@ -434,18 +419,23 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
+    public void rebuildCollectionIndex(UUID appId, String collection, boolean reverse, ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
     public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
     public void rebuildAllIndexes(ProgressObserver po) throws Exception {
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
     public void rebuildApplicationIndexes(UUID appId, ProgressObserver po) throws Exception {
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
 
@@ -472,19 +462,24 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported in v1");
     }
 
-
     @Override
-    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
-        throw new UnsupportedOperationException("Not supported."); 
-    }
-
-    @Override
-    public void addIndex(UUID appId, String suffix,final int shards,final int replicas) {
+    public void addIndex(UUID appId, String suffix,final int shards,final int replicas,final String consistency) {
         throw new UnsupportedOperationException("Not supported in v1");
     }
 
     @Override
     public Health getEntityStoreHealth() {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        throw new UnsupportedOperationException("Not supported in v1.");
     }
+
+    @Override
+    public void restoreApplication(UUID applicationId) throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    @Override
+    public Map<String, UUID> getDeletedApplications() throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
 }

@@ -37,5 +37,6 @@ public interface ResultsLoaderFactory {
      * @param indexScope The index scope used in the search
      * @param
      */
-    public ResultsLoader getLoader( final ApplicationScope applicationScope, final IndexScope indexScope, final Query.Level resultsLevel );
+    ResultsLoader getLoader( final ApplicationScope applicationScope, final IndexScope indexScope,
+                             final Query.Level resultsLevel );
 }

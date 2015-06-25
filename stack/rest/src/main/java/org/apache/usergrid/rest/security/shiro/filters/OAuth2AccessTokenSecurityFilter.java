@@ -107,6 +107,10 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                 catch ( InvalidTokenException ite ) {
                     throw mappableSecurityException( INVALID_AUTH_ERROR );
                 }
+                catch ( IndexOutOfBoundsException ioobe ) {
+                    // token is just some rubbish string
+                    throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
+                }
                 catch ( Exception e ) {
                     if ( LOG.isDebugEnabled() ) {
                         LOG.debug( "Unable to verify OAuth token: " + accessToken, e );
@@ -138,7 +142,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
-                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken( 
+                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken(
                             user, accessToken, emf.getManagementAppId() );
                 }
                 else if ( AuthPrincipalType.APPLICATION_USER.equals( principal.getType() ) ) {

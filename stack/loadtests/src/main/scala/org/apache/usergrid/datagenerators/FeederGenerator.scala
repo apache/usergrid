@@ -143,13 +143,55 @@
 
   }
 
-  def generateCustomEntityFeeder(numEntities: Int): Array[Map[String, String]] = {
-    var entityArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
-    for (entityCount <- 1 to numEntities) {
-      var entity: Map[String, String] = EntityDataGenerator.generateCustomEntity(entityCount.toString)
-      entityArray += entity
-    }
-    return entityArray.toArray
-  }
 
+
+
+   /**
+    * Generate users forever
+    * @param seed The seed
+    * @return
+    */
+   def generateCustomEntityInfinite(seed:Int): Iterator[Map[String, String]] = {
+     //val rod = "rod"
+     val userFeeder = Iterator.from(seed).map(i=>EntityDataGenerator.generateCustomEntity())
+     return userFeeder
+   }
+
+
+
+   /**
+    * Generate users forever
+    * @param seed The seed
+    * @return
+    */
+   def generateCustomEntityPutInfinite(seed:Int): Iterator[Map[String, Any]] = {
+     //val rod = "rod"
+     val userFeeder = Iterator.from(seed).map(i=>Map("entityName" -> i.toString.concat(UUID.randomUUID().toString), "entity" -> EntityDataGenerator.generateCustomEntityJSONString()));
+     return userFeeder
+   }
+
+
+   def testFeeder(seed:Int): Iterator[Map[String, String]] = {
+     var entity: Map[String, String] = EntityDataGenerator.generateCustomEntity();
+     Map("entity" -> entity)
+     val userFeeder = Iterator.from(seed).map(i=>EntityDataGenerator.generateCustomEntity())
+     return userFeeder
+   }
+
+/*
+
+   def testFeeder(): Array[Map[String, String]] = {
+     var userArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
+     for (userCount <- 1 to numUsers) {
+       var user: Map[String, String] = EntityDataGenerator.generateUser(userCount.toString)
+       var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
+       var blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(numUsers)
+
+       user = user ++ geolocation ++ blockLists
+
+       userArray += user
+     }
+     return userArray.toArray
+   }
+  */
 }

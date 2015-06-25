@@ -72,12 +72,12 @@ public class CorePerformanceIT extends BaseIT {
     public static ElasticSearchResource es = new ElasticSearchResource();
 
     // max entities we will write and read
-    static int maxEntities = 10; // TODO: make this configurable when you add Chop 
+    static int maxEntities = 10; // TODO: make this configurable when you add Chop
 
     // each app will get all data
     static int appCount = 10;
 
-    // number of threads = orgCount x appCount 
+    // number of threads = orgCount x appCount
 
     // total number of records = orgCount x appCount x numRecords
 
@@ -191,14 +191,14 @@ public class CorePerformanceIT extends BaseIT {
                 count += candidateResults.size();
 
                 //cause retrieval from cassandra
-                EntityResults entityResults = new EntityResults( 
+                EntityResults entityResults = new EntityResults(
                     candidateResults, ecm, UUIDGenerator.newTimeUUID() );
 
                 while(entityResults.hasNext()){
                     entityResults.next();
                 }
 
-                log.info("Read {} reviews in {} / {} ", new Object[] { 
+                log.info("Read {} reviews in {} / {} ", new Object[] {
                     count, indexScope.getOwner(), indexScope.getName() } );
             }
         }
@@ -216,7 +216,7 @@ public class CorePerformanceIT extends BaseIT {
 
         public void run() {
 
-            CollectionScope collectionScope = new CollectionScopeImpl( 
+            CollectionScope collectionScope = new CollectionScopeImpl(
                     applicationScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
             EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope );
             EntityIndex eci = ecif.createEntityIndex(applicationScope );
@@ -232,7 +232,7 @@ public class CorePerformanceIT extends BaseIT {
 
             // create the first entry
             Entity current = new Entity(
-                new SimpleId(UUIDGenerator.newTimeUUID(), "review")); 
+                new SimpleId(UUIDGenerator.newTimeUUID(), "review"));
 
 //            Id orgId = orgAppScope.scope.getApplication();
 //            Id appId = orgAppScope.scope.getOwner();
@@ -243,54 +243,54 @@ public class CorePerformanceIT extends BaseIT {
 
             try {
                 while ( (s = br.readLine()) != null && count < maxEntities ) {
-                    
+
                     try {
-                        
+
                         if ( s.trim().equals("")) { // then we are at end of a record
-                            
+
                             // write and index current entity
                             ecm.write( current ).toBlocking().last();
 
                             entityIndexBatch.index(indexScope, current  );
-                            
+
                             if ( maxEntities < 20 ) {
                                 log.info("Index written for {}", current.getId());
                                 log.info("---");
                             }
-                            
+
                             // create the next entity
                             current = new Entity(
                                     new SimpleId(UUIDGenerator.newTimeUUID(), "review"));
-                            
+
                             count++;
                             if(count % 1000 == 0){
-                                entityIndexBatch.execute();
+                                entityIndexBatch.execute().get();
                             }
 
                             if (count % 100000 == 0) {
-                                log.info("Indexed {} reviews in {} / {} ", 
-                                    new Object[] { 
-                                        count, 
+                                log.info("Indexed {} reviews in {} / {} ",
+                                    new Object[] {
+                                        count,
                                             applicationScope,
                                         indexScope.getOwner() } );
                             }
                             continue;
                         }
-                        
+
                         // process a field
                         String name = s.substring( 0, s.indexOf(":")).replace("/", "_").toLowerCase() ;
                         String value = s.substring( s.indexOf(":") + 1 ).trim();
-                        
+
                         if ( maxEntities < 20 ) {
                             log.info("Indexing {} = {}", name, value);
                         }
-                        
+
                         if ( NumberUtils.isNumber(value) && value.contains(".")) {
                             current.setField( new DoubleField( name, Double.parseDouble(value)));
-                            
+
                         } else if ( NumberUtils.isNumber(value) ) {
                             current.setField( new LongField( name, Long.parseLong(value)));
-                            
+
                         } else {
                             current.setField( new StringField( name, value.toString() ));
                         }
@@ -306,7 +306,7 @@ public class CorePerformanceIT extends BaseIT {
 
             eci.refresh();
         }
-    }   
+    }
 
 
     public void runSelectedQueries(final ApplicationScope scope,  List<IndexScope> indexScopes ) {

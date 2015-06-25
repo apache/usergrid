@@ -90,8 +90,6 @@ public class ServiceResource extends AbstractContextResource {
     protected static final Logger LOG = LoggerFactory.getLogger( ServiceResource.class );
     private static final String FILE_FIELD_NAME = "file";
 
-    protected static TypeReference<Map<String, Object>> mapTypeReference = new TypeReference<Map<String, Object>>() {};
-    protected static TypeReference<List<Object>> listTypeReference = new TypeReference<List<Object>>() {};
 
     @Autowired
     private BinaryStore binaryStore;
@@ -168,6 +166,11 @@ public class ServiceResource extends AbstractContextResource {
             //TODO TN query parameters are not being correctly decoded here.  The URL encoded strings
             //aren't getting decoded properly
             Query query = Query.fromQueryParams( params );
+
+            if(query == null && parameters.size() > 0 && parameters.get( 0 ).isId()){
+                query = Query.fromUUID( parameters.get( 0 ).getId() );
+            }
+
             if ( query != null ) {
                 parameters = ServiceParameter.addParameter( parameters, query );
             }
@@ -323,28 +326,13 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    /**
-     * Next three new methods necessary to work around inexplicable problems with EntityHolder.
-     * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
-     * https://groups.google.com/forum/#!topic/usergrid/yyAJdmsBfig
-     */
-    protected Object readJsonToObject( String content ) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree( content );
-        Object jsonObject;
-        if ( jsonNode.isArray() ) {
-            jsonObject = mapper.readValue( content, listTypeReference );
-        } else {
-            jsonObject = mapper.readValue( content, mapTypeReference );
-        }
-        return jsonObject;
-    }
+
 
     /**
      * Necessary to work around inexplicable problems with EntityHolder.
      * See above.
      */
-    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json, 
+    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         LOG.debug( "ServiceResource.executePostWithMap" );
@@ -389,7 +377,7 @@ public class ServiceResource extends AbstractContextResource {
     @POST
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost( @Context UriInfo ui, String body, 
+    public JSONWithPadding executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         LOG.debug( "ServiceResource.executePost: body = " + body );
@@ -448,9 +436,16 @@ public class ServiceResource extends AbstractContextResource {
 
         ServiceResults sr = executeServiceRequest( ui, response, ServiceAction.DELETE, null );
 
-        for ( Entity entity : sr.getEntities() ) {
-            if ( entity.getProperty( AssetUtils.FILE_METADATA ) != null ) {
-                binaryStore.delete( services.getApplicationId(), entity );
+        // if we deleted an entity (and not a connection or collection) then
+        // we may need to clean up binary asset data associated with that entity
+
+        if (    !sr.getResultsType().equals( ServiceResults.Type.CONNECTION )
+             && !sr.getResultsType().equals( ServiceResults.Type.COLLECTION )) {
+
+            for ( Entity entity : sr.getEntities() ) {
+                if ( entity.getProperty( AssetUtils.FILE_METADATA ) != null ) {
+                    binaryStore.delete( services.getApplicationId(), entity );
+                }
             }
         }
 
@@ -649,7 +644,7 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
         Entity entity = serviceResults.getEntity();
 
-        LOG.info( "In AssetsResource.findAsset with id: {}, range: {}, modifiedSince: {}",
+        LOG.info( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
                 new Object[] { entityId, rangeHeader, modifiedSince } );
 
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );

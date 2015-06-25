@@ -17,9 +17,9 @@
  */
 
 
-// 
-// configure_usergrid.groovy 
-// 
+//
+// configure_usergrid.groovy
+//
 // Emits usergrid properties file based on environment and Cassandra node registry in SimpleDB
 //
 import com.amazonaws.auth.*
@@ -36,25 +36,30 @@ String domain    = stackName
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 def replFactor   = System.getenv().get("CASSANDRA_REPLICATION_FACTOR")
 def clusterName  = System.getenv().get("CASSANDRA_CLUSTER_NAME")
+def readConsistencyLevel  = System.getenv().get("CASSANDRA_READ_CONSISTENCY")
+def writeConsistencyLevel  = System.getenv().get("CASSANDRA_WRITE_CONSISTENCY")
 
 def superUserEmail     = System.getenv().get("SUPER_USER_EMAIL")
 def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
 def numEsNodes = Integer.parseInt(System.getenv().get("ES_NUM_SERVERS"))
 //Override number of shards.  Set it to 2x the cluster size
-def esShards = numEsNodes*4;
+def esShards = numEsNodes*2;
 
 
 //This gives us 3 copies, which means we'll have a quorum with primary + 1 replica
-def esReplicas = 2;
+def esReplicas = 1;
 
-def cassThreads = System.getenv().get("TOMCAT_THREADS")
-def hystrixThreads = Integer.parseInt(cassThreads) / 100
+def tomcatThreads = System.getenv().get("TOMCAT_THREADS")
+
+def workerCount = System.getenv().get("INDEX_WORKER_COUNT")
+
+//temporarily set to equal since we now have a sane tomcat thread calculation
+def hystrixThreads = tomcatThreads
 
 //if we end in -1, we remove it
 def ec2Region = System.getenv().get("EC2_REGION")
 def cassEc2Region = ec2Region.replace("-1", "")
-
 
 NodeRegistry registry = new NodeRegistry();
 
@@ -88,7 +93,7 @@ for (item in selectResult) {
 
 def usergridConfig = """
 ######################################################
-# Minimal Usergrid configuration properties for local Tomcat and Cassandra 
+# Minimal Usergrid configuration properties for local Tomcat and Cassandra
 
 cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
@@ -96,19 +101,23 @@ cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
 cassandra.keyspace.replication=${cassEc2Region}:${replFactor}
 
 cassandra.timeout=5000
-cassandra.connections=${cassThreads}
+cassandra.connections=${tomcatThreads}
 hystrix.threadpool.graph_user.coreSize=${hystrixThreads}
 hystrix.threadpool.graph_async.coreSize=${hystrixThreads}
+usergrid.read.cl=${readConsistencyLevel}
+usergrid.write.cl=${writeConsistencyLevel}
+
+
 
 elasticsearch.cluster_name=${clusterName}
-elasticsearch.index_prefix=usergrid
+elasticsearch.index_prefix=${stackName}
 elasticsearch.hosts=${esnodes}
 elasticsearch.port=9300
 elasticsearch.number_shards=${esShards}
 elasticsearch.number_replicas=${esReplicas}
 
 ######################################################
-# Custom mail transport 
+# Custom mail transport
 
 mail.transport.protocol=smtp
 mail.smtp.host=localhost
@@ -184,6 +193,14 @@ usergrid.metrics.graphite.host=${graphite}
 usergrid.queue.prefix=${stackName}
 usergrid.queue.region=${ec2Region}
 
+# Enable scheduler for import/export jobs
+usergrid.scheduler.enabled=true
+usergrid.scheduler.job.workers=1
+
+
+#Set our ingest rate
+elasticsearch.worker_count=${workerCount}
+
 """
 
-println usergridConfig 
+println usergridConfig

@@ -21,11 +21,14 @@ public class QueueMessage {
     private final Object body;
     private final String messageId;
     private final String handle;
+    private final String type;
 
-    public QueueMessage(String messageId, String handle, Object body) {
+
+    public QueueMessage(String messageId, String handle, Object body,String type) {
         this.body = body;
         this.messageId = messageId;
         this.handle = handle;
+        this.type = type;
     }
 
     public String getHandle() {
@@ -38,5 +41,10 @@ public class QueueMessage {
 
     public String getMessageId() {
         return messageId;
+    }
+
+
+    public String getType() {
+        return type;
     }
 }

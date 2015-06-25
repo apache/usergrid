@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# 
+#
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #   contributor license agreements.  The ASF licenses this file to You
 #  under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,10 +35,10 @@ apt-get -y --force-yes install ${PKGS}
 # Install AWS Java SDK and get it into the Groovy classpath
 curl http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip > /tmp/aws-sdk-java.zip
 cd /usr/share/
-unzip /tmp/aws-sdk-java.zip 
+unzip /tmp/aws-sdk-java.zip
 mkdir -p /home/ubuntu/.groovy/lib
 cp /usr/share/aws-java-sdk-*/third-party/*/*.jar /home/ubuntu/.groovy/lib
-cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib 
+cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 ln -s /home/ubuntu/.groovy /root/.groovy
 
 # Build environment for Groovy scripts
@@ -55,7 +55,7 @@ groovy tag_instance.groovy -BUILD-IN-PROGRESS
 chmod +x /usr/share/usergrid/update.sh
 
 cd /usr/share/usergrid/init_instance
-./install_oraclejdk.sh 
+./install_oraclejdk.sh
 
 cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
@@ -67,9 +67,6 @@ export NOFILE=150000
 export ACCEPT_COUNT=100
 export NR_OPEN=1048576
 export FILE_MAX=761773
-
-#Number of threads to allow per core
-export NUM_THREAD_PROC=25
 
 #Get the number of processors
 export NUM_PROC=$(nproc)
@@ -116,12 +113,14 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 esac
 
 
-sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties/g" /etc/default/tomcat7
+sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8050 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false/g" /etc/default/tomcat7
 sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${ACCEPT_COUNT}\" maxConnections=\"${TOMCAT_THREADS}\"/g" /var/lib/tomcat7/conf/server.xml
 
 
 #Append our java opts for secret key
 echo "JAVA_OPTS=\"\${JAVA_OPTS} -DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY}\"" >> /etc/default/tomcat7
+echo "JAVA_OPTS=\"\${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000\"" >> /etc/default/tomcat7
+
 
 ulimit -n $NOFILE
 
@@ -171,7 +170,7 @@ kernel.shmall = 4294967296
 ######
 EOF
 
-# wait for enough Cassandra nodes then delpoy and configure Usergrid 
+# wait for enough Cassandra nodes then delpoy and configure Usergrid
 cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
 groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
@@ -185,8 +184,8 @@ chown -R tomcat7 /usr/share/usergrid/webapps
 chown -R tomcat7 /var/lib/tomcat7/webapps
 
 # configure usergrid
-mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
+mkdir -p /usr/share/tomcat7/lib
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 
@@ -207,12 +206,19 @@ sh /etc/init.d/tomcat7 start
 until curl -m 1 -I -X GET http://localhost:8080/status | grep "200 OK";  do sleep 5; done
 
 
+#Install collectd client to report to graphite
+cd /usr/share/usergrid/init_instance
+./install_collectd.sh
+
+
 #If we're the first rest server, run the migration, the database setup, then run the Cassanda keyspace updates
 cd /usr/share/usergrid/scripts
 groovy registry_register.groovy rest
 
 FIRSTHOST="$(groovy get_first_instance.groovy rest)"
+GRAPHITE_SERVER="$(groovy get_first_instance.groovy graphite )"
 
+#First host run the migration and setup
 if [ "$FIRSTHOST"=="$PUBLIC_HOSTNAME" ]; then
 
 #Run the migration
@@ -229,6 +235,20 @@ cd /usr/share/usergrid/init_instance
 ./update_keyspaces.sh
 
 fi
+
+#Always create our graphite dashboard.  Last to write will implicity win, since they will have the most recent cluster state
+cd /usr/share/usergrid/scripts
+JSON_PAYLOAD="$(groovy create_dashboard.groovy rest)"
+
+echo ${JSON_PAYLOAD} > /var/lib/tomcat7/webapps/portal/graphite.json
+
+
+#Post the JSON graphite payload to graphite
+## The json is correct, but this doens't work yet. To get the generated data to save, just hit ELB/portal/graphite.json to set into graphite manually
+##curl -X POST -d "${JSON_PAYLOAD}" "http://${GRAPHITE_SERVER}/dashboard/save/Tomcats"
+
+
+
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts

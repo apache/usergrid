@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,11 +24,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Test;
+
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,8 +39,8 @@ public class PathQueryIT extends AbstractCoreIT {
 
     @Test
     public void testUserDevicePathQuery() throws Exception {
-        UUID applicationId = setup.createApplication( 
-                "testOrganization", "testUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication(
+                "testOrganization"+ UUIDGenerator.newTimeUUID(), "testUserDevicePathQuery" + UUIDGenerator.newTimeUUID()  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> users = new ArrayList<Entity>();
@@ -94,7 +95,7 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.addFilter( "index >= 2" );
         int expectedDeviceQuerySize = 3;
 
-        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>( 
+        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>(
                 new SimpleEntityRef( em.getApplicationRef()), userQuery );
         PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
         HashSet set = new HashSet( expectedUserQuerySize * expectedDeviceQuerySize );
@@ -109,8 +110,8 @@ public class PathQueryIT extends AbstractCoreIT {
     @Test
     public void testGroupUserDevicePathQuery() throws Exception {
 
-        UUID applicationId = setup.createApplication( 
-                "testOrganization", "testGroupUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication(
+                "testOrganization"+ UUIDGenerator.newTimeUUID(), "testGroupUserDevicePathQuery" + UUIDGenerator.newTimeUUID()  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> groups = new ArrayList<Entity>();
@@ -178,15 +179,45 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.addFilter( "index >= 4" );
         int expectedDeviceQuerySize = 3;
 
-        PathQuery groupsPQ = new PathQuery(new SimpleEntityRef( em.getApplicationRef() ), groupQuery );
-        PathQuery usersPQ = groupsPQ.chain( userQuery );
-        PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
 
-        HashSet set = new HashSet( expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize );
-        Iterator<Entity> i = devicesPQ.iterator( em );
-        while ( i.hasNext() ) {
-            set.add( i.next() );
+        final PathQuery groupsPQ = new PathQuery(new SimpleEntityRef( em.getApplicationRef() ), groupQuery );
+
+
+        //test 1 level deep
+        HashSet groupSet = new HashSet( expectedGroupQuerySize );
+        Iterator<Entity> groupsIterator = groupsPQ.iterator( em );
+
+        while ( groupsIterator.hasNext() ) {
+            groupSet.add( groupsIterator.next() );
         }
-        assertEquals( expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize, set.size() );
+
+        assertEquals( expectedGroupQuerySize, groupSet.size() );
+
+        //test 2 levels
+
+        final PathQuery groupsPQ1 = new PathQuery(new SimpleEntityRef( em.getApplicationRef() ), groupQuery );
+        PathQuery usersPQ1 = groupsPQ1.chain( userQuery );
+        final Iterator<Entity> userIterator  = usersPQ1.iterator( em );
+
+        final HashSet userSet = new HashSet( expectedGroupQuerySize * expectedUserQuerySize );
+
+        while ( userIterator.hasNext() ) {
+            userSet.add( userIterator.next() );
+        }
+
+        assertEquals( expectedGroupQuerySize * expectedUserQuerySize, userSet.size() );
+
+
+// ORIGINAL TEST, restore
+        PathQuery groupsPQ2 = new PathQuery(new SimpleEntityRef( em.getApplicationRef() ), groupQuery );
+        PathQuery usersPQ2 = groupsPQ2.chain( userQuery );
+        PathQuery<Entity> devicesPQ2 = usersPQ2.chain( deviceQuery );
+
+        final HashSet deviceSet = new HashSet( expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize );
+        Iterator<Entity> i = devicesPQ2.iterator( em );
+        while ( i.hasNext() ) {
+            deviceSet.add( i.next() );
+        }
+        assertEquals( expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize, deviceSet.size() );
     }
 }

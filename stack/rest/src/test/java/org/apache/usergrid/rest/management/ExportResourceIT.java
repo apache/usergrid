@@ -18,6 +18,7 @@
 package org.apache.usergrid.rest.management;
 
 
+import com.amazonaws.SDKGlobalConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -28,7 +29,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 
@@ -41,7 +42,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 
-@Concurrent
 public class ExportResourceIT extends AbstractRestIT {
 
     @Rule
@@ -638,7 +638,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
         storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
         //remove storage_key field
-        storage_info.remove( "s3_access_id" );
+        storage_info.remove( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
 
         try {
             node = resource().path( "/management/orgs/" + orgName + "/export" ).queryParam( "access_token", token )
@@ -697,7 +697,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
         storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
         //remove storage_key field
-        storage_info.remove( "s3_access_id" );
+        storage_info.remove( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
 
         try {
             node = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/apps/" + appName + "/export" )
@@ -757,7 +757,7 @@ public class ExportResourceIT extends AbstractRestIT {
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
         storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
         //remove storage_key field
-        storage_info.remove( "s3_access_id" );
+        storage_info.remove( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
 
         try {
             node = mapper.readTree(
@@ -795,8 +795,8 @@ public class ExportResourceIT extends AbstractRestIT {
         Map<String, Object> storage_info = new HashMap<String, Object>();
         //TODO: always put dummy values here and ignore this test.
         //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "s3_key", "insert key here" );
-        storage_info.put( "s3_access_id", "insert access id here" );
+        storage_info.put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR, "insert key here" );
+        storage_info.put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "insert access id here" );
         storage_info.put( "bucket_location", "insert bucket name here" );
         properties.put( "storage_provider", "s3" );
         properties.put( "storage_info", storage_info );

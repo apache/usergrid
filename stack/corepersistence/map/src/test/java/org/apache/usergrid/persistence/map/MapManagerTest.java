@@ -20,7 +20,12 @@
 package org.apache.usergrid.persistence.map;
 
 
-import org.apache.usergrid.persistence.core.test.UseModules;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,14 +33,15 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.map.guice.TestMapModule;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
 
-import java.util.UUID;
-
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -76,6 +82,80 @@ public class MapManagerTest {
         assertEquals( value, returned );
     }
 
+
+    @Test
+    public void multiReadNoKey() {
+        MapManager mm = mmf.createMapManager( this.scope );
+
+        final String key = UUIDGenerator.newTimeUUID().toString();
+
+        final Map<String, String> results = mm.getStrings( Collections.singleton( key ) );
+
+        assertNotNull( results );
+
+        final String shouldBeMissing = results.get( key );
+
+        assertNull( shouldBeMissing );
+    }
+
+
+    @Test
+    public void writeReadStringBatch() {
+        MapManager mm = mmf.createMapManager( this.scope );
+
+        final String key1 = "key1";
+        final String value1 = "value1";
+
+        mm.putString( key1, value1 );
+
+
+        final String key2 = "key2";
+        final String value2 = "value2";
+
+        mm.putString( key2, value2 );
+
+
+        final Map<String, String> returned = mm.getStrings( Arrays.asList( key1, key2 ) );
+
+        assertNotNull( returned );
+
+        assertEquals( value1, returned.get( key1 ) );
+        assertEquals( value2, returned.get( key2 ) );
+    }
+
+
+    @Test
+    public void writeReadStringTTL() throws InterruptedException {
+
+        MapManager mm = mmf.createMapManager( this.scope );
+
+        final String key = "key";
+        final String value = "value";
+        final int ttl = 5;
+
+
+        mm.putString( key, value, ttl );
+
+        final long startTime = System.currentTimeMillis();
+
+        final String returned = mm.getString( key );
+
+        assertEquals( value, returned );
+
+        final long endTime = startTime + TimeUnit.SECONDS.toMillis( ttl + 1 );
+
+        final long remaining = endTime - System.currentTimeMillis();
+
+        //now sleep and assert it gets removed
+        Thread.sleep( remaining );
+
+        //now read it should be gone
+        final String timedOut = mm.getString( key );
+
+        assertNull( "Value was not returned", timedOut );
+    }
+
+
     @Test
     public void writeReadUUID() {
         MapManager mm = mmf.createMapManager( this.scope );
@@ -89,6 +169,7 @@ public class MapManagerTest {
 
         assertEquals( value, returned );
     }
+
 
     @Test
     public void writeReadLong() {
@@ -143,6 +224,7 @@ public class MapManagerTest {
         assertNull( postDelete );
     }
 
+
     @Test
     public void deleteUUID() {
         MapManager mm = mmf.createMapManager( this.scope );
@@ -162,6 +244,7 @@ public class MapManagerTest {
 
         assertNull( postDelete );
     }
+
 
     @Test
     public void deleteLong() {
@@ -191,14 +274,17 @@ public class MapManagerTest {
         mm.putString( null, null );
     }
 
+
     @Test( expected = NullPointerException.class )
     public void nullInputLong() {
         MapManager mm = mmf.createMapManager( this.scope );
 
         mm.putLong( null, null );
     }
+
+
     @Test( expected = NullPointerException.class )
-     public void nullInputUUID() {
+    public void nullInputUUID() {
         MapManager mm = mmf.createMapManager( this.scope );
 
         mm.putUuid( null, null );

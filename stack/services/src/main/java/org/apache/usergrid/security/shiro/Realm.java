@@ -234,8 +234,16 @@ public class Realm extends AuthorizingRealm {
 
         for ( PrincipalIdentifier principal : principals.byType( PrincipalIdentifier.class ) ) {
 
+            // TODO: refactor so that this whole instanceof mess can be replaced with this:
+            // principle.addRolesAndPermissionsToInfo( info );
+            // principle.addApplicationsToSet( applicationsSet );
+            // principle.addOrganizationsToSet( applicationsSet );
+            // organization = principle.getOrganization();
+            // application = principle.getApplication();
+
             if ( principal instanceof OrganizationPrincipal ) {
-                // OrganizationPrincipals are usually only through OAuth
+
+                // OrganizationPricipals are usually only through OAuth
                 // They have access to a single organization
 
                 organization = ( ( OrganizationPrincipal ) principal ).getOrganization();
@@ -269,7 +277,7 @@ public class Realm extends AuthorizingRealm {
 
                 application = ( ( ApplicationPrincipal ) principal ).getApplication();
                 grant( info, principal, "applications:admin,access,get,put,post,delete:" + application.getId() );
-                applicationSet.put( application.getId(), application.getName() );
+                applicationSet.put( application.getId(), application.getName().toLowerCase() );
             }
             else if ( principal instanceof AdminUserPrincipal ) {
                 // AdminUserPrincipals are through basic auth and sessions

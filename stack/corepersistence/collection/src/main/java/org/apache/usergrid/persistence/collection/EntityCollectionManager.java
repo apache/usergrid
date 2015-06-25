@@ -55,6 +55,9 @@ public interface EntityCollectionManager {
      */
     public Observable<VersionSet> getLatestVersion( Collection<Id> entityId );
 
+
+    public Observable<FieldSet> getEntitiesFromFields( Collection<Field> fields );
+
     /**
      * Gets the Id for a field
      * @return most likely a single Id, watch for onerror events
@@ -62,18 +65,24 @@ public interface EntityCollectionManager {
     public Observable<Id> getIdField(final Field field);
 
     /**
+     * Audit a unique field, and remove any stale entries in the system
+     * @param field The field to audit within this collection scope.
+
+    public Observable<Integer> auditUniqueField(final Field field);
+     */
+    /**
      * Load all the entityIds into the observable entity set
      */
     public Observable<EntitySet> load(Collection<Id> entityIds);
 
     /**
      * Takes the change and reloads an entity with all changes applied in this entity applied.
-     * The resulting entity from calling load will be the previous version of this entity plus 
+     * The resulting entity from calling load will be the previous version of this entity plus
      * the entity in this object applied to it.
      */
     public Observable<Entity> update ( Entity entity );
 
-    /** 
+    /**
      * Returns health of entity data store.
      */
     public Health getHealth();

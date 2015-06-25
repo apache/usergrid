@@ -25,8 +25,8 @@ import org.junit.Test;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -34,18 +34,14 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author zznate */
-@Concurrent
 public class UsergridSystemMonitorIT {
-
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
     private UsergridSystemMonitor usergridSystemMonitor;
 
 
     @Before
     public void setupLocal() {
-        usergridSystemMonitor = cassandraResource.getBean( UsergridSystemMonitor.class );
+        usergridSystemMonitor = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( UsergridSystemMonitor.class );
     }
 
 

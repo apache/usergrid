@@ -23,13 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
 
 import static org.junit.Assert.assertEquals;
 
 
 /** @author zznate */
-@Concurrent()
+
 public class QueryUtilsTest {
 
     private static final String FAKE_QL = "select color from cat";

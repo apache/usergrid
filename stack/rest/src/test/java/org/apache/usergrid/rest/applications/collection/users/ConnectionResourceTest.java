@@ -17,235 +17,191 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.UUID;
-
-import org.junit.Before;
-import org.junit.Test;
-
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
+import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 /**
- * Contains tests that center around using connections with entities and users.
+ * // TODO: Document this
+ *
+ * @author ApigeeCorporation
+ * @since 4.0
  */
 public class ConnectionResourceTest extends AbstractRestIT {
+    private static Logger log = LoggerFactory.getLogger(ConnectionResourceTest.class);
 
-    private CollectionEndpoint thingsResource;
-    private UUID thing1Id;
-    private UUID thing2Id;
-
-
-    /**
-     * Setup two thing objects for use in the following tests
-     */
-    @Before
-    public void setup(){
-        this.thingsResource =  this.app().collection("things");
-
-        thing1Id =  thingsResource.post( new Entity().chainPut("name", "thing1") ).getUuid();
-
-        thing2Id = thingsResource.post( new Entity().chainPut("name", "thing2") ).getUuid();
-
-        refreshIndex();
-    }
-    /**
-     * Checks to see that a connection associated with one user cannot be retrieved by a different user.
-     * @throws IOException
-     */
     @Test
-    public void connectionMisMatchTest() throws IOException {
+    public void connectionsQueryTest() throws IOException {
 
-        //Creates collection and posts a chicken entity to it.
-        CollectionEndpoint activities = this.app().collection("peeps");
+        //create a peep
+        Entity peep = new Entity();
+        peep.put("type", "chicken");
 
-        Entity stuff = new Entity().chainPut("name", "chicken").chainPut("type","chicken");
+        peep = this.app().collection("peeps").post(peep);
 
-        activities.post(stuff);
 
-        //Create two users
-        User payload = new User("todd", "todd", "todd@apigee.com", "password");
-        this.app().collection("users").post(payload);
-        payload = new User("scott", "scott", "scott@apigee.com", "password");
-        this.app().collection("users").post(payload);
+        Entity todd = new Entity();
+        todd.put("username", "todd");
+        todd = this.app().collection("users").post(todd);
 
+        Entity scott = new Entity();
+        scott.put("username", "scott");
+        scott = this.app().collection("users").post(scott);
+
+        Entity objectOfDesire = new Entity();
+        objectOfDesire.put("codingmunchies", "doritoes");
+        objectOfDesire = this.app().collection("snacks").post(objectOfDesire);
         refreshIndex();
 
-        //Set user Todd  to connect to the chicken entity.
-        Entity entity = this.app().collection("users").entity("todd").connection("likes").collection("peeps").entity("chicken").post();
+        Entity toddWant = this.app().collection("users").entity(todd).collection("likes").collection("snacks").entity(objectOfDesire).post();
+        assertNotNull(toddWant);
 
-        assertNotNull(entity);
-
-        refreshIndex();
-
-        //Get the collection and get the chicken entity.
-        Collection collection = this.app().collection("peeps").get();
-
-        String uuid = collection.next().get("uuid").toString();
-
-        //Set user Scott to get back a nonexistant connection.
         try {
-            this.app().collection("users").entity("scott").connection("likes").entity(uuid).get();
-            fail("We shouldn't be able to see user1 connection through user2");
+
+            this.app().collection("users").entity(scott).collection("likes").collection("peeps").entity(peep).get();
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            // Should return a 404 Not Found
+            assertEquals(404, uie.getResponse().getStatus());
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( 404, uie.getResponse().getStatus() );
-        }
+
+
     }
 
 
-    /**
-     * Checks that we can setup a connection loop and that we can retrieve both entities from the loop.
-     * @throws IOException
-     */
     @Test
     public void connectionsLoopbackTest() throws IOException {
 
-        //create a connection loop by having thing1 connect to thing2 and vise versa.
-        thingsResource.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
-        thingsResource.entity( thing2Id ).connection( "likes" ).entity( thing1Id ).post();
+        // create entities thing1 and thing2
+        Entity thing1 = new Entity();
+        thing1.put("name", "thing1");
+        thing1 = this.app().collection("things").post(thing1);
+
+        Entity thing2 = new Entity();
+        thing2.put("name", "thing2");
+        thing2 = this.app().collection("things").post(thing2);
 
         refreshIndex();
+        //create the connection: thing1 likes thing2
+        this.app().collection("things").entity(thing1).connection("likes").collection("things").entity(thing2).post();
+        refreshIndex();
 
-        //Do a get on thing1 to make sure we have the connection present
-        Collection collection =this.app().collection("things").entity(thing1Id).connection( "likes" ).get();
+        //test we have the "likes" in our connection meta data response
+        thing1 = this.app().collection("things").entity(thing1).get();
+        //TODO this is ugly. revisit.
+        String url = (String) ((Map<String, Object>) ((Map<String, Object>) thing1.get("metadata")).get("connections")).get("likes");
+        assertNotNull("Connection url returned with entity", url);
 
-        assertTrue("Connection url returned in entity", collection.hasNext());
+        //now that we know the URl is correct, follow it
+        CollectionEndpoint likesEndpoint = new CollectionEndpoint(url, this.context(), this.app());
+        Collection likes = likesEndpoint.get();
+        assertNotNull(likes);
+        Entity likedEntity = likes.next();
+        assertNotNull(likedEntity);
 
-        //Verify that thing1 is connected to thing2
-        UUID returnedUUID  = collection.next().getUuid();
+        //make sure the returned entity is thing2
+        assertEquals(thing2.getUuid(), likedEntity.getUuid());
 
-        assertEquals( thing2Id, returnedUUID );
 
-        //now follow the loopback from thing2, which should be pointers to thing1
+        //now follow the loopback, which should be pointers to the other entity
+        thing2 = this.app().collection("things").entity(thing2).get();
+        //TODO this is ugly. revisit.
+        url = (String) ((Map<String, Object>) ((Map<String, Object>) thing2.get("metadata")).get("connecting")).get("likes");
+        assertNotNull("Connecting url returned with entity", url);
 
-        collection  = this.app().collection("things").entity(thing2Id).connection("likes").get();
+        CollectionEndpoint likedByEndpoint = new CollectionEndpoint(url, this.context(), this.app());
+        Collection likedBy = likedByEndpoint.get();
+        assertNotNull(likedBy);
+        Entity likedByEntity = likedBy.next();
+        assertNotNull(likedByEntity);
 
-        UUID returned = collection.next().getUuid();
-
-        assertEquals( "Should point to thing1 as an incoming entity connection", thing1Id, returned );
-
-        //Follow the connection through the loop to make sure it works. 
-        Entity thing1Return = this.app().collection("things").entity(thing1Id).connection( "likes" )
-            .collection( "things" ).entity( thing2Id ).connection( "likes" )
-            .collection( "things" ).entity( thing1Id ).get();
-
-        assertEquals(thing1Id,thing1Return.getUuid());
+        //make sure the returned entity is thing1
+        assertEquals(thing1.getUuid(), likedByEntity.getUuid());
 
     }
 
 
     /**
-     * Checks that we can get a valid uuid from a connection url and follow it to the correct entity.
-     * @throws IOException
-     */
-    @Test
-    public void connectionsUrlTest() throws IOException {
-
-        //Create a connection between thing1 and thing2
-        thingsResource.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
-
-
-        refreshIndex();
-
-        //Do a get on thing1 to make sure we have the connection present
-        Entity response = thingsResource.entity( "thing1" ).get();
-
-        String url =((Map) ((Map)response.get( "metadata" )).get( "connections" )).get("likes").toString();
-
-
-        assertNotNull( "Connection url returned in entity", url );
-
-        //trim off the starting / from the url.
-        url = url.substring( 1 );
-
-
-        //now that we know the URl is correct, follow it to get the entity in the connection
-
-        Collection collection = this.app().collection(url).get();
-
-        UUID returnedUUID =collection.next().getUuid();
-
-        assertEquals( thing2Id, returnedUUID );
-
-        //get on the collection works, now get it directly by uuid. We should also get thing1 from the loopback url.
-        response = thingsResource.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).get();
-
-        UUID returned = response.getUuid();
-
-        assertEquals( "Should point to thing2 as an entity connection", thing2Id, returned );
-    }
-
-
-    /**
-     * Deletes the connected to entity and make sure the delete persists.
+     * Ensure that the connected entity can be deleted
+     * properly after it has been connected to another entity
+     *
      * @throws IOException
      */
     @Test //USERGRID-3011
-    public void deleteConnectedEntity() throws IOException {
+    public void connectionsDeleteSecondEntityInConnectionTest() throws IOException {
 
-        //create the connection
-        thingsResource.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
+        //Create 2 entities, thing1 and thing2
+        Entity thing1 = new Entity();
+        thing1.put("name", "thing1");
+        thing1 = this.app().collection("things").post(thing1);
+
+        Entity thing2 = new Entity();
+        thing2.put("name", "thing2");
+        thing2 = this.app().collection("things").post(thing2);
+
+        refreshIndex();
+        //create the connection: thing1 likes thing2
+        this.app().collection("things").entity(thing1).connection("likes").collection("things").entity(thing2).post();
+        //delete thing2
+        this.app().collection("things").entity(thing2).delete();
 
         refreshIndex();
 
-        //Delete the connected entity.
-        thingsResource.entity( "thing2" ).delete();
-
-        refreshIndex();
-
-        //Make sure that we can no longer retrieve the entity.
-        int status = 0;
         try {
-            thingsResource.entity("thing2").get();
-            fail( "Entity should have been deleted." );
-        }catch (UniformInterfaceException e){
-            status = e.getResponse().getStatus();
+            //attempt to retrieve thing1
+            thing2 = this.app().collection("things").entity(thing2).get();
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            // Should return a 404 Not Found
+            assertEquals(404, uie.getResponse().getStatus());
         }
-        assertEquals(404,status);
-
-
     }
 
-
     /**
-     * Delete the connecting entity and make sure the delete persists.
+     * Ensure that the connecting entity can be deleted
+     * properly after a connection has been added
+     *
      * @throws IOException
      */
     @Test //USERGRID-3011
-    public void deleteConnectingEntity() throws IOException {
+    public void connectionsDeleteFirstEntityInConnectionTest() throws IOException {
 
-        //create the connection
-        thingsResource.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
+        //Create 2 entities, thing1 and thing2
+        Entity thing1 = new Entity();
+        thing1.put("name", "thing1");
+        thing1 = this.app().collection("things").post(thing1);
+
+        Entity thing2 = new Entity();
+        thing2.put("name", "thing2");
+        thing2 = this.app().collection("things").post(thing2);
+
+        refreshIndex();
+        //create the connection: thing1 likes thing2
+        this.app().collection("things").entity(thing1).connection("likes").collection("things").entity(thing2).post();
+        //delete thing1
+        this.app().collection("things").entity(thing1).delete();
 
         refreshIndex();
 
-        //Delete the connecting entity
-        thingsResource.entity( "thing1" ).delete();
-
-        refreshIndex();
-
-        //Make sure that we can no longer retrieve the entity.
-        int status = 0;
         try {
-            thingsResource.entity("thing1").get();
-            fail( "Entity should have been deleted." );
-        }catch (UniformInterfaceException e){
-            status = e.getResponse().getStatus();
+            //attempt to retrieve thing1
+            thing1 = this.app().collection("things").entity(thing1).get();
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            // Should return a 404 Not Found
+            assertEquals(404, uie.getResponse().getStatus());
         }
-        assertEquals(404,status);
 
     }
 
