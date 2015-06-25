@@ -1,0 +1,319 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Relationships &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Organizations &amp; Admins" href="../organizations-admins.html"/>
+        <link rel="next" title="Collections" href="collections.html"/>
+        <link rel="prev" title="Roles &amp; Permissions" href="roles-and-permissions.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> Apache Usergrid</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deploy-local.html">Deploying to local Tomcat &amp; Cassandra</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-cassandra">Install and configure Cassandra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-tomcat">Install and configure Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-war-to-tomcat">Add Usergrid WAR to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-configuration-file-to-tomcat">Add Usergrid configuration file to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#run-usergrid-database-super-user-setup">Run Usergrid Database &amp; Super User Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#build-the-usergrid-console">Build the Usergrid Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#login-to-the-usergrid-console-get-started">Login to the Usergrid Console &amp; get started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#example-usergrid-custom-properties-file">Example <strong>usergrid-custom.properties</strong> file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-up-and-running-locally.html">Getting Up &amp; Running Locally</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#getting-started-with-the-http-api">Getting Started with the HTTP API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../organizations-admins.html">Organizations &amp; Admins</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events-and-counters.html">Events and counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles-and-permissions.html">Roles &amp; Permissions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Relationships</a></li>
+<li class="toctree-l2"><a class="reference internal" href="collections.html">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query-language.html">Query Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-devices.html">Users &amp; Devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groups.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="activity.html">Activity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assets.html">Assets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">SDKs &amp; Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#sdks">SDKs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#tools">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../presentations-and-videos.html">Presentations &amp; Videos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/presentations.html">Presentations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/videos.html">Videos</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../upgrading.html">Upgrading from Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute-code.html">How to Contribute Code &amp; Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#code-contributions">Code Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#website-and-documentation-contributions">Website and Documentation Contributions</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../organizations-admins.html">Organizations &amp; Admins</a> &raquo;</li>
+      
+    <li>Relationships</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/concepts/relationships.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="relationships">
+<h1>Relationships<a class="headerlink" href="#relationships" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="creating-connections-between-entities">
+<h2>Creating connections between entities<a class="headerlink" href="#creating-connections-between-entities" title="Permalink to this headline">¶</a></h2>
+<p>One of the most useful features of App services is the ability to create
+connections between entities. A simple example of this is the
+Twitter-like use of <em>following</em>, where one user forms a connection with
+another by subscribing to any tweets they post. <a class="reference external" href="/messagee-example">Messagee
+Example</a> walks you through an example of following
+other users in our sample app, <em>Messagee</em>. Here is the basic format:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/users/fred/following/users/barney
+</pre></div>
+</div>
+<p>This API call results in two users, Fred and Barney, linked with a
+connection where Fred is following Barney.</p>
+<p>If you create a <em>following</em> connection between two users, Apache
+Usergrid automatically creates a virtual connection called <em>followers</em>
+that mirrors the <em>following</em> connection. In other words, if you create a
+connection where Fred is following Barney, Apache Usergrid automatically
+creates a virtual connection where Fred is a follower of Barney.</p>
+<p>Note that there is no mirror connection established. Apache Usergrid
+only creates a mirror connection when you create a <em>following</em>
+connection. It does not create a mirror connection for other verbs such
+as likes.</p>
+<p>You can see all the users that Fred is following, in this case only
+Barney, by making the following API call:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/my-org/my-app/users/fred/following
+</pre></div>
+</div>
+<p>You can see all of barney’s followers, in this case only Fred, by making
+the following API call:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/my-org/my-app/users/barney/followers
+</pre></div>
+</div>
+<p>The <em>followers</em> connection is a virtual connection because you can’t use
+it to link two entities. In other words, you can’t make fred a follower
+of barney by using a <em>followers</em> connection. &nbsp;<strong>This is wrong:</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/users/barney/followers/users/fred
+</pre></div>
+</div>
+<p>To create a <em>following</em> connection with the users switched, so that
+Barney is following Fred, do this:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/users/barney/following/users/fred
+</pre></div>
+</div>
+<p>You can now see Fred’s followers (only Barney) by making the following
+call:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/my-org/my-app/users/fred/followers
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-other-connections">
+<h2>Creating other connections<a class="headerlink" href="#creating-other-connections" title="Permalink to this headline">¶</a></h2>
+<p>You can extend this connection structure to create connections using any
+&#8220;verb&#8221; that can link two entities. For example, you could use likes to
+denote a connection between a user and his dog. First, create a dogs
+collection:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/dogs
+</pre></div>
+</div>
+<p>Then populate this collection with a new dog named Dino:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/dogs {&quot;name&quot; : &quot;dino&quot;}
+</pre></div>
+</div>
+<p>Then create a likes connection between Fred and his dog Dino:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/my-org/my-app/users/fred/likes/dogs/dino
+</pre></div>
+</div>
+</div>
+<div class="section" id="getting-connections">
+<h2>Getting connections<a class="headerlink" href="#getting-connections" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="get-all-connections-for-an-entity">
+<h3>Get all connections for an entity<a class="headerlink" href="#get-all-connections-for-an-entity" title="Permalink to this headline">¶</a></h3>
+<p>To get a list that only contains the connections, do a GET on the
+connections sub-property of the entity:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/my-org/my-app/users/fred/connections
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-information-on-a-specific-connection-type">
+<h3>Get information on a specific connection type<a class="headerlink" href="#get-information-on-a-specific-connection-type" title="Permalink to this headline">¶</a></h3>
+<p>To get a list of users who like Fred:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/my-org/my-app/users/fred/connecting/likes
+</pre></div>
+</div>
+<p>To get a list of all dogs that Fred likes:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/my-org/my-app/users/fred/likes/dog
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="deleting-a-connection">
+<h2>Deleting a connection<a class="headerlink" href="#deleting-a-connection" title="Permalink to this headline">¶</a></h2>
+<p>You can delete a connection in a way similar to creating one. Just
+replace the POST method with the DELETE method. For example, you can
+delete the connection between fred and barney with the following API
+call:</p>
+<div class="highlight-python"><div class="highlight"><pre>DELETE https://api.usergrid.com/my-org/my-app/users/fred/following/barney
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="collections.html" class="btn btn-neutral float-right" title="Collections">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="roles-and-permissions.html" class="btn btn-neutral" title="Roles &amp; Permissions"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Apache Usergrid.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

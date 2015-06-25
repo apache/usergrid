@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting Up &amp; Running Locally &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="index.html"/>
+        <link rel="next" title="Organizations &amp; Admins" href="organizations-admins.html"/>
+        <link rel="prev" title="Deploying to local Tomcat &amp; Cassandra" href="deploy-local.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="index.html" class="fa fa-home"> Apache Usergrid</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="deploy-local.html">Deploying to local Tomcat &amp; Cassandra</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#install-and-configure-cassandra">Install and configure Cassandra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#install-and-configure-tomcat">Install and configure Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#add-usergrid-war-to-tomcat">Add Usergrid WAR to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#add-usergrid-configuration-file-to-tomcat">Add Usergrid configuration file to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#run-usergrid-database-super-user-setup">Run Usergrid Database &amp; Super User Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#build-the-usergrid-console">Build the Usergrid Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#login-to-the-usergrid-console-get-started">Login to the Usergrid Console &amp; get started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy-local.html#example-usergrid-custom-properties-file">Example <strong>usergrid-custom.properties</strong> file</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Getting Up &amp; Running Locally</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started-with-the-http-api">Getting Started with the HTTP API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="organizations-admins.html">Organizations &amp; Admins</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concepts/applications.html">Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/events-and-counters.html">Events and counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/roles-and-permissions.html">Roles &amp; Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/relationships.html">Relationships</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/collections.html">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/query-language.html">Query Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/users-devices.html">Users &amp; Devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/groups.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/activity.html">Activity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts/assets.html">Assets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">SDKs &amp; Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#sdks">SDKs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#tools">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="presentations-and-videos.html">Presentations &amp; Videos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="presentations-and-videos/presentations.html">Presentations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="presentations-and-videos/videos.html">Videos</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="upgrading.html">Upgrading from Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute-code.html">How to Contribute Code &amp; Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contribute-code.html#code-contributions">Code Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribute-code.html#website-and-documentation-contributions">Website and Documentation Contributions</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Getting Up &amp; Running Locally</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/getting-up-and-running-locally.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="getting-up-running-locally">
+<h1>Getting Up &amp; Running Locally<a class="headerlink" href="#getting-up-running-locally" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">JDK
+1.7</a></li>
+<li><a class="reference external" href="http://maven.apache.org/">Maven</a></li>
+</ul>
+</div>
+<div class="section" id="download">
+<h2>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="download2">
+<h3>Download2<a class="headerlink" href="#download2" title="Permalink to this headline">¶</a></h3>
+<p>Start by <a class="reference external" href="https://github.com/apache/incubator-usergrid/archive/master.zip">downloading our latest
+code</a>
+and extract it.</p>
+<div class="section" id="building-3">
+<h4>Building 3<a class="headerlink" href="#building-3" title="Permalink to this headline">¶</a></h4>
+<p>From the command line, navigate to stack directory and type the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre>mvn clean install -DskipTests=true
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="running">
+<h2>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h2>
+<p>Usergrid-core contains the persistence layer and shared utilities for
+powering the Usergrid service. The services layer is contained in
+usergrid-services and exposes a higher-level API that&#8217;s used by the
+usergrid-rest web services tier.</p>
+<p>You can run Usergrid from the command-line from the jar in the
+usergrid/standalone project:</p>
+<div class="highlight-python"><div class="highlight"><pre>cd launcher; java -jar target/usergrid-launcher-*.jar
+</pre></div>
+</div>
+<p>After startup, your instance will be available on localhost, port 8080.
+To check it’s running properly, you can try loading our status page:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl http://localhost:8080/status
+</pre></div>
+</div>
+<p>You can also run it as a webapp in Tomcat, by deploying the ROOT.war
+file generated in the usergrid/rest project.</p>
+</div>
+<div class="section" id="getting-started-with-the-http-api">
+<h2>Getting Started with the HTTP API<a class="headerlink" href="#getting-started-with-the-http-api" title="Permalink to this headline">¶</a></h2>
+<p>Start by creating an Organization. It’s the top-level structure in
+Usergrid: all Apps and Administrators must belong to an Organization.
+Here’s how you create one:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST  \
+     -d &#39;organization=myfirstorg&amp;username=myadmin&amp;name=Admin&amp;email=admin@example.com&amp;password=password&#39; \
+     http://localhost:8080/management/organizations
+</pre></div>
+</div>
+<p>You can see that creating an Organization creates an Administrator in
+the process. Let’s authenticate as him:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl &#39;http://localhost:8080/management/token?grant_type=password&amp;username=myadmin&amp;password=password&#39;
+</pre></div>
+</div>
+<p>This will return an access_token. We’ll use this to authenticate the
+next two calls. Next, let’s create an Application:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -H &quot;Authorization: Bearer [the management token from above]&quot; \
+     -H &quot;Content-Type: application/json&quot; \
+     -X POST -d &#39;{ &quot;name&quot;:&quot;myapp&quot; }&#39; \
+     http://localhost:8080/management/orgs/myfirstorg/apps
+</pre></div>
+</div>
+<p>… And a User for the Application:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -H &quot;Authorization: Bearer [the management token from above]&quot; \
+     -X POST &quot;http://localhost:8080/myfirstorg/myapp/users&quot; \
+     -d &#39;{ &quot;username&quot;:&quot;myuser&quot;, &quot;password&quot;:&quot;mypassword&quot;, &quot;email&quot;:&quot;user@example.com&quot; }&#39;
+</pre></div>
+</div>
+<p>Let’s now generate an access token for this Application User:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl &#39;http://localhost:8080/myfirstorg/myapp/token?grant_type=password&amp;username=myuser&amp;password=mypassword&#39;
+</pre></div>
+</div>
+<p>This will also send back an access_token, but limited in scope. Let’s
+use it to create a collection with some data in it:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -H &quot;Authorization: Bearer [the user token]&quot; \
+     -X POST -d &#39;[ { &quot;cat&quot;:&quot;fluffy&quot; }, { &quot;fish&quot;: { &quot;gold&quot;:2, &quot;oscar&quot;:1 } } ]&#39; \
+     http://localhost:8080/myfirstorg/myapp/pets
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="organizations-admins.html" class="btn btn-neutral float-right" title="Organizations &amp; Admins">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="deploy-local.html" class="btn btn-neutral" title="Deploying to local Tomcat &amp; Cassandra"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Apache Usergrid.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

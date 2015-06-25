@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Authentication and access in App services</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Authentication and access in App services</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/authentication-and-access-app-services-0.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#authentication-and-access-in-app-services">Authentication and access in App services</a><ul>
+<li>
+<a href="#access-types">Access types</a><ul>
+<li><a href="#organizations">Organizations</a></li>
+<li><a href="#admin-users">Admin users</a></li>
+</ul>
+</li>
+<li><a href="#applications">Applications</a></li>
+<li><a href="#application-users">Application users</a></li>
+<li><a href="#using-an-access-token">Using an access token</a></li>
+<li><a href="#safe-mobile-access">Safe mobile access</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="authentication-and-access-in-app-services">Authentication and access in App services</h1>
+<p>App services requests are authenticated via OAuth (Open Authorization) 2.0. OAuth is an authentication mechanism that allows users to grant access to their web resources or mobile apps safely, without having to share their passwords. The analogy of a valet key is sometimes used to describe OAuth, because users can permit general access, but limit access rights to perform certain operations. Instead of an app user having to share a password, OAuth enables access using a security token tied specifically to an app and device.</p>
+<p>Unlike OAuth 1.0, which requires special support in the client code for signing requests, OAuth 2.0 can be used by any web service client libraries. Although the OAuth 2.0 specification isn’t finalized yet, it is sufficiently complete so that many web service providers, including Google and Facebook, are now using it for authentication. More information about OAuth 2.0 is available at <a href="http://oauth.net/2/">oauth.net</a>.</p>
+<h2 id="access-types">Access types</h2>
+<p>App services take advantage of standard OAuth 2.0 mechanisms that require an access token with data operation requests. To obtain the access token, you connect to an appropriate web service endpoint and provide the correct client credentials. The credentials required to get the token depend on the type of access you need.</p>
+<p>There are four access types.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Access Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Organization</td>
+<td align="left">Full access to perform any operation on a App services organization account</td>
+</tr>
+<tr class="even">
+<td align="left">Admin User</td>
+<td align="left">Full access to perform any operation on all organization accounts of which the admin user is a member</td>
+</tr>
+<tr class="odd">
+<td align="left">Application</td>
+<td align="left">Full access to perform any operation on a App services application account</td>
+</tr>
+<tr class="even">
+<td align="left">Application User</td>
+<td align="left">Policy-limited access to perform operations on a App services application account</td>
+</tr>
+</tbody>
+</table>
+<p>The <em>Organization</em> and <em>Application</em> access types are intended for server-side applications because they are “superuser” access mechanisms with few constraints on what they are permitted to do. When connecting via OAuth, you supply organization or application client ID and client secret parameters as client credentials. The Home page of the developer portal shows these parameters for the organization, while the Settings page displays them for the currently selected app.</p>
+<p>The <em>Admin User</em> and <em>Application User</em> access types are appropriate for connections on behalf of a known user account, such as an admin user who is a member of several organizations and has management rights to several apps, or an application user authorized for an application. When connecting via OAuth on behalf of a known user, you supply username and password parameters as client credentials.</p>
+<p>Each access type is discussed below, along with information on supplying an access token in an API request.</p>
+<h3 id="organizations">Organizations</h3>
+<p>When you sign up for the App services developer portal, you create an organization account in addition to your personal admin user account. Access to a single organization requires client ID and client secret credentials (or an admin user can supply username and password credentials, as shown in the next section).</p>
+<p>As an example of accessing an organization, you can obtain your client ID and client secret values from the developer portal and connect to the following URL (substituting the correct values for &lt;client_id&gt; and &lt;client_secret&gt;):</p>
+<pre><code>https://api.usergrid.com/management/token?grant_type=client_credentials&amp;client_id=&lt;client_id&gt;&amp;client_secret=&lt;client_secret&gt;</code></pre>
+<p>The results show the access token needed to make subsequent API requests, as well as additional information about the organization:</p>
+<pre><code>{
+  "access_token": "gAuFEOlXEeCfRgBQVsAACA:b3U6AAABMqz-Cn0wtDxxkxmQLgZvTMubcP20FulCZQ",
+  "expires_in": 3600,
+  "organization": {
+    "users": {
+      "test": {
+        "name": "Test User",
+        "disabled": false,
+        "uuid": "7ff1946d-e957-11e0-9f46-005056c00008",
+        "activated": true,
+        "username": "test",
+        "applicationId": "00000000-0000-0000-0000-000000000001",
+        "email": "test@usergrid.com",
+        "adminUser": true,
+        "mailTo": "Test User &lt;test@usergrid.com&gt;"
+      }
+    },
+    "name": "test-organization",
+    "applications": {
+      "test-app": "8041893b-e957-11e0-9f46-005056c00008"
+    },
+    "uuid": "800b8510-e957-11e0-9f46-005056c00008"
+  }
+}</code></pre>
+<h3 id="admin-users">Admin users</h3>
+<p><em>Admin Users</em> are users of the Usergrid.com service as well as members of one or more organizations. In turn, an organization can have one or more admin users. Currently all admin users in an organization have full access permissions after they authenticate using their basic username and password credentials. In a subsequent release, App services will support a more fine-grained, delegated administration model in which access rights for admin users are configurable.</p>
+<p>As an example. to authenticate as an admin user, use the username and password values specified when you created your admin user account and connect to the following URL (substituting the correct values for &lt;username&gt; and &lt;password&gt;):</p>
+<pre><code>https://api.usergrid.com/management/token?grant_type=password&amp;username=&lt;username&gt;&amp;password=&lt;password&gt;</code></pre>
+<p>In these results, note the access token needed to make subsequent API requests on behalf of the admin user:</p>
+<pre><code>{
+  "access_token": "f_GUbelXEeCfRgBQVsAACA:YWQ6AAABMqz_xUyYeErOkKjnzN7YQXXlpgmL69fvaA",
+  "expires_in": 3600,
+  "user": {
+    "username": "test",
+    "email": "test@usergrid.com",
+    "organizations": {
+      "test-organization": {
+        "users": {
+          "test": {
+            "name": "Test User",
+            "disabled": false,
+            "uuid": "7ff1946d-e957-11e0-9f46-005056c00008",
+            "activated": true,
+            "username": "test",
+            "applicationId": "00000000-0000-0000-0000-000000000001",
+            "email": "test@usergrid.com",
+            "adminUser": true,
+            "mailTo": "Test User &lt;test@usergrid.com&gt;"
+          }
+        },
+        "name": "test-organization",
+        "applications": {
+          "test-app": "8041893b-e957-11e0-9f46-005056c00008"
+        },
+        "uuid": "800b8510-e957-11e0-9f46-005056c00008"
+      }
+    },
+    "adminUser": true,
+    "activated": true,
+    "name": "Test User",
+    "mailTo": "Test User &lt;test@usergrid.com&gt;",
+    "applicationId": "00000000-0000-0000-0000-000000000001",
+    "uuid": "7ff1946d-e957-11e0-9f46-005056c00008",
+    "disabled": false
+  }
+}</code></pre>
+<h2 id="applications">Applications</h2>
+<p>Users can access applications in three ways:</p>
+<ul>
+<li>With application client ID and client secret credentials</li>
+<li>With the client ID and client secret credentials of the organization that owns the application</li>
+<li>With username and password credentials of an admin user associated with the application’s organization</li>
+</ul>
+<p>Using your client ID and client secret values (obtained from the Application Settings section of the developer portal), you can connect to the following URL (substituting the correct values for &lt;org-name&gt;,&lt;app-name&gt;, &lt;client_id&gt;, and &lt;client_secret&gt;):</p>
+<pre><code>https://api.usergrid.com/&lt;org-name&gt;/&lt;app-name&gt;/token?grant_type=client_credentials&amp;client_id=&lt;client_id&gt;&amp;client_secret=&lt;client_secret&gt;</code></pre>
+<p>The results show the access token needed to make subsequent API requests on behalf of the application:</p>
+<pre><code>{
+  "access_token": "F8zeMOlcEeCUBwBQVsAACA:YXA6AAABMq0d4Mep_UgbZA0-sOJRe5yWlkq7JrDCkA",
+  "expires_in": 3600,
+  "application": {
+    "name": "test-app",
+    "id": "17ccde30-e95c-11e0-9407-005056c00008"
+  }
+}</code></pre>
+<h2 id="application-users">Application users</h2>
+<p><em>Application Users</em> are members of the “users” collection within an application. They are the actual users of an app and their data is stored separately from any other app in App services.</p>
+<p>Application users can authenticate with either basic username/password credentials or OAuth client ID and client secret credentials. When authenticated, these users can access App services entities depending on their assigned permissions, their roles, and the permissions assigned to those roles.</p>
+<p>Using the username and password values specified when the application user was created, you can connect to the following URL (substituting the correct values for &lt;org-name&gt;,&lt;app-name&gt;, &lt;username&gt;, and &lt;password&gt;):</p>
+<pre><code>https://api.usergrid.com/management/&lt;org-name&gt;/&lt;app-name&gt;/token?grant_type=password&amp;username=&lt;username&gt;&amp;password=&lt;password&gt;</code></pre>
+<p>The results show the access token needed to make subsequent API requests on behalf of the application user:</p>
+<pre><code>{
+  "access_token": "5wuGd-lcEeCUBwBQVsAACA:F8zeMOlcEeCUBwBQVsAACA:YXU6AAABMq0hdy4Lh0ewmmnOWOR-DaepCrpWx9oPmw",
+  "expires_in": 3600,
+  "user": {
+    "uuid": "e70b8677-e95c-11e0-9407-005056c00008",
+    "type": "user",
+    "username": "edanuff",
+    "email": "ed@anuff.com",
+    "activated": true,
+    "created": 1317164604367013,
+    "modified": 1317164604367013
+  }
+}</code></pre>
+<h2 id="using-an-access-token">Using an access token</h2>
+<p>When you obtain an access token, you must provide it with every subsequent API call that you make. There are two ways to provide your access token.</p>
+<ul>
+<li><p>You can add the token to the API querystring:<br><br> https://api.usergrid.com/<org-name>/<app-name>/users?access_token=<access_token></access_token></app-name></org-name></p></li>
+<li><p>You can include the token in an HTTP authorization header:<br><br> Authorization: Bearer <access_token></access_token></p></li>
+</ul>
+<p><strong>Note:</strong> The App services documentation assumes you are providing a valid access token with every API call whether or not it is shown explicitly in the examples. Unless the documentation specifically says that you can access an API endpoint without an access token, you should assume that you must provide it.</p>
+<h2 id="safe-mobile-access">Safe mobile access</h2>
+<p>For mobile access, it is recommended that you connect as an application user with configured access control policies. Mobile applications are inherently untrusted because they can be easily examined and even decompiled.</p>
+<p>Any credentials stored in a mobile app should be considered secure only to the level of the application user. This means that if you don’t want the user to be able to access or delete data in your App services application, you need to make sure that you don’t enable that capability via roles or permissions. Because most web applications talk to the database using some elevated level of permissions, such as root, it’s generally a good idea for mobile applications to connect with a more restricted set of permissions. For more information, see <a href="/managing-access-defining-permission-rules">Managing access by defining permission rules</a>.</p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/authentication-and-access-app-services-0.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>

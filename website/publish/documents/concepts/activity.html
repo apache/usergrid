@@ -1,0 +1,1501 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Activity &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Organizations &amp; Admins" href="../organizations-admins.html"/>
+        <link rel="next" title="Assets" href="assets.html"/>
+        <link rel="prev" title="Groups" href="groups.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> Apache Usergrid</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deploy-local.html">Deploying to local Tomcat &amp; Cassandra</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-cassandra">Install and configure Cassandra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#install-and-configure-tomcat">Install and configure Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-war-to-tomcat">Add Usergrid WAR to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#add-usergrid-configuration-file-to-tomcat">Add Usergrid configuration file to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#run-usergrid-database-super-user-setup">Run Usergrid Database &amp; Super User Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#build-the-usergrid-console">Build the Usergrid Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#login-to-the-usergrid-console-get-started">Login to the Usergrid Console &amp; get started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deploy-local.html#example-usergrid-custom-properties-file">Example <strong>usergrid-custom.properties</strong> file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-up-and-running-locally.html">Getting Up &amp; Running Locally</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-up-and-running-locally.html#getting-started-with-the-http-api">Getting Started with the HTTP API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../organizations-admins.html">Organizations &amp; Admins</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events-and-counters.html">Events and counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles-and-permissions.html">Roles &amp; Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relationships.html">Relationships</a></li>
+<li class="toctree-l2"><a class="reference internal" href="collections.html">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query-language.html">Query Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-devices.html">Users &amp; Devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groups.html">Groups</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Activity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assets.html">Assets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">SDKs &amp; Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#sdks">SDKs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html#tools">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../presentations-and-videos.html">Presentations &amp; Videos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/presentations.html">Presentations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../presentations-and-videos/videos.html">Videos</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../upgrading.html">Upgrading from Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute-code.html">How to Contribute Code &amp; Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#code-contributions">Code Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contribute-code.html#website-and-documentation-contributions">Website and Documentation Contributions</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../organizations-admins.html">Organizations &amp; Admins</a> &raquo;</li>
+      
+    <li>Activity</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/concepts/activity.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="activity">
+<h1>Activity<a class="headerlink" href="#activity" title="Permalink to this headline">¶</a></h1>
+<p>Most modern applications struggle to manage data streams, such as those
+that contain an ongoing list of comments, activities, and tweets. In
+particular, mobile applications are prone to generating very large
+amounts of data in a data stream. Beyond that, additions to a data
+stream must often be routed automatically to subscribers or filtered or
+counted.</p>
+<p>App services provides an activity entity that is specifically designed
+for data streams. An activity is an entity type that represents activity
+stream actions (see the <a class="reference external" href="http://activitystrea.ms/specs/json/1.0/">JSON Activity Streams 1.0
+specification</a> for more
+information about these actions).</p>
+<p>When a user creates an activity, it creates a relationship between the
+activity and the user who created it. Because this relationship exists,
+the activity will appear in the feed of any of the user’s followers.
+Think of the Activities endpoint (/users/{uuid|username}/activities) as
+an &#8220;outbox&#8221; of news items created by the user. Think of the Feed
+endpoint (/users/{uuid|username}/feed) as an &#8220;inbox&#8221; of news items
+meant to be seen or consumed by the user.</p>
+<p>A user can also post an activity to a group (located at
+/groups/{uuid|groupname}/activities). This allows you to emulate
+Facebook-style group functionality, where a limited number of users can
+share content on a common &#8220;wall&#8221;. In any of these cases, there is no
+need to construct publish/subscribe relationships manually.</p>
+<p>Activity entities are particularly useful in applications that enable
+users to post content to activity streams (also called feeds) and to
+display activity streams. Some examples of these applications are
+Twitter, foursquare, and Pinterest.&nbsp;For example, when a Twitter user
+posts a short, 140-character or less, &#8220;tweet&#8221;, that activity gets added
+to the user&#8217;s activity stream for display as well as to the activity
+streams of any of the user&#8217;s followers.</p>
+<p>Using App services APIs you can create, retrieve, update, and delete
+activity entities. See You do not have access to view this node for
+descriptions of these APIs.</p>
+<p><strong>Note:</strong>&nbsp;Although not shown in the API examples below, you need to
+provide a valid access token with each API call. See <a class="reference external" href="/authenticating-users-and-application-clients">Authenticating
+users and application
+clients</a> for details.</p>
+<div class="section" id="creating-an-activity">
+<h2>Creating an activity<a class="headerlink" href="#creating-an-activity" title="Permalink to this headline">¶</a></h2>
+<p>Use the &nbsp;POST method to create an activity in the activities collection.</p>
+<div class="section" id="request-uri">
+<h3>Request URI<a class="headerlink" href="#request-uri" title="Permalink to this headline">¶</a></h3>
+<p>POST /{org_id}/{app_id}/users/{uuid|username}/activities {request
+body}</p>
+</div>
+<div class="section" id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>arg uuid|string org_id</td>
+<td>Organization UUID or organization
+name</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string app_id</td>
+<td>Application UUID or application name</td>
+</tr>
+<tr class="row-even"><td>request body</td>
+<td><p class="first">One or more sets of activity
+properties:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;actor&quot;:
+    {
+    &quot;displayName&quot;:&quot;John Doe&quot;,
+    &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-a
+</pre></div>
+</div>
+<p class="last">fad-12313b01d5c1&#8221;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#8220;username&#8221;:&#8221;john.doe&#8221;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#8220;image&#8221;:{ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;duration&#8221;:0,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;height&#8221;:80,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;url&#8221;:&#8221;<a class="reference external" href="http://www.gravatar">http://www.gravatar</a>
+.com/avatar/&#8221;,&#8221;width&#8221;:80},
+&nbsp;&nbsp;&#8220;email&#8221;:&#8221;<a class="reference external" href="mailto:john&#46;doe&#37;&#52;&#48;gmail&#46;com">john<span>&#46;</span>doe<span>&#64;</span>gmail<span>&#46;</span>com</a>&#8220;},
+&nbsp;&nbsp;&#8220;verb&#8221;:&#8221;post&#8221;, &nbsp;&nbsp;&#8220;content&#8221;:&#8221;Hello
+World!&#8221;&nbsp;&nbsp;&nbsp;&nbsp; }</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="example-request">
+<h3>Example - Request<a class="headerlink" href="#example-request" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="#curl_create_activity">cURL</a></li>
+<li><a class="reference external" href="#javascript_create_activity">JavaScript (HTML5)</a></li>
+<li><a class="reference external" href="#ruby_create_activity">Ruby</a></li>
+<li><a class="reference external" href="#nodejs_create_activity">Node.js</a></li>
+</ul>
+<!-- --><div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/my-org/my-app/users/john.doe/activities&quot; -d &#39;{&quot;actor&quot;:{&quot;displayName&quot;:&quot;John Doe&quot;,&quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,&quot;username&quot;:&quot;john.doe&quot;,
+&quot;image&quot;:{&quot;duration&quot;:0,&quot;height&quot;:80,&quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,&quot;width&quot;:80},
+&quot;email&quot;:&quot;john.doe@gmail.com&quot;},&quot;verb&quot;:&quot;post&quot;,&quot;content&quot;:&quot;Hello World!&quot;}&#39;
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5)
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;POST&#39;,
+    endpoint:&#39;users/john.doe/activities&#39;,
+    body:{&quot;actor&quot;:
+           {&quot;displayName&quot;:&quot;John Doe&quot;,
+            &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+            &quot;username&quot;:&quot;john.doe&quot;,
+            &quot;image&quot;:
+             {&quot;duration&quot;:0,
+              &quot;height&quot;:80,
+              &quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,
+              &quot;width&quot;:80},
+              &quot;email&quot;:&quot;john.doe@gmail.com&quot;},
+             &quot;verb&quot;:&quot;post&quot;,
+             &quot;content&quot;:&quot;Hello World!&quot;}
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — POST failed
+    } else {
+        // success — POST worked. Data will contain raw results from API call
+    }
+});
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/scottganyo/usergrid_iron">Ruby
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>app = Usergrid::Application.new &#39;https://api.usergrid.com/my-org/my-app/&#39;
+app.create_activity { actor: { displayName: &#39;John Doe&#39;, uuid: &#39;1f3567aa-da83-11e1-afad-12313b01d5c1&#39;, username: &#39;john.doe&#39;, image: { duration: 0, height: 80, url: &#39;http://www.gravatar.com/avatar/&#39;, width: 80 }, email: &#39;john.doe@gmail.com&#39; }, verb: &#39;post&#39;, content: &#39;Hello World!&#39; }
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Node.js
+module</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;POST&#39;,
+    endpoint:&#39;users/john.doe/activities&#39;,
+    body:{&quot;actor&quot;:
+           {&quot;displayName&quot;:&quot;John Doe&quot;,
+            &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+            &quot;username&quot;:&quot;john.doe&quot;,
+            &quot;image&quot;:
+             {&quot;duration&quot;:0,
+              &quot;height&quot;:80,
+              &quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,
+              &quot;width&quot;:80},
+              &quot;email&quot;:&quot;john.doe@gmail.com&quot;},
+             &quot;verb&quot;:&quot;post&quot;,
+             &quot;content&quot;:&quot;Hello World!&quot;}
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — POST failed
+    } else {
+        // success — POST worked. Data will contain raw results from API call
+    }
+});
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-response">
+<h3>Example - Response<a class="headerlink" href="#example-response" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+ &quot;action&quot; : &quot;post&quot;,
+ &quot;application&quot; : &quot;5111c463-6a42-11e1-b6dd-1231380a0284&quot;,
+ &quot;params&quot; : {
+ },
+ &quot;path&quot; : &quot;/users/1f3567aa-da83-11e1-afad-12313b01d5c1/activities&quot;,
+ &quot;uri&quot; : &quot;https://api.usergrid.com/5111c463-6a42-11e1-b6dd-1231380a0284/users/1f3567aa-da83-11e1-afad-12313b01d5c1/activities&quot;,
+ &quot;entities&quot; : [ {
+   &quot;uuid&quot; : &quot;da448955-f3aa-11e1-8042-12313d331ae8&quot;,
+   &quot;type&quot; : &quot;activity&quot;,
+   &quot;created&quot; : 1346445092974,
+   &quot;modified&quot; : 1346445092974,
+   &quot;actor&quot; : {
+     &quot;displayName&quot; : &quot;John Doe&quot;,
+     &quot;uuid&quot; : &quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+     &quot;username&quot; : &quot;john.doe&quot;,
+     &quot;image&quot; : {
+       &quot;duration&quot; : 0,
+       &quot;height&quot; : 80,
+       &quot;url&quot; : &quot;http://www.gravatar.com/avatar/&quot;,
+       &quot;width&quot; : 80
+     },
+     &quot;email&quot; : &quot;john.doe@gmail.com&quot;
+   },
+   &quot;content&quot; : &quot;Hello World!&quot;,
+   &quot;metadata&quot; : {
+     &quot;path&quot; : &quot;/users/1f3567aa-da83-11e1-afad-12313b01d5c1/activities/da448955-f3aa-11e1-8042-12313d331ae8&quot;
+   },
+   &quot;published&quot; : 1346445092974,
+   &quot;verb&quot; : &quot;post&quot;
+ } ],
+ &quot;timestamp&quot; : 1346445092827,
+ &quot;duration&quot; : 1406,
+ &quot;organization&quot;: &quot;my-org&quot;,
+ &quot;applicationName&quot;: &quot;my-app&quot;
+}
+</pre></div>
+</div>
+<p><strong>Note:</strong> Anytime a logged-in user makes a request, you can substitute
+&#8220;me&#8221; for the uuid or username. So the format of a request to create an
+activity for the currently logged-in user would look like this:</p>
+<p>POST /{org_id}/{app_id}/users/me/activities {request body}</p>
+<p>The users/me endpoint is accessible only if you provide an access token
+with the request. If you don&#8217;t provide an access token with the request,
+that is, you make an anonymous (or &#8220;guest&#8221;) call, the system will not be
+able to determine which user to return as /users/me.</p>
+<p>When you create an activity it creates a relationship between the
+activity and the user who created it. In other words, the newly created
+activity above belongs to john.doe. Another way of saying this is the
+user &#8220;owns&#8221; the activity. And because this relationship exists, the
+activity will appear in the feed of any of the user’s followers (in this
+example, anyone who is following john.doe). However, it will not appear
+in the feed of people the user follows. The activity is accessible at
+the /activites endpoint to users who have the permission to read that
+endpoint.</p>
+<p>Notice the properties specified in the request body in the previous
+example are <em>actor</em>, <em>verb</em>, and <em>content</em>. The <em>actor</em>, <em>verb</em>, and
+<em>content</em> properties are built into the Activity entity (see
+<a class="reference external" href="#properties">System-defined activity properties</a>). The actor
+property specifies properties of the entity that performs the action
+(here, user john.doe). The gravatar URL is used to create an icon for
+the activity.&nbsp;And because an Activity is simply an Apache Usergrid
+entity, you can also create custom properties.</p>
+<p>The <em>verb</em> parameter is descriptive. You can use it to indicate what
+type of activity is posted, for example, an image versus text. The
+value<em>post</em> is defined in the JSON Activity Streams specification as
+“the act of authoring an object and then publishing it online.“</p>
+</div>
+</div>
+<div class="section" id="posting-an-activity-to-a-group">
+<h2>Posting an activity to a group<a class="headerlink" href="#posting-an-activity-to-a-group" title="Permalink to this headline">¶</a></h2>
+<p>Use the POST method to post an activity to a specific group. In this
+case the activity is created in the activities collection and is
+accessible at the /activities endpoint to users who have the permission
+to read that endpoint. In addition, a relationship is established
+between the activity and the group, and because of that, the activity
+will appear in the group’s feed. The group &#8220;owns&#8221; the activity. Also,
+the activity will be published in the feed of all users that are members
+of the group.</p>
+<p>Request URI</p>
+<p>POST /{org_id}/{app_id}/groups/{uuid|groupname}/activities {request
+body}</p>
+<div class="section" id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>arg uuid|string org_id</td>
+<td>Organization UUID or organization
+name</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string app_id</td>
+<td>Application UUID or application name</td>
+</tr>
+<tr class="row-even"><td>arg uuid|string groupname</td>
+<td>UUID or name of the group</td>
+</tr>
+<tr class="row-odd"><td>request body</td>
+<td><p class="first">One or more sets of activity
+properties:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;actor&quot;:
+    {
+    &quot;displayName&quot;:&quot;John Doe&quot;,
+    &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-a
+</pre></div>
+</div>
+<p class="last">fad-12313b01d5c1&#8221;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#8220;username&#8221;:&#8221;john.doe&#8221;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#8220;image&#8221;:{ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;duration&#8221;:0,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;height&#8221;:80,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;url&#8221;:&#8221;<a class="reference external" href="http://www.gravatar">http://www.gravatar</a>
+.com/avatar/&#8221;,&#8221;width&#8221;:80},
+&nbsp;&nbsp;&#8220;email&#8221;:&#8221;<a class="reference external" href="mailto:john&#46;doe&#37;&#52;&#48;gmail&#46;com">john<span>&#46;</span>doe<span>&#64;</span>gmail<span>&#46;</span>com</a>&#8220;},
+&nbsp;&nbsp;&#8220;verb&#8221;:&#8221;post&#8221;, &nbsp;&nbsp;&#8220;content&#8221;:&#8221;Hello
+World!&#8221;&nbsp;&nbsp;&nbsp;&nbsp; }</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id2">
+<h3>Example - Request<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="#curl_post_activity_group">cURL</a></li>
+<li><a class="reference external" href="#javascript_post_activity_group">JavaScript (HTML5)</a></li>
+<li><a class="reference external" href="#ruby_post_activity_group">Ruby</a></li>
+<li><a class="reference external" href="#nodejs_post_activity_group">Node.js</a></li>
+</ul>
+<!-- --><div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/my-org/my-app/groups/mygroup/activities&quot; -d &#39;{&quot;actor&quot;:{&quot;displayName&quot;:&quot;John Doe&quot;,&quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,&quot;username&quot;:&quot;john.doe&quot;,
+&quot;image&quot;:{&quot;duration&quot;:0,&quot;height&quot;:80,&quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,&quot;width&quot;:80},
+&quot;email&quot;:&quot;john.doe@gmail.com&quot;},&quot;verb&quot;:&quot;post&quot;,&quot;content&quot;:&quot;Hello World!&quot;}&#39;
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5)
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;POST&#39;,
+    endpoint:&#39;groups/mygroup/activities&#39;,
+    body:{&quot;actor&quot;:
+           {&quot;displayName&quot;:&quot;John Doe&quot;,
+            &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+            &quot;username&quot;:&quot;john.doe&quot;,
+            &quot;image&quot;:
+             {&quot;duration&quot;:0,
+              &quot;height&quot;:80,
+              &quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,
+              &quot;width&quot;:80},
+              &quot;email&quot;:&quot;john.doe@gmail.com&quot;},
+             &quot;verb&quot;:&quot;post&quot;,
+             &quot;content&quot;:&quot;Hello World!&quot;}
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — POST failed
+    } else {
+        //success — POST worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/scottganyo/usergrid_iron">Ruby
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>app = Usergrid::Application.new &#39;https://api.usergrid.com/my-org/my-app/&#39;
+app[&#39;groups/mygroup/activities&#39;].post { actor:{ displayName: &#39;John Doe&#39;, uuid : &#39;1f3567aa-da83-11e1-afad-12313b01d5c1&#39;, username: &#39;john.doe&#39;, image: { duration: 0, height: 80, url: &#39;http://www.gravatar.com/avatar/&#39;, width: 80 }, email: &#39;john.doe@gmail.com&#39; }, verb: &#39;post&#39;, content: &#39;Hello World!&#39; }
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Node.js
+module</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;POST&#39;,
+    endpoint:&#39;groups/mygroup/activities&#39;,
+    body:{&quot;actor&quot;:
+           {&quot;displayName&quot;:&quot;John Doe&quot;,
+            &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+            &quot;username&quot;:&quot;john.doe&quot;,
+            &quot;image&quot;:
+             {&quot;duration&quot;:0,
+              &quot;height&quot;:80,
+              &quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,
+              &quot;width&quot;:80},
+              &quot;email&quot;:&quot;john.doe@gmail.com&quot;},
+             &quot;verb&quot;:&quot;post&quot;,
+             &quot;content&quot;:&quot;Hello World!&quot;}
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — POST failed
+    } else {
+        //success — POST worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>Because this relationship exists, this activity will appear in the feed
+of all users who are members of mygroup. It won&#8217;t appear in the feeds of
+the group members’ followers or in feeds of users they follow.</p>
+</div>
+<div class="section" id="id3">
+<h3>Example - Response<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;action&quot;: &quot;post&quot;,
+  &quot;application&quot;: &quot;3400ba10-cd0c-11e1-bcf7-12313d1c4491&quot;,
+  &quot;params&quot;:  {},
+  &quot;path&quot;: &quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/activities&quot;,
+  &quot;uri&quot;: &quot;https://api.usergrid.com/my-org/my-app/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/activities&quot;,
+  &quot;entities&quot;:  [
+     {
+      &quot;uuid&quot;: &quot;563f5d96-37f3-11e2-a0f7-02e81ae640dc&quot;,
+      &quot;type&quot;: &quot;activity&quot;,
+      &quot;created&quot;: 1353952903811,
+      &quot;modified&quot;: 1353952903811,
+      &quot;actor&quot;:  {
+        &quot;displayName&quot;: &quot;John Doe&quot;,
+        &quot;uuid&quot;: &quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+        &quot;username&quot;: &quot;john.doe&quot;,
+        &quot;image&quot;:  {
+          &quot;duration&quot;: 0,
+          &quot;height&quot;: 80,
+          &quot;url&quot;: &quot;http://www.gravatar.com/avatar/&quot;,
+          &quot;width&quot;: 80
+        },
+        &quot;email&quot;: &quot;john.doe@gmail.com&quot;
+      },
+      &quot;content&quot;: &quot;Hello World!&quot;,
+      &quot;metadata&quot;:  {
+        &quot;path&quot;: &quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/activities/563f5d96-37f3-11e2-a0f7-02e81ae640dc&quot;
+      },
+      &quot;published&quot;: 1353952903811,
+      &quot;verb&quot;: &quot;post&quot;
+    }
+  ],
+  &quot;timestamp&quot;: 1353952903800,
+  &quot;duration&quot;: 81,
+  &quot;organization&quot;: &quot;my-org&quot;,
+  &quot;applicationName&quot;: &quot;my-app&quot;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="creating-an-activity-for-a-user-s-followers-in-a-group">
+<h2>Creating an activity for a user&#8217;s followers in a group<a class="headerlink" href="#creating-an-activity-for-a-user-s-followers-in-a-group" title="Permalink to this headline">¶</a></h2>
+<p>Use the POST method to create an activity that will be published only in
+the feeds of users who (1) follow you, and (2) are in the same group to
+which you posted the activity. This is useful if you want to create
+specific groups of friends (for example, acquaintances or colleagues)
+and publish content to them with more precise privacy settings. This
+allows you to re-create a privacy model similar to Google+’s Circles or
+Facebook current privacy system.</p>
+<p>When you create an activity for a user’s followers in a group:</p>
+<ul class="simple">
+<li>The activity is accessible at the /activities endpoint to users who
+have the permission to read that endpoint. The activity will not be
+cross-posted to the group’s activity endpoint
+(/groups/{uuid|groupname}/activities)</li>
+<li>A relationship is automatically created between the activity entity
+that was just created and the user within that group
+(/groups/{uuid|groupname}/users/{uuid|username})</li>
+<li>The user within the group
+(/groups/{uuid|groupname}/users/{uuid|username}) becomes the owner
+of the activity (through the owner property in the activity).</li>
+</ul>
+<div class="section" id="id4">
+<h3>Request URI<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>POST
+/{org_id}/{app_id}/groups/{uuid|groupname}/users/{uuid|username}/activities
+{request body}</p>
+</div>
+<div class="section" id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>arg uuid|string org_id</td>
+<td>Organization UUID or organization
+name</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string app_id</td>
+<td>Application UUID or application name</td>
+</tr>
+<tr class="row-even"><td>arg uuid|string groupname</td>
+<td>UUID or name of the group</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string username</td>
+<td>UUID or name of the user</td>
+</tr>
+<tr class="row-even"><td>request body</td>
+<td><p class="first">One or more sets of activity
+properties:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;actor&quot;:
+    {
+    &quot;displayName&quot;:&quot;John Doe&quot;,
+    &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-a
+</pre></div>
+</div>
+<p class="last">fad-12313b01d5c1&#8221;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#8220;username&#8221;:&#8221;john.doe&#8221;,
+&nbsp;&nbsp;&nbsp;&nbsp;&#8220;image&#8221;:{ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;duration&#8221;:0,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;height&#8221;:80,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;url&#8221;:&#8221;<a class="reference external" href="http://www.gravatar">http://www.gravatar</a>
+.com/avatar/&#8221;,&#8221;width&#8221;:80},
+&nbsp;&nbsp;&#8220;email&#8221;:&#8221;<a class="reference external" href="mailto:john&#46;doe&#37;&#52;&#48;gmail&#46;com">john<span>&#46;</span>doe<span>&#64;</span>gmail<span>&#46;</span>com</a>&#8220;},
+&nbsp;&nbsp;&#8220;verb&#8221;:&#8221;post&#8221;, &nbsp;&nbsp;&#8220;content&#8221;:&#8221;Hello
+World!&#8221;&nbsp;&nbsp;&nbsp;&nbsp; }</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id6">
+<h3>Example - Request<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="#curl_post_activity_user_group">cURL</a></li>
+<li><a class="reference external" href="#javascript_post_activity_user_group">JavaScript (HTML5)</a></li>
+<li><a class="reference external" href="#ruby_post_activity_user_group">Ruby</a></li>
+<li><a class="reference external" href="#nodejs_post_activity_user_group">Node.js</a></li>
+</ul>
+<!-- --><div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/my-org/my-app/groups/mygroup/users/john.doe/activities&quot; -d &#39;{&quot;actor&quot;:{&quot;displayName&quot;:&quot;John Doe&quot;,&quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,&quot;username&quot;:&quot;john.doe&quot;,
+&quot;image&quot;:{&quot;duration&quot;:0,&quot;height&quot;:80,&quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,&quot;width&quot;:80},
+&quot;email&quot;:&quot;john.doe@gmail.com&quot;},&quot;verb&quot;:&quot;post&quot;,&quot;content&quot;:&quot;Hello World!&quot;}&#39;
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5)
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;POST&#39;,
+    endpoint:&#39;groups/mygroup/users/john.doe/activities&#39;,
+    body:{&quot;actor&quot;:
+           {&quot;displayName&quot;:&quot;John Doe&quot;,
+            &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+            &quot;username&quot;:&quot;john.doe&quot;,
+            &quot;image&quot;:
+             {&quot;duration&quot;:0,
+              &quot;height&quot;:80,
+              &quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,
+              &quot;width&quot;:80},
+              &quot;email&quot;:&quot;john.doe@gmail.com&quot;},
+             &quot;verb&quot;:&quot;post&quot;,
+             &quot;content&quot;:&quot;Hello World!&quot;}
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — POST failed
+    } else {
+        //success — POST worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/scottganyo/usergrid_iron">Ruby
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>app = Usergrid::Application.new &#39;https://api.usergrid.com/my-org/my-app/&#39;
+app[&#39;groups/mygroup/users/john.doe/activities&#39;].post { actor:{ displayName: &#39;John Doe&#39;, uuid : &#39;1f3567aa-da83-11e1-afad-12313b01d5c1&#39;, username: &#39;john.doe&#39;, image: { duration: 0, height: 80, url: &#39;http://www.gravatar.com/avatar/&#39;, width: 80 }, email: &#39;john.doe@gmail.com&#39; }, verb: &#39;post&#39;, content: &#39;Hello World!&#39; }
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Node.js
+module</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;POST&#39;,
+    endpoint:&#39;groups/mygroup/users/john.doe/activities&#39;,
+    body:{&quot;actor&quot;:
+           {&quot;displayName&quot;:&quot;John Doe&quot;,
+            &quot;uuid&quot;:&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+            &quot;username&quot;:&quot;john.doe&quot;,
+            &quot;image&quot;:
+             {&quot;duration&quot;:0,
+              &quot;height&quot;:80,
+              &quot;url&quot;:&quot;http://www.gravatar.com/avatar/&quot;,
+              &quot;width&quot;:80},
+              &quot;email&quot;:&quot;john.doe@gmail.com&quot;},
+             &quot;verb&quot;:&quot;post&quot;,
+             &quot;content&quot;:&quot;Hello World!&quot;}
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — POST failed
+    } else {
+        //success — POST worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>Because this relationship exists, this activity will appear in the feed
+of all users who are members of mygroup. It won&#8217;t appear in the feeds of
+the group members’ followers or in feeds of users they follow.</p>
+</div>
+<div class="section" id="id7">
+<h3>Example - Response<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;action&quot; : &quot;post&quot;,
+  &quot;application&quot; : &quot;3400ba10-cd0c-11e1-bcf7-12313d1c4491&quot;,
+  &quot;params&quot; : { },
+  &quot;path&quot; : &quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/users/34e26bc9-2d00-11e2-a065-02e81ae640dc/activities&quot;,
+  &quot;uri&quot; : &quot;https://api.usergrid.com/my-org/my-app/
+/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/users/34e26bc9-2d00-11e2-a065-02e81ae640dc/activities&quot;,
+  &quot;entities&quot; : [ {
+    &quot;uuid&quot; : &quot;2440ca58-49ff-11e2-84c0-02e81adcf3d0&quot;,
+    &quot;type&quot; : &quot;activity&quot;,
+    &quot;created&quot; : 1355937094825,
+    &quot;modified&quot; : 1355937094825,
+    &quot;actor&quot; : {
+      &quot;displayName&quot; : &quot;John Doe&quot;,
+      &quot;uuid&quot; : &quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+      &quot;username&quot; : &quot;john.doe&quot;,
+      &quot;image&quot; : {
+        &quot;duration&quot; : 0,
+        &quot;height&quot; : 80,
+        &quot;url&quot; : &quot;http://www.gravatar.com/avatar/&quot;,
+        &quot;width&quot; : 80
+      },
+      &quot;email&quot; : &quot;john.doe@gmail.com&quot;
+    },
+    &quot;content&quot; : &quot;Happy New Year!&quot;,
+    &quot;metadata&quot; : {
+      &quot;path&quot; : &quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/users/34e26bc9-2d00-11e2-a065-02e81ae640dc/activities/2440ca58-49ff-11e2-84c0-02e81adcf3d0&quot;
+    },
+    &quot;published&quot; : 1355937094825,
+    &quot;verb&quot; : &quot;post&quot;
+  } ],
+  &quot;timestamp&quot; : 1355937094789,
+  &quot;duration&quot; : 95,
+  &quot;organization&quot; : &quot;my-org&quot;,
+  &quot;applicationName&quot; : &quot;my-app&quot;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-a-users-activities">
+<h2>Getting a user’s activities<a class="headerlink" href="#getting-a-users-activities" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve a user’s activities. This returns the
+activities posted on the user (that is, to
+/users/{uuid|username}/activities), but not the activities of the
+people that user follows. To retrieve the user’s activities and
+activities of the users he follows, you need to get the user’s feed.</p>
+<div class="section" id="id8">
+<h3>Request URI<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<p>GET /{org_id}/{app_id}/users/{uuid|username}/activities</p>
+</div>
+<div class="section" id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>arg uuid|string org_id</td>
+<td>Organization UUID or organization name</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string app_id</td>
+<td>Application UUID or application name</td>
+</tr>
+<tr class="row-even"><td>arg uuid|string username</td>
+<td>UUID or name of the user</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id10">
+<h3>Example - Request<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="#curl_get_user_activities">cURL</a></li>
+<li><a class="reference external" href="#javascript_get_user_activities">JavaScript (HTML5)</a></li>
+<li><a class="reference external" href="#ruby_get_user_activities">Ruby</a></li>
+<li><a class="reference external" href="#nodejs_get_user_activities">Node.js</a></li>
+</ul>
+<!-- --><div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/my-org/my-app/users/john.doe/activities&quot;
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5)
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;users/john.doe/activities&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/scottganyo/usergrid_iron">Ruby
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>app = Usergrid::Application.new &#39;https://api.usergrid.com/my-org/my-app/&#39;
+app[&#39;users/john.doe/activities&#39;].get
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Node.js
+module</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;users/john.doe/activities&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+</div>
+<div class="section" id="id11">
+<h3>Example - Response<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;action&quot; : &quot;get&quot;,
+  &quot;application&quot; : &quot;3400ba10-cd0c-11e1-bcf7-12313d1c4491&quot;,
+  &quot;params&quot; : { },
+  &quot;path&quot; : &quot;/users/5c0c1789-d503-11e1-b36a-12313b01d5c1/activities&quot;,
+  &quot;uri&quot; : &quot;https://api.usergrid.com/my-org/my-app/users/5c0c1789-d503-11e1-b36a-12313b01d5c1/activities&quot;,
+  &quot;entities&quot; : [ {
+    &quot;uuid&quot; : &quot;d57e5b00-37f1-11e2-a0f7-02e81ae640dc&quot;,
+    &quot;type&quot; : &quot;activity&quot;,
+    &quot;created&quot; : 1353952258301,
+    &quot;modified&quot; : 1353952258301,
+    &quot;actor&quot; : {
+      &quot;displayName&quot; : &quot;John Doe&quot;,
+      &quot;image&quot; : {
+        &quot;duration&quot; : 0,
+        &quot;height&quot; : 80,
+        &quot;url&quot; : &quot;http://www.gravatar.com/avatar/&quot;,
+        &quot;width&quot; : 80
+      },
+      &quot;uuid&quot; : &quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+      &quot;email&quot; : &quot;john.doe@gmail.com&quot;,
+      &quot;username&quot; : &quot;john.doe&quot;
+    },
+    &quot;content&quot; : &quot;Hello World!&quot;,
+    &quot;metadata&quot; : {
+      &quot;path&quot; : &quot;/users/5c0c1789-d503-11e1-b36a-12313b01d5c1/activities/d57e5b00-37f1-11e2-a0f7-02e81ae640dc&quot;
+    },
+    &quot;published&quot; : 1353952258301,
+    &quot;verb&quot; : &quot;post&quot;
+  },
+  &quot;timestamp&quot; : 1355933909077,
+  &quot;duration&quot; : 39,
+  &quot;organization&quot; : &quot;my-org&quot;,
+  &quot;applicationName&quot; : &quot;my-app&quot;}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-a-groups-activities">
+<h2>Getting a group’s activities<a class="headerlink" href="#getting-a-groups-activities" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve a group’s activities. This returns the
+activities created on or by the group (that is, to
+/groups/{uuid|groupname}/activities), but not the activities of
+followers of group members. To retrieve the group’s activities and
+activities of followers, you need to get the group’s feed.</p>
+<div class="section" id="id12">
+<h3>Request URI<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<p>GET /{org_id}/{app_id}/groups/{uuid|groupname}/activities</p>
+</div>
+<div class="section" id="id13">
+<h3>Parameters<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="42%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>arg uuid|string org_id</td>
+<td>Organization UUID or organization name</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string app_id</td>
+<td>Application UUID or application name</td>
+</tr>
+<tr class="row-even"><td>arg uuid|string groupname</td>
+<td>UUID or name of the group</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id14">
+<h3>Example - Request<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="#curl_get_group_activities">cURL</a></li>
+<li><a class="reference external" href="#javascript_get_group_activities">JavaScript (HTML5)</a></li>
+<li><a class="reference external" href="#ruby_get_group_activities">Ruby</a></li>
+<li><a class="reference external" href="#nodejs_get_group_activities">Node.js</a></li>
+</ul>
+<!-- --><div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/my-org/my-app/groups/mygroup/activities&quot;
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5)
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;groups/mygroup/activities&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/scottganyo/usergrid_iron">Ruby
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>app = Usergrid::Application.new &#39;https://api.usergrid.com/my-org/my-app/&#39;
+app[&#39;groups/mygroup/activities&#39;].get
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Node.js
+module</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;groups/mygroup/activities&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+</div>
+<div class="section" id="id15">
+<h3>Example - Response<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span> <span class="p">:</span> <span class="s">&quot;get&quot;</span><span class="p">,</span>
+  <span class="s">&quot;application&quot;</span> <span class="p">:</span> <span class="s">&quot;3400ba10-cd0c-11e1-bcf7-12313d1c4491&quot;</span><span class="p">,</span>
+  <span class="s">&quot;params&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="p">},</span>
+  <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/activities&quot;</span><span class="p">,</span>
+  <span class="s">&quot;uri&quot;</span> <span class="p">:</span> <span class="s">&quot;https://api.usergrid.com/my-org/my-app//groups/d87edec7-fc4d-11e1-9917-12313d1520f1/activities&quot;</span><span class="p">,</span>
+  <span class="s">&quot;entities&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="p">{</span>
+    <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;e7a47a41-4310-11e2-8861-02e81adcf3d0&quot;</span><span class="p">,</span>
+    <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;activity&quot;</span><span class="p">,</span>
+    <span class="s">&quot;created&quot;</span> <span class="p">:</span> <span class="mi">1355175065939</span><span class="p">,</span>
+    <span class="s">&quot;modified&quot;</span> <span class="p">:</span> <span class="mi">1355175065939</span><span class="p">,</span>
+    <span class="s">&quot;actor&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;displayName&quot;</span> <span class="p">:</span> <span class="s">&quot;Martin Smith&quot;</span><span class="p">,</span>
+      <span class="s">&quot;id&quot;</span> <span class="p">:</span> <span class="s">&quot;tag:example.org,2011:martin&quot;</span><span class="p">,</span>
+      <span class="s">&quot;image&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s">&quot;height&quot;</span> <span class="p">:</span> <span class="mi">250</span><span class="p">,</span>
+        <span class="s">&quot;url&quot;</span> <span class="p">:</span> <span class="s">&quot;http://example.org/martin/image&quot;</span><span class="p">,</span>
+        <span class="s">&quot;width&quot;</span> <span class="p">:</span> <span class="mi">250</span>
+      <span class="p">},</span>
+      <span class="s">&quot;objectType&quot;</span> <span class="p">:</span> <span class="s">&quot;person&quot;</span><span class="p">,</span>
+      <span class="s">&quot;url&quot;</span> <span class="p">:</span> <span class="s">&quot;http://example.org/martin&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;metadata&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/activities/e7a47a41-4310-11e2-8861-02e81adcf3d0&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;object&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;id&quot;</span> <span class="p">:</span> <span class="s">&quot;tag:example.org,2011:abc123/xyz&quot;</span><span class="p">,</span>
+      <span class="s">&quot;url&quot;</span> <span class="p">:</span> <span class="s">&quot;http://example.org/blog/2011/02/entry&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;published&quot;</span> <span class="p">:</span> <span class="mi">1355175065939</span><span class="p">,</span>
+    <span class="s">&quot;target&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;url&quot;</span> <span class="p">:</span> <span class="s">&quot;http://example.org/blog/&quot;</span><span class="p">,</span>
+      <span class="s">&quot;objectType&quot;</span> <span class="p">:</span> <span class="s">&quot;blog&quot;</span><span class="p">,</span>
+      <span class="s">&quot;id&quot;</span> <span class="p">:</span> <span class="s">&quot;tag:example.org,2011:abc123&quot;</span><span class="p">,</span>
+      <span class="s">&quot;displayName&quot;</span> <span class="p">:</span> <span class="s">&quot;Martin&#39;s Blog&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;verb&quot;</span> <span class="p">:</span> <span class="s">&quot;post&quot;</span>
+  <span class="p">},</span> <span class="p">{</span>
+    <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;563f5d96-37f3-11e2-a0f7-02e81ae640dc&quot;</span><span class="p">,</span>
+    <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;activity&quot;</span><span class="p">,</span>
+    <span class="s">&quot;created&quot;</span> <span class="p">:</span> <span class="mi">1353952903811</span><span class="p">,</span>
+    <span class="s">&quot;modified&quot;</span> <span class="p">:</span> <span class="mi">1353952903811</span><span class="p">,</span>
+    <span class="s">&quot;actor&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;displayName&quot;</span> <span class="p">:</span> <span class="s">&quot;John Doe&quot;</span><span class="p">,</span>
+      <span class="s">&quot;image&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s">&quot;height&quot;</span> <span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+        <span class="s">&quot;url&quot;</span> <span class="p">:</span> <span class="s">&quot;http://www.gravatar.com/avatar/&quot;</span><span class="p">,</span>
+        <span class="s">&quot;width&quot;</span> <span class="p">:</span> <span class="mi">80</span>
+      <span class="p">},</span>
+      <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;</span><span class="p">,</span>
+      <span class="s">&quot;email&quot;</span> <span class="p">:</span> <span class="s">&quot;john.doe@gmail.com&quot;</span><span class="p">,</span>
+      <span class="s">&quot;username&quot;</span> <span class="p">:</span> <span class="s">&quot;john.doe&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;content&quot;</span> <span class="p">:</span> <span class="s">&quot;Hello World!&quot;</span><span class="p">,</span>
+    <span class="s">&quot;metadata&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/activities/563f5d96-37f3-11e2-a0f7-02e81ae640dc&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;published&quot;</span> <span class="p">:</span> <span class="mi">1353952903811</span><span class="p">,</span>
+    <span class="s">&quot;verb&quot;</span> <span class="p">:</span> <span class="s">&quot;post&quot;</span>
+  <span class="p">}</span> <span class="p">],</span>
+  <span class="s">&quot;timestamp&quot;</span> <span class="p">:</span> <span class="mi">1355934203039</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">141</span><span class="p">,</span>
+  <span class="s">&quot;organization&quot;</span> <span class="p">:</span> <span class="s">&quot;my-org&quot;</span><span class="p">,</span>
+  <span class="s">&quot;applicationName&quot;</span> <span class="p">:</span> <span class="s">&quot;my-app&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-a-users-feed">
+<h2>Getting a user’s feed<a class="headerlink" href="#getting-a-users-feed" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve a user’s feed.</p>
+<div class="section" id="id16">
+<h3>Request URI<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<p>GET /{org_id}/{app_id}/users/{uuid|username}/feed</p>
+</div>
+<div class="section" id="id17">
+<h3>Parameters<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>arg uuid|string org_id</td>
+<td>Organization UUID or organization name</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string app_id</td>
+<td>Application UUID or application name</td>
+</tr>
+<tr class="row-even"><td>arg uuid|string username</td>
+<td>UUID or name of the user</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id18">
+<h3>Example - Request<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="#curl_get_user_feed">cURL</a></li>
+<li><a class="reference external" href="#javascript_get_user_feed">JavaScript (HTML5)</a></li>
+<li><a class="reference external" href="#ruby_get_user_feed">Ruby</a></li>
+<li><a class="reference external" href="#nodejs_get_user_feed">Node.js</a></li>
+</ul>
+<!-- --><div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/my-org/my-app/users/john.doe/feed&quot;
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5)
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;users/john.doe/feed&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/scottganyo/usergrid_iron">Ruby
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>app = Usergrid::Application.new &#39;https://api.usergrid.com/my-org/my-app/&#39;
+app[&#39;users/john.doe/feed&#39;].get
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Node.js
+module</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;users/john.doe/feed&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+</div>
+<div class="section" id="id19">
+<h3>Example - Response<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span> <span class="p">:</span> <span class="s">&quot;get&quot;</span><span class="p">,</span>
+  <span class="s">&quot;application&quot;</span> <span class="p">:</span> <span class="s">&quot;5111c463-6a42-11e1-b6dd-1231380a0284&quot;</span><span class="p">,</span>
+  <span class="s">&quot;params&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;_&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s">&quot;1346438183429&quot;</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/1f3567aa-da83-11e1-afad-12313b01d5c1/feed&quot;</span><span class="p">,</span>
+  <span class="s">&quot;uri&quot;</span> <span class="p">:</span> <span class="s">&quot;https://api.usergrid.com/5111c463-6a42-11e1-b6dd-1231380a0284/users/1f3567aa-da83-11e1-afad-12313b01d5c1/feed&quot;</span><span class="p">,</span>
+  <span class="s">&quot;entities&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="p">{</span>
+    <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;ffd79647-f399-11e1-aec3-12313b06ae01&quot;</span><span class="p">,</span>
+    <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;activity&quot;</span><span class="p">,</span>
+    <span class="s">&quot;created&quot;</span> <span class="p">:</span> <span class="mi">1346437854569</span><span class="p">,</span>
+    <span class="s">&quot;modified&quot;</span> <span class="p">:</span> <span class="mi">1346437854569</span><span class="p">,</span>
+    <span class="s">&quot;actor&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;displayName&quot;</span> <span class="p">:</span> <span class="s">&quot;John Doe&quot;</span><span class="p">,</span>
+      <span class="s">&quot;image&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s">&quot;height&quot;</span> <span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+        <span class="s">&quot;url&quot;</span> <span class="p">:</span> <span class="s">&quot;http://www.gravatar.com/avatar/&quot;</span><span class="p">,</span>
+        <span class="s">&quot;width&quot;</span> <span class="p">:</span> <span class="mi">80</span>
+      <span class="p">},</span>
+      <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;</span><span class="p">,</span>
+      <span class="s">&quot;email&quot;</span> <span class="p">:</span> <span class="s">&quot;john.doe@gmail.com&quot;</span><span class="p">,</span>
+      <span class="s">&quot;username&quot;</span> <span class="p">:</span> <span class="s">&quot;john.doe&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;content&quot;</span> <span class="p">:</span> <span class="s">&quot;Hello World!&quot;</span><span class="p">,</span>
+    <span class="s">&quot;metadata&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;cursor&quot;</span> <span class="p">:</span> <span class="s">&quot;gGkAAQMAgGkABgE5ffM1aQCAdQAQ_9eWR_OZEeGuwxIxOwauAQCAdQAQABlaOvOaEeGuwxIxOwauAQA&quot;</span><span class="p">,</span>
+      <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/1f3567aa-da83-11e1-afad-12313b01d5c1/feed/ffd79647-f399-11e1-aec3-12313b06ae01&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;published&quot;</span> <span class="p">:</span> <span class="mi">1346437854569</span><span class="p">,</span>
+    <span class="s">&quot;verb&quot;</span> <span class="p">:</span> <span class="s">&quot;post&quot;</span>
+  <span class="p">},</span> <span class="p">{</span>
+    <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;2482a1c5-e7d0-11e1-96f6-12313b06d112&quot;</span><span class="p">,</span>
+    <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;activity&quot;</span><span class="p">,</span>
+    <span class="s">&quot;created&quot;</span> <span class="p">:</span> <span class="mi">1345141694958</span><span class="p">,</span>
+    <span class="s">&quot;modified&quot;</span> <span class="p">:</span> <span class="mi">1345141694958</span><span class="p">,</span>
+    <span class="s">&quot;actor&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;displayName&quot;</span> <span class="p">:</span> <span class="s">&quot;moab&quot;</span><span class="p">,</span>
+      <span class="s">&quot;image&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s">&quot;height&quot;</span> <span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+        <span class="s">&quot;url&quot;</span> <span class="p">:</span> <span class="s">&quot;http://www.gravatar.com/avatar/&quot;</span><span class="p">,</span>
+        <span class="s">&quot;width&quot;</span> <span class="p">:</span> <span class="mi">80</span>
+      <span class="p">},</span>
+      <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;</span><span class="p">,</span>
+      <span class="s">&quot;email&quot;</span> <span class="p">:</span> <span class="s">&quot;massoddb@mfdsadfdsaoabl.com&quot;</span><span class="p">,</span>
+      <span class="s">&quot;username&quot;</span> <span class="p">:</span> <span class="s">&quot;moab&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;content&quot;</span> <span class="p">:</span> <span class="s">&quot;checking in code left and right!!&quot;</span><span class="p">,</span>
+    <span class="s">&quot;metadata&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;cursor&quot;</span> <span class="p">:</span> <span class="s">&quot;gGkAAQMAgGkABgE5MLFh7gCAdQAQJIKhxefQEeGW9hIxOwbREgCAdQAQJNEP6ufQEeGW9hIxOwbREgA&quot;</span><span class="p">,</span>
+      <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/1f3567aa-da83-11e1-afad-12313b01d5c1/feed/2482a1c5-e7d0-11e1-96f6-12313b06d112&quot;</span>
+    <span class="p">},</span>
+    <span class="s">&quot;published&quot;</span> <span class="p">:</span> <span class="mi">1345141694958</span><span class="p">,</span>
+    <span class="s">&quot;verb&quot;</span> <span class="p">:</span> <span class="s">&quot;post&quot;</span>
+  <span class="p">}</span> <span class="p">],</span>
+  <span class="s">&quot;timestamp&quot;</span> <span class="p">:</span> <span class="mi">1346438331316</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">144</span><span class="p">,</span>
+  <span class="s">&quot;organization&quot;</span><span class="p">:</span> <span class="s">&quot;my-org&quot;</span><span class="p">,</span>
+  <span class="s">&quot;applicationName&quot;</span><span class="p">:</span> <span class="s">&quot;my-app&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>When a user creates an activity, a relationship is established between
+the activity and the user who created it. The activities in the user’s
+feed are based on this relationship as well as &nbsp;any following
+relationships that the user has, and any groups in which the user
+belongs. So when a user asks to get his feed, what he gets is a list of
+(1) all the activities that the user owns, (2) all the activities posted
+by any users this user is following, and (3) any activities owned by any
+groups in which this user belongs.</p>
+<p>The user john.doe’s feed includes activities posted by user moab because
+john.doe follows moab.</p>
+</div>
+</div>
+<div class="section" id="getting-a-groups-feed">
+<h2>Getting a group’s feed<a class="headerlink" href="#getting-a-groups-feed" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve the feed for a group. This gets a list of
+all the activities that have been posted to this group, that is, the
+activities for which this group has a relationship (owns).</p>
+<div class="section" id="id20">
+<h3>Request URI<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<p>GET /{org_id}/{app_id}/groups/{uuid|groupname}/feed</p>
+</div>
+<div class="section" id="id21">
+<h3>Parameters<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="42%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>arg uuid|string org_id</td>
+<td>Organization UUID or organization name</td>
+</tr>
+<tr class="row-odd"><td>arg uuid|string app_id</td>
+<td>Application UUID or application name</td>
+</tr>
+<tr class="row-even"><td>arg uuid|string groupname</td>
+<td>UUID or name of the group</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id22">
+<h3>Example - Request<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="#curl_get_group_feed">cURL</a></li>
+<li><a class="reference external" href="#javascript_get_group_feed">JavaScript (HTML5)</a></li>
+<li><a class="reference external" href="#ruby_get_group_feed">Ruby</a></li>
+<li><a class="reference external" href="#nodejs_get_group_feed">Node.js</a></li>
+</ul>
+<!-- --><div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/my-org/my-app/groups/mygroup/feed&quot;
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk">JavaScript (HTML5)
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;groups/mygroup/feed&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success — GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/scottganyo/usergrid_iron">Ruby
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>app = Usergrid::Application.new &#39;https://api.usergrid.com/my-org/my-app/&#39;
+app[&#39;groups/mygroup/feed&#39;].get
+</pre></div>
+</div>
+<p>The example assumes use of the <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Node.js
+module</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;groups/mygroup/feed&#39;
+};
+client.request(options, function (err, data) {
+    if (err) {
+        //error — GET failed
+    } else {
+        //success — GET worked. Data will contain raw results from API call.
+    }
+});
+</pre></div>
+</div>
+</div>
+<div class="section" id="id23">
+<h3>Example - Response<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+    &quot;action&quot;: &quot;get&quot;,
+    &quot;application&quot;: &quot;3400ba10-cd0c-11e1-bcf7-12313d1c4491&quot;,
+    &quot;params&quot;:  {},
+    &quot;path&quot;: &quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/feed&quot;,
+    &quot;uri&quot;: &quot;https://api.usergrid.com/my-org/my-app/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/feed&quot;,
+    &quot;entities&quot;:  [
+       {
+        &quot;uuid&quot;: &quot;563f5d96-37f3-11e2-a0f7-02e81ae640dc&quot;,
+        &quot;type&quot;: &quot;activity&quot;,
+        &quot;created&quot;: 1353952903811,
+        &quot;modified&quot;: 1353952903811,
+        &quot;actor&quot;:  {
+          &quot;displayName&quot;: &quot;John Doe&quot;,
+          &quot;image&quot;:  {
+            &quot;duration&quot;: 0,
+            &quot;height&quot;: 80,
+            &quot;url&quot;: &quot;http://www.gravatar.com/avatar/&quot;,
+            &quot;width&quot;: 80
+          },
+          &quot;uuid&quot;: &quot;1f3567aa-da83-11e1-afad-12313b01d5c1&quot;,
+          &quot;email&quot;: &quot;john.doe@gmail.com&quot;,
+        &quot;username&quot;: &quot;john.doe&quot;
+        },
+          &quot;content&quot;: &quot;Hello World!&quot;,
+          &quot;metadata&quot;:  {
+            &quot;cursor&quot;: &quot;gGkAAQMAgGkABgE7PeHCgwCAdQAQVj9dljfzEeKg9wLoGuZA3ACAdQAQVkVRCTfzEeKg9wLoGuZA3AA&quot;,
+            &quot;path&quot;: &quot;/groups/d87edec7-fc4d-11e1-9917-12313d1520f1/feed/563f5d96-37f3-11e2-a0f7-02e81ae640dc&quot;
+          },
+          &quot;published&quot;: 1353952903811,
+          &quot;verb&quot;: &quot;post&quot;
+        }
+      ],
+  &quot;timestamp&quot;: 1353953272756,
+  &quot;duration&quot;: 29,
+  &quot;organization&quot;: &quot;my-org&quot;,
+  &quot;applicationName&quot;: &quot;my-app&quot;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="activity-properties">
+<h2>Activity properties<a class="headerlink" href="#activity-properties" title="Permalink to this headline">¶</a></h2>
+<p>The following are the system-defined properties for activity entities.
+You can create application-specific properties for an activity entity in
+addition to the system-defined properties. The system-defined properties
+are reserved. You cannot use these names to create other properties for
+an activity entity. In addition the activities name is reserved for the
+activities collection — you can&#8217;t use it to name another collection.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="10%" />
+<col width="82%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Property</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>uuid</td>
+<td>UUID</td>
+<td>Activity’s unique entity ID</td>
+</tr>
+<tr class="row-odd"><td>type</td>
+<td>string</td>
+<td>&#8220;activity&#8221;</td>
+</tr>
+<tr class="row-even"><td>created</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
+</tr>
+<tr class="row-odd"><td>modified</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
+</tr>
+<tr class="row-even"><td>actor</td>
+<td>ActivityObject</td>
+<td>Entity that performs the action of the activity (see <a class="reference external" href="http://activitystrea.ms/specs/json/1.0/">JSON Activity Streams 1.0 specification</a>)</td>
+</tr>
+<tr class="row-odd"><td>content</td>
+<td>string</td>
+<td>Description of the activity</td>
+</tr>
+<tr class="row-even"><td>icon</td>
+<td>MediaLink</td>
+<td>Visual representation of a media link resource (see <a class="reference external" href="http://activitystrea.ms/specs/json/1.0/">JSON Activity Streams 1.0 specification</a>)</td>
+</tr>
+<tr class="row-odd"><td>category</td>
+<td>string</td>
+<td>Category used to organize activities</td>
+</tr>
+<tr class="row-even"><td>verb</td>
+<td>string</td>
+<td>Action that the actor performs (for example, <em>post</em>)</td>
+</tr>
+<tr class="row-odd"><td>published</td>
+<td>long</td>
+<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> when the activity was published</td>
+</tr>
+<tr class="row-even"><td>object</td>
+<td>ActivityObject</td>
+<td>Object on which the action is performed (see <a class="reference external" href="http://activitystrea.ms/specs/json/1.0/">JSON Activity Streams 1.0 specification</a>)</td>
+</tr>
+<tr class="row-odd"><td>title</td>
+<td>string</td>
+<td>Title or headline for the activity</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="set-property">
+<h2>Set property<a class="headerlink" href="#set-property" title="Permalink to this headline">¶</a></h2>
+<p>Activities have the following set property.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="16%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Set</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>connections</td>
+<td>string</td>
+<td>Set of connections for the activity</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="sample-app">
+<h2>Sample app<a class="headerlink" href="#sample-app" title="Permalink to this headline">¶</a></h2>
+<p>The Messagee sample app is a simple Twitter-style messaging application
+that leverages the activity stream functionality of App services. The
+source for the application is available in HTML5 (JavaScript), iOS, and
+Android. You can download the source from github at:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/apigee/usergrid-sample-html5-messagee">https://github.com/apigee/usergrid-sample-html5-messagee</a> &nbsp;(HTML5)</li>
+<li><a class="reference external" href="https://github.com/apache/incubator-usergrid-sample-ios-messagee">https://github.com/apache/incubator-usergrid-sample-ios-messagee</a>
+(iOS)</li>
+<li><a class="reference external" href="https://github.com/apigee/usergrid-sample-android-messagee">https://github.com/apigee/usergrid-sample-android-messagee</a> (Android)</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="assets.html" class="btn btn-neutral float-right" title="Assets">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="groups.html" class="btn btn-neutral" title="Groups"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Apache Usergrid.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

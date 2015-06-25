@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Admin portal</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Admin portal</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/admin-portal.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#admin-portal">Admin portal</a><ul>
+<li><a href="#account-home-page">Account Home page</a></li>
+<li>
+<a href="#applications">Applications</a><ul>
+<li><a href="#application-dashboard">Application Dashboard</a></li>
+<li><a href="#administration-for-multiple-organizations">Administration for multiple organizations</a></li>
+</ul>
+</li>
+<li><a href="#authentication-credentials">Authentication credentials</a></li>
+<li>
+<a href="#exploring-the-api-using-the-shell">Exploring the API using the shell</a><ul>
+<li><a href="#entering-api-requests-in-the-shell">Entering API requests in the shell</a></li>
+<li><a href="#adding-properties-using-the-shell">Adding properties using the shell</a></li>
+</ul>
+</li>
+<li><a href="#analytics">Analytics</a></li>
+<li><a href="#creating-a-sandbox-app">Creating a sandbox app</a></li>
+<li><a href="#displaying-api-calls-as-curl-commands">Displaying API calls as cURL commands</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="admin-portal">Admin portal</h1>
+<p>The <em>admin portal</em> is the primary administrative user interface for working with App services. The portal is also the most complete reference application that demonstrates how to incorporate App services with JavaScript.</p>
+<p>The admin portal is available online at <a href="https://apigee.com/usergrid/">https://apigee.com/usergrid/</a>. The portal source code is fully open source and forkable, available for download on GitHub at <a href="https://github.com/usergrid/portal">https://github.com/usergrid/portal</a>. You can easily extend the portal, embed it into your own applications, or inspect the code to learn best practices associated with the App services API. The App services JavaScript client is also part of the GitHub portal project.</p>
+<p>The portal opens in your default web browser, either Safari, Firefox, or Google Chrome. The article <a href="/messagee-example">Messagee Example</a> describes how to use the portal to run a sample application, whereas this section describes portal components in more detail and highlights App services features.</p>
+<h2 id="account-home-page">Account Home page</h2>
+<p>When you log in to the portal, you are presented with a Home page for managing applications and data for your organization. The Home page displays:</p>
+<ul>
+<li>Applications associated with the currently selected organization</li>
+<li>Administrators that are part of that organization</li>
+<li>API credentials for the organization</li>
+<li>Activities performed recently by administrators</li>
+<li>A menu for building, organizing, and managing application content</li>
+</ul>
+<h2 id="applications">Applications</h2>
+<p>For every app that you build, you need a defined application space within App services.  By default, a test application called “sandbox” is created for you automatically. For ease of use, this default app has all authentication disabled and should be used for learning / testing purposes only. You may also create as many additional applications as needed.</p>
+<p>This unique application space allows each app to have its own private infrastructure to store its objects and data. In some cases, if you have multiple apps that share much of the same data and users, you might represent them in App services as a single application, which would allow those apps to share the same data space.</p>
+<h3 id="application-dashboard">Application Dashboard</h3>
+<p>The Dashboard shows a variety of statistical data for the selected application. You can see the activity level, the total number of entities, entities created in the last day, week, and month, and other vital statistics for monitoring application health as well as quota limits.</p>
+<h3 id="administration-for-multiple-organizations">Administration for multiple organizations</h3>
+<p>The portal is designed to let you work within the context of a single organization at any one point in time. Because it is possible to be an administrator for multiple organizations, you can switch between organizations using the menu in the upper right corner.</p>
+<h2 id="authentication-credentials">Authentication credentials</h2>
+<p>The portal provides a convenient way to set and retrieve credentials for API access. If you click your email address at the top of the Home page, you can set your password for both the portal and for OAuth2 username/password Admin-level access. On the Home page for the selected organization, you can see OAuth2 client credentials for organization-wide access to applications owned by that organization. Clicking the Settings button (on the left sidebar) displays OAuth2 credentials for the selected application. See the discussion on the <a href="/app-services-security-model">App services security model</a> for more information on specifying credentials and authentication.</p>
+<h2 id="exploring-the-api-using-the-shell">Exploring the API using the shell</h2>
+<p>When you first create a new Organization account, there are no applications associated with the account. To create an application, click New Application in your organization’s Home page. You are presented with a dialog box that prompts you for the information needed to create a new app. When the app is created, a number of options are enabled in the left sidebar for viewing and administering that application’s data. Before you get started with the high-level tools, create a new application, go to the left sidebar, and click the Shell button to try out a few basic API commands.</p>
+<h3 id="entering-api-requests-in-the-shell">Entering API requests in the shell</h3>
+<p>The shell interface is a simple way to get started using the App services API. It provides a command-line environment within your web browser for trying out interactive commands. One thing to keep in mind when using the shell is that App services API endpoints usually take the form of:</p>
+<pre><code>https://api.usergrid.com/my-org-id/my-app-id/users</code></pre>
+<p>where my-org-id is the organization identifier(uuid), my-app-id is your application identifier(uuid) and users refers to the collection of user objects defined for your application. Refer to the <a href="/using-api">Using the API</a> section for more information on constructing API requests.</p>
+<p>When using the shell, you can abbreviate a fully qualified path name, omitting everything through the application identifier. The above URL request, which lists all the users in the application my-app-id, simply becomes:</p>
+<pre><code>/users</code></pre>
+<p>If you type /users into the shell, it’s the same as an HTTP GET command to the API endpoint for the currently selected portal application. (The current application is selected using the Applications menu in the left sidebar.)</p>
+<p>To create a new user entity using the shell, enter the following and press return:</p>
+<pre><code>post /users {"username":"john.doe","email":"john.doe@gmail.com"}</code></pre>
+<p>Note that there is a space after the path and before the JSON representation.</p>
+<p>You’ve now created a new user in your application. You should see something like the following displayed as a result:</p>
+<pre><code>&gt; post /users {"username":"john.doe","email":"john.doe@gmail.com"}
+/users
+{
+  "action": "post",
+  "application": "1c8f60e4-da67-11e0-b93d-12313f0204bb",
+  "params": {},
+  "path": "/users",
+  "uri": "https://api.usergrid.com/1c8f60e4-da67-11e0-b93d-12313f0204bb/users",
+  "entities": [
+    {
+      "uuid": "0e47f040-da71-11e0-b93d-12313f0204bb",
+      "type": "user",
+      "username": "john.doe",
+      "email": "john.doe@gmail.com",
+      "created": 1315523992687007,
+      "modified": 1315523992687007,
+      "metadata": {
+        "path": "/users/0e47f040-da71-11e0-b93d-12313f0204bb",
+        "collections": {
+          "activities": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/activities",
+          "feed": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/feed",
+          "groups": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/groups",
+          "messages": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/messages",
+          "queue": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/queue",
+          "roles": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/roles",
+          "following": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/following",
+          "followers": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/followers"
+        },
+        "sets": {
+          "rolenames": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/rolenames",
+          "permissions": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/permissions"
+        }
+      }
+    }
+  ],
+  "timestamp": 1315523992585,
+  "duration": 162
+}
+&gt;</code></pre>
+<p>Enter the following to create another user:</p>
+<pre><code>post /users {"username":"jane.doe","email":"jane.doe@gmail.com"}</code></pre>
+<p>You should see something like the following result:</p>
+<pre><code>&gt; post /users {"username":"jane.doe","email":"jane.doe@gmail.com"}
+/users
+{
+  "action": "post",
+  "application": "1c8f60e4-da67-11e0-b93d-12313f0204bb",
+  "params": {},
+  "path": "/users",
+  "uri": "https://api.usergrid.com/1c8f60e4-da67-11e0-b93d-12313f0204bb/users",
+  "entities": [
+    {
+      "uuid": "78c54a82-da71-11e0-b93d-12313f0204bb",
+      "type": "user",
+      "username": "jane.doe",
+      "email": "jane.doe@gmail.com",
+      "created": 1315524171347008,
+      "modified": 1315524171347008,
+      "metadata": {
+        "path": "/users/78c54a82-da71-11e0-b93d-12313f0204bb",
+        "collections": {
+          "activities": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/activities",
+          "feed": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/feed",
+          "groups": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/groups",
+          "messages": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/messages",
+          "queue": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/queue",
+          "roles": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/roles",
+          "following": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/following",
+          "followers": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/followers"
+        },
+        "sets": {
+          "rolenames": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/rolenames",
+          "permissions": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/permissions"
+        }
+      }
+    }
+  ],
+  "timestamp": 1315524171329,
+  "duration": 110
+}
+&gt;</code></pre>
+<p>Now enter the command to list the elements of the users collection again:</p>
+<pre><code>/users</code></pre>
+<p>This time the results should show the two users you added:</p>
+<pre><code>&gt; /users
+/users
+{
+  "action": "get",
+  "application": "1c8f60e4-da67-11e0-b93d-12313f0204bb",
+  "params": {
+    "_": [
+      "1315524221412"
+    ]
+  },
+  "path": "/users",
+  "uri": "https://api.usergrid.com/1c8f60e4-da67-11e0-b93d-12313f0204bb/users",
+  "entities": [
+    {
+      "uuid": "0e47f040-da71-11e0-b93d-12313f0204bb",
+      "type": "user",
+      "created": 1315523992687007,
+      "modified": 1315523992687007,
+      "email": "john.doe@gmail.com",
+      "metadata": {
+        "path": "/users/0e47f040-da71-11e0-b93d-12313f0204bb",
+        "collections": {
+          "activities": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/activities",
+          "feed": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/feed",
+          "groups": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/groups",
+          "messages": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/messages",
+          "queue": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/queue",
+          "roles": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/roles",
+          "following": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/following",
+          "followers": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/followers"
+        },
+        "sets": {
+          "rolenames": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/rolenames",
+          "permissions": "/users/0e47f040-da71-11e0-b93d-12313f0204bb/permissions"
+        }
+      },
+      "username": "john.doe"
+    },
+    {
+      "uuid": "78c54a82-da71-11e0-b93d-12313f0204bb",
+      "type": "user",
+      "created": 1315524171347008,
+      "modified": 1315524171347008,
+      "email": "jane.doe@gmail.com",
+      "metadata": {
+        "path": "/users/78c54a82-da71-11e0-b93d-12313f0204bb",
+        "collections": {
+          "activities": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/activities",
+          "feed": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/feed",
+          "groups": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/groups",
+          "messages": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/messages",
+          "queue": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/queue",
+          "roles": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/roles",
+          "following": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/following",
+          "followers": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/followers"
+        },
+        "sets": {
+          "rolenames": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/rolenames",
+          "permissions": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/permissions"
+        }
+      },
+      "username": "jane.doe"
+    }
+  ],
+  "timestamp": 1315524225021,
+  "duration": 59
+}
+&gt;</code></pre>
+<p>To retrieve a specific user, try the following:</p>
+<pre><code>/users/jane.doe</code></pre>
+<p>You should see results similar to this:</p>
+<pre><code>&gt; /users/jane.doe
+/users/jane.doe
+{
+  "action": "get",
+  "application": "1c8f60e4-da67-11e0-b93d-12313f0204bb",
+  "params": {
+    "_": [
+      "1315524419746"
+    ]
+  },
+  "path": "/users",
+  "uri": "https://api.usergrid.com/1c8f60e4-da67-11e0-b93d-12313f0204bb/users",
+  "entities": [
+    {
+      "uuid": "78c54a82-da71-11e0-b93d-12313f0204bb",
+      "type": "user",
+      "created": 1315524171347008,
+      "modified": 1315524171347008,
+      "email": "jane.doe@gmail.com",
+      "metadata": {
+        "path": "/users/78c54a82-da71-11e0-b93d-12313f0204bb",
+        "collections": {
+          "activities": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/activities",
+          "feed": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/feed",
+          "groups": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/groups",
+          "messages": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/messages",
+          "queue": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/queue",
+          "roles": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/roles",
+          "following": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/following",
+          "followers": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/followers"
+        },
+        "sets": {
+          "rolenames": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/rolenames",
+          "permissions": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/permissions"
+        }
+      },
+      "username": "jane.doe"
+    }
+  ],
+  "timestamp": 1315524421071,
+  "duration": 107
+}
+&gt;</code></pre>
+<h3 id="adding-properties-using-the-shell">Adding properties using the shell</h3>
+<p>Now, let’s add some information (entity properties) for the user jane.doe. You can assign application-specific or system-defined properties to user entities. (See the You do not have access to view this node for a list of predefined properties for each system-defined entity type.) As an example of adding an application-specific property, let’s add the property city to the user jane.doe by typing:</p>
+<pre><code>put /users/jane.doe {"city" : "san francisco" }</code></pre>
+<p>You should see results similar to this:</p>
+<pre><code>&gt; put /users/jane.doe {"city" : "san francisco" }
+/users/jane.doe
+{
+  "action": "put",
+  "application": "1c8f60e4-da67-11e0-b93d-12313f0204bb",
+  "params": {},
+  "path": "/users",
+  "uri": "https://api.usergrid.com/1c8f60e4-da67-11e0-b93d-12313f0204bb/users",
+  "entities": [
+    {
+      "uuid": "78c54a82-da71-11e0-b93d-12313f0204bb",
+      "type": "user",
+      "created": 1315524171347008,
+      "modified": 1315524526405008,
+      "city": "san francisco",
+      "email": "jane.doe@gmail.com",
+      "metadata": {
+        "path": "/users/78c54a82-da71-11e0-b93d-12313f0204bb",
+        "collections": {
+          "activities": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/activities",
+          "feed": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/feed",
+          "groups": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/groups",
+          "messages": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/messages",
+          "queue": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/queue",
+          "roles": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/roles",
+          "following": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/following",
+          "followers": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/followers"
+        },
+        "sets": {
+          "rolenames": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/rolenames",
+          "permissions": "/users/78c54a82-da71-11e0-b93d-12313f0204bb/permissions"
+        }
+      },
+      "username": "jane.doe"
+    }
+  ],
+  "timestamp": 1315524526343,
+  "duration": 84
+}
+&gt;</code></pre>
+<p>Let’s create another type of object. Type the following:</p>
+<pre><code>post /cats {"name" : "felix"}</code></pre>
+<p>You should see results for the collection cats that you created with the entity felix:</p>
+<pre><code>&gt; post /cats {"name" : "felix"}
+/cats
+{
+  "action": "post",
+  "application": "1c8f60e4-da67-11e0-b93d-12313f0204bb",
+  "params": {},
+  "path": "/cats",
+  "uri": "https://api.usergrid.com/1c8f60e4-da67-11e0-b93d-12313f0204bb/cats",
+  "entities": [
+    {
+      "uuid": "89a05d85-da72-11e0-b93d-12313f0204bb",
+      "type": "cat",
+      "created": 1315524629123008,
+      "modified": 1315524629123008,
+      "metadata": {
+        "path": "/cats/89a05d85-da72-11e0-b93d-12313f0204bb"
+      },
+      "name": "felix"
+    }
+  ],
+  "timestamp": 1315524629068,
+  "duration": 107
+}
+&gt;</code></pre>
+<p>Now let’s update this object by assigning a property color:</p>
+<pre><code>put /cats/felix {"color" : "black"}</code></pre>
+<p>You should see something like the following results:</p>
+<pre><code>&gt; put /cats/felix {"color" : "black"}
+/cats/felix
+{
+  "action": "put",
+  "application": "1c8f60e4-da67-11e0-b93d-12313f0204bb",
+  "params": {},
+  "path": "/cats",
+  "uri": "https://api.usergrid.com/1c8f60e4-da67-11e0-b93d-12313f0204bb/cats",
+  "entities": [
+    {
+      "uuid": "89a05d85-da72-11e0-b93d-12313f0204bb",
+      "type": "cat",
+      "created": 1315524629123008,
+      "modified": 1315524724093008,
+      "color": "black",
+      "metadata": {
+        "path": "/cats/89a05d85-da72-11e0-b93d-12313f0204bb"
+      },
+      "name": "felix"
+    }
+  ],
+  "timestamp": 1315524724058,
+  "duration": 57
+}
+&gt;</code></pre>
+<p>You can now click the Collections button in the sidebar to see all of the collections in your application. There are two entities in the users collection and one in the cats collection. Feel free to look around and see how the portal provides a high-level alternative to the API for viewing and manipulating application objects.</p>
+<p>Subsequent sections give details about using the API to access and modify application entities. If you’re ready to start using the App services API, see the You do not have access to view this node for details and examples for each API endpoint.</p>
+<h2 id="analytics">Analytics</h2>
+<p>On the left sidebar, click Analytics to explore this functionality. You can specify parameters for data collection, including what data points you’d like to collect, over what time period, and at what resolution. When you click the Generate button, the results are displayed in tabular form and graphically in the lower portion of the window.</p>
+<h2 id="creating-a-sandbox-app">Creating a sandbox app</h2>
+<p>When you create a new Apache Usergrid account, an app named sandbox is automatically created. In some cases you may want to create (or re-create) the sandbox app. For example, you may want to create a sandbox app for another organization or you may want to create another app for testing purposes. See <a href="/using-sandbox-application">Using a Sandbox Application</a> for details.</p>
+<h2 id="displaying-api-calls-as-curl-commands">Displaying API calls as cURL commands</h2>
+<p>You can display the equivalent cURL syntax for each API call that you make through the admin portal. The calls are displayed in the console area of any of the following browsers: Chrome, Internet Explorer (in the debugger), Firefox (in Firebug), and Safari. For details, see <a href="/displaying-app-services-api-calls-curl-commands">Displaying Apache Usergrid API calls as Curl commands</a>.</p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/admin-portal.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>

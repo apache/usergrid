@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Uploading files and assets</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Uploading files and assets</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/uploading-files-and-assets.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#uploading-files-and-assets">Uploading files and assets</a><ul>
+<li><a href="#creating-a-folder-to-hold-assets">Creating a folder to hold assets</a></li>
+<li><a href="#creating-an-assets-entity">Creating an assets entity</a></li>
+<li><a href="#linking-a-folder-to-an-asset">Linking a folder to an asset</a></li>
+<li><a href="#retrieving-an-asset">Retrieving an asset</a></li>
+<li><a href="#uploading-and-retrieving-binary-data-for-an-asset">Uploading and retrieving binary data for an asset</a></li>
+<li><a href="#updating-the-binary-data-for-an-asset">Updating the binary data for an asset</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="uploading-files-and-assets">Uploading files and assets</h1>
+<p><strong>Beta Feature</strong><br> Please note that this is currently a beta feature. As a result, some functionality may not work as expected.</p>
+<p>Using Apache Usergrid APIs, you can store and retrieve files and assets that hold data objects such as images, video, and audio content.</p>
+<p>Apache Usergrid manages these objects as <a href="/assets">Assets</a> entities. Optionally, you can use <a href="/folder">Folder</a> entities to organize related assets.</p>
+<p><strong>Note:</strong> All binary objects are managed as assets. However, an asset does not have to be used for a binary object. For example, assets can be used to model a file system.</p>
+<h2 id="creating-a-folder-to-hold-assets">Creating a folder to hold assets</h2>
+<p>Suppose you have some images that you want to store. Suppose too that you want to organize your images in folders. To create a folder, you issue a POST request to the folders endpoint. The general format of the request is:</p>
+<pre><code>POST /{org-uuid}/{app-uuid}/folders {request body}</code></pre>
+<p>The request body must specify the name of the folder, the UUID of the owner of the folder, as well as the relative path to the folder.</p>
+<p>Here’s how you could create a folder named myfirstfolder to hold some of the images:</p>
+<pre><code>POST https://api.usergrid.com/my-org/my-app/folders {"name": "myfirstfolder","owner": "7d1aa429-e978-11e0-8264-005056c00008", "path": "/myfolders/folder1"}</code></pre>
+<p><strong>Note:</strong> Although not shown in the API examples, you need to provide a valid access token with each API call. See <a href="/authenticating-users-and-application-clients">Authenticating users and application clients</a> for details. You also need to replace my-org with the name of your organization, my-app with the name of your application, and the UUID and path values as appropriate.</p>
+<p>The response to the API request should include the UUID of the created folder, for example:</p>
+<pre><code> "uuid": "6640a601-2ac6-11e2-92c3-02e81ae640dc"</code></pre>
+<p>You’ll need this UUID to link the folder to assets.</p>
+<h2 id="creating-an-assets-entity">Creating an assets entity</h2>
+<p>Assume that one of the images is named my-image.jpg. You can create an asset for the image by issuing a POST request to the assets endpoint. The general format of the request is:</p>
+<pre><code>POST /{org-uuid}/{app-uuid}/assets {request body}</code></pre>
+<p>The request body must specify the UUID of the name of the asset, the owner of the asset, as well as the relative path to the asset. For example, you can create an asset for the my-image.jpg image like this:</p>
+<pre><code>POST https://api.usergrid.com/my-org/my-app/assets {"name": "my-image.jpg","owner": "7d1aa429-e978-11e0-8264-005056c00008", "path": "/myassets/asset1"}</code></pre>
+<p>You can also specify a content-type property for the asset in the request body. For example, you can specify “content-type”:”image/jpeg”. That content type is then set as a property of the asset. It is also set (as specified) in the response header. Specifying the content-type is optional. Apache Usergrid can automatically detect the content type of the asset when the binary data for the asset is uploaded. It then sets this as the content-type property value on the asset.</p>
+<p>The response to the API request should include the UUID of the created asset, for example:</p>
+<pre><code>"uuid": "9501cda1-2d21-11e2-b4c6-02e81ac5a17b"</code></pre>
+<p>You’ll need this UUID when you upload or retrieve the image.</p>
+<h2 id="linking-a-folder-to-an-asset">Linking a folder to an asset</h2>
+<p>In order to access the asset for the image in the folder, you need to link the folder to the asset. You can do that by issuing a POST request in the following format:</p>
+<pre><code>POST /{org-uuid}/{app-uuid}/folders/{folder-uuid}/assets/{assets_id}</code></pre>
+<p>where {folder-uuid} is the UUID of the folder, and {assets-uuid} is the UUID of the assets entity.</p>
+<p>Here’s how you could link the folder and the asset you created for the my-image.jpg image:</p>
+<pre><code>POST https://api.usergrid.com/my-org/my-app/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b </code></pre>
+<p>In the response, you should see the assets entity for the image added to the folder:</p>
+<pre><code>{
+  "action": "post",
+  "application": "3400ba10-cd0c-11e1-bcf7-12313d1c4491",
+  "params": {},
+  "path": "/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets",
+  "uri": "https://api.usergrid.com/my-org/my-app/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets",
+  "entities": [
+    {
+      "uuid": "9501cda1-2d21-11e2-b4c6-02e81ac5a17b",
+      "type": "asset",
+      "name": "my-image.jpg",
+      "created": 1352763303163,
+      "modified": 1352763303163,
+      "metadata": {
+        "path": "/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b"
+      },
+      "owner": "5c0c1789-d503-11e1-b36a-12313b01d5c1",
+      "path": "/myassets/asset1"
+    }
+  ],
+  "timestamp": 1352830448045,
+  "duration": 54,
+  "organization": "my-org”,
+  "applicationName": "my-app"
+}</code></pre>
+<p>You can also request a list of the linked contents of the folder like this:</p>
+<pre><code>GET https://api.usergrid.com/my-org/my-app/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets</code></pre>
+<p>The response should look something like this:</p>
+<pre><code>{
+  "action": "get",
+  "application": "3400ba10-cd0c-11e1-bcf7-12313d1c4491",
+  "params": {
+    "_": [
+      "1352830364891"
+    ]
+  },
+  "path": "/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets",
+  "uri": "https://api.usergrid.com/my-org/my-app/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets",
+  "entities": [
+    {
+      "uuid": "7bf47435-2ac8-11e2-b4c6-02e81ac5a17b",
+      "type": "asset",
+      "name": "my-image.jpg",
+      "created": 1352505133598,
+      "modified": 1352507245108,
+      "checksum": "8e0cd3866ee20746c99e9a9825f38ad8",
+      "content-length": 11853,
+      "content-type": "image/jpeg",
+      "etag": "\"8e0cd3866ee20746c99e9a9825f38ad8\"",
+      "metadata": {
+        "connecting": {
+          "assets": "/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets/7bf47435-2ac8-11e2-b4c6-02e81ac5a17b/connecting/assets"
+        },
+        "connection": "assets",
+        "path": "/folders/6640a601-2ac6-11e2-92c3-02e81ae640dc/assets/7bf47435-2ac8-11e2-b4c6-02e81ac5a17b"
+      },
+      "owner": "5c0c1789-d503-11e1-b36a-12313b01d5c1",
+      "path": "my-image"
+    }
+  ],
+  "timestamp": 1352830363797,
+  "duration": 57,
+  "organization": "my-org",
+  "applicationName": "my-app"
+}</code></pre>
+<h2 id="retrieving-an-asset">Retrieving an asset</h2>
+<p>You can retrieve an asset by its UUID. The general form of the request is:</p>
+<pre><code>GET /{org-uuid}/{app-uuid}/assets/{asset-uuid}</code></pre>
+<p>For example, to retrieve the asset for the my-image.jpg image, you make a request like this:</p>
+<pre><code>GET https://api.usergrid.com/my-org/my-app/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b</code></pre>
+<p>The response should look something like this:</p>
+<pre><code>{
+  "action": "get",
+  "application": "3400ba10-cd0c-11e1-bcf7-12313d1c4491",
+  "params": {
+    "_": [
+      "1352833055831"
+    ]
+  },
+  "path": "/assets",
+  "uri": "https://api.usergrid.com/my-org/my-app/assets",
+  "entities": [
+    {
+      "uuid": "9501cda1-2d21-11e2-b4c6-02e81ac5a17b",
+      "type": "asset",
+      "name": "edhead3.jpg",
+      "created": 1352763303163,
+      "modified": 1352763303163,
+      "metadata": {
+        "connecting": {
+          "assets": "/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b/connecting/assets"
+        },
+        "path": "/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b"
+      },
+      "owner": "5c0c1789-d503-11e1-b36a-12313b01d5c1",
+      "path": "/myassets/asset1"
+    }
+  ],
+  "timestamp": 1352833055408,
+  "duration": 17,
+  "organization": "my-org",
+  "applicationName": "my-app"
+}</code></pre>
+<h2 id="uploading-and-retrieving-binary-data-for-an-asset">Uploading and retrieving binary data for an asset</h2>
+<p>So far the focus has been on assets entities, which App services uses to manage binary objects such as images. But what about the data for those objects? You can use Apache Usergrid APIs to upload the data for a binary object and retrieve the data.</p>
+<p><strong>Note:</strong> The data for an asset is stored separately from the entity itself.</p>
+<p>To upload data for an asset, you issue a POST request to the endpoint for the asset’s data. The general form of the request is:</p>
+<pre><code>POST /{org-uuid}/{app-uuid}/assets/{asset-uuid}/data {binary-data}</code></pre>
+<p>where {binary-data} is the binary data for the asset.</p>
+<p>For example, you can upload the binary data for the my-image.jpg image asset like this:</p>
+<pre><code>POST https://api.usergrid.com/my-org/my-app/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b/data {binary data}</code></pre>
+<p>where {binary-data} is the binary data for the image.</p>
+<p>In cURL format, the upload request would look something like this:</p>
+<pre><code>POST  --data-binary "@src/resources/my-image.jpg" -H
+"Content-Type: application/octet-stream"
+‘https://api.usergrid.com/my-org/my-app/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b/data’</code></pre>
+<p>In the cURL example, the binary data is in a file whose relative path is src/resources/my-image.jpg.</p>
+<p><strong>Note:</strong> Currently, a 5 MB limitation exists for the size of the uploaded binary data. This limitation is temporary and the allowable size of a data upload should increase soon.</p>
+<p>To retrieve the data, issue a GET request to the same endpoint, for example:</p>
+<pre><code>GET https://api.usergrid.com/my-org/my-app/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b/data</code></pre>
+<p>In response, you’ll get the binary data for the asset.</p>
+<h2 id="updating-the-binary-data-for-an-asset">Updating the binary data for an asset</h2>
+<p>Suppose, you want to update the my-image.jpg image. You can do it by replacing the binary data for the asset through a PUT request. Here’s an example:</p>
+<pre><code>PUT https://api.usergrid.com/my-org/my-app/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b/data {binary-data}</code></pre>
+<p>where {binary-data} is the updated binary data for the image.</p>
+<p>In cURL format, the update request would look something like this:</p>
+<pre><code>PUT  --data-binary "@src/resources/my-image2.jpg" -H
+"Content-Type: application/octet-stream"
+‘https://api.usergrid.com/my-org/my-app/assets/9501cda1-2d21-11e2-b4c6-02e81ac5a17b/data’</code></pre>
+<p>In the cURL example, the updated binary data is in a file whose relative path is src/resources/my-image2.jpg.</p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/uploading-files-and-assets.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>
