@@ -48,11 +48,22 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
 
 
 /**
- * Usage example: 
+ * Import Admin Users and metadata including organizations and passwords.
  * 
- * java -Xmx8000m -Dlog4j.configuration=file:/home/dmjohnson/import-admins/log4j.properties -classpath . \
- *      -jar usergrid-tools-1.0.2.jar ImportAdmins -writeThreads 100 -auditThreads 100 -host cca03eadn \ 
- *      -inputDir=/home/dmjohnson/export-admins/exported > import3.log 2>&1 &
+ * Usage Example: 
+ * 
+ * java -Xmx8000m -Dlog4j.configuration=file:/home/me/log4j.properties -classpath . \
+ *      -jar usergrid-tools-1.0.2.jar ImportAdmins -writeThreads 100 -auditThreads 100 \
+ *      -host casshost -inputDir=/home/me/import-data 
+ *      
+ * If you want to provide any property overrides, put properties file named usergrid-custom-tools.properties
+ * in the same directory where you run the above command. For example, you might want to set the Cassandra
+ * client threads and import to a specific set of keyspaces:
+ *
+ *    cassandra.connections=110
+ *    cassandra.system.keyspace=My_Other_Usergrid
+ *    cassandra.application.keyspace=My_Other_Usergrid_Applications
+ *    cassandra.lock.keyspace=My_Other_Usergrid_Locks
  */
 public class ImportAdmins extends ToolBase {
 
@@ -651,7 +662,7 @@ public class ImportAdmins extends ToolBase {
 
                     if (entityProps == null) {
                         logger.warn("Reading from admin import queue was null!");
-                        Thread.sleep(1000);
+                        Thread.sleep( 1000 );
                         continue;
                     }
 
