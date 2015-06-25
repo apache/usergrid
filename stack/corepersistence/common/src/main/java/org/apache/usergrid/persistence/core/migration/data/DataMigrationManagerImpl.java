@@ -264,7 +264,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             }
 
             //second one is first
-            if(o2.getPhase().ordinal() < o2.getPhase().ordinal()){
+            if(o2.getPhase().ordinal() < o1.getPhase().ordinal()){
                 return 1;
             }
 
