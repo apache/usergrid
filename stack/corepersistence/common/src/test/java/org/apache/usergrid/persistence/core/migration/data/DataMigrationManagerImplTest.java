@@ -102,7 +102,70 @@ public class DataMigrationManagerImplTest {
         verify( plugin2 ).run( any( ProgressObserver.class ) );
     }
 
+    @Test
+      public void test2PluginsPhaseOrder() throws MigrationException {
 
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.BOOTSTRAP );
+        when( plugin1.getName() ).thenReturn( "plugin2a" );
+
+        MigrationPlugin plugin1a = mock( MigrationPlugin.class );
+        when( plugin1a.getPhase() ).thenReturn( PluginPhase.BOOTSTRAP );
+        when( plugin1a.getName() ).thenReturn( "plugin2" );
+
+        MigrationPlugin plugin2 = mock( MigrationPlugin.class );
+        when( plugin2.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin2.getName() ).thenReturn( "plugin1" );
+
+        plugins.add( plugin1 );
+        plugins.add( plugin2 );
+        plugins.add( plugin1a);
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+
+        assertTrue(migrationManager.getExecutionOrder().get(0).getName() == "plugin2");
+        assertTrue(migrationManager.getExecutionOrder().get(1).getName() == "plugin2a");
+        assertTrue(migrationManager.getExecutionOrder().get(2).getName() == "plugin1");
+
+    }
+
+    @Test
+    public void test2PluginsNameOrder() throws MigrationException {
+
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin1.getName() ).thenReturn( "plugin2" );
+
+        MigrationPlugin plugin2 = mock( MigrationPlugin.class );
+        when( plugin2.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin2.getName() ).thenReturn( "plugin1" );
+
+        plugins.add( plugin1 );
+        plugins.add( plugin2 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+
+        assertTrue(migrationManager.getExecutionOrder().get(0).getName() == "plugin1");
+        assertTrue(migrationManager.getExecutionOrder().get(1).getName() == "plugin2");
+
+    }
     @Test
     public void testRunning() throws MigrationException {
 

@@ -173,6 +173,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         StatusCode( final int status ) {this.status = status;}
     }
 
+    public List<MigrationPlugin> getExecutionOrder(){return executionOrder;}
+
 
     private final class CassandraProgressObserver implements ProgressObserver {
 
@@ -249,6 +251,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         public boolean isFailed() {
             return failed;
         }
+
     }
 
     private final static class MigrationPluginComparator implements Comparator<MigrationPlugin> {
