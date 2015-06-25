@@ -117,6 +117,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             logger.debug("Skipping Migration Plugin: " + getName());
             return;
         }
+
         observer.start();
         //get old app infos to migrate
         final Observable<org.apache.usergrid.persistence.model.entity.Entity> oldAppInfos = getOldAppInfos();
@@ -149,8 +150,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         try {
             final String orgName = name.split("/")[0];
             final String appName = name.split("/")[1];
-            UUID applicationId = getUuid(oldAppInfoMap,"appUuid");
-
+            UUID applicationId = getUuid(oldAppInfoMap,"applicationUuid") ;
+            applicationId = applicationId == null ?  getUuid(oldAppInfoMap,"appUuid") : applicationId ;
             //get app info from graph to see if it has been migrated already
             Entity appInfo = getApplicationInfo(applicationId);
             if (appInfo == null) {
@@ -182,7 +183,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         if (uuidObject instanceof UUID) {
             applicationId = (UUID) uuidObject;
         } else {
-            applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
+            applicationId = uuidObject == null ? null : UUIDUtils.tryExtractUUID(uuidObject.toString());
         }
         return applicationId;
     }
