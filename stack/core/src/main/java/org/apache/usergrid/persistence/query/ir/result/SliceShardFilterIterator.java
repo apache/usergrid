@@ -19,71 +19,118 @@
 package org.apache.usergrid.persistence.query.ir.result;
 
 
-import java.nio.ByteBuffer;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
-import org.apache.usergrid.persistence.query.ir.QuerySlice;
-
-import me.prettyprint.hector.api.beans.HColumn;
+import org.apache.usergrid.persistence.cassandra.CursorCache;
 
 
 /**
  * An iterator that will check if the parsed column is part of this shard.  This is required due to a legacy storage
- * format
+ * format in both connection pointers, as well as geo points.
  *
- * Connections are not sharded by target entity, as a result, we get data partition mismatches when performing
+ * Some formats are not sharded by target entity, as a result, we get data partition mismatches when performing
  * intersections and seeks.  This is meant to discard target entities that are not part of the current shard
  *
  * @author tnine
  */
-public class SliceShardIterator extends SliceIterator {
+public class SliceShardFilterIterator implements ResultIterator {
 
-    private static final Logger logger = LoggerFactory.getLogger( SliceShardIterator.class );
+    private static final Logger logger = LoggerFactory.getLogger( SliceShardFilterIterator.class );
 
     private final ShardBucketValidator shardBucketValidator;
+    private final ResultIterator resultsIterator;
+    private final int pageSize;
+
+    private Set<ScanColumn> current;
 
 
     /**
-     * @param slice The slice used in the scanner
-     * @param scanner The scanner to use to read the cols
-     * @param parser The parser for the scanner results
+     * @param shardBucketValidator The validator to use when validating results belong to a shard
+     * @param resultsIterator The iterator to filter results from
+     * @param pageSize
      */
-    public SliceShardIterator( final ShardBucketValidator shardBucketValidator, final QuerySlice slice,
-                               final IndexScanner scanner, final SliceParser parser ) {
-        super( slice, scanner, parser );
-
+    public SliceShardFilterIterator( final ShardBucketValidator shardBucketValidator,
+                                     final ResultIterator resultsIterator, final int pageSize ) {
         this.shardBucketValidator = shardBucketValidator;
+        this.resultsIterator = resultsIterator;
+        this.pageSize = pageSize;
+    }
+
+
+
+    @Override
+    public void reset() {
+        current = null;
+        resultsIterator.reset();
+    }
+
+
+    @Override
+    public void finalizeCursor( final CursorCache cache, final UUID lastValue ) {
+        resultsIterator.finalizeCursor( cache, lastValue );
+    }
+
+
+    @Override
+    public Iterator<Set<ScanColumn>> iterator() {
+        return this;
+    }
+
+
+    @Override
+    public boolean hasNext() {
+        if(current == null){
+            advance();
+        }
+
+        return current != null && current.size() > 0;
+    }
+
+
+    @Override
+    public Set<ScanColumn> next() {
+
+        final Set<ScanColumn> toReturn = current;
+
+        current = null;
+
+        return toReturn;
     }
 
 
     /**
-     * Parses the column.  If the column should be discarded, null should be returned
+     * Advance the column pointers
      */
-    protected ScanColumn parse( HColumn<ByteBuffer, ByteBuffer> column ) {
+    private void advance(){
 
-        final ByteBuffer colName = column.getName().duplicate();
+        final Set<ScanColumn> results = new LinkedHashSet<ScanColumn>(  );
 
-        final ScanColumn parsed = parser.parse( colName, isReversed );
+        while(resultsIterator.hasNext()){
 
-        if(parsed == null){
-            return null;
+            final Iterator<ScanColumn> scanColumns = resultsIterator.next().iterator();
+
+
+            while(results.size() < pageSize && scanColumns.hasNext()){
+                final ScanColumn scanColumn = scanColumns.next();
+
+                if(shardBucketValidator.isInShard( scanColumn.getUUID() )){
+                   results.add( scanColumn );
+                }
+            }
         }
 
-        final UUID entityId = parsed.getUUID();
+        current = results;
 
 
-        //not for our current processing shard, discard
-        if(!shardBucketValidator.isInShard( entityId )){
-            return null;
-        }
-
-        return parsed;
     }
+
 
 
     /**

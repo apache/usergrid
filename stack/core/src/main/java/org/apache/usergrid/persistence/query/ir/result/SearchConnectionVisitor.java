@@ -17,6 +17,7 @@ import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeStartToBy
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
+import org.apache.usergrid.persistence.geo.CollectionGeoSearch;
 import org.apache.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.query.ir.AllNode;
@@ -109,12 +110,20 @@ public class SearchConnectionVisitor extends SearchVisitor {
 
         queryProcessor.applyCursorAndSort( slice );
 
+        final int size = queryProcessor.getPageSizeHint( node );
+
+
+
         GeoIterator itr =
                 new GeoIterator( new ConnectionGeoSearch( em, indexBucketLocator, cassandraService, connection.getIndexId() ),
-                        query.getLimit(), slice, node.getPropertyName(),
+                        size, slice, node.getPropertyName(),
                         new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
 
-        results.push( itr );
+        final SliceShardFilterIterator.ShardBucketValidator validator = new SliceShardFilterIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.CONNECTION, connection.getSearchIndexName() );
+
+
+        this.results.push( new SliceShardFilterIterator( validator, itr, size ) );
+
     }
 
 
@@ -183,9 +192,13 @@ public class SearchConnectionVisitor extends SearchVisitor {
                         start, slice.isReversed(), size, skipFirst );
 
         //we have to create our wrapper so validate the data we read is correct for our shard
-        final SliceShardIterator.ShardBucketValidator validator = new SliceShardIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.CONNECTION, "" );
+        final SliceShardFilterIterator.ShardBucketValidator validator = new SliceShardFilterIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.CONNECTION, "" );
 
-        this.results.push(  new SliceShardIterator( validator, slice, connectionScanner, connectionParser ));
+
+        final SliceIterator sliceIterator = new SliceIterator( slice, connectionScanner, connectionParser );
+
+
+        this.results.push(  new SliceShardFilterIterator( validator, sliceIterator, size));
     }
 
 

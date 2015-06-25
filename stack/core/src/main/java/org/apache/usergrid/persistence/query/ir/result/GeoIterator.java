@@ -35,6 +35,8 @@ import org.apache.usergrid.persistence.geo.GeoIndexSearcher.SearchResults;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 
+import com.fasterxml.uuid.UUIDComparator;
+
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
@@ -223,7 +225,7 @@ public class GeoIterator implements ResultIterator {
         LocationScanColumn col = idOrder.get( uuid );
 
         if ( col == null ) {
-            return;
+            throw new IllegalArgumentException( "Could not generate cursor for column because column could not be found" );
         }
 
         final EntityLocationRef location = col.location;
@@ -369,7 +371,18 @@ public class GeoIterator implements ResultIterator {
                 throw new UnsupportedOperationException( "Cannot compare another ScanColumn that is not an instance of LocationScanColumn" );
             }
 
-            return this.location.compareTo( ((LocationScanColumn)o).location );
+            //sort by location (closest first) if that's the same compare uuids
+            final int locationCompare = this.location.compareTo( ( ( LocationScanColumn ) o ).location ) ;
+
+            if(locationCompare == 0) {
+                //same distance, return compare by uuid
+                final int uuidCompare = UUIDComparator.staticCompare( getUUID(), o.getUUID() );
+
+
+                return uuidCompare;
+            }
+
+            return locationCompare;
         }
     }
 }
