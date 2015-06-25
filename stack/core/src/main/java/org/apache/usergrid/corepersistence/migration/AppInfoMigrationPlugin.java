@@ -47,6 +47,8 @@ import rx.Observable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
 import static org.apache.usergrid.persistence.Schema.*;
@@ -119,12 +121,14 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         }
 
         observer.start();
+        AtomicInteger count = new AtomicInteger();
         //get old app infos to migrate
         final Observable<org.apache.usergrid.persistence.model.entity.Entity> oldAppInfos = getOldAppInfos();
         oldAppInfos
             .doOnNext(oldAppInfoEntity -> {
                 try {
                     migrateAppInfo( oldAppInfoEntity, observer);
+                    count.incrementAndGet();
                 }catch (Exception e){
                     logger.error("Failed to migrate app info"+oldAppInfoEntity.getId().getUuid(),e);
                     throw new RuntimeException(e);
@@ -132,7 +136,9 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
             })
             .doOnCompleted(() -> {
-                migrationInfoSerialization.setVersion(getName(), getMaxVersion());
+                if(count.get()>0) {
+                    migrationInfoSerialization.setVersion(getName(), getMaxVersion());
+                }
                 observer.complete();
             }).toBlocking().lastOrDefault(null);
 
