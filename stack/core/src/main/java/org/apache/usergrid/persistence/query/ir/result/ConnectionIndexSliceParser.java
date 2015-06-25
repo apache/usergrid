@@ -23,6 +23,8 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
 
+import com.fasterxml.uuid.UUIDComparator;
+
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
 
@@ -94,7 +96,13 @@ public class ConnectionIndexSliceParser implements SliceParser {
                 return 1;
             }
 
-            return connectedType.compareTo( ((ConnectionColumn)o).connectedType );
+            final int compare =  UUIDComparator.staticCompare( uuid, o.getUUID() );
+
+            if(compare == 0){
+                return connectedType.compareTo( ((ConnectionColumn)o).connectedType );
+            }
+
+            return compare;
         }
     }
 }
