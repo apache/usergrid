@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -88,19 +89,20 @@ public class DataMigrationManagerImplTest {
 
         Set<String> pluginNames = migrationManager.getPluginNames();
 
-        assertEquals( 2, pluginNames.size() );
+        assertEquals(2, pluginNames.size());
 
         assertTrue( pluginNames.contains( "plugin1" ) );
 
-        assertTrue( pluginNames.contains( "plugin2" ) );
+        assertTrue(pluginNames.contains("plugin2"));
 
         //now run them
 
         migrationManager.migrate();
 
-        verify( plugin1 ).run( any( ProgressObserver.class ) );
+        verify( plugin1 ).run(any(ProgressObserver.class));
 
         verify( plugin2 ).run( any( ProgressObserver.class ) );
+        verify(migrationInfoCache,Mockito.times(2)).invalidateAll();
     }
 
     @Test
@@ -261,6 +263,8 @@ public class DataMigrationManagerImplTest {
         InOrder inOrderVerification = inOrder( plugin1, plugin2 );
         inOrderVerification.verify( plugin2 ).run( any( ProgressObserver.class ) );
         inOrderVerification.verify( plugin1 ).run( any( ProgressObserver.class ) );
+
+        verify(migrationInfoCache, Mockito.times(2)).invalidateAll();
     }
 
 
