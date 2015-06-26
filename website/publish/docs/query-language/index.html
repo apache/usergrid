@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Query Language</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Query Language</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/query-language.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li><a href="#basic-syntax">Basic syntax</a></li>
+<li><a href="#supported-operators">Supported operators</a></li>
+<li><a href="#query-response-format">Query Response Format</a></li>
+<li><a href="#data-types-supported-in-queries">Data types supported in queries</a></li>
+<li><a href="#retrieving-values-for-multiple-properties">Retrieving values for multiple properties</a></li>
+<li><a href="#querying-for-the-contents-of-text">Querying for the contents of text</a></li>
+<li><a href="#sorting-results">Sorting results</a></li>
+<li><a href="#geoqueries">Geoqueries</a></li>
+<li><a href="#managing-large-sets-of-results">Managing large sets of results</a></li>
+</ul>
+</div>
+<blockquote>
+<p>Query examples in this content are shown unencoded to make them easier to read. Keep in mind that you might need to encode query strings if you’re sending them as part of URLs, such as when you’re executing them with the cURL tool.</p>
+</blockquote>
+<p>The following example retrieves a list of restaurants (from a restaurants collection) whose name property contains the value “diner”, sorting the list in ascending order by name:</p>
+<pre><code>/restaurants?ql=select * where name contains 'diner' order by name asc</code></pre>
+<h2 id="basic-syntax">Basic syntax</h2>
+<p>Queries of Apigee data for Apache Usergrid are made up of two kinds of statements: the path to the collection you want to query, followed by the query language statement containing your query. These two statements are separated by “?ql=” to indicate where the query language statement starts.</p>
+<p>To retrieve items from a collection, you would use a syntax such as the following:</p>
+<pre><code>/&lt;collection&gt;?ql=&lt;query_statement&gt;</code></pre>
+<p>In the following example, the query is retrieving all users whose name is Gladys Kravitz.</p>
+<pre><code>/users?ql=select * where name = 'Gladys Kravitz'</code></pre>
+<p>The following example selects all items except those that have an a property value of 5:</p>
+<pre><code>/items?ql=select * where NOT a = 5</code></pre>
+<p>Note that there is a shortcut available when your query selects all items matching certain criteria – in other words, where you use a statement that starts “select * where”. In this case, you can omit the first part of the statement and abbreviate it this way:</p>
+<pre><code>/items?ql=NOT a = 5</code></pre>
+<p>You query your Apache Usergrid data by using a query syntax that’s like Structured Query Language (SQL), the query language for relational databases. Unlike a relational database, where you specify tables and columns containing the data you want to query, in your Apache Usergrid queries you specify collections and entities.</p>
+<p>The syntax of Apache Usergrid queries only <em>resembles</em> SQL to make queries familiar and easier to write. However, the language isn’t SQL. Only the syntax items documented here are supported.</p>
+<h2 id="supported-operators">Supported operators</h2>
+<p>Comparisons</p>
+<ul>
+<li>Less than <code>&lt;</code> or <code>lt</code>
+</li>
+<li>Less than or equal <code>&lt;=</code> or <code>lte</code>
+</li>
+<li>Equal <code>=</code> or <code>eq</code>
+</li>
+<li>Greater than or equal <code>&gt;=</code> or <code>gte</code>
+</li>
+<li>Greater than <code>&gt;</code> or <code>gt</code>
+</li>
+<li>Not equal <code>NOT</code>
+</li>
+</ul>
+<p>Logical operations</p>
+<ul>
+<li>Intersection of results <code>and</code>
+</li>
+<li>Union of results <code>or</code>
+</li>
+<li>Subtraction of results <code>not</code>
+</li>
+</ul>
+<h2 id="query-response-format">Query Response Format</h2>
+<p>the query’s response is formatted in JavaScript Object Notation (JSON). This is a common format used for parameter and return values in REST web services.</p>
+<p>So for the following query:</p>
+<pre><code>/users?ql=select * where name = ‘Gladys Kravitz’</code></pre>
+<p>…you would get a response such as the the one below. The JSON format arranges the data in name/value pairs. Many of the values correspond to specifics of the request, including the request’s HTTP action (GET), the application’s UUID, the request’s parameters (the query string you sent), and so on.</p>
+<p>Here, the query is asking for whole entities in the users collection. Data corresponding to the response is captured in the response’s <code>entities</code> array. The array has one member here, corresponding to the one user found by the query (another kind of query might have found more users). That one member gives the UUID of the entity (user), the entity type, and values for properties such as name, username, email, and so on.</p>
+<pre class="highlight"><code class="language-json"><span class="p">{</span>
+  <span class="nt">"action"</span> <span class="p">:</span> <span class="s2">"get"</span><span class="p">,</span>
+  <span class="nt">"application"</span> <span class="p">:</span> <span class="s2">"8272c9b0-d86a-11e2-92e2-cdf1ce04c1c0"</span><span class="p">,</span>
+  <span class="nt">"params"</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">"ql"</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">"select * where name = 'Gladys Kravitz'"</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="nt">"path"</span> <span class="p">:</span> <span class="s2">"/users"</span><span class="p">,</span>
+  <span class="nt">"uri"</span> <span class="p">:</span> <span class="s2">"http://api.usergrid.com/myorg/myapp/users"</span><span class="p">,</span>
+  <span class="nt">"entities"</span> <span class="p">:</span> <span class="p">[</span> <span class="p">{</span>
+    <span class="nt">"uuid"</span> <span class="p">:</span> <span class="s2">"d0d7d0ba-e97b-11e2-8cef-411c466c4f2c"</span><span class="p">,</span>
+    <span class="nt">"type"</span> <span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+    <span class="nt">"name"</span> <span class="p">:</span> <span class="s2">"Gladys Kravitz"</span><span class="p">,</span>
+    <span class="nt">"created"</span> <span class="p">:</span> <span class="mi">1373472876859</span><span class="p">,</span>
+    <span class="nt">"modified"</span> <span class="p">:</span> <span class="mi">1373472876859</span><span class="p">,</span>
+    <span class="nt">"username"</span> <span class="p">:</span> <span class="s2">"gladys"</span><span class="p">,</span>
+    <span class="nt">"email"</span> <span class="p">:</span> <span class="s2">"gladys@example.com"</span><span class="p">,</span>
+    <span class="nt">"activated"</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nt">"picture"</span> <span class="p">:</span> <span class="s2">"http://www.gravatar.com/avatar/20c57d4f41cf51f2db44165eb058b3b2"</span><span class="p">,</span>
+    <span class="nt">"metadata"</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">"path"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c"</span><span class="p">,</span>
+      <span class="nt">"sets"</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">"rolenames"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/rolenames"</span><span class="p">,</span>
+        <span class="nt">"permissions"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/permissions"</span>
+      <span class="p">},</span>
+      <span class="nt">"connections"</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">"firstname"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/firstname"</span><span class="p">,</span>
+        <span class="nt">"lastname"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/lastname"</span>
+      <span class="p">},</span>
+      <span class="nt">"collections"</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">"activities"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/activities"</span><span class="p">,</span>
+        <span class="nt">"devices"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/devices"</span><span class="p">,</span>
+        <span class="nt">"feed"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/feed"</span><span class="p">,</span>
+        <span class="nt">"groups"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/groups"</span><span class="p">,</span>
+        <span class="nt">"roles"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/roles"</span><span class="p">,</span>
+        <span class="nt">"following"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/following"</span><span class="p">,</span>
+        <span class="nt">"followers"</span> <span class="p">:</span> <span class="s2">"/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/followers"</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="p">],</span>
+  <span class="nt">"timestamp"</span> <span class="p">:</span> <span class="mi">1374694196061</span><span class="p">,</span>
+  <span class="nt">"duration"</span> <span class="p">:</span> <span class="mi">48</span><span class="p">,</span>
+  <span class="nt">"organization"</span> <span class="p">:</span> <span class="s2">"myorg"</span><span class="p">,</span>
+  <span class="nt">"applicationName"</span> <span class="p">:</span> <span class="s2">"myapp"</span><span class="p">,</span>
+  <span class="nt">"count"</span> <span class="p">:</span> <span class="mi">1</span>
+<span class="p">}</span></code></pre>
+<p>Compare the preceding example with the following for another kind of query. Imagine the following request string, where the query string is asking for only the values of two of the entity’s properties (username and name):</p>
+<pre><code>/users?ql=select username,name where name=’Gladys Kravitz’</code></pre>
+<p>In the response JSON from this query, the return value is specified as the property of the <code>list</code> item – here, an array containing only the values of the properties the query asked for, in the order they were requested (username first, then name).</p>
+<pre><code>{
+  "action" : "get",
+  "application" : "8272c9b0-d86a-11e2-92e2-cdf1ce04c1c0",
+  "params" : {
+    "ql" : [ "select username,name where name='Gladys Kravitz'" ]
+  },
+  "path" : "/users",
+  "uri" : "http://api.usergrid.com/myorg/myapp/users",
+  "list" : [ [ "gladys", "Gladys Kravitz" ] ],
+  "timestamp" : 1374697463190,
+  "duration" : 25,
+  "organization" : "myorg",
+  "applicationName" : "myapp",
+  "count" : 1
+}</code></pre>
+<h2 id="data-types-supported-in-queries">Data types supported in queries</h2>
+<p>As you develop queries for your Apache Usergrid data, remember that entity properties each conform to a particular data type (whether the entity is included by default or an entity you defined). Your queries must acknowledge this, testing with values that conform to each property’s data type. (You can view the list of property data types for the default entities at <a href="/default-data-entities">Default Data Entities</a>.)</p>
+<p>For example, in the default entity <code>User</code>, the <code>name</code> property is stored as a <code>string</code>, the created date as a <code>long</code>, and metadata is stored as a JSON object. Your queries must be data type-aware so that you can be sure that query results are as you expect them to be.</p>
+<p>So imagine you define an entity with a <code>price</code> property whose value might be <code>100.00</code>. Querying for <code>100</code> will return no results even if there are occurrences of <code>100.00</code> as <code>price</code> values in your data set. That’s because the database expected a decimal-delimited <code>float</code> value in your query.</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Data Type</th>
+<th align="left">Examples</th>
+<th align="left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p><code>string</code></p></td>
+<td align="left"><p><code>'value'</code>, <code>unicode '\uFFFF'</code>, <code>octal '\0707'</code></p></td>
+<td align="left"><p> </p></td>
+</tr>
+<tr class="even">
+<td align="left"><p><code>long</code></p></td>
+<td align="left"><pre><code>1357412326021</code></pre></td>
+<td align="left"><p>Timestamps are typically stored as <code>long</code> values.</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p><code>float</code></p></td>
+<td align="left">
+<pre><code>10.1, -10.1, 10e10,</code></pre>
+<p>10e-10, 10E10, 10E-10</p>
+</td>
+<td align="left"><p>Your query must be specific about the value you’re looking for, down to the value (if any) after the decimal point.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p><code>boolean</code></p></td>
+<td align="left"><pre><code>true | false</code></pre></td>
+<td align="left"><p> </p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p><code>UUID</code></p></td>
+<td align="left"><pre><code>ee912c4b-5769-11e2-
+924d-02e81ac5a17b</code></pre></td>
+<td align="left">
+<p>UUID types are typically used for the unique IDs of entities. The value must conform to the following format (do not enclose with quotation marks): xxxxxxxx-xxxx-xxxx- xxxx-xxxxxxxxxxxx</p>
+<p>.</p>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><p><code>object</code></p></td>
+<td align="left">
+<p>For a JSON object like this one:</p>
+<pre><code>{
+ "items": [
+  {
+   "name": "rocks"
+  },
+  {
+   "name": "boats"
+  }
+ ]
+}</code></pre>
+<p>… you can use dot notation to reach property values in the object:</p>
+<pre><code>/mycollection/thing</code></pre>
+<p>?ql=“select * where ite ms.name = ‘rocks’”</p>
+</td>
+<td align="left"><p>Objects are often used to contain entity metadata, such as the activities associated with a user, the users associated with a role, and so on.</p></td>
+</tr>
+</tbody>
+</table>
+<h2 id="retrieving-values-for-multiple-properties">Retrieving values for multiple properties</h2>
+<p>Your query can return multiple kinds of values – such as the values of multiple properties – by specifying the property names in your select statement as a comma-separated list.</p>
+<p>For example, the following request returns the address and phone number of users whose name is Gladys Kravitz:</p>
+<pre><code>/users?ql=select address,phone_number where name = 'Gladys Kravitz'</code></pre>
+<h2 id="querying-for-the-contents-of-text">Querying for the contents of text</h2>
+<p>Your query can search the text of entity values of the string data type. For example, you can search a postal code field for values that start with a specific three numbers.</p>
+<p>For example, the following query selects all restaurants with the word <code>diner</code> in the name:</p>
+<pre><code>/restaurants?ql=select * where name contains 'diner'</code></pre>
+<p><strong>Note:</strong> Not all string properties of the default entities are indexed for searching. This includes the <code>User</code> entity’s <code>username</code> property.</p>
+<p>This will return all users whose name property contains the word ‘Kravitz’</p>
+<pre><code>/users?ql=select * where name contains 'Kravitz'</code></pre>
+<p>This will return all users whose name property contains a word beginning with ‘Krav’</p>
+<pre><code>/users?ql=select * where name contains 'Krav*'</code></pre>
+<p>This will return all users whose name is exactly ‘Gladys Kravitz’</p>
+<pre><code>/users?ql=select * where name = 'Gladys Kravitz'</code></pre>
+<h2 id="sorting-results">Sorting results</h2>
+<p>You can return query results that are sorted in the order you specify. Use the <code>order by</code> clause to specify the property to sort by, along with the order in which results should be sorted. The syntax for the clause is as follows <code>order by &lt;property_name&gt; asc | desc</code></p>
+<p>The following table includes a few examples:</p>
+<pre><code>/users?ql=select * where lastname = 'Smith' order by firstname asc
+
+
+/users?ql=select * where lastname = 'Smith' order by firstname desc
+
+
+/users?ql=select * where lastname contains 'Sm*' order by lastname asc, firstname asc</code></pre>
+<h2 id="geoqueries">Geoqueries</h2>
+<p>Many of today’s apps are enhanced by the use of <em>geolocation</em>, wireless detection of the physical location of a remote device. These apps are said to be <em>geolocation-aware</em> in that they query the device to determine the user’s position and then use this data to further enhance the user’s experience. For example, apps can capture the exact location where a picture was taken or a message was created.</p>
+<p>App services support geolocation on any entity, both built in (e.g., users, groups) and user defined.</p>
+<p>To add a location to any entity, include the following member to the JSON in a POST or PUT call:</p>
+<pre><code>"location": {
+    "latitude": 37.779632,
+    "longitude": -122.395131  
+} </code></pre>
+<p>For example, to store a listing of restaurants and their locations, start by creating a collection called restaurants:</p>
+<pre><code>POST https://api.usergrid.com/org_name/app_name/restaurants</code></pre>
+<p>Next, add a new entity to the collection:</p>
+<pre><code>POST https://api.usergrid.com/org_name/app_name/restaurants
+{
+  "name": "Rockadero",
+  "address": "21 Slate Street, Bedrock, CA",
+  "location": {
+    "latitude": 37.779632,
+    "longitude": -122.395131
+  }
+}</code></pre>
+<p>This creates a new restaurant entity called “Rockadero” with the longitude and latitude included as part of the object.</p>
+<p>When a location is added to an entity, it is easy to make queries against that data. For example, to see all restaurants within a 10 mile radius of the user’s location, make a GET call against that entity, and include a search query in the following format:</p>
+<pre><code>location within &lt;distance in meters&gt; of &lt;latitude&gt;, &lt;longitude&gt;</code></pre>
+<p>If we use the location of our user Fred, we first need to convert miles to meters. 1 mile is equivalent to 1609.344 meters, so 10 miles is about 16093 meters. Thus, the API call looks like this:</p>
+<pre><code>GET https://api.usergrid.com/org_name/app_name/restaurants?ql=location within 16093 of 37.776753, -122.407846</code></pre>
+<h2 id="managing-large-sets-of-results">Managing large sets of results</h2>
+<p>When your query might return more results than you want to display to the user at once, you can use the limit parameter with cursors or API methods to manage the display of results. By default, query results are limited to 10 at a time. You can adjust this by setting the limit parameter to a value you prefer.</p>
+<p>For example, you might execute a query that could potentially return hundreds of results, but you want to display 20 of those at a time to users. To do this, your code sets the limit parameter to 20 when querying for data, then provides a way for the user to request more of the results when they’re ready.</p>
+<p>You would use the following parameters in your query:</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p><code>limit</code></p></td>
+<td align="left"><p>integer</p></td>
+<td align="left">
+<p>Number of results to return. The maximum number of results is 1,000. Specifying a limit greater than 1,000 will result in a limit of 1,000.</p>
+<p>Limit is applied to the collection, not the query string. For example, the following query will find the first 100 entities in the books collection, then from that set return the ones with author=‘Hemingway’:</p>
+<pre><code>/books?ql=author =</code></pre>
+<p>‘Hemingway’&amp;limit=100</p>
+<p>You can also use the limit parameter on a request without a query string. The following example is shorthand for selecting all books and limiting by 100 at a time:</p>
+<pre><code>/books?limit=100</code></pre>
+<p>Using a limit on a DELETE can help you manage the amount of time it takes to delete data. For example you can delete all of the books, 1000 at a time, with the following:</p>
+<pre><code>DELETE /books?limit</code></pre>
+<p>=1000</p>
+<p>Keep in mind that DELETE operations can take longer to execute. Yet even though the DELETE query call might time out (such as with a very large limit), the operation will continue on the server even if the client stops waiting for the result.</p>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><p><code>cursor</code></p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>An encoded representation of the query position pointing to a set of results. To retrieve the next set of results, pass the cursor with your next call for most results.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For example:</p>
+<p>Select all users whose name starts with fred, and returns the first 50 results:</p>
+<pre><code>/users?ql=select * where name = 'fred*'&amp;limit=50</code></pre>
+<p>Retrieve the next batch of users whose name is “fred”, passing the cursor received from the last request to specify where the next set of results should begin:</p>
+<pre><code>/users?ql=select * where name = 'fred*'&amp;limit=50&amp;cursor=LTIxNDg0NDUxNDpnR2tBQVFFQWdITUFDWFJ2YlM1emJXbDBhQUNBZFFBUUQyMVZneExfRWVLRlV3TG9Hc1doZXdDQWRRQVFIYVdjb0JwREVlS1VCd0xvR3NWT0JRQQ</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/query-language.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>

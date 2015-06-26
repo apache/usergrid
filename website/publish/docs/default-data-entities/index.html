@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Default Data Entities</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Default Data Entities</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/default-data-entities.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#default-data-entities">Default Data Entities</a><ul>
+<li>
+<a href="#activity">Activity</a><ul>
+<li><a href="#properties">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#application">Application</a><ul>
+<li><a href="#properties-1">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#asset">Asset</a><ul>
+<li><a href="#properties-2">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#device">Device</a><ul>
+<li><a href="#properties-3">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#event">Event</a><ul>
+<li><a href="#properties-4">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#folder">Folder</a><ul>
+<li><a href="#properties-5">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#group">Group</a><ul>
+<li><a href="#properties-6">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#notification">Notification</a><ul>
+<li><a href="#properties-7">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#notifier">Notifier</a><ul>
+<li><a href="#properties-8">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#receipt">Receipt</a><ul>
+<li><a href="#properties-9">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#role">Role</a><ul>
+<li><a href="#properties-10">Properties</a></li>
+</ul>
+</li>
+<li>
+<a href="#user">User</a><ul>
+<li><a href="#properties-11">Properties</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="default-data-entities">Default Data Entities</h1>
+<p>This following describes all of the default data entities available in Apache Usergrid, and their default properties. Each entity can be accessed in a corresponding collection, named with the plural form of the entity name (see <a href="/app-services-data-model-1">Apache Usergrid Data model</a> for more information on how data is stored in Apache Usergrid).</p>
+<p>Properties marked ‘required’ must be set for the entity to be successfully created. Properties marked ‘optional’ are reserved by the API but not required. All other properties are automatically set and returned by the API when the entity is created.</p>
+<p>For information on creating custom entities or custom properties for any entity, see You do not have access to view this node.</p>
+<h2 id="activity">Activity</h2>
+<p>The <em>activity</em> entity represents a user activity, and is specifically designed for use in data streams as defined by the <a href="http://activitystrea.ms/specs/json/1.0/">JSON Activity Streams 1.0 specification</a>.</p>
+<p>For more information on using the activity entity, see <a href="/activity">Activity</a>.</p>
+<h3 id="properties">Properties</h3>
+<p>The following are the system-defined properties for activity entities:</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “activity”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>actor</p></td>
+<td align="left"><p>ActivityObject</p></td>
+<td align="left"><p><strong>Required.</strong> Entity that performed the ‘action’ of the activity (see <a href="http://a%20ctivitystrea.ms/specs/j%20son/1.0/">JSON Activity Streams 1.0 specification</a>). By default, the UUID of the user who performed the action is recorded as the value of the ‘uuid’ property of this object.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>verb</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong> The action performed by the user (for example, <em>post</em>)</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>published</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><strong>Required.</strong> <a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the activity was published</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>content</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Description of the activity</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>icon</p></td>
+<td align="left"><p>MediaLink</p></td>
+<td align="left"><p><em>Optional.</em> Visual representation of a media link resource (see <a href="http://a%20ctivitystrea.ms/specs/j%20son/1.0/">JSON Activity Streams 1.0 specification</a>)</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>category</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Category used to organize activities</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>verb</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Action that the actor performs (for example, <em>post</em>)</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>published</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><em>Optional.</em> <a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds when the activity was published</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>object</p></td>
+<td align="left"><p>ActivityObject</p></td>
+<td align="left"><p><em>Optional.</em> Object on which the action is performed (see <a href="http://a%20ctivitystrea.ms/specs/j%20son/1.0/">JSON Activity Streams 1.0 specification</a>)</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>title</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Title or headline for the activity</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the activity entity, as well as additional data entities associated with the activity. The following properties are included in metadata:</p>
+<p><strong>path</strong>: Path to retrieve the activity entity, including the UUID of the user entity associated with the activity and the UUID of the activity entity</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="application">Application</h2>
+<p>The <em>application</em> entity is the base entity for accessing your application data in Apache Usergrid. Aside from creating the application entity, most apps using Apache Usergrid will never need to access the application entity directly; however, you can add custom entities or make changes to the default properties of the entity for configuration purposes via the Apache Usergrid.</p>
+<p>For more information on creating and configuring applications in App Services, see <a href="/creating-new-application-admin-console">Creating a New Application with the Admin Console</a>.</p>
+<h3 id="properties-1">Properties</h3>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>String</p></td>
+<td align="left"><p>Type of entity, in this case “application”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>name</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Application name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>accesstokenttl</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><em>Optional.</em> Time to live value for an access token obtained within the application</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>organizationName</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Name of the organization the application belongs to</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>applicationName</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Name of the application</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>title</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Application title</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>description</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Application description</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>activated</p></td>
+<td align="left"><p>boolean</p></td>
+<td align="left"><p><em>Optional.</em> Whether application is activated</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>disabled</p></td>
+<td align="left"><p>boolean</p></td>
+<td align="left"><p><em>Optional.</em> Whether application is administratively disabled</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>allowOpenRegistration</p></td>
+<td align="left"><p>boolean</p></td>
+<td align="left"><p><em>Optional.</em> Whether application allows any user to register</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>registrationRequiresEma ilConfirmation</p></td>
+<td align="left"><p>boolean</p></td>
+<td align="left"><p><em>Optional.</em> Whether registration requires email confirmation</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>registrationRequiresAdm inApproval</p></td>
+<td align="left"><p>boolean</p></td>
+<td align="left"><p><em>Optional.</em> Whether registration requires admin approval</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>notify_admin_of_new<br>_users</p></td>
+<td align="left"><p>boolean</p></td>
+<td align="left"><p><em>Optional.</em> Whether application admins should be notified of new users</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides a ‘collections’ object with the relative paths to all entity collections associated with the application. The following collections are included in metadata by default:</p>
+<ul>
+<li>
+<strong>users</strong>: Path to retrieve the /users collection</li>
+<li>
+<strong>groups</strong>: Path to retrieve the /groups collection</li>
+<li>
+<strong>folders</strong>: Path to retrieve the /folders collection</li>
+<li>
+<strong>events</strong>: Path to retrieve the /events collection</li>
+<li>
+<strong>assets</strong>: Path to retrieve the /assets collection</li>
+<li>
+<strong>activities</strong>: Path to retrieve the /activities collection</li>
+<li>
+<strong>devices</strong>: Path to retrieve the /devices collection</li>
+<li>
+<strong>notifiers</strong>: Path to retrieve the /notifiers collection</li>
+<li>
+<strong>notifications</strong>: Path to retrieve the /notifications collection</li>
+<li>
+<strong>receipts</strong>: Path to retrieve the /receipts collection</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="asset">Asset</h2>
+<p>The <em>asset</em> entity represents a binary data object stored in App Services infrastructure, such as an image, video or audio file. The asset entity does not contain the binary data, but rather contains information about the data and points to the location where it can be accessed in Apache Usergrid infrastructure.</p>
+<p>For more information on using the asset entity, see <a href="/assets">Assets</a>.</p>
+<h3 id="properties-2">Properties</h3>
+<p>The following are the system-defined properties for asset entities:</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case“asset”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>name</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Asset name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>owner</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p><strong>Required.</strong> UUID of the user entity that owns the asset</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>path</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong> Relative path to the asset</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>content-type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>MIME media type that describes the asset (see <a href="http://www.iana.%20org/assignments/media-t%20ypes">media types</a>)</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the asset entity, as well as additional data entities associated with the asset. The following properties are included in metadata:</p>
+<ul>
+<li>
+<strong>path</strong>: Path to retrieve the asset entity</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="device">Device</h2>
+<p>The <em>device</em> entity represents a unique device that is being used to access your app. Device entities should be associated with a user entity. The Apache Usergrid push notification feature requires the device entity.</p>
+<p>For more information on using the device entity, see <a href="/device">Device</a>.</p>
+<h3 id="properties-3">Properties</h3>
+<p>The following are the system-defined properties for device entities:</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “device”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>name</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Device name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the device entity, as well as additional data entities associated with the user. The following properties are included in metadata:</p>
+<p><strong>path</strong>: Path to retrieve the device entity, including the device UUID</p>
+<p><strong>collections</strong>: Nested object that contains paths to data entity collections associated with the device.</p>
+<ul>
+<li>receipts: Receipt entities associated with the device</li>
+<li>users: User entities associated with the device</li>
+</ul>
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="event">Event</h2>
+<p>The <em>event</em> entity is used to log application data, primarily for performance and error monitoring. Event entities can be also associated with users and groups. The event mechanism in Apache Usergrid is optimized to handle large numbers of events, so it is an ideal mechanism for logging in your application.</p>
+<p>For more information on using the event entity, see <a href="/events-and-counters">Events and counters</a>.</p>
+<h3 id="properties-4">Properties</h3>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>String</p></td>
+<td align="left"><p>Type of entity, in this case “event”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>timestamp</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><strong>Required.</strong> <a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the application event occurred</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>user</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p><em>Optional.</em> UUID of application user that posted the event</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>group</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p><em>Optional.</em> UUID of application group that posted the event</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>category</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Category used for organizing similar events</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>counters</p></td>
+<td align="left"><p>map</p></td>
+<td align="left"><p><em>Optional.</em> Counter used for tracking number of similar events</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>message</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Message describing event. Will be <em>null</em> if no message is specified</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the event entity, as well as additional data entities associated with the event. The following properties are included in metadata:</p>
+<ul>
+<li>
+<strong>path</strong>: Path to retrieve the event entity</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="folder">Folder</h2>
+<p>The <em>folder</em> entity is used to emulate a file structure for the purpose of organizing assets or custom entities.</p>
+<p>For more information on using the folder entity, see <a href="/folder">Folder</a>.</p>
+<h3 id="properties-5">Properties</h3>
+<p>The following are the system-defined properties for folder entities:</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case“folder”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>name</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Folder name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>owner</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p><strong>Required.</strong> UUID of the folder’s owner</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>path</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong> Relative path to the folder</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the folder entity, as well as additional data entities associated with the asset. The following properties are included in metadata:</p>
+<ul>
+<li>
+<strong>path</strong>: Path to retrieve the folder entity</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="group">Group</h2>
+<p>The <em>group</em> entity allows you to group users based on any criteria. Multiple group entities can be nested to create sub-groups. Users can also belong to multiple groups. Examples of uses for the group entity include grouping users by interest or location.</p>
+<p>The look-up properties for the entities of type group are UUID and path, that is, you can use the uuid or path property to reference a group in an API call. However, you can search on a group using any property of the group entity. See <a href="/queries-and-parameters">Queries and parameters</a> for details on searching.</p>
+<p>For more information on using the group entity, see <a href="/group">Group</a>.</p>
+<h3 id="properties-6">Properties</h3>
+<p>The following are the system-defined properties for group entities</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity UUID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “group”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>path</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong> Relative path where the group can be retrieved</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>title</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Display name for the group entity</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the group entity, as well as additional data entities associated with the group. The following properties are included in metadata:</p>
+<p><strong>path</strong>: Path to retrieve the group entity, including the group UUID</p>
+<p><strong>sets</strong>: Nested object that contains the ‘rolenames’ and ‘permissions’ properties.</p>
+<ul>
+<li>rolenames: Path to retrieve a list of roles associated with the group.</li>
+<li>permissions: Path to retrieve a list of all permissions directly associated with the group. If the group is associated with a role, the list will not include permissions associated with the role entity.</li>
+</ul>
+<p> </p>
+<p><strong>collections</strong>: Nested object that contains paths to data entity collections associated with the group.</p>
+<ul>
+<li>activities: Activity entities associated with the group</li>
+<li>feed: A feed of all activities published by users associated with the group</li>
+<li>roles: Role entities associated with the group</li>
+<li>users: User entities associated with the group</li>
+</ul>
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="notification">Notification</h2>
+<p>The <em>notification</em> entity represents a push notification, including notification message and details. A notification entity is sent in conjunction with a notifier entity to a notification service, such as Apple Push Notification Service, to initiate a push notification.</p>
+<p>For more information on using the notification entity, see <a href="/create-manage-notifications">Create &amp; Manage Notifications</a>.</p>
+<h3 id="properties-7">Properties</h3>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “notification”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>payloads</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong> The push notifications to be delivered, formatted as key-value pairs of notifier entities and messages (&lt;notifier_name1&gt;:&lt; message1&gt;, &lt;notifier_name2&gt;:&lt;m essage2&gt;, …)</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>errorMessage</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Error message returned by the notification service (APNs or GCM) if the notification fails entirely</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>scheduled</p></td>
+<td align="left"><p>bool</p></td>
+<td align="left"><p>Whether the notification is currently scheduled for delivery</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>state</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>The current delivery status of the notification: “FINISHED”, “SCHEDULED” or “CANCELED”.</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the notification entity, as well as additional data entities associated with the notification. The following properties are included in metadata:</p>
+<p><strong>path</strong>: Path to retrieve the notification object</p>
+<p><strong>collections</strong>: Nested object that contains paths to data entity collections associated with the notification.</p>
+<ul>
+<li>
+<strong>queue</strong>: Device entities scheduled to receive the push notification</li>
+<li>
+<strong>receipts</strong>“: Receipt entities for delivery attempts”</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="notifier">Notifier</h2>
+<p>The <em>notifier</em> entity contains the credentials necessary to securely access push notification service providers, which in turn send your notifications to targeted devices.</p>
+<p>For more information on using the notifier entity, see <a href="/create-notifiers">Create Notifiers</a>.</p>
+<h3 id="properties-8">Properties</h3>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “notifier”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>name</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Notifier display name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>provider</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong> Push notification provider: “apple” or “google”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>environment</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong> The environment that corresponds to your app: “development” or “production”</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the notifier entity</p>
+<p><strong>path</strong>: Path to retrieve the notification object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="receipt">Receipt</h2>
+<p>The <em>receipt</em> entity is created after a push notification has been sent using Apache Usergrid. The receipt is a record of an attempted push notification, including if the notification was successful, and when it was sent.</p>
+<p>For more information on the receipt entity, see <a href="/create-manage-notifications">Create &amp; Manage Notifications</a>.</p>
+<h3 id="properties-9">Properties</h3>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “receipt”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>payload</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>The push notification message that was specified in the ‘payload’ property of the notification entity associated with the push notification.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>errorMessage</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Error message returned by the notification service (APNs or GCM) if delivery of the notification to a device fails</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>errorCode</p></td>
+<td align="left"><p>String</p></td>
+<td align="left"><p>Error code returned by the notification service, if any.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>sent</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds for when the notification was sent</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the notifier entity</p>
+<p><strong>path</strong>: Path to retrieve the notification object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="role">Role</h2>
+<p>The <em>role</em> entity is used to define standard permission sets that can be assigned to user and groups entities. For example, you might create an Administrator role to easily grant certain users full access to all app features.</p>
+<p>For more information on using the role entity, see <a href="/role">Role</a>.</p>
+<h3 id="properties-10">Properties</h3>
+<p>The following are the system-defined properties for role entities:</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “role”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>name</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> Unique name that identifies the role</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>roleName</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Identical to the value of the ‘name’ property by default</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>title</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Identical to the value of the ‘name’ property by default</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>inactivity</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>The amount of time, in milliseconds, that a user or group associated with the role can be inactive before they lose the permissions associated with that role. By default, ‘inactivity’ is set to 0 so that the user/group never loses the role.</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the role entity, as well as additional data entities associated with the role. The following properties are included in metadata:</p>
+<p><strong>path</strong>: Path to retrieve the role entity</p>
+<p><strong>sets</strong>: Nested object that contains the ‘permissions’ property.</p>
+<ul>
+<li>permissions: Path to retrieve a list of all permissions associated with the role.</li>
+</ul>
+<p> </p>
+<p><strong>collections</strong>: Nested object that contains paths to data entity collections associated with the role.</p>
+<ul>
+<li>groups: Group entities associated with the role</li>
+<li>users: User entities associated with the role</li>
+</ul>
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="user">User</h2>
+<p>The <em>user</em> entity represents a registered user of your app, and includes optional properties for common user details, such as real name, email address, and password.</p>
+<p>For more information on using the user entity, see <a href="/user">User</a>.</p>
+<h3 id="properties-11">Properties</h3>
+<p>The following are the system-defined properties for user entities:</p>
+<table>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+<thead>
+<tr class="header">
+<th align="left">Property</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><p>uuid</p></td>
+<td align="left"><p>UUID</p></td>
+<td align="left"><p>Unique entity ID</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>type</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p>Type of entity, in this case “user”</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>created</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was created</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>modified</p></td>
+<td align="left"><p>long</p></td>
+<td align="left"><p><a href="http://en.wi%20kipedia.org/wiki/Coordi%20nated_Universal_Time">UTC timestamp</a> in milliseconds of when the entity was last modified</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>username</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><strong>Required.</strong>Valid and unique username</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>password</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> User password</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>name</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> <em>Optional.</em> User display name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>email</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em>User’s email address. Note that this is a required field for user entities created with the User Management tool in the Apache Usergrid console.</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>firstname</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> User first name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>middlename</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> User middle name</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>lastname</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> User last name</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>picture</p></td>
+<td align="left"><p>string</p></td>
+<td align="left"><p><em>Optional.</em> URL where the user’s profile picture can be retrieved</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>activated</p></td>
+<td align="left"><p>boolean</p></td>
+<td align="left"><p>Whether the user account is activated. Set to ‘true’ by default when the user is created.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>metadata</p></td>
+<td align="left"><p>object</p></td>
+<td align="left">
+<p>A nested, JSON-formatted object that provides the relative path to the user entity, as well as additional data entities associated with the user. The following properties are included in metadata:</p>
+<p><strong>path</strong>: Path to retrieve the user entity</p>
+<p><strong>sets</strong>: Nested object that contains the ‘rolenames’ and ‘permissions’ properties.</p>
+<ul>
+<li>rolenames: <em>Deprecated</em>. Use <strong>/users/\/roles</strong> instead. Path to retrieve a list of roles associated with the user.</li>
+<li>permissions: Path to retrieve a list of all permissions directly associated with the user. If the user is associated with a role or group, the list will not include permissions associated with those entities.</li>
+</ul>
+<p> </p>
+<p><strong>collections</strong>: Nested object that contains paths to data entity collections associated with the user.</p>
+<ul>
+<li>activities: Activity entities associated with the user</li>
+<li>devices: Device entities associated with the user</li>
+<li>feed: A feed of all activities published by the user</li>
+<li>groups: Group entities associated with the user</li>
+<li>roles: Role entities associated with the user</li>
+<li>following: Users that the user is following</li>
+<li>followers: Users that are following the user</li>
+</ul>
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/default-data-entities.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>

@@ -1,12 +1,10 @@
 Apache Usergrid Website
 =======================
 
-Check out the latest code with
-
-    $ svn --username "APACHE_USERNAME" --password "APACHE_PASSWORD" co https://svn.apache.org/repos/asf/incubator/usergrid/site/
-
 All pages are generated from the content (html,js,css) under `content/`
 All doc sources are in markdown files under `content/docs/`
+
+Content is published to ../content. You must commit this to the asf-site branch to update the site.
 
 To generate the site locally, you need [pandoc](http://johnmacfarlane.net/pandoc/installing.html), ruby and python installed.
 
