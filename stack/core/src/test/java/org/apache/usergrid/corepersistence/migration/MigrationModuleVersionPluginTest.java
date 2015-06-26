@@ -50,7 +50,7 @@ public class MigrationModuleVersionPluginTest {
     public void testNewSystem(){
 
         //mock up an initial system state
-        final int systemState = 0;
+        final int systemState = 3;
 
         final MigrationInfoSerialization migrationInfoSerialization = mock(MigrationInfoSerialization.class);
 
