@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Retrieving Collections</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Retrieving Collections</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/retrieving-collections.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#retrieving-collections">Retrieving Collections</a><ul>
+<li>
+<a href="#retrieving-sets-of-entities-from-a-collection">Retrieving sets of entities from a collection</a><ul>
+<li><a href="#example-requestresponse">Example Request/Response</a></li>
+<li><a href="#request-syntax">Request Syntax</a></li>
+<li><a href="#parameters">Parameters</a></li>
+<li><a href="#example-requestresponse-1">Example Request/Response</a></li>
+<li><a href="#sdk-method">SDK Method</a></li>
+<li><a href="#properties">Properties</a></li>
+<li><a href="#example-requestresponse-2">Example Request/Response</a></li>
+<li><a href="#sdk-method-1">SDK Method</a></li>
+<li><a href="#properties-1">Properties</a></li>
+<li><a href="#example-requestresponse-3">Example Request/Response</a></li>
+<li><a href="#sdk-method-2">SDK Method</a></li>
+<li><a href="#parameters-1">Parameters</a></li>
+<li><a href="#example-requestresponse-4">Example Request/Response</a></li>
+<li><a href="#sdk-method-3">SDK Method</a></li>
+<li><a href="#parameters-2">Parameters</a></li>
+<li><a href="#example-requestresponse-5">Example Request/Response</a></li>
+<li><a href="#sdk-method-4">SDK Method</a></li>
+<li><a href="#parameters-3">Parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="retrieving-collections">Retrieving Collections</h1>
+<p>This article describes how to retrieve all of the entities in a collection.</p>
+<p>By default, the Apache Usergrid API returns 10 entities per request. For collections with more than 10 entities, use the returned ‘cursor’ property to retrieve the next 10 entities in the result set. You may also use the <code>LIMIT</code> parameter in a query string to increase the number of results returned. For more information on using cursors, see <a href="/working-queries#cursor">Managing large sets of results</a>.</p>
+<p><strong>Note:</strong> Although not shown in the API examples below, you need to provide a valid access token with each API call. See <a href="/authenticating-users-and-application-clients">Authenticating users and application clients</a> for details.</p>
+<h2 id="retrieving-sets-of-entities-from-a-collection">Retrieving sets of entities from a collection</h2>
+<ul>
+<li><a href="#curl_get_collection">cURL</a></li>
+<li><a href="#ios_get_collection">iOS</a></li>
+<li><a href="#android_get_collection">Android</a></li>
+<li><a href="#javascript_get_collection">JavaScript (HTML5)</a></li>
+<li><a href="#ruby_get_collection">Ruby</a></li>
+<li><a href="#nodejs_get_collection">Node.js</a></li>
+</ul>
+<h3 id="example-requestresponse">Example Request/Response</h3>
+<h4 id="request">Request:</h4>
+<pre><code>curl -X GET "https://api.usergrid.com/your-org/your-app/items"</code></pre>
+<h4 id="response">Response:</h4>
+<pre><code>{
+      "action" : "get",
+      "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+      "params" : { },
+      "path" : "/items",
+      "uri" : "http://api.usergrid.com/your-org/your-app/items",
+      "entities" : [ {
+            "uuid" : "5bb76bca-1657-11e3-903f-9ff6c621a7a4",
+            "type" : "item",
+            "name" : "milk",
+            "created" : 1378405020796,
+            "modified" : 1378405020796,
+            "metadata" : {
+                  "path" : "/items/5bb76bca-1657-11e3-903f-9ff6c621a7a4"
+            },
+            "name" : "milk",
+            "price" : "3.25"
+      }, {
+        "uuid" : "1a9356ba-1682-11e3-a72a-81581bbaf055",
+        "type" : "item",
+        "name" : "bread",
+        "created" : 1378423379867,
+        "modified" : 1378423379867,
+        "metadata" : {
+              "path" : "/items/1a9356ba-1682-11e3-a72a-81581bbaf055"
+        },
+        "name" : "bread",
+        "price" : "2.50"
+      } ],
+      "timestamp" : 1378426821261,
+      "duration" : 35,
+      "organization" : "your-org",
+      "applicationName" : "your-app",
+      "count" : 2
+}</code></pre>
+<h3 id="request-syntax">Request Syntax</h3>
+<pre><code>curl -X GET https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;collection&gt;</code></pre>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">org</td>
+<td align="left">Organization UUID or organization name</td>
+</tr>
+<tr class="even">
+<td align="left">app</td>
+<td align="left">Application UUID or application name</td>
+</tr>
+<tr class="odd">
+<td align="left">collection</td>
+<td align="left">Collection UUID or collection name</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ios">Apache Usergrid iOS SDK</a>.</p>
+<h3 id="example-requestresponse-1">Example Request/Response</h3>
+<h4 id="request-1">Request:</h4>
+<pre><code>-(NSString*)getCollection {
+
+    //specify the entity type that corresponds to the collection to be retrieved
+    NSString *type = @"item";
+    
+    //we recommend you call ApigeeClient from your AppDelegate. 
+    //for more information see the iOS SDK install guide: http://apigee.com/docs/app-services/content/installing-apigee-sdk-ios
+
+    //create an instance of AppDelegate
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    
+    ApigeeCollection *collection = [[ApigeeCollection alloc] init:apigeeClient.dataClient type:type];
+    
+    @try {
+        //success
+    }
+    @catch (NSException * e) {
+        //fail
+    }
+
+}
+                    
+                    </code></pre>
+<h4 id="response-1">Response:</h4>
+<pre><code>{
+      "action" : "get",
+      "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+      "params" : { },
+      "path" : "/items",
+      "uri" : "http://api.usergrid.com/your-org/your-app/items",
+      "entities" : [ {
+            "uuid" : "5bb76bca-1657-11e3-903f-9ff6c621a7a4",
+            "type" : "item",
+            "name" : "milk",
+            "created" : 1378405020796,
+            "modified" : 1378405020796,
+            "metadata" : {
+                  "path" : "/items/5bb76bca-1657-11e3-903f-9ff6c621a7a4"
+            },
+            "name" : "milk",
+            "price" : "3.25"
+      }, {
+        "uuid" : "1a9356ba-1682-11e3-a72a-81581bbaf055",
+        "type" : "item",
+        "name" : "bread",
+        "created" : 1378423379867,
+        "modified" : 1378423379867,
+        "metadata" : {
+              "path" : "/items/1a9356ba-1682-11e3-a72a-81581bbaf055"
+        },
+        "name" : "bread",
+        "price" : "2.50"
+      } ],
+      "timestamp" : 1378426821261,
+      "duration" : 35,
+      "organization" : "your-org",
+      "applicationName" : "your-app",
+      "count" : 2
+}</code></pre>
+<h3 id="sdk-method">SDK Method</h3>
+<pre><code>(ApigeeCollection*)getCollection:(NSString*)type</code></pre>
+<h3 id="properties">Properties</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">The entity type associated with the collection to be retrieved</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#android">Apache Usergrid Android SDK</a>.</p>
+<h3 id="example-requestresponse-2">Example Request/Response</h3>
+<h4 id="request-2">Request:</h4>
+<pre><code>//Create client entity
+String ORGNAME = "your-org";
+String APPNAME = "your-app";        
+ApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME);
+DataClient dataClient = apigeeClient.getDataClient();
+
+String type = "item"; //entity type to be retrieved
+Map&lt;String,Object&gt; queryString =  null; //we don't need any additional query parameters, in this case
+    
+//call getCollectionAsync to initiate the asynchronous API call    
+dataClient.getCollectionAsync(type, queryString, new ApiResponseCallback() {    
+
+//If getEntitiesAsync fails, catch the error
+    @Override
+    public void onException(Exception e) { 
+        // Error
+    }
+    
+    //If getCollectionAsync is successful, handle the response object
+    @Override
+    public void onResponse(ApiResponse response) {
+        try { 
+            if (response != null) {
+                // Success
+            }
+        } catch (Exception e) { //The API request returned an error
+                // Fail
+        }
+    }
+}); 
+                    </code></pre>
+<h4 id="response-2">Response:</h4>
+<pre><code>    {"action":"get","application":"f34f4222-a166-11e2-a7f7-02e81adcf3d0","entities":[{"dataClient":{"accessToken":null,"apiUrl":"https://api.usergrid.com","applicationId":"your-app","clientId":null,"clientSecret":null,"currentOrganization":null,"loggedInUser":null,"organizationId":"your-org"},"type":"item","uuid":"5bb76bca-1657-11e3-903f-9ff6c621a7a4","price":"4.00","created":1378405020796,"name":"milk","modified":1378505935248,"availability":"in-stock","metadata":{"path":"/items/5bb76bca-1657-11e3-903f-9ff6c621a7a4"}},{"dataClient":{"accessToken":null,"apiUrl":"https://api.usergrid.com","applicationId":"your-app","clientId":null,"clientSecret":null,"currentOrganization":null,"loggedInUser":null,"organizationId":"your-org"},"type":"item","uuid":"1a9356ba-1682-11e3-a72a-81581bbaf055","price":"2.50","created":1378423379867,"name":"bread","modified":1378423379867,"metadata":{"path":"/items/1a9356ba-1682-11e3-a72a-81581bbaf055"}}],"params":{},"path":"/items","rawResponse":"{
+      "action" : "get",
+      "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+      "params" : { },
+      "path" : "/items",
+      "uri" : "http://api.usergrid.com/your-org/your-app/items",
+      "entities" : [ {
+        "uuid" : "5bb76bca-1657-11e3-903f-9ff6c621a7a4",
+        "type" : "item",
+        "name" : "milk",
+        "created" : 1378405020796,
+        "modified" : 1378505935248,
+        "availability" : "in-stock",
+        "metadata" : {
+          "path" : "/items/5bb76bca-1657-11e3-903f-9ff6c621a7a4"
+        },
+        "name" : "milk",
+        "price" : "4.00"
+      }, {
+        "uuid" : "1a9356ba-1682-11e3-a72a-81581bbaf055",
+        "type" : "item",
+        "name" : "bread",
+        "created" : 1378423379867,
+        "modified" : 1378423379867,
+        "metadata" : {
+          "path" : "/items/1a9356ba-1682-11e3-a72a-81581bbaf055"
+        },
+        "name" : "bread",
+        "price" : "2.50"
+      } ],
+      "timestamp" : 1378512710357,
+      "duration" : 39,
+      "organization" : "your-org",
+      "applicationName" : "your-app"
+    }
+    ","uri":"http://api.usergrid.com/your-org/your-app/items","timestamp":1378512710357,"entityCount":2,"firstEntity":{"dataClient":{"accessToken":null,"apiUrl":"https://api.usergrid.com","applicationId":"your-app","clientId":null,"clientSecret":null,"currentOrganization":null,"loggedInUser":null,"organizationId":"your-org"},"type":"item","uuid":"5bb76bca-1657-11e3-903f-9ff6c621a7a4","price":"4.00","created":1378405020796,"name":"milk","modified":1378505935248,"availability":"in-stock","metadata":{"path":"/items/5bb76bca-1657-11e3-903f-9ff6c621a7a4"}},"lastEntity":{"dataClient":{"accessToken":null,"apiUrl":"https://api.usergrid.com","applicationId":"your-app","clientId":null,"clientSecret":null,"currentOrganization":null,"loggedInUser":null,"organizationId":"your-org"},"type":"item","uuid":"1a9356ba-1682-11e3-a72a-81581bbaf055","price":"2.50","created":1378423379867,"name":"bread","modified":1378423379867,"metadata":{"path":"/items/1a9356ba-1682-11e3-a72a-81581bbaf055"}},"organization":"your-org","duration":39,"applicationName":"your-app"}
+                    </code></pre>
+<h3 id="sdk-method-1">SDK Method</h3>
+<p>Asynchronous:</p>
+<pre><code>getCollectionAsync(String type, Map&lt;String,Object&gt; queryString, ApiResponseCallback callback)</code></pre>
+<p>Synchronous:</p>
+<pre><code>ApiResponse getCollection(String type, Map&lt;String,Object&gt; queryString)</code></pre>
+<h3 id="properties-1">Properties</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">The entity type being retrieved</td>
+</tr>
+<tr class="even">
+<td align="left">queryString</td>
+<td align="left">Map object of entity properties to be matched for the collection to be retrieved</td>
+</tr>
+<tr class="odd">
+<td align="left">callback</td>
+<td align="left">Callback function (Asynchronous calls only)</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#javascript">Apache Usergrid JavaScript (HTML5) SDK</a>.</p>
+<h3 id="example-requestresponse-3">Example Request/Response</h3>
+<h4 id="request-3">Request:</h4>
+<pre><code>var dataClient = new Usergrid.Client({
+orgName:'your-org',
+appName:'your-app'
+});
+
+var options = {
+    type:"item", //Required - the type of collection to be retrieved
+    client:dataClient //Required
+};
+
+//Create a collection object to hold the response
+var collection = new Usergrid.Collection(options);
+
+//Call request to initiate the API call
+collection.fetch(
+    function() {
+        //success callback
+    },
+    function() {
+        //error callback
+    }
+);
+                    </code></pre>
+<h4 id="response-3">Response:</h4>
+<pre><code>Object {action: "get", application: "f34f4222-a166-11e2-a7f7-02e81adcf3d0", params: Object, path: "/items", uri: "http://api.usergrid.com/your-org/your-app/items"…}
+    action: "get"
+    application: "f34f4222-a166-11e2-a7f7-02e81adcf3d0"
+    applicationName: "your-app"
+    count: 2
+    duration: 33
+    entities: Array[2]
+        0: Object
+            created: 1378423379867
+            metadata: Object
+            modified: 1378423379867
+            name: "bread"
+            price: "2.50"
+            type: "item"
+            uuid: "1a9356ba-1682-11e3-a72a-81581bbaf055"
+            __proto__: Object
+        1: Object
+            created: 1378405020796
+            metadata: Object
+            modified: 1378405020796
+            name: "milk"
+            price: "3.25"
+            type: "item"
+            uuid: "5bb76bca-1657-11e3-903f-9ff6c621a7a4"
+            __proto__: Object
+        length: 2
+    __proto__: Array[0]
+    organization: "your-org"
+    params: Object
+    path: "/items"
+    timestamp: 1378427598013
+    uri: "http://api.usergrid.com/your-org/your-app/items"
+    __proto__: Object               
+                    </code></pre>
+<h3 id="sdk-method-2">SDK Method</h3>
+<pre><code>Collection.fetch(callback);</code></pre>
+<h3 id="parameters-1">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">callback</td>
+<td align="left">Callback function to handle the API response</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#ruby">Apache Usergrid RubyGem</a>.</p>
+<h3 id="example-requestresponse-4">Example Request/Response</h3>
+<h4 id="request-4">Request:</h4>
+<pre><code>    #Create a client object
+    usergrid_api = 'https://api.usergrid.com'
+    organization = 'your-org'
+    application = 'your-app'
+    
+    dataClient = Usergrid::Application.new "#{usergrid_api}/#{organization}/#{application}"
+    
+    begin
+    # Retrieve the collection by referencing the [type]
+    # and save the response
+    response = dataClient['items'].entity
+    
+    rescue
+    #fail
+    end
+                    
+                    </code></pre>
+<h4 id="response-4">Response:</h4>
+<pre><code>{
+      "action" : "get",
+      "application" : "f34f4222-a166-11e2-a7f7-02e81adcf3d0",
+      "params" : { },
+      "path" : "/items",
+      "uri" : "http://api.usergrid.com/your-org/your-app/items",
+      "entities" : [ {
+            "uuid" : "5bb76bca-1657-11e3-903f-9ff6c621a7a4",
+            "type" : "item",
+            "name" : "milk",
+            "created" : 1378405020796,
+            "modified" : 1378405020796,
+            "metadata" : {
+                  "path" : "/items/5bb76bca-1657-11e3-903f-9ff6c621a7a4"
+            },
+            "name" : "milk",
+            "price" : "3.25"
+      }, {
+        "uuid" : "1a9356ba-1682-11e3-a72a-81581bbaf055",
+        "type" : "item",
+        "name" : "bread",
+        "created" : 1378423379867,
+        "modified" : 1378423379867,
+        "metadata" : {
+              "path" : "/items/1a9356ba-1682-11e3-a72a-81581bbaf055"
+        },
+        "name" : "bread",
+        "price" : "2.50"
+      } ],
+      "timestamp" : 1378426821261,
+      "duration" : 35,
+      "organization" : "your-org",
+      "applicationName" : "your-app",
+      "count" : 2
+}</code></pre>
+<h3 id="sdk-method-3">SDK Method</h3>
+<pre><code>Application.[&lt;entity_type&gt;].entity</code></pre>
+<h3 id="parameters-2">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">entity_type</td>
+<td align="left">The entity type associated with the collection to be retrieved</td>
+</tr>
+</tbody>
+</table>
+<p>This example uses the <a href="/app-services-sdks#nodejs">Apache Usergrid Node.js module</a>.</p>
+<h3 id="example-requestresponse-5">Example Request/Response</h3>
+<h4 id="request-5">Request:</h4>
+<pre><code>    var dataClient = new Usergrid.client({
+        orgName:'your-org',
+        appName:'your-app'
+    });
+    
+    var options = {
+        type:"item", //Required - the type of collection to be retrieved
+        client:dataClient //Required
+    };
+    
+    //Create a collection object to hold the response
+    var collection = new Usergrid.collection(options);
+    
+    //Call request to initiate the API call
+    collection.fetch(function (error, response) {
+        if (error) {
+            //error
+        } else {
+            //success      
+        }
+    });
+                    </code></pre>
+<h4 id="response-5">Response:</h4>
+<pre><code>    { action: 'get',
+      application: 'f34f4222-a166-11e2-a7f7-02e81adcf3d0',
+      params: {},
+      path: '/items',
+      uri: 'http://api.usergrid.com/your-org/your-app/items',
+      entities: 
+       [ { uuid: '5bb76bca-1657-11e3-903f-9ff6c621a7a4',
+           type: 'item',
+           name: 'milk',
+           created: 1378405020796,
+           modified: 1378405020796,
+           metadata: [Object],
+           price: '3.25' },
+         { uuid: '1a9356ba-1682-11e3-a72a-81581bbaf055',
+           type: 'item',
+           name: 'bread',
+           created: 1378423379867,
+           modified: 1378423379867,
+           metadata: [Object],
+           price: '2.50' } ],
+      timestamp: 1378428161834,
+      duration: 33,
+      organization: 'your-org',
+      applicationName: 'your-app' }             
+                    </code></pre>
+<h3 id="sdk-method-4">SDK Method</h3>
+<pre><code>Collection.fetch(callback)</code></pre>
+<h3 id="parameters-3">Parameters</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">callback</td>
+<td align="left">Callback function to handle the API response</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/retrieving-collections.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>

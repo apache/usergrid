@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid (incubating) — Facebook sign in</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="http://usergrid.readthedocs.org/" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/incubator-usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+<div class="container bf-docs-container">    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bf-sidebar hidden-print" role="complementary">
+                <ul class="nav nav-list">
+                    <li><a href="/docs/getting-up-and-running-locally/">Getting Up &amp; Running Locally</a></li>
+                    <li><a href="/docs/deploy-local/">Deploying to local Tomcat &amp; Cassandra</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc"><code>ugc</code> — the Command-line Client</a></li>
+
+                    <li class="nav-header"><span>Concepts</span></li>
+                    <li>
+                        <a href="/docs/organizations-admins/">Organizations & Admins</a>
+                        <ul>
+                            <li>
+                                <a href="/docs/applications/">Applications</a>
+                                <ul>
+                                    <li><a href="/docs/roles-and-permissions/">Roles & Permissions</a></li>
+                                    <!--<li><a href="#">Queues</a></li>-->
+                                    <li><a href="/docs/events-and-counters/">Events & Counters</a></li>
+                                    <li><a href="/docs/relationships/">Relationships (Joins)</a></li>
+                                    <li>
+                                        <a href="/docs/collections">Collections</a>
+                                        <ul>
+                                            <li><a href="/docs/query-language/">Query Language</a></li>
+                                            <li><a href="/docs/users-devices/">Users & Devices</a></li>
+                                            <li><a href="/docs/groups/">Groups</a></li>
+                                            <li><a href="/docs/activities/">Activities</a></li>
+                                            <li><a href="/docs/assets/">Assets</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-header"><span>Usage</span></li>
+                    <!-- <li>REST API — Coming Soon</li> -->
+                    <li><a class="icns-apple" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ios">iOS SDK</a></li>
+                    <li><a class="icns-android" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/android">Android SDK</a></li>
+                    <li><a class="icns-html5" href="">HTML5 / JavaScript SDK</a></li>
+                    <li><a class="icns-windows" href="https://github.com/apache/incubator-usergrid/tree/master/sdks/dotnet">Windows 8 / Windows Phone / .net SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/nodejs">Node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/php">PHP library</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/tree/master/sdks/java">Java library</a></li>
+
+                    <!--<li class="nav-header"><span>Internals</span></li>
+                    <li>Design & Goals — Coming Soon</li>
+                    <li>Java Architecture — Coming Soon</li>
+                    <li>Cassandra Schema — Coming Soon</li>-->
+
+                    <li class="nav-header"><span>Operations</span></li>
+                    <!--<li>Deploying — Coming Soon</li>-->
+                    <!-- <li>Monitoring — Coming Soon</li> -->
+                    <li><a href="/docs/upgrading/">Upgrading</a></li>
+                    <!-- <li>Security — Coming Soon</li> -->
+
+                    <li class="nav-header"><span>Presentations & Videos</span></li>
+                    <li><a href="/docs/presentations/">Presentations</a></li>
+                    <li><a href="/docs/videos/">Videos</a></li>
+
+                    <li class="nav-header"><span>We need your help!</span></li>
+                    <li><a href="/docs/contribute-code/">How to Contribute Code & Docs</a></li>
+                    <!--
+                    <li><a href="/docs/contribute-docs">How to contribute docs</a></li>
+                    -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 main-article" role="main">
+            <div class="page-article">
+                <div class="page-header">
+                    <h1>Facebook sign in</h1>
+                    <!-- TODO: reenable this when we sync SVN to GitHub
+                  <small><a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/facebook-sign.md">contribute to this article on github</a></small>
+                    -->
+                </div>
+                <div class="toc">
+	<ul>
+<li>
+<a href="#facebook-sign-in">Facebook sign in</a><ul>
+<li>
+<a href="#facebook-login-example">Facebook login example</a><ul>
+<li><a href="#step-1-create-a-facebook-app">Step 1: Create a Facebook app</a></li>
+<li><a href="#step-2-invoke-the-facebook-oauth-dialog">Step 2: Invoke the Facebook OAuth dialog</a></li>
+<li><a href="#step-3-add-the-javascript-sdk-for-facebook">Step 3: Add the JavaScript SDK for Facebook</a></li>
+<li><a href="#step-4.-setup-fb.login">Step 4. Setup FB.login</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="facebook-sign-in">Facebook sign in</h1>
+<p>You can authenticate your Apache Usergrid requests by logging into Facebook. To access Apache Usergrid resources, you need to provide an access token with each request (unless you use the sandbox app). You can get an access token by connecting to an appropriate web service endpoint and providing the correct client credentials — this is further described in <a href="/authenticating-users-and-application-clients">Authenticating users and application clients</a>. However, you can also obtain an access token by logging into Facebook.</p>
+<p>To enable authentication to Apache Usergrid through Facebook, do the following in your app:</p>
+<ol style="list-style-type: decimal">
+<li>Make a login call to the Facebook API (do this using the <a href="https://developers.facebook.com/docs/sdks/">Facebook SDK</a> or <a href="https://developers.facebook.com/docs/facebook-login/">API</a>). If the login succeeds, a Facebook access token is returned.</li>
+<li>
+<p>Send the Facebook access token to Apache Usergrid. If the Facebook access token is valid and the user does not already exist in App Services, Apache Usergrid provisions a new Apache Usergrid user. It also returns an Apache Usergrid access token, which you can use for subsequent Apache Usergrid API calls. Behind the scenes, Apache Usergrid uses the Facebook access token to retrieve the user’s profile information from Facebook.</p>
+<p>If the Facebook access token is invalid, Facebook returns an OAuth authentication error, and the login does not succeed.</p>
+</li>
+</ol>
+<p>The request to authenticate to Apache Usergrid using a Facebook access token is:</p>
+<pre><code>GET https://api.usergrid.com/{my_org}/{my_app}/auth/facebook?fb_access_token={fb_access_token}</code></pre>
+<p>where:</p>
+<p>{my_org} is the organization UUID or organization name.<br>{my_app} is the application UUID or application name.<br>{fb_access_token} is the Facebook access token.</p>
+<h2 id="facebook-login-example">Facebook login example</h2>
+<p>The <a href="https://developers.facebook.com/docs/technical-guides/login/">Facebook technical guides for login</a> present detailed information on how to add Facebook login to your app. Instructions are provided for JavaScript, iOS, and Android.</p>
+<p>In brief, here are the steps for JavaScript. You can see these steps implemented in the Facebook login example packaged with the JavaScript SDK for Apache Usergrid (which you can download in <a href="https://github.com/apigee/usergrid-javascript-sdk/archive/master.zip">ZIP</a> format or <a href="https://github.com/apigee/usergrid-javascript-sdk/archive/master.tar.gz">tar.gz</a> format). The Facebook login example is in the /examples/facebook directory of the extracted download. The code example snippets shown below are taken from the Facebook login example.</p>
+<h3 id="step-1-create-a-facebook-app">Step 1: Create a Facebook app</h3>
+<p>Create a new app on the <a href="https://developers.facebook.com/apps/">Facebook App Dashboard</a>. Enter your app’s basic information. Once created, note the app ID shown at the top of the dashboard page.</p>
+<h3 id="step-2-invoke-the-facebook-oauth-dialog">Step 2: Invoke the Facebook OAuth dialog</h3>
+<p>Invoke the Facebook OAuth Dialog. To do that, redirect the user’s browser to a URL by inserting the following Javascript code after the opening &lt;body&gt; tag in your app’s HTML file:</p>
+<pre><code>https://www.facebook.com/dialog/oauth/?
+    client_id={YOUR_APP_ID}
+    &amp;redirect_uri={YOUR_REDIRECT_URL}
+    &amp;state={YOUR_STATE_VALUE}
+    &amp;scope={COMMA_SEPARATED_LIST_OF_PERMISSION_NAMES}
+    &amp;response_type={YOUR_RESPONSE_TYPE}</code></pre>
+<p>where:</p>
+<p>{YOUR_APP_ID} is the app ID.<br>{YOUR_REDIRECT_URL} is the application UUID or application name.<br>{YOUR_STATE_VALUE} is a unique string used to maintain application state between the request and callback.<br>{COMMA_SEPARATED_LIST_OF_PERMISSION_NAMES} is a comma separated list of permission names which you would like the user to grant your application.<br>{YOUR_RESPONSE_TYPE}is the requested response type, either code or token. Defaults to code. Set the response type to token. With the response type set to token, the Dialog’s response will include an OAuth user access token in the fragment of the URL the user is redirected to, as per the client-side authentication flow.</p>
+<p>Here is how it’s done in the Facebook login example:</p>
+<pre><code>var apiKey = $("#api-key").val();
+var location = window.location.protocol + '//' + window.location.host;
+var path = window.location.pathname;
+
+var link = "https://www.facebook.com/dialog/oauth?client_id=";
+link += apiKey;
+link += "&amp;redirect_uri=";
+link += location+path
+link += "&amp;scope&amp;COMMA_SEPARATED_LIST_OF_PERMISSION_NAMES&amp;response_type=token";
+
+//now forward the user to facebook
+window.location = link;</code></pre>
+<p>Notice that the response type is set to token. As a result, a Facebook access token will be appended to the URL to which the user is redirected.</p>
+<h3 id="step-3-add-the-javascript-sdk-for-facebook">Step 3: Add the JavaScript SDK for Facebook</h3>
+<p>Add the following Javascript SDK initialization code after the code that invokes the Facebook OAuth Dialog. The code will load and initialize the JavaScript SDK in your HTML page. Replace YOUR_APP_ID with the App ID noted in Step 1, and WWW.YOUR_DOMAIN.COM with your own domain.</p>
+<pre><code>window.fbAsyncInit = function() {
+    FB.init({
+      appId      : 'YOUR_APP_ID', // App ID
+      channelUrl : '//WWW.YOUR_DOMAIN.COM/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });</code></pre>
+<p>Here is how the window.fbAsynchInit() function is implemented in the Facebook login example:</p>
+<pre><code>//load up the facebook api sdk
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '308790195893570', // App ID
+      channelUrl : '//usergridsdk.dev//examples/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+  };</code></pre>
+<h3 id="step-4.-setup-fb.login">Step 4. Setup FB.login</h3>
+<p>Whenever a user is either not logged into Facebook or not authorized for an app, it is useful to prompt them with the relevant dialog. The FB.login() Javascript SDK function automatically displays the correct one to the user.</p>
+<p>To integrate FB.login()Fwindow.fbAsyncInit() function in your existing code:</p>
+<pre><code>function login() {
+    FB.login(function(response) {
+        if (response.authResponse) {
+            // connected
+        } else {
+            // cancelled
+        }
+    });
+}</code></pre>
+<p>Here is how window.fbAsynchInit()FB.login() is implemented in the Facebook login example:</p>
+<pre><code>function login(facebookAccessToken) {
+    client.loginFacebook(facebookAccessToken, function(err, response){
+      var output = JSON.stringify(response, null, 2);
+      if (err) {
+        var html = '&lt;pre&gt;Oops!  There was an error logging you in. \r\n\r\n';
+        html += 'Error: \r\n' + output+'&lt;/pre&gt;';
+      } else {
+        var html = '&lt;pre&gt;Hurray!  You have been logged in. \r\n\r\n';
+        html += 'Facebook Token: ' + '\r\n' + facebookAccessToken + '\r\n\r\n';
+        html += 'Facebook Profile data stored in Usergrid: \r\n' + output+'&lt;/pre&gt;';
+      }
+      $('#facebook-status').html(html);
+    })
+  }</code></pre>
+<p>The client.loginFacebook() function is provided by the Apache Usergrid JavaScript SDK. It uses the Facebook auth token to obtain an App Services auth token. If the Facebook access token is valid and the user does not already exist in Apache Usergrid, the function creates a user entity for the user. It also uses the Facebook access token to retrieve the user’s profile information from Facebook.</p>
+<p>Here is what the client.loginFacebook() function looks like:</p>
+<pre><code>Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
+  var self = this;
+  var options = {
+    method:'GET',
+    endpoint:'auth/facebook',
+    qs:{
+      fb_access_token: facebookToken
+    }
+  };
+  this.request(options, function(err, data) {
+    var user = {};
+    if (err &amp;&amp; self.logging) {
+      console.log('error trying to log user in');
+    } else {
+      user = new Usergrid.Entity('users', data.user);
+      self.setToken(data.access_token);
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data, user);
+    }
+  });
+}</code></pre>
+<p>Notice that the function also returns an Apache Usergrid access token, which you can use for subsequent Apache Usergrid API calls.</p>
+<p>Remember to create a client for your app, which is the main entry point to the JavaScript SDK for Apache Usergrid. You need to do this before you can use the SDK. Here’s the code to create a client:</p>
+<pre><code>var client = new Usergrid.Client({
+    orgName:'yourorgname',
+    appName:'yourappname',
+    logging: true, //optional - turn on logging, off by default
+    buildCurl: true //optional - turn on curl commands, off by default
+});</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="github-callout">
+                <strong>Questions?</strong> Please do <a href="/community">ask on the mailing-lists</a>!<br/>
+                <!--
+                <strong>Found an error?</strong> We’d greatly appreciate a pull request about <a target="_blank" href="https://github.com/usergrid/website/blob/master/content/docs/facebook-sign.md">this article on github</a>.</div> 
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/incubator-usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/incubator-usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="http://usergrid.readthedocs.org/" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="http://incubator.apache.org/projects/usergrid.html" target="_blank">Podling Listing</a></li>
+                    <li><a href="https://github.com/apache/incubator-usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Apache Usergrid is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.</p>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a>.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>
