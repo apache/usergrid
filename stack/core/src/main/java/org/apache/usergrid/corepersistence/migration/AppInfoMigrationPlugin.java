@@ -138,6 +138,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             .doOnCompleted(() -> {
                 if(count.get()>0) {
                     migrationInfoSerialization.setVersion(getName(), getMaxVersion());
+                }else{
+                    logger.error("Failed to migrate any app infos");
                 }
                 observer.complete();
             }).toBlocking().lastOrDefault(null);
