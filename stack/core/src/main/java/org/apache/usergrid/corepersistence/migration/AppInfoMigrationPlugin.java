@@ -61,6 +61,10 @@ import static org.apache.usergrid.persistence.Schema.*;
  * https://issues.apache.org/jira/browse/USERGRID-448
  */
 public class AppInfoMigrationPlugin implements MigrationPlugin {
+
+    /** Old and deprecated SYSTEM_APP */
+    public static final UUID SYSTEM_APP_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-10ddb1de66c3" );
+
     private static final Logger logger = LoggerFactory.getLogger(AppInfoMigrationPlugin.class);
 
     public static String PLUGIN_NAME = "appinfo-migration";
@@ -205,14 +209,6 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         return appInfo;
     }
 
-    private void deleteOldAppInfo(UUID uuid) {
-        final ApplicationScope systemAppScope = getApplicationScope(CpNamingUtils.SYSTEM_APP_ID );
-        final EntityCollectionManager systemCollectionManager =
-            entityCollectionManagerFactory.createCollectionManager( systemAppScope );
-        systemCollectionManager.mark( new SimpleId( uuid, "appinfos" ) ).toBlocking().last();
-    }
-
-
     /**
      * TODO: Use Graph to get application_info for an specified Application.
      */
@@ -259,7 +255,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
      */
     public Observable<org.apache.usergrid.persistence.model.entity.Entity> getOldAppInfos( ) {
 
-        final ApplicationScope systemAppScope = getApplicationScope(CpNamingUtils.SYSTEM_APP_ID);
+        final ApplicationScope systemAppScope = getApplicationScope(SYSTEM_APP_ID);
 
         final EntityCollectionManager systemCollectionManager =
             entityCollectionManagerFactory.createCollectionManager(systemAppScope);
