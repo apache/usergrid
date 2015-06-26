@@ -50,8 +50,8 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
-
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         Set<String> pluginNames = migrationManager.getPluginNames();
@@ -80,9 +80,10 @@ public class DataMigrationManagerImplTest {
 
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization,migrationInfoCache );
 
 
         Set<String> pluginNames = migrationManager.getPluginNames();
@@ -126,9 +127,10 @@ public class DataMigrationManagerImplTest {
 
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         assertTrue(migrationManager.getExecutionOrder().get(0).getName() == "plugin2");
@@ -158,8 +160,9 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         assertTrue(migrationManager.getExecutionOrder().get(0).getName() == "plugin1");
@@ -184,8 +187,9 @@ public class DataMigrationManagerImplTest {
         when( migrationInfoSerialization.getStatusCode( "plugin1" ) )
             .thenReturn( DataMigrationManagerImpl.StatusCode.RUNNING.status );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         boolean status = migrationManager.isRunning();
@@ -235,8 +239,9 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         Set<String> pluginNames = migrationManager.getPluginNames();
@@ -284,8 +289,9 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         migrationManager.resetToVersion( name, 0 );
 
@@ -322,8 +328,10 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         migrationManager.resetToVersion( name, version + 1 );
     }
@@ -353,8 +361,9 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         migrationManager.resetToVersion( name + "foo", version );
     }
@@ -384,8 +393,9 @@ public class DataMigrationManagerImplTest {
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
         when(migrationInfoSerialization.getStatusMessage( name )).thenReturn( status  );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         final String returnedStatus = migrationManager.getLastStatus( name );
 

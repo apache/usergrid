@@ -49,12 +49,15 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     private final List<MigrationPlugin> executionOrder;
 
     private final MigrationInfoSerialization migrationInfoSerialization;
-
+    private final MigrationInfoCache migrationInfoCache;
 
 
     @Inject
     public DataMigrationManagerImpl( final Set<MigrationPlugin> plugins,
-                                     final MigrationInfoSerialization migrationInfoSerialization ) {
+                                     final MigrationInfoSerialization migrationInfoSerialization,
+                                     final MigrationInfoCache migrationInfoCache
+    ) {
+        this.migrationInfoCache = migrationInfoCache;
 
 
         Preconditions.checkNotNull( plugins, "plugins must not be null" );
@@ -101,6 +104,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         executionOrder.forEach(plugin -> {
             final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
             plugin.run(observer);
+            migrationInfoCache.invalidateAll();
+
         });
     }
 

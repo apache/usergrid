@@ -97,9 +97,6 @@ public class MigrationModuleVersionPlugin implements MigrationPlugin{
         switch ( legacyVersion ) {
 
             //we need to set the version of the entity data, and our edge shard migration.  The fall through (no break) is deliberate
-            //if it's initial, set both
-            case INITIAL:
-
             //if it's entity v2, set all, it's current
             case ENTITY_V2_MIGRATION:
                migrationInfoSerialization.setVersion(
