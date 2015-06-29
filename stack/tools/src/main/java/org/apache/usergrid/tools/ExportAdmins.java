@@ -14,16 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.tools;
 
 import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.ConnectionRef;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Results;
@@ -42,12 +41,28 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 /**
- * Export Admin Users and metadata including organizations.
+ * Export Admin Users and metadata including organizations and passwords.
  *
- * java -jar usergrid-tools.jar ExportAdmins
+ * Usage Example:
+ *
+ * java -Xmx8000m -Dlog4j.configuration=file:/home/me/log4j.properties -classpath . \
+ *      -jar usergrid-tools-1.0.2.jar ImportAdmins -writeThreads 100 -auditThreads 100 \
+ *      -host casshost -inputDir=/home/me/export-data
+ *
+ * If you want to provide any property overrides, put properties file named usergrid-custom-tools.properties
+ * in the same directory where you run the above command. For example, you might want to set the Cassandra
+ * client threads and export from a specific set of keyspaces:
+ *
+ *    cassandra.connections=110
+ *    cassandra.system.keyspace=My_Usergrid
+ *    cassandra.application.keyspace=My_Usergrid_Applications
+ *    cassandra.lock.keyspace=My_Usergrid_Locks
  */
 public class ExportAdmins extends ExportingToolBase {
 
@@ -55,7 +70,10 @@ public class ExportAdmins extends ExportingToolBase {
     public static final String ADMIN_USERS_PREFIX = "admin-users";
     public static final String ADMIN_USER_METADATA_PREFIX = "admin-user-metadata";
     private static final String READ_THREAD_COUNT = "readThreads";
+    private Map<String, List<Org>> orgMap = new HashMap<String, List<Org>>(80000);
     private int readThreadCount;
+
+    AtomicInteger count = new AtomicInteger( 0 );
 
 
     /**
@@ -63,10 +81,21 @@ public class ExportAdmins extends ExportingToolBase {
      */
     class AdminUserWriteTask {
         Entity                           adminUser;
-        Map<String, List<UUID>>          collectionsByName;
-        Map<String, List<ConnectionRef>> connectionsByType;
         Map<String, Map<Object, Object>> dictionariesByName;
         BiMap<UUID, String>              orgNamesByUuid;
+    }
+
+
+    /**
+     * Represents an organization associated with a user.
+     */
+    private class Org {
+        UUID orgId;
+        String orgName;
+        public Org( UUID orgId, String orgName ) {
+            this.orgId = orgId;
+            this.orgName = orgName;
+        }
     }
 
 
@@ -100,6 +129,8 @@ public class ExportAdmins extends ExportingToolBase {
             readThreadCount = 20;
         }
 
+        buildOrgMap();
+
         // start write queue worker
 
         BlockingQueue<AdminUserWriteTask> writeQueue = new LinkedBlockingQueue<AdminUserWriteTask>();
@@ -131,7 +162,7 @@ public class ExportAdmins extends ExportingToolBase {
         while (ids.size() > 0) {
             for (UUID uuid : ids.getIds()) {
                 readQueue.add( uuid );
-                logger.debug( "Added uuid to readQueue: " + uuid );
+                //logger.debug( "Added uuid to readQueue: " + uuid );
             }
             if (ids.getCursor() == null) {
                 break;
@@ -146,7 +177,13 @@ public class ExportAdmins extends ExportingToolBase {
         }
 
         logger.debug( "Waiting for write thread to complete" );
-        writeThread.join();
+
+        boolean done = false;
+        while ( !done ) {
+            writeThread.join( 10000, 0 );
+            done = !writeThread.isAlive();
+            logger.info( "Wrote {} users", count.get() );
+        }
     }
 
 
@@ -161,6 +198,76 @@ public class ExportAdmins extends ExportingToolBase {
 
         options.addOption( readThreads );
         return options;
+    }
+
+
+    /**
+     * Shouldn't have to do this but getOrganizationsForAdminUser() is not 100% reliable in some Usergrid installations.
+     */
+    private void buildOrgMap() throws Exception {
+
+        logger.info("Building org map");
+
+        ExecutorService execService = Executors.newFixedThreadPool( this.readThreadCount );
+
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        String queryString = "select *";
+        Query query = Query.fromQL( queryString );
+        query.withLimit( 1000 );
+        Results organizations = null;
+        int count = 0;
+        do {
+            organizations = em.searchCollection( em.getApplicationRef(), "groups", query );
+            for ( Entity organization : organizations.getEntities() ) {
+                execService.submit( new OrgMapWorker( organization ) );
+            }
+            count++;
+            if ( count % 1000 == 0 ) {
+                logger.info("Processed {} orgs for org map", count);
+            }
+            query.setCursor( organizations.getCursor() );
+        }
+        while ( organizations != null && organizations.hasCursor() );
+
+        execService.shutdown();
+        while ( !execService.awaitTermination( 10, TimeUnit.SECONDS ) ) {
+            logger.info("Processed {} orgs for map", orgMap.size() );
+        }
+    }
+
+
+    public class OrgMapWorker implements Runnable {
+        private final Entity orgEntity;
+
+        public OrgMapWorker( Entity orgEntity ) {
+            this.orgEntity = orgEntity;
+        }
+
+        @Override
+        public void run() {
+            try {
+                final String orgName = orgEntity.getProperty( "path" ).toString();
+                final UUID orgId = orgEntity.getUuid();
+                for (UserInfo user : managementService.getAdminUsersForOrganization( orgEntity.getUuid() )) {
+                    try {
+                        Entity admin = managementService.getAdminUserEntityByUuid( user.getUuid() );
+                        List<Org> orgs = orgMap.get( admin.getProperty( "username" ) );
+                        if (orgs == null) {
+                            orgs = new ArrayList<Org>();
+                            orgMap.put( admin.getProperty( "username" ).toString().toLowerCase(), orgs );
+                        }
+                        orgs.add( new Org( orgId, orgName ) );
+
+                        //logger.debug("Added org {} for user {}", orgName, admin.getProperty( "username" ));
+
+                    } catch (Exception e) {
+                        logger.warn( "Cannot get orgs for userId {}", user.getUuid() );
+                    }
+                }
+            } catch ( Exception e ) {
+                logger.error("Error getting users for org {}:{}", orgEntity.getName(), orgEntity.getUuid());
+            }
+        }
     }
 
 
@@ -196,7 +303,7 @@ public class ExportAdmins extends ExportingToolBase {
                 UUID uuid = null;
                 try {
                     uuid = readQueue.poll( 30, TimeUnit.SECONDS );
-                    logger.debug("Got item from entityId queue: " + uuid );
+                    //logger.debug("Got item from entityId queue: " + uuid );
 
                     if ( uuid == null && done ) {
                         break;
@@ -207,10 +314,8 @@ public class ExportAdmins extends ExportingToolBase {
                     AdminUserWriteTask task = new AdminUserWriteTask();
                     task.adminUser = entity;
 
-                    addCollectionsToTask(   task, entity );
                     addDictionariesToTask(  task, entity );
-                    addConnectionsToTask(   task, entity );
-                    addOrganizationsToTask( task, entity );
+                    addOrganizationsToTask( task );
 
                     writeQueue.add( task );
 
@@ -221,41 +326,14 @@ public class ExportAdmins extends ExportingToolBase {
         }
 
 
-        private void addCollectionsToTask(AdminUserWriteTask task, Entity entity) throws Exception {
-
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-            Set<String> collections = em.getCollections( entity );
-            if ((collections == null) || collections.isEmpty()) {
-                return;
-            }
-
-            task.collectionsByName = new HashMap<String, List<UUID>>();
-
-            for (String collectionName : collections) {
-
-                List<UUID> uuids = task.collectionsByName.get( collectionName );
-                if ( uuids == null ) {
-                    uuids = new ArrayList<UUID>();
-                    task.collectionsByName.put( collectionName, uuids );
-                }
-
-                Results collectionMembers = em.getCollection( entity, collectionName, null, 100000, Level.IDS, false );
-
-                List<UUID> entityIds = collectionMembers.getIds();
-
-                if ((entityIds != null) && !entityIds.isEmpty()) {
-                    for (UUID childEntityUUID : entityIds) {
-                        uuids.add( childEntityUUID );
-                    }
-                }
-            }
-        }
-
-
         private void addDictionariesToTask(AdminUserWriteTask task, Entity entity) throws Exception {
             EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
 
             Set<String> dictionaries = em.getDictionaries( entity );
+
+            if ( dictionaries.isEmpty() ) {
+                logger.error("User {}:{} has no dictionaries", task.adminUser.getName(), task.adminUser.getUuid() );
+            }
 
             task.dictionariesByName = new HashMap<String, Map<Object, Object>>();
 
@@ -265,32 +343,26 @@ public class ExportAdmins extends ExportingToolBase {
             }
         }
 
+        private void addOrganizationsToTask(AdminUserWriteTask task) throws Exception {
 
-        private void addConnectionsToTask(AdminUserWriteTask task, Entity entity) throws Exception {
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            task.orgNamesByUuid = managementService.getOrganizationsForAdminUser( task.adminUser.getUuid() );
 
-            task.connectionsByType = new HashMap<String, List<ConnectionRef>>();
+            List<Org> orgs = orgMap.get( task.adminUser.getProperty( "username" ).toString().toLowerCase() );
 
-            Set<String> connectionTypes = em.getConnectionTypes( entity );
-            for (String connectionType : connectionTypes) {
-
-                List<ConnectionRef> connRefs = task.connectionsByType.get( connectionType );
-                if ( connRefs == null ) {
-                    connRefs = new ArrayList<ConnectionRef>();
+            if ( orgs != null && task.orgNamesByUuid.size() < orgs.size() ) {
+                BiMap<UUID, String> bimap = HashBiMap.create();
+                for (Org org : orgs) {
+                    bimap.put( org.orgId, org.orgName );
                 }
-
-                Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Level.IDS );
-                List<ConnectionRef> connections = results.getConnections();
-
-                for (ConnectionRef connectionRef : connections) {
-                    connRefs.add( connectionRef );
-                }
+                task.orgNamesByUuid = bimap;
             }
-        }
 
-
-        private void addOrganizationsToTask(AdminUserWriteTask task, Entity entity) throws Exception {
-            task.orgNamesByUuid = managementService.getOrganizationsForAdminUser( entity.getUuid() );
+            if ( task.orgNamesByUuid.isEmpty() ) {
+                logger.error("{}:{}:{} has no orgs", new Object[] {
+                        task.adminUser.getProperty("username"),
+                        task.adminUser.getProperty("email"),
+                        task.adminUser.getUuid() } );
+            }
         }
 
         public void setDone(boolean done) {
@@ -332,8 +404,6 @@ public class ExportAdmins extends ExportingToolBase {
                     getJsonGenerator( createOutputFile( ADMIN_USER_METADATA_PREFIX, em.getApplication().getName() ) );
             metadataFile.writeStartObject();
 
-            int count = 0;
-
             while ( true ) {
 
                 try {
@@ -347,18 +417,20 @@ public class ExportAdmins extends ExportingToolBase {
                     echo( task.adminUser );
 
                     // write metadata to metadata file
-                    saveCollections(   metadataFile, task );
-                    saveConnections(   metadataFile, task );
+                    metadataFile.writeFieldName( task.adminUser.getUuid().toString() );
+                    metadataFile.writeStartObject();
+
                     saveOrganizations( metadataFile, task );
-                    saveDictionaries(  metadataFile, task );
+                    saveDictionaries( metadataFile, task );
 
-                    logger.debug("Exported user {}", task.adminUser.getProperty( "email" ));
+                    metadataFile.writeEndObject();
 
-                    count++;
-                    if ( count % 1000 == 0 ) {
-                        logger.info("Exported {} admin users", count);
-                    }
+                    logger.debug( "Exported user {}:{}:{}", new Object[] {
+                        task.adminUser.getProperty("username"),
+                        task.adminUser.getProperty("email"),
+                        task.adminUser.getUuid() } );
 
+                    count.addAndGet( 1 );
 
                 } catch (InterruptedException e) {
                     throw new Exception("Interrupted", e);
@@ -371,32 +443,7 @@ public class ExportAdmins extends ExportingToolBase {
             usersFile.writeEndArray();
             usersFile.close();
 
-            logger.info("Exported TOTAL {} admin users", count);
-        }
-
-
-        private void saveCollections( JsonGenerator jg, AdminUserWriteTask task ) throws Exception {
-
-            jg.writeFieldName( task.adminUser.getUuid().toString() );
-            jg.writeStartObject();
-
-            for (String collectionName : task.collectionsByName.keySet() ) {
-
-                jg.writeFieldName( collectionName );
-                jg.writeStartArray();
-
-                List<UUID> entityIds = task.collectionsByName.get( collectionName );
-
-                if ((entityIds != null) && !entityIds.isEmpty()) {
-                    for (UUID childEntityUUID : entityIds) {
-                        jg.writeObject( childEntityUUID.toString() );
-                    }
-                }
-
-                jg.writeEndArray();
-            }
-
-            jg.writeEndObject();
+            logger.info( "Exported TOTAL {} admin users", count );
         }
 
 
@@ -423,27 +470,6 @@ public class ExportAdmins extends ExportingToolBase {
                 }
 
                 jg.writeEndObject();
-            }
-            jg.writeEndObject();
-        }
-
-
-        private void saveConnections( JsonGenerator jg, AdminUserWriteTask task ) throws Exception {
-
-            jg.writeFieldName( "connections" );
-            jg.writeStartObject();
-
-            for (String connectionType : task.connectionsByType.keySet() ) {
-
-                jg.writeFieldName( connectionType );
-                jg.writeStartArray();
-
-                List<ConnectionRef> connections = task.connectionsByType.get( connectionType );
-                for (ConnectionRef connectionRef : connections) {
-                    jg.writeObject( connectionRef.getConnectedEntity().getUuid() );
-                }
-
-                jg.writeEndArray();
             }
             jg.writeEndObject();
         }
