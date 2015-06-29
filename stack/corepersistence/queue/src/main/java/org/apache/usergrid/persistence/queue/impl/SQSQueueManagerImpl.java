@@ -108,7 +108,7 @@ public class SQSQueueManagerImpl implements QueueManager {
                     final CreateQueueResult deadletterResult = sqs.createQueue(createDeadLetterQueueRequest);
                     logger.info("Created deadletter queue with url {}", deadletterResult.getQueueUrl());
 
-                    final String deadletterArn = AmazonNotificationUtils.getQueueArnByName(deadletterQueueName, sqs);
+                    final String deadletterArn = AmazonNotificationUtils.getQueueArnByName(sqs, deadletterQueueName);
 
                     String redrivePolicy = String.format("{\"maxReceiveCount\":\"%s\"," +
                         " \"deadLetterTargetArn\":\"%s\"}", fig.getQueueDeliveryLimit(), deadletterArn);

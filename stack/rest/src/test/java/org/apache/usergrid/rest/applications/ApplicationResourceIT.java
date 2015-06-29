@@ -21,17 +21,14 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.shiro.codec.Base64;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.OrganizationResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Application;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.MapUtils;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
@@ -94,6 +92,109 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //assert that a valid response is returned without error
         assertNotNull(apiResponse);
         assertNull(apiResponse.getError());
+    }
+
+    /**
+     * Retrieve an collection using the application client credentials
+     */
+    @Test
+    public void applicationCollectionWithAppCredentials() throws Exception {
+
+        //retrieve the credentials
+        Credentials appCredentials = getAppCredentials();
+
+        //retrieve the app using only the org credentials
+        ApiResponse apiResponse = this.app().collection( "roles" ).getResource( false )
+                                      .queryParam( "grant_type", "client_credentials" )
+                                      .queryParam("client_id", appCredentials.getClientId())
+                                      .queryParam("client_secret", appCredentials.getClientSecret())
+                                      .accept(MediaType.APPLICATION_JSON)
+                                      .type(MediaType.APPLICATION_JSON_TYPE)
+                                      .get(ApiResponse.class);
+        //assert that a valid response is returned without error
+        assertNotNull(apiResponse);
+        assertNull(apiResponse.getError());
+
+        Collection roles = new Collection(apiResponse);
+        //assert that we have the correct number of default roles
+        assertEquals(3, roles.getNumOfEntities());
+    }
+
+    /**
+     * Retrieve an collection using the application client credentials.
+     */
+    @Test
+    public void applicationCollectionWithAppToken() throws Exception {
+
+        String username = RandomStringUtils.randomAlphanumeric( 20 );
+        String orgName = "MiXedApplicationResourceTest_" + username;
+        String appName = "mgmt-org-app-test";
+
+        // create new org with mixed case name
+
+        Map payload = hashMap( "email", username + "@example.com" )
+            .map( "username", username )
+            .map( "name", "App Creds User" )
+            .map( "password", "password" )
+            .map( "organization", orgName );
+
+        QueryParameters tokenParams = new QueryParameters();
+        tokenParams.addParam( "access_token", getAdminToken("superuser","superpassword").getAccessToken() );
+
+        pathResource( "management/organizations" ).post( false, payload, tokenParams );
+
+        // create new app
+
+        Map<String, String> data = new HashMap<String, String>();
+        data.put( "name", appName );
+
+        ApiResponse appResponse = pathResource( "management/orgs/" + orgName + "/applications" )
+            .post( false, data, tokenParams );
+        UUID appId = appResponse.getEntities().get(0).getUuid();
+
+        // wait for app to become available and then get app creds
+
+        String clientId = null;
+        String clientSecret = null;
+
+        Map<String, String> loginMap = new HashMap<String, String>() {{
+            put("username", username);
+            put("password", "password");
+            put("grant_type", "password");
+        }};
+        ApiResponse authResponse = pathResource( "management/token" ).post( loginMap );
+
+        // TODO: rewrite to use REST rather
+
+        int tries = 0;
+        SpringResource springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
+        ManagementService mgmt = springResource.getBean( ManagementService.class );
+        while ( tries++ < 20 ) {
+            try {
+                clientId = mgmt.getClientIdForApplication( appId );
+                clientSecret = mgmt.getClientSecretForApplication( appId );
+            } catch ( Exception intentionallyIgnored ) {}
+            if ( clientId != null && clientSecret != null ) {
+                break;
+            }
+            logger.info( "Waiting for app to become available" );
+            Thread.sleep(500);
+            refreshIndex();
+        }
+        assertNotNull( clientId );
+        assertNotNull( clientSecret );
+
+        QueryParameters adminTokenParams = new QueryParameters();
+        adminTokenParams
+            .addParam( "grant_type", "client_credentials" )
+            .addParam( "client_id", clientId )
+            .addParam( "client_secret", clientSecret );
+
+        ApiResponse rolesResponse = pathResource( orgName.toLowerCase() + "/" + appName + "/roles" )
+            .get( ApiResponse.class, adminTokenParams, false );
+
+        assertTrue( rolesResponse.getEntityCount() > 0 );
+
     }
 
     /**
@@ -493,7 +594,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         payload.add("redirect_uri", "http://www.my_test.com");
 
         //POST the form to the authorization endpoint
-        String apiResponse = clientSetup.getRestClient().management().authorize().getResource().type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).accept(MediaType.TEXT_HTML).post(String.class, payload);
+        String apiResponse = clientSetup.getRestClient().management().authorize().getResource()
+            .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).accept(MediaType.TEXT_HTML).post(String.class, payload);
 
         //Assert that an appropriate error message is returned
         assertTrue(apiResponse.contains("Username or password do not match"));
@@ -540,7 +642,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         try {
             //POST the form to the authorization endpoint
-            clientSetup.getRestClient().management().authorize().getResource().accept(MediaType.TEXT_HTML).post(String.class, payload);
+            clientSetup.getRestClient().management().authorize()
+                .getResource().accept(MediaType.TEXT_HTML).post(String.class, payload);
         } catch (UniformInterfaceException uie) {
             assertEquals(String.valueOf(Status.TEMPORARY_REDIRECT.getStatusCode()), uie.getResponse().getStatus());
         }
@@ -756,7 +859,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
      */
     public Credentials getOrgCredentials() throws IOException {
         String orgName = clientSetup.getOrganizationName().toLowerCase();
-        return new Credentials( clientSetup.getRestClient().management().orgs().org( orgName ).credentials().get(ApiResponse.class,null,true) );
+        return new Credentials( clientSetup.getRestClient().management()
+            .orgs().org( orgName ).credentials().get(ApiResponse.class,null,true) );
 
     }
 }

@@ -21,21 +21,16 @@
 package org.apache.usergrid.rest.test.resource2point0;
 
 
-import java.io.IOException;
-
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Application;
-import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 
 /**
@@ -58,7 +53,7 @@ public class ClientSetup implements TestRule {
     protected Credentials clientCredentials;
 
     protected Organization organization;
-    protected Application application;
+    protected Entity application;
 
 
     public ClientSetup (String serverUrl) {
@@ -113,21 +108,21 @@ public class ClientSetup implements TestRule {
         orgName = "org_"+name+UUIDUtils.newTimeUUID();
         appName = "app_"+name+UUIDUtils.newTimeUUID();
 
-        organization = restClient.management().orgs()
-                                 .post( new Organization( orgName, username, username + "@usergrid.com", username,
-                                     username, null ) );
+        organization = restClient.management().orgs().post(
+            new Organization( orgName, username, username + "@usergrid.com", username, username, null ) );
 
         restClient.management().token().get(username,password);
 
-        // refreshIndex();
         clientCredentials = restClient.management().orgs().org( orgName ).credentials().get(Credentials.class);
-        //refreshIndex();
 
-
-        ApiResponse appResponse = restClient.management().orgs().org( organization.getName() ).app().post(new Application(appName));
+        ApiResponse appResponse = restClient.management().orgs()
+            .org( organization.getName() ).app().post(new Application(appName));
         appUuid = ( String ) appResponse.getEntities().get( 0 ).get( "uuid" );
+        application = new Application( appResponse );
         refreshIndex();
 
+        restClient.management().token().post(new Token(username,username));
+        refreshIndex();
     }
 
     public String getUsername(){return username;}
@@ -163,7 +158,8 @@ public class ClientSetup implements TestRule {
     }
 
     public void refreshIndex() {
-        this.restClient.refreshIndex(getOrganizationName(),getAppName(), CpNamingUtils.getManagementApplicationId().getUuid().toString());
+        this.restClient.refreshIndex(getOrganizationName(),getAppName(),
+            CpNamingUtils.getManagementApplicationId().getUuid().toString());
 
         if(!CpNamingUtils.getManagementApplicationId().getUuid().toString().equals(getAppUuid())) {
             this.restClient.refreshIndex(getOrganizationName(), getAppName(), getAppUuid());

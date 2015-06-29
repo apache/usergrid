@@ -111,6 +111,11 @@ public class LocalFileBinaryStore implements BinaryStore {
         fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
         fileMetadata.put( AssetUtils.E_TAG, RandomStringUtils.randomAlphanumeric( 10 ) );
 
+        // if we were successful, write the mime type
+        if ( file.exists() ) {
+            fileMetadata.put( AssetUtils.CONTENT_TYPE , AssetMimeHandler.get().getMimeType( entity, file ));
+        }
+
         try {
             em.update( entity );
         } catch (Exception e) {

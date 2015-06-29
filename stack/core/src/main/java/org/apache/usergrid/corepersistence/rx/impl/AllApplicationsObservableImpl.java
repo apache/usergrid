@@ -68,15 +68,15 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
 
 
 
+
+
     @Override
     public Observable<ApplicationScope> getData() {
 
         //emit our hard coded applications that are used the manage the system first.
         //this way consumers can perform whatever work they need to on the root system first
-        final Observable<ApplicationScope> systemIds = Observable.from(
-            Arrays.asList(
-                getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID ),
-                getApplicationScope( CpNamingUtils.SYSTEM_APP_ID ))); // still need deprecated system app here
+        final Observable<ApplicationScope> systemIds = Observable.just(
+                getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID ));
 
         final ApplicationScope appScope = getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 

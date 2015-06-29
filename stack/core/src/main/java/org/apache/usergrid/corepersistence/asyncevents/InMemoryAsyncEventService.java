@@ -52,7 +52,6 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     private final boolean resolveSynchronously;
 
 
-
     @Inject
     public InMemoryAsyncEventService( final EventBuilder eventBuilder, final RxTaskScheduler rxTaskScheduler, boolean
         resolveSynchronously ) {

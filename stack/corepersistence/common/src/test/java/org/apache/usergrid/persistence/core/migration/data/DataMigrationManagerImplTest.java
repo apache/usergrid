@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -50,8 +51,8 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
-
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         Set<String> pluginNames = migrationManager.getPluginNames();
@@ -80,29 +81,96 @@ public class DataMigrationManagerImplTest {
 
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization,migrationInfoCache );
 
 
         Set<String> pluginNames = migrationManager.getPluginNames();
 
-        assertEquals( 2, pluginNames.size() );
+        assertEquals(2, pluginNames.size());
 
         assertTrue( pluginNames.contains( "plugin1" ) );
 
-        assertTrue( pluginNames.contains( "plugin2" ) );
+        assertTrue(pluginNames.contains("plugin2"));
 
         //now run them
 
         migrationManager.migrate();
 
-        verify( plugin1 ).run( any( ProgressObserver.class ) );
+        verify( plugin1 ).run(any(ProgressObserver.class));
 
         verify( plugin2 ).run( any( ProgressObserver.class ) );
+        verify(migrationInfoCache,Mockito.times(2)).invalidateAll();
     }
 
+    @Test
+      public void test2PluginsPhaseOrder() throws MigrationException {
 
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.BOOTSTRAP );
+        when( plugin1.getName() ).thenReturn( "plugin2a" );
+
+        MigrationPlugin plugin1a = mock( MigrationPlugin.class );
+        when( plugin1a.getPhase() ).thenReturn( PluginPhase.BOOTSTRAP );
+        when( plugin1a.getName() ).thenReturn( "plugin2" );
+
+        MigrationPlugin plugin2 = mock( MigrationPlugin.class );
+        when( plugin2.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin2.getName() ).thenReturn( "plugin1" );
+
+        plugins.add( plugin1 );
+        plugins.add( plugin2 );
+        plugins.add( plugin1a);
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
+
+
+        assertTrue(migrationManager.getExecutionOrder().get(0).getName() == "plugin2");
+        assertTrue(migrationManager.getExecutionOrder().get(1).getName() == "plugin2a");
+        assertTrue(migrationManager.getExecutionOrder().get(2).getName() == "plugin1");
+
+    }
+
+    @Test
+    public void test2PluginsNameOrder() throws MigrationException {
+
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin1.getName() ).thenReturn( "plugin2" );
+
+        MigrationPlugin plugin2 = mock( MigrationPlugin.class );
+        when( plugin2.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin2.getName() ).thenReturn( "plugin1" );
+
+        plugins.add( plugin1 );
+        plugins.add( plugin2 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
+
+
+        assertTrue(migrationManager.getExecutionOrder().get(0).getName() == "plugin1");
+        assertTrue(migrationManager.getExecutionOrder().get(1).getName() == "plugin2");
+
+    }
     @Test
     public void testRunning() throws MigrationException {
 
@@ -121,8 +189,9 @@ public class DataMigrationManagerImplTest {
         when( migrationInfoSerialization.getStatusCode( "plugin1" ) )
             .thenReturn( DataMigrationManagerImpl.StatusCode.RUNNING.status );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         boolean status = migrationManager.isRunning();
@@ -172,8 +241,9 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
 
         Set<String> pluginNames = migrationManager.getPluginNames();
@@ -193,6 +263,8 @@ public class DataMigrationManagerImplTest {
         InOrder inOrderVerification = inOrder( plugin1, plugin2 );
         inOrderVerification.verify( plugin2 ).run( any( ProgressObserver.class ) );
         inOrderVerification.verify( plugin1 ).run( any( ProgressObserver.class ) );
+
+        verify(migrationInfoCache, Mockito.times(2)).invalidateAll();
     }
 
 
@@ -221,8 +293,9 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         migrationManager.resetToVersion( name, 0 );
 
@@ -259,8 +332,10 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         migrationManager.resetToVersion( name, version + 1 );
     }
@@ -290,8 +365,9 @@ public class DataMigrationManagerImplTest {
 
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         migrationManager.resetToVersion( name + "foo", version );
     }
@@ -321,8 +397,9 @@ public class DataMigrationManagerImplTest {
         final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
         when(migrationInfoSerialization.getStatusMessage( name )).thenReturn( status  );
 
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization, migrationInfoCache );
 
         final String returnedStatus = migrationManager.getLastStatus( name );
 

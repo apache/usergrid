@@ -27,6 +27,9 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface MetricsFig extends GuicyFig {
 
+    /**
+     * The graphite host for sending metrics to.
+     */
     @Default("false")
     @Key( "usergrid.metrics.graphite.host" )
     String getHost();

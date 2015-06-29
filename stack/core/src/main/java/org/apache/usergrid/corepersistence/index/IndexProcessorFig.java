@@ -30,58 +30,51 @@ import org.safehaus.guicyfig.Key;
 public interface IndexProcessorFig extends GuicyFig {
 
 
-    /**
-     * Amount of time in milliseconds to wait when ES rejects our request before retrying.  Provides simple
-     * backpressure
-     */
     String FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.rejected_retry_wait";
 
-    /**
-     * The number of worker threads to consume from the queue
-     */
     String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
 
-
-    /**
-     * The queue implementation to use.  Values come from <class>QueueProvider.Implementations</class>
-     */
     String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
 
-
-    /**
-     * The queue implementation to use.  Values come from <class>QueueProvider.Implementations</class>
-     */
-    String ELASTICSEARCH_QUEUE_OFFER_TIMEOUT = "elasticsearch.queue.offer_timeout";
-
-    /**
-     * Amount of time to wait when reading from the queue
-     */
     String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
 
-    /**
-     * Amount of time to wait when reading from the queue
-     */
     String INDEX_QUEUE_VISIBILITY_TIMEOUT = "elasticsearch.queue_visibility_timeout";
 
 
+    /**
+     * Set the amount of time to wait when Elasticsearch rejects a requests before
+     * retrying.  This provides simple back pressure. (in milliseconds)
+     */
     @Default( "1000" )
     @Key( FAILURE_REJECTED_RETRY_WAIT_TIME )
     long getFailureRetryTime();
 
-    //give us 60 seconds to process the message
+    /**
+     * Set the read timeout for processing messages in the queue. (in milliseconds)
+     */
     @Default( "10000" )
     @Key( INDEX_QUEUE_READ_TIMEOUT )
     int getIndexQueueTimeout();
 
-    //give us 60 seconds to process the message
+    /**
+     * Set the visibility timeout for messages created in the queue. (in milliseconds)
+     */
     @Default( "12000000" )
     @Key( INDEX_QUEUE_VISIBILITY_TIMEOUT )
     int getIndexQueueVisibilityTimeout();
 
+    /**
+     * The number of worker threads used to read index write requests from the queue.
+     */
     @Default( "1" )
     @Key( ELASTICSEARCH_WORKER_COUNT )
     int getWorkerCount();
 
+    /**
+     * Set the implementation to use for queuing.
+     * Valid values: TEST, LOCAL, SQS, SNS
+     * NOTE: SQS and SNS equate to the same implementation of Amazon queue services.
+     */
     @Default( "LOCAL" )
     @Key( ELASTICSEARCH_QUEUE_IMPL )
     String getQueueImplementation();
@@ -90,6 +83,9 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key("elasticsearch.reindex.flush.interval")
     int getUpdateInterval();
 
+    /**
+     * Flag to resolve the LOCAL queue implementation service synchronously.
+     */
     @Default("false")
     @Key("elasticsearch.queue_impl.resolution")
     boolean resolveSynchronously();
