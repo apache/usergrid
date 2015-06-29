@@ -37,6 +37,7 @@ public class IndexOperationMessage implements Serializable {
     private final Set<IndexOperation> indexRequests;
     private final Set<DeIndexOperation> deIndexRequests;
 
+    private long creationTime;
 
 
     private final FutureObservable<IndexOperationMessage> containerFuture;
@@ -46,6 +47,7 @@ public class IndexOperationMessage implements Serializable {
         this.indexRequests = new HashSet<>();
         this.deIndexRequests = new HashSet<>();
         this.containerFuture = new FutureObservable<>( this );
+        this.creationTime = System.currentTimeMillis();
     }
 
 
@@ -117,5 +119,9 @@ public class IndexOperationMessage implements Serializable {
     public void done() {
         //if this has been serialized, it could be null. don't NPE if it is, there's nothing to ack
         containerFuture.done();
+    }
+
+    public long getCreationTime() {
+        return creationTime;
     }
 }

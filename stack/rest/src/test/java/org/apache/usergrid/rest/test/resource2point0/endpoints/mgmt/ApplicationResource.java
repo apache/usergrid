@@ -60,7 +60,7 @@ public class ApplicationResource extends NamedResource {
 
     public ApiResponse post(Application application) {
         ApiResponse apiResponse =getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(ApiResponse.class,application);
+            .accept(MediaType.APPLICATION_JSON).post(ApiResponse.class, application);
         return apiResponse;
     }
 

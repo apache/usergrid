@@ -22,8 +22,9 @@ package org.apache.usergrid.rest;
 
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
-
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,22 +34,15 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-
-import static org.junit.Assert.assertNotNull;
 
 
 /**
  * test index creation
  */
 public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
-
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -58,6 +52,7 @@ public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2poin
     public IndexResourceIT(){
 
     }
+
     @Test
     public void testCaseReindexEndpoint() {
 
@@ -120,6 +115,5 @@ public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2poin
             fail(e.toString());
         }
         assertNotNull( node );
-
     }
 }

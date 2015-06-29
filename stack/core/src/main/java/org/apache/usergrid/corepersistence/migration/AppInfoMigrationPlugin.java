@@ -47,6 +47,8 @@ import rx.Observable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
 import static org.apache.usergrid.persistence.Schema.*;
@@ -59,6 +61,10 @@ import static org.apache.usergrid.persistence.Schema.*;
  * https://issues.apache.org/jira/browse/USERGRID-448
  */
 public class AppInfoMigrationPlugin implements MigrationPlugin {
+
+    /** Old and deprecated SYSTEM_APP */
+    public static final UUID SYSTEM_APP_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-10ddb1de66c3" );
+
     private static final Logger logger = LoggerFactory.getLogger(AppInfoMigrationPlugin.class);
 
     public static String PLUGIN_NAME = "appinfo-migration";
@@ -117,13 +123,16 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             logger.debug("Skipping Migration Plugin: " + getName());
             return;
         }
+
         observer.start();
+        AtomicInteger count = new AtomicInteger();
         //get old app infos to migrate
         final Observable<org.apache.usergrid.persistence.model.entity.Entity> oldAppInfos = getOldAppInfos();
         oldAppInfos
             .doOnNext(oldAppInfoEntity -> {
                 try {
                     migrateAppInfo( oldAppInfoEntity, observer);
+                    count.incrementAndGet();
                 }catch (Exception e){
                     logger.error("Failed to migrate app info"+oldAppInfoEntity.getId().getUuid(),e);
                     throw new RuntimeException(e);
@@ -131,7 +140,11 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
             })
             .doOnCompleted(() -> {
-                migrationInfoSerialization.setVersion(getName(), getMaxVersion());
+                if(count.get()>0) {
+                    migrationInfoSerialization.setVersion(getName(), getMaxVersion());
+                }else{
+                    logger.error("Failed to migrate any app infos");
+                }
                 observer.complete();
             }).toBlocking().lastOrDefault(null);
 
@@ -149,8 +162,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         try {
             final String orgName = name.split("/")[0];
             final String appName = name.split("/")[1];
-            UUID applicationId = getUuid(oldAppInfoMap,"applicationUuid");
-
+            UUID applicationId = getUuid(oldAppInfoMap,"applicationUuid") ;
+            applicationId = applicationId == null ?  getUuid(oldAppInfoMap,"appUuid") : applicationId ;
             //get app info from graph to see if it has been migrated already
             Entity appInfo = getApplicationInfo(applicationId);
             if (appInfo == null) {
@@ -182,7 +195,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         if (uuidObject instanceof UUID) {
             applicationId = (UUID) uuidObject;
         } else {
-            applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
+            applicationId = uuidObject == null ? null : UUIDUtils.tryExtractUUID(uuidObject.toString());
         }
         return applicationId;
     }
@@ -195,14 +208,6 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         appInfo = managementEm.create(new SimpleId(applicationId, CpNamingUtils.APPLICATION_INFO), appInfoMap);
         return appInfo;
     }
-
-    private void deleteOldAppInfo(UUID uuid) {
-        final ApplicationScope systemAppScope = getApplicationScope(CpNamingUtils.SYSTEM_APP_ID );
-        final EntityCollectionManager systemCollectionManager =
-            entityCollectionManagerFactory.createCollectionManager( systemAppScope );
-        systemCollectionManager.mark( new SimpleId( uuid, "appinfos" ) ).toBlocking().last();
-    }
-
 
     /**
      * TODO: Use Graph to get application_info for an specified Application.
@@ -250,7 +255,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
      */
     public Observable<org.apache.usergrid.persistence.model.entity.Entity> getOldAppInfos( ) {
 
-        final ApplicationScope systemAppScope = getApplicationScope(CpNamingUtils.SYSTEM_APP_ID);
+        final ApplicationScope systemAppScope = getApplicationScope(SYSTEM_APP_ID);
 
         final EntityCollectionManager systemCollectionManager =
             entityCollectionManagerFactory.createCollectionManager(systemAppScope);

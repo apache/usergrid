@@ -116,7 +116,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     /**
      * Different implementations
      */
-    public static enum Implementations {
+    public static enum Implementations { //TODO see about removing SNS and SQS and use AMZN? - michaelarusso
         TEST,
         LOCAL,
         SQS,

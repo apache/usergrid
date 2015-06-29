@@ -69,9 +69,6 @@ public class CpNamingUtils {
     /** App where we store management info */
     public static final UUID MANAGEMENT_APPLICATION_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-11ddb1de66c8" );
 
-    /** Old and deprecated SYSTEM_APP */
-    public static final UUID SYSTEM_APP_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-10ddb1de66c3" );
-
     /**
      * Information about applications is stored in the management app using these types
      */

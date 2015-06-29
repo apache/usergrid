@@ -49,12 +49,15 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     private final List<MigrationPlugin> executionOrder;
 
     private final MigrationInfoSerialization migrationInfoSerialization;
-
+    private final MigrationInfoCache migrationInfoCache;
 
 
     @Inject
     public DataMigrationManagerImpl( final Set<MigrationPlugin> plugins,
-                                     final MigrationInfoSerialization migrationInfoSerialization ) {
+                                     final MigrationInfoSerialization migrationInfoSerialization,
+                                     final MigrationInfoCache migrationInfoCache
+    ) {
+        this.migrationInfoCache = migrationInfoCache;
 
 
         Preconditions.checkNotNull( plugins, "plugins must not be null" );
@@ -101,6 +104,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         executionOrder.forEach(plugin -> {
             final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
             plugin.run(observer);
+            migrationInfoCache.invalidateAll();
+
         });
     }
 
@@ -172,6 +177,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         StatusCode( final int status ) {this.status = status;}
     }
+
+    public List<MigrationPlugin> getExecutionOrder(){return executionOrder;}
 
 
     private final class CassandraProgressObserver implements ProgressObserver {
@@ -249,6 +256,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         public boolean isFailed() {
             return failed;
         }
+
     }
 
     private final static class MigrationPluginComparator implements Comparator<MigrationPlugin> {
@@ -264,7 +272,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             }
 
             //second one is first
-            if(o2.getPhase().ordinal() < o2.getPhase().ordinal()){
+            if(o2.getPhase().ordinal() < o1.getPhase().ordinal()){
                 return 1;
             }
 
