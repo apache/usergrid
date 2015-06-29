@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
@@ -47,9 +48,22 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
 
 
 /**
- * TODO: REFACTOR EVERYTHING TO USE JSON NODES
- * Example on how to run:
- * java -jar usergrid-tools.jar ImportAdmins -host cassandraHost -v -inputDir exportFilesDirectory
+ * Import Admin Users and metadata including organizations and passwords.
+ * 
+ * Usage Example: 
+ * 
+ * java -Xmx8000m -Dlog4j.configuration=file:/home/me/log4j.properties -classpath . \
+ *      -jar usergrid-tools-1.0.2.jar ImportAdmins -writeThreads 100 -auditThreads 100 \
+ *      -host casshost -inputDir=/home/me/import-data 
+ *      
+ * If you want to provide any property overrides, put properties file named usergrid-custom-tools.properties
+ * in the same directory where you run the above command. For example, you might want to set the Cassandra
+ * client threads and import to a specific set of keyspaces:
+ *
+ *    cassandra.connections=110
+ *    cassandra.system.keyspace=My_Other_Usergrid
+ *    cassandra.application.keyspace=My_Other_Usergrid_Applications
+ *    cassandra.lock.keyspace=My_Other_Usergrid_Locks
  */
 public class ImportAdmins extends ToolBase {
 
@@ -72,6 +86,9 @@ public class ImportAdmins extends ToolBase {
 
 
     JsonFactory jsonFactory = new JsonFactory();
+
+    AtomicInteger userCount = new AtomicInteger( 0 );
+    AtomicInteger metadataCount = new AtomicInteger( 0 );
 
 
     @Override
@@ -102,8 +119,8 @@ public class ImportAdmins extends ToolBase {
         options.addOption(hostOption);
         options.addOption(writeThreads);
         options.addOption(auditThreads);
-        options.addOption(inputDir);
-        options.addOption(verbose);
+        options.addOption( inputDir );
+        options.addOption( verbose );
 
         return options;
     }
@@ -126,16 +143,12 @@ public class ImportAdmins extends ToolBase {
         }
 
         if (line.hasOption(WRITE_THREAD_COUNT)) {
-            writeThreadCount = Integer.parseInt(line.getOptionValue(WRITE_THREAD_COUNT));
+            writeThreadCount = Integer.parseInt( line.getOptionValue(WRITE_THREAD_COUNT));
         }
 
         importAdminUsers(writeThreadCount, auditThreadCount);
 
-        importMetadata(writeThreadCount);
-
-        // forces the counters to flush
-//        logger.info( "Sleeping 35 seconds for batcher" );
-//        Thread.sleep( 35000 );
+        importMetadata( writeThreadCount );
     }
 
 
@@ -190,10 +203,11 @@ public class ImportAdmins extends ToolBase {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> entityProps = jp.readValueAs(HashMap.class);
-            if (loopCounter % 100 == 1)
-                logger.info("Publishing to queue... counter=" + loopCounter);
+            if (loopCounter % 1000 == 0) {
+                logger.debug( "Publishing to queue... counter=" + loopCounter );
+            }
 
-            workQueue.add(entityProps);
+            workQueue.add( entityProps );
         }
 
         waitForQueueAndMeasure(workQueue, adminWriteThreads, "Admin Write");
@@ -209,15 +223,15 @@ public class ImportAdmins extends ToolBase {
                                                final Map<Stoppable, Thread> threadMap,
                                                final String identifier) throws InterruptedException {
         double rateAverageSum = 0;
-        int iterationCounter = 0;
+        int iterations = 0;
 
         while (!workQueue.isEmpty()) {
-            iterationCounter += 1;
+            iterations += 1;
 
             int sizeLast = workQueue.size();
             long lastTime = System.currentTimeMillis();
             logger.info("Queue {} is not empty, remaining size={}, waiting...", identifier, sizeLast);
-            Thread.sleep(5000);
+            Thread.sleep(10000);
 
             long timeNow = System.currentTimeMillis();
             int sizeNow = workQueue.size();
@@ -229,12 +243,11 @@ public class ImportAdmins extends ToolBase {
             double rateLast = (double) processed / (timeDelta / 1000);
             rateAverageSum += rateLast;
 
-            long timeRemaining = (long) ( sizeLast / (rateAverageSum / iterationCounter) );
+            long timeRemaining = (long) ( sizeLast / (rateAverageSum / iterations) );
 
-            logger.info(
-                    String.format("++PROGRESS (%s): sizeLast=%s nowSize=%s processed=%s rateLast=%s/s rateAvg=%s/s timeRemaining=%s(s)",
-                            identifier, sizeLast, sizeNow, processed, rateLast, (rateAverageSum / iterationCounter), timeRemaining)
-            );
+            logger.info("++PROGRESS ({}): sizeLast={} nowSize={} processed={} rateLast={}/s rateAvg={}/s timeRemaining={}s",
+                new Object[] { 
+                    identifier, sizeLast, sizeNow, processed, rateLast, (rateAverageSum / iterations), timeRemaining } );
         }
 
         for (Stoppable worker : threadMap.keySet()) {
@@ -249,6 +262,7 @@ public class ImportAdmins extends ToolBase {
             workerThread.start();
             adminAuditThreads.put(worker, workerThread);
         }
+        logger.info("Started {} admin auditors", workerCount);
 
     }
 
@@ -263,6 +277,8 @@ public class ImportAdmins extends ToolBase {
             workerThread.start();
             adminWriteThreads.put(worker, workerThread);
         }
+
+        logger.info("Started {} admin workers", workerCount);
     }
 
 
@@ -284,8 +300,8 @@ public class ImportAdmins extends ToolBase {
 
 
     private JsonParser getJsonParserForFile(File organizationFile) throws Exception {
-        JsonParser jp = jsonFactory.createJsonParser(organizationFile);
-        jp.setCodec(new ObjectMapper());
+        JsonParser jp = jsonFactory.createJsonParser( organizationFile );
+        jp.setCodec( new ObjectMapper() );
         return jp;
     }
 
@@ -312,10 +328,12 @@ public class ImportAdmins extends ToolBase {
 
         for (int x = 0; x < writeThreadCount; x++) {
             ImportMetadataWorker worker = new ImportMetadataWorker(workQueue);
-            Thread workerThread = new Thread(worker, "ImportMetadataTask-" + x);
+            Thread workerThread = new Thread(worker, "ImportMetadataTask-" + x );
             workerThread.start();
             metadataWorkerThreadMap.put(worker, workerThread);
         }
+        
+        logger.info( "Started {} metadata workers", writeThreadCount );
     }
 
 
@@ -362,7 +380,6 @@ public class ImportAdmins extends ToolBase {
                 Map<String, Object> metadata = (Map<String, Object>) jp.readValueAs(Map.class);
 
                 workQueue.put(new ImportMetadataTask(entityRef, metadata));
-//                importEntityMetadata(em, entityRef, metadata);
             }
         }
 
@@ -380,82 +397,11 @@ public class ImportAdmins extends ToolBase {
     private void importEntityMetadata(
             EntityManager em, EntityRef entityRef, Map<String, Object> metadata) throws Exception {
 
-        Map<String, Object> connectionsMap = (Map<String, Object>) metadata.get("connections");
-
-        if (connectionsMap != null && !connectionsMap.isEmpty()) {
-            for (String type : connectionsMap.keySet()) {
-                try {
-                    UUID uuid = UUID.fromString((String) connectionsMap.get(type));
-                    EntityRef connectedEntityRef = em.getRef(uuid);
-                    em.createConnection(entityRef, type, connectedEntityRef);
-
-                    logger.debug("Creating connection from {} type {} target {}",
-                            new Object[]{entityRef, type, connectedEntityRef});
-
-                } catch (Exception e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.error("Error importing connection of type "
-                                + type + " for user " + entityRef.getUuid(), e);
-                    } else {
-                        logger.error("Error importing connection of type "
-                                + type + " for user " + entityRef.getUuid());
-                    }
-                }
-            }
-        }
-
-        Map<String, Object> dictionariesMap = (Map<String, Object>) metadata.get("dictionaries");
-
-        if (dictionariesMap != null && !dictionariesMap.isEmpty()) {
-            for (String name : dictionariesMap.keySet()) {
-                try {
-                    Map<String, Object> dictionary = (Map<String, Object>) dictionariesMap.get(name);
-                    em.addMapToDictionary(entityRef, name, dictionary);
-
-                    logger.debug("Creating dictionary for {} name {} map {}",
-                            new Object[]{entityRef, name, dictionary});
-
-                } catch (Exception e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.error("Error importing dictionary name "
-                                + name + " for user " + entityRef.getUuid(), e);
-                    } else {
-                        logger.error("Error importing dictionary name "
-                                + name + " for user " + entityRef.getUuid());
-                    }
-                }
-            }
-        }
-
-        List<String> collectionsList = (List<String>) metadata.get("collections");
-        if (collectionsList != null && !collectionsList.isEmpty()) {
-            for (String name : collectionsList) {
-                try {
-                    UUID uuid = UUID.fromString((String) connectionsMap.get(name));
-                    EntityRef collectedEntityRef = em.getRef(uuid);
-                    em.addToCollection(entityRef, name, collectedEntityRef);
-
-                    logger.debug("Add to collection of {} name {} entity {}",
-                            new Object[]{entityRef, name, collectedEntityRef});
-
-                } catch (Exception e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.error("Error adding to collection "
-                                + name + " for user " + entityRef.getUuid(), e);
-                    } else {
-                        logger.error("Error adding to collection "
-                                + name + " for user " + entityRef.getUuid());
-                    }
-                }
-            }
-        }
-
-
         List<Object> organizationsList = (List<Object>) metadata.get("organizations");
         if (organizationsList != null && !organizationsList.isEmpty()) {
 
             User user = em.get(entityRef, User.class);
-
+            
             if (user == null) {
                 logger.error("User with uuid={} not found, not adding to organizations");
 
@@ -476,19 +422,55 @@ public class ImportAdmins extends ToolBase {
                             managementService.createOrganization(orgUuid, orgName, userInfo, false);
                             orgInfo = managementService.getOrganizationByUuid(orgUuid);
 
-                            logger.debug("Created new org {} for user {}",
-                                    new Object[]{orgInfo.getName(), user.getEmail()});
+                            logger.debug( "Created new org {} for user {}",
+                                    new Object[]{orgInfo.getName(), user.getEmail()} );
 
                         } catch (DuplicateUniquePropertyExistsException dpee) {
-                            logger.error("Org {} already exists", orgName);
+                            logger.debug( "Org {} already exists", orgName );
                         }
                     } else {
-                        managementService.addAdminUserToOrganization(userInfo, orgInfo, false);
-                        logger.debug("Added user {} to org {}", new Object[]{user.getEmail(), orgName});
+                        try {
+                            managementService.addAdminUserToOrganization( userInfo, orgInfo, false );
+                            logger.debug( "Added user {} to org {}", new Object[]{user.getEmail(), orgName} );
+                            
+                        } catch ( Exception e ) {
+                            logger.error( "Error Adding user {} to org {}", new Object[]{user.getEmail(), orgName} );
+                        }
                     }
                 }
             }
+
+        } else {
+            logger.warn("User {} has no organizations", entityRef.getUuid() );
         }
+
+        Map<String, Object> dictionariesMap = (Map<String, Object>) metadata.get("dictionaries");
+
+        if (dictionariesMap != null && !dictionariesMap.isEmpty()) {
+            for (String name : dictionariesMap.keySet()) {
+                try {
+                    Map<String, Object> dictionary = (Map<String, Object>) dictionariesMap.get(name);
+                    em.addMapToDictionary( entityRef, name, dictionary);
+
+                    logger.debug( "Creating dictionary for {} name {}",
+                            new Object[]{entityRef, name} );
+
+                } catch (Exception e) {
+                    if (logger.isDebugEnabled()) {
+                        logger.error("Error importing dictionary name "
+                                + name + " for user " + entityRef.getUuid(), e);
+                    } else {
+                        logger.error("Error importing dictionary name "
+                                + name + " for user " + entityRef.getUuid());
+                    }
+                }
+            }
+            
+        } else {
+            logger.warn("User {} has no dictionaries", entityRef.getUuid() );
+        }
+
+
     }
 
 
@@ -552,8 +534,7 @@ public class ImportAdmins extends ToolBase {
                     String type = getType(entityProps);
 
                     if (em.get(uuid) == null) {
-                        logger.error("Holy hell, we wrote an entity and it's missing.  " +
-                                "Entity Id was {} and type is {}", uuid, type);
+                        logger.error( "FATAL ERROR: wrote an entity {}:{} and it's missing", uuid, type );
                         System.exit(1);
                     }
 
@@ -563,8 +544,12 @@ public class ImportAdmins extends ToolBase {
 
                     long duration = stopTime - startTime;
                     durationSum += duration;
-                    logger.debug(String.format("Audited [%s]th admin", count));
-                    logger.info(String.format("Average Audit Rate: %s(ms)", durationSum / count));
+
+                    //logger.debug( "Audited {}th admin", count );
+                    
+                    if ( count % 100 == 0 ) {
+                        logger.info( "Audited {}. Average Audit Rate: {}(ms)", count, durationSum / count );
+                    }
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -572,8 +557,6 @@ public class ImportAdmins extends ToolBase {
                     e.printStackTrace();
                 }
             }
-
-            logger.warn("Done!");
         }
     }
 
@@ -619,24 +602,28 @@ public class ImportAdmins extends ToolBase {
                         Thread.sleep(1000);
                         continue;
                     }
-
-                    count++;
+                    
                     long startTime = System.currentTimeMillis();
+                    
                     importEntityMetadata(em, task.entityRef, task.metadata);
+                    
+                    metadataCount.addAndGet( 1 );
                     long stopTime = System.currentTimeMillis();
-
                     long duration = stopTime - startTime;
                     durationSum += duration;
-                    logger.debug(String.format("Imported [%s]th metadata", count));
-                    logger.info(String.format("Average metadata Imported Rate: %s(ms)", durationSum / count));
+                    count++;
+
+                    //logger.debug( "Imported {}th metadata", count );
+                    
+                    if ( count % 30 == 0 ) {
+                        logger.info( "Imported {} metadata of total {}. Average metadata Imported Rate: {}(ms)", 
+                           new Object[] { count, metadataCount.get(), durationSum / count });
+                    }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    logger.debug("EXCEPTION", e);
+                    logger.debug("Error reading writing metadata", e);
                 }
             }
-
-            logger.warn("Done!");
         }
     }
 
@@ -650,7 +637,6 @@ public class ImportAdmins extends ToolBase {
 
         public ImportAdminWorker(final BlockingQueue<Map<String, Object>> workQueue,
                                  final BlockingQueue<Map<String, Object>> auditQueue) {
-            logger.info("New Worker!");
             this.workQueue = workQueue;
             this.auditQueue = auditQueue;
         }
@@ -676,7 +662,7 @@ public class ImportAdmins extends ToolBase {
 
                     if (entityProps == null) {
                         logger.warn("Reading from admin import queue was null!");
-                        Thread.sleep(1000);
+                        Thread.sleep( 1000 );
                         continue;
                     }
 
@@ -684,27 +670,29 @@ public class ImportAdmins extends ToolBase {
                     UUID uuid = getId(entityProps);
                     String type = getType(entityProps);
 
-
                     try {
                         long startTime = System.currentTimeMillis();
+                        
                         em.create(uuid, type, entityProps);
+
+                        logger.debug( "Imported admin user {} / {}",
+                            new Object[] { uuid, entityProps.get( "username" ) } );
+
+                        userCount.addAndGet( 1 );
                         auditQueue.put(entityProps);
                         long stopTime = System.currentTimeMillis();
-
                         long duration = stopTime - startTime;
                         durationSum += duration;
-
+                        
                         count++;
-                        logger.debug(String.format("Imported [%s]th admin user %s  / %s", count, uuid, entityProps.get("username")));
-                        logger.info(String.format("Average Creation Rate: %s(ms)", durationSum / count));
-
-                        if (count % 100 == 0) {
-                            logger.info("Imported {} admin users", count);
+                        if (count % 30 == 0) {
+                            logger.info( "Imported {} admin users of total {}. Average Creation Rate: {}ms", 
+                                new Object[] { count, userCount.get(), durationSum / count });
                         }
+                        
                     } catch (DuplicateUniquePropertyExistsException de) {
-                        logger.warn("Unable to create entity. It appears to be a duplicate: " +
-                                        "id={}, type={}, name={}, username={}",
-                                new Object[]{uuid, type, entityProps.get("name"), entityProps.get("username")});
+                        logger.warn("Unable to create admin user {}:{}, duplicate property {}",
+                                new Object[]{ uuid, entityProps.get("username"), de.getPropertyName() });
                         if (logger.isDebugEnabled()) {
                             logger.debug("Exception", de);
                         }
@@ -716,8 +704,6 @@ public class ImportAdmins extends ToolBase {
                 }
 
             }
-
-            logger.warn("Done!");
         }
     }
 }
