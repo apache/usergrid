@@ -23,6 +23,8 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.exception.EntityTooLargeException;
@@ -47,6 +49,9 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
+import org.apache.usergrid.persistence.model.field.ArrayField;
+import org.apache.usergrid.persistence.model.field.ListField;
+import org.codehaus.jackson.map.deser.CustomDeserializerFactory;
 
 
 /**
@@ -118,10 +123,11 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
         private byte VERSION = 1;
 
 
-        public EntitySerializer( final SerializationFig serializationFig ) {
+        public EntitySerializer( final SerializationFig serializationFig) {
             this.serializationFig = serializationFig;
-
-            //                mapper.enable(SerializationFeature.INDENT_OUTPUT); don't indent output,
+//            SimpleModule listModule = new SimpleModule("ListFieldModule", new Version(1, 0, 0, null,null,null))
+//                .addAbstractTypeMapping(ListField.class, ArrayField.class);
+//            MAPPER.registerModule(listModule);
             // causes slowness
             MAPPER.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
         }
