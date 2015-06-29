@@ -429,7 +429,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     @Override
     public void index(final EntityIndexOperation entityIdScope) {
-
-        //todo need this?
+        offer(new EntityIndexEvent(entityIdScope));
     }
 }
