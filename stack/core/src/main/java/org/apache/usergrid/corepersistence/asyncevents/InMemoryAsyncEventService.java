@@ -68,19 +68,19 @@ public class InMemoryAsyncEventService implements AsyncEventService {
         //only process the same version, otherwise ignore
 
 
-        run( eventBuilder.queueEntityIndexUpdate( applicationScope, entity ) );
+        run( eventBuilder.queueEntityIndexUpdate(applicationScope, entity) );
     }
 
 
     @Override
     public void queueNewEdge( final ApplicationScope applicationScope, final Entity entity, final Edge newEdge ) {
-        run( eventBuilder.queueNewEdge( applicationScope, entity, newEdge ) );
+        run( eventBuilder.queueNewEdge(applicationScope, entity, newEdge) );
     }
 
 
     @Override
     public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
-        run( eventBuilder.queueDeleteEdge( applicationScope, edge ) );
+        run( eventBuilder.queueDeleteEdge(applicationScope, edge) );
     }
 
 
@@ -96,8 +96,8 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
 
     @Override
-    public void index( final EntityIndexOperation entityIndexOperation ) {
-        run(eventBuilder.index( entityIndexOperation ));
+    public void index( final ApplicationScope applicationScope, final Id id ) {
+        run(eventBuilder.index(new EntityIndexOperation(applicationScope, id, Long.MAX_VALUE)));
     }
 
 

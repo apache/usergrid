@@ -21,6 +21,8 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
@@ -31,7 +33,8 @@ public interface ReIndexAction {
 
     /**
      * Index this entity with the specified scope
-     * @param entityIdScope
+     * @param id
+     * @param applicationScope
      */
-    void index( final EntityIndexOperation entityIdScope );
+    void index(final ApplicationScope applicationScope, final Id id );
 }
