@@ -121,6 +121,35 @@ public class CollectionsResourceIT extends AbstractRestIT {
 */
     }
 
+    @Test
+    public void postToReservedField() throws Exception {
+        Entity payload = new Entity();
+        payload.put( "term_date", "12/31/9999" );
+        payload.put( "effective_date","2015-04-20T17:41:38.035Z" );
+        payload.put("junk","TEST");
+
+        this.app().collection( "testCollection" ).post( payload );
+        refreshIndex();
+        Thread.sleep( 1000 );
+
+        Collection collection = this.app().collection( "testCollection" ).get();
+
+        assertNotEquals(0, collection.getNumOfEntities() );
+
+        payload = new Entity();
+        payload.put( "term_date","1991-17-10" );
+        payload.put( "effective_date","HELLO WORLD!" );
+        payload.put("junk","TEST");
+
+        this.app().collection( "testCollection" ).post( payload );
+        refreshIndex();
+        Thread.sleep( 1000 );
+
+        collection = this.app().collection( "testCollection" ).get();
+
+        assertEquals( 2, collection.getNumOfEntities() );
+
+    }
 
     /**
      * Test posts with a user level token on a path with permissions
