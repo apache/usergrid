@@ -36,8 +36,6 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 public class SearchCollectionVisitor extends SearchVisitor {
 
 
-    private static final UUIDIndexSliceParser UUID_PARSER = new UUIDIndexSliceParser();
-
 
     private final CollectionInfo collection;
 
@@ -95,8 +93,13 @@ public class SearchCollectionVisitor extends SearchVisitor {
 
         UUID startId = null;
 
+        final UUIDCursorGenerator uuidCursorGenerator = new UUIDCursorGenerator( slice.hashCode() );
+        final UUIDIndexSliceParser uuidIndexSliceParser = new UUIDIndexSliceParser( uuidCursorGenerator );
+
+
         if ( slice.hasCursor() ) {
-            startId = UUID_PARSER.parse( slice.getCursor(), false ).getUUID();
+
+            startId = uuidIndexSliceParser.parse( slice.getCursor(), false ).getUUID();
         }
 
 
@@ -105,7 +108,7 @@ public class SearchCollectionVisitor extends SearchVisitor {
                         queryProcessor.getPageSizeHint( node ), query.isReversed(), bucket, applicationId,
                         node.isForceKeepFirst() );
 
-        this.results.push( new SliceIterator( slice, indexScanner, UUID_PARSER ) );
+        this.results.push( new SliceIterator( slice, indexScanner, uuidIndexSliceParser ) );
     }
 
 

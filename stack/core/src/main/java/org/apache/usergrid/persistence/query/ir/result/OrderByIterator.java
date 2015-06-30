@@ -134,19 +134,19 @@ public class OrderByIterator extends MergeIterator {
         // no op
     }
 
-
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
-        int sliceHash = slice.hashCode();
-
-        ByteBuffer bytes = ue.toByteBuffer( lastValue );
-
-        if ( bytes == null ) {
-            return;
-        }
-
-        cache.setNextCursor( sliceHash, bytes );
-    }
+//
+//    @Override
+//    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
+//        int sliceHash = slice.hashCode();
+//
+//        ByteBuffer bytes = ue.toByteBuffer( lastValue );
+//
+//        if ( bytes == null ) {
+//            return;
+//        }
+//
+//        cache.setNextCursor( sliceHash, bytes );
+//    }
 
 
     /** A Sorted set with a max size. When a new entry is added, the max is removed */

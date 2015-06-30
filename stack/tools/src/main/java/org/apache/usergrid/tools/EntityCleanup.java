@@ -126,7 +126,7 @@ public class EntityCleanup extends ToolBase {
                         key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null, PAGE_SIZE, false,
                         indexBucketLocator, applicationId, collectionName, false );
 
-                SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser() );
+                SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser( uuidCursorGenerator ) );
 
                 while ( itr.hasNext() ) {
 

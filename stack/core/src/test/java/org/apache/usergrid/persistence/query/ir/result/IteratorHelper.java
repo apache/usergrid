@@ -28,7 +28,9 @@ import java.util.UUID;
  */
 public class IteratorHelper {
 
+    private static final UUIDCursorGenerator<UUIDColumn> CURSOR_GENERATOR = new UUIDCursorGenerator<UUIDColumn>( 1 );
+
     public static ScanColumn uuidColumn( UUID value ) {
-        return new UUIDColumn( value, 1 );
+        return new UUIDColumn( value, 1 , CURSOR_GENERATOR);
     }
 }

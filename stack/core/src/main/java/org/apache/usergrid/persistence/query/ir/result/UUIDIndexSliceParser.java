@@ -29,10 +29,17 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 public class UUIDIndexSliceParser implements SliceParser {
 
 
+    private final CursorGenerator<UUIDColumn> uuidCursorGenerator;
+
+
+    public UUIDIndexSliceParser( final UUIDCursorGenerator<UUIDColumn> uuidCursorGenerator ) {
+        this.uuidCursorGenerator = uuidCursorGenerator;
+    }
+
 
     @Override
     public ScanColumn parse( final ByteBuffer columnNameBytes, final boolean isReversed ) {
         final int compare = isReversed? -1: 1;
-        return new UUIDColumn( ue.fromByteBuffer( columnNameBytes.duplicate() ), columnNameBytes,  compare );
+        return new UUIDColumn( ue.fromByteBuffer( columnNameBytes.duplicate() ),  compare, uuidCursorGenerator);
     }
 }

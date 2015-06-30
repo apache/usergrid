@@ -285,8 +285,9 @@ public class QueryProcessor {
             int resultSize = Math.min( entityIds.size(), size );
             entityIds = entityIds.subList( 0, resultSize );
 
+            //set our cursor on the last results
             if ( resultSize == size ) {
-                itr.finalizeCursor( resultsCursor, entityIds.get( resultSize - 1 ).getUUID() );
+                entityIds.get( resultSize -1 ).addToCursor( resultsCursor );
             }
         }
         if ( logger.isDebugEnabled() ) {

@@ -44,7 +44,6 @@ public class SliceIterator implements ResultIterator {
 
     private static final Logger logger = LoggerFactory.getLogger( SliceIterator.class );
 
-    private final LinkedHashMap<UUID, ScanColumn> cols;
     private final QuerySlice slice;
     protected final SliceParser parser;
     protected final IndexScanner scanner;
@@ -83,7 +82,6 @@ public class SliceIterator implements ResultIterator {
         this.parser = parser;
         this.scanner = scanner;
         this.pageSize = scanner.getPageSize();
-        this.cols = new LinkedHashMap<UUID, ScanColumn>( this.pageSize );
         this.parsedCols = new LinkedHashSet<ScanColumn>( this.pageSize );
         this.isReversed = scanner.isReversed();
     }
@@ -122,8 +120,6 @@ public class SliceIterator implements ResultIterator {
 
         Iterator<HColumn<ByteBuffer, ByteBuffer>> results = scanner.next().iterator();
 
-        cols.clear();
-
         parsedCols.clear();
 
         while ( results.hasNext() ) {
@@ -141,7 +137,6 @@ public class SliceIterator implements ResultIterator {
             }
 
             last = parsed;
-            cols.put( parsed.getUUID(), parsed );
             parsedCols.add( parsed );
         }
 
@@ -196,56 +191,4 @@ public class SliceIterator implements ResultIterator {
     }
 
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
-     */
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
-        final int sliceHash = slice.hashCode();
-
-        ByteBuffer bytes = null;
-
-        ScanColumn col = cols.get( lastLoaded );
-
-
-        //the column came from the current page
-        if ( col != null ) {
-            bytes = col.getCursorValue();
-        }
-        else {
-
-            //check if we reached the end of our iterator.  If we did, set the last value into the cursor.  Otherwise
-            //this is a bug
-            if ( scanner.hasNext() ) {
-                logger.error(
-                        "An iterator attempted to access a slice that was not iterated over.  This will result in the"
-                                + " cursor construction failing" );
-                throw new QueryIterationException(
-                        "An iterator attempted to access a slice that was not iterated over.  This will result in the"
-                                + " cursor construction failing" );
-            }
-
-            final ByteBuffer sliceCursor = slice.getCursor();
-
-            //we've never loaded anything, just re-use the existing slice
-            if ( last == null && sliceCursor != null ) {
-                bytes = sliceCursor;
-            }
-
-            //use the last column we loaded.  This way our scan returns nothing next time since start == finish
-            else if ( last != null ) {
-                bytes = last.getCursorValue();
-            }
-        }
-
-
-        if ( bytes == null ) {
-            return;
-        }
-
-        cache.setNextCursor( sliceHash, bytes );
-    }
 }

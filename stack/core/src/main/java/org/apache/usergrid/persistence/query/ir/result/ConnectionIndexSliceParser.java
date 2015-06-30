@@ -21,7 +21,6 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
 
 import com.fasterxml.uuid.UUIDComparator;
 
@@ -36,11 +35,15 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
 public class ConnectionIndexSliceParser implements SliceParser {
 
     private final String connectedEntityType;
+    private final SliceCursorGenerator sliceCurosrGenerator;
 
 
-    /** @param connectedEntityType Could be null if we want to return all types */
-    public ConnectionIndexSliceParser( String connectedEntityType ) {
+    /**
+     * @param connectedEntityType Could be null if we want to return all types
+     * @param sliceCurosrGenerator */
+    public ConnectionIndexSliceParser( String connectedEntityType, final SliceCursorGenerator sliceCurosrGenerator ) {
         this.connectedEntityType = connectedEntityType;
+        this.sliceCurosrGenerator = sliceCurosrGenerator;
     }
 
 
@@ -65,7 +68,7 @@ public class ConnectionIndexSliceParser implements SliceParser {
             return null;
         }
 
-        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff );
+        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff, sliceCurosrGenerator );
         //    return composite;
         //    return null;
     }
@@ -78,8 +81,9 @@ public class ConnectionIndexSliceParser implements SliceParser {
         private final String connectedType;
 
 
-        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column) {
-            super( uuid, column );
+        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column,
+                                 final SliceCursorGenerator sliceCursorGenerator ) {
+            super( uuid, column, sliceCursorGenerator );
             this.connectedType = connectedType;
         }
 

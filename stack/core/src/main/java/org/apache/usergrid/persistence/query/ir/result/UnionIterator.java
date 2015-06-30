@@ -41,8 +41,6 @@ public class UnionIterator extends MultiIterator {
 
     private SortedColumnList list;
 
-    private final int id;
-
 
     /**
      * @param pageSize The page size to return
@@ -51,16 +49,17 @@ public class UnionIterator extends MultiIterator {
      */
     public UnionIterator( int pageSize, int id, ByteBuffer minUuid ) {
         super( pageSize );
-
-        this.id = id;
-
         UUID parseMinUuid = null;
 
         if(minUuid != null)      {
             parseMinUuid = ue.fromByteBuffer( minUuid );
         }
 
-        list = new SortedColumnList( pageSize, parseMinUuid );
+        final UUIDCursorGenerator uuidCursorGenerator = new UUIDCursorGenerator( id );
+
+        list = new SortedColumnList( pageSize, parseMinUuid, uuidCursorGenerator );
+
+
     }
 
 
@@ -98,21 +97,6 @@ public class UnionIterator extends MultiIterator {
     }
 
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
-     * org.apache.usergrid.persistence.cassandra.CursorCache)
-     */
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
-
-        ByteBuffer buff = ue.toByteBuffer( lastLoaded );
-        cache.setNextCursor( id, buff );
-        //get our scan column and put them in the cache
-        //we finalize the cursor of the min
-    }
 
 
     @Override
@@ -135,16 +119,21 @@ public class UnionIterator extends MultiIterator {
 
         private final List<UnionScanColumn> list;
 
+        private final UUIDCursorGenerator uuidCursorGenerator;
+
         private UnionScanColumn min;
 
 
-        public SortedColumnList( final int maxSize, final UUID minUuid ) {
+        public SortedColumnList( final int maxSize, final UUID minUuid, final UUIDCursorGenerator uuidCursorGenerator ) {
+
+
+            this.uuidCursorGenerator = uuidCursorGenerator;
             //we need to allocate the extra space if required
             this.list = new ArrayList<UnionScanColumn>( maxSize );
             this.maxSize = maxSize;
 
             if ( minUuid != null ) {
-                min = new UnionScanColumn(new UUIDColumn( minUuid, 1 )) ;
+                min = new UnionScanColumn(new UUIDColumn( minUuid, 1, uuidCursorGenerator), uuidCursorGenerator ) ;
             }
         }
 
@@ -154,7 +143,7 @@ public class UnionIterator extends MultiIterator {
          */
         public void add( ScanColumn col ) {
 
-            final UnionScanColumn unionScanColumn = new UnionScanColumn(col);
+            final UnionScanColumn unionScanColumn = new UnionScanColumn(col, uuidCursorGenerator );
 
             //less than our min, don't add
             if ( min != null && min.compareTo( unionScanColumn ) >= 0 ) {
@@ -239,12 +228,16 @@ public class UnionIterator extends MultiIterator {
     private static class UnionScanColumn implements ScanColumn{
 
         private final ScanColumn delegate;
+        private final UUIDCursorGenerator uuidCursorGenerator;
         private ScanColumn child;
 
 
-        private UnionScanColumn( final ScanColumn delegate ) {
+
+        private UnionScanColumn( final ScanColumn delegate, final UUIDCursorGenerator uuidCursorGenerator ) {
             super();
-            this.delegate = delegate;}
+            this.delegate = delegate;
+            this.uuidCursorGenerator = uuidCursorGenerator;
+        }
 
 
         @Override
@@ -268,6 +261,12 @@ public class UnionIterator extends MultiIterator {
         @Override
         public void setChild( final ScanColumn childColumn ) {
            //intentionally a no-op, since child is on the delegate
+        }
+
+
+        @Override
+        public void addToCursor( final CursorCache cache ) {
+            this.uuidCursorGenerator.addToCursor( cache, this );
         }
 
 

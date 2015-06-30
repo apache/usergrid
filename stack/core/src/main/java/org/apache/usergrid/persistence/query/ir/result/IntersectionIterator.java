@@ -150,21 +150,22 @@ public class IntersectionIterator extends MultiIterator {
         return results;
     }
 
+    //TODO, replace columns with slice parser here
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
-     * org.apache.usergrid.persistence.cassandra.CursorCache)
-     */
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
-        ResultIterator itr = iterators.get( 0 );
-
-        //We can only create a cursor on our root level value in the intersection iterator.
-        if ( itr != null ) {
-            itr.finalizeCursor( cache, lastLoaded );
-        }
-    }
+//    /*
+//     * (non-Javadoc)
+//     *
+//     * @see
+//     * org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
+//     * org.apache.usergrid.persistence.cassandra.CursorCache)
+//     */
+//    @Override
+//    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
+//        ResultIterator itr = iterators.get( 0 );
+//
+//        //We can only create a cursor on our root level value in the intersection iterator.
+//        if ( itr != null ) {
+//            itr.finalizeCursor( cache, lastLoaded );
+//        }
+//    }
 }

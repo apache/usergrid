@@ -22,6 +22,8 @@ import java.util.UUID;
 
 import org.apache.cassandra.utils.ByteBufferUtil;
 
+import org.apache.usergrid.persistence.cassandra.CursorCache;
+
 
 /**
  *
@@ -32,12 +34,15 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
     protected final UUID uuid;
     protected final ByteBuffer buffer;
+    protected final CursorGenerator sliceCursorGenerator;
     protected ScanColumn child;
 
 
-    protected AbstractScanColumn( final UUID uuid, final ByteBuffer columnNameBuffer ) {
+    protected AbstractScanColumn( final UUID uuid, final ByteBuffer columnNameBuffer,
+                                  final CursorGenerator sliceCursorGenerator ) {
         this.uuid = uuid;
         this.buffer = columnNameBuffer;
+        this.sliceCursorGenerator = sliceCursorGenerator;
     }
 
 
@@ -94,4 +99,9 @@ public abstract class AbstractScanColumn implements ScanColumn {
         return child;
     }
 
+
+    @Override
+    public void addToCursor( final CursorCache cache ) {
+        this.sliceCursorGenerator.addToCursor( cache, this );
+    }
 }

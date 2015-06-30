@@ -72,11 +72,6 @@ public class SliceShardFilterIterator implements ResultIterator {
     }
 
 
-    @Override
-    public void finalizeCursor( final CursorCache cache, final UUID lastValue ) {
-        resultsIterator.finalizeCursor( cache, lastValue );
-    }
-
 
     @Override
     public Iterator<Set<ScanColumn>> iterator() {

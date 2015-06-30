@@ -37,8 +37,6 @@ public interface ResultIterator extends Iterable<Set<ScanColumn>>, Iterator<Set<
 
 
     /** Reset this iterator to the start to begin iterating again */
-    public void reset();
+    void reset();
 
-    /** Finalize the cursor for this results.  Pass in the uuid of the last entity loaded. */
-    public void finalizeCursor( CursorCache cache, UUID lastValue );
 }

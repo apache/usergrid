@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cassandra.CursorCache;
 import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
 
 
@@ -39,6 +40,14 @@ public interface ScanColumn extends Comparable<ScanColumn> {
      * @param childColumn
      */
     void setChild( final ScanColumn childColumn );
+
+
+    /**
+     * Use the generator to add this value to the cursor cache
+     * @param cache
+     */
+    void addToCursor( final CursorCache cache );
+
 
     /**
      * Returns the childl column if present, can return null

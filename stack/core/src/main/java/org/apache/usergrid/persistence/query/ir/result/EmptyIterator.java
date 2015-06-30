@@ -32,11 +32,6 @@ public class EmptyIterator implements ResultIterator {
     }
 
 
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
-        //no op
-    }
-
 
     @Override
     public Iterator<Set<ScanColumn>> iterator() {

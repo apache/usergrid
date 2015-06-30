@@ -100,14 +100,14 @@ public class SubtractionIterator extends MergeIterator {
     }
 
 
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(org.apache.usergrid.persistence.cassandra
-     * .CursorCache)
-     */
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
-        //we can only keep a cursor on our keep result set, we must subtract from every page of keep when loading
-        // results
-        keepIterator.finalizeCursor( cache, lastLoaded );
-    }
+//    /* (non-Javadoc)
+//     * @see org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(org.apache.usergrid.persistence.cassandra
+//     * .CursorCache)
+//     */
+//    @Override
+//    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
+//        //we can only keep a cursor on our keep result set, we must subtract from every page of keep when loading
+//        // results
+//        keepIterator.finalizeCursor( cache, lastLoaded );
+//    }
 }
