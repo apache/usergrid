@@ -232,8 +232,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     @Override
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
                                        final Entity entity) {
-
-        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, entity.getId())));
+        index(applicationScope,entity.getId());
     }
 
 
