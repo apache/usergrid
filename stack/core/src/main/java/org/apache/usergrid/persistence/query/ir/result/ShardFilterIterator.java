@@ -22,13 +22,9 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.CursorCache;
 
 
 /**
@@ -40,11 +36,11 @@ import org.apache.usergrid.persistence.cassandra.CursorCache;
  *
  * @author tnine
  */
-public class SliceShardFilterIterator implements ResultIterator {
+public class ShardFilterIterator implements ResultIterator {
 
-    private static final Logger logger = LoggerFactory.getLogger( SliceShardFilterIterator.class );
+    private static final Logger logger = LoggerFactory.getLogger( ShardFilterIterator.class );
 
-    private final ShardBucketValidator shardBucketValidator;
+    private final ShardFilter shardFilter;
     private final ResultIterator resultsIterator;
     private final int pageSize;
 
@@ -52,13 +48,13 @@ public class SliceShardFilterIterator implements ResultIterator {
 
 
     /**
-     * @param shardBucketValidator The validator to use when validating results belong to a shard
+     * @param shardFilter The validator to use when validating results belong to a shard
      * @param resultsIterator The iterator to filter results from
      * @param pageSize
      */
-    public SliceShardFilterIterator( final ShardBucketValidator shardBucketValidator,
-                                     final ResultIterator resultsIterator, final int pageSize ) {
-        this.shardBucketValidator = shardBucketValidator;
+    public ShardFilterIterator( final ShardFilter shardFilter, final ResultIterator resultsIterator,
+                                final int pageSize ) {
+        this.shardFilter = shardFilter;
         this.resultsIterator = resultsIterator;
         this.pageSize = pageSize;
     }
@@ -115,7 +111,7 @@ public class SliceShardFilterIterator implements ResultIterator {
             while(results.size() < pageSize && scanColumns.hasNext()){
                 final ScanColumn scanColumn = scanColumns.next();
 
-                if(shardBucketValidator.isInShard( scanColumn.getUUID() )){
+                if( shardFilter.isInShard( scanColumn )){
                    results.add( scanColumn );
                 }
             }
@@ -124,37 +120,5 @@ public class SliceShardFilterIterator implements ResultIterator {
         current = results;
 
 
-    }
-
-
-
-    /**
-     * Class that performs validation on an entity to ensure it's in the shard we expecte
-     */
-    public static final class ShardBucketValidator {
-        private final IndexBucketLocator indexBucketLocator;
-        private final String expectedBucket;
-        private final UUID applicationId;
-        private final IndexBucketLocator.IndexType type;
-        private final String[] components;
-
-
-        public ShardBucketValidator( final IndexBucketLocator indexBucketLocator, final String expectedBucket,
-                                     final UUID applicationId, final IndexBucketLocator.IndexType type,
-                                     final String... components ) {
-            this.indexBucketLocator = indexBucketLocator;
-            this.expectedBucket = expectedBucket;
-            this.applicationId = applicationId;
-            this.type = type;
-            this.components = components;
-        }
-
-
-        public boolean isInShard( final UUID entityId ) {
-            //not for our current processing shard, discard
-            final String shard = indexBucketLocator.getBucket( applicationId, type, entityId, components );
-
-            return expectedBucket.equals( shard );
-        }
     }
 }

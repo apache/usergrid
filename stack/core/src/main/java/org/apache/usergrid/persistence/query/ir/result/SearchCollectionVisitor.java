@@ -108,7 +108,7 @@ public class SearchCollectionVisitor extends SearchVisitor {
                         queryProcessor.getPageSizeHint( node ), query.isReversed(), bucket, applicationId,
                         node.isForceKeepFirst() );
 
-        this.results.push( new SliceIterator( slice, indexScanner, uuidIndexSliceParser ) );
+        this.results.push( new SliceIterator( indexScanner, uuidIndexSliceParser ) );
     }
 
 
@@ -128,14 +128,16 @@ public class SearchCollectionVisitor extends SearchVisitor {
         final int size = queryProcessor.getPageSizeHint( node );
 
         GeoIterator itr = new GeoIterator(
-                new CollectionGeoSearch( em, indexBucketLocator, cassandraService, headEntity, collection.getName() ),
+                new CollectionGeoSearch( em, bucket, cassandraService, headEntity, collection.getName() ),
                 size, slice, node.getPropertyName(), new Point( node.getLattitude(), node.getLongitude() ),
                 node.getDistance() );
 
+        this.results.push( itr );
 
-        final SliceShardFilterIterator.ShardBucketValidator validator = new SliceShardFilterIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.COLLECTION, collection.getName() );
-
-        this.results.push(  new SliceShardFilterIterator( validator, itr, size));
+//        final CollectionShardFilter
+//                validator = new CollectionShardFilter(indexBucketLocator, bucket );
+//
+//        this.results.push(  new ShardFilterIterator( validator, itr, size));
     }
 
 

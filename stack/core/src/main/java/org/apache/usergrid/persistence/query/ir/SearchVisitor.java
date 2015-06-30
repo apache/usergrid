@@ -213,7 +213,7 @@ public abstract class SearchVisitor implements NodeVisitor {
                 final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( firstFieldSlice );
 
                 subResults =
-                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), new SecondaryIndexSliceParser( sliceCursorGenerator ) );
+                        new SliceIterator( secondaryIndexScan( orderByNode, firstFieldSlice ), new SecondaryIndexSliceParser( sliceCursorGenerator ) );
             }
 
             orderIterator = new OrderByIterator( slice, orderByNode.getSecondarySorts(), subResults, em,
@@ -234,7 +234,7 @@ public abstract class SearchVisitor implements NodeVisitor {
 
             final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
 
-            SliceIterator joinSlice = new SliceIterator( slice, scanner, new SecondaryIndexSliceParser(
+            SliceIterator joinSlice = new SliceIterator( scanner, new SecondaryIndexSliceParser(
                     sliceCursorGenerator ));
 
             IntersectionIterator union = new IntersectionIterator( queryProcessor.getPageSizeHint( orderByNode ) );
@@ -268,7 +268,7 @@ public abstract class SearchVisitor implements NodeVisitor {
 
             final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
 
-            intersections.addIterator( new SliceIterator( slice, scanner, new SecondaryIndexSliceParser(
+            intersections.addIterator( new SliceIterator( scanner, new SecondaryIndexSliceParser(
                     sliceCursorGenerator )) );
         }
 

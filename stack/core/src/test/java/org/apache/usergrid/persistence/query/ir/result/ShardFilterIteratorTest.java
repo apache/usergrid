@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Simple test to test UUID
  */
-public class SliceShardFilterIteratorTest {
+public class ShardFilterIteratorTest {
 
     @Test
     public void testIndexValues() {
@@ -55,7 +55,6 @@ public class SliceShardFilterIteratorTest {
 
         final UUID applicationId = UUIDUtils.newTimeUUID();
 
-        final IndexBucketLocator.IndexType indexType = IndexBucketLocator.IndexType.COLLECTION;
 
         final String components = "things";
 
@@ -68,7 +67,7 @@ public class SliceShardFilterIteratorTest {
         for ( int i = 0; i < size; i++ ) {
             final UUID entityId = UUIDUtils.newTimeUUID();
 
-            final String shard = indexBucketLocator.getBucket( applicationId, indexType, entityId, components );
+            final String shard = indexBucketLocator.getBucket(entityId );
 
             final UUIDColumn uuidColumn = new UUIDColumn( entityId, 1, uuidCursorGenerator );
 
@@ -89,23 +88,23 @@ public class SliceShardFilterIteratorTest {
             final TestIterator testIterator = new TestIterator( new HashSet<ScanColumn>( shards.get( shard ) ) );
 
 
-            final SliceShardFilterIterator.ShardBucketValidator shardBucketValidator =
-                    new SliceShardFilterIterator.ShardBucketValidator( indexBucketLocator, shard, applicationId,
-                            indexType, components );
+            final TestEntityFilter collectionSliceShardFilter =
+                    new TestEntityFilter( indexBucketLocator, shard );
 
 
             //now iterate over everything and remove it from expected
-            final SliceShardFilterIterator sliceShardFilterIterator = new SliceShardFilterIterator( shardBucketValidator, testIterator, 10 );
+            final ShardFilterIterator shardFilterIterator = new ShardFilterIterator(
+                    collectionSliceShardFilter, testIterator, 10 );
 
             //keep removing
-            while(sliceShardFilterIterator.hasNext()){
+            while( shardFilterIterator.hasNext()){
 
                 //check each scan column from our results
-                for(final ScanColumn column : sliceShardFilterIterator.next()){
+                for(final ScanColumn column : shardFilterIterator.next()){
 
                     final boolean contained = expected.remove( column );
 
-                    assertTrue("Column should be present", contained);
+                    assertTrue( "Column should be present", contained );
 
                 }
 
@@ -115,6 +114,27 @@ public class SliceShardFilterIteratorTest {
             assertTrue("expected should be empty", expected.isEmpty());
         }
 
+    }
+
+    private static final class TestEntityFilter implements ShardFilter{
+
+        private final IndexBucketLocator indexBucketLocator;
+        private final String expectedShard;
+
+
+        private TestEntityFilter( final IndexBucketLocator indexBucketLocator, final String expectedShard ) {
+            this.indexBucketLocator = indexBucketLocator;
+            this.expectedShard = expectedShard;
+        }
+
+
+        @Override
+        public boolean isInShard( final ScanColumn scanColumn ) {
+
+            final String shard =  indexBucketLocator.getBucket( scanColumn.getUUID() );
+
+            return expectedShard.equals( shard );
+        }
     }
 
 

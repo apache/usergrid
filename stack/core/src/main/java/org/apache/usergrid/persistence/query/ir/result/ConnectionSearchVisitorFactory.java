@@ -62,7 +62,7 @@ public class ConnectionSearchVisitorFactory implements SearchVisitorFactory {
     public Collection<SearchVisitor> createVisitors() {
 
         final List<String> buckets =
-                indexBucketLocator.getBuckets( applicationId, IndexBucketLocator.IndexType.CONNECTION, prefix );
+                indexBucketLocator.getBuckets( );
 
 
         final List<SearchVisitor> visitors = new ArrayList<SearchVisitor>( buckets.size() );

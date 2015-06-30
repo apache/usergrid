@@ -113,15 +113,19 @@ public class SearchConnectionVisitor extends SearchVisitor {
 
 
 
+        //TODO, make search take a shard
         GeoIterator itr =
-                new GeoIterator( new ConnectionGeoSearch( em, indexBucketLocator, cassandraService, connection.getIndexId() ),
+                new GeoIterator( new ConnectionGeoSearch( em, bucket, cassandraService, connection.getIndexId() ),
                         size, slice, node.getPropertyName(),
                         new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
 
-        final SliceShardFilterIterator.ShardBucketValidator validator = new SliceShardFilterIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.CONNECTION, connection.getSearchIndexName() );
+
+        this.results.push( itr );
+//        final CollectionShardFilter
+//                validator = new CollectionShardFilter(indexBucketLocator, bucket );
 
 
-        this.results.push( new SliceShardFilterIterator( validator, itr, size ) );
+//        this.results.push( new ShardFilterIterator( validator, itr, size ) );
 
     }
 
@@ -193,13 +197,15 @@ public class SearchConnectionVisitor extends SearchVisitor {
                         start, slice.isReversed(), size, skipFirst );
 
         //we have to create our wrapper so validate the data we read is correct for our shard
-        final SliceShardFilterIterator.ShardBucketValidator validator = new SliceShardFilterIterator.ShardBucketValidator(indexBucketLocator, bucket, applicationId, IndexBucketLocator.IndexType.CONNECTION, "" );
 
 
-        final SliceIterator sliceIterator = new SliceIterator( slice, connectionScanner, connectionParser );
+        final ConnectionShardFilter connectionShardFilter = new ConnectionShardFilter( indexBucketLocator, bucket, connection);
 
 
-        this.results.push(  new SliceShardFilterIterator( validator, sliceIterator, size));
+        final SliceIterator sliceIterator = new SliceIterator( connectionScanner, connectionParser );
+
+
+        this.results.push(  new ShardFilterIterator( connectionShardFilter, sliceIterator, size));
     }
 
 
