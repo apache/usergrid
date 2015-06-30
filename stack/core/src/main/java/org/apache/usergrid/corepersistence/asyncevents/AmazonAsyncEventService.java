@@ -232,7 +232,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
     @Override
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
                                        final Entity entity) {
-        index(applicationScope,entity.getId());
+
+        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, entity.getId())));
     }
 
 
@@ -427,8 +428,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
     @Override
-    public void index(final ApplicationScope applicationScope, final Id id) {
+    public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
         //change to id scope to avoid serialization issues
-        offer(new EntityIndexEvent(new EntityIdScope(applicationScope,id)));
+        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, id)));
     }
 }

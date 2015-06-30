@@ -96,8 +96,10 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
 
     @Override
-    public void index( final ApplicationScope applicationScope, final Id id ) {
-        run(eventBuilder.index(new EntityIndexOperation(applicationScope, id, Long.MAX_VALUE)));
+    public void index( final ApplicationScope applicationScope, final Id id, final long updatedSince ) {
+        final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, id, updatedSince );
+
+        run(eventBuilder.index( entityIndexOperation ));
     }
 
 
