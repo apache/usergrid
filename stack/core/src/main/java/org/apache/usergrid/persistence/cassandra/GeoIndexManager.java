@@ -23,9 +23,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.GeocellManager;
 import org.apache.usergrid.persistence.geo.model.Point;
@@ -38,7 +38,6 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
-
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_GEOCELL;
 import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -104,26 +103,25 @@ public class GeoIndexManager {
         // entity_id,prop_name
         Object property_index_key =
                 key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, propertyName, DICTIONARY_GEOCELL, geoCell,
-                        locator.getBucket( appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL], geoCell ) );
+                        locator.getBucket(index_keys[ConnectionRefImpl.ALL] ) );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName, DICTIONARY_GEOCELL,
                         geoCell,
-                        locator.getBucket( appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE],
-                                geoCell ) );
+                        locator.getBucket( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE] ) );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, propertyName,
-                        DICTIONARY_GEOCELL, geoCell, locator.getBucket( appId, IndexType.CONNECTION,
-                        index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], geoCell ) );
+                        DICTIONARY_GEOCELL, geoCell, locator.getBucket(
+                        index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE] ) );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName,
-                        DICTIONARY_GEOCELL, geoCell, locator.getBucket( appId, IndexType.CONNECTION,
-                        index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell ) );
+                        DICTIONARY_GEOCELL, geoCell, locator.getBucket(
+                        index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE] ) );
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addInsertToMutator( m, ENTITY_INDEX, property_index_key, columnName, columnValue, timestamp );
@@ -187,26 +185,25 @@ public class GeoIndexManager {
         // entity_id,prop_name
         Object property_index_key =
                 key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, propertyName, DICTIONARY_GEOCELL, geoCell,
-                        locator.getBucket( appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL], geoCell ) );
+                        locator.getBucket( index_keys[ConnectionRefImpl.ALL] ) );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName, DICTIONARY_GEOCELL,
                         geoCell,
-                        locator.getBucket( appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE],
-                                geoCell ) );
+                        locator.getBucket( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE]) );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, propertyName,
-                        DICTIONARY_GEOCELL, geoCell, locator.getBucket( appId, IndexType.CONNECTION,
-                        index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], geoCell ) );
+                        DICTIONARY_GEOCELL, geoCell, locator.getBucket(
+                        index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE] ) );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName,
-                        DICTIONARY_GEOCELL, geoCell, locator.getBucket( appId, IndexType.CONNECTION,
-                        index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell ) );
+                        DICTIONARY_GEOCELL, geoCell, locator.getBucket(
+                        index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE] ) );
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         m.addDeletion( bytebuffer( property_index_key ), ENTITY_INDEX.toString(), columnName,
@@ -260,7 +257,7 @@ public class GeoIndexManager {
         for ( int i = 0; i < MAX_RESOLUTION; i++ ) {
             String cell = cells.get( i );
 
-            String indexBucket = locator.getBucket( appId, IndexType.GEO, entityId, cell );
+            String indexBucket = locator.getBucket( entityId );
 
             addLocationEntryInsertionToMutator( m, key( key, DICTIONARY_GEOCELL, cell, indexBucket ), location );
         }
@@ -297,7 +294,7 @@ public class GeoIndexManager {
 
             String cell = cells.get( i );
 
-            for ( String indexBucket : locator.getBuckets( appId, IndexType.GEO, cell ) ) {
+            for ( String indexBucket : locator.getBuckets() ) {
 
                 addLocationEntryDeletionToMutator( m, key( key, DICTIONARY_GEOCELL, cell, indexBucket ), location );
             }

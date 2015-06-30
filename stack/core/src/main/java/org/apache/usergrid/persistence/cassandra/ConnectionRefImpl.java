@@ -355,6 +355,16 @@ public class ConnectionRefImpl implements ConnectionRef {
     }
 
 
+    /**
+     * Return the shard UUID to be used for hashing and filters on connections
+     * @return
+     */
+    public UUID getConnectionSearchShardId(){
+       return getIndexId( ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, getConnectedEntity(),
+                    getConnectionType(), getConnectedEntityType(), new ConnectedEntityRef[0] );
+    }
+
+
     public ConnectionRefImpl getConnectionToConnectionEntity() {
         return new ConnectionRefImpl( getConnectingEntity(),
                 new ConnectedEntityRefImpl( CONNECTION_ENTITY_CONNECTION_TYPE, CONNECTION_ENTITY_TYPE, getUuid() ) );

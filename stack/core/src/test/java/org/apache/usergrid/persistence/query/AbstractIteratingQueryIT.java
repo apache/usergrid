@@ -371,8 +371,7 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-//        int size = 2000;
-        int size = 2;
+        int size = 2000;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection

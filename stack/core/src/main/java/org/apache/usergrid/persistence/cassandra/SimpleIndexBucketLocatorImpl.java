@@ -102,7 +102,7 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
      * java.lang.String[])
      */
     @Override
-    public String getBucket( UUID applicationId, IndexType type, UUID entityId, String... components ) {
+    public String getBucket( UUID entityId ) {
         return getClosestToken( entityId );
     }
 
@@ -116,7 +116,7 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
      * java.lang.String[])
      */
     @Override
-    public List<String> getBuckets( UUID applicationId, IndexType type, String... components ) {
+    public List<String> getBuckets( ) {
         return bucketsString;
     }
 }

@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
+
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.mq.QueueManager;
@@ -57,7 +58,6 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Query.CounterFilterPredicate;
 import org.apache.usergrid.persistence.Results;
@@ -109,7 +109,6 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
-
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
@@ -157,6 +156,10 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.persistence.cassandra.Serializers.le;
+import static org.apache.usergrid.persistence.cassandra.Serializers.se;
+import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
@@ -168,7 +171,6 @@ import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -808,7 +810,7 @@ public class EntityManagerImpl implements EntityManager {
         // Create collection name based on entity: i.e. "users"
         String collection_name = Schema.defaultCollectionName( eType );
         // Create collection key based collection name
-        String bucketId = indexBucketLocator.getBucket( applicationId, IndexType.COLLECTION, itemId, collection_name );
+        String bucketId = indexBucketLocator.getBucket(itemId );
 
         Object collection_key = key( applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId );
 

@@ -39,7 +39,6 @@ import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.RelationManager;
@@ -51,20 +50,14 @@ import org.apache.usergrid.persistence.SimpleCollectionRef;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
-import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
-import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.hector.CountingMutator;
-import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.result.CollectionResultsLoaderFactory;
 import org.apache.usergrid.persistence.query.ir.result.CollectionSearchVisitorFactory;
 import org.apache.usergrid.persistence.query.ir.result.ConnectionResultsLoaderFactory;
 import org.apache.usergrid.persistence.query.ir.result.ConnectionSearchVisitorFactory;
 import org.apache.usergrid.persistence.query.ir.result.ConnectionTypesIterator;
-import org.apache.usergrid.persistence.query.ir.result.SearchCollectionVisitor;
-import org.apache.usergrid.persistence.query.ir.result.SearchConnectionVisitor;
-import org.apache.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.IndexUtils;
 import org.apache.usergrid.utils.MapUtils;
@@ -202,8 +195,7 @@ public class RelationManagerImpl implements RelationManager {
         Entity indexedEntity = indexUpdate.getEntity();
 
         String bucketId = indexBucketLocator
-                .getBucket( applicationId, IndexType.COLLECTION, indexedEntity.getUuid(), indexedEntity.getType(),
-                        indexUpdate.getEntryName() );
+                .getBucket(indexedEntity.getUuid() );
 
         // the root name without the bucket
         // entity_id,collection_name,prop_name,
@@ -397,7 +389,7 @@ public class RelationManagerImpl implements RelationManager {
 
             // get the bucket this entityId needs to be inserted into
             String bucketId = indexBucketLocator
-                    .getBucket( applicationId, IndexType.COLLECTION, entity.getUuid(), collectionName );
+                    .getBucket(entity.getUuid());
 
             Object collections_key = key( ownerId, Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId );
 
@@ -502,7 +494,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         Object collections_key = key( headEntity.getUuid(), Schema.DICTIONARY_COLLECTIONS, collectionName,
-                indexBucketLocator.getBucket( applicationId, IndexType.COLLECTION, entity.getUuid(), collectionName ) );
+                indexBucketLocator.getBucket( entity.getUuid()) );
 
         // Remove property indexes
 
@@ -563,26 +555,25 @@ public class RelationManagerImpl implements RelationManager {
 
         // entity_id,prop_name
         Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
-                        entry.getPath() ) );
+                indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.ALL] ) );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
+                        indexBucketLocator.getBucket(
+                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE] ) );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
+                        indexBucketLocator.getBucket(
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE]) );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
+                        indexBucketLocator.getBucket(
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE]) );
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,
@@ -613,26 +604,25 @@ public class RelationManagerImpl implements RelationManager {
 
         // entity_id,prop_name
         Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
-                        entry.getPath() ) );
+                indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.ALL] ) );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
+                        indexBucketLocator.getBucket(
+                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE]) );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
+                        indexBucketLocator.getBucket(
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE] ) );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
+                        indexBucketLocator.getBucket(
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE]) );
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,

@@ -39,7 +39,6 @@ public class CollectionSearchVisitorFactory implements SearchVisitorFactory {
     private final QueryProcessor queryProcessor;
     private final UUID applicationId;
     private final EntityRef headEntity;
-    private final String collectionName;
 
 
     public CollectionSearchVisitorFactory( final CassandraService cassandraService,
@@ -51,7 +50,6 @@ public class CollectionSearchVisitorFactory implements SearchVisitorFactory {
         this.queryProcessor = queryProcessor;
         this.applicationId = applicationId;
         this.headEntity = headEntity;
-        this.collectionName = collectionName;
     }
 
 
@@ -59,7 +57,7 @@ public class CollectionSearchVisitorFactory implements SearchVisitorFactory {
     public Collection<SearchVisitor> createVisitors() {
 
         final List<String> buckets =
-                indexBucketLocator.getBuckets( applicationId, IndexBucketLocator.IndexType.CONNECTION, collectionName );
+                indexBucketLocator.getBuckets( );
 
 
         final List<SearchVisitor> visitors = new ArrayList<SearchVisitor>( buckets.size() );

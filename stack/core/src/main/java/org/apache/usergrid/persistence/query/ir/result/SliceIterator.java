@@ -42,9 +42,7 @@ import me.prettyprint.hector.api.beans.HColumn;
  */
 public class SliceIterator implements ResultIterator {
 
-    private static final Logger logger = LoggerFactory.getLogger( SliceIterator.class );
 
-    private final QuerySlice slice;
     protected final SliceParser parser;
     protected final IndexScanner scanner;
     private final int pageSize;
@@ -66,19 +64,13 @@ public class SliceIterator implements ResultIterator {
      */
     private int pagesLoaded = 0;
 
-    /**
-     * Pointer to the last column we parsed
-     */
-    private ScanColumn last;
 
 
     /**
      * @param scanner The scanner to use to read the cols
-     * @param slice The slice used in the scanner
      * @param parser The parser for the scanner results
      */
-    public SliceIterator( QuerySlice slice, IndexScanner scanner, SliceParser parser ) {
-        this.slice = slice;
+    public SliceIterator(  IndexScanner scanner, SliceParser parser ) {
         this.parser = parser;
         this.scanner = scanner;
         this.pageSize = scanner.getPageSize();
@@ -136,7 +128,6 @@ public class SliceIterator implements ResultIterator {
                 continue;
             }
 
-            last = parsed;
             parsedCols.add( parsed );
         }
 

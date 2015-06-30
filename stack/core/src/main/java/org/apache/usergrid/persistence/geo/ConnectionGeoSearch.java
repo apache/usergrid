@@ -43,9 +43,9 @@ public class ConnectionGeoSearch extends GeoIndexSearcher {
     private final UUID connectionId;
 
 
-    public ConnectionGeoSearch( EntityManager entityManager, IndexBucketLocator locator, CassandraService cass,
+    public ConnectionGeoSearch( EntityManager entityManager,  final String shard, CassandraService cass,
                                 UUID connectionId ) {
-        super( entityManager, locator, cass );
+        super( entityManager, shard, cass );
 
         this.connectionId = connectionId;
     }
