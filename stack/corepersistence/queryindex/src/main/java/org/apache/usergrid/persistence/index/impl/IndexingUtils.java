@@ -150,7 +150,7 @@ public class IndexingUtils {
         builder = builder
 
             .startObject()
-
+                    .field( "date_detection",false )
                     /**  add routing  "_routing":{ "required":false,  "path":"ug_entityId" **/
                      .startObject("_routing").field("required",true).field("path",ENTITYID_ID_FIELDNAME).endObject()
                      .startArray("dynamic_templates")
