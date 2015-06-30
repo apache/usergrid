@@ -126,11 +126,10 @@ public class ReIndexServiceImpl implements ReIndexService {
 
             //for each edge, create our scope and index on it
             .doOnNext( edge -> {
-                final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( edge.getApplicationScope(), edge.getEdge().getTargetNode(), modifiedSince );
 
-                logger.info( "Queueing {}", entityIndexOperation );
+                logger.info( "Queueing {} {}", edge.getApplicationScope(), edge.getEdge().getTargetNode() );
 
-                indexService.index(entityIndexOperation);
+                indexService.index(edge.getApplicationScope(),edge.getEdge().getTargetNode());
 
             } );
 
