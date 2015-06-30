@@ -15,14 +15,9 @@ class UUIDColumn extends AbstractScanColumn{
 
     private final int compareReversed;
 
-    protected UUIDColumn( final UUID uuid, final ByteBuffer columnNameBuffer, final int compareReversed  ) {
-        super( uuid, columnNameBuffer );
-        this.compareReversed = compareReversed;
-    }
 
-
-    public UUIDColumn( final UUID uuid, final int compareReversed ) {
-        super(uuid, Serializers.ue.toByteBuffer( uuid ));
+    public UUIDColumn( final UUID uuid, final int compareReversed, final CursorGenerator<UUIDColumn> sliceCursorGenerator   ) {
+        super(uuid, Serializers.ue.toByteBuffer( uuid ), sliceCursorGenerator );
         this.compareReversed = compareReversed;
     }
 

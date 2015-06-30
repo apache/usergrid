@@ -45,8 +45,12 @@ public class SecondaryIndexSliceParser implements SliceParser {
     //the type comparator
     private Comparator<SecondaryIndexColumn> typeComparator;
 
+    private final SliceCursorGenerator sliceCursorGenerator;
 
-    public SecondaryIndexSliceParser() {}
+
+    public SecondaryIndexSliceParser( final SliceCursorGenerator sliceCursorGenerator ) {
+        this.sliceCursorGenerator = sliceCursorGenerator;
+    }
 
 
     /* (non-Javadoc)
@@ -63,7 +67,7 @@ public class SecondaryIndexSliceParser implements SliceParser {
             typeComparator = getTypeComparator( value, isReversed );
         }
 
-        return new SecondaryIndexColumn( uuid, value, buff, typeComparator );
+        return new SecondaryIndexColumn( uuid, value, buff, typeComparator, sliceCursorGenerator );
     }
 
 
@@ -95,8 +99,9 @@ public class SecondaryIndexSliceParser implements SliceParser {
          * @param valueComparator The comparator for the values
          */
         public SecondaryIndexColumn( final UUID uuid, final Object value, final ByteBuffer columnNameBuffer,
-                                     final Comparator<SecondaryIndexColumn> valueComparator ) {
-            super( uuid, columnNameBuffer );
+                                     final Comparator<SecondaryIndexColumn> valueComparator,
+                                     final SliceCursorGenerator sliceCursorGenerator) {
+            super( uuid, columnNameBuffer, sliceCursorGenerator );
             this.value = value;
             this.valueComparator = valueComparator;
         }

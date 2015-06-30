@@ -17,7 +17,6 @@ import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeStartToBy
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
-import org.apache.usergrid.persistence.geo.CollectionGeoSearch;
 import org.apache.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.query.ir.AllNode;
@@ -171,8 +170,10 @@ public class SearchConnectionVisitor extends SearchVisitor {
 
         final String connectionType = connection.getConnectionType();
 
+        final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
 
-        final ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser( targetType );
+        final ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser( targetType,
+                sliceCursorGenerator );
 
 
         final Iterator<String> connectionTypes;

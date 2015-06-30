@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static junit.framework.Assert.assertNull;
@@ -94,7 +96,7 @@ public class AbstractScanColumnTest {
     private class TestScanColumn extends AbstractScanColumn {
 
         protected TestScanColumn( final UUID uuid, final ByteBuffer buffer ) {
-            super( uuid, buffer );
+            super( uuid, buffer, new SliceCursorGenerator( new QuerySlice( "foo", 1 ) ) );
         }
 
 

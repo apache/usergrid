@@ -31,14 +31,12 @@ public class GatherIterator implements ResultIterator {
 
 
     private Iterator<ScanColumn> mergedIterators;
-    private Map<UUID, ResultIterator> cursorMap;
     private List<ResultIterator> iterators;
 
 
     public GatherIterator(final int pageSize, final QueryNode rootNode, final Collection<SearchVisitor> searchVisitors) {
         this.pageSize = pageSize;
         this.rootNode = rootNode;
-        this.cursorMap = new HashMap<UUID, ResultIterator>( pageSize );
         createIterators( searchVisitors );
     }
 
@@ -48,19 +46,6 @@ public class GatherIterator implements ResultIterator {
         throw new UnsupportedOperationException( "Gather iterators cannot be reset" );
     }
 
-
-    @Override
-    public void finalizeCursor( final CursorCache cache, final UUID lastValue ) {
-        //find the last value in the tree, and return it's cursor
-        final ResultIterator sourceIterator = cursorMap.get( lastValue );
-
-        if(sourceIterator == null){
-            throw new IllegalArgumentException( "Could not find the iterator that provided the candidate with uuid " + lastValue );
-        }
-
-        //delegate to the source iterator
-        sourceIterator.finalizeCursor( cache, lastValue );
-    }
 
 
     @Override
@@ -133,8 +118,6 @@ public class GatherIterator implements ResultIterator {
     private void mergeIterators(){
         //TODO make this concurrent
 
-        //clear the cursor map
-        cursorMap.clear();
 
         TreeSet<ScanColumn> merged = new TreeSet<ScanColumn>(  );
 
@@ -169,7 +152,6 @@ public class GatherIterator implements ResultIterator {
             final ScanColumn next = nextPage.next();
 
             results.add(next);
-            cursorMap.put( next.getUUID(), iterator );
 
         }
 

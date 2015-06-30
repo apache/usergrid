@@ -51,7 +51,7 @@ public class InOrderIterator implements ResultIterator {
     /** Add a uuid to the list */
     public void add( UUID... ids ) {
         for ( UUID current : ids ) {
-            uuids.add( new UUIDColumn( current, 1 ) );
+            uuids.add( new UUIDColumn( current, 1, new UUIDCursorGenerator<UUIDColumn>( 1 ) ) );
         }
     }
 
@@ -120,12 +120,5 @@ public class InOrderIterator implements ResultIterator {
     }
 
 
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(org.apache.usergrid.persistence.cassandra
-     * .CursorCache)
-     */
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
 
-    }
 }

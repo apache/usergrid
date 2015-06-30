@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.query.ir.result.IntersectionIterator;
 import org.apache.usergrid.persistence.query.ir.result.OrderByIterator;
 import org.apache.usergrid.persistence.query.ir.result.ResultIterator;
 import org.apache.usergrid.persistence.query.ir.result.SecondaryIndexSliceParser;
+import org.apache.usergrid.persistence.query.ir.result.SliceCursorGenerator;
 import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
 import org.apache.usergrid.persistence.query.ir.result.StaticIdIterator;
 import org.apache.usergrid.persistence.query.ir.result.SubtractionIterator;
@@ -208,8 +209,11 @@ public abstract class SearchVisitor implements NodeVisitor {
             //only order by with no query, start scanning the first field
             if ( subResults == null ) {
                 QuerySlice firstFieldSlice = new QuerySlice( slice.getPropertyName(), -1 );
+
+                final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( firstFieldSlice );
+
                 subResults =
-                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), new SecondaryIndexSliceParser() );
+                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), new SecondaryIndexSliceParser( sliceCursorGenerator ) );
             }
 
             orderIterator = new OrderByIterator( slice, orderByNode.getSecondarySorts(), subResults, em,
@@ -228,7 +232,10 @@ public abstract class SearchVisitor implements NodeVisitor {
                 scanner = secondaryIndexScan( orderByNode, slice );
             }
 
-            SliceIterator joinSlice = new SliceIterator( slice, scanner, new SecondaryIndexSliceParser());
+            final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
+
+            SliceIterator joinSlice = new SliceIterator( slice, scanner, new SecondaryIndexSliceParser(
+                    sliceCursorGenerator ));
 
             IntersectionIterator union = new IntersectionIterator( queryProcessor.getPageSizeHint( orderByNode ) );
             union.addIterator( joinSlice );
@@ -259,7 +266,10 @@ public abstract class SearchVisitor implements NodeVisitor {
         for ( QuerySlice slice : node.getAllSlices() ) {
             IndexScanner scanner = secondaryIndexScan( node, slice );
 
-            intersections.addIterator( new SliceIterator( slice, scanner, new SecondaryIndexSliceParser()) );
+            final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
+
+            intersections.addIterator( new SliceIterator( slice, scanner, new SecondaryIndexSliceParser(
+                    sliceCursorGenerator )) );
         }
 
         results.push( intersections );
