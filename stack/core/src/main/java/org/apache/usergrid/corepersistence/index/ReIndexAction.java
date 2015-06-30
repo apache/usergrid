@@ -33,8 +33,8 @@ public interface ReIndexAction {
 
     /**
      * Index this entity with the specified scope
-     * @param id
      * @param applicationScope
+     * @param id
      */
-    void index(final ApplicationScope applicationScope, final Id id );
+    void index( final ApplicationScope applicationScope, final Id id, final long updatedSince );
 }
