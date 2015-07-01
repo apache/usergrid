@@ -290,7 +290,7 @@ public class GeoIterator implements ResultIterator {
 
         @Override
         public void addToCursor( final CursorCache cache ) {
-
+            geoCursorGenerator.addToCursor( cache, this );
         }
 
 
