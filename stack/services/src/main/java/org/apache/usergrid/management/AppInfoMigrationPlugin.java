@@ -54,7 +54,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 
 /**
@@ -209,14 +208,6 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         return applicationId;
     }
 
-    private org.apache.usergrid.persistence.Entity createNewAppInfo(EntityManager managementEm, final String name, final UUID applicationId) throws Exception {
-        org.apache.usergrid.persistence.Entity appInfo;Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
-            put(PROPERTY_NAME, name);
-            put(PROPERTY_APPLICATION_ID, applicationId);
-        }};
-        appInfo = managementEm.create(new SimpleId(applicationId, CpNamingUtils.APPLICATION_INFO), appInfoMap);
-        return appInfo;
-    }
 
     /**
      * TODO: Use Graph to get application_info for an specified Application.
