@@ -20,7 +20,9 @@ package org.apache.usergrid.services.guice;
 
 
 import org.apache.usergrid.corepersistence.CoreModule;
+import org.apache.usergrid.management.AppInfoMigrationPlugin;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.apache.usergrid.services.queues.ImportQueueListener;
@@ -58,6 +60,9 @@ public class ServiceModule extends AbstractModule {
         //Seems weird, aren't we just binding the factory to the exact same factory when it goes to look for it?
         bind( ServiceManagerFactory.class );
         bind( EntityManagerFactory.class );
+        final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
+        plugins.addBinding().to(AppInfoMigrationPlugin.class);
+
 
 
 

@@ -77,7 +77,7 @@ public interface EntityManagerFactory {
      * @throws Exception the exception
      */
     Entity createApplicationV2(
-        String organizationName, String name, Map<String, Object> properties ) throws Exception;
+        String organizationName, String name, UUID applicationId, Map<String, Object> properties ) throws Exception;
 
 
     /**

@@ -235,8 +235,6 @@ public class CounterIT extends AbstractCoreIT {
             applicationId, CpNamingUtils.APPLICATION_INFO, properties );
 
 //Creating connections like below doesn't work.
-//        em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",
-//                new SimpleEntityRef( "application_info", applicationId ) );
 
         em.createConnection( organizationEntity.toTypedEntity(), "owns", applicationEntity );
 

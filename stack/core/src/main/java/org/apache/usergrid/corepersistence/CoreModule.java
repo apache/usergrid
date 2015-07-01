@@ -23,7 +23,6 @@ import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
-import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
@@ -119,7 +118,6 @@ public class CoreModule  extends AbstractModule {
         //wire up the collection migration plugin
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to( CoreMigrationPlugin.class );
-        plugins.addBinding().to( AppInfoMigrationPlugin.class );
         plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
         bind( AllApplicationsObservable.class ).to( AllApplicationsObservableImpl.class );
