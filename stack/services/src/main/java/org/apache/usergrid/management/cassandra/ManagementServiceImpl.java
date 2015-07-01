@@ -33,7 +33,6 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,7 +188,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     private static final String TOKEN_TYPE_CONFIRM = "confirm";
 
-    public static final String Org_App_Relationship = "applications";
+    public static final String ORG_APP_RELATIONSHIP = "applications";
 
     public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
@@ -1763,7 +1762,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         Results r = em.getSourceEntities(
             new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-            Org_App_Relationship, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
+            ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
 
         Entity entity = r.getEntity();
         if ( entity != null ) {
@@ -1786,7 +1785,7 @@ public class ManagementServiceImpl implements ManagementService {
         // query for application_info entities
         final Results results = em.getTargetEntities(
             new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
-            Org_App_Relationship, CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES);
+            ORG_APP_RELATIONSHIP, CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES);
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );
 
@@ -1840,7 +1839,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), Org_App_Relationship, appInfo );
+        em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), ORG_APP_RELATIONSHIP, appInfo );
 
         return applicationId;
     }
