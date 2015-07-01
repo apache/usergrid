@@ -266,6 +266,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
             put( PROPERTY_NAME, appName );
+            put( "org", organizationName );
         }};
 
         Entity appInfo;
