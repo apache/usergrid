@@ -128,16 +128,16 @@ public class SearchCollectionVisitor extends SearchVisitor {
         final int size = queryProcessor.getPageSizeHint( node );
 
         GeoIterator itr = new GeoIterator(
-                new CollectionGeoSearch( em, bucket, cassandraService, headEntity, collection.getName() ),
+                new CollectionGeoSearch( em, indexBucketLocator, cassandraService, headEntity, collection.getName() ),
                 size, slice, node.getPropertyName(), new Point( node.getLattitude(), node.getLongitude() ),
                 node.getDistance() );
 
-        this.results.push( itr );
+//        this.results.push( itr );
 
-//        final CollectionShardFilter
-//                validator = new CollectionShardFilter(indexBucketLocator, bucket );
-//
-//        this.results.push(  new ShardFilterIterator( validator, itr, size));
+        final CollectionShardFilter
+                validator = new CollectionShardFilter(indexBucketLocator, bucket );
+
+        this.results.push(  new ShardFilterIterator( validator, itr, size));
     }
 
 

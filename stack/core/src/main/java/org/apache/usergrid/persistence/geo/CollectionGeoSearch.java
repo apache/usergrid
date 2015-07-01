@@ -44,9 +44,9 @@ public class CollectionGeoSearch extends GeoIndexSearcher {
     private final EntityRef headEntity;
 
 
-    public CollectionGeoSearch( EntityManager entityManager, final String shard, CassandraService cass,
+    public CollectionGeoSearch( EntityManager entityManager, IndexBucketLocator locator, CassandraService cass,
                                 EntityRef headEntity, String collectionName ) {
-        super( entityManager, shard, cass );
+        super( entityManager, locator, cass );
         this.collectionName = collectionName;
         this.headEntity = headEntity;
     }

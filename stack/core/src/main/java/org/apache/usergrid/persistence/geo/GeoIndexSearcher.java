@@ -65,12 +65,12 @@ public abstract class GeoIndexSearcher {
     private static final int MAX_FETCH_SIZE = 1000;
 
     protected final EntityManager em;
-    protected final String shard;
+    protected final IndexBucketLocator locator;
     protected final CassandraService cass;
 
-    public GeoIndexSearcher(final  EntityManager entityManager, final String shard, final CassandraService cass ) {
+    public GeoIndexSearcher( EntityManager entityManager, IndexBucketLocator locator, CassandraService cass ) {
         this.em = entityManager;
-        this.shard = shard;
+        this.locator = locator;
         this.cass = cass;
     }
 
@@ -325,7 +325,12 @@ public abstract class GeoIndexSearcher {
         for ( String geoCell : curGeocellsUnique ) {
 
             // add buckets for each geoCell
-            keys.add( key( key, DICTIONARY_GEOCELL, geoCell, shard ) );
+
+            //TODO, use merge logic here
+
+            for ( String indexBucket : locator.getBuckets( ) ) {
+                keys.add( key( key, DICTIONARY_GEOCELL, geoCell, indexBucket ) );
+            }
         }
 
         DynamicComposite start = null;
