@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
-
 
 public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
@@ -125,8 +123,8 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
         Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
-        UUID applicationId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID applicationId = appInfo.getUuid();
+
         return applicationId;
     }
 

@@ -48,7 +48,6 @@ import com.google.inject.Inject;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -226,8 +225,8 @@ public class CounterIT extends AbstractCoreIT {
         organizationEntity = em.create( organizationEntity );
 
         Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName  );
-        UUID applicationId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID applicationId =
+            appInfo.getUuid();
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", orgName + "/" + appName );

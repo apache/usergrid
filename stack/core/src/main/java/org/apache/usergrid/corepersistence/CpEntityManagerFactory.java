@@ -83,7 +83,6 @@ import rx.Observable;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 

@@ -118,8 +118,7 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
 
                         @Override
                         public ApplicationScope call( final Entity entity ) {
-                            final UUID uuid = UUIDUtils.tryExtractUUID(
-                                entity.getField( Schema.PROPERTY_APPLICATION_ID ).getValue().toString() );
+                            final UUID uuid =entity.getId().getUuid();
                             return getApplicationScope( uuid );
                         }
                     } );

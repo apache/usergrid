@@ -108,7 +108,6 @@ public class Schema {
     public static final String TYPE_MEMBER = "member";
 
     public static final String PROPERTY_ACTIVATED = "activated";
-    public static final String PROPERTY_APPLICATION_ID = "applicationId";
     public static final String PROPERTY_COLLECTION_NAME = "collectionName";
     public static final String PROPERTY_CREATED = "created";
     public static final String PROPERTY_CONFIRMED = "confirmed";
