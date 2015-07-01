@@ -20,6 +20,7 @@ package org.apache.usergrid.services.guice;
 
 
 import org.apache.usergrid.corepersistence.CoreModule;
+import org.apache.usergrid.corepersistence.ServiceModule;
 import org.apache.usergrid.management.AppInfoMigrationPlugin;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
@@ -47,25 +48,13 @@ import com.google.inject.multibindings.Multibinder;
  </bean>
  */
 
-public class ServiceModule extends AbstractModule {
+public class ServiceModuleImpl extends AbstractModule implements ServiceModule {
     @Override
     protected void configure() {
 
-        //TODO: why not just make the ImportQueueListener inject the ServiceManager instead?
-        //TODO: I don't know why we need to do the same with emf. We could just inject it like the CoreModule does.
-
-       // install( new CoreModule() );
-
-
         //Seems weird, aren't we just binding the factory to the exact same factory when it goes to look for it?
-        bind( ServiceManagerFactory.class );
-        bind( EntityManagerFactory.class );
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to(AppInfoMigrationPlugin.class);
-
-
-
-
 
     }
 }

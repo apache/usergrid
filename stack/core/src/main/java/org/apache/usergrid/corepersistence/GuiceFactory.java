@@ -20,10 +20,15 @@
 package org.apache.usergrid.corepersistence;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.inject.Named;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
@@ -126,9 +131,15 @@ public class GuiceFactory implements FactoryBean<Injector> {
             throw new RuntimeException( "Fatal error loading configuration.", e );
         }
 
-
+        List<Module> moduleList = new ArrayList<>();
+        if(applicationContext.containsBean("serviceModule")){
+            Module serviceModule =(Module)applicationContext.getBean("serviceModule");
+            moduleList.add( serviceModule);
+        }
+        moduleList.add(new CoreModule());
+        moduleList.add(new PersistenceModule(applicationContext));
         //we have to inject a couple of spring beans into our Guice.  Wire it with PersistenceModule
-        injector = Guice.createInjector( new CoreModule(), new PersistenceModule( applicationContext ) );
+        injector = Guice.createInjector( moduleList );
 
         return injector;
     }

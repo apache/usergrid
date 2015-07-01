@@ -17,7 +17,6 @@
 package org.apache.usergrid;
 
 
-import org.apache.usergrid.management.AppInfoMigrationPlugin;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.export.ExportService;

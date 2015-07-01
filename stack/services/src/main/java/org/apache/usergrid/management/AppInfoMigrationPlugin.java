@@ -46,6 +46,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanFactory;
 import rx.Observable;
 
 import java.util.HashMap;
@@ -84,8 +85,21 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
     final private GraphManagerFactory graphManagerFactory;
     private final ManagementService managementService;
 
-
     @Inject
+    public AppInfoMigrationPlugin(
+        EntityManagerFactory emf,
+        MigrationInfoSerialization migrationInfoSerialization,
+        EntityCollectionManagerFactory entityCollectionManagerFactory,
+        GraphManagerFactory graphManagerFactory,
+        BeanFactory beanFactory) {
+
+        this.emf = emf;
+        this.migrationInfoSerialization = migrationInfoSerialization;
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.graphManagerFactory = graphManagerFactory;
+        this.managementService = beanFactory.getBean(ManagementService.class);
+    }
+
     public AppInfoMigrationPlugin(
         EntityManagerFactory emf,
         MigrationInfoSerialization migrationInfoSerialization,
