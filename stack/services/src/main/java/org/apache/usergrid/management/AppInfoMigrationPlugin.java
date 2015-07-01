@@ -194,9 +194,12 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
                 observer.update(getMaxVersion(), "Created application_info for " + appName);
                 // create org->app connections, but not for apps in dummy "usergrid" internal organization
-                EntityRef orgRef = managementEm.getAlias(Group.ENTITY_TYPE, orgName);
-                // create and connect new APPLICATION_INFO oldAppInfo to Organization
-                managementService.createApplication(orgRef.getUuid(), name, applicationId, null);
+                if(!orgName.equals("usergrid")) { //avoid management org
+
+                    EntityRef orgRef = managementEm.getAlias(Group.ENTITY_TYPE, orgName);
+                    // create and connect new APPLICATION_INFO oldAppInfo to Organization
+                    managementService.createApplication(orgRef.getUuid(), name, applicationId, null);
+                }
             } else {
                 //already migrated don't do anything
                 observer.update(getMaxVersion(), "Received existing application_info for " + appName + " don't do anything");
