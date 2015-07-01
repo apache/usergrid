@@ -115,17 +115,16 @@ public class SearchConnectionVisitor extends SearchVisitor {
 
         //TODO, make search take a shard
         GeoIterator itr =
-                new GeoIterator( new ConnectionGeoSearch( em, bucket, cassandraService, connection.getIndexId() ),
+                new GeoIterator( new ConnectionGeoSearch( em, indexBucketLocator, cassandraService, connection.getIndexId() ),
                         size, slice, node.getPropertyName(),
                         new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
 
 
-        this.results.push( itr );
-//        final CollectionShardFilter
-//                validator = new CollectionShardFilter(indexBucketLocator, bucket );
+        final ConnectionShardFilter
+                validator = new ConnectionShardFilter(indexBucketLocator, bucket, connection );
 
 
-//        this.results.push( new ShardFilterIterator( validator, itr, size ) );
+        this.results.push( new ShardFilterIterator( validator, itr, size ) );
 
     }
 
