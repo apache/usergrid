@@ -200,13 +200,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2(organizationName, name, null);
+        return createApplicationV2(organizationName, name, null, null);
     }
 
 
     @Override
     public Entity createApplicationV2(
-        String orgName, String name, Map<String, Object> properties) throws Exception {
+        String orgName, String name, UUID applicationId, Map<String, Object> properties) throws Exception {
 
         String appName = buildAppName( orgName, name );
 
@@ -217,7 +217,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( name );
         }
 
-        UUID applicationId = UUIDGenerator.newTimeUUID();
+        applicationId = applicationId==null ?  UUIDGenerator.newTimeUUID() : applicationId;
 
         logger.debug( "New application orgName {} orgAppName {} id {} ",
             new Object[] { orgName, name, applicationId.toString() } );
@@ -267,7 +267,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
             put( PROPERTY_NAME, appName );
-            put( PROPERTY_APPLICATION_ID, applicationId );
         }};
 
         Entity appInfo;
@@ -493,7 +492,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                             final org.apache.usergrid.persistence.model.entity.Entity entityData =
                                 entity.getEntity().get();
 
-                            final UUID applicationId = ( UUID ) entityData.getField( PROPERTY_APPLICATION_ID ).getValue();
+                            final UUID applicationId = entity.getId().getUuid();
                             final String applicationName = ( String ) entityData.getField( PROPERTY_NAME ).getValue();
 
                             appMap.put( applicationName , applicationId );

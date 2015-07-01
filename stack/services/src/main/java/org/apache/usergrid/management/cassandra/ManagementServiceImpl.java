@@ -189,6 +189,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     private static final String TOKEN_TYPE_CONFIRM = "confirm";
 
+    public static final String Org_App_Relationship = "applications";
+
     public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
     private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
@@ -1643,12 +1645,12 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception {
 
-        return createApplication( organizationId, applicationName, null );
+        return createApplication( organizationId, applicationName,null, null );
     }
 
 
     @Override
-    public ApplicationInfo createApplication( UUID organizationId, String applicationName,
+    public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
                                               Map<String, Object> properties ) throws Exception {
 
         if ( ( organizationId == null ) || ( applicationName == null ) ) {
@@ -1661,7 +1663,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
         Entity appInfo = emf.createApplicationV2(
-            organizationInfo.getName(), applicationName, properties);
+            organizationInfo.getName(), applicationName, applicationId ,properties);
 
         writeUserToken( smf.getManagementAppId(), appInfo,
             encryptionService.plainTextCredentials(
@@ -1669,7 +1671,7 @@ public class ManagementServiceImpl implements ManagementService {
                 null,
                 smf.getManagementAppId() ) );
 
-        UUID applicationId = addApplicationToOrganization( organizationId, appInfo );
+        applicationId = addApplicationToOrganization( organizationId, appInfo );
 
         UserInfo user = null;
         try {
@@ -1761,7 +1763,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         Results r = em.getSourceEntities(
             new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-            "owns", Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
+            Org_App_Relationship, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
 
         Entity entity = r.getEntity();
         if ( entity != null ) {
@@ -1784,7 +1786,7 @@ public class ManagementServiceImpl implements ManagementService {
         // query for application_info entities
         final Results results = em.getTargetEntities(
             new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
-            "owns", CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES);
+            Org_App_Relationship, CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES);
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );
 
@@ -1839,7 +1841,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "owns", appInfo );
+        em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), Org_App_Relationship, appInfo );
 
         return applicationId;
     }

@@ -20,7 +20,7 @@ package org.apache.usergrid;
 import java.util.Properties;
 
 import org.apache.usergrid.corepersistence.GuiceFactory;
-import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
+import org.apache.usergrid.management.AppInfoMigrationPlugin;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -176,10 +176,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
         return providerFactory;
     }
 
-    @Override
-    public AppInfoMigrationPlugin getAppInfoMigrationPlugin() {
-        return appInfoMigrationPlugin;
-    }
+
 
     public void refreshIndex(UUID appid){
         this.getEntityIndex().refresh(appid);

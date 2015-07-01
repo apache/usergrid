@@ -25,18 +25,16 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.management.AppInfoMigrationPlugin;
+import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -46,18 +44,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.apache.usergrid.TestHelper.*;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionSearchEdge;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateApplicationId;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeTypeFromCollectionName;
 import static org.junit.Assert.*;
 
 
@@ -84,8 +73,9 @@ public class AppInfoMigrationPluginTest {
         Mockito.when(serialization.getVersion(Mockito.any())).thenReturn(0);
         EntityCollectionManagerFactory ecmf = setup.getInjector().getInstance(EntityCollectionManagerFactory.class);
         GraphManagerFactory gmf = setup.getInjector().getInstance(GraphManagerFactory.class);
+        ManagementService managementService = setup.getMgmtSvc();
 
-        AppInfoMigrationPlugin appInfoMigrationPlugin = new AppInfoMigrationPlugin(setup.getEmf(),serialization,ecmf,gmf);
+        AppInfoMigrationPlugin appInfoMigrationPlugin = new AppInfoMigrationPlugin(setup.getEmf(),serialization,ecmf,gmf,managementService);
 
        // create 10 applications, each with 10 entities
 
@@ -146,7 +136,7 @@ public class AppInfoMigrationPluginTest {
 
             final String appName = applicationInfo.getName();
             final String finalOrgId = organization.getOrganization().getUuid().toString();
-            final String finalAppId = applicationInfo.getProperty( Schema.PROPERTY_APPLICATION_ID ).toString();
+            final String finalAppId = applicationInfo.asId().getUuid().toString();
             systemAppEm.create("appinfo", new HashMap<String, Object>() {{
                 put("name", appName );
                 put("organizationUuid", finalOrgId );
@@ -191,9 +181,9 @@ public class AppInfoMigrationPluginTest {
         assertEquals( 0, appInfoResults.size() );
 
         final Results applicationInfoResults =  rootEm.searchCollection(
-            new SimpleEntityRef("application", mgmtAppId), "application_infos", Query.fromQL("select *"));
+            new SimpleEntityRef("application", mgmtAppId), CpNamingUtils.APPLICATION_INFOS, Query.fromQL("select *"));
         int appCount =  Observable.from( applicationInfoResults.getEntities() ).filter(
-            entity -> !entity.getName().startsWith( "org." ) && !entity.getName().startsWith( "usergrid" ) ).doOnNext(
+            entity -> !entity.getName().startsWith( "org." )  ).doOnNext(
             entity -> logger.info("counting entity {}", entity) ).count().toBlocking().last();
         assertEquals( appIds.size() ,appCount );
 
@@ -241,14 +231,12 @@ public class AppInfoMigrationPluginTest {
     }
 
     private Entity getApplicationInfo( UUID appId ) throws Exception {
-
-        UUID mgmtAppId = setup.getEmf().getManagementAppId();
-        EntityManager rootEm = setup.getEmf().getEntityManager( mgmtAppId );
-
-        final Results applicationInfoResults = rootEm.searchCollection(
-            new SimpleEntityRef("application", mgmtAppId), "application_infos",
-            Query.fromQL("select * where applicationId=" + appId.toString()));
-
-        return applicationInfoResults.getEntity();
+        Map<String, UUID> apps = setup.getEmf().getApplications();
+        if(apps.containsValue(appId)){
+            return setup.getEmf().getManagementEntityManager().get(appId);
+        }else{
+            fail("no app " + appId);
+            return null;
+        }
     }
 }
