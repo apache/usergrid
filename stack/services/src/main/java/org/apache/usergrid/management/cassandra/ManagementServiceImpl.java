@@ -1803,8 +1803,7 @@ public class ManagementServiceImpl implements ManagementService {
             }
 
             // make sure we return applicationId and not the application_info UUID
-            UUID applicationId = UUIDUtils.tryExtractUUID(
-                entity.getProperty( PROPERTY_APPLICATION_ID ).toString() );
+            UUID applicationId = entity.getUuid();
 
             applications.put( applicationId, entityName );
         }
