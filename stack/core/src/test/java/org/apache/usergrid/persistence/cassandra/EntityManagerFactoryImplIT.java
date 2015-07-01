@@ -49,7 +49,6 @@ import rx.functions.Func2;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -94,8 +93,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
         Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
-        UUID appId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID appId = appInfo.getUuid();
         return appId;
     }
 
