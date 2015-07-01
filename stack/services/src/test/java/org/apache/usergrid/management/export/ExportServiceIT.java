@@ -62,7 +62,6 @@ import com.google.inject.Module;
 import static org.apache.usergrid.TestHelper.newUUIDString;
 import static org.apache.usergrid.TestHelper.uniqueApp;
 import static org.apache.usergrid.TestHelper.uniqueOrg;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -407,8 +406,8 @@ public class ExportServiceIT {
 
 
         Entity appInfo = setup.getEmf().createApplicationV2(orgName, appName);
-        UUID applicationId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID applicationId = appInfo.getUuid();
+
 
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );

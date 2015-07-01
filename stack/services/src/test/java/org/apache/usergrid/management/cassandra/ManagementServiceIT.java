@@ -59,7 +59,6 @@ import static org.apache.usergrid.TestHelper.uniqueEmail;
 import static org.apache.usergrid.TestHelper.uniqueOrg;
 import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -639,8 +638,8 @@ public class ManagementServiceIT {
         String appName = uniqueApp();
 
         Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName );
-        UUID appId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID appId = appInfo.getUuid();
+
 
         User user = new User();
         user.setActivated( true );
@@ -685,8 +684,8 @@ public class ManagementServiceIT {
         String appName = "testAppUserPasswordChangeShaType"+newUUIDString();
 
         Entity appInfo = setup.getEmf().createApplicationV2(orgName, appName);
-        UUID appId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID appId = appInfo.getUuid();
+
 
         User user = new User();
         user.setActivated( true );
@@ -745,9 +744,8 @@ public class ManagementServiceIT {
         String orgName = uniqueOrg();
         String appName = uniqueApp();
 
-        Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName );
-        UUID appId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        Entity appInfo = setup.getEmf().createApplicationV2(orgName, appName);
+        UUID appId = appInfo.getUuid();
 
         User user = new User();
         user.setActivated( true );
