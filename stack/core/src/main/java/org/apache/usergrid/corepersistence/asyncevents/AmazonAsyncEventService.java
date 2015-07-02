@@ -450,9 +450,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         List batch = new ArrayList<EdgeScope>();
         for ( EdgeScope e : edges){
+            //change to id scope to avoid serialization issues
             batch.add(new EntityIndexEvent(new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode())));
         }
-        //change to id scope to avoid serialization issues
         offerBatch(batch);
     }
 }

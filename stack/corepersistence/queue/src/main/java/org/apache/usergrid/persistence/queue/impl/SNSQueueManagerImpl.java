@@ -247,6 +247,13 @@ public class SNSQueueManagerImpl implements QueueManager {
 
     private AmazonSNSAsyncClient createSNSClient(final Region region) {
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+
+        /**
+         * The Async client will use default client configurations (default max conn: 50)
+         * http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/ClientConfiguration.html
+         * http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/constant-values.html#com.amazonaws.ClientConfiguration.DEFAULT_MAX_CONNECTIONS
+         */
+
         final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient(ugProvider.getCredentials());
 
         sns.setRegion(region);
