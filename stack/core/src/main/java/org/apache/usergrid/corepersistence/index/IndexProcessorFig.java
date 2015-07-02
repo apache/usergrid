@@ -40,6 +40,8 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String INDEX_QUEUE_VISIBILITY_TIMEOUT = "elasticsearch.queue_visibility_timeout";
 
+    String REINDEX_BUFFER_SIZE = "elasticsearch.reindex.buffer_size";
+
 
     /**
      * Set the amount of time to wait when Elasticsearch rejects a requests before
@@ -66,7 +68,7 @@ public interface IndexProcessorFig extends GuicyFig {
     /**
      * The number of worker threads used to read index write requests from the queue.
      */
-    @Default( "1" )
+    @Default( "8" )
     @Key( ELASTICSEARCH_WORKER_COUNT )
     int getWorkerCount();
 
@@ -82,6 +84,10 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("1000")
     @Key("elasticsearch.reindex.flush.interval")
     int getUpdateInterval();
+
+    @Default("1000")
+    @Key( REINDEX_BUFFER_SIZE )
+    int getReindexBufferSize();
 
     /**
      * Flag to resolve the LOCAL queue implementation service synchronously.

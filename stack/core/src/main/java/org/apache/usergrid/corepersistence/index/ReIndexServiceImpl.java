@@ -120,28 +120,26 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         final long modifiedSince = reIndexRequestBuilder.getUpdateTimestamp().or( Long.MIN_VALUE );
 
-        //create an observable that loads each entity and indexes it, start it running with publish
-        final Observable<EdgeScope> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
-            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
+        // create an observable that loads a batch to be indexed
 
-            //for each edge, create our scope and index on it
-            .doOnNext( edge -> {
+        final Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
+            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
+            .buffer( indexProcessorFig.getReindexBufferSize())
+            .doOnNext(edges -> {
 
                 if(logger.isInfoEnabled()) {
-                    logger.info("Queueing {} {}", edge.getApplicationScope(), edge.getEdge().getTargetNode());
+                    logger.info("Sending batch of {} to be indexed.", edges.size());
                 }
+                indexService.indexBatch(edges, modifiedSince);
 
-                indexService.index(edge.getApplicationScope(),edge.getEdge().getTargetNode(), modifiedSince);
-
-            } );
+            });
 
 
         //start our sampler and state persistence
         //take a sample every sample interval to allow us to resume state with minimal loss
-        runningReIndex.buffer( indexProcessorFig.getUpdateInterval() )
-            //create our flushing collector and flush the edge scopes to it
-            .collect( () -> new FlushingCollector( jobId ),
-                ( ( flushingCollector, edgeScopes ) -> flushingCollector.flushBuffer( edgeScopes ) ) ).doOnNext( flushingCollector-> flushingCollector.complete() )
+        //create our flushing collector and flush the edge scopes to it
+        runningReIndex.collect(() -> new FlushingCollector(jobId),
+            ((flushingCollector, edgeScopes) -> flushingCollector.flushBuffer(edgeScopes))).doOnNext( flushingCollector-> flushingCollector.complete() )
                 //subscribe on our I/O scheduler and run the task
             .subscribeOn( Schedulers.io() ).subscribe();
 
