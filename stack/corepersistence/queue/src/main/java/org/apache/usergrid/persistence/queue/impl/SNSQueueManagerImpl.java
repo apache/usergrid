@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.queue.impl;
 
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNSAsyncClient;
@@ -365,9 +366,18 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         PublishRequest publishRequest = new PublishRequest(topicArn, toString(body));
 
-        sns.publishAsync(publishRequest);
+        sns.publishAsync(publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
+                @Override
+                public void onError(Exception e) {
+                    logger.error("Error publishing message... {}", e);
+                }
 
-        // see about implementing asyncHandler for publishAsync in future
+                @Override
+                public void onSuccess(PublishRequest request, PublishResult result) {
+                    if (logger.isDebugEnabled()) logger.debug("Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(), request.getTopicArn());
+
+                }
+            });
 
     }
 
