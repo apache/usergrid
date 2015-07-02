@@ -103,7 +103,7 @@ public class ShardFilterIterator implements ResultIterator {
 
         final Set<ScanColumn> results = new LinkedHashSet<ScanColumn>(  );
 
-        while(resultsIterator.hasNext()){
+        while(results.size() < pageSize && resultsIterator.hasNext() ){
 
             final Iterator<ScanColumn> scanColumns = resultsIterator.next().iterator();
 

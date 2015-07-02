@@ -73,8 +73,7 @@ public class SearchConnectionVisitor extends SearchVisitor {
     @Override
     protected IndexScanner secondaryIndexScan( QueryNode node, QuerySlice slice ) throws Exception {
 
-        UUID
-                id = ConnectionRefImpl.getIndexId( ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity,
+        final UUID id = ConnectionRefImpl.getIndexId( ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity,
                 connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0] );
 
         Object key = key( id, INDEX_CONNECTIONS );
