@@ -20,15 +20,15 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
+import java.util.List;
 
 
 /**
  * Callback to perform an index operation based on an scope during bulk re-index operations
  */
-@FunctionalInterface
 public interface ReIndexAction {
 
     /**
@@ -37,4 +37,11 @@ public interface ReIndexAction {
      * @param id
      */
     void index( final ApplicationScope applicationScope, final Id id, final long updatedSince );
+
+    /**
+     * Index a batch list of entities.
+     * @param edges
+     * @param updatedSince
+     */
+    void indexBatch ( final List<EdgeScope> edges, final long updatedSince);
 }

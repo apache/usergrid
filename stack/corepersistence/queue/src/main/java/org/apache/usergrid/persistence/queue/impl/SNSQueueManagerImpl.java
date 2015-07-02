@@ -19,9 +19,10 @@ package org.apache.usergrid.persistence.queue.impl;
 
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.*;
 import com.amazonaws.services.sns.util.Topics;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -54,7 +55,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueFig fig;
     private final ClusterFig clusterFig;
     private final AmazonSQSClient sqs;
-    private final AmazonSNSClient sns;
+    private final AmazonSNSAsyncClient sns;
 
 
     private final JsonFactory JSON_FACTORY = new JsonFactory();
@@ -171,7 +172,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                 Region region = Region.getRegion(regions);
 
                 final AmazonSQSClient sqsClient = createSQSClient(region);
-                final AmazonSNSClient snsClient = createSNSClient(region);
+                final AmazonSNSAsyncClient snsClient = createSNSClient(region);
 
                 String topicArn = AmazonNotificationUtils.getTopicArn(snsClient, queueName, true);
 
@@ -210,7 +211,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                     Regions snsRegions = Regions.fromName(strSnsRegion);
                     Region snsRegion = Region.getRegion(snsRegions);
 
-                    final AmazonSNSClient snsClient = createSNSClient(snsRegion);
+                    final AmazonSNSAsyncClient snsClient = createSNSClient(snsRegion);
 
                     try {
 
@@ -244,9 +245,16 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
 
-    private AmazonSNSClient createSNSClient(final Region region) {
+    private AmazonSNSAsyncClient createSNSClient(final Region region) {
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-        final AmazonSNSClient sns = new AmazonSNSClient(ugProvider.getCredentials());
+
+        /**
+         * The Async client will use default client configurations (default max conn: 50)
+         * http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/ClientConfiguration.html
+         * http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/constant-values.html#com.amazonaws.ClientConfiguration.DEFAULT_MAX_CONNECTIONS
+         */
+
+        final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient(ugProvider.getCredentials());
 
         sns.setRegion(region);
 
@@ -363,10 +371,21 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         if (logger.isDebugEnabled()) logger.debug("Publishing Message...{} to arn: {}", stringBody, topicArn);
 
-        PublishResult publishResult = sns.publish(topicArn, toString(body));
+        PublishRequest publishRequest = new PublishRequest(topicArn, toString(body));
 
-        if (logger.isDebugEnabled())
-            logger.debug("Published Message ID: {} to arn: {}", publishResult.getMessageId(), topicArn);
+        sns.publishAsync(publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
+                @Override
+                public void onError(Exception e) {
+                    logger.error("Error publishing message... {}", e);
+                }
+
+                @Override
+                public void onSuccess(PublishRequest request, PublishResult result) {
+                    if (logger.isDebugEnabled()) logger.debug("Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(), request.getTopicArn());
+
+                }
+            });
+
     }
 
 
