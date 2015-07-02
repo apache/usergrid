@@ -67,7 +67,8 @@ public interface ManagementService {
     public UserInfo createAdminFromPrexistingPassword( User user, CredentialsInfo ci ) throws Exception;
 
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception;
-
+    public ApplicationInfo createApplication( UUID organizationId, String applicationName,
+                                              Map<String, Object> properties ) throws Exception;
     public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
                                               Map<String, Object> properties ) throws Exception;
 
