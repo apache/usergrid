@@ -1649,6 +1649,12 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
+    public ApplicationInfo createApplication( UUID organizationId, String applicationName,
+                                              Map<String, Object> properties ) throws Exception {
+        return createApplication(organizationId, applicationName, null, properties);
+    }
+
+        @Override
     public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
                                               Map<String, Object> properties ) throws Exception {
 
