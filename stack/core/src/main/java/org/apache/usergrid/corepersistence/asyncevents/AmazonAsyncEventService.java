@@ -29,6 +29,7 @@ import com.codahale.metrics.Histogram;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.CpEntityManager;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
+import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,6 +137,19 @@ public class AmazonAsyncEventService implements AsyncEventService {
         try {
             //signal to SQS
             this.queue.sendMessage(operation);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to queue message", e);
+        } finally {
+            timer.stop();
+        }
+    }
+
+    private void offerBatch(final List operations){
+        final Timer.Context timer = this.writeTimer.time();
+
+        try {
+            //signal to SQS
+            this.queue.sendMessages(operations);
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
@@ -427,9 +441,18 @@ public class AmazonAsyncEventService implements AsyncEventService {
         }
     }
 
-    @Override
     public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
         //change to id scope to avoid serialization issues
         offer(new EntityIndexEvent(new EntityIdScope(applicationScope, id)));
+    }
+
+    public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
+
+        List batch = new ArrayList<EdgeScope>();
+        for ( EdgeScope e : edges){
+            batch.add(new EntityIndexEvent(new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode())));
+        }
+        //change to id scope to avoid serialization issues
+        offerBatch(batch);
     }
 }

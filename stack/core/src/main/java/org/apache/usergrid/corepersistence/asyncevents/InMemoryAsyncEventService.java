@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
+import java.util.List;
 
 
 /**
@@ -95,13 +96,21 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     }
 
 
-    @Override
     public void index( final ApplicationScope applicationScope, final Id id, final long updatedSince ) {
         final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, id, updatedSince );
 
         run(eventBuilder.index( entityIndexOperation ));
     }
 
+    public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
+        for ( EdgeScope e : edges){
+            final EntityIndexOperation entityIndexOperation = new EntityIndexOperation(e.getApplicationScope(),
+                e.getEdge().getTargetNode(), updatedSince);
+
+            run(eventBuilder.index (entityIndexOperation));
+        }
+
+    }
 
     public void run( Observable<?> observable ) {
         //start it in the background on an i/o thread
