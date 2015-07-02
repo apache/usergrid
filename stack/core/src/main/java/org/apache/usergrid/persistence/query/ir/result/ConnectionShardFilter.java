@@ -48,15 +48,17 @@ public final class ConnectionShardFilter implements ShardFilter {
 
     public boolean isInShard( final ScanColumn scanColumn ) {
 
-        final UUID entityId = scanColumn.getUUID();
 
-        final ConnectionRefImpl hashRef = new ConnectionRefImpl( searchConnection.getConnectingEntityType(), searchConnection.getConnectedEntityId(), searchConnection.getConnectionType(), searchConnection.getConnectingEntityType(), entityId  );
+        //shard hashing is currently based on source.  this is a placeholder for when this is fixed.
+//        UUID[] indexIds = searchConnection.getIndexIds();
+//
+//        final String shard = indexBucketLocator.getBucket(indexIds[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE] );
+//
+//        return expectedBucket.equals( shard );
 
-        final UUID hashId = hashRef.getConnectionSearchShardId();
-
-        //not for our current processing shard, discard
-        final String shard = indexBucketLocator.getBucket( hashId );
-
-        return expectedBucket.equals( shard );
+        return true;
+//
     }
+
+
 }
