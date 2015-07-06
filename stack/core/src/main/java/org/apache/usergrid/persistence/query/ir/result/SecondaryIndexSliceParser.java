@@ -100,7 +100,7 @@ public class SecondaryIndexSliceParser implements SliceParser {
          */
         public SecondaryIndexColumn( final UUID uuid, final Object value, final ByteBuffer columnNameBuffer,
                                      final Comparator<SecondaryIndexColumn> valueComparator,
-                                     final SliceCursorGenerator sliceCursorGenerator) {
+                                     final SliceCursorGenerator sliceCursorGenerator ) {
             super( uuid, columnNameBuffer, sliceCursorGenerator );
             this.value = value;
             this.valueComparator = valueComparator;
@@ -130,24 +130,24 @@ public class SecondaryIndexSliceParser implements SliceParser {
     static {
 
         final LongComparator longComparator = new LongComparator();
-        COMPARATOR_MAP.put( new MapKey( Long.class, false ), longComparator );
-        COMPARATOR_MAP.put( new MapKey( Long.class, true ), new ReverseComparator( longComparator ) );
+        COMPARATOR_MAP.put( new MapKey( Long.class, false ), new ForwardValueComparator( longComparator ) );
+        COMPARATOR_MAP.put( new MapKey( Long.class, true ), new ReverseValueComparator( longComparator ) );
 
         final StringComparator stringComparator = new StringComparator();
 
-        COMPARATOR_MAP.put( new MapKey( String.class, false ), stringComparator );
-        COMPARATOR_MAP.put( new MapKey( String.class, true ), new ReverseComparator( stringComparator ) );
+        COMPARATOR_MAP.put( new MapKey( String.class, false ), new ForwardValueComparator( stringComparator ) );
+        COMPARATOR_MAP.put( new MapKey( String.class, true ), new ReverseValueComparator( stringComparator ) );
 
 
         final UUIDComparator uuidComparator = new UUIDComparator();
 
-        COMPARATOR_MAP.put( new MapKey( UUID.class, false ), uuidComparator );
-        COMPARATOR_MAP.put( new MapKey( UUID.class, true ), new ReverseComparator( uuidComparator ) );
+        COMPARATOR_MAP.put( new MapKey( UUID.class, false ), new ForwardValueComparator( uuidComparator ) );
+        COMPARATOR_MAP.put( new MapKey( UUID.class, true ), new ReverseValueComparator( uuidComparator ) );
 
         final BigIntegerComparator bigIntegerComparator = new BigIntegerComparator();
 
-        COMPARATOR_MAP.put( new MapKey( BigInteger.class, false ), bigIntegerComparator );
-        COMPARATOR_MAP.put( new MapKey( BigInteger.class, true ), new ReverseComparator( bigIntegerComparator ) );
+        COMPARATOR_MAP.put( new MapKey( BigInteger.class, false ), new ForwardValueComparator( bigIntegerComparator ) );
+        COMPARATOR_MAP.put( new MapKey( BigInteger.class, true ), new ReverseValueComparator( bigIntegerComparator ) );
     }
 
 
@@ -192,23 +192,7 @@ public class SecondaryIndexSliceParser implements SliceParser {
     }
 
 
-    private static abstract class SecondaryIndexColumnComparator implements Comparator<SecondaryIndexColumn> {
-
-        /**
-         * If the result of compare is != 0 it is returned, otherwise the uuids are compared
-         */
-        protected int compareValues( final int compare, final SecondaryIndexColumn first,
-                                     SecondaryIndexColumn second ) {
-            if ( compare != 0 ) {
-                return compare;
-            }
-
-            return com.fasterxml.uuid.UUIDComparator.staticCompare( first.uuid, second.uuid );
-        }
-    }
-
-
-    private static final class LongComparator extends SecondaryIndexColumnComparator {
+    private static final class LongComparator implements Comparator<SecondaryIndexColumn> {
 
         @Override
         public int compare( final SecondaryIndexColumn first, final SecondaryIndexColumn second ) {
@@ -217,12 +201,12 @@ public class SecondaryIndexSliceParser implements SliceParser {
             final Long secondLong = ( Long ) second.value;
 
 
-            return compareValues( Long.compare( firstLong, secondLong ), first, second );
+            return Long.compare( firstLong, secondLong );
         }
     }
 
 
-    private static final class StringComparator extends SecondaryIndexColumnComparator {
+    private static final class StringComparator implements Comparator<SecondaryIndexColumn> {
         @Override
         public int compare( final SecondaryIndexColumn first, final SecondaryIndexColumn second ) {
 
@@ -234,49 +218,84 @@ public class SecondaryIndexSliceParser implements SliceParser {
             final String secondString = ( String ) second.value;
 
 
-            return compareValues( firstString.compareTo( secondString ), first, second );
+            return firstString.compareTo( secondString );
         }
     }
 
 
-    private static final class UUIDComparator extends SecondaryIndexColumnComparator {
+    private static final class UUIDComparator implements Comparator<SecondaryIndexColumn> {
         @Override
         public int compare( final SecondaryIndexColumn first, final SecondaryIndexColumn second ) {
             final UUID firstUUID = ( UUID ) first.value;
             final UUID secondUUID = ( UUID ) second.value;
 
 
-            return compareValues( UUIDUtils.compare( firstUUID, secondUUID ), first, second );
+            return UUIDUtils.compare( firstUUID, secondUUID );
         }
     }
 
 
-    private static final class BigIntegerComparator extends SecondaryIndexColumnComparator {
+    private static final class BigIntegerComparator implements Comparator<SecondaryIndexColumn> {
         @Override
         public int compare( final SecondaryIndexColumn first, final SecondaryIndexColumn second ) {
             final BigInteger firstInt = ( BigInteger ) first.value;
             final BigInteger secondInt = ( BigInteger ) second.value;
 
 
-            return compareValues( firstInt.compareTo( secondInt ), first, second );
+            return firstInt.compareTo( secondInt );
         }
     }
 
 
     /**
-     * Reversed our comparator
+     * Delegates to the type comparator, if equal, sorts by UUID ascending always
      */
-    private static final class ReverseComparator implements Comparator<SecondaryIndexColumn> {
+    private static final class ForwardValueComparator implements Comparator<SecondaryIndexColumn> {
 
         private final Comparator<SecondaryIndexColumn> comparator;
 
 
-        private ReverseComparator( final Comparator<SecondaryIndexColumn> comparator ) {this.comparator = comparator;}
+        private ForwardValueComparator( final Comparator<SecondaryIndexColumn> comparator ) {
+            this.comparator = comparator;
+        }
 
 
         @Override
         public int compare( final SecondaryIndexColumn first, final SecondaryIndexColumn second ) {
-            return comparator.compare( first, second ) * -1;
+
+            int compare = comparator.compare( first, second );
+
+            if ( compare == 0 ) {
+                return com.fasterxml.uuid.UUIDComparator.staticCompare( first.uuid, second.uuid );
+            }
+
+            return compare;
+        }
+    }
+
+
+    /**
+     * Reversed our delegate comparator, if equal, compares by uuid ascending
+     */
+    private static final class ReverseValueComparator implements Comparator<SecondaryIndexColumn> {
+
+        private final Comparator<SecondaryIndexColumn> comparator;
+
+
+        private ReverseValueComparator( final Comparator<SecondaryIndexColumn> comparator ) {
+            this.comparator = comparator;
+        }
+
+
+        @Override
+        public int compare( final SecondaryIndexColumn first, final SecondaryIndexColumn second ) {
+            int compare = comparator.compare( first, second ) * -1;
+
+            if ( compare == 0 ) {
+                return com.fasterxml.uuid.UUIDComparator.staticCompare( first.uuid, second.uuid );
+            }
+
+            return compare;
         }
     }
 }
