@@ -30,17 +30,6 @@ public interface ScanColumn extends Comparable<ScanColumn> {
     /** Get the uuid from the column */
     UUID getUUID();
 
-    /** Get the cursor value of this column */
-    ByteBuffer getCursorValue();
-
-    /**
-     * Append the child column used in tree iterator to this column, along with the comparator used to compare them
-     *
-     * for instance, a term search of A = 1 AND B = 2 would generate a ScanColumn of A-- child -> B
-     * @param childColumn
-     */
-    void setChild( final ScanColumn childColumn );
-
 
     /**
      * Use the generator to add this value to the cursor cache
@@ -48,11 +37,5 @@ public interface ScanColumn extends Comparable<ScanColumn> {
      */
     void addToCursor( final CursorCache cache );
 
-
-    /**
-     * Returns the childl column if present, can return null
-     * @return
-     */
-    ScanColumn getChild();
 
 }

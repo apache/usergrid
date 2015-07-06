@@ -52,7 +52,7 @@ public abstract class AbstractScanColumn implements ScanColumn {
     }
 
 
-    @Override
+
     public ByteBuffer getCursorValue() {
         return buffer == null ? null : buffer.duplicate();
     }
@@ -86,19 +86,6 @@ public abstract class AbstractScanColumn implements ScanColumn {
                 ", buffer=" + ByteBufferUtil.bytesToHex( buffer ) +
                 '}';
     }
-
-
-    @Override
-    public void setChild( final ScanColumn childColumn ) {
-        this.child = childColumn;
-    }
-
-
-    @Override
-    public ScanColumn getChild() {
-        return child;
-    }
-
 
     @Override
     public void addToCursor( final CursorCache cache ) {
