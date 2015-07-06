@@ -315,7 +315,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
             UserRepo.INSTANCE.load( resource(), access_token );
 
-            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cat-larger-than-6mb.jpg" ) );
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ) );
             FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
 
             // send data
