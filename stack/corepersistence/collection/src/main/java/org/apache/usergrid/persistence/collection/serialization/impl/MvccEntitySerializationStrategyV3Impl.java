@@ -81,7 +81,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
     private final EntitySerializer entitySerializer;
 
-    private static final Logger log = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
+    private static final Logger log = LoggerFactory.getLogger( MvccEntitySerializationStrategyV3Impl.class );
 
 
     protected final Keyspace keyspace;
