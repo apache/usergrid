@@ -90,6 +90,11 @@ public class ImportAdmins extends ToolBase {
     AtomicInteger userCount = new AtomicInteger( 0 );
     AtomicInteger metadataCount = new AtomicInteger( 0 );
 
+    AtomicInteger writeEmptyCount = new AtomicInteger( 0 );
+    AtomicInteger auditEmptyCount = new AtomicInteger( 0 );
+    AtomicInteger metadataEmptyCount = new AtomicInteger( 0 );
+    
+
 
     @Override
     @SuppressWarnings("static-access")
@@ -146,7 +151,7 @@ public class ImportAdmins extends ToolBase {
             writeThreadCount = Integer.parseInt( line.getOptionValue(WRITE_THREAD_COUNT));
         }
 
-        importAdminUsers(writeThreadCount, auditThreadCount);
+        importAdminUsers( writeThreadCount, auditThreadCount );
 
         importMetadata( writeThreadCount );
     }
@@ -159,7 +164,7 @@ public class ImportAdmins extends ToolBase {
 
         String[] fileNames = importDir.list(new PrefixFileFilter(ExportAdmins.ADMIN_USERS_PREFIX + "."));
 
-        logger.info("Applications to read: " + fileNames.length);
+        logger.info( "Applications to read: " + fileNames.length );
 
         for (String fileName : fileNames) {
             try {
@@ -210,8 +215,8 @@ public class ImportAdmins extends ToolBase {
             workQueue.add( entityProps );
         }
 
-        waitForQueueAndMeasure(workQueue, adminWriteThreads, "Admin Write");
-        waitForQueueAndMeasure(auditQueue, adminAuditThreads, "Admin Audit");
+        waitForQueueAndMeasure(workQueue, writeEmptyCount, adminWriteThreads, "Admin Write");
+        waitForQueueAndMeasure(auditQueue, auditEmptyCount, adminAuditThreads, "Admin Audit");
 
         logger.info("----- End: Imported {} admin users from file {}",
                 count, adminUsersFile.getAbsolutePath());
@@ -220,12 +225,13 @@ public class ImportAdmins extends ToolBase {
     }
 
     private static void waitForQueueAndMeasure(final BlockingQueue workQueue,
+                                               final AtomicInteger emptyCounter,
                                                final Map<Stoppable, Thread> threadMap,
                                                final String identifier) throws InterruptedException {
         double rateAverageSum = 0;
         int iterations = 0;
 
-        while (!workQueue.isEmpty()) {
+        while ( emptyCounter.get() < threadMap.size() ) {
             iterations += 1;
 
             int sizeLast = workQueue.size();
@@ -312,8 +318,8 @@ public class ImportAdmins extends ToolBase {
     private void importMetadata(int writeThreadCount) throws Exception {
 
         String[] fileNames = importDir.list(
-                new PrefixFileFilter(ExportAdmins.ADMIN_USER_METADATA_PREFIX + "."));
-        logger.info("Metadata files to read: " + fileNames.length);
+                new PrefixFileFilter( ExportAdmins.ADMIN_USER_METADATA_PREFIX + "." ) );
+        logger.info( "Metadata files to read: " + fileNames.length );
 
         for (String fileName : fileNames) {
             try {
@@ -373,17 +379,22 @@ public class ImportAdmins extends ToolBase {
             if (jsonToken.equals(JsonToken.FIELD_NAME) && depth == 2) {
 
                 jp.nextToken();
-
                 String entityOwnerId = jp.getCurrentName();
-                EntityRef entityRef = em.getRef(UUID.fromString(entityOwnerId));
 
-                Map<String, Object> metadata = (Map<String, Object>) jp.readValueAs(Map.class);
-
-                workQueue.put(new ImportMetadataTask(entityRef, metadata));
+                try {
+                    EntityRef entityRef = em.getRef( UUID.fromString( entityOwnerId ) );
+                    Map<String, Object> metadata = (Map<String, Object>) jp.readValueAs( Map.class );
+                    
+                    workQueue.put( new ImportMetadataTask( entityRef, metadata ) );
+                    logger.debug( "Put user {} in metadata queue", entityRef.getUuid() );
+                    
+                } catch ( Exception e ) {
+                    logger.debug( "Error with user {}, not putting in metadata queue", entityOwnerId );
+                }
             }
         }
 
-        waitForQueueAndMeasure(workQueue, metadataWorkerThreadMap, "Metadata Load");
+        waitForQueueAndMeasure(workQueue, metadataEmptyCount, metadataWorkerThreadMap, "Metadata Load");
 
         logger.info("----- End of metadata -----");
         jp.close();
@@ -523,9 +534,11 @@ public class ImportAdmins extends ToolBase {
 
                     if (entityProps == null) {
                         logger.warn("Reading from AUDIT queue was null!");
+                        auditEmptyCount.getAndIncrement();
                         Thread.sleep(1000);
                         continue;
                     }
+                    auditEmptyCount.set(0);
 
                     count++;
                     long startTime = System.currentTimeMillis();
@@ -599,15 +612,16 @@ public class ImportAdmins extends ToolBase {
 
                     if (task == null) {
                         logger.warn("Reading from metadata queue was null!");
+                        metadataEmptyCount.getAndIncrement();
                         Thread.sleep(1000);
                         continue;
                     }
+                    metadataEmptyCount.set(0);
                     
                     long startTime = System.currentTimeMillis();
                     
                     importEntityMetadata(em, task.entityRef, task.metadata);
                     
-                    metadataCount.addAndGet( 1 );
                     long stopTime = System.currentTimeMillis();
                     long duration = stopTime - startTime;
                     durationSum += duration;
@@ -662,9 +676,11 @@ public class ImportAdmins extends ToolBase {
 
                     if (entityProps == null) {
                         logger.warn("Reading from admin import queue was null!");
+                        writeEmptyCount.getAndIncrement();
                         Thread.sleep( 1000 );
                         continue;
                     }
+                    writeEmptyCount.set(0);
 
                     // Import/create the entity
                     UUID uuid = getId(entityProps);
