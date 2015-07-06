@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.query.ir.QuerySlice;
 /**
  * A cursor generator for the specified query slice
  */
-public class SliceCursorGenerator implements CursorGenerator<ScanColumn> {
+public class SliceCursorGenerator implements CursorGenerator<AbstractScanColumn> {
 
     private final QuerySlice slice;
 
@@ -38,7 +38,7 @@ public class SliceCursorGenerator implements CursorGenerator<ScanColumn> {
 
 
     @Override
-    public void addToCursor( final CursorCache cache, final ScanColumn col ) {
+    public void addToCursor( final CursorCache cache, final AbstractScanColumn col ) {
 
         if ( col == null ) {
             return;

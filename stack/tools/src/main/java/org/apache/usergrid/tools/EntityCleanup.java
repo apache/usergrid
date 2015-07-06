@@ -25,9 +25,14 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -38,11 +43,6 @@ import org.apache.usergrid.persistence.query.ir.result.ScanColumnTransformer;
 import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
 import org.apache.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.mutation.Mutator;
 
@@ -51,9 +51,9 @@ import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -122,53 +122,57 @@ public class EntityCleanup extends ToolBase {
             // go through each collection and audit the value
             for ( String collectionName : collectionNames ) {
 
-                IndexScanner scanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
-                        key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null, PAGE_SIZE, false,
-                        indexBucketLocator, applicationId, collectionName, false );
 
-                SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser( uuidCursorGenerator ) );
+                for ( final String bucketName : indexBucketLocator.getBuckets() ) {
 
-                while ( itr.hasNext() ) {
+                    IndexScanner scanner =
+                            cass.getIdList( key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null,
+                                    PAGE_SIZE, false, bucketName, applicationId, false );
 
-                    // load all entity ids from the index itself.
+                    SliceIterator itr = new SliceIterator( scanner, new UUIDIndexSliceParser( null ) );
 
-                    Set<ScanColumn> copy = new LinkedHashSet<ScanColumn>( itr.next() );
+                    while ( itr.hasNext() ) {
 
-                    results = em.get( ScanColumnTransformer.getIds( copy ) );
-                    // nothing to do they're the same size so there's no
-                    // orphaned uuid's in the entity index
-                    if ( copy.size() == results.size() ) {
-                        continue;
+                        // load all entity ids from the index itself.
+
+                        Set<ScanColumn> copy = new LinkedHashSet<ScanColumn>( itr.next() );
+
+                        results = em.get( ScanColumnTransformer.getIds( copy ) );
+                        // nothing to do they're the same size so there's no
+                        // orphaned uuid's in the entity index
+                        if ( copy.size() == results.size() ) {
+                            continue;
+                        }
+
+                        // they're not the same, we have some orphaned records,
+                        // remove them
+
+                        for ( Entity returned : results.getEntities() ) {
+                            copy.remove( returned.getUuid() );
+                        }
+
+                        // what's left needs deleted, do so
+
+                        logger.info( "Cleaning up {} orphaned entities for app {}", copy.size(), app.getValue() );
+
+                        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+                        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+                        for ( ScanColumn col : copy ) {
+
+                            final UUID id = col.getUUID();
+
+                            Object collections_key = key( applicationId, Schema.DICTIONARY_COLLECTIONS, collectionName,
+                                    indexBucketLocator
+                                            .getBucket(  id ) );
+
+                            addDeleteToMutator( m, ENTITY_ID_SETS, collections_key, id, timestamp );
+
+                            logger.info( "Deleting entity with id '{}' from collection '{}'", id, collectionName );
+                        }
+
+                        m.execute();
                     }
-
-                    // they're not the same, we have some orphaned records,
-                    // remove them
-
-                    for ( Entity returned : results.getEntities() ) {
-                        copy.remove( returned.getUuid() );
-                    }
-
-                    // what's left needs deleted, do so
-
-                    logger.info( "Cleaning up {} orphaned entities for app {}", copy.size(), app.getValue() );
-
-                    Keyspace ko = cass.getApplicationKeyspace( applicationId );
-                    Mutator<ByteBuffer> m = createMutator( ko, be );
-
-                    for ( ScanColumn col : copy ) {
-
-                        final UUID id = col.getUUID();
-
-                        Object collections_key = key( applicationId, Schema.DICTIONARY_COLLECTIONS, collectionName,
-                                indexBucketLocator
-                                        .getBucket( applicationId, IndexType.COLLECTION, id, collectionName ) );
-
-                        addDeleteToMutator( m, ENTITY_ID_SETS, collections_key, id, timestamp );
-
-                        logger.info( "Deleting entity with id '{}' from collection '{}'", id, collectionName );
-                    }
-
-                    m.execute();
                 }
             }
         }

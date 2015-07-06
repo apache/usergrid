@@ -21,17 +21,17 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.collections.comparators.ComparatorChain;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityPropertyComparator;
@@ -40,9 +40,8 @@ import org.apache.usergrid.persistence.Query.SortPredicate;
 import org.apache.usergrid.persistence.cassandra.CursorCache;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 
-import org.apache.commons.collections.comparators.ComparatorChain;
+import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * 1) Take a result set iterator as the child 2) Iterate only over candidates and create a cursor from the candidates
@@ -62,6 +61,8 @@ public class OrderByIterator extends MergeIterator {
 
     //our last result from in memory sorting
     private SortedEntitySet entries;
+
+    private final UUIDCursorGenerator<MultiColumnSort> generator;
 
 
     /**
@@ -91,6 +92,8 @@ public class OrderByIterator extends MergeIterator {
         // paging
         this.secondaryFields.add( NAME_UUID );
         this.subSortCompare.addComparator( new EntityPropertyComparator( NAME_UUID, false ) );
+
+        this.generator = new UUIDCursorGenerator<MultiColumnSort>( this.slice.hashCode() );
     }
 
 
@@ -105,7 +108,7 @@ public class OrderByIterator extends MergeIterator {
             minEntryId = ue.fromByteBuffer( cursor );
         }
 
-        entries = new SortedEntitySet( subSortCompare, em, secondaryFields, pageSize, minEntryId );
+        entries = new SortedEntitySet( subSortCompare, em, secondaryFields, pageSize, minEntryId, generator );
 
         /**
          *  keep looping through our peek iterator.  We need to inspect each forward page to ensure we have performed a
@@ -134,45 +137,75 @@ public class OrderByIterator extends MergeIterator {
         // no op
     }
 
-//
-//    @Override
-//    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
-//        int sliceHash = slice.hashCode();
-//
-//        ByteBuffer bytes = ue.toByteBuffer( lastValue );
-//
-//        if ( bytes == null ) {
-//            return;
-//        }
-//
-//        cache.setNextCursor( sliceHash, bytes );
-//    }
+    //
+    //    @Override
+    //    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
+    //        int sliceHash = slice.hashCode();
+    //
+    //        ByteBuffer bytes = ue.toByteBuffer( lastValue );
+    //
+    //        if ( bytes == null ) {
+    //            return;
+    //        }
+    //
+    //        cache.setNextCursor( sliceHash, bytes );
+    //    }
 
 
     /** A Sorted set with a max size. When a new entry is added, the max is removed */
-    public static final class SortedEntitySet extends TreeSet<Entity> {
+    public static final class SortedEntitySet {
 
         private final int maxSize;
-        private final Map<UUID, ScanColumn> cursorVal = new HashMap<UUID, ScanColumn>();
+        private final UUIDCursorGenerator<MultiColumnSort> generator;
+        private final Set<UUID> uuidBuffer = new LinkedHashSet<UUID>();
+        private final TreeSet<ScanColumn> sortedEntities = new TreeSet<ScanColumn>();
         private final EntityManager em;
         private final List<String> fields;
         private final Entity minEntity;
         private final Comparator<Entity> comparator;
 
 
-        public SortedEntitySet( Comparator<Entity> comparator, EntityManager em, List<String> fields, int maxSize,
-                                UUID minEntityId ) {
-            super( comparator );
+        public SortedEntitySet( final Comparator<Entity> comparator, final EntityManager em, final List<String> fields,
+                                final int maxSize, final UUID minEntityId,
+                                final UUIDCursorGenerator<MultiColumnSort> generator ) {
             this.maxSize = maxSize;
             this.em = em;
             this.fields = fields;
             this.comparator = comparator;
+            this.generator = generator;
             this.minEntity = getPartialEntity( minEntityId );
         }
 
 
-        @Override
-        public boolean add( Entity entity ) {
+        /** Add the current scancolumn to be loaded **/
+        public void add( ScanColumn col ) {
+            uuidBuffer.add( col.getUUID() );
+        }
+
+
+        public void load() {
+            try {
+
+
+                //load all the entities
+                for ( Entity e : em.getPartialEntities( uuidBuffer, fields ) ) {
+                    add( e );
+                }
+            }
+            catch ( Exception e ) {
+                logger.error( "Unable to load partial entities", e );
+                throw new RuntimeException( e );
+            }
+        }
+
+
+        /** Turn our sorted entities into a set of ids */
+        public Set<ScanColumn> toIds() {
+            return sortedEntities;
+        }
+
+
+        private boolean add( Entity entity ) {
 
             // don't add this entity.  We get it in our scan range, but it's <= the minimum value that
             //should be allowed in the result set
@@ -180,22 +213,14 @@ public class OrderByIterator extends MergeIterator {
                 return false;
             }
 
-            boolean added = super.add( entity );
+            boolean added = sortedEntities.add( new MultiColumnSort( entity, comparator, generator ) );
 
-            while ( size() > maxSize ) {
+            while ( sortedEntities.size() > maxSize ) {
                 //remove our last element, we're over size
-                Entity e = this.pollLast();
-                //remove it from the cursors as well
-                cursorVal.remove( e.getUuid() );
+                sortedEntities.pollLast();
             }
 
             return added;
-        }
-
-
-        /** add the id to be loaded, and the dynamiccomposite column that belongs with it */
-        public void add( ScanColumn col ) {
-            cursorVal.put( col.getUUID(), col );
         }
 
 
@@ -216,35 +241,42 @@ public class OrderByIterator extends MergeIterator {
 
             return entities.get( 0 );
         }
+    }
 
 
-        public void load() {
-            try {
-                for ( Entity e : em.getPartialEntities( cursorVal.keySet(), fields ) ) {
-                    add( e );
-                }
-            }
-            catch ( Exception e ) {
-                logger.error( "Unable to load partial entities", e );
-                throw new RuntimeException( e );
-            }
+    private static final class MultiColumnSort implements ScanColumn {
+
+        private final CursorGenerator<MultiColumnSort> generator;
+        private final Entity partialCompareEntity;
+        private final Comparator<Entity> entityComparator;
+
+
+        private MultiColumnSort( final Entity partialCompareEntity, final Comparator<Entity> entityComparator,
+                                 final CursorGenerator<MultiColumnSort> generator ) {
+            this.generator = generator;
+            this.partialCompareEntity = partialCompareEntity;
+            this.entityComparator = entityComparator;
         }
 
 
-        /** Turn our sorted entities into a set of ids */
-        public Set<ScanColumn> toIds() {
-            Iterator<Entity> itr = iterator();
+        @Override
+        public UUID getUUID() {
+            return partialCompareEntity.getUuid();
+        }
 
-            Set<ScanColumn> columns = new LinkedHashSet<ScanColumn>( this.size() );
 
-            while ( itr.hasNext() ) {
+        @Override
+        public void addToCursor( final CursorCache cache ) {
+            this.generator.addToCursor( cache, this );
+        }
 
-                UUID id = itr.next().getUuid();
 
-                columns.add( cursorVal.get( id ) );
-            }
+        @Override
+        public int compareTo( final ScanColumn o ) {
 
-            return columns;
+            final MultiColumnSort other = ( MultiColumnSort ) o;
+
+            return entityComparator.compare( this.partialCompareEntity, other.partialCompareEntity );
         }
     }
 }

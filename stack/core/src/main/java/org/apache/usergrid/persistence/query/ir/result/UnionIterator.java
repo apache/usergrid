@@ -253,27 +253,10 @@ public class UnionIterator extends MultiIterator {
 
 
         @Override
-        public ByteBuffer getCursorValue() {
-            return ue.toByteBuffer( delegate.getUUID() );
-        }
-
-
-        @Override
-        public void setChild( final ScanColumn childColumn ) {
-           //intentionally a no-op, since child is on the delegate
-        }
-
-
-        @Override
         public void addToCursor( final CursorCache cache ) {
             this.uuidCursorGenerator.addToCursor( cache, this );
         }
 
-
-        @Override
-        public ScanColumn getChild() {
-            return delegate.getChild();
-        }
 
 
         @Override

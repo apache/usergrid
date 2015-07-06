@@ -259,9 +259,6 @@ public class GeoIterator implements ResultIterator {
 
         private final EntityLocationRef location;
         private final GeoCursorGenerator geoCursorGenerator;
-        private ScanColumn child;
-
-
 
         public LocationScanColumn( EntityLocationRef location, final GeoCursorGenerator geoCursorGenerator ) {
             this.location = location;
@@ -275,29 +272,12 @@ public class GeoIterator implements ResultIterator {
         }
 
 
-        @Override
-        public ByteBuffer getCursorValue() {
-            throw new UnsupportedOperationException(
-                    "This is not supported for location scan columns.  It requires iterator information" );
-        }
-
-
-        @Override
-        public void setChild( final ScanColumn childColumn ) {
-             this.child = childColumn;
-        }
-
 
         @Override
         public void addToCursor( final CursorCache cache ) {
             geoCursorGenerator.addToCursor( cache, this );
         }
 
-
-        @Override
-        public ScanColumn getChild() {
-            return this.child;
-        }
 
 
         @Override
