@@ -167,11 +167,6 @@ public class ExportAdmins extends ExportingToolBase {
             ids = em.searchCollection( em.getApplicationRef(), "users", query );
         }
 
-        adminUserWriter.setDone( true );
-        for (AdminUserReader aur : readers) {
-            aur.setDone( true );
-        }
-
         logger.debug( "Waiting for write thread to complete" );
         
         boolean done = false;
@@ -202,7 +197,7 @@ public class ExportAdmins extends ExportingToolBase {
      */
     private void buildOrgMap() throws Exception {
 
-        logger.info("Building org map");
+        logger.info( "Building org map" );
 
         ExecutorService execService = Executors.newFixedThreadPool( this.readThreadCount );
 
@@ -269,8 +264,6 @@ public class ExportAdmins extends ExportingToolBase {
 
     public class AdminUserReader implements Runnable {
 
-        private boolean done = true;
-
         private final BlockingQueue<UUID> readQueue;
         private final BlockingQueue<AdminUserWriteTask> writeQueue;
 
@@ -299,9 +292,7 @@ public class ExportAdmins extends ExportingToolBase {
                 UUID uuid = null;
                 try {
                     uuid = readQueue.poll( 30, TimeUnit.SECONDS );
-                    //logger.debug("Got item from entityId queue: " + uuid );
-
-                    if ( uuid == null && done ) {
+                    if ( uuid == null ) {
                         break;
                     }
 
@@ -335,8 +326,31 @@ public class ExportAdmins extends ExportingToolBase {
 
             for (String dictionary : dictionaries) {
                 Map<Object, Object> dict = em.getDictionaryAsMap( entity, dictionary );
+                if ( dict.isEmpty() ) {
+                    continue;
+                }
                 task.dictionariesByName.put( dictionary, dict );
             }
+           
+            if ( task.dictionariesByName.isEmpty() ) {
+                logger.error( "User {}:{} has no dictionaries",
+                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
+                
+            } else if ( task.dictionariesByName.get("credentials") == null ) {
+                logger.error( "User {}:{} has no credentials dictionary",
+                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
+                
+            } else {
+                if ( task.dictionariesByName.get("credentials").get("password") == null ) {
+                    logger.error( "User {}:{} has no password in credential dictionary",
+                            new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
+                }
+                if ( task.dictionariesByName.get("credentials").get("secret") == null ) {
+                    logger.error( "User {}:{} has no secret in credential dictionary",
+                            new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
+                }
+            }
+                
         }
 
         private void addOrganizationsToTask(AdminUserWriteTask task) throws Exception {
@@ -360,15 +374,9 @@ public class ExportAdmins extends ExportingToolBase {
                         task.adminUser.getUuid() } );
             }
         }
-
-        public void setDone(boolean done) {
-            this.done = done;
-        }
     }
 
     class AdminUserWriter implements Runnable {
-
-        private boolean done = false;
 
         private final BlockingQueue<AdminUserWriteTask> taskQueue;
 
@@ -404,7 +412,7 @@ public class ExportAdmins extends ExportingToolBase {
 
                 try {
                     AdminUserWriteTask task = taskQueue.poll( 30, TimeUnit.SECONDS );
-                    if ( task == null && done ) {
+                    if ( task == null ) {
                         break;
                     }
 
@@ -493,10 +501,6 @@ public class ExportAdmins extends ExportingToolBase {
             }
 
             jg.writeEndArray();
-        }
-
-        public void setDone(boolean done) {
-            this.done = done;
         }
     }
 }
