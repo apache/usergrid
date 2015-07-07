@@ -125,7 +125,7 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @Path("{applicationName}")
+    @Path("{applicationName: [^<>/]+}")
     public ApplicationResource getApplicationByName( @PathParam("applicationName") String applicationName )
             throws Exception {
 
@@ -143,21 +143,21 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @Path("applications/{applicationName}")
+    @Path("applications/{applicationName: [^<>/]+}")
     public ApplicationResource getApplicationByName2( @PathParam("applicationName") String applicationName )
             throws Exception {
         return getApplicationByName( applicationName );
     }
 
 
-    @Path("apps/{applicationName}")
+    @Path("apps/{applicationName: [^<>/]+}")
     public ApplicationResource getApplicationByName3( @PathParam("applicationName") String applicationName )
             throws Exception {
         return getApplicationByName( applicationName );
     }
 
 
-    @Path("a/{applicationName}")
+    @Path("a/{applicationName: [^<>/]+}")
     public ApplicationResource getApplicationByName4( @PathParam("applicationName") String applicationName )
             throws Exception {
         return getApplicationByName( applicationName );
