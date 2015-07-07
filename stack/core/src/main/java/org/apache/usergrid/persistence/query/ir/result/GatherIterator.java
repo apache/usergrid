@@ -19,19 +19,16 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
-import org.apache.usergrid.persistence.ResultsIterator;
-import org.apache.usergrid.persistence.cassandra.CursorCache;
 import org.apache.usergrid.persistence.query.ir.QueryNode;
 import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 
@@ -42,18 +39,27 @@ import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 public class GatherIterator implements ResultIterator {
 
 
-    private final QueryNode rootNode;
-    private final int pageSize;
+    private List<Future<Void>> iterators;
+    private final ConcurrentResultMerge merge;
+    private boolean merged;
 
 
-    private Iterator<ScanColumn> mergedIterators;
-    private List<ResultIterator> iterators;
+    public GatherIterator( final int pageSize, final QueryNode rootNode, final Collection<SearchVisitor> searchVisitors,
+                           final ExecutorService executorService ) {
+        this.merge = new ConcurrentResultMerge( pageSize );
 
 
-    public GatherIterator(final int pageSize, final QueryNode rootNode, final Collection<SearchVisitor> searchVisitors) {
-        this.pageSize = pageSize;
-        this.rootNode = rootNode;
-        createIterators( searchVisitors );
+        this.iterators = new ArrayList<Future<Void>>( searchVisitors.size() );
+        this.merged = false;
+
+
+        /**
+         * Start our search processing
+         */
+        for ( SearchVisitor visitor : searchVisitors ) {
+            final Future<Void> result = executorService.submit( new VisitorExecutor( rootNode, merge, visitor ) );
+            iterators.add( result );
+        }
     }
 
 
@@ -61,7 +67,6 @@ public class GatherIterator implements ResultIterator {
     public void reset() {
         throw new UnsupportedOperationException( "Gather iterators cannot be reset" );
     }
-
 
 
     @Override
@@ -72,28 +77,61 @@ public class GatherIterator implements ResultIterator {
 
     @Override
     public boolean hasNext() {
-        if(mergedIterators == null || !mergedIterators.hasNext()){
-            mergeIterators();
+        waitForCompletion();
+
+        return merge.results.size() > 0;
+    }
+
+
+    private void waitForCompletion() {
+        if ( merged ) {
+            return;
         }
 
-        return mergedIterators.hasNext();
+        for ( final Future<Void> future : iterators ) {
+            try {
+                future.get();
+            }
+            catch ( Exception e ) {
+                throw new RuntimeException( "Unable to aggregate results" );
+            }
+        }
+
+        merged = true;
     }
 
 
     @Override
     public Set<ScanColumn> next() {
-        if(!hasNext()){
+        if ( !hasNext() ) {
             throw new NoSuchElementException( "No more elements" );
         }
 
-        return getNextPage();
+        return merge.copyAndClear();
     }
 
-    private void createIterators(final Collection<SearchVisitor> searchVisitors ){
 
-        this.iterators = new ArrayList<ResultIterator>( searchVisitors.size() );
+    /**
+     * A visitor that will visit and get the first page of an set and return them.
+     */
+    private final class VisitorExecutor implements Callable<Void> {
 
-        for(SearchVisitor visitor: searchVisitors){
+        private final QueryNode rootNode;
+        private final SearchVisitor visitor;
+        private final ConcurrentResultMerge merge;
+
+
+        private VisitorExecutor( final QueryNode rootNode, final ConcurrentResultMerge merge,
+                                 final SearchVisitor visitor ) {
+            this.rootNode = rootNode;
+            this.visitor = visitor;
+            this.merge = merge;
+        }
+
+
+        @Override
+        public Void call() throws Exception {
+
 
             try {
                 rootNode.visit( visitor );
@@ -104,74 +142,54 @@ public class GatherIterator implements ResultIterator {
 
             final ResultIterator iterator = visitor.getResults();
 
-            iterators.add( iterator );
 
+            if ( iterator.hasNext() ) {
+                merge.merge( iterator.next() );
+            }
+
+            return null;
         }
-
     }
 
 
     /**
-     * Get the next page of results
-     * @return
+     * Class used to synchronize our treeSet access
      */
-    private Set<ScanColumn> getNextPage(){
+    private final class ConcurrentResultMerge {
 
-        //try to take from our PageSize
-        LinkedHashSet<ScanColumn> resultSet = new LinkedHashSet<ScanColumn>( pageSize );
+        private final TreeSet<ScanColumn> results;
+        private final int maxSize;
 
-        for(int i = 0; i < pageSize && mergedIterators.hasNext(); i ++){
-            resultSet.add( mergedIterators.next() );
+
+        private ConcurrentResultMerge( final int maxSize ) {
+            this.maxSize = maxSize;
+            results = new TreeSet<ScanColumn>();
         }
 
 
-        return resultSet;
+        /**
+         * Merge this set into the existing set
+         */
+        public synchronized void merge( final Set<ScanColumn> columns ) {
+            for ( ScanColumn scanColumn : columns ) {
+                results.add( scanColumn );
+
+                //results are too large remove the last
+                while ( results.size() > maxSize ) {
+                    results.pollLast();
+                }
+            }
+        }
+
+
+        /**
+         * Get the set
+         */
+        public Set<ScanColumn> copyAndClear() {
+            //create an immutable copy
+            final Set<ScanColumn> toReturn = new LinkedHashSet<ScanColumn>( results );
+            results.clear();
+            return toReturn;
+        }
     }
-
-    /**
-     * Advance the iterator
-     */
-    private void mergeIterators(){
-        //TODO make this concurrent
-
-
-        TreeSet<ScanColumn> merged = new TreeSet<ScanColumn>(  );
-
-        for(ResultIterator iterator: this.iterators){
-              merge(merged, iterator);
-        }
-
-        mergedIterators = merged.iterator();
-
-    }
-
-
-
-
-    /**
-     * Merge this interator into our final column results
-     * @param results
-     * @param iterator
-     */
-    private void merge(final TreeSet<ScanColumn> results, final ResultIterator iterator){
-
-
-        //nothing to do, return
-        if( !iterator.hasNext()){
-            return;
-        }
-
-        final Iterator<ScanColumn> nextPage = iterator.next().iterator();
-
-        //only take from the iterator what we need to create a full page.
-        for(int i = 0 ; i < pageSize && nextPage.hasNext(); i ++){
-            final ScanColumn next = nextPage.next();
-
-            results.add(next);
-
-        }
-
-    }
-
-
 }
