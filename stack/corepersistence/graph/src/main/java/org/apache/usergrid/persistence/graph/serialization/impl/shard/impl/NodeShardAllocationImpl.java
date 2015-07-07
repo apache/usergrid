@@ -173,6 +173,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             return false;
         }
 
+        if(LOG.isDebugEnabled()){
+            LOG.debug("Count of {} has exceeded shard config of {} will begin compacting", count, shardSize);
+        }
+
         /**
          * We want to allocate a new shard as close to the max value as possible.  This way if we're filling up a shard rapidly, we split it near the head of the values.
          * Further checks to this group will result in more splits, similar to creating a tree type structure and splitting each node.
