@@ -32,6 +32,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
@@ -79,6 +80,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
+    private final AtomicLong countAudits;
     private static final Logger LOG = LoggerFactory.getLogger( ShardGroupCompactionImpl.class );
 
 
@@ -109,6 +111,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                                      final EdgeShardSerialization edgeShardSerialization) {
 
         this.timeService = timeService;
+        this.countAudits = new AtomicLong();
         this.graphFig = graphFig;
         this.nodeShardAllocation = nodeShardAllocation;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
@@ -146,7 +149,9 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         Preconditions
             .checkArgument( group.shouldCompact( startTime ), "Compaction cannot be run yet.  Ignoring compaction." );
 
-
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("Compacting shard group. count is {} ", countAudits.get());
+        }
         final CompactionResult.CompactionBuilder resultBuilder = CompactionResult.builder();
 
         final Shard targetShard = group.getCompactionTarget();
@@ -299,6 +304,11 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             return Futures.immediateFuture( AuditResult.NOT_CHECKED );
         }
 
+        countAudits.getAndIncrement();
+        
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("Auditing shard group. count is {} ", countAudits.get());
+        }
         /**
          * Try and submit.  During back pressure, we may not be able to submit, that's ok.  Better to drop than to
          * hose the system
