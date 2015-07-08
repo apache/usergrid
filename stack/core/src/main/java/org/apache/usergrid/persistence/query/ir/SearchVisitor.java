@@ -229,7 +229,7 @@ public abstract class SearchVisitor implements NodeVisitor {
                 scanner = new NoOpIndexScanner();
             }
             else {
-                scanner = secondaryIndexScan( orderByNode, slice );
+                scanner = secondaryIndexScan( orderByNode, slice.duplicate() );
             }
 
             final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
@@ -264,7 +264,7 @@ public abstract class SearchVisitor implements NodeVisitor {
         IntersectionIterator intersections = new IntersectionIterator( queryProcessor.getPageSizeHint( node ) );
 
         for ( QuerySlice slice : node.getAllSlices() ) {
-            IndexScanner scanner = secondaryIndexScan( node, slice );
+            IndexScanner scanner = secondaryIndexScan( node, slice.duplicate() );
 
             final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
 

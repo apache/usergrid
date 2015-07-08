@@ -220,7 +220,7 @@ public class QueryProcessor {
      * Apply cursor position and sort order to this slice. This should only be invoke at evaluation time to ensure that
      * the IR tree has already been fully constructed
      */
-    public void applyCursorAndSort( QuerySlice slice ) {
+    public  void applyCursorAndSort( QuerySlice slice ) {
         // apply the sort first, since this can change the hash code
         SortPredicate sort = getSort( slice.getPropertyName() );
 
