@@ -30,6 +30,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import rx.Observable;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -75,7 +76,8 @@ public class Pipeline<InputType> {
 
         //set our observable to start at the application
         final FilterResult<Id> filter = new FilterResult<>( applicationScope.getApplication(), Optional.absent() );
-        this.currentObservable = Observable.just( filter );
+
+        this.currentObservable = Observable.just( filter ).subscribeOn(Schedulers.io());
     }
 
 
