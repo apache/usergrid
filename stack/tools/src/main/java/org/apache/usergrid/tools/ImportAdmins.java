@@ -382,7 +382,7 @@ public class ImportAdmins extends ToolBase {
                 String entityOwnerId = jp.getCurrentName();
 
                 try {
-                    EntityRef entityRef = em.getRef( UUID.fromString( entityOwnerId ) );
+                    EntityRef entityRef = em.get( UUID.fromString( entityOwnerId ) );
                     Map<String, Object> metadata = (Map<String, Object>) jp.readValueAs( Map.class );
                     
                     workQueue.put( new ImportMetadataTask( entityRef, metadata ) );
@@ -414,7 +414,8 @@ public class ImportAdmins extends ToolBase {
             User user = em.get(entityRef, User.class);
             
             if (user == null) {
-                logger.error("User with uuid={} not found, not adding to organizations");
+                logger.error("User not found, not adding to organizations: " 
+                    + (entityRef == null ? null : entityRef.getUuid()));
 
             } else {
 
