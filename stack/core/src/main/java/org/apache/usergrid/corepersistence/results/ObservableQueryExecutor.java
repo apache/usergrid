@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Optional;
 
 import rx.Observable;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -97,11 +98,12 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
     public boolean hasNext() {
 
         if ( iterator == null ) {
-            iterator = resultsObservable.toBlocking().getIterator();
+            iterator =  resultsObservable.toBlocking().getIterator();
         }
 
+        boolean hasNext = iterator.hasNext();
 
-        return iterator.hasNext();
+        return hasNext;
     }
 
 

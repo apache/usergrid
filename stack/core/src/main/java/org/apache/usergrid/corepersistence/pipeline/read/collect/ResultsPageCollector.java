@@ -61,9 +61,19 @@ public class ResultsPageCollector<T> extends AbstractFilter<FilterResult<T>, Res
 
         final int limit = pipelineContext.getLimit();
 
-        return filterResultObservable.buffer( limit ).flatMap( buffer -> Observable.from( buffer ).collect(
-            () -> new ResultsPageWithCursorCollector( limit ), ( collector, element ) -> collector.add( element ) ) ).map( resultsPageCollector -> new ResultsPage( resultsPageCollector.results,
-            new ResponseCursor( resultsPageCollector.lastPath ), pipelineContext.getLimit() ) );
+        return filterResultObservable
+            .buffer( limit )
+            .flatMap( buffer
+                -> Observable
+                    .from( buffer )
+                    .collect(() -> new ResultsPageWithCursorCollector( limit ), ( collector, element ) -> collector.add( element ) )
+            )
+            .map( resultsPageCollector ->
+                new ResultsPage(
+                    resultsPageCollector.results,
+                    new ResponseCursor( resultsPageCollector.lastPath ), pipelineContext.getLimit()
+                )
+            );
     }
 
 
