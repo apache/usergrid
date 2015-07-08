@@ -93,7 +93,7 @@ public class GatherIterator implements ResultIterator {
                 future.get();
             }
             catch ( Exception e ) {
-                throw new RuntimeException( "Unable to aggregate results" );
+                throw new RuntimeException( "Unable to aggregate results", e );
             }
         }
 
