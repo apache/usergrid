@@ -181,7 +181,6 @@ public class GatherIterator implements ResultIterator {
             }
         }
 
-
         /**
          * Get the set
          */

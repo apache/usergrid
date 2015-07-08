@@ -67,6 +67,7 @@
 		<constructor-arg ref="cassandraHostConfigurator" />
 	</bean>
 
+
     <bean id="loadBalancingPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
 
 	<!--  locking for a single node -->	
@@ -195,6 +196,10 @@
     <bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
 
     <bean id="metricsFactory" class="org.apache.usergrid.metrics.MetricsFactory" scope="singleton"/>
+
+  <bean id="queryExecutorService" class="org.apache.usergrid.persistence.cassandra.QueryExecutorServiceImpl" scope="singleton">
+    <property name="threadCount" value="${usergrid.query.threadcount}"/>
+  </bean>
 
     <!-- scan all job classes -->
     <context:component-scan base-package="org.apache.usergrid.batch.job" />

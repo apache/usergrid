@@ -193,6 +193,9 @@ public class EntityManagerImpl implements EntityManager {
     @Resource
     private IndexBucketLocator indexBucketLocator;
 
+    @Resource
+    private QueryExecutorService queryExecutorService;
+
     private UUID applicationId;
 
     private Application application;
@@ -270,7 +273,7 @@ public class EntityManagerImpl implements EntityManager {
     public RelationManagerImpl getRelationManager( EntityRef entityRef ) {
         //RelationManagerImpl rmi = applicationContext.getBean(RelationManagerImpl.class);
         RelationManagerImpl rmi = new RelationManagerImpl();
-        rmi.init( this, cass, applicationId, entityRef, indexBucketLocator );
+        rmi.init( this, cass, queryExecutorService,  applicationId, entityRef, indexBucketLocator );
         return rmi;
     }
 
