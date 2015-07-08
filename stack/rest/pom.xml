@@ -285,7 +285,16 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
-        <version>2.3</version>
+        <version>2.5</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Usergrid-Version>$
+                {project.version}
+              </Usergrid-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
       </plugin>
 
       <plugin>
