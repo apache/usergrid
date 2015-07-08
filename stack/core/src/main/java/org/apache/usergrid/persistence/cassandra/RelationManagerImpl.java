@@ -127,13 +127,14 @@ public class RelationManagerImpl implements RelationManager {
     private UUID applicationId;
     private EntityRef headEntity;
     private IndexBucketLocator indexBucketLocator;
+    private QueryExecutorService executorService;
 
 
     public RelationManagerImpl() {
     }
 
 
-    public RelationManagerImpl init( EntityManagerImpl em, CassandraService cass, UUID applicationId,
+    public RelationManagerImpl init( EntityManagerImpl em, CassandraService cass,  QueryExecutorService executorService, UUID applicationId,
                                      EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -148,6 +149,7 @@ public class RelationManagerImpl implements RelationManager {
         this.cass = cass;
         this.headEntity = headEntity;
         this.indexBucketLocator = indexBucketLocator;
+        this.executorService = executorService;
 
         return this;
     }
@@ -155,7 +157,7 @@ public class RelationManagerImpl implements RelationManager {
 
     private RelationManagerImpl getRelationManager( EntityRef headEntity ) {
         RelationManagerImpl rmi = new RelationManagerImpl();
-        rmi.init( em, cass, applicationId, headEntity, indexBucketLocator );
+        rmi.init( em,  cass, executorService, applicationId, headEntity, indexBucketLocator );
         return rmi;
     }
 
@@ -1711,7 +1713,7 @@ public class RelationManagerImpl implements RelationManager {
 
         // we have something to search with, visit our tree and evaluate the
         // results
-        QueryProcessor qp = new QueryProcessor( query, collection, em, factory );
+        QueryProcessor qp = new QueryProcessor(  em, executorService, query, collection, factory );
 
         CollectionSearchVisitorFactory collectionSearchVisitorFactory = new CollectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, collectionName );
 //        SearchCollectionVisitor visitor = new SearchCollectionVisitor( this, qp );
@@ -1903,7 +1905,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessor qp = new QueryProcessor(  em, executorService, query, null,factory );
 
         ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, true, "" );
 
@@ -1946,7 +1948,7 @@ public class RelationManagerImpl implements RelationManager {
                 new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessor qp = new QueryProcessor(  em, executorService, query, null, factory );
 
 
         ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, false, "" );
@@ -1987,7 +1989,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessor qp = new QueryProcessor(em, executorService, query, null,  factory );
 
         ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, true, "" );
 

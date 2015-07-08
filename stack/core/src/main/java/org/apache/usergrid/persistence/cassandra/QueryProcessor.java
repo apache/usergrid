@@ -22,12 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,11 +87,7 @@ public class QueryProcessor {
     private final CollectionInfo collectionInfo;
     private final EntityManager em;
     private final ResultsLoaderFactory loaderFactory;
-
-    //we set up a thread pool with 100 execution threads.  We purposefully use a synchronous queue and a caller runs so that we simply reject and immediately execute tasks if all 100 threads are occupied.
-
-    //we make this static, we only want 1 instance of this service in the JVM.  Otherwise tests fail
-    private static final ExecutorService executorService = new ThreadPoolExecutor( 100, 100, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>( ), new CallerRunsExecutionHandler() );
+    private final QueryExecutorService executorService;
 
     private Operand rootOperand;
     private List<SortPredicate> sorts;
@@ -110,11 +100,12 @@ public class QueryProcessor {
     private int sliceCount;
 
 
-    public QueryProcessor( Query query, CollectionInfo collectionInfo, EntityManager em,
+    public QueryProcessor(  EntityManager em, QueryExecutorService executorService, Query query, CollectionInfo collectionInfo,
                            ResultsLoaderFactory loaderFactory ) throws PersistenceException {
         setQuery( query );
         this.collectionInfo = collectionInfo;
         this.em = em;
+        this.executorService = executorService;
         this.loaderFactory = loaderFactory;
         process();
     }
@@ -281,7 +272,7 @@ public class QueryProcessor {
         //use the gather iterator to collect all the          '
         final int resultSetSize = Math.min( size, Query.MAX_LIMIT );
 
-        ResultIterator itr = new GatherIterator(resultSetSize, rootNode, searchVisitorFactory.createVisitors(), executorService  );
+        ResultIterator itr = new GatherIterator(resultSetSize, rootNode, searchVisitorFactory.createVisitors(), executorService.getExecutor()  );
 
         List<ScanColumn> entityIds = new ArrayList<ScanColumn>( );
 
@@ -695,20 +686,6 @@ public class QueryProcessor {
         return em;
     }
 
-
-    private static class CallerRunsExecutionHandler implements RejectedExecutionHandler{
-
-        private static final Logger logger = LoggerFactory.getLogger( CallerRunsExecutionHandler.class );
-
-        @Override
-        public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            //when a task is rejected due to back pressure, we just want to run it in the caller.
-
-            logger.warn( "Concurrent shard execution rejected the task in executor {}, running it in the caller thread", executor );
-
-            r.run();
-        }
-    }
 
 
 }
