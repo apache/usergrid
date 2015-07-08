@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
@@ -39,27 +38,15 @@ import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 public class GatherIterator implements ResultIterator {
 
 
-    private List<Future<Void>> iterators;
-    private final ConcurrentResultMerge merge;
-    private boolean merged;
+    private final WorkerCoordinator workerCoordinator;
 
 
     public GatherIterator( final int pageSize, final QueryNode rootNode, final Collection<SearchVisitor> searchVisitors,
                            final ExecutorService executorService ) {
-        this.merge = new ConcurrentResultMerge( pageSize );
 
+        this.workerCoordinator = new WorkerCoordinator( executorService, searchVisitors, rootNode, pageSize );
 
-        this.iterators = new ArrayList<Future<Void>>( searchVisitors.size() );
-        this.merged = false;
-
-
-        /**
-         * Start our search processing
-         */
-        for ( SearchVisitor visitor : searchVisitors ) {
-            final Future<Void> result = executorService.submit( new VisitorExecutor( rootNode, merge, visitor ) );
-            iterators.add( result );
-        }
+        this.workerCoordinator.start();
     }
 
 
@@ -77,27 +64,7 @@ public class GatherIterator implements ResultIterator {
 
     @Override
     public boolean hasNext() {
-        waitForCompletion();
-
-        return merge.results.size() > 0;
-    }
-
-
-    private void waitForCompletion() {
-        if ( merged ) {
-            return;
-        }
-
-        for ( final Future<Void> future : iterators ) {
-            try {
-                future.get();
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Unable to aggregate results", e );
-            }
-        }
-
-        merged = true;
+        return workerCoordinator.getResults().hasResults();
     }
 
 
@@ -107,7 +74,76 @@ public class GatherIterator implements ResultIterator {
             throw new NoSuchElementException( "No more elements" );
         }
 
-        return merge.copyAndClear();
+        return workerCoordinator.getResults().copyAndClear();
+    }
+
+
+    /**
+     * Coordinator object for all workers
+     */
+    private final class WorkerCoordinator {
+
+        private final ExecutorService executorService;
+        private final Collection<SearchVisitor> searchVisitors;
+        private final int pageSize;
+        private final QueryNode rootNode;
+        private ConcurrentResultMerge merge;
+        private ArrayList<Future<Void>> workers;
+
+
+        private WorkerCoordinator( final ExecutorService executorService,
+                                   final Collection<SearchVisitor> searchVisitors, final QueryNode rootNode,
+                                   final int pageSize ) {
+            this.executorService = executorService;
+            this.searchVisitors = searchVisitors;
+            this.rootNode = rootNode;
+            this.pageSize = pageSize;
+        }
+
+
+        public void start() {
+            this.merge = new ConcurrentResultMerge( pageSize );
+
+
+            this.workers = new ArrayList<Future<Void>>( searchVisitors.size() );
+
+
+            /**
+             * Start our search processing
+             */
+            for ( SearchVisitor visitor : searchVisitors ) {
+                final VisitorExecutor executor = new VisitorExecutor( rootNode, merge, visitor );
+
+//                try {
+//                    executor.call();
+//                }
+//                catch ( Exception e ) {
+//                    throw new RuntimeException( e );
+//                }
+                final Future<Void> result = executorService.submit( executor);
+                workers.add( result );
+            }
+        }
+
+
+        /**
+         * Get the results of the merge, after all workers have finished
+         * @return
+         */
+        public ConcurrentResultMerge getResults() {
+
+            //make sure all our workers are done
+            for ( final Future<Void> future : workers ) {
+                try {
+                    future.get();
+                }
+                catch ( Exception e ) {
+                    throw new RuntimeException( "Unable to aggregate results", e );
+                }
+            }
+
+            return merge;
+        }
     }
 
 
@@ -157,7 +193,7 @@ public class GatherIterator implements ResultIterator {
      */
     private final class ConcurrentResultMerge {
 
-        private final TreeSet<ScanColumn> results;
+        private TreeSet<ScanColumn> results;
         private final int maxSize;
 
 
@@ -181,14 +217,25 @@ public class GatherIterator implements ResultIterator {
             }
         }
 
+
+        /**
+         * Return true if the merge has results
+         */
+        public boolean hasResults() {
+            return results != null && results.size() > 0;
+        }
+
+
         /**
          * Get the set
          */
-        public Set<ScanColumn> copyAndClear() {
+        public synchronized Set<ScanColumn> copyAndClear() {
             //create an immutable copy
-            final Set<ScanColumn> toReturn = new LinkedHashSet<ScanColumn>( results );
-            results.clear();
+            final Set<ScanColumn> toReturn = results ;
+            results = new TreeSet<ScanColumn>();
             return toReturn;
         }
+
+
     }
 }
