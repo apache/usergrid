@@ -28,6 +28,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.core.rx.ObservableToBlockingIteratorFactory;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -52,7 +53,8 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
     public ObservableQueryExecutor( final Observable<ResultsPage<T>> resultsObservable ) {
         //map to our old results objects, return a default empty if required
         this.resultsObservable = resultsObservable.map( resultsPage -> createResultsInternal( resultsPage ) )
-                                                  .defaultIfEmpty( new Results() );
+                                                  .defaultIfEmpty(new Results())
+            .subscribeOn(Schedulers.io());
     }
 
 
@@ -98,7 +100,7 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
     public boolean hasNext() {
 
         if ( iterator == null ) {
-            iterator =  resultsObservable.toBlocking().getIterator();
+            iterator = ObservableToBlockingIteratorFactory.toIterator( resultsObservable );
         }
 
         boolean hasNext = iterator.hasNext();
@@ -117,5 +119,11 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
         next.setQueryExecutor( this );
 
         return next;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        resultsObservable.unsubscribeOn(Schedulers.io());
+        super.finalize();
     }
 }
