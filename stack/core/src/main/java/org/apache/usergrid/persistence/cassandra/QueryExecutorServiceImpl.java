@@ -21,8 +21,10 @@ package org.apache.usergrid.persistence.cassandra;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +72,7 @@ public class QueryExecutorServiceImpl implements QueryExecutorService {
        }
 
 
-        executorService = new ThreadPoolExecutor( threadCount, threadCount, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>( ), new CallerRunsExecutionHandler() );
+        executorService = new ThreadPoolExecutor( threadCount, threadCount, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>( ), new QueryThreadFactory(), new CallerRunsExecutionHandler() );
         return executorService;
     }
 
@@ -91,5 +93,26 @@ public class QueryExecutorServiceImpl implements QueryExecutorService {
             r.run();
         }
     }
+
+    /**
+      * Simple factory for labeling job worker threads for easier debugging
+      */
+     private static final class QueryThreadFactory implements ThreadFactory {
+
+         public static final QueryThreadFactory INSTANCE = new QueryThreadFactory();
+
+         private static final String NAME = "query-";
+         private final AtomicLong counter = new AtomicLong();
+
+
+         @Override
+         public Thread newThread( final Runnable r ) {
+
+             Thread newThread = new Thread( r, NAME + counter.incrementAndGet() );
+             newThread.setDaemon( true );
+
+             return newThread;
+         }
+     }
 
 }
