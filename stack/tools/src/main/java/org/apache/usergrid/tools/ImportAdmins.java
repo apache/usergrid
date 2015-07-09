@@ -625,13 +625,13 @@ public class ImportAdmins extends ToolBase {
                     long stopTime = System.currentTimeMillis();
                     long duration = stopTime - startTime;
                     durationSum += duration;
+                    metadataCount.getAndIncrement();
                     count++;
-
-                    //logger.debug( "Imported {}th metadata", count );
                     
                     if ( count % 30 == 0 ) {
-                        logger.info( "Imported {} metadata of total {}. Average metadata Imported Rate: {}(ms)", 
-                           new Object[] { count, metadataCount.get(), durationSum / count });
+                        logger.info( "Imported {} metadata of total {} expected. " +
+                                        "Average metadata Imported Rate: {}(ms)", 
+                           new Object[] { metadataCount.get(), userCount.get(), durationSum / count });
                     }
 
                 } catch (Exception e) {
@@ -694,7 +694,7 @@ public class ImportAdmins extends ToolBase {
                         logger.debug( "Imported admin user {} / {}",
                             new Object[] { uuid, entityProps.get( "username" ) } );
 
-                        userCount.addAndGet( 1 );
+                        userCount.getAndIncrement();
                         auditQueue.put(entityProps);
                         long stopTime = System.currentTimeMillis();
                         long duration = stopTime - startTime;
@@ -702,7 +702,8 @@ public class ImportAdmins extends ToolBase {
                         
                         count++;
                         if (count % 30 == 0) {
-                            logger.info( "Imported {} admin users of total {}. Average Creation Rate: {}ms", 
+                            logger.info( "This worked has imported {} users of total {} imported so far. " +
+                                            "Average Creation Rate: {}ms", 
                                 new Object[] { count, userCount.get(), durationSum / count });
                         }
                         
