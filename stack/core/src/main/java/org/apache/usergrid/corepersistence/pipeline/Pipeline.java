@@ -77,7 +77,7 @@ public class Pipeline<InputType> {
         //set our observable to start at the application
         final FilterResult<Id> filter = new FilterResult<>( applicationScope.getApplication(), Optional.absent() );
 
-        this.currentObservable = Observable.just( filter ).subscribeOn(Schedulers.io());
+        this.currentObservable = Observable.just( filter );
     }
 
 

@@ -100,10 +100,12 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                 subscriber.onStart();
 
+                int count = 0;
                 //emit while we have values from ES and someone is subscribed
                 while ( !subscriber.isUnsubscribed() ) {
 
 
+                    log.info("elastic search iteration loop {}",count++);
                     try {
                         final CandidateResults candidateResults =
                             applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet );
