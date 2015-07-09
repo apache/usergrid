@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 
 
 /**
@@ -30,35 +29,22 @@ import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 public final class ConnectionShardFilter implements ShardFilter {
     private final IndexBucketLocator indexBucketLocator;
     private final String expectedBucket;
-    private final ConnectionRefImpl searchConnection;
 
 
-    public ConnectionShardFilter( final IndexBucketLocator indexBucketLocator, final String expectedBucket,
-                                  final ConnectionRefImpl connection ) {
+    public ConnectionShardFilter( final IndexBucketLocator indexBucketLocator, final String expectedBucket ) {
         this.indexBucketLocator = indexBucketLocator;
         this.expectedBucket = expectedBucket;
-        this.searchConnection = connection;
-
-
     }
-
-
-
 
 
     public boolean isInShard( final ScanColumn scanColumn ) {
 
 
-        //shard hashing is currently based on source.  this is a placeholder for when this is fixed.
-//        UUID[] indexIds = searchConnection.getIndexIds();
-//
-//        final String shard = indexBucketLocator.getBucket(indexIds[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE] );
-//
-//        return expectedBucket.equals( shard );
+        final UUID entityId = scanColumn.getUUID();
 
-        return true;
-//
+        //not for our current processing shard, discard
+        final String shard = indexBucketLocator.getBucket( entityId );
+
+        return expectedBucket.equals( shard );
     }
-
-
 }

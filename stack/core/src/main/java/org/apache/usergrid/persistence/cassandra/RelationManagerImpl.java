@@ -250,7 +250,7 @@ public class RelationManagerImpl implements RelationManager {
                     EntityLocationRef loc =
                             new EntityLocationRef( indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
                                     indexEntry.getValue().toString() );
-                    batchStoreLocationInCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                    batchStoreLocationInCollectionIndex( indexUpdate.getBatch(), indexBucketLocator,
                             index_name, indexedEntity.getUuid(), loc );
                 }
 
@@ -555,6 +555,12 @@ public class RelationManagerImpl implements RelationManager {
                                                                   ConnectionRefImpl connection, UUID[] index_keys )
             throws Exception {
 
+
+        /**
+         * Original bucket scheme.  Incorrect and legacy, but we need to keep it b/c we're not sure if the original write was the
+         * incorrect legacy system
+         */
+
         // entity_id,prop_name
         Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
                 indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.ALL] ) );
@@ -562,20 +568,19 @@ public class RelationManagerImpl implements RelationManager {
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket(
-                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE] ) );
+                        indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE] ) );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket(
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE]) );
+                        indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE] ) );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket(
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE]) );
+                        indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE] ) );
+
+
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,
@@ -596,35 +601,85 @@ public class RelationManagerImpl implements RelationManager {
         addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_and_entity_type_prop_index_key,
                 entry.getIndexComposite( connection.getConnectedEntityId() ), indexUpdate.getTimestamp() );
 
+
+        /**
+         * New bucket scheme for deletes
+         */
+
+        final UUID entityId = connection.getConnectedEntityId();
+        final String bucket = indexBucketLocator.getBucket( entityId );
+
+
+        // entity_id,prop_name
+        Object property_index_key_new =
+                key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(), bucket );
+
+        // entity_id,entity_type,prop_name
+        Object entity_type_prop_index_key_new =
+                key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(), bucket );
+
+        // entity_id,connection_type,prop_name
+        Object connection_type_prop_index_key_new =
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(), bucket );
+
+        // entity_id,connection_type,entity_type,prop_name
+        Object connection_type_and_entity_type_prop_index_key_new =
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        bucket );
+
+
+        // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key_new,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType(),
+                        connection.getConnectedEntityType() ), indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,connection_type,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, entity_type_prop_index_key_new,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType() ),
+                indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,entity_type,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_prop_index_key_new,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectedEntityType() ),
+                indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_and_entity_type_prop_index_key_new,
+                entry.getIndexComposite( connection.getConnectedEntityId() ), indexUpdate.getTimestamp() );
+
+
         return indexUpdate.getBatch();
     }
+
+
 
 
     @Metered(group = "core", name = "RelationManager_batchAddConnectionIndexEntries")
     public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, IndexEntry entry,
                                                                ConnectionRefImpl connection, UUID[] index_keys ) {
 
+        final UUID entityId = connection.getConnectedEntityId();
+
+        final String bucket = indexBucketLocator.getBucket( entityId );
+
         // entity_id,prop_name
         Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.ALL] ) );
+                bucket );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket(
-                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE]) );
+                        bucket );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket(
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE] ) );
+                        bucket );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket(
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE]) );
+                        bucket );
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,
@@ -725,7 +780,8 @@ public class RelationManagerImpl implements RelationManager {
     public Set<String> getConnectionIndexes( ConnectionRefImpl connection ) throws Exception {
         List<HColumn<String, String>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), Serializers.se, Serializers.se );
+                        key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), Serializers.se,
+                        Serializers.se );
         Set<String> indexes = new TreeSet<String>();
         if ( results != null ) {
             for ( HColumn<String, String> column : results ) {

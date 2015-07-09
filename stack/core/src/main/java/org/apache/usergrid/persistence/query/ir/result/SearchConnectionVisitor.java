@@ -136,7 +136,7 @@ public class SearchConnectionVisitor extends SearchVisitor {
 
 
         final ConnectionShardFilter
-                validator = new ConnectionShardFilter(indexBucketLocator, bucket, connection );
+                validator = new ConnectionShardFilter(indexBucketLocator, bucket );
 
 
         this.results.push( new ShardFilterIterator( validator, itr, size ) );
@@ -213,7 +213,7 @@ public class SearchConnectionVisitor extends SearchVisitor {
         //we have to create our wrapper so validate the data we read is correct for our shard
 
 
-        final ConnectionShardFilter connectionShardFilter = new ConnectionShardFilter( indexBucketLocator, bucket, connection);
+        final ConnectionShardFilter connectionShardFilter = new ConnectionShardFilter( indexBucketLocator, bucket);
 
 
         final SliceIterator sliceIterator = new SliceIterator( connectionScanner, connectionParser );
