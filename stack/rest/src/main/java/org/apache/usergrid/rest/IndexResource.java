@@ -72,13 +72,37 @@ public class IndexResource extends AbstractContextResource {
         throws Exception {
 
 
-        logger.info( "Rebuilding all applications" );
+        logger.info("Rebuilding all applications");
 
         final ReIndexRequestBuilder request = createRequest();
 
         return executeAndCreateResponse( request, callback );
     }
 
+    @RequireSystemAccess
+    @GET
+    @Path( "rebuild" )
+    public JSONWithPadding rebuildIndexesGet(@QueryParam( "jobId" ) String jobId, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+        logger.info("Getting status for index jobs");
+
+        Preconditions
+            .checkNotNull(jobId, "query param jobId must not be null" );
+
+
+        ReIndexService.ReIndexStatus status = getReIndexService().getStatus(jobId);
+
+        final ApiResponse response = createApiResponse();
+
+        response.setAction( "rebuild indexes" );
+        response.setProperty( "jobId", status.getJobId() );
+        response.setProperty( "status", status.getStatus() );
+        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
+        response.setProperty( "numberQueued", status.getNumberProcessed() );
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
 
     @RequireSystemAccess
     @PUT
