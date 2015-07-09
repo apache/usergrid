@@ -35,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -86,11 +87,13 @@ public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2poin
 
         WebResource res = clientSetup.getRestClient()
             .pathResource( "system/index/rebuild/"+result.getProperties().get("jobId").toString() ).getResource();
+        String status = result.getProperties().get("jobId").toString();
         //added httpBasicauth filter to all setup calls because they all do verification this way.
         HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword() );
         res.addFilter( httpBasicAuthFilter );
         result = res.get(ApiResponse.class);
         assertNotNull( result );
+        assertEquals(status,result.getProperties().get("jobId").toString());
 
 
     }
