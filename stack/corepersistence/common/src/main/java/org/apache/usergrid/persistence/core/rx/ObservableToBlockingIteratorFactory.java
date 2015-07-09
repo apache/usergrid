@@ -19,9 +19,7 @@
  */
 package org.apache.usergrid.persistence.core.rx;
 
-/**
- * Classy class class.
- */
+
 
 import rx.Notification;
 import rx.Observable;
@@ -36,6 +34,7 @@ import java.util.concurrent.BlockingQueue;
 
 /**
  * Returns an Iterator that iterates over all items emitted by a specified Observable.
+ * This blocks with an array blocking queue of 1
  * <p>
  * <img width="640" src="https://github.com/ReactiveX/RxJava/wiki/images/rx-operators/B.toIterator.png" alt="">
  * <p>
