@@ -125,14 +125,15 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @Path("{applicationName: [^<>/]+}")
+    @Path("{applicationName}")
     public ApplicationResource getApplicationByName( @PathParam("applicationName") String applicationName )
             throws Exception {
-
         if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();
         }
-
+        if (!isSafe(applicationName)) {
+            throw new IllegalArgumentException("Invalid application name");
+        }
         String orgAppName = PathingUtils.assembleAppName( organizationName, applicationName );
         UUID applicationId = emf.lookupApplication( orgAppName );
         if ( applicationId == null ) {
@@ -143,21 +144,21 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @Path("applications/{applicationName: [^<>/]+}")
+    @Path("applications/{applicationName}")
     public ApplicationResource getApplicationByName2( @PathParam("applicationName") String applicationName )
             throws Exception {
         return getApplicationByName( applicationName );
     }
 
 
-    @Path("apps/{applicationName: [^<>/]+}")
+    @Path("apps/{applicationName}")
     public ApplicationResource getApplicationByName3( @PathParam("applicationName") String applicationName )
             throws Exception {
         return getApplicationByName( applicationName );
     }
 
 
-    @Path("a/{applicationName: [^<>/]+}")
+    @Path("a/{applicationName}")
     public ApplicationResource getApplicationByName4( @PathParam("applicationName") String applicationName )
             throws Exception {
         return getApplicationByName( applicationName );
