@@ -81,8 +81,8 @@ public class IndexResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
-    @Path( "rebuild" )
-    public JSONWithPadding rebuildIndexesGet(@QueryParam( "jobId" ) String jobId, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    @Path( "rebuild/{jobId}" )
+    public JSONWithPadding rebuildIndexesGet(@PathParam( "jobId" ) String jobId, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
         logger.info("Getting status for index jobs");
 

@@ -84,6 +84,15 @@ public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2poin
 
         assertNotNull( result );
 
+        WebResource res = clientSetup.getRestClient()
+            .pathResource( "system/index/rebuild/"+result.getProperties().get("jobId").toString() ).getResource();
+        //added httpBasicauth filter to all setup calls because they all do verification this way.
+        HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword() );
+        res.addFilter( httpBasicAuthFilter );
+        result = res.get(ApiResponse.class);
+        assertNotNull( result );
+
+
     }
 
     @Ignore
