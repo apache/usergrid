@@ -221,7 +221,7 @@ public class RelationManagerImpl implements RelationManager {
                 if ( "location.coordinates".equals( entry.getPath() ) ) {
                     EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
                             entry.getValue().toString() );
-                    batchRemoveLocationFromCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                    batchRemoveLocationFromCollectionIndex( indexUpdate.getBatch(), indexBucketLocator,
                             index_name, loc );
                 }
             }
