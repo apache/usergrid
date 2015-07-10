@@ -16,31 +16,26 @@
  */
 package org.apache.usergrid.rest.management.organizations;
 
-
 import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.JsonNode;
-import org.junit.Rule;
-import org.junit.Test;
+import junit.framework.Assert;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
-
-import junit.framework.Assert;
+import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
+import org.junit.Test;
 import org.usergrid.java.client.response.ApiResponse;
 
-import static junit.framework.Assert.fail;
+import javax.ws.rs.core.MediaType;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+
+
+import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 
 @Concurrent()
@@ -98,7 +93,7 @@ public class OrganizationResourceIT extends AbstractRestIT {
         try {
             final String encodedAppName = URLEncoder.encode("<bob>", "UTF-8");
             resource().path("/applications/" + encodedAppName).get( String.class );
-            fail("Expected exception");
+            Assert.fail("Expected exception");
         }
         catch (UniformInterfaceException e) {
             final ApiResponse response = e.getResponse().getEntity(ApiResponse.class);
