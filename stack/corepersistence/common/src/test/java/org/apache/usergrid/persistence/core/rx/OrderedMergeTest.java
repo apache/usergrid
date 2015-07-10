@@ -547,7 +547,7 @@ public class OrderedMergeTest {
                 //pull from source
                 for (int i = 0; i < 10 && !subscriber.isUnsubscribed(); i++) {
                     //emit
-                    log.info("inner produce " + count);
+                    log.info("loop " + count);
                     subscriber.onNext(count++);
                 }
             }
@@ -559,34 +559,13 @@ public class OrderedMergeTest {
                 log.info("iteration " + o);
             }).subscribeOn(Schedulers.io()));
         //never
-        for(int i =0; i<20;i++){
-            Object it =iterator.next();
-            log.info("iterate "+i);
-        }
+        Object it =iterator.next();
+        it = iterator.next();
+        log.info("iterate");
+        it = iterator.next();
+        log.info("iterate");
 
-        iterator = ObservableToBlockingIteratorFactory.toIterator(Observable.create(subscriber -> {
-            int count = 0;
-            while (!subscriber.isUnsubscribed()) {
-                //pull from source
-                for (int i = 0; i < 10 && !subscriber.isUnsubscribed(); i++) {
-                    //emit
-                    log.info("inner produce " + count);
-                    subscriber.onNext(count++);
-                }
-            }
-
-            subscriber.onCompleted();
-        })
-            .onBackpressureBlock(1)
-            .buffer(2)
-            .doOnNext(o -> {
-                log.info("iteration " + o);
-            }).subscribeOn(Schedulers.io()));
-        //never
-        for(int i =0; i<20;i++){
-            Object it =iterator.next();
-            log.info("iterate "+i);
-        }
+        Object size = it;
     }
 
 
