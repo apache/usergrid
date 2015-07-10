@@ -52,13 +52,6 @@ public class ShardFilterIteratorTest {
 
         final IndexBucketLocator indexBucketLocator = new SimpleIndexBucketLocatorImpl( 20 );
 
-
-        final UUID applicationId = UUIDUtils.newTimeUUID();
-
-
-        final String components = "things";
-
-
         final Set<ScanColumn> allColumns = new LinkedHashSet<ScanColumn>( size );
 
 
