@@ -1,6 +1,9 @@
 package org.apache.usergrid.persistence.queue.util;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.policy.*;
+import com.amazonaws.auth.policy.actions.SQSActions;
+import com.amazonaws.auth.policy.conditions.ConditionFactory;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.*;
 import com.amazonaws.services.sns.util.Topics;
@@ -11,7 +14,9 @@ import org.apache.usergrid.persistence.queue.QueueFig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,6 +63,43 @@ public class AmazonNotificationUtils {
         logger.info("Created SQS queue with url {}", url);
 
         return url;
+    }
+
+    public static void setQueuePermissionsToReceive(final AmazonSQSClient sqs,
+                                                    final String queueUrl,
+                                                    final List<String> topicARNs) throws Exception{
+
+        String queueARN = getQueueArnByUrl(sqs, queueUrl);
+
+        Statement statement = new Statement(Statement.Effect.Allow)
+            .withActions(SQSActions.SendMessage)
+            .withPrincipals(new Principal("*"))
+            .withResources(new Resource(queueARN));
+
+        List<Condition> conditions = new ArrayList<>();
+
+        for(String topicARN : topicARNs){
+
+            conditions.add(ConditionFactory.newSourceArnCondition(topicARN));
+
+        }
+        statement.setConditions(conditions);
+
+        Policy policy = new Policy("SubscriptionPermission").withStatements(statement);
+
+
+        final Map<String, String> queueAttributes = new HashMap<>();
+        queueAttributes.put("Policy", policy.toJson());
+
+        SetQueueAttributesRequest queueAttributesRequest = new SetQueueAttributesRequest(queueUrl, queueAttributes);
+
+        try {
+            sqs.setQueueAttributes(queueAttributesRequest);
+        }catch (Exception e){
+            logger.error("Failed to set permissions on QUEUE ARN=[{}] for TOPIC ARNs=[{}]", queueARN, topicARNs.toString());
+        }
+
+
     }
 
 

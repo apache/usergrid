@@ -23,8 +23,8 @@ import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNSAsyncClient;
+import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.*;
-import com.amazonaws.services.sns.util.Topics;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -55,7 +55,8 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueFig fig;
     private final ClusterFig clusterFig;
     private final AmazonSQSClient sqs;
-    private final AmazonSNSAsyncClient sns;
+    private final AmazonSNSClient sns;
+    private final AmazonSNSAsyncClient snsAsync;
 
 
     private final JsonFactory JSON_FACTORY = new JsonFactory();
@@ -112,6 +113,7 @@ public class SNSQueueManagerImpl implements QueueManager {
         try {
             sqs = createSQSClient(getRegion());
             sns = createSNSClient(getRegion());
+            snsAsync = createAsyncSNSClient(getRegion());
 
         } catch (Exception e) {
             throw new RuntimeException("Error setting up mapper", e);
@@ -144,7 +146,14 @@ public class SNSQueueManagerImpl implements QueueManager {
         }
 
         try {
-            Topics.subscribeQueue(sns, sqs, primaryTopicArn, queueUrl);
+
+            SubscribeRequest primarySubscribeRequest = new SubscribeRequest(primaryTopicArn, "sqs", primaryQueueArn);
+            sns.subscribe(primarySubscribeRequest);
+
+            // ensure the SNS primary topic has permission to send to the primary SQS queue
+            List<String> primaryTopicArnList = new ArrayList<>();
+            primaryTopicArnList.add(primaryTopicArn);
+            AmazonNotificationUtils.setQueuePermissionsToReceive(sqs, queueUrl, primaryTopicArnList);
         } catch (AmazonServiceException e) {
             logger.error(String.format("Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn), e);
         }
@@ -167,19 +176,18 @@ public class SNSQueueManagerImpl implements QueueManager {
             for (String regionName : regionNames) {
 
                 regionName = regionName.trim();
-
                 Regions regions = Regions.fromName(regionName);
                 Region region = Region.getRegion(regions);
 
-                final AmazonSQSClient sqsClient = createSQSClient(region);
-                final AmazonSNSAsyncClient snsClient = createSNSClient(region);
+                AmazonSQSClient sqsClient = createSQSClient(region);
+                AmazonSNSClient snsClient = createSNSClient(region); // do this stuff synchronously
 
+                // getTopicArn will create the SNS topic if it doesn't exist
                 String topicArn = AmazonNotificationUtils.getTopicArn(snsClient, queueName, true);
-
                 topicArns.put(topicArn, regionName);
 
+                // create the SQS queue if it doesn't exist
                 String queueArn = AmazonNotificationUtils.getQueueArnByName(sqsClient, queueName);
-
                 if (queueArn == null) {
                     queueUrl = AmazonNotificationUtils.createQueue(sqsClient, queueName, fig);
                     queueArn = AmazonNotificationUtils.getQueueArnByUrl(sqsClient, queueUrl);
@@ -197,36 +205,41 @@ public class SNSQueueManagerImpl implements QueueManager {
                 Regions sqsRegions = Regions.fromName(strSqsRegion);
                 Region sqsRegion = Region.getRegion(sqsRegions);
 
-                final AmazonSQSClient sqsClient = createSQSClient(sqsRegion);
+                AmazonSQSClient subscribeSqsClient = createSQSClient(sqsRegion);
 
-                logger.info("Creating subscriptions for QUEUE ARN=[{}]", queueARN);
+                // ensure the URL used to subscribe is for the correct name/region
+                String subscribeQueueUrl = AmazonNotificationUtils.getQueueUrlByName(subscribeSqsClient, queueName);
+
+                // this list used later for adding permissions to queues
+                List<String> topicArnList = new ArrayList<>();
 
                 for (Map.Entry<String, String> topicArnEntry : topicArns.entrySet()) {
+
                     String topicARN = topicArnEntry.getKey();
+                    topicArnList.add(topicARN);
 
-                    logger.info("Creating subscriptions for TOPIC ARN=[{}]", topicArnEntry.getKey());
-
-                    String strSnsRegion = queueArnEntry.getValue();
-
+                    String strSnsRegion = topicArnEntry.getValue();
                     Regions snsRegions = Regions.fromName(strSnsRegion);
                     Region snsRegion = Region.getRegion(snsRegions);
 
-                    final AmazonSNSAsyncClient snsClient = createSNSClient(snsRegion);
+                    AmazonSNSClient subscribeSnsClient = createSNSClient(snsRegion); // do this stuff synchronously
+                    SubscribeRequest subscribeRequest = new SubscribeRequest(topicARN, "sqs", queueARN);
 
                     try {
 
                         logger.info("Subscribing Queue ARN/Region=[{} / {}] and Topic ARN/Region=[{} / {}]",
-                                queueARN,
-                                strSqsRegion,
-                                topicARN,
-                                strSnsRegion
+                            queueARN,
+                            strSqsRegion,
+                            topicARN,
+                            strSnsRegion
                         );
 
-                        Topics.subscribeQueue(
-                                snsClient,
-                                sqsClient,
-                                topicArnEntry.getKey(),
-                                queueArnEntry.getKey());
+                        SubscribeResult subscribeResult = subscribeSnsClient.subscribe(subscribeRequest);
+                        String subscriptionARN = subscribeResult.getSubscriptionArn();
+                        if(logger.isDebugEnabled()){
+                            logger.debug("Successfully subscribed Queue ARN=[{}] to Topic ARN=[{}], subscription ARN=[{}]", queueARN, topicARN, subscriptionARN);
+                        }
+
 
                     } catch (Exception e) {
                         logger.error(String.format("ERROR Subscribing Queue ARN/Region=[%s / %s] and Topic ARN/Region=[%s / %s]",
@@ -238,14 +251,23 @@ public class SNSQueueManagerImpl implements QueueManager {
 
                     }
                 }
+
+                logger.info("Adding permission to receive messages...");
+                // add permission to each queue, providing a list of topics that it's subscribed to
+                AmazonNotificationUtils.setQueuePermissionsToReceive(subscribeSqsClient, subscribeQueueUrl, topicArnList);
+
             }
         }
 
         return primaryTopicArn;
     }
 
+    /**
+     * The Asynchronous SNS client is used for publishing events to SNS.
+     *
+     */
 
-    private AmazonSNSAsyncClient createSNSClient(final Region region) {
+    private AmazonSNSAsyncClient createAsyncSNSClient(final Region region) {
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
 
         /**
@@ -255,6 +277,20 @@ public class SNSQueueManagerImpl implements QueueManager {
          */
 
         final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient(ugProvider.getCredentials());
+
+        sns.setRegion(region);
+
+        return sns;
+    }
+
+    /**
+     * The Synchronous SNS client is used for creating topics and subscribing queues.
+     *
+     */
+    private AmazonSNSClient createSNSClient(final Region region) {
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+
+        final AmazonSNSClient sns = new AmazonSNSClient(ugProvider.getCredentials());
 
         sns.setRegion(region);
 
@@ -346,7 +382,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public void sendMessages(final List bodies) throws IOException {
 
-        if (sns == null) {
+        if (snsAsync == null) {
             logger.error("SNS client is null, perhaps it failed to initialize successfully");
             return;
         }
@@ -360,7 +396,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public void sendMessage(final Object body) throws IOException {
 
-        if (sns == null) {
+        if (snsAsync == null) {
             logger.error("SNS client is null, perhaps it failed to initialize successfully");
             return;
         }
@@ -373,7 +409,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         PublishRequest publishRequest = new PublishRequest(topicArn, toString(body));
 
-        sns.publishAsync(publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
+        snsAsync.publishAsync(publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
                 @Override
                 public void onError(Exception e) {
                     logger.error("Error publishing message... {}", e);
