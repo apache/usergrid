@@ -39,7 +39,6 @@ public interface AsyncEventService extends ReIndexAction {
      * @param applicationScope
      */
     void queueInitializeApplicationIndex( final ApplicationScope applicationScope );
-    void queueInitializeManagementIndex( );
 
     /**
      * Queue an entity to be indexed.  This will start processing immediately. For implementations that are realtime (akka, in memory)

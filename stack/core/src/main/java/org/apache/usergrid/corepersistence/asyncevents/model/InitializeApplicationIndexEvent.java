@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 @JsonDeserialize(as = AsyncEvent.class)
 public class InitializeApplicationIndexEvent extends AsyncEvent {
     public InitializeApplicationIndexEvent() {
+        super(EventType.APPLICATION_INDEX);
     }
     public InitializeApplicationIndexEvent(final ApplicationScope applicationScope) {
         super(EventType.APPLICATION_INDEX, applicationScope);

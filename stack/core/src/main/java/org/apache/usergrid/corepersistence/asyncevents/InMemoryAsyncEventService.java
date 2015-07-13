@@ -71,12 +71,6 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     }
 
     @Override
-    public void queueInitializeManagementIndex() {
-
-    }
-
-
-    @Override
     public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity ) {
 
         //process the entity immediately
