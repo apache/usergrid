@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
@@ -71,10 +72,17 @@ public class AmazonAsyncEventServiceTest extends AsyncIndexServiceTest {
     public RxTaskScheduler rxTaskScheduler;
 
 
+    @Inject
+    public IndexLocationStrategyFactory indexLocationStrategyFactory;
+
+
+    @Inject
+    public EntityIndexFactory entityIndexFactory;
+
     @Override
     protected AsyncEventService getAsyncEventService() {
         return  new AmazonAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
-                    entityCollectionManagerFactory, rxTaskScheduler );
+                    entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory );
     }
 
 

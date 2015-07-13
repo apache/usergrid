@@ -29,7 +29,10 @@ import com.codahale.metrics.Histogram;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.CpEntityManager;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -77,6 +80,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final IndexProcessorFig indexProcessorFig;
     private final IndexService indexService;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final EntityIndexFactory entityIndexFactory;
 
     private final Timer readTimer;
     private final Timer writeTimer;
@@ -97,11 +102,15 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                    final IndexProcessorFig indexProcessorFig,
                                    final MetricsFactory metricsFactory,
                                    final IndexService indexService,
-                                   final EntityCollectionManagerFactory entityCollectionManagerFactory
+                                   final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                   final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                   final EntityIndexFactory entityIndexFactory
     ) {
 
         this.indexService = indexService;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.entityIndexFactory = entityIndexFactory;
 
         final QueueScope queueScope = new QueueScopeImpl(QUEUE_NAME);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
@@ -229,6 +238,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         handleEntityIndexUpdate(message);
                         break;
 
+
+                    case APPLICATION_INDEX:
+                        handleInitializeApplicationIndex(message);
+
                     default:
                         logger.error("Unknown EventType: {}", event.getEventType());
 
@@ -242,13 +255,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     @Override
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
-        offer( new InitializeApplicationIndexEvent( applicationScope  ) );
+        offer(new InitializeApplicationIndexEvent(applicationScope));
     }
 
-    @Override
-    public void queueInitializeManagementIndex() {
-        offer( new InitializeManagementIndexEvent( ) );
-    }
 
     @Override
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
@@ -362,6 +371,20 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 .doOnNext(ignore -> ack(message)).subscribe();
     }
 
+
+    public void handleInitializeApplicationIndex(final QueueMessage message) {
+        Preconditions.checkNotNull(message, "Queue Message cannot be null for handleInitializeApplicationIndex");
+
+        final AsyncEvent event = (AsyncEvent) message.getBody();
+        Preconditions.checkNotNull(message, "QueueMessage Body cannot be null for handleInitializeApplicationIndex");
+        Preconditions.checkArgument(event.getEventType() == AsyncEvent.EventType.APPLICATION_INDEX, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getEventType()));
+
+        final ApplicationScope applicationScope = event.getApplicationScope();
+        final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        final EntityIndex index = entityIndexFactory.createEntityIndex(indexLocationStrategy);
+        index.initialize();
+        ack(message);
+    }
 
     /**
      * Loop through and start the workers

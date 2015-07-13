@@ -149,9 +149,7 @@ public class AsyncEvent implements Serializable {
         EDGE_INDEX,
         ENTITY_DELETE,
         ENTITY_INDEX,
-        APPLICATION_INDEX,
-        MANAGEMENT_INDEX;
-        ;
+        APPLICATION_INDEX;
 
 
         public String asString() {
