@@ -21,10 +21,13 @@ package org.apache.usergrid.corepersistence.asyncevents.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.usergrid.corepersistence.index.ReplicatedIndexLocationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.io.Serializable;
@@ -35,6 +38,9 @@ import java.io.Serializable;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AsyncEvent implements Serializable {
+
+    @JsonProperty
+    protected IndexLocationStrategy indexLocationStrategy;
 
     @JsonProperty
     protected EventType eventType;
@@ -61,11 +67,23 @@ public class AsyncEvent implements Serializable {
     protected AsyncEvent() {
     }
 
+    public AsyncEvent(final EventType eventType) {
+
+        this.eventType = eventType;
+        this.creationTime = System.currentTimeMillis();
+    }
+
     public AsyncEvent(final EventType eventType,
                       final EntityIdScope entityIdScope) {
 
         this.eventType = eventType;
         this.entityIdScope = entityIdScope;
+        this.creationTime = System.currentTimeMillis();
+    }
+
+    public AsyncEvent(EventType eventType, IndexLocationStrategy indexLocationStrategy) {
+        this.eventType = eventType;
+        this.indexLocationStrategy = indexLocationStrategy;
         this.creationTime = System.currentTimeMillis();
     }
 
@@ -121,6 +139,14 @@ public class AsyncEvent implements Serializable {
     }
 
     @JsonSerialize()
+    @JsonDeserialize(as=ReplicatedIndexLocationStrategy.class)
+    public IndexLocationStrategy getIndexLocationStrategy() { return indexLocationStrategy; }
+
+    protected void setIndexLocationStrategy( IndexLocationStrategy indexLocationStrategy ){
+        this.indexLocationStrategy = indexLocationStrategy;
+    }
+
+    @JsonSerialize()
     public Edge getEdge() {
         return edge;
     }
@@ -136,7 +162,8 @@ public class AsyncEvent implements Serializable {
         EDGE_DELETE,
         EDGE_INDEX,
         ENTITY_DELETE,
-        ENTITY_INDEX;
+        ENTITY_INDEX,
+        APPLICATION_INDEX;
 
 
         public String asString() {

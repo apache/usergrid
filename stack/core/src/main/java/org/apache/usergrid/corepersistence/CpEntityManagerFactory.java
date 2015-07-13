@@ -154,6 +154,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private void init() {
 
         EntityManager em = getEntityManager(getManagementAppId());
+        indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(getManagementAppId()));
 
         try {
             if ( em.getApplication() == null ) {
@@ -252,9 +253,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
+        indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(applicationId));
 
         if ( properties == null ) {
-            properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+            properties = new TreeMap<>( CASE_INSENSITIVE_ORDER);
         }
         properties.put( PROPERTY_NAME, appName );
         EntityManager appEm = getEntityManager(applicationId);

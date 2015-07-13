@@ -29,14 +29,15 @@ import com.codahale.metrics.Histogram;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.CpEntityManager;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
@@ -76,11 +77,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final IndexProcessorFig indexProcessorFig;
     private final IndexService indexService;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final RxTaskScheduler rxTaskScheduler;
+    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final EntityIndexFactory entityIndexFactory;
 
     private final Timer readTimer;
     private final Timer writeTimer;
-    private final Timer messageProcessingTimer;
 
     private final Object mutex = new Object();
 
@@ -99,11 +100,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                    final MetricsFactory metricsFactory,
                                    final IndexService indexService,
                                    final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                   final RxTaskScheduler rxTaskScheduler) {
+                                   final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                   final EntityIndexFactory entityIndexFactory
+    ) {
 
         this.indexService = indexService;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.rxTaskScheduler = rxTaskScheduler;
+        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.entityIndexFactory = entityIndexFactory;
 
         final QueueScope queueScope = new QueueScopeImpl(QUEUE_NAME);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
@@ -111,7 +115,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.write");
         this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.read");
-        this.messageProcessingTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.message_processing");
         this.indexErrorCounter = metricsFactory.getCounter(AmazonAsyncEventService.class, "async_event.error");
         this.messageCycle = metricsFactory.getHistogram(AmazonAsyncEventService.class, "async_event.message_cycle");
 
@@ -232,6 +235,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         handleEntityIndexUpdate(message);
                         break;
 
+                    case APPLICATION_INDEX:
+                        handleInitializeApplicationIndex(message);
+                        break;
+
                     default:
                         logger.error("Unknown EventType: {}", event.getEventType());
 
@@ -240,6 +247,13 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
             messageCycle.update( System.currentTimeMillis() - event.getCreationTime() );
         }
+    }
+
+
+    @Override
+    public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
+        IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        offer(new InitializeApplicationIndexEvent(new ReplicatedIndexLocationStrategy(indexLocationStrategy)));
     }
 
 
@@ -355,6 +369,19 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 .doOnNext(ignore -> ack(message)).subscribe();
     }
 
+
+    public void handleInitializeApplicationIndex(final QueueMessage message) {
+        Preconditions.checkNotNull(message, "Queue Message cannot be null for handleInitializeApplicationIndex");
+
+        final AsyncEvent event = (AsyncEvent) message.getBody();
+        Preconditions.checkNotNull(message, "QueueMessage Body cannot be null for handleInitializeApplicationIndex");
+        Preconditions.checkArgument(event.getEventType() == AsyncEvent.EventType.APPLICATION_INDEX, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getEventType()));
+
+        final IndexLocationStrategy indexLocationStrategy = event.getIndexLocationStrategy();
+        final EntityIndex index = entityIndexFactory.createEntityIndex(indexLocationStrategy);
+        index.initialize();
+        ack(message);
+    }
 
     /**
      * Loop through and start the workers

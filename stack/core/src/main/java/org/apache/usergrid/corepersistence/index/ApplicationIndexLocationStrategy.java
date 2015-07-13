@@ -31,11 +31,8 @@ import org.apache.usergrid.utils.StringUtils;
  * Strategy for getting the application index name.
  */
 class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
-    private final ClusterFig clusterFig;
-    private final CassandraFig cassandraFig;
     private final IndexFig indexFig;
     private final ApplicationScope applicationScope;
-    private final ApplicationIndexBucketLocator applicationIndexBucketLocator;
     private final String indexBucketName;
     private final IndexAlias alias;
     private final String indexRootName;
@@ -45,12 +42,8 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
                                             final IndexFig indexFig,
                                             final ApplicationScope applicationScope,
                                             final ApplicationIndexBucketLocator applicationIndexBucketLocator){
-        this.clusterFig = clusterFig;
-
-        this.cassandraFig = cassandraFig;
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
-        this.applicationIndexBucketLocator = applicationIndexBucketLocator;
         this.indexRootName  = clusterFig.getClusterName() + "_" + cassandraFig.getApplicationKeyspace().toLowerCase();
         this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexRootName);
         this.indexBucketName = indexRootName + "_applications_" + applicationIndexBucketLocator.getBucket(applicationScope);
