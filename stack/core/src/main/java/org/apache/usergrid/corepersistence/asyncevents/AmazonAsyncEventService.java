@@ -73,6 +73,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private static final String QUEUE_NAME = "es_queue";
 
     private final QueueManager queue;
+    private final QueueScope queueScope;
     private final IndexProcessorFig indexProcessorFig;
     private final IndexService indexService;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
@@ -105,7 +106,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.rxTaskScheduler = rxTaskScheduler;
 
-        final QueueScope queueScope = new QueueScopeImpl(QUEUE_NAME);
+        this.queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALLREGIONS);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
         this.indexProcessorFig = indexProcessorFig;
 
