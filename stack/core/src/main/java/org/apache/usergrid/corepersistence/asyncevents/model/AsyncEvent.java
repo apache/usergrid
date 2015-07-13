@@ -61,11 +61,23 @@ public class AsyncEvent implements Serializable {
     protected AsyncEvent() {
     }
 
+    public AsyncEvent(final EventType eventType) {
+
+        this.eventType = eventType;
+        this.creationTime = System.currentTimeMillis();
+    }
+
     public AsyncEvent(final EventType eventType,
                       final EntityIdScope entityIdScope) {
 
         this.eventType = eventType;
         this.entityIdScope = entityIdScope;
+        this.creationTime = System.currentTimeMillis();
+    }
+
+    public AsyncEvent(EventType eventType, ApplicationScope applicationScope) {
+        this.eventType = eventType;
+        this.applicationScope = applicationScope;
         this.creationTime = System.currentTimeMillis();
     }
 
@@ -136,7 +148,10 @@ public class AsyncEvent implements Serializable {
         EDGE_DELETE,
         EDGE_INDEX,
         ENTITY_DELETE,
-        ENTITY_INDEX;
+        ENTITY_INDEX,
+        APPLICATION_INDEX,
+        MANAGEMENT_INDEX;
+        ;
 
 
         public String asString() {

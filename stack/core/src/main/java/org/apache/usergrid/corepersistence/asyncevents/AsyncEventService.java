@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 import org.apache.usergrid.corepersistence.index.ReIndexAction;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -32,6 +33,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public interface AsyncEventService extends ReIndexAction {
 
+
+    /**
+     * Initialize index for creation
+     * @param applicationScope
+     */
+    void queueInitializeApplicationIndex( final ApplicationScope applicationScope );
+    void queueInitializeManagementIndex( );
 
     /**
      * Queue an entity to be indexed.  This will start processing immediately. For implementations that are realtime (akka, in memory)

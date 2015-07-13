@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.CpEntityManager;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,11 +77,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final IndexProcessorFig indexProcessorFig;
     private final IndexService indexService;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final RxTaskScheduler rxTaskScheduler;
 
     private final Timer readTimer;
     private final Timer writeTimer;
-    private final Timer messageProcessingTimer;
 
     private final Object mutex = new Object();
 
@@ -98,12 +97,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                    final IndexProcessorFig indexProcessorFig,
                                    final MetricsFactory metricsFactory,
                                    final IndexService indexService,
-                                   final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                   final RxTaskScheduler rxTaskScheduler) {
+                                   final EntityCollectionManagerFactory entityCollectionManagerFactory
+    ) {
 
         this.indexService = indexService;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.rxTaskScheduler = rxTaskScheduler;
 
         final QueueScope queueScope = new QueueScopeImpl(QUEUE_NAME);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
@@ -111,7 +109,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.write");
         this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.read");
-        this.messageProcessingTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.message_processing");
         this.indexErrorCounter = metricsFactory.getCounter(AmazonAsyncEventService.class, "async_event.error");
         this.messageCycle = metricsFactory.getHistogram(AmazonAsyncEventService.class, "async_event.message_cycle");
 
@@ -242,6 +239,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
         }
     }
 
+
+    @Override
+    public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
+        offer( new InitializeApplicationIndexEvent( applicationScope  ) );
+    }
+
+    @Override
+    public void queueInitializeManagementIndex() {
+        offer( new InitializeManagementIndexEvent( ) );
+    }
 
     @Override
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
