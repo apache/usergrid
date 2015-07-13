@@ -32,6 +32,8 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 import rx.Observable;
 
 
@@ -39,11 +41,11 @@ import rx.Observable;
  * Processes our results of connection refs
  */
 @Deprecated//Required for 1.0 compatibility
-public class ConnectionRefQueryExecutor extends ObservableQueryExecutor<ConnectionRef> {
+public abstract class ConnectionRefQueryExecutor extends ObservableQueryExecutor<ConnectionRef> {
 
 
-    public ConnectionRefQueryExecutor( final Observable<ResultsPage<ConnectionRef>> resultsObservable ) {
-        super( resultsObservable );
+    protected ConnectionRefQueryExecutor( final Optional<String> startCursor ) {
+        super( startCursor );
     }
 
 

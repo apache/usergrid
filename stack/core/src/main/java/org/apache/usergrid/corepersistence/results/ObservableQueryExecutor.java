@@ -21,21 +21,14 @@ package org.apache.usergrid.corepersistence.results;
 
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
-import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
-import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.core.rx.ObservableToBlockingIteratorFactory;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 
 /**
@@ -45,17 +38,17 @@ import rx.schedulers.Schedulers;
 @Deprecated//Required for 1.0 compatibility
 public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
 
-    private final Observable<Results> resultsObservable;
-
-    public Iterator<Results> iterator;
 
 
-    public ObservableQueryExecutor( final Observable<ResultsPage<T>> resultsObservable ) {
-        //map to our old results objects, return a default empty if required
-        this.resultsObservable = resultsObservable.map( resultsPage -> createResultsInternal( resultsPage ) )
-                                                  .defaultIfEmpty(new Results())
-            .subscribeOn(Schedulers.io());
+    private Results results;
+    private Optional<String> cursor;
+    private boolean complete;
+
+    protected ObservableQueryExecutor(final Optional<String> startCursor){
+        this.cursor = startCursor;
     }
+
+
 
 
     /**
@@ -64,6 +57,14 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
      * @return
      */
     protected abstract Results createResults( final ResultsPage<T> resultsPage );
+
+
+    /**
+     * Build new results page from the cursor
+     * @param cursor
+     * @return
+     */
+    protected abstract Observable<ResultsPage<T>> buildNewResultsPage(final Optional<String>  cursor);
 
 
 
@@ -90,6 +91,8 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
 
 
 
+
+
     @Override
     public Iterator<Results> iterator() {
         return this;
@@ -99,13 +102,11 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
     @Override
     public boolean hasNext() {
 
-        if ( iterator == null ) {
-            iterator = ObservableToBlockingIteratorFactory.toIterator( resultsObservable );
+        if ( !complete && results == null) {
+            advance();
         }
 
-        boolean hasNext = iterator.hasNext();
-
-        return hasNext;
+        return results != null;
     }
 
 
@@ -114,16 +115,38 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
         if ( !hasNext() ) {
             throw new NoSuchElementException( "No more results present" );
         }
-        final Results next = iterator.next();
+
+        final Results next = results;
+
+        results = null;
 
         next.setQueryExecutor( this );
 
         return next;
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        resultsObservable.unsubscribeOn(Schedulers.io());
-        super.finalize();
+    private void advance(){
+         //map to our old results objects, return a default empty if required
+        final Observable<Results>
+            observable = buildNewResultsPage( cursor ).map( resultsPage -> createResultsInternal( resultsPage ) ).defaultIfEmpty(
+            new Results() );
+
+        //take the first from our observable
+        final Results resultsPage = observable.take(1).toBlocking().first();
+
+        //set the results for the iterator
+        this.results = resultsPage;
+
+        //set the complete flag
+        this.complete =  !resultsPage.hasCursor();
+
+        //if not comlete, set our cursor for the next iteration
+        if(!complete){
+            this.cursor = Optional.of( results.getCursor());
+        }else{
+            this.cursor = Optional.absent();
+        }
     }
+
+
 }

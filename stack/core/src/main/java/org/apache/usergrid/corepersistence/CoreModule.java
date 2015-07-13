@@ -34,6 +34,10 @@ import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
+import org.apache.usergrid.corepersistence.service.CollectionService;
+import org.apache.usergrid.corepersistence.service.CollectionServiceImpl;
+import org.apache.usergrid.corepersistence.service.ConnectionService;
+import org.apache.usergrid.corepersistence.service.ConnectionServiceImpl;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
@@ -64,9 +68,6 @@ public class CoreModule  extends AbstractModule {
     @Override
     protected void configure() {
 
-
-//        //See TODO, this is fugly
-//        bind(EntityManagerFactory.class).toProvider( lazyEntityManagerFactoryProvider );
 
         install( new CommonModule());
         install( new CollectionModule() {
@@ -155,6 +156,14 @@ public class CoreModule  extends AbstractModule {
 
         //install our pipeline modules
         install(new PipelineModule());
+
+        /**
+         * Install our service operations
+         */
+
+        bind( CollectionService.class).to( CollectionServiceImpl.class );
+
+        bind( ConnectionService.class).to( ConnectionServiceImpl.class);
 
     }
 

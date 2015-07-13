@@ -19,23 +19,19 @@
 package org.apache.usergrid.persistence.core.rx;
 
 
-import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import rx.Notification;
 import rx.Observable;
-import rx.Observable.Transformer;
 import rx.Subscriber;
-import rx.Subscription;
-import rx.exceptions.Exceptions;
 import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
@@ -156,20 +152,20 @@ public class OrderedMergeTest {
 
         List<Integer> expected1List = Arrays.asList( 5, 3, 2, 0 );
 
-        Observable<Integer> expected1 = Observable.from(expected1List);
+        Observable<Integer> expected1 = Observable.from( expected1List );
 
-        List<Integer> expected2List = Arrays.asList(10, 7, 6, 4);
+        List<Integer> expected2List = Arrays.asList( 10, 7, 6, 4 );
 
-        Observable<Integer> expected2 = Observable.from(expected2List);
+        Observable<Integer> expected2 = Observable.from( expected2List );
 
-        List<Integer> expected3List = Arrays.asList(9, 8, 1);
+        List<Integer> expected3List = Arrays.asList( 9, 8, 1 );
 
-        Observable<Integer> expected3 = Observable.from(expected3List);
+        Observable<Integer> expected3 = Observable.from( expected3List );
 
         //set our buffer size to 2.  We should easily exceed this since every observable has more than 2 elements
 
         Observable<Integer> ordered =
-                OrderedMerge.orderedMerge(new ReverseIntegerComparator(), 2, expected1, expected2, expected3);
+                OrderedMerge.orderedMerge( new ReverseIntegerComparator(), 2, expected1, expected2, expected3 );
 
         final CountDownLatch latch = new CountDownLatch( 1 );
         final List<Integer> results = new ArrayList();
@@ -208,9 +204,9 @@ public class OrderedMergeTest {
         /**
          * Since we're on the same thread, we should blow up before we begin producing elements our size
          */
-        assertEquals(0, results.size());
+        assertEquals( 0, results.size() );
 
-        assertTrue("An exception was thrown", errorThrown[0]);
+        assertTrue( "An exception was thrown", errorThrown[0] );
     }
 
 
@@ -247,14 +243,14 @@ public class OrderedMergeTest {
             @Override
             public void onError(final Throwable e) {
                 e.printStackTrace();
-                fail("An error was thrown ");
+                fail( "An error was thrown " );
             }
 
 
             @Override
             public void onNext(final Integer integer) {
                 log.info("onNext invoked with {}", integer);
-                results.add(integer);
+                results.add( integer );
             }
         });
 
@@ -262,7 +258,7 @@ public class OrderedMergeTest {
 
         List<Integer> expected = Arrays.asList( 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 );
 
-        assertEquals(expected.size(), results.size());
+        assertEquals( expected.size(), results.size() );
 
 
         for ( int i = 0; i < expected.size(); i++ ) {
@@ -310,7 +306,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onError( final Throwable e ) {
-                log.error("Expected error thrown", e);
+                log.error( "Expected error thrown", e );
 
                 if ( e.getMessage().contains( "The maximum queue size of 2 has been reached" ) ) {
                     errorThrown[0] = true;
@@ -322,14 +318,14 @@ public class OrderedMergeTest {
 
             @Override
             public void onNext( final Integer integer ) {
-                log.info("onNext invoked with {}", integer);
+                log.info( "onNext invoked with {}", integer );
             }
         } );
 
         latch.await();
 
 
-        assertTrue("An exception was thrown", errorThrown[0]);
+        assertTrue( "An exception was thrown", errorThrown[0] );
     }
 
 
@@ -539,34 +535,6 @@ public class OrderedMergeTest {
           }
       }
 
-    @Test
-    public void obsIterator() {
-        Iterator<Object> iterator = ObservableToBlockingIteratorFactory.toIterator(Observable.create(subscriber -> {
-            int count = 0;
-            while (!subscriber.isUnsubscribed()) {
-                //pull from source
-                for (int i = 0; i < 10 && !subscriber.isUnsubscribed(); i++) {
-                    //emit
-                    log.info("loop " + count);
-                    subscriber.onNext(count++);
-                }
-            }
-
-            subscriber.onCompleted();
-        })
-            .onBackpressureBlock(1)
-            .doOnNext(o -> {
-                log.info("iteration " + o);
-            }).subscribeOn(Schedulers.io()));
-        //never
-        Object it =iterator.next();
-        it = iterator.next();
-        log.info("iterate");
-        it = iterator.next();
-        log.info("iterate");
-
-        Object size = it;
-    }
 
 
 
