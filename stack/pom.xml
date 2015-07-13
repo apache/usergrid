@@ -108,7 +108,7 @@
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
     <metrics.version>3.0.0</metrics.version>
-    <rx.version>0.19.6</rx.version>
+    <rx.version>1.0.12</rx.version>
   </properties>
 
   <licenses>
