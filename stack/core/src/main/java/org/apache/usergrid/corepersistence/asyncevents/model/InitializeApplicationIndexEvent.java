@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.asyncevents.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 
 /**
  * event to init app index
@@ -30,8 +31,8 @@ public class InitializeApplicationIndexEvent extends AsyncEvent {
     public InitializeApplicationIndexEvent() {
         super(EventType.APPLICATION_INDEX);
     }
-    public InitializeApplicationIndexEvent(final ApplicationScope applicationScope) {
-        super(EventType.APPLICATION_INDEX, applicationScope);
+    public InitializeApplicationIndexEvent(final IndexLocationStrategy indexLocationStrategy) {
+        super(EventType.APPLICATION_INDEX, indexLocationStrategy);
 
     }
 }

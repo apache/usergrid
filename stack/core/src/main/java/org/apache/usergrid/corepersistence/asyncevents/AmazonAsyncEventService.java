@@ -29,7 +29,7 @@ import com.codahale.metrics.Histogram;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.CpEntityManager;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -38,9 +38,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
@@ -255,7 +252,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     @Override
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
-        offer(new InitializeApplicationIndexEvent(applicationScope));
+        IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        offer(new InitializeApplicationIndexEvent(new ReplicatedIndexLocationStrategy(indexLocationStrategy)));
     }
 
 
@@ -379,8 +377,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         Preconditions.checkNotNull(message, "QueueMessage Body cannot be null for handleInitializeApplicationIndex");
         Preconditions.checkArgument(event.getEventType() == AsyncEvent.EventType.APPLICATION_INDEX, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getEventType()));
 
-        final ApplicationScope applicationScope = event.getApplicationScope();
-        final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        final IndexLocationStrategy indexLocationStrategy = event.getIndexLocationStrategy();
         final EntityIndex index = entityIndexFactory.createEntityIndex(indexLocationStrategy);
         index.initialize();
         ack(message);
