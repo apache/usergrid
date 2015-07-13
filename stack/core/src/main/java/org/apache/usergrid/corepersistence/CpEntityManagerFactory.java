@@ -34,6 +34,8 @@ import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
+import org.apache.usergrid.corepersistence.service.CollectionService;
+import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.persistence.AbstractEntity;
@@ -118,7 +120,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final ReIndexService reIndexService;
     private final MetricsFactory metricsFactory;
     private final AsyncEventService indexService;
-    private final PipelineBuilderFactory pipelineBuilderFactory;
+    private final CollectionService collectionService;
+    private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
@@ -132,10 +135,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
-        this.pipelineBuilderFactory = injector.getInstance( PipelineBuilderFactory.class );
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
+        this.collectionService = injector.getInstance( CollectionService.class );
+        this.connectionService = injector.getInstance( ConnectionService.class );
+
+        //this line always needs to be last due to the temporary cicular dependency until spring is removed
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
+
 
     }
 
@@ -192,7 +199,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, pipelineBuilderFactory, graphManagerFactory, applicationId );
+            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService, applicationId );
 
         return em;
     }

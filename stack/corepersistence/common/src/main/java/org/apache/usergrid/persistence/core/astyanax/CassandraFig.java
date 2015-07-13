@@ -48,7 +48,7 @@ public interface CassandraFig extends GuicyFig {
     String getHosts();
 
     @Key( "cassandra.version" )
-    @Default( "1.2" )
+    @Default( "2.1" )
     String getVersion();
 
     @Key( "cassandra.cluster_name" )

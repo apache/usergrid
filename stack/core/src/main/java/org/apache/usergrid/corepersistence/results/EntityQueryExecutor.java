@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 import rx.Observable;
 
 
@@ -38,11 +40,11 @@ import rx.Observable;
  * Processes our results of entities
  */
 @Deprecated//Required for 1.0 compatibility
-public class EntityQueryExecutor extends ObservableQueryExecutor<Entity> {
+public abstract class EntityQueryExecutor extends ObservableQueryExecutor<Entity> {
 
 
-    public EntityQueryExecutor( final Observable<ResultsPage<Entity>> resultsObservable ) {
-        super( resultsObservable );
+    protected EntityQueryExecutor( final Optional<String> startCursor ) {
+        super( startCursor );
     }
 
 
@@ -81,4 +83,7 @@ public class EntityQueryExecutor extends ObservableQueryExecutor<Entity> {
 
         return entity;
     }
+
+
+
 }
