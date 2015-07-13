@@ -19,6 +19,8 @@
  */
 package org.apache.usergrid.corepersistence.index;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
@@ -28,7 +30,7 @@ import org.apache.usergrid.persistence.index.IndexLocationStrategy;
  */
 public class ReplicatedIndexLocationStrategy implements IndexLocationStrategy {
 
-    private ReplicatedIndexAlias alias;
+    private IndexAlias alias;
     private String rootName;
     private String indexInitialName;
     private ApplicationScope applicationScope;
@@ -49,35 +51,65 @@ public class ReplicatedIndexLocationStrategy implements IndexLocationStrategy {
     }
 
     @Override
+    @JsonSerialize()
+    @JsonDeserialize(as=ReplicatedIndexAlias.class)
     public IndexAlias getAlias() {
         return alias;
     }
 
+    protected void setAlias(IndexAlias alias) {
+        this.alias = alias;
+    }
+
+
     @Override
+    @JsonSerialize()
     public String getIndexRootName() {
         return rootName;
     }
+    protected void setIndexRootName(String indexRootName) {
+        this.rootName = indexRootName;
+    }
 
     @Override
+    @JsonSerialize()
     public String getIndexInitialName() {
         return indexInitialName;
     }
 
+    protected void setIndexInitialName(String indexInitialName) {
+        this.indexInitialName = indexInitialName;
+    }
+
+
     @Override
+    @JsonSerialize()
     public ApplicationScope getApplicationScope() {
         return applicationScope;
     }
 
+    protected void setApplicationScope(ApplicationScope applicationScope) {
+        this.applicationScope = applicationScope;
+    }
+
+
     @Override
+    @JsonSerialize()
     public int getNumberOfShards() {
         return numberShards;
     }
-
+    public void setNumberOfShards(int shards) {
+        numberShards = shards;
+    }
     @Override
+    @JsonSerialize()
     public int getNumberOfReplicas() {
         return numberReplicas;
     }
 
+    public void setNumberOfReplicas(int replicas) {
+        numberReplicas = replicas;
+    }
     public static class ReplicatedIndexAlias implements IndexAlias{
 
         private String readAlias;
@@ -91,11 +123,13 @@ public class ReplicatedIndexLocationStrategy implements IndexLocationStrategy {
             this.writeAlias = alias.getWriteAlias();
         }
         @Override
+        @JsonSerialize()
         public String getReadAlias() {
             return readAlias;
         }
 
         @Override
+        @JsonSerialize()
         public String getWriteAlias() {
             return writeAlias;
         }
