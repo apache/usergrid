@@ -24,8 +24,22 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 public interface QueueScope  {
 
     /**
+     * LOCALREGION will create a SNS topic with a queue subscription in a single AWS region.
+     * ALLREGIONS will create SNS topics and queue subscriptions  in ALL AWS regions.
+     */
+    enum RegionImplementation {
+        LOCALREGION,
+        ALLREGIONS
+    }
+
+    /**
      * Get the name of the the map
      * @return
      */
     public String getName();
+
+    /**
+     * Get the Usergrid region enum
+     */
+    public RegionImplementation getRegionImplementation();
 }

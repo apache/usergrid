@@ -158,7 +158,7 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error(String.format("Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn), e);
         }
 
-        if (fig.isMultiRegion()) {
+        if (fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALLREGIONS) {
 
             String multiRegion = fig.getRegionList();
 
@@ -299,7 +299,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     private String getName() {
-        String name = clusterFig.getClusterName() + "_" + scope.getName();
+        String name = clusterFig.getClusterName() + "_" + scope.getName() + "_" + scope.getRegionImplementation();
 
         Preconditions.checkArgument(name.length() <= 80, "Your name must be < than 80 characters");
 
