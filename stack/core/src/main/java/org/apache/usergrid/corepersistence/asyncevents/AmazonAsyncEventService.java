@@ -235,9 +235,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         handleEntityIndexUpdate(message);
                         break;
 
-
                     case APPLICATION_INDEX:
                         handleInitializeApplicationIndex(message);
+                        break;
 
                     default:
                         logger.error("Unknown EventType: {}", event.getEventType());

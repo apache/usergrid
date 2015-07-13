@@ -321,7 +321,8 @@ public class SNSQueueManagerImpl implements QueueManager {
                 Object body;
 
                 try {
-                    JsonNode bodyObj = mapper.readTree(message.getBody()).get("Message");
+                    final JsonNode bodyNode =  mapper.readTree(message.getBody());
+                    JsonNode bodyObj = bodyNode.has("Message") ? bodyNode.get("Message") : bodyNode;
                     body = fromString(bodyObj.textValue(), klass);
                 } catch (Exception e) {
                     logger.error(String.format("failed to deserialize message: %s", message.getBody()), e);
@@ -371,7 +372,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         if (logger.isDebugEnabled()) logger.debug("Publishing Message...{} to arn: {}", stringBody, topicArn);
 
-        PublishRequest publishRequest = new PublishRequest(topicArn, toString(body));
+        PublishRequest publishRequest = new PublishRequest(topicArn, stringBody);
 
         sns.publishAsync(publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
                 @Override
