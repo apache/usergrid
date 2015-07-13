@@ -26,7 +26,7 @@ import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 
 /**
- * Classy class class.
+ * Strategy to replicate an index naming convention and publish elsewhere
  */
 public class ReplicatedIndexLocationStrategy implements IndexLocationStrategy {
 
