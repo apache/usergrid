@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.io.Serializable;
@@ -35,6 +36,9 @@ import java.io.Serializable;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AsyncEvent implements Serializable {
+
+    @JsonProperty
+    protected IndexLocationStrategy indexLocationStrategy;
 
     @JsonProperty
     protected EventType eventType;
@@ -75,9 +79,9 @@ public class AsyncEvent implements Serializable {
         this.creationTime = System.currentTimeMillis();
     }
 
-    public AsyncEvent(EventType eventType, ApplicationScope applicationScope) {
+    public AsyncEvent(EventType eventType, IndexLocationStrategy indexLocationStrategy) {
         this.eventType = eventType;
-        this.applicationScope = applicationScope;
+        this.indexLocationStrategy = indexLocationStrategy;
         this.creationTime = System.currentTimeMillis();
     }
 
@@ -130,6 +134,13 @@ public class AsyncEvent implements Serializable {
 
     protected void setApplicationScope(ApplicationScope applicationScope) {
         this.applicationScope = applicationScope;
+    }
+
+    @JsonSerialize
+    public IndexLocationStrategy getIndexLocationStrategy() { return indexLocationStrategy; }
+
+    public void setIndexLocationStrategy( IndexLocationStrategy indexLocationStrategy ){
+        this.indexLocationStrategy = indexLocationStrategy;
     }
 
     @JsonSerialize()
