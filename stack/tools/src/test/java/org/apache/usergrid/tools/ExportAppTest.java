@@ -27,14 +27,26 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.Scheduler;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ExportAppTest {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
+    
+    int NUM_COLLECTIONS = 5;
+    int NUM_ENTITIES = 10; 
+    int NUM_CONNECTIONS = 1;
 
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
@@ -52,46 +64,110 @@ public class ExportAppTest {
         ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(
                 orgInfo.getOrganization().getUuid(), "app_" + rand );
 
-        EntityManager em = setup.getEmf().getEntityManager( appInfo.getId() );
+        final EntityManager em = setup.getEmf().getEntityManager( appInfo.getId() );
         
-        // create 10 connected things
+        // create connected things
 
-        List<Entity> connectedThings = new ArrayList<Entity>();
+        final List<Entity> connectedThings = new ArrayList<Entity>();
         String connectedType = "connected_thing";
         em.createApplicationCollection(connectedType);
-        for ( int j=0; j<10; j++) {
+        for ( int j=0; j<NUM_CONNECTIONS; j++) {
             final String name = "connected_thing_" + j;
             connectedThings.add( em.create( connectedType, new HashMap<String, Object>() {{
                 put( "name", name );
             }} ) );
         }
        
-        // create 10 collections of 10 things, every other thing is connected to the connected things
-        
-        for ( int i=0; i<10; i++) {
-            String type = "thing_"+i;
-            em.createApplicationCollection(type);
-            for ( int j=0; j<10; j++) {
-                final String name = "thing_" + j;
-                Entity source = em.create(type, new HashMap<String, Object>() {{ put("name", name); }});
-                if ( j % 2 == 0 ) {
-                    for ( Entity target : connectedThings ) {
-                        em.createConnection( source, "has", target );
-                    }
-                }
-            }
-        }
-        
-        // export to file
+        // create collections of things, every other thing is connected to the connected things
 
-        String directoryName = "./target/export" + rand;
+        final AtomicInteger entitiesCount = new AtomicInteger(0);
+        final AtomicInteger connectionCount = new AtomicInteger(0);
+
+        ExecutorService execService = Executors.newFixedThreadPool( 50);
+        final Scheduler scheduler = Schedulers.from( execService );
+
+        Observable.range( 0, NUM_COLLECTIONS ).flatMap( new Func1<Integer, Observable<?>>() {
+            @Override
+            public Observable<?> call(Integer i) {
+                
+                return Observable.just( i ).doOnNext( new Action1<Integer>() {
+                    @Override
+                    public void call(Integer i) {
+                        
+                        final String type = "thing_"+i;
+                        try {
+                            em.createApplicationCollection( type );
+                            connectionCount.getAndIncrement();
+                            
+                        } catch (Exception e) {
+                            throw new RuntimeException( "Error creating collection", e );
+                        }
+                       
+                        Observable.range( 0, NUM_ENTITIES ).flatMap( new Func1<Integer, Observable<?>>() {
+                            @Override
+                            public Observable<?> call(Integer j) {
+                                return Observable.just( j ).doOnNext( new Action1<Integer>() {
+                                    @Override
+                                    public void call(Integer j) {
+                                        
+                                        final String name = "thing_" + j;
+                                        try {
+                                            final Entity source = em.create( 
+                                                    type, new HashMap<String, Object>() {{ put("name", name); }});
+                                            entitiesCount.getAndIncrement();
+                                            logger.info( "Created entity {} type {}", name, type );
+                                            
+                                            for ( Entity target : connectedThings ) {
+                                                em.createConnection( source, "has", target );
+                                                connectionCount.getAndIncrement();
+                                                logger.info( "Created connection from entity {} type {} to {}",
+                                                        new Object[]{name, type, target.getName()} );
+                                            }
+
+
+                                        } catch (Exception e) {
+                                            throw new RuntimeException( "Error creating collection", e );
+                                        }
+                                        
+                                        
+                                    }
+                                    
+                                } );
+
+                            }
+                        }, 50 ).subscribeOn( scheduler ).subscribe(); // toBlocking().last();
+                        
+                    }
+                } );
+                
+
+            }
+        }, 30 ).subscribeOn( scheduler ).toBlocking().last();
+
+        while ( entitiesCount.get() < NUM_COLLECTIONS * NUM_ENTITIES ) {
+            Thread.sleep( 5000 );
+            logger.info( "Still working. Created {} entities and {} connections", 
+                    entitiesCount.get(), connectionCount.get() );
+        }
+
+        logger.info( "Done. Created {} entities and {} connections", entitiesCount.get(), connectionCount.get() );
+
+        long start = System.currentTimeMillis();
+        
+        String directoryName = "target/export" + rand;
 
         ExportApp exportApp = new ExportApp();
         exportApp.startTool( new String[]{
                 "-application", appInfo.getName(),
+                "-readThreads", "50",
+                "-writeThreads", "10",
                 "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
                 "-outputDir", directoryName
         }, false );
+        
+        logger.info("time = " + (System.currentTimeMillis() - start)/1000 + "s");
+
+
         
     }
 }
