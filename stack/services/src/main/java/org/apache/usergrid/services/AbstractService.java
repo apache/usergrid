@@ -48,6 +48,10 @@ import org.apache.usergrid.services.exceptions.ServiceInvocationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
 
+import rx.Observable;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
+
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.mergeQueries;
@@ -400,14 +404,67 @@ public abstract class AbstractService implements Service {
 
         List<Entity> entities = results.getEntities();
         if ( entities != null ) {
-            for ( Entity entity : entities ) {
-                Entity imported = importEntity( request, entity );
-                if ( imported != entity ) {
-                    logger.debug( "Import returned new entity instace for {} replacing in results set",
-                            entity.getUuid() );
-                    results.replace( imported );
+            importEntitiesParallel(request, results);
+        }
+    }
+
+
+    /**
+     * Import entities in parallel
+     * @param request
+     * @param results
+     */
+    private void importEntitiesParallel(final ServiceRequest request, final Results results ) {
+
+        //create our tuples
+        final Observable<EntityTuple> tuples = Observable.create( new Observable.OnSubscribe<EntityTuple>() {
+            @Override
+            public void call( final Subscriber<? super EntityTuple> subscriber ) {
+                subscriber.onStart();
+
+                final List<Entity> entities = results.getEntities();
+                final int size = entities.size();
+                for ( int i = 0; i < size && !subscriber.isUnsubscribed(); i++ ) {
+                    subscriber.onNext( new EntityTuple( i, entities.get( i ) ) );
                 }
+
+                subscriber.onCompleted();
             }
+        } );
+
+        //now process them in parallel up to 10 threads
+
+        tuples.flatMap( tuple -> {
+            //map the entity into the tuple
+            return Observable.just( tuple ).doOnNext( parallelTuple -> {
+                //import the entity and set it at index
+                try {
+
+                    final Entity imported = importEntity( request, parallelTuple.entity );
+
+                    if(imported != null) {
+                        results.setEntity( parallelTuple.index, imported );
+                    }
+                }
+                catch ( Exception e ) {
+                    throw new RuntimeException(e);
+                }
+            } ).subscribeOn( Schedulers.io() );
+        }, 10 ).toBlocking().lastOrDefault( null );
+    }
+
+
+    /**
+     * Simple tuple representing and entity and it's location within the results
+     */
+    private static final class EntityTuple {
+        private final int index;
+        private final Entity entity;
+
+
+        private EntityTuple( final int index, final Entity entity ) {
+            this.index = index;
+            this.entity = entity;
         }
     }
 
