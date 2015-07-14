@@ -41,9 +41,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ExportAppTest {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
     
-    int NUM_COLLECTIONS = 20;
-    int NUM_ENTITIES = 200; 
-    int NUM_CONNECTIONS = 5;
+    int NUM_COLLECTIONS = 10;
+    int NUM_ENTITIES = 50; 
+    int NUM_CONNECTIONS = 3;
 
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
@@ -113,12 +113,22 @@ public class ExportAppTest {
         ExportApp exportApp = new ExportApp();
         exportApp.startTool( new String[]{
                 "-application", appInfo.getName(),
-                "-readThreads", "50",
-                "-writeThreads", "10",
+                "-readThreads", "100",
+                "-writeThreads", "100",
                 "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
                 "-outputDir", directoryName
         }, false );
-        
-        logger.info("time = " + (System.currentTimeMillis() - start)/1000 + "s");
+
+        logger.info("100 read and 100 write threads = " + (System.currentTimeMillis() - start)/1000 + "s");
+
+        exportApp.startTool( new String[]{
+                "-application", appInfo.getName(),
+                "-readThreads", "1",
+                "-writeThreads", "1",
+                "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
+                "-outputDir", directoryName + "1"
+        }, false );
+
+        logger.info("1 thread time = " + (System.currentTimeMillis() - start)/1000 + "s");
     }
 }
