@@ -26,9 +26,11 @@ import org.apache.usergrid.persistence.queue.QueueScope;
 public class QueueScopeImpl implements QueueScope {
 
     private final String name;
+    private final RegionImplementation regionImpl;
 
-    public QueueScopeImpl(  final String name ) {
+    public QueueScopeImpl(  final String name, final RegionImplementation regionImpl) {
         this.name = name;
+        this.regionImpl = regionImpl;
     }
 
 
@@ -38,6 +40,9 @@ public class QueueScopeImpl implements QueueScope {
     public String getName() {
         return name;
     }
+
+    @Override
+    public RegionImplementation getRegionImplementation() {return regionImpl;}
 
     @Override
     public boolean equals( final Object o ) {

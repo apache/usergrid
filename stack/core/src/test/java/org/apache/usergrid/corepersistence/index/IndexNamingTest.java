@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 import com.google.inject.Inject;
+import junit.framework.Assert;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -173,7 +174,22 @@ public class IndexNamingTest {
             names.add(name);
         }
         //always hashes to diff't bucket
-        assertTrue(names.size()==indexProcessorFig.getNumberOfIndexBuckets());
+        assertTrue(names.size() == indexProcessorFig.getNumberOfIndexBuckets());
+    }
+
+    @Test
+    public void testReplication(){
+        IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        ReplicatedIndexLocationStrategy replicatedIndexLocationStrategy = new ReplicatedIndexLocationStrategy(indexLocationStrategy);
+        assertEquals(replicatedIndexLocationStrategy.getApplicationScope(),indexLocationStrategy.getApplicationScope());
+        assertEquals(replicatedIndexLocationStrategy.getIndexInitialName(),indexLocationStrategy.getIndexInitialName());
+        assertEquals(replicatedIndexLocationStrategy.getIndexRootName(),indexLocationStrategy.getIndexRootName());
+        assertEquals(replicatedIndexLocationStrategy.getNumberOfReplicas(), indexLocationStrategy.getNumberOfReplicas());
+        assertEquals(replicatedIndexLocationStrategy.getNumberOfShards(),indexLocationStrategy.getNumberOfShards());
+        assertEquals(replicatedIndexLocationStrategy.getAlias().getReadAlias(),indexLocationStrategy.getAlias().getReadAlias());
+        assertEquals(replicatedIndexLocationStrategy.getAlias().getWriteAlias(),indexLocationStrategy.getAlias().getWriteAlias());
+
+
     }
 
 }

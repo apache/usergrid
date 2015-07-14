@@ -130,23 +130,37 @@ public class MigrateResource extends AbstractContextResource {
         Preconditions.checkNotNull( json, "You must provide a json body" );
         Preconditions.checkArgument( json.keySet().size() > 0, "You must specify at least one module and version" );
 
+        ApiResponse response = createApiResponse();
+        response.setAction("Set Migration Versions");
+
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+
+        final DataMigrationManager dataMigrationManager = getDataMigrationManager();
+        final Set<String> plugins = dataMigrationManager.getPluginNames();
+
         /**
          *  Set the migration version for the plugins specified
          */
         for ( final String key : json.keySet() ) {
-            String version = ( String ) json.get( key );
 
-            Preconditions.checkArgument( version != null && version.length() > 0,
-                "You must specify a version field per module name" );
+            int version = ( int ) json.get( key );
 
-
-            int intVersion = Integer.parseInt( version );
-
-            getDataMigrationManager().resetToVersion( key, intVersion );
+            dataMigrationManager.resetToVersion(key, version);
         }
 
 
-        return migrateStatus( ui, callback );
+        /**
+         *  Echo back a response of the current versions for all plugins
+         */
+        for(final String pluginName: plugins){
+            node.put(pluginName, dataMigrationManager.getCurrentVersion(pluginName));
+        }
+
+
+        response.setData( node );
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
     }
 
 

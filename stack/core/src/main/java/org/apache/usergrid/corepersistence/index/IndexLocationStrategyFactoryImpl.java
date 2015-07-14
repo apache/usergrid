@@ -47,7 +47,7 @@ public class IndexLocationStrategyFactoryImpl implements IndexLocationStrategyFa
         this.applicationLocatorBucketStrategy = applicationLocatorBucketStrategy;
         this.coreIndexFig = coreIndexFig;
     }
-    public IndexLocationStrategy getIndexLocationStrategy(ApplicationScope applicationScope){
+    public IndexLocationStrategy getIndexLocationStrategy( final ApplicationScope applicationScope){
         if(CpNamingUtils.getManagementApplicationId().equals(applicationScope.getApplication())){
             return new ManagementIndexLocationStrategy(clusterFig,cassandraFig,indexFig,coreIndexFig);
         }
