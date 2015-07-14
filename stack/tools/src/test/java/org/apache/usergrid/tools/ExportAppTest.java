@@ -27,10 +27,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
 import rx.Scheduler;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
@@ -44,9 +41,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ExportAppTest {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
     
-    int NUM_COLLECTIONS = 5;
-    int NUM_ENTITIES = 10; 
-    int NUM_CONNECTIONS = 1;
+    int NUM_COLLECTIONS = 20;
+    int NUM_ENTITIES = 200; 
+    int NUM_CONNECTIONS = 5;
 
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
@@ -86,68 +83,25 @@ public class ExportAppTest {
         ExecutorService execService = Executors.newFixedThreadPool( 50);
         final Scheduler scheduler = Schedulers.from( execService );
 
-        Observable.range( 0, NUM_COLLECTIONS ).flatMap( new Func1<Integer, Observable<?>>() {
-            @Override
-            public Observable<?> call(Integer i) {
-                
-                return Observable.just( i ).doOnNext( new Action1<Integer>() {
-                    @Override
-                    public void call(Integer i) {
-                        
-                        final String type = "thing_"+i;
-                        try {
-                            em.createApplicationCollection( type );
-                            connectionCount.getAndIncrement();
-                            
-                        } catch (Exception e) {
-                            throw new RuntimeException( "Error creating collection", e );
-                        }
-                       
-                        Observable.range( 0, NUM_ENTITIES ).flatMap( new Func1<Integer, Observable<?>>() {
-                            @Override
-                            public Observable<?> call(Integer j) {
-                                return Observable.just( j ).doOnNext( new Action1<Integer>() {
-                                    @Override
-                                    public void call(Integer j) {
-                                        
-                                        final String name = "thing_" + j;
-                                        try {
-                                            final Entity source = em.create( 
-                                                    type, new HashMap<String, Object>() {{ put("name", name); }});
-                                            entitiesCount.getAndIncrement();
-                                            logger.info( "Created entity {} type {}", name, type );
-                                            
-                                            for ( Entity target : connectedThings ) {
-                                                em.createConnection( source, "has", target );
-                                                connectionCount.getAndIncrement();
-                                                logger.info( "Created connection from entity {} type {} to {}",
-                                                        new Object[]{name, type, target.getName()} );
-                                            }
+        for (int i = 0; i < NUM_COLLECTIONS; i++) {
 
+            final String type = "thing_" + i;
+            em.createApplicationCollection( type );
+            connectionCount.getAndIncrement();
 
-                                        } catch (Exception e) {
-                                            throw new RuntimeException( "Error creating collection", e );
-                                        }
-                                        
-                                        
-                                    }
-                                    
-                                } );
+            for (int j = 0; j < NUM_ENTITIES; j++) {
+                final String name = "thing_" + j;
+                final Entity source = em.create(
+                        type, new HashMap<String, Object>() {{
+                    put( "name", name );
+                }} );
+                entitiesCount.getAndIncrement();
 
-                            }
-                        }, 50 ).subscribeOn( scheduler ).subscribe(); // toBlocking().last();
-                        
-                    }
-                } );
-                
-
+                for (Entity target : connectedThings) {
+                    em.createConnection( source, "has", target );
+                    connectionCount.getAndIncrement();
+                }
             }
-        }, 30 ).subscribeOn( scheduler ).toBlocking().last();
-
-        while ( entitiesCount.get() < NUM_COLLECTIONS * NUM_ENTITIES ) {
-            Thread.sleep( 5000 );
-            logger.info( "Still working. Created {} entities and {} connections", 
-                    entitiesCount.get(), connectionCount.get() );
         }
 
         logger.info( "Done. Created {} entities and {} connections", entitiesCount.get(), connectionCount.get() );
@@ -166,8 +120,5 @@ public class ExportAppTest {
         }, false );
         
         logger.info("time = " + (System.currentTimeMillis() - start)/1000 + "s");
-
-
-        
     }
 }

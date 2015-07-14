@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.tools;
 
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -82,8 +81,30 @@ public class ExportApp extends ExportingToolBase {
     // set via CLI
     int readThreadCount = 80;
     int writeThreadCount = 10; // limiting write will limit output files 
-    
 
+
+    @Override
+    @SuppressWarnings("static-access")
+    public Options createOptions() {
+
+        Options options = super.createOptions();
+
+        Option appNameOption = OptionBuilder.hasArg().withType("")
+                .withDescription( "Application Name -" + APPLICATION_NAME ).create( APPLICATION_NAME );
+        options.addOption( appNameOption );
+
+        Option readThreadsOption = OptionBuilder.hasArg().withType(0)
+                .withDescription( "Read Threads -" + READ_THREAD_COUNT ).create( READ_THREAD_COUNT );
+        options.addOption( readThreadsOption );
+
+        Option writeThreadsOption = OptionBuilder.hasArg().withType(0)
+                .withDescription( "Write Threads -" + WRITE_THREAD_COUNT ).create(WRITE_THREAD_COUNT);
+        options.addOption( writeThreadsOption );
+
+        return options;
+    }
+
+    
     /**
      * Tool entry point. 
      */
@@ -110,24 +131,24 @@ public class ExportApp extends ExportingToolBase {
             }
         }
 
-        ExecutorService readThreadPoolExecutor = Executors.newFixedThreadPool( readThreadCount );
-        readScheduler = Schedulers.from( readThreadPoolExecutor );
-        
-        ExecutorService writeThreadPoolExecutor = Executors.newFixedThreadPool( writeThreadCount );
-        writeScheduler = Schedulers.from( writeThreadPoolExecutor );
-       
-        startSpring();
-
         setVerbose( line );
 
         applyOrgId( line );
         prepareBaseOutputFileName( line );
         outputDir = createOutputParentDir();
         logger.info( "Export directory: " + outputDir.getAbsolutePath() );
-       
+
+        startSpring();
+        
         UUID applicationId = emf.lookupApplication( applicationName );
         final EntityManager em = emf.getEntityManager( applicationId );
         organizationName = em.getApplication().getOrganizationName();
+
+        ExecutorService readThreadPoolExecutor = Executors.newFixedThreadPool( readThreadCount );
+        readScheduler = Schedulers.from( readThreadPoolExecutor );
+
+        ExecutorService writeThreadPoolExecutor = Executors.newFixedThreadPool( writeThreadCount );
+        writeScheduler = Schedulers.from( writeThreadPoolExecutor );
 
         Observable<String> collectionsObservable = Observable.create( new CollectionsObservable( em ) );
         
@@ -151,30 +172,11 @@ public class ExportApp extends ExportingToolBase {
             .toBlocking().last();
     }
 
-    @Override
-    @SuppressWarnings("static-access")
-    public Options createOptions() {
-
-        Options options = super.createOptions();
-
-        Option appNameOption = OptionBuilder.hasArg().withType("")
-                .withDescription( "Application Name -" + APPLICATION_NAME ).create( APPLICATION_NAME );
-        options.addOption( appNameOption );
-
-        Option readThreadsOption = OptionBuilder.hasArg().withType(0)
-                .withDescription( "Read Threads -" + READ_THREAD_COUNT ).create( READ_THREAD_COUNT );
-        options.addOption( readThreadsOption );
-
-        Option writeThreadsOption = OptionBuilder.hasArg().withType(0)
-                .withDescription( "Write Threads -" + WRITE_THREAD_COUNT ).create(WRITE_THREAD_COUNT);
-        options.addOption( writeThreadsOption );
-
-        return options;
-    }
 
     // ----------------------------------------------------------------------------------------
     // reading data
 
+    
     /**
      * Emits collection names found in application.
      */
@@ -198,16 +200,13 @@ public class ExportApp extends ExportingToolBase {
             } catch (Exception e) {
                 subscriber.onError( e );
             }
-            if ( count > 0 ) {
-                subscriber.onCompleted();
-                logger.info( "Completed. Read {} collection names", count );
-            } else {
-                subscriber.unsubscribe();
-                logger.info( "No collections found" );
-            }
+            
+            subscriber.onCompleted();
+            logger.info( "Completed. Read {} collection names", count );
         }
     }
 
+    
     /**
      * Emits entities of collection.
      */
@@ -267,13 +266,8 @@ public class ExportApp extends ExportingToolBase {
                     results = em.searchCollection( em.getApplicationRef(), collection, query );
                 }
 
-                if ( count > 0 ) {
-                    subscriber.onCompleted();
-                    logger.info("Completed collection {}. Read {} entities", collection, count);
-                } else {
-                    logger.info("Completed collection {} empty", collection );
-                    subscriber.unsubscribe();
-                }
+                subscriber.onCompleted();
+                logger.info("Completed collection {}. Read {} entities", collection, count);
                 
             } catch ( Exception e ) {
                 subscriber.onError(e);
@@ -281,6 +275,7 @@ public class ExportApp extends ExportingToolBase {
         }
     }
 
+    
     /**
      * Emits connections of an entity.
      */
@@ -331,19 +326,17 @@ public class ExportApp extends ExportingToolBase {
                 subscriber.onError( e );
             }
             
-            if ( count > 0 ) {
-                subscriber.onCompleted();
-                logger.info("Completed entity {} type {} connections count {}",
-                        new Object[] { exportEntity.getEntity().getName(), exportEntity.getEntity().getType(), count });
-                
-            } else {
-                subscriber.unsubscribe();
-                logger.info( "Entity {} type {} has no connections",
-                        exportEntity.getEntity().getName(), exportEntity.getEntity().getType() );
-            }
+            subscriber.onCompleted();
+            logger.info("Completed entity {} type {} connections count {}",
+                new Object[] { exportEntity.getEntity().getName(), exportEntity.getEntity().getType(), count });
         }
     }
 
+    
+    // ----------------------------------------------------------------------------------------
+    // writing data
+    
+    
     /**
      * Writes entities to JSON file.
      */
@@ -381,6 +374,7 @@ public class ExportApp extends ExportingToolBase {
         }
     }
 
+    
     /**
      * Writes connection to JSON file.
      */
@@ -418,6 +412,7 @@ public class ExportApp extends ExportingToolBase {
         }
     }
 
+    
     private class FileWrapUpAction implements Action0 {
         @Override
         public void call() {
@@ -448,6 +443,10 @@ public class ExportApp extends ExportingToolBase {
     }
 }
 
+
+/**
+ * Represents entity data to be serialized to JSON.
+ */
 class ExportEntity {
     private String organization;
     private String application;
@@ -493,6 +492,10 @@ class ExportEntity {
     }
 }
 
+
+/**
+ * Represents connection data to be serialized to JSON.
+ */
 class ExportConnection {
     private String organization;
     private String application;
