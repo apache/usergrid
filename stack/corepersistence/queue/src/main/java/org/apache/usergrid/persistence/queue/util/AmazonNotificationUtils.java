@@ -96,7 +96,7 @@ public class AmazonNotificationUtils {
         try {
             sqs.setQueueAttributes(queueAttributesRequest);
         }catch (Exception e){
-            logger.error("Failed to set permissions on QUEUE ARN=[{}] for TOPIC ARNs=[{}]", queueARN, topicARNs.toString());
+            logger.error("Failed to set permissions on QUEUE ARN=[{}] for TOPIC ARNs=[{}]", queueARN, topicARNs.toString(), e);
         }
 
 
