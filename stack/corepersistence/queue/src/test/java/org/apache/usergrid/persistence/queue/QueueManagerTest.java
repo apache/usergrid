@@ -65,7 +65,7 @@ public class QueueManagerTest {
 
     @Before
     public void mockApp() {
-        this.scope = new QueueScopeImpl(  "testQueue" );
+        this.scope = new QueueScopeImpl( "testQueue", QueueScope.RegionImplementation.LOCALREGION );
         qm = qmf.getQueueManager(scope);
     }
 

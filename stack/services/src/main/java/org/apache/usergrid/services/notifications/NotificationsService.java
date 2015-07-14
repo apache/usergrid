@@ -108,7 +108,7 @@ public class NotificationsService extends AbstractCollectionService {
         postTimer = metricsService.getTimer(this.getClass(), "collection.post_requests");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
         String name = ApplicationQueueManagerImpl.getQueueNames( props );
-        QueueScope queueScope = new QueueScopeImpl( name );
+        QueueScope queueScope = new QueueScopeImpl( name, QueueScope.RegionImplementation.LOCALREGION );
         queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
         QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
         notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
