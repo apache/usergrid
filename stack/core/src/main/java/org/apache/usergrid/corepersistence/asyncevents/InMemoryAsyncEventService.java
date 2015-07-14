@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import com.amazonaws.services.opsworks.model.App;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +63,12 @@ public class InMemoryAsyncEventService implements AsyncEventService {
         this.resolveSynchronously = resolveSynchronously;
     }
 
+
+    @Override
+    public void queueInitializeApplicationIndex(final ApplicationScope applicationScope) {
+        //index will be initialized locally, don't need to inform other indexes
+        return;
+    }
 
     @Override
     public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity ) {
