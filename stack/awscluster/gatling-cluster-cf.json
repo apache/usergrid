@@ -120,13 +120,13 @@
         },
         "AWSRegionArch2AMI": {
             "ap-southeast-2": {
-                "64": "ami-c1335ffb"
+                "64": "ami-8dcd88b7"
             },
             "us-east-1": {
-                "64": "ami-c43491ac"
+                "64": "ami-9301c7f8"
             },
             "us-west-2": {
-                "64": "ami-194a0429"
+                "64": "ami-ed5751dd"
             }
         },
         "TwoAZs": {
