@@ -248,7 +248,7 @@
                     "wget https://bootstrap.pypa.io/ez_setup.py -O - | python\n",
                     "easy_install  https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
                     "## These don't seem to work correctly and cause script to bail.  Temporarily removing \n",
-                    "/usr/local/bin/cfn-init -v ",
+                    "#/usr/local/bin/cfn-init -v ",
                     "         --stack ", { "Ref" : "AWS::StackName" },
                     "         --resource LaunchConfig ",
                     "         --region ", { "Ref" : "AWS::Region" }, "\n",
