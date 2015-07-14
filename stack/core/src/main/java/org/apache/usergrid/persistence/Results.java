@@ -518,6 +518,10 @@ public class Results implements Iterable<Entity> {
         level = Level.CORE_PROPERTIES;
     }
 
+    public void setEntity( final int index, final Entity entity){
+        this.entities.set( index, entity );
+    }
+
 
     public Results withEntity( Entity resultEntity ) {
         setEntity( resultEntity );
