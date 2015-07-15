@@ -44,6 +44,11 @@ public interface RxSchedulerFig extends GuicyFig {
      */
     String IO_SCHEDULER_NAME = "scheduler.io.poolName";
 
+    /**
+     * The number of threads to use when importing entities into result sets
+     */
+    String IO_IMPORT_THREADS = "scheduler.import.threads";
+
 
 
 
@@ -54,6 +59,10 @@ public interface RxSchedulerFig extends GuicyFig {
     @Default( "Usergrid-RxIOPool" )
     @Key(IO_SCHEDULER_NAME)
     String getIoSchedulerName();
+
+    @Default("20")
+    @Key( IO_IMPORT_THREADS)
+    int getImportThreads();
 
 
 
