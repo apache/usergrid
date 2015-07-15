@@ -21,11 +21,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.usergrid.rest.TestContextSetup;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -43,8 +43,6 @@ import static org.junit.Assert.fail;
  */
 public class BasicGeoTests extends AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
 
     public final String latitude = "latitude";
 
@@ -57,7 +55,7 @@ public class BasicGeoTests extends AbstractRestIT {
     public void createEntityWithGeoLocationPoint() throws IOException {
 
         String collectionType = "stores";
-        JsonNode node = null;
+        Entity node = null;
         Double lat = 37.776753;
         Double lon = -122.407846;
         //1. Create entity
@@ -67,7 +65,7 @@ public class BasicGeoTests extends AbstractRestIT {
         entityData.put( "location", latLon );
 
         try {
-            node = context.collection( collectionType ).post( entityData );
+            node = this.app().collection( collectionType ).post( entityData ).getEntity();
         }
         catch ( UniformInterfaceException e ) {
             JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
@@ -76,8 +74,8 @@ public class BasicGeoTests extends AbstractRestIT {
 
         //2. Verify that the entity was created
         assertNotNull( node );
-        assertEquals( lat.toString(), node.get("location").get("latitude").asText() );
-        assertEquals( lon.toString(), node.get( "location" ).get("longitude").asText() );
+        assertEquals( lat.toString(), node.getMap("location").get("latitude").toString() );
+        assertEquals( lon.toString(), node.getMap("location").get("longitude").toString() );
 
     }
 
@@ -93,7 +91,7 @@ public class BasicGeoTests extends AbstractRestIT {
 
         String collectionType = "stores";
         String entityName = "cornerStore";
-        JsonNode entity = null;
+        Entity entity = null;
         Double lat = 37.776753;
         Double lon = -122.407846;
 
@@ -105,7 +103,7 @@ public class BasicGeoTests extends AbstractRestIT {
         entityData.put( "name", entityName );
 
         try {
-            entity = context.collection( collectionType ).post( entityData );
+            entity = this.app().collection( collectionType ).post( entityData ).getEntities().get(0);
         }
         catch ( UniformInterfaceException e ) {
             JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
@@ -113,10 +111,10 @@ public class BasicGeoTests extends AbstractRestIT {
         }
 
         assertNotNull(entity);
-        assertEquals( lat.toString(), entity.get("location").get("latitude").asText() );
-        assertEquals( lon.toString(), entity.get( "location" ).get("longitude").asText() );
+        assertEquals( lat.toString(), entity.getMap("location").get("latitude").toString() );
+        assertEquals( lon.toString(), entity.getMap("location").get("longitude").toString() );
 
-        context.refreshIndex();
+        this.refreshIndex();
 
         //2. read back that entity make sure it is accurate
         /*
@@ -151,7 +149,7 @@ public class BasicGeoTests extends AbstractRestIT {
         assertEquals( newLon.toString(), entity.get( "location" ).get("longitude").asText() );
   */
 
-        context.refreshIndex();
+        this.refreshIndex();
 
         //4. read back the updated entity, make sure it is accurate
 
@@ -170,7 +168,7 @@ public class BasicGeoTests extends AbstractRestIT {
     public void createEntitiesWithBadSpelling() throws IOException {
 
         String collectionType = "stores";
-        JsonNode node = null;
+        Entity node = null;
         Double lat = 37.776753;
         Double lon = -122.407846;
 
@@ -181,7 +179,7 @@ public class BasicGeoTests extends AbstractRestIT {
         misspelledLatitudeEntityData.put( "location", misspelledLatitude );
 
         try {
-            node = context.collection( collectionType ).post( misspelledLatitudeEntityData );
+            node = this.app().collection( collectionType ).post( misspelledLatitudeEntityData ).getEntity();
             fail("System allowed misspelled location property - latitudee, which it should not");
         }
         catch ( UniformInterfaceException e ) {
@@ -197,7 +195,7 @@ public class BasicGeoTests extends AbstractRestIT {
         misspelledLongitudeEntityData.put( "location", misspelledLongitude );
 
         try {
-            node = context.collection( collectionType ).post( misspelledLongitudeEntityData );
+            node = this.app().collection( collectionType ).post( misspelledLongitudeEntityData ).getEntity();
             fail("System allowed misspelled location property - longitudee, which it should not");
         }
         catch ( UniformInterfaceException e ) {
@@ -218,7 +216,7 @@ public class BasicGeoTests extends AbstractRestIT {
     public void createEntitiesWithBadPoints() throws IOException {
 
         String collectionType = "stores";
-        JsonNode node = null;
+        Entity node = null;
         Double lat = 37.776753;
         Double lon = -122.407846;
 
@@ -228,7 +226,7 @@ public class BasicGeoTests extends AbstractRestIT {
         latitudeOnlyEntityData.put( "location", latitudeOnly );
 
         try {
-            node = context.collection( collectionType ).post( latitudeOnlyEntityData );
+            node = this.app().collection( collectionType ).post( latitudeOnlyEntityData ).getEntity();
             fail("System allowed location with only one point, latitude, which it should not");
         }
         catch ( UniformInterfaceException e ) {
@@ -244,7 +242,7 @@ public class BasicGeoTests extends AbstractRestIT {
         notDoubleLatLonEntityData.put( "location", notDoubleLatLon );
 
         try {
-            node = context.collection( collectionType ).post( notDoubleLatLonEntityData );
+            node = this.app().collection( collectionType ).post( notDoubleLatLonEntityData ).getEntity();
             fail("System allowed misspelled location values that are not doubles for latitude and longitude, which it should not");
         }
         catch ( UniformInterfaceException e ) {

@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
