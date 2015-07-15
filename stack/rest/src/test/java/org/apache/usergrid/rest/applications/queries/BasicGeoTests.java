@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 
 import com.fasterxml.jackson.databind.JsonNode;

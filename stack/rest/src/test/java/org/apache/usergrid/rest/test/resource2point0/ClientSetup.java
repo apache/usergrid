@@ -109,7 +109,7 @@ public class ClientSetup implements TestRule {
         appName = "app_"+name+UUIDUtils.newTimeUUID();
 
         organization = restClient.management().orgs().post(
-            new Organization( orgName, username, username + "@usergrid.com", username, username, null ) );
+            new Organization( orgName, username, username + "@usergrid.com", username, password, null ) );
 
         restClient.management().token().get(username,password);
 
@@ -121,7 +121,7 @@ public class ClientSetup implements TestRule {
         application = new Application( appResponse );
         refreshIndex();
 
-        restClient.management().token().post(new Token(username,username));
+        ApiResponse response = restClient.management().token().post(new Token(username, password));
         refreshIndex();
     }
 
