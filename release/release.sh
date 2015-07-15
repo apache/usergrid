@@ -132,31 +132,35 @@ git commit -m "Updating .usergridversion to ${current_version}."
 
 git tag -s "${current_version}" -m "usergrid-${current_version} release." $current_version
 
+echo "Push origin"
+
 #if [[ $publish == 1 ]]; then
   #git push origin $current_version
   #git push origin --tags
 #fi
 
-dist_name="apache-usergrid-${current_version}-incubating"
+echo "Creating release dir"
 
+dist_name="apache-usergrid-${current_version}-incubating"
 dist_dir=${base_dir}/dist
 release_dir=${dist_dir}/${current_version}
 mkdir -p $release_dir
 cd $dist_dir
 
-#if [[ $publish == 1 ]]; then
-#  echo "Publishing the release"
+if [[ $publish == 1 ]]; then
+  echo "Publishing the release"
   # Make and checkout the release dist directory
 #  svn mkdir ${usergrid_svn_dist_url}/${current_version} -m "usergrid-${current_version} release"
 #  svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
-#fi
+fi
 
-# Now that the .usergridversion has been updated to the release version build the release source dist from it
+# Now that the .usergridversion has been updated to the release 
+# version build the release source dist from it
 cd $base_dir
 git archive --prefix=${dist_name}/ -o ${release_dir}/${dist_name}.tar.gz HEAD
 
-cd ${release_dir}
 # Sign the tarball.
+cd ${release_dir}
 echo "Signing the distribution"
 gpg --armor --output ${release_dir}/${dist_name}.tar.gz.asc --detach-sig ${release_dir}/${dist_name}.tar.gz
 
