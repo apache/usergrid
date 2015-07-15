@@ -146,8 +146,8 @@ cd $dist_dir
 if [[ $publish == 1 ]]; then
   echo "Publishing the release"
   # Make and checkout the release dist directory
-  svn mkdir ${usergrid_svn_dist_url}/${current_version} -m "usergrid-${current_version} release"
-  svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
+  #svn mkdir ${usergrid_svn_dist_url}/${current_version} -m "usergrid-${current_version} release"
+  #svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
 fi
 
 # Now that the .usergridversion has been updated to the release 
@@ -169,15 +169,15 @@ shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 
 if [[ $publish == 1 ]]; then
  # Commit the release
-  svn add .
-  svn ci -m "usergrid-${current_version} release"
+  #svn add .
+  #svn ci -m "usergrid-${current_version} release"
 
  # Finally delete all release candidate branches
-  for ref in $(git for-each-ref --format='%(refname:short)' 'refs/heads/${current_version}-rc*') do
-    git branch -D ${ref} 
-    git push origin --delete ${ref}
-    svn rm ${usergrid_svn_dev_dist_url}/${ref}
-  done
+  #for ref in $(git for-each-ref --format='%(refname:short)' 'refs/heads/${current_version}-rc*') do
+    #git branch -D ${ref} 
+    #git push origin --delete ${ref}
+    #svn rm ${usergrid_svn_dev_dist_url}/${ref}
+  #done
 fi
 
 current_commit_id=`git rev-parse HEAD`
