@@ -200,6 +200,84 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( 1, r.size() );
     }
 
+    @Test
+    public void containsTest() throws Exception {
+        LOG.debug("testCollection");
+
+        app.put("username", "edanuff");
+        app.put("email", "ed@anuff.com");
+
+        Entity user = app.create("user");
+        assertNotNull(user);
+
+        app.put("actor", new LinkedHashMap<String, Object>() {
+            {
+                put("displayName", "Ed Anuff");
+                put("objectType", "person");
+            }
+        });
+        app.put("verb", "tweet");
+        app.put("content", "I ate a sammich");
+        app.put("ordinal", 3);
+
+        Entity activity = app.create("activity");
+        assertNotNull(activity);
+
+        LOG.info("" + activity.getClass());
+        LOG.info(JsonUtils.mapToFormattedJsonString(activity));
+
+        activity = app.get(activity.getUuid(), activity.getType());
+
+        LOG.info("Activity class = {}", activity.getClass());
+        LOG.info(JsonUtils.mapToFormattedJsonString(activity));
+
+        app.addToCollection(user, "activities", activity);
+
+        // test queries on the collection
+
+        app.put("actor", new LinkedHashMap<String, Object>() {
+            {
+                put("displayName", "Ed Anuff");
+                put("objectType", "person");
+            }
+        });
+        app.put("verb", "tweet2");
+        app.put("content", "I ate a pickle");
+        app.put("ordinal", 2);
+        Entity activity2 = app.create("activity");
+        activity2 = app.get(activity2.getUuid(), activity2.getType());
+        app.addToCollection(user, "activities", activity2);
+
+        app.put("actor", new LinkedHashMap<String, Object>() {
+            {
+                put("displayName", "Ed Anuff");
+                put("objectType", "person");
+            }
+        });
+        app.put("verb", "tweet2");
+        app.put("content", "I ate an apple");
+        app.put("ordinal", 1);
+        Entity activity3 = app.create("activity");
+        activity3 = app.get(activity3.getUuid(), activity3.getType());
+        app.addToCollection(user, "activities", activity3);
+
+        app.refreshIndex();
+
+        // empty query
+        Query query = new Query();
+        Results r = app.searchCollection(user, "activities", query);
+        assertEquals(3, r.size()); // success
+
+        // query verb
+        query = Query.fromQL("where verb contains 'tweet2'");
+        r = app.searchCollection(user, "activities", query);
+        assertEquals(2, r.size());
+        // query verb
+        query = Query.fromQL("where verb contains 'tw*'");
+        r = app.searchCollection(user, "activities", query);
+        assertEquals(3, r.size());
+
+    }
 
     @Test
     public void userFirstNameSearch() throws Exception {
