@@ -205,6 +205,38 @@ public class GrammarTreeTest {
         assertEquals( 5, ( ( LongLiteral ) equal.getLiteral() ).getValue().intValue() );
     }
 
+    @Test
+    public void partialGrammar() throws Exception{
+        String queryString;
+        TokenRewriteStream tokens;
+        ParsedQuery query;
+        CpQueryFilterParser parser;
+        CpQueryFilterLexer lexer;
+        ANTLRStringStream in;
+        Operand root;
+
+        queryString = "where a gte 5";
+
+        in = new ANTLRStringStream( queryString );
+        lexer = new CpQueryFilterLexer( in );
+        tokens = new TokenRewriteStream( lexer );
+        parser = new CpQueryFilterParser( tokens );
+
+        query = parser.ql().parsedQuery;
+
+         root = query.getRootOperand();
+
+        queryString = "where name = 'bob'";
+
+        in = new ANTLRStringStream( queryString );
+        lexer = new CpQueryFilterLexer( in );
+        tokens = new TokenRewriteStream( lexer );
+        parser = new CpQueryFilterParser( tokens );
+
+        query = parser.ql().parsedQuery;
+
+        root = query.getRootOperand();
+    }
 
     /** Simple test that constructs and AST from the ANTLR generated files */
     @Test

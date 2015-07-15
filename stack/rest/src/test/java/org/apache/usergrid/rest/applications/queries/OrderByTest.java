@@ -39,11 +39,6 @@ import static org.junit.Assert.assertEquals;
 public class OrderByTest extends QueryTestBase {
     private static Logger log = LoggerFactory.getLogger(OrderByTest.class);
 
-    /**
-     * Test correct sort order for Long properties
-     *
-     * @throws IOException
-     */
     @Test
     public void orderByLongAsc() throws IOException {
         int numOfEntities = 20;
@@ -64,6 +59,7 @@ public class OrderByTest extends QueryTestBase {
             assertEquals(index++, Long.parseLong(activity.get("ordinal").toString()));
         }
     }
+
 
     /**
      * Test correct sort order for Long properties
@@ -302,6 +298,12 @@ public class OrderByTest extends QueryTestBase {
         //3. Ensure the correct number of results are returned
         assertEquals(5, activities.getResponse().getEntityCount());
 
+        //2. Query a subset of the entities, specifying order and limit
+         query = " where created > " + 1 + " order by created desc";
+         params = new QueryParameters().setQuery(query).setLimit(5);
+         activities = this.app().collection("activities").get(params);
+        //3. Ensure the correct number of results are returned
+        assertEquals(5, activities.getResponse().getEntityCount());
     }
 
     /**

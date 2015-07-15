@@ -142,7 +142,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( 3, r.size() ); // success
 
         // query verb
-        query = Query.fromQL( "verb = 'tweet2'" );
+        query = Query.fromQL( "where verb = 'tweet2'" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 2, r.size() );
 
@@ -190,12 +190,12 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( entities.get( 2 ).getUuid(), activity.getUuid() );
 
         // query ordinal
-        query = Query.fromQL( "ordinal = 2" );
+        query = Query.fromQL( "where ordinal = 2" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 1, r.size() );
 
         // query ordinal and sort ordinal
-        query = Query.fromQL( "ordinal = 2 order by ordinal" );
+        query = Query.fromQL( " where ordinal = 2 order by ordinal" );
         r = app.searchCollection( user, "activities", query );
         assertEquals( 1, r.size() );
     }
