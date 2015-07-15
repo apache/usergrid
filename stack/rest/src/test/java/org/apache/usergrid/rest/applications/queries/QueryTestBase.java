@@ -43,6 +43,8 @@ public class QueryTestBase  extends AbstractRestIT {
             actor.put("displayName", String.format("Test User %d", i));
             actor.put("username", String.format("user%d", i));
             props.put("actor", actor);
+            props.put("sometestprop","testprop");
+
             //give each entity a unique, numeric ordinal value
             props.put("ordinal", i);
             //Set half the entities to have a 'madeup' property of 'true'

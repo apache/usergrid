@@ -124,6 +124,7 @@ public class CollectionEndpoint extends NamedResource {
         WebResource resource  = getResource(useToken);
         resource = addParametersToResource(resource, parameters);
 
+        logger.info("PATH is "+ resource.getURI().getRawPath()+"?"+resource.getURI().getRawQuery());
         // use string type so we can log actual response from server
         String responseString = resource.type( MediaType.APPLICATION_JSON_TYPE )
             .accept(acceptHeader)
