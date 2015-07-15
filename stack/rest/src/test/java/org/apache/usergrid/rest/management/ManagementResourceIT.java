@@ -37,7 +37,6 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.usergrid.rest.AbstractRestIT.logNode;
 import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
@@ -411,7 +410,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         JsonNode node = management.me().post( JsonNode.class, payload );
 
-        logNode( node );
+        logger.info("node:", node);
         String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
@@ -429,15 +428,16 @@ public class ManagementResourceIT extends AbstractRestIT {
         form.add( "password", clientSetup.getPassword() );
 
         JsonNode node = management.me().post( JsonNode.class, form );
+        logger.info("node:", node);
 
-        logNode( node );
         String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
 
         node = resource().path( "/management/me" ).queryParam( "access_token", token )
                          .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        logNode( node );
+        logger.info("node:", node );
+
     }
 
 

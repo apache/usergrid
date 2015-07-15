@@ -22,10 +22,11 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 
 import static org.junit.Assert.assertEquals;
@@ -58,7 +59,6 @@ public class ApplicationsIT extends AbstractRestIT {
             appNames.add( name );
 
             context.withApp( name ).createAppForOrg();
-            refreshIndex(context.getOrgName(), name);
         }
 
 
