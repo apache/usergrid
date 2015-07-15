@@ -28,10 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;

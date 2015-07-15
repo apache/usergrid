@@ -21,10 +21,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
 import static org.junit.Assert.assertNotNull;
 

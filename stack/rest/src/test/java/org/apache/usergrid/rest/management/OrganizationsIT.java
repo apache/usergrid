@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.RestClient;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.RestClient;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;

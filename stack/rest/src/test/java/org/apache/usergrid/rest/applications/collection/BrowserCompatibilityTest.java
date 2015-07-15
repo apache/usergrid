@@ -19,16 +19,9 @@ package org.apache.usergrid.rest.applications.collection;
 
 import java.io.IOException;
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Test;
 
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 
 
@@ -36,7 +29,7 @@ import static org.junit.Assert.assertEquals;
  * Simple tests to test querying at the REST tier
  */
 
-public class BrowserCompatibilityTest extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
+public class BrowserCompatibilityTest extends org.apache.usergrid.rest.test.resource.AbstractRestIT {
 
 
     /**

@@ -17,8 +17,8 @@
 package org.apache.usergrid.rest.applications.utils;
 
 
-import org.apache.usergrid.rest.test.resource2point0.ClientSetup;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource.ClientSetup;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import java.util.HashMap;
