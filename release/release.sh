@@ -126,17 +126,14 @@ fi
 # Create a branch for the release and update the .usergridversion and tag it
 echo "Creating release branch and tag for ${current_version}"
 git checkout -b $current_version
-#echo $current_version > .usergridversion
-#git add .usergridversion
-#git commit -m "Updating .usergridversion to ${current_version}."
 git tag -s "${current_version}" -m "usergrid-${current_version} release." $current_version
 
 echo "Push origin"
 
-#if [[ $publish == 1 ]]; then
-  #git push origin $current_version
-  #git push origin --tags
-#fi
+if [[ $publish == 1 ]]; then
+  git push origin $current_version
+  git push origin --tags
+fi
 
 echo "Creating release dir"
 
@@ -149,8 +146,8 @@ cd $dist_dir
 if [[ $publish == 1 ]]; then
   echo "Publishing the release"
   # Make and checkout the release dist directory
-#  svn mkdir ${usergrid_svn_dist_url}/${current_version} -m "usergrid-${current_version} release"
-#  svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
+  svn mkdir ${usergrid_svn_dist_url}/${current_version} -m "usergrid-${current_version} release"
+  svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
 fi
 
 # Now that the .usergridversion has been updated to the release 
@@ -170,18 +167,18 @@ gpg --print-md MD5 ${dist_name}.tar.gz > ${dist_name}.tar.gz.md5
 # sha
 shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 
-#if [[ $publish == 1 ]]; then
-  # Commit the release
-#  svn add .
-#  svn ci -m "usergrid-${current_version} release"
+if [[ $publish == 1 ]]; then
+ # Commit the release
+  svn add .
+  svn ci -m "usergrid-${current_version} release"
 
-  # Finally delete all release candidate branches
-#  for ref in $(git for-each-ref --format='%(refname:short)' 'refs/heads/${current_version}-rc*') do
-#    git branch -D ${ref} # line 177: syntax error near unexpected token `git'
-#    git push origin --delete ${ref}
-#    svn rm ${usergrid_svn_dev_dist_url}/${ref}
-#  done
-#fi
+ # Finally delete all release candidate branches
+  for ref in $(git for-each-ref --format='%(refname:short)' 'refs/heads/${current_version}-rc*') do
+    git branch -D ${ref} # line 177: syntax error near unexpected token `git'
+    git push origin --delete ${ref}
+    svn rm ${usergrid_svn_dev_dist_url}/${ref}
+  done
+fi
 
 current_commit_id=`git rev-parse HEAD`
 
