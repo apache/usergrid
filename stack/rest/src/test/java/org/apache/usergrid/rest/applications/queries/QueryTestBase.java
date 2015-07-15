@@ -16,8 +16,8 @@
  */
 package org.apache.usergrid.rest.applications.queries;
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

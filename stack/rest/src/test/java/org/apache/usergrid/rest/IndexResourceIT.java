@@ -22,9 +22,10 @@ package org.apache.usergrid.rest;
 
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource.model.Token;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,10 +44,8 @@ import static org.junit.Assert.fail;
 /**
  * test index creation
  */
-public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
+public class IndexResourceIT extends AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
     //Used for all MUUserResourceITTests
     private Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
 
@@ -111,7 +110,7 @@ public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2poin
         String appId = this.clientSetup.getAppUuid();
 
         // change the password as admin. The old password isn't required
-        org.apache.usergrid.rest.test.resource2point0.model.ApiResponse node = null;
+        org.apache.usergrid.rest.test.resource.model.ApiResponse node = null;
         try {
 
             WebResource resource = this.clientSetup.getRestClient().pathResource("/system/index/" + appId).getResource();
@@ -121,7 +120,7 @@ public class IndexResourceIT extends org.apache.usergrid.rest.test.resource2poin
             resource.addFilter( httpBasicAuthFilter );
 
             node = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .get( org.apache.usergrid.rest.test.resource2point0.model.ApiResponse.class);
+                .get( org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (Exception e) {
             LOG.error("failed", e);
             fail(e.toString());
