@@ -20,8 +20,8 @@ package org.apache.usergrid.rest.applications.collection.users;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Before;
 import org.junit.Test;
 

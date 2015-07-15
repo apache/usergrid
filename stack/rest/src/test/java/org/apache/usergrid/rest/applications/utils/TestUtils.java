@@ -20,8 +20,8 @@ package org.apache.usergrid.rest.applications.utils;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Ignore;
 import org.apache.usergrid.utils.UUIDUtils;
 
