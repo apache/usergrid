@@ -39,6 +39,8 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.core.rx.RxSchedulerFig;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
@@ -48,9 +50,11 @@ import org.apache.usergrid.services.exceptions.ServiceInvocationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
 
+import com.google.inject.Injector;
+
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscriber;
-import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.apache.usergrid.services.ServiceParameter.filter;
@@ -92,6 +96,11 @@ public abstract class AbstractService implements Service {
 
     protected Map<String, Object> defaultEntityMetadata;
 
+    private Scheduler rxScheduler;
+    private RxSchedulerFig rxSchedulerFig;
+
+
+
 
     public AbstractService() {
 
@@ -101,6 +110,9 @@ public abstract class AbstractService implements Service {
     public void setServiceManager( ServiceManager sm ) {
         this.sm = sm;
         em = sm.getEntityManager();
+        final Injector injector = sm.getApplicationContext().getBean( Injector.class );
+        rxScheduler = injector.getInstance( RxTaskScheduler.class ).getAsyncIOScheduler();
+        rxSchedulerFig = injector.getInstance( RxSchedulerFig.class );
     }
 
 
@@ -449,8 +461,8 @@ public abstract class AbstractService implements Service {
                 catch ( Exception e ) {
                     throw new RuntimeException(e);
                 }
-            } ).subscribeOn( Schedulers.io() );
-        }, 10 ).toBlocking().lastOrDefault( null );
+            } ).subscribeOn( rxScheduler );
+        }, rxSchedulerFig.getImportThreads() ).toBlocking().lastOrDefault( null );
     }
 
 
