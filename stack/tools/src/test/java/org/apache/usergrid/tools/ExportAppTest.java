@@ -24,12 +24,15 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Scheduler;
 import rx.schedulers.Schedulers;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +40,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+
+/**
+ * TODO: better test, this is really just a smoke test.
+ */
 public class ExportAppTest {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
     
@@ -119,8 +128,15 @@ public class ExportAppTest {
                 "-outputDir", directoryName
         }, false );
 
-        logger.info("100 read and 100 write threads = " + (System.currentTimeMillis() - start)/1000 + "s");
+        logger.info( "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s" );
+        
+        File exportDir = new File(directoryName);
+        assertTrue( getFileCount( exportDir, "entities"    ) > 0 );
+        assertTrue( getFileCount( exportDir, "collections" ) > 0 );
+        assertTrue( getFileCount( exportDir, "entities" ) >= 100 );
+        assertTrue( getFileCount( exportDir, "collections" ) >= 100 );
 
+        File exportDir1 = new File(directoryName + "1");
         exportApp.startTool( new String[]{
                 "-application", appInfo.getName(),
                 "-readThreads", "1",
@@ -129,6 +145,19 @@ public class ExportAppTest {
                 "-outputDir", directoryName + "1"
         }, false );
 
-        logger.info("1 thread time = " + (System.currentTimeMillis() - start)/1000 + "s");
+        logger.info( "1 thread time = " + (System.currentTimeMillis() - start) / 1000 + "s" );
+
+        exportDir = new File(directoryName);
+        assertEquals( 1, getFileCount( exportDir, "entities" ));
+        assertEquals( 1, getFileCount( exportDir, "collections" ));
+    }
+
+    private static int getFileCount(File exportDir, final String ext ) {
+        return exportDir.listFiles( new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pathname.getAbsolutePath().endsWith("." + ext);
+            }
+        } ).length;
     }
 }
