@@ -54,7 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * Will create as many output files as there are writeThreads (by default: 10).
  * 
- * Will create two types of files: *.uge for Usegrird entities and *.ugc for entity to entity connections.
+ * Will create two types of files: *.entities for Usegrird entities and *.collections for entity to entity connections.
  * 
  * Every line of the data files is a complete JSON object.
  */
@@ -62,7 +62,6 @@ public class ExportApp extends ExportingToolBase {
     static final Logger logger = LoggerFactory.getLogger( ExportApp.class );
 
     static final String APPLICATION_NAME = "application";
-    private static final String READ_THREAD_COUNT = "readThreads";
     private static final String WRITE_THREAD_COUNT = "writeThreads";
    
     String applicationName;
@@ -71,16 +70,13 @@ public class ExportApp extends ExportingToolBase {
     AtomicInteger entitiesWritten = new AtomicInteger(0);
     AtomicInteger connectionsWritten = new AtomicInteger(0);
 
-    Scheduler readScheduler;
     Scheduler writeScheduler;
 
     ObjectMapper mapper = new ObjectMapper();
     Map<Thread, JsonGenerator> entityGeneratorsByThread  = new HashMap<Thread, JsonGenerator>();
     Map<Thread, JsonGenerator> connectionGeneratorsByThread = new HashMap<Thread, JsonGenerator>();
 
-    // set via CLI
-    int readThreadCount = 80;
-    int writeThreadCount = 10; // limiting write will limit output files 
+    int writeThreadCount = 10; // set via CLI option; limiting write will limit output files 
 
 
     @Override
@@ -92,10 +88,6 @@ public class ExportApp extends ExportingToolBase {
         Option appNameOption = OptionBuilder.hasArg().withType("")
                 .withDescription( "Application Name -" + APPLICATION_NAME ).create( APPLICATION_NAME );
         options.addOption( appNameOption );
-
-        Option readThreadsOption = OptionBuilder.hasArg().withType(0)
-                .withDescription( "Read Threads -" + READ_THREAD_COUNT ).create( READ_THREAD_COUNT );
-        options.addOption( readThreadsOption );
 
         Option writeThreadsOption = OptionBuilder.hasArg().withType(0)
                 .withDescription( "Write Threads -" + WRITE_THREAD_COUNT ).create(WRITE_THREAD_COUNT);
@@ -113,15 +105,6 @@ public class ExportApp extends ExportingToolBase {
         
         applicationName = line.getOptionValue( APPLICATION_NAME );
 
-        if (StringUtils.isNotEmpty( line.getOptionValue( READ_THREAD_COUNT ) )) {
-            try {
-                readThreadCount = Integer.parseInt( line.getOptionValue( READ_THREAD_COUNT ) );
-            } catch (NumberFormatException nfe) {
-                logger.error( "-" + READ_THREAD_COUNT + " must be specified as an integer. Aborting..." );
-                return;
-            }
-        }
-        
         if (StringUtils.isNotEmpty( line.getOptionValue( WRITE_THREAD_COUNT ) )) {
             try {
                 writeThreadCount = Integer.parseInt( line.getOptionValue( WRITE_THREAD_COUNT ) );
@@ -144,9 +127,6 @@ public class ExportApp extends ExportingToolBase {
         final EntityManager em = emf.getEntityManager( applicationId );
         organizationName = em.getApplication().getOrganizationName();
 
-        ExecutorService readThreadPoolExecutor = Executors.newFixedThreadPool( readThreadCount );
-        readScheduler = Schedulers.from( readThreadPoolExecutor );
-
         ExecutorService writeThreadPoolExecutor = Executors.newFixedThreadPool( writeThreadCount );
         writeScheduler = Schedulers.from( writeThreadPoolExecutor );
 
@@ -155,19 +135,18 @@ public class ExportApp extends ExportingToolBase {
         collectionsObservable.flatMap( new Func1<String, Observable<ExportEntity>>() {
             
             public Observable<ExportEntity> call(String collection) {
-                return Observable.create( new EntityObservable( em, collection ))
+                return Observable.create( new EntityObservable( em, collection ) )
                         .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
             }
-            
-        }, 10).flatMap( new Func1<ExportEntity, Observable<ExportConnection>>() {
-            
+
+        }, writeThreadCount ).flatMap( new Func1<ExportEntity, Observable<ExportConnection>>() {
+
             public Observable<ExportConnection> call(ExportEntity exportEntity) {
-                return Observable.create( new ConnectionsObservable( em, exportEntity ))
+                return Observable.create( new ConnectionsObservable( em, exportEntity ) )
                         .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
             }
-            
-        }, 10)
-            .subscribeOn( readScheduler )
+
+        }, writeThreadCount)
             .doOnCompleted( new FileWrapUpAction() )
             .toBlocking().last();
     }

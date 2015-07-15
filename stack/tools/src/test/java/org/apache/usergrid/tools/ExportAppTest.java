@@ -24,7 +24,6 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.junit.Assert;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,9 +131,9 @@ public class ExportAppTest {
         
         File exportDir = new File(directoryName);
         assertTrue( getFileCount( exportDir, "entities"    ) > 0 );
-        assertTrue( getFileCount( exportDir, "collections" ) > 0 );
-        assertTrue( getFileCount( exportDir, "entities" ) >= 100 );
-        assertTrue( getFileCount( exportDir, "collections" ) >= 100 );
+        assertTrue( getFileCount( exportDir, "connections" ) > 0 );
+        assertTrue( getFileCount( exportDir, "entities"    ) <= 100 );
+        assertTrue( getFileCount( exportDir, "connections" ) <= 100 );
 
         File exportDir1 = new File(directoryName + "1");
         exportApp.startTool( new String[]{
@@ -147,9 +146,8 @@ public class ExportAppTest {
 
         logger.info( "1 thread time = " + (System.currentTimeMillis() - start) / 1000 + "s" );
 
-        exportDir = new File(directoryName);
-        assertEquals( 1, getFileCount( exportDir, "entities" ));
-        assertEquals( 1, getFileCount( exportDir, "collections" ));
+        assertEquals( 1, getFileCount( exportDir1, "entities" ));
+        assertEquals( 1, getFileCount( exportDir1, "connections" ));
     }
 
     private static int getFileCount(File exportDir, final String ext ) {
