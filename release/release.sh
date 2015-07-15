@@ -167,7 +167,7 @@ gpg --print-md MD5 ${dist_name}.tar.gz > ${dist_name}.tar.gz.md5
 # sha
 shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 
-if [[ $publish == 1 ]]; then
+#if [[ $publish == 1 ]]; then
  # Commit the release
   #svn add .
   #svn ci -m "usergrid-${current_version} release"
@@ -178,7 +178,7 @@ if [[ $publish == 1 ]]; then
     #git push origin --delete ${ref}
     #svn rm ${usergrid_svn_dev_dist_url}/${ref}
   #done
-fi
+#fi
 
 current_commit_id=`git rev-parse HEAD`
 
