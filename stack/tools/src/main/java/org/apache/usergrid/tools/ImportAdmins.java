@@ -17,6 +17,7 @@
 package org.apache.usergrid.tools;
 
 
+import com.sun.org.apache.bcel.internal.generic.DUP;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -26,6 +27,8 @@ import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.codehaus.jackson.JsonFactory;
@@ -84,6 +87,7 @@ public class ImportAdmins extends ToolBase {
     private Map<Stoppable, Thread> adminAuditThreads = new HashMap<Stoppable, Thread>();
     private Map<Stoppable, Thread> metadataWorkerThreadMap = new HashMap<Stoppable, Thread>();
 
+    Map<UUID, DuplicateUser> dupsByDupUuid = new HashMap<UUID, DuplicateUser>(200);
 
     JsonFactory jsonFactory = new JsonFactory();
 
@@ -93,6 +97,19 @@ public class ImportAdmins extends ToolBase {
     AtomicInteger writeEmptyCount = new AtomicInteger( 0 );
     AtomicInteger auditEmptyCount = new AtomicInteger( 0 );
     AtomicInteger metadataEmptyCount = new AtomicInteger( 0 );
+    
+    
+    static class DuplicateUser {
+        String email;
+        String username;
+        public DuplicateUser( String propName, Map<String, Object> user ) {
+            if ( "email".equals(propName)) {
+                email = user.get("email").toString();
+            } else {
+                username = user.get("username").toString();
+            }
+        }
+    }
     
 
 
@@ -382,7 +399,7 @@ public class ImportAdmins extends ToolBase {
                 String entityOwnerId = jp.getCurrentName();
 
                 try {
-                    EntityRef entityRef = em.get( UUID.fromString( entityOwnerId ) );
+                    EntityRef entityRef = new SimpleEntityRef( "user", UUID.fromString( entityOwnerId ) );
                     Map<String, Object> metadata = (Map<String, Object>) jp.readValueAs( Map.class );
                     
                     workQueue.put( new ImportMetadataTask( entityRef, metadata ) );
@@ -408,31 +425,33 @@ public class ImportAdmins extends ToolBase {
     private void importEntityMetadata(
             EntityManager em, EntityRef entityRef, Map<String, Object> metadata) throws Exception {
 
-        List<Object> organizationsList = (List<Object>) metadata.get("organizations");
-        if (organizationsList != null && !organizationsList.isEmpty()) {
+        DuplicateUser dup = dupsByDupUuid.get( entityRef.getUuid() );
+        
+        if ( dup == null ) { // not a duplicate
 
-            User user = em.get(entityRef, User.class);
-            
-            if (user == null) {
-                logger.error("User not found, not adding to organizations: " 
-                    + (entityRef == null ? null : entityRef.getUuid()));
+            User user = em.get( entityRef, User.class );
+            final UserInfo userInfo = managementService.getAdminUserByEmail( user.getEmail() );
 
-            } else {
+            if (user == null || userInfo == null) {
+                logger.error( "User {} does not exist, not processing metadata", entityRef.getUuid() );
+                return;
+            }
 
-                final UserInfo userInfo = managementService.getAdminUserByEmail(user.getEmail());
+            List<Object> organizationsList = (List<Object>) metadata.get("organizations");
+            if (organizationsList != null && !organizationsList.isEmpty()) {
 
                 for (Object orgObject : organizationsList) {
 
                     Map<String, Object> orgMap = (Map<String, Object>) orgObject;
-                    UUID orgUuid = UUID.fromString((String) orgMap.get("uuid"));
-                    String orgName = (String) orgMap.get("name");
+                    UUID orgUuid = UUID.fromString( (String) orgMap.get( "uuid" ) );
+                    String orgName = (String) orgMap.get( "name" );
 
-                    // create org only if it does not exist
-                    OrganizationInfo orgInfo = managementService.getOrganizationByUuid(orgUuid);
-                    if (orgInfo == null) {
+                    OrganizationInfo orgInfo = managementService.getOrganizationByUuid( orgUuid );
+
+                    if (orgInfo == null) { // org does not exist yet, create it and add user
                         try {
-                            managementService.createOrganization(orgUuid, orgName, userInfo, false);
-                            orgInfo = managementService.getOrganizationByUuid(orgUuid);
+                            managementService.createOrganization( orgUuid, orgName, userInfo, false );
+                            orgInfo = managementService.getOrganizationByUuid( orgUuid );
 
                             logger.debug( "Created new org {} for user {}",
                                     new Object[]{orgInfo.getName(), user.getEmail()} );
@@ -440,49 +459,107 @@ public class ImportAdmins extends ToolBase {
                         } catch (DuplicateUniquePropertyExistsException dpee) {
                             logger.debug( "Org {} already exists", orgName );
                         }
-                    } else {
+                    } else { // org exists, add original user to it
                         try {
                             managementService.addAdminUserToOrganization( userInfo, orgInfo, false );
                             logger.debug( "Added user {} to org {}", new Object[]{user.getEmail(), orgName} );
-                            
-                        } catch ( Exception e ) {
+
+                        } catch (Exception e) {
                             logger.error( "Error Adding user {} to org {}", new Object[]{user.getEmail(), orgName} );
                         }
                     }
                 }
             }
+            
+            Map<String, Object> dictionariesMap = (Map<String, Object>) metadata.get("dictionaries");
+            if (dictionariesMap != null && !dictionariesMap.isEmpty()) {
+                for (String name : dictionariesMap.keySet()) {
+                    try {
+                        Map<String, Object> dictionary = (Map<String, Object>) dictionariesMap.get(name);
+                        em.addMapToDictionary( entityRef, name, dictionary);
 
-        } else {
-            logger.warn("User {} has no organizations", entityRef.getUuid() );
-        }
+                        logger.debug( "Creating dictionary for {} name {}",
+                                new Object[]{entityRef, name} );
 
-        Map<String, Object> dictionariesMap = (Map<String, Object>) metadata.get("dictionaries");
-
-        if (dictionariesMap != null && !dictionariesMap.isEmpty()) {
-            for (String name : dictionariesMap.keySet()) {
-                try {
-                    Map<String, Object> dictionary = (Map<String, Object>) dictionariesMap.get(name);
-                    em.addMapToDictionary( entityRef, name, dictionary);
-
-                    logger.debug( "Creating dictionary for {} name {}",
-                            new Object[]{entityRef, name} );
-
-                } catch (Exception e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.error("Error importing dictionary name "
-                                + name + " for user " + entityRef.getUuid(), e);
-                    } else {
-                        logger.error("Error importing dictionary name "
-                                + name + " for user " + entityRef.getUuid());
+                    } catch (Exception e) {
+                        if (logger.isDebugEnabled()) {
+                            logger.error("Error importing dictionary name "
+                                    + name + " for user " + entityRef.getUuid(), e);
+                        } else {
+                            logger.error("Error importing dictionary name "
+                                    + name + " for user " + entityRef.getUuid());
+                        }
                     }
                 }
+
+            } else {
+                logger.warn("User {} has no dictionaries", entityRef.getUuid() );
             }
             
-        } else {
-            logger.warn("User {} has no dictionaries", entityRef.getUuid() );
+        } else { // this is a duplicate user, so merge orgs
+
+            logger.info("Processing duplicate username={} email={}", dup.email, dup.username );
+           
+            Identifier identifier = dup.email != null ? 
+                Identifier.fromEmail( dup.email ) : Identifier.from( dup.username );
+            User originalUser = em.get( em.getUserByIdentifier(identifier), User.class );
+
+            // get map of original user's orgs
+            
+            UserInfo originalUserInfo = managementService.getAdminUserByEmail( originalUser.getEmail() );
+            Map<String, Object> originalUserOrgData =
+                    managementService.getAdminUserOrganizationData( originalUser.getUuid() );
+            Map<String, Map<String, Object>> originalUserOrgs =
+                    (Map<String, Map<String, Object>>) originalUserOrgData.get( "organizations" );
+
+            // loop through duplicate user's orgs and give orgs to original user
+
+            List<Object> organizationsList = (List<Object>) metadata.get("organizations");
+            for (Object orgObject : organizationsList) {
+
+                Map<String, Object> orgMap = (Map<String, Object>) orgObject;
+                UUID orgUuid = UUID.fromString( (String) orgMap.get( "uuid" ) );
+                String orgName = (String) orgMap.get( "name" );
+
+                if (originalUserOrgs.get( orgName ) == null) { // original user does not have this org
+
+                    OrganizationInfo orgInfo = managementService.getOrganizationByUuid( orgUuid );
+                    
+                    if (orgInfo == null) { // org does not exist yet, create it and add original user to it
+                        try {
+                            managementService.createOrganization( orgUuid, orgName, originalUserInfo, false );
+                            orgInfo = managementService.getOrganizationByUuid( orgUuid );
+
+                            logger.debug( "Created new org {} for user {}:{}:{} from duplicate user {}:{}",
+                                new Object[]{
+                                        orgInfo.getName(),
+                                        originalUser.getUuid(), originalUser.getUsername(), originalUser.getEmail(),
+                                        dup.username, dup.email
+                                });
+
+                        } catch (DuplicateUniquePropertyExistsException dpee) {
+                            logger.debug( "Org {} already exists", orgName );
+                        }
+                    } else { // org exists so add original user to it
+                        try {
+                            managementService.addAdminUserToOrganization( originalUserInfo, orgInfo, false );
+                            logger.debug( "Added to org user {}:{}:{} from duplicate user {}:{}",
+                                    new Object[]{
+                                            orgInfo.getName(),
+                                            originalUser.getUuid(), originalUser.getUsername(), originalUser.getEmail(),
+                                            dup.username, dup.email
+                                    });
+
+                        } catch (Exception e) {
+                            logger.error( "Error Adding user {} to org {}", 
+                                    new Object[]{originalUserInfo.getEmail(), orgName} );
+                        }
+                    }
+                    
+                } // else original user already has this org
+                
+            }
         }
-
-
     }
 
 
@@ -685,15 +762,15 @@ public class ImportAdmins extends ToolBase {
 
                     // Import/create the entity
                     UUID uuid = getId(entityProps);
-                    String type = getType(entityProps);
+                    String type = getType( entityProps );
 
                     try {
                         long startTime = System.currentTimeMillis();
                         
                         em.create(uuid, type, entityProps);
 
-                        logger.debug( "Imported admin user {} / {}",
-                            new Object[] { uuid, entityProps.get( "username" ) } );
+                        logger.debug( "Imported admin user {}:{}:{}",
+                            new Object[] { uuid, entityProps.get( "username" ), entityProps.get("email") } );
 
                         userCount.getAndIncrement();
                         auditQueue.put(entityProps);
@@ -709,19 +786,37 @@ public class ImportAdmins extends ToolBase {
                         }
                         
                     } catch (DuplicateUniquePropertyExistsException de) {
-                        logger.warn("Unable to create admin user {}:{}, duplicate property {}",
-                                new Object[]{ uuid, entityProps.get("username"), de.getPropertyName() });
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Exception", de);
-                        }
+                        String dupProperty = de.getPropertyName();
+                        handleDuplicateAccount( em, dupProperty, entityProps );
+                        continue;
+
+                        
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("Error", e);
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error( "Error", e );
                 }
 
             }
+        }
+
+        
+        private void handleDuplicateAccount(EntityManager em, String dupProperty, Map<String, Object> entityProps ) {
+
+            logger.info( "Processing duplicate user {}:{}:{} with duplicate {}", new Object[]{
+                    entityProps.get( "uuid" ), entityProps.get( "username" ), entityProps.get( "email" ), dupProperty} );
+           
+            UUID dupUuid = UUID.fromString( entityProps.get("uuid").toString() );
+            try {
+                dupsByDupUuid.put( dupUuid, new DuplicateUser( dupProperty, entityProps ) );
+                
+            } catch (Exception e) {
+                logger.error("Error processing dup user {}:{}:{}",
+                        new Object[] {entityProps.get( "username" ), entityProps.get("email"), dupUuid});
+                return;
+            }
+
         }
     }
 }
