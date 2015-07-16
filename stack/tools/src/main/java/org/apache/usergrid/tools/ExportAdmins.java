@@ -489,6 +489,8 @@ public class ExportAdmins extends ExportingToolBase {
                 jg.writeObject( orgs.get( uuid ) );
 
                 jg.writeEndObject();
+                
+                logger.debug( "Exported organization {}:{}", uuid, orgs.get( uuid ) );
             }
 
             jg.writeEndArray();
