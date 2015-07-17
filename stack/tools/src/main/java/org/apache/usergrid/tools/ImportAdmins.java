@@ -636,7 +636,7 @@ public class ImportAdmins extends ToolBase {
                     long duration = stopTime - startTime;
                     durationSum += duration;
 
-                    //logger.debug( "Audited {}th admin", count );
+                    //logger.debug( "Audited {}th admin", userCount );
                     
                     if ( count % 100 == 0 ) {
                         logger.info( "Audited {}. Average Audit Rate: {}(ms)", count, durationSum / count );
