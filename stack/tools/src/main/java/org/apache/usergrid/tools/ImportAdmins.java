@@ -462,7 +462,13 @@ public class ImportAdmins extends ToolBase {
                     } else { // org exists, add original user to it
                         try {
                             managementService.addAdminUserToOrganization( userInfo, orgInfo, false );
-                            logger.debug( "Added user {} to org {}", new Object[]{user.getEmail(), orgName} );
+                            logger.debug( "Added to org user {}:{}:{}",
+                                    new Object[]{
+                                            orgInfo.getName(),
+                                            user.getUsername(),
+                                            user.getEmail(),
+                                            user.getUuid()
+                                    });
 
                         } catch (Exception e) {
                             logger.error( "Error Adding user {} to org {}", new Object[]{user.getEmail(), orgName} );
@@ -533,7 +539,9 @@ public class ImportAdmins extends ToolBase {
                             logger.debug( "Created new org {} for user {}:{}:{} from duplicate user {}:{}",
                                 new Object[]{
                                         orgInfo.getName(),
-                                        originalUser.getUuid(), originalUser.getUsername(), originalUser.getEmail(),
+                                        originalUser.getUsername(), 
+                                        originalUser.getEmail(),
+                                        originalUser.getUuid(), 
                                         dup.username, dup.email
                                 });
 
@@ -546,7 +554,9 @@ public class ImportAdmins extends ToolBase {
                             logger.debug( "Added to org user {}:{}:{} from duplicate user {}:{}",
                                     new Object[]{
                                             orgInfo.getName(),
-                                            originalUser.getUuid(), originalUser.getUsername(), originalUser.getEmail(),
+                                            originalUser.getUsername(), 
+                                            originalUser.getEmail(),
+                                            originalUser.getUuid(), 
                                             dup.username, dup.email
                                     });
 
@@ -686,7 +696,7 @@ public class ImportAdmins extends ToolBase {
 
             while (!done) {
                 try {
-                    ImportMetadataTask task = this.workQueue.poll(30, TimeUnit.SECONDS);
+                    ImportMetadataTask task = this.workQueue.poll( 30, TimeUnit.SECONDS );
 
                     if (task == null) {
                         logger.warn("Reading from metadata queue was null!");
@@ -694,11 +704,11 @@ public class ImportAdmins extends ToolBase {
                         Thread.sleep(1000);
                         continue;
                     }
-                    metadataEmptyCount.set(0);
+                    metadataEmptyCount.set( 0 );
                     
                     long startTime = System.currentTimeMillis();
                     
-                    importEntityMetadata(em, task.entityRef, task.metadata);
+                    importEntityMetadata( em, task.entityRef, task.metadata );
                     
                     long stopTime = System.currentTimeMillis();
                     long duration = stopTime - startTime;
@@ -770,7 +780,7 @@ public class ImportAdmins extends ToolBase {
                         em.create(uuid, type, entityProps);
 
                         logger.debug( "Imported admin user {}:{}:{}",
-                            new Object[] { uuid, entityProps.get( "username" ), entityProps.get("email") } );
+                            new Object[] { entityProps.get( "username" ), entityProps.get("email"), uuid } );
 
                         userCount.getAndIncrement();
                         auditQueue.put(entityProps);
@@ -805,7 +815,10 @@ public class ImportAdmins extends ToolBase {
         private void handleDuplicateAccount(EntityManager em, String dupProperty, Map<String, Object> entityProps ) {
 
             logger.info( "Processing duplicate user {}:{}:{} with duplicate {}", new Object[]{
-                    entityProps.get( "uuid" ), entityProps.get( "username" ), entityProps.get( "email" ), dupProperty} );
+                    entityProps.get( "username" ), 
+                    entityProps.get( "email" ), 
+                    entityProps.get( "uuid" ), 
+                    dupProperty} );
            
             UUID dupUuid = UUID.fromString( entityProps.get("uuid").toString() );
             try {
