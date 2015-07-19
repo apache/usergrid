@@ -43,7 +43,7 @@ public class Identifier implements Serializable {
 
     static Pattern emailRegEx = Pattern.compile( EMAIL_REX );
     //"Pattern nameRegEx" below used to be [a-zA-Z0-9_\\-./], changed it to contain a 'space' to address https://issues.apache.org/jira/browse/USERGRID-94
-    static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./ ]*" );
+    static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-. ]*" );
 
 
     private Identifier( Type type, Object value ) {
