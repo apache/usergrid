@@ -80,6 +80,8 @@ public class ExportAdmins extends ExportingToolBase {
     private int readThreadCount;
 
     AtomicInteger userCount = new AtomicInteger( 0 );
+    
+    boolean ignoreInvalidUsers = false; // true to ignore users with no credentials or orgs
    
     
     /**
@@ -335,9 +337,10 @@ public class ExportAdmins extends ExportingToolBase {
 
                     String actionTaken = "Processed";
 
-                    if (task.orgNamesByUuid.isEmpty()
+                    if (ignoreInvalidUsers && (task.orgNamesByUuid.isEmpty()
                             || task.dictionariesByName.isEmpty()
-                            || task.dictionariesByName.get( "credentials" ).isEmpty()) {
+                            || task.dictionariesByName.get( "credentials" ).isEmpty())) {
+                        
                         actionTaken = "Ignored";
                         
                     } else {
