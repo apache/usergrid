@@ -1521,6 +1521,7 @@
                     <exclude>**/*.json</exclude>
                     <exclude>**/*.log</exclude>
                     <exclude>**/*.md5</exclude>
+                    <exclude>**/*.opts</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
