@@ -315,42 +315,33 @@ public class ExportAdmins extends ExportingToolBase {
 
         private void addDictionariesToTask(AdminUserWriteTask task, Entity entity) throws Exception {
             EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            
+            task.dictionariesByName = new HashMap<String, Map<Object, Object>>();
 
             Set<String> dictionaries = em.getDictionaries( entity );
             
             if ( dictionaries.isEmpty() ) {
                 logger.error("User {}:{} has no dictionaries", task.adminUser.getName(), task.adminUser.getUuid() );
+                return;
             }
 
-            task.dictionariesByName = new HashMap<String, Map<Object, Object>>();
+            Map<Object, Object> credentialsDictionary = em.getDictionaryAsMap( entity, "credentials" );
 
-            for (String dictionary : dictionaries) {
-                Map<Object, Object> dict = em.getDictionaryAsMap( entity, dictionary );
-                if ( dict.isEmpty() ) {
-                    continue;
-                }
-                task.dictionariesByName.put( dictionary, dict );
-            }
-           
-            if ( task.dictionariesByName.isEmpty() ) {
-                logger.error( "User {}:{} has no dictionaries",
-                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
-                
-            } else if ( task.dictionariesByName.get("credentials") == null ) {
-                logger.error( "User {}:{} has no credentials dictionary",
-                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
-                
-            } else {
-                if ( task.dictionariesByName.get("credentials").get("password") == null ) {
+            if ( credentialsDictionary != null && !credentialsDictionary.isEmpty() ) {
+                task.dictionariesByName.put( "credentials", credentialsDictionary );
+
+                if (credentialsDictionary.get( "password" ) == null) {
                     logger.error( "User {}:{} has no password in credential dictionary",
-                            new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
+                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid()} );
                 }
-                if ( task.dictionariesByName.get("credentials").get("secret") == null ) {
+                if (credentialsDictionary.get( "secret" ) == null) {
                     logger.error( "User {}:{} has no secret in credential dictionary",
-                            new Object[]{task.adminUser.getName(), task.adminUser.getUuid() } );
+                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid()} );
                 }
+            } else {
+                logger.error( "User {}:{} has no or empty credentials dictionary",
+                    new Object[]{task.adminUser.getName(), task.adminUser.getUuid()} );
             }
-                
         }
 
         private void addOrganizationsToTask(AdminUserWriteTask task) throws Exception {
