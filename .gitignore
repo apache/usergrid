@@ -86,3 +86,7 @@ portal/js/templates.js
 *.iml
 sdks/dotnet/samples/notifications/packages/*
 /sdks/html5-javascript/node_modules/
+
+
+/stack/rest_integration_tests/node_modules
+/stack/rest_integration_tests/config/override.js
