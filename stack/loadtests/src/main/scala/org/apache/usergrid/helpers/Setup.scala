@@ -29,111 +29,134 @@ import io.gatling.http.Predef._
 import io.gatling.http.request.StringBody
 import io.gatling.jsonpath.JsonPath
 import org.apache.usergrid.datagenerators.FeederGenerator
+import org.apache.usergrid.enums.TokenType
 import org.apache.usergrid.settings.{Settings, Headers}
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.parsing.json.JSONObject
 
 /**
  * Classy class class.
  */
 object Setup {
-  var token:String = null
+  var managementToken:String = null
   val client = new AsyncHttpClient()
+
+  def getToken(tokenUrl:String, username:String, password:String):String = {
+    val getToken = client
+      .preparePost(tokenUrl)
+      .setBody("{\"username\":\"" + username + "\",\"password\":\"" + password + "\",\"grant_type\":\"password\"}")
+      .setHeader("Cache-Control", "no-cache")
+      .setHeader("Content-Type", "application/json; charset=UTF-8")
+      .build()
+    val response = client.executeRequest(getToken).get()
+    val mapper = new ObjectMapper()
+    val tree = mapper.readTree(response.getResponseBody)
+    tree.get("access_token").asText()
+  }
+
+  def getManagementToken():String = {
+    if(managementToken == null) {
+      managementToken = getToken(Settings.baseUrl + "/management/token", Settings.adminUser, Settings.adminPassword)
+      println("Management token is "+managementToken)
+    }
+    managementToken
+  }
+
+  def getUserToken:String = {
+    getToken(Settings.baseAppUrl + "/token", Settings.appUser, Settings.appUserPassword)
+  }
+
+  def getToken():String = {
+    var token = ""
+    if (Settings.tokenType == TokenType.Management) token = getManagementToken()
+    if (Settings.tokenType == TokenType.User) token = getUserToken
+
+    token
+  }
 
   def setupOrg(): Integer = {
 
     val createOrgPost = client
       .preparePost(Settings.baseUrl + "/management/organizations")
-       .setHeader("Cache-Control", "no-cache")
-      .setHeader("Content-Type", "application/json; charset=UTF-8")
-      .setBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"" + Settings.admin + "\",\"email\":\"" + Settings.admin + "@apigee.com\",\"password\":\"" + Settings.password + "\"}")
-    .build()
-    val orgResponse = client.executeRequest(createOrgPost).get()
-    printResponse("POST ORG",orgResponse.getStatusCode,orgResponse.getResponseBody())
-    return orgResponse.getStatusCode
-  }
-  def setupApplication():Integer = {
-
-    val authToken = getManagementToken()
-    val createAppPost = client
-      .preparePost(Settings.baseUrl + "/management/organizations/"+Settings.org+"/applications")
-      .setBody("{\"name\":\"" + Settings.app + "\"}")
       .setHeader("Cache-Control", "no-cache")
       .setHeader("Content-Type", "application/json; charset=UTF-8")
-      .setHeader("Authorization","Bearer "+authToken)
+      .setBody(Utils.toJSONStr(Map(
+                          "organization" -> Settings.org,
+                          "username" -> Settings.adminUser,
+                          "name" -> Settings.adminUser,
+                          "email" -> (Settings.adminUser + "@apigee.com"),
+                          "password" -> Settings.adminPassword
+      )))
+      .build()
+
+    val orgResponse = client.executeRequest(createOrgPost).get()
+
+    printResponse("POST ORG",orgResponse.getStatusCode,orgResponse.getResponseBody)
+
+    orgResponse.getStatusCode
+  }
+
+  def setupApplication(): Integer = {
+
+    val createAppPost = client
+      .preparePost(Settings.baseUrl + "/management/organizations/" + Settings.org + "/applications")
+      .setBody(Utils.toJSONStr(Map("name" -> Settings.app)))
+      .setHeader("Cache-Control", "no-cache")
+      .setHeader("Content-Type", "application/json; charset=UTF-8")
+      .setHeader("Authorization", "Bearer " + getManagementToken)
       .build()
 
     val appResponse = client.executeRequest(createAppPost).get();
-    printResponse("POST Application",appResponse.getStatusCode, appResponse.getResponseBody())
 
-    return appResponse.getStatusCode
+    val statusCode = appResponse.getStatusCode
+    printResponse("POST APP",statusCode, appResponse.getResponseBody)
+
+    statusCode
   }
 
   def setupNotifier():Integer = {
 
-    val authToken = getManagementToken()
     val createNotifier = client
       .preparePost(Settings.baseAppUrl + "/notifiers")
-      .setBody("{\"name\":\"" + Settings.pushNotifier + "\",\"provider\":\"" + Settings.pushProvider + "\"}")
+      .setBody(Utils.toJSONStr(Map("name" -> Settings.pushNotifier, "provider" -> Settings.pushProvider)))
       .setHeader("Cache-Control", "no-cache")
       .setHeader("Content-Type", "application/json; charset=UTF-8")
-      .setHeader("Authorization","Bearer "+authToken)
+      .setHeader("Authorization","Bearer " + getManagementToken)
       .build()
 
     val notifierResponse = client.executeRequest(createNotifier).get();
     printResponse("POST Notifier", notifierResponse.getStatusCode ,notifierResponse.getResponseBody())
 
-    return notifierResponse.getStatusCode
-  }
-
-  def getManagementToken():String = {
-    if(token == null) {
-      val getToken = client
-        .preparePost(Settings.baseUrl + "/management/token")
-        .setBody("{\"username\":\"" + Settings.admin + "\",\"password\":\"" + Settings.password + "\",\"grant_type\":\"password\"}")
-        .setHeader("Cache-Control", "no-cache")
-        .setHeader("Content-Type", "application/json; charset=UTF-8")
-        .build()
-      val response = client.executeRequest(getToken).get()
-      val omapper = new ObjectMapper();
-      val tree = omapper.readTree(response.getResponseBody())
-      val node = tree.get("access_token");
-      token = node.asText()
-      println("Token is "+token)
-    }
-    return token
+    notifierResponse.getStatusCode
   }
 
   def setupUsers() = {
-    if (!Settings.skipSetup) {
-      val userFeeder = Settings.getUserFeeder()
-      val numUsers = userFeeder.length
-      println(s"setupUsers: Sending requests for $numUsers users")
+    val userFeeder = Settings.getUserFeeder()
+    val numUsers = userFeeder.length
+    println(s"setupUsers: Sending requests for $numUsers users")
 
-      val list: ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
-      var successCount: Int = 0;
-      def purgeList = {
-        list.foreach(f => {
-          val response = f.get()
-          if (response.getStatusCode != 200) {
-            printResponse("Post User", response.getStatusCode, response.getResponseBody())
-          } else {
-            successCount += 1
-          }
-        })
-        list.clear()
-      }
-      userFeeder.foreach(user => {
-        list += setupUser(user);
-        if(list.length == Integer.getInteger("purgeUsers",100)){
-          purgeList
+    val list: ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
+    var successCount: Int = 0
+    def purgeList() = {
+      list.foreach(f => {
+        val response = f.get()
+        if (response.getStatusCode != 200) {
+          printResponse("Post User", response.getStatusCode, response.getResponseBody())
+        } else {
+          successCount += 1
         }
-      });
-
-      println(s"setupUsers: Received $successCount successful responses out of $numUsers requests.")
-    } else {
-      println("Skipping Adding Users due to skipSetup=true")
+      })
+      list.clear()
     }
+    userFeeder.foreach(user => {
+      list += setupUser(user)
+      if (list.length == Integer.getInteger("purgeUsers",100)) {
+        purgeList()
+      }
+    })
+
+    println(s"setupUsers: Received $successCount successful responses out of $numUsers requests.")
   }
 
   def setupUser(user:Map[String,String]):ListenableFuture[Response] = {
@@ -165,14 +188,56 @@ object Setup {
       .setHeader("Authorization","Bearer "+authToken)
       .build()
 
-    return client.executeRequest(createUser)
+    client.executeRequest(createUser)
+  }
 
+  def setupEntitiesCollection(numEntities: Int, entityType: String, prefix: String, seed: Int = 1) = {
+    val entitiesFeeder = FeederGenerator.generateCustomEntityFeeder(numEntities, entityType, prefix, seed)
+    val purgeUsers = Integer.getInteger("purgeUsers", 100)
 
+    val list: ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
+    var successCount: Int = 0;
+    def purgeList(): Unit = {
+      list.foreach(f => {
+        val response = f.get()
+        if (response.getStatusCode != 200) {
+          printResponse("Post Entity", response.getStatusCode, response.getResponseBody)
+        } else {
+          successCount += 1
+        }
+      })
+      list.clear()
+    }
+
+    entitiesFeeder.foreach(payload => {
+      //println("setupEntitiesCollection: payload=" + payload)
+      list += setupEntity(payload)
+      if(list.length == purgeUsers) {
+        purgeList()
+      }
+    })
+
+    // purgeList()
+
+    println(s"setupEntitiesCollection: Received $successCount successful responses out of $numEntities requests.")
+  }
+
+  def setupEntity(payload: String):ListenableFuture[Response] = {
+    val authToken = getManagementToken()
+    val createEntity = client
+      .preparePost(Settings.baseAppUrl + "/" + Settings.collectionType)
+      .setBody(payload)
+      .setBodyEncoding("UTF-8")
+      .setHeader("Authorization", "Bearer " + authToken)
+      .setHeader("Content-Type", "application/json; charset=UTF-8")
+      .build()
+    //println("setupEntity: baseAppUrl=" + Settings.baseAppUrl + ", collectionType=" + Settings.collectionType + ", payload=" + payload)
+
+    client.executeRequest(createEntity)
   }
 
   def printResponse(caller:String, status:Int, body:String) = {
     println(caller + ": status: "+status.toString+" body:"+body)
-
   }
 
 }

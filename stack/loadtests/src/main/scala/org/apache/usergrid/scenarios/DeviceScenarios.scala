@@ -46,7 +46,7 @@ object DeviceScenarios {
    */
   val postDeviceWithNotifier = exec(http("Create device with notifier")
     .post("/devices")
-    .headers(Headers.jsonAuthorized)
+    .headers(Headers.authToken)
     .body(StringBody("""{"deviceModel":"Fake Device",
     "deviceOSVerion":"Negative Version",
     """" + notifier + """.notifier.id":"${entityName}"}"""))
@@ -55,7 +55,7 @@ object DeviceScenarios {
 
   val postDeviceWithNotifier400ok = exec(http("Create device with notifier")
     .post("/devices")
-    .headers(Headers.jsonAuthorized)
+    .headers(Headers.authToken)
     .body(StringBody("""{"name":"${entityName}",
     "deviceModel":"Fake Device",
     "deviceOSVerion":"Negative Version",
@@ -70,7 +70,7 @@ object DeviceScenarios {
     //try to do a GET on device name, if it 404's create it
     http("Check and create device")
       .get("/users/${username}/devices")
-      .headers(Headers.jsonAuthorized)
+      .headers(Headers.authToken)
       .check(jsonPath("$.entities").exists, jsonPath("$.entities").saveAs("devices"))
       )
       .exec(session =>{

@@ -22,6 +22,8 @@ package org.apache.usergrid.helpers
 import io.gatling.core.Predef._
 import io.gatling.core.session._
 import io.gatling.http.Predef._
+import org.apache.usergrid.enums._
+import org.apache.usergrid.settings.Settings
 
 /**
  * Helper object that will perform extractions
@@ -38,7 +40,6 @@ object Extractors {
     }).saveAs(saveAsName)
   }
 
-
   /**
    * tries to extract the cursor from the session, if it exists, it returns true. if it's the default, returns false
    * @param nameInSession The name of the variable in the session
@@ -54,7 +55,7 @@ object Extractors {
    */
   def maybeExtractEntities(saveAsName: String) = {
     jsonPath("$..entities").ofType[Seq[Any]].transformOption(extract => {
-      extract.orElse(Some(Seq()));
+      extract.orElse(Some(Seq()))
     }).saveAs(saveAsName)
   }
 
@@ -64,21 +65,69 @@ object Extractors {
    * @return
    */
   def sequenceHasElements(nameInSession: String): Expression[Boolean] = {
-    session => session(nameInSession) != null && session(nameInSession).as[Seq[Any]].length > 0
+    session => session(nameInSession) != null && session(nameInSession).as[Seq[Any]].nonEmpty
   }
-
-
-  val ManagementToken: String = Setup.getManagementToken()
-
 
   /**
    * Get the management token for the admin username and password in settings, then inject it into the session
    * under the variable "authToken"
    * @return
    */
-  def injectStaticTokenToSession(): Expression[Session] = {
-    session => session.set("authToken", ManagementToken)
+  def injectManagementTokenIntoSession(): Expression[Session] = {
+    session => session.set("authToken", Setup.getManagementToken())
   }
 
+  def injectUserTokenIntoSession(): Expression[Session] = {
+    session => session.set("authToken", Setup.getUserToken)
+  }
+
+  // handles different types of tokens
+  def injectTokenIntoSession(): Expression[Session] = {
+    session => session.set("authToken", Setup.getToken())
+  }
+
+  def injectAnonymousAuth(): Expression[Session] = {
+    session => session.set("authType", AuthType.Anonymous)
+  }
+
+  def injectBasicAuth(): Expression[Session] = {
+    session => session.set("authType", AuthType.Basic)
+  }
+
+  def injectTokenAuth(): Expression[Session] = {
+    session => session.set("authType", AuthType.Token)
+  }
+
+  // handles different types of auth
+  def injectAuthType(): Expression[Session] = {
+    session => session.set("authType", Settings.authType)
+  }
+
+  /*
+  def injectTokenToSession(authType: String, tokenType: String): Expression[Session] = {
+    session => {
+      if (authType == AuthType.Token && tokenType == TokenType.User) {
+        session.set("authToken", Setup.getUserToken)
+      } else if (authType == AuthType.Token && tokenType == TokenType.Management) {
+        session.set("authToken", Setup.getManagementToken())
+      } else {
+        session.set("authToken", "")
+      }
+    }
+  }
+
+  def injectAuth(authType: String, tokenType: String): Expression[Session] = {
+    session => {
+      if (authType == AuthType.Token && tokenType == TokenType.User) {
+        session.set("authToken", Setup.getUserToken)
+      } else if (authType == AuthType.Token && tokenType == TokenType.Management) {
+        session.set("authToken", Setup.getManagementToken())
+      } else {
+        session.set("authToken", "")
+      }
+      session.set("authType", authType)
+    }
+  }
+  */
 
 }

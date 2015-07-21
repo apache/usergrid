@@ -20,7 +20,8 @@
  import java.util.UUID
  import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
  import io.gatling.core.Predef._
- import org.apache.usergrid.settings.Utils
+ import org.apache.usergrid.helpers.Utils
+ import org.apache.usergrid.settings.Settings
  import scala.collection.mutable.ArrayBuffer
  import scala.util.Random
 
@@ -30,29 +31,27 @@
     var userArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
     for (userCount <- 1 to numUsers) {
       var user: Map[String, String] = EntityDataGenerator.generateUser(userCount.toString)
-      var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
-      var blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(numUsers)
+      val geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
+      val blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(numUsers)
 
       user = user ++ geolocation ++ blockLists
 
       userArray += user
     }
-    return userArray.toArray
+
+    userArray.toArray
   }
-
-
 
   /**
    * Generate users forever
+   * @param seed
    * @param radius
    * @param centerLatitude
    * @param centerLongitude
    * @return
    */
-  def generateUserWithGeolocationFeederInfinite(seed:Int,radius: Double, centerLatitude: Double, centerLongitude: Double, maxPossible: Int): Iterator[Map[String, String]] = {
-    val userFeeder = Iterator.from(seed).map(i=>generateUserData(i.toString, radius, centerLatitude, centerLongitude))
-    return userFeeder
-
+  def generateUserWithGeolocationFeederInfinite(seed:Int,radius: Double, centerLatitude: Double, centerLongitude: Double): Iterator[Map[String, String]] = {
+    Iterator.from(seed).map(i=>generateUserData(i.toString, radius, centerLatitude, centerLongitude))
   }
 
   /**
@@ -64,14 +63,11 @@
    */
   def generateUserData(id: String, radius: Double, centerLatitude: Double, centerLongitude: Double): Map[String, String] = {
 
+    val user: Map[String, String] = EntityDataGenerator.generateUser(id)
+    val geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
+    val blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(1)
 
-    var user: Map[String, String] = EntityDataGenerator.generateUser(id)
-    var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
-    var blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(1)
-
-    user = user ++ geolocation ++ blockLists
-
-    return user
+    user ++ geolocation ++ blockLists
   }
 
 
@@ -82,14 +78,13 @@
       // always return true as this feeder can be polled infinitively
       override def hasNext = true
 
-      override def next: Map[String, String] = {
-        var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
+      override def next(): Map[String, String] = {
+        val geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
         Map("latitude" -> geolocation("latitude"), "longitude" -> geolocation("longitude"))
       }
     }
 
-    return geolocationFeeder
-
+    geolocationFeeder
   }
 
   def generateGeolocationWithQueryFeeder(radius: Double, centerLatitude: Double, centerLongitude: Double): Feeder[String] = {
@@ -99,36 +94,33 @@
       // always return true as this feeder can be polled infinitively
       override def hasNext = true
 
-      override def next: Map[String, String] = {
-        var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
-        var queryParams = Utils.generateRandomQueryString
+      override def next(): Map[String, String] = {
+        val geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
+        val queryParams = Utils.generateRandomQueryString
         Map("latitude" -> geolocation("latitude"), "longitude" -> geolocation("longitude"), "queryParams" -> queryParams)
       }
     }
 
-    return geolocationFeeder
-
+    geolocationFeeder
   }
 
   def generateUserConnectionFeeder(numUsers: Int): Feeder[String] = {
 
     val userIdFeeder = new Feeder[String] {
 
-      // always return true as this feeder can be polled infinitively
+      // always return true as this feeder can be polled infinitely
       override def hasNext = true
 
-      override def next: Map[String, String] = {
+      override def next(): Map[String, String] = {
         Map("user1" -> "user".concat(Utils.generateRandomInt(1, numUsers).toString), "user2" -> "user".concat(Utils.generateRandomInt(1, numUsers).toString))
       }
     }
 
-    return userIdFeeder
-
+    userIdFeeder
   }
 
   def generateEntityNameFeeder(prefix: String, numEntities: Int): Iterator[Map[String, String]]  = {
-    val itr = Iterator.from(1).map(i=> Map("entityName" -> prefix.concat(i.toString).concat(UUID.randomUUID().toString)))
-    return itr
+    Iterator.from(1).map(i=> Map("entityName" -> prefix.concat(i.toString).concat(UUID.randomUUID().toString)))
   }
 
   def generateRandomEntityNameFeeder(prefix: String, numEntities: Int): Array[Map[String, String]] = {
@@ -139,8 +131,7 @@
       nameArray += Map("entityName" -> prefix.concat(Utils.generateRandomInt(0, 100000000).toString))
     }
 
-    return nameArray.toArray
-
+    nameArray.toArray
   }
 
 
@@ -166,32 +157,57 @@
     */
    def generateCustomEntityPutInfinite(seed:Int): Iterator[Map[String, Any]] = {
      //val rod = "rod"
-     val userFeeder = Iterator.from(seed).map(i=>Map("entityName" -> i.toString.concat(UUID.randomUUID().toString), "entity" -> EntityDataGenerator.generateCustomEntityJSONString()));
+     val userFeeder = Iterator.from(seed).map(i=>Map("entityName" -> i.toString.concat(UUID.randomUUID().toString), "entity" -> EntityDataGenerator.generateCustomEntity()));
      return userFeeder
    }
 
 
-   def testFeeder(seed:Int): Iterator[Map[String, String]] = {
-     var entity: Map[String, String] = EntityDataGenerator.generateCustomEntity();
-     Map("entity" -> entity)
-     val userFeeder = Iterator.from(seed).map(i=>EntityDataGenerator.generateCustomEntity())
-     return userFeeder
-   }
+   /*
+      def testFeeder(seed:Int): Iterator[Map[String, String]] = {
+        var entity: Map[String, String] = EntityDataGenerator.generateCustomEntity();
+        Map("entity" -> entity)
+        val userFeeder = Iterator.from(seed).map(i=>EntityDataGenerator.generateCustomEntity())
+        return userFeeder
+      }
 
-/*
 
-   def testFeeder(): Array[Map[String, String]] = {
-     var userArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
-     for (userCount <- 1 to numUsers) {
-       var user: Map[String, String] = EntityDataGenerator.generateUser(userCount.toString)
-       var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
-       var blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(numUsers)
+      def testFeeder(): Array[Map[String, String]] = {
+        var userArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
+        for (userCount <- 1 to numUsers) {
+          var user: Map[String, String] = EntityDataGenerator.generateUser(userCount.toString)
+          var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
+          var blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(numUsers)
 
-       user = user ++ geolocation ++ blockLists
+          user = user ++ geolocation ++ blockLists
 
-       userArray += user
-     }
-     return userArray.toArray
-   }
+          userArray += user
+        }
+        return userArray.toArray
+      }
+     */
+
+ /* --------------------------- */
+
+ /**
+  * Generate specified number of custom entities
+  * @param numEntities Number of entities to create
+  * @param entityType Type of entity to create
+  * @param prefix Prefix for entities
+  * @return
   */
+ def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Array[String] = {
+   //val entityFeeder = Iterator.from(1).take(numEntities).map(i=>Map("entity" -> EntityDataGenerator.generateNamedCustomEntityJSONString(prefix.concat(i.toString()))))
+   var entityArray: ArrayBuffer[String] = new ArrayBuffer[String]
+   for (i <- seed to numEntities+seed-1) {
+     var entity = EntityDataGenerator.generateEntity(entityType, prefix.concat(i.toString))
+     entityArray += entity
+   }
+
+   entityArray.toArray
+ }
+
+ def generateCustomEntityInfiniteFeeder(seed: Int = Settings.entitySeed, entityType: String = Settings.entityType, prefix: String = Settings.entityPrefix): Iterator[String] = {
+   Iterator.from(seed).map(i=>EntityDataGenerator.generateEntity(entityType, prefix.concat(i.toString)))
+ }
+
 }

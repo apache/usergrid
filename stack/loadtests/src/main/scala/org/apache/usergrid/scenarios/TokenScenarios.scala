@@ -41,9 +41,9 @@ import io.gatling.core.Predef._
 object TokenScenarios {
   val getManagementToken = exec(http("POST Org Token")
     .post(Settings.baseUrl+"/management/token")
-    .headers(Headers.jsonAnonymous)
+    .headers(Headers.authAnonymous)
     //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
-    .body(StringBody("{\"username\":\"" + Settings.admin + "\",\"password\":\""+Settings.password+"\",\"grant_type\":\"password\"}"))
+    .body(StringBody("{\"username\":\"" + Settings.adminUser + "\",\"password\":\""+Settings.adminPassword+"\",\"grant_type\":\"password\"}"))
     .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
   )
 

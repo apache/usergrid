@@ -37,7 +37,7 @@ object ApplicationScenarios {
 
   val createApplication = exec(http("Create Application")
     .post(Settings.baseUrl +  "/management/organizations/"+Settings.org+"/applications")
-    .headers(Headers.jsonAuthorized)
+    .headers(Headers.authToken)
     .body(StringBody("{\"name\":\"" + Settings.app + "\"}"))
     .check(status.in(200 to 204))
 
@@ -45,7 +45,7 @@ object ApplicationScenarios {
 
    val checkApplication = exec(http("Get Application")
      .get(Settings.baseAppUrl)
-     .headers(Headers.jsonAuthorized)
+     .headers(Headers.authToken)
      .check(status.saveAs("applicationStatus"))
    )
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
 import io.gatling.core.Predef._
 import org.apache.usergrid.helpers.Setup
@@ -28,7 +28,7 @@ import org.apache.usergrid.settings.Settings
  * -DrampTime: The amount of time (in seconds) to allow for maxPossibleUsers to be reached.  This will add new users linearlly
  * -Dduration: The amount of time (in seconds) to continue to perform requests up with the maxPossibleUsers
  */
-class GetUsersSimulation extends Simulation {
+class GetUserPagesSimulation extends Simulation {
 
   println("Begin setup")
   Setup.setupOrg()
@@ -37,14 +37,14 @@ class GetUsersSimulation extends Simulation {
 
 
   setUp(
-    UserScenarios.getUsersByUsername
+    UserScenarios.getUserPagesToEnd
       .inject(
         /**
          * injection steps take from this forum post
          * https://groups.google.com/forum/#!topic/gatling/JfYHaWCbA-w
          */
-        rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
-        constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
+        rampUsers(Settings.rampUsers) over Settings.rampTime,
+        constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
 
       )).protocols(Settings.httpConf.acceptHeader("application/json"))
 

@@ -18,14 +18,14 @@
  *
  */
 
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
 import io.gatling.core.Predef._
 import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.helpers.Setup
 import org.apache.usergrid.scenarios.NotificationScenarios
 import org.apache.usergrid.settings.Settings
-import scala.annotation.switch
+
 import scala.concurrent.duration._
 
 /**
@@ -38,7 +38,7 @@ class AppSimulation extends Simulation {
 
   setUp(
     NotificationScenarios.createScenario
-      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration))
+      .inject(constantUsersPerSec(Settings.constantUsersPerSec) during (Settings.constantUsersDuration))
       .protocols(Settings.httpConf.acceptHeader("application/json"))
-  ).throttle(reachRps(Settings.throttle) in (Settings.rampTime seconds), holdFor(Settings.duration))
+  ).throttle(reachRps(Settings.throttle) in (Settings.rampTime seconds), holdFor(Settings.holdDuration))
 }

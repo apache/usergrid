@@ -14,31 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.simulations
+ package org.apache.usergrid.simulations.deprecated
 
-import com.ning.http.client.AsyncHttpClient
 import io.gatling.core.Predef._
-import io.gatling.http.Predef._
-import org.apache.usergrid.scenarios._
+import org.apache.usergrid.datagenerators.FeederGenerator
+import org.apache.usergrid.scenarios.UserScenarios
 import org.apache.usergrid.settings.Settings
+
 import scala.concurrent.duration._
-import org.apache.usergrid.helpers.Setup
 
-class PushNotificationTargetUserSimulation extends Simulation {
+class GetEntitySimulation extends Simulation {
 
+  // Target settings
+  val httpConf = Settings.httpConf
 
-  before{
-    Setup.setupOrg()
-    Setup.setupApplication()
-    Setup.setupNotifier()
-    Setup.setupUsers()
-  }
-  setUp(
-    NotificationScenarios.createScenario
-      .inject(
-        rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
-        constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration)
-      .protocols( Settings.httpConf.acceptHeader("application/json"))
-  )
+  // Simulation settings
+  val numUsers:Int = Settings.rampUsers
+  val numEntities:Int = Settings.numEntities
+  val rampTime:Int = Settings.rampTime
+  val throttle:Int = Settings.throttle
+
+  val feeder = FeederGenerator.generateEntityNameFeeder("user", numEntities)
+
+  val scnToRun = scenario("GET entity")
+    .exec(UserScenarios.getRandomUser)
+
+  setUp(scnToRun.inject(atOnceUsers(numUsers)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.holdDuration)
 
 }

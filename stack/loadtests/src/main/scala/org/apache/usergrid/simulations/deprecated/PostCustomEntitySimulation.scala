@@ -18,24 +18,20 @@
  *
  */
 
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
-
-import io.gatling.core.scenario.Simulation
-import org.apache.usergrid.helpers.Setup
-import org.apache.usergrid.scenarios.{EntityScenarios, TokenScenarios}
-import java.nio.file.{Paths, Files}
 import io.gatling.core.Predef._
+import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.datagenerators.FeederGenerator
-import scala.concurrent.duration._
-import org.apache.usergrid.settings.{Utils, Headers, Settings}
+import org.apache.usergrid.scenarios.EntityScenarios
+import org.apache.usergrid.settings.Settings
 
 /**
  * PostCustomEntitySimulation - creates lots of custom entities
- * 
+ *
  * Run this way:
- * mvn gatling:execute -DrampTime=10 -DmaxPossibleUsers=10 -Dduration=120 -Dorg=yourorgname -Dapp=sandbox -Dbaseurl=https://api.usergrid.com -DadminUser=yourusername -DadminPassword='yourpassword' -Dgatling.simulationClass=org.apache.usergrid.simulations.PostCustomEntitySimulation -DcollectionType=yourcollection
- * 
+ * mvn gatling:execute -DrampTime=10 -DmaxPossibleUsers=10 -Dduration=120 -Dorg=yourorgname -Dapp=sandbox -Dbaseurl=https://api.usergrid.com -DadminUser=yourusername -DadminPassword='yourpassword' -Dgatling.simulationClass=org.apache.usergrid.simulations.deprecated.PostCustomEntitySimulation -DcollectionType=yourcollection
+ *
  *
  */
 class PostCustomEntitySimulation extends Simulation {
@@ -60,7 +56,7 @@ class PostCustomEntitySimulation extends Simulation {
   val scnToRun = scenario("POST custom entities")
     .feed(feeder)
     .exec(EntityScenarios.postEntity)
-  
+
   /*
   val scnToRun = scenario("POST custom entities")
     .feed(feeder)
@@ -73,8 +69,8 @@ class PostCustomEntitySimulation extends Simulation {
 
 
   setUp(scnToRun.inject(
-    rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
-    constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
-  ).protocols(httpConf)).maxDuration(Settings.duration)
+    rampUsers(Settings.rampUsers) over Settings.rampTime,
+    constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
+  ).protocols(httpConf)).maxDuration(Settings.holdDuration)
 
 }
