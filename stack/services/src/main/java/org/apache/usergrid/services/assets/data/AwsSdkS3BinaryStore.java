@@ -25,13 +25,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.utils.StringUtils;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -43,13 +46,17 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.glacier.model.ListMultipartUploadsResult;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadResult;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
+import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
+import com.amazonaws.services.s3.model.MultipartUploadListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PutObjectResult;
@@ -68,7 +75,7 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(AwsSdkS3BinaryStore.class );
     private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
-    
+
     private AmazonS3 s3Client;
     private String accessId;
     private String secretKey;
@@ -77,6 +84,9 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
 
     @Autowired
     private EntityManagerFactory emf;
+
+    @Autowired
+    private Properties properties;
 
 
     public AwsSdkS3BinaryStore( String accessId, String secretKey, String bucketName, String regionName ) {
@@ -115,24 +125,26 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
         long written = IOUtils.copyLarge( inputStream, baos, 0, FIVE_MB );
 
         byte[] data = baos.toByteArray();
-        
+
         InputStream awsInputStream = new ByteArrayInputStream(data);
-        
+
         final Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
         fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
 
         String mimeType = AssetMimeHandler.get().getMimeType( entity, data );
-        
+
+        Boolean overSizeLimit = false;
+
         if ( written < FIVE_MB ) { // total smaller than 5mb
 
             ObjectMetadata om = new ObjectMetadata();
             om.setContentLength(written);
             om.setContentType(mimeType);
             PutObjectResult result = getS3Client().putObject(bucketName, uploadFileName, awsInputStream, om);
-            
+
             String md5sum = Hex.encodeHexString( Base64.decodeBase64(result.getContentMd5()) );
             String eTag = result.getETag();
-            
+
             fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
 
             if(md5sum != null)
@@ -145,12 +157,24 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
             int firstByte = 0;
             Boolean isFirstChunck = true;
             List<PartETag> partETags = new ArrayList<PartETag>();
-            
+
             InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(bucketName, uploadFileName);
-            InitiateMultipartUploadResult initResponse = getS3Client().initiateMultipartUpload(initRequest);  
-            
+            InitiateMultipartUploadResult initResponse = getS3Client().initiateMultipartUpload(initRequest);
+
             InputStream firstChunck = new ByteArrayInputStream(data);
             PushbackInputStream chunckableInputStream = new PushbackInputStream(inputStream, 1);
+
+            // determine max size file allowed, default to 50mb
+            long maxSizeBytes = 50 * FileUtils.ONE_MB;
+            String maxSizeMbString = properties.getProperty( "usergrid.binary.max-size-mb", "50" );
+            if ( StringUtils.isNumeric( maxSizeMbString )) {
+                maxSizeBytes = Long.parseLong( maxSizeMbString ) * FileUtils.ONE_MB;
+            }
+
+            // always allow files up to 5mb
+            if (maxSizeBytes < 5 * FileUtils.ONE_MB ) {
+                maxSizeBytes = 5 * FileUtils.ONE_MB;
+            }
 
             while (-1 != (firstByte = chunckableInputStream.read())) {
                 long partSize = 0;
@@ -161,7 +185,7 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
                 OutputStream os = null;
                 try {
                     os = new BufferedOutputStream( new FileOutputStream( tempFile.getAbsolutePath() ) );
-                    
+
                     if(isFirstChunck == true) {
                         partSize = IOUtils.copyLarge( firstChunck, os, 0, ( FIVE_MB ) );
                         isFirstChunck = false;
@@ -170,42 +194,80 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
                         partSize = IOUtils.copyLarge( chunckableInputStream, os, 0, ( FIVE_MB ) );
                     }
                     written += partSize;
+
+                    if(written> maxSizeBytes){
+                        overSizeLimit = true;
+                        break;
+                        //set flag here and break out of loop to run abort
+                    }
                 }
                 finally {
                     IOUtils.closeQuietly( os );
                 }
-                
-                FileInputStream chunck = new FileInputStream(tempFile);
-               
+
+                FileInputStream chunk = new FileInputStream(tempFile);
+
                 Boolean isLastPart = -1 == (firstByte = chunckableInputStream.read());
                 if(!isLastPart)
                     chunckableInputStream.unread(firstByte);
-                
+
                 UploadPartRequest uploadRequest = new UploadPartRequest().withUploadId(initResponse.getUploadId())
                                                                          .withBucketName(bucketName)
                                                                          .withKey(uploadFileName)
-                                                                         .withInputStream(chunck)
+                                                                         .withInputStream(chunk)
                                                                          .withPartNumber(partNumber)
                                                                          .withPartSize(partSize)
                                                                          .withLastPart(isLastPart);
                 partETags.add( getS3Client().uploadPart(uploadRequest).getPartETag() );
                 partNumber++;
             }
-            
-            CompleteMultipartUploadRequest request = new CompleteMultipartUploadRequest(bucketName, uploadFileName, initResponse.getUploadId(), partETags);
-            CompleteMultipartUploadResult amazonResult = getS3Client().completeMultipartUpload(request);
-            fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
-            fileMetadata.put( AssetUtils.E_TAG, amazonResult.getETag() );
+
+            //check for flag here then abort.
+            if(overSizeLimit) {
+
+                EntityManager em = emf.getEntityManager( appId );
+                AbortMultipartUploadRequest abortRequest =
+                    new AbortMultipartUploadRequest( bucketName, uploadFileName, initResponse.getUploadId() );
+
+                ListMultipartUploadsRequest listRequest = new ListMultipartUploadsRequest( bucketName );
+
+                MultipartUploadListing listResult = getS3Client().listMultipartUploads( listRequest );
+
+                //upadte the entity with the error.
+                try {
+                    fileMetadata.put( "error", "Asset size is larger than max size of " + maxSizeBytes );
+                    em.update( entity );
+                }
+                catch ( Exception e ) {
+                    LOG.error( "Error updating entity with error message", e );
+                }
+
+                //loop and abort all the multipart uploads
+                while ( listResult.getMultipartUploads().size()!=0 ) {
+
+                    getS3Client().abortMultipartUpload( abortRequest );
+                    listResult = getS3Client().listMultipartUploads( listRequest );
+
+                }
+            }
+            else {
+                CompleteMultipartUploadRequest request =
+                    new CompleteMultipartUploadRequest( bucketName, uploadFileName, initResponse.getUploadId(),
+                        partETags );
+                CompleteMultipartUploadResult amazonResult = getS3Client().completeMultipartUpload( request );
+                fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
+                fileMetadata.put( AssetUtils.E_TAG, amazonResult.getETag() );
+            }
         }
     }
 
 
     @Override
     public InputStream read( UUID appId, Entity entity, long offset, long length ) throws IOException {
-        
-        S3Object object = getS3Client().getObject(bucketName,  AssetUtils.buildAssetKey( appId, entity ));        
+
+        S3Object object = getS3Client().getObject(bucketName,  AssetUtils.buildAssetKey( appId, entity ));
         byte data[] = null;
-        
+
         if ( offset == 0 && length == FIVE_MB ) {
             return object.getObjectContent();
         }
