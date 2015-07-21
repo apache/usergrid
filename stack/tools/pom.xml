@@ -249,5 +249,11 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>io.codearte.jfairy</groupId>
+      <artifactId>jfairy</artifactId>
+      <version>0.4.3</version>
+    </dependency>
+
   </dependencies>
 </project>
