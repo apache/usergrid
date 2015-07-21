@@ -38,8 +38,8 @@ object OrganizationScenarios {
   val createOrgAndAdmin =
     exec(http("Create Organization")
       .post(Settings.baseUrl + "/management/organizations")
-      .headers(Headers.jsonAnonymous)
-      .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"" + Settings.password + "\"}"))
+      .headers(Headers.authAnonymous)
+      .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.adminUser + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"" + Settings.adminPassword + "\"}"))
       .check(status.in(200 to 400))
     )
   val createOrgBatch =

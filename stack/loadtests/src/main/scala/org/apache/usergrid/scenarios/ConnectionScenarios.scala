@@ -26,7 +26,7 @@ import io.gatling.http.Predef._
   val postUserConnection = exec(
     http("POST connection")
     .post("/users/${user1}/likes/users/${user2}")
-      .headers(Headers.jsonAuthorized)
+      .headers(Headers.authToken)
 
       .check(status.is(200))
   )
@@ -34,14 +34,14 @@ import io.gatling.http.Predef._
   val postUserToDeviceConnection = exec(
     http("Connect user with device")
     .post("/users/${username}/devices/${deviceId}")
-      .headers(Headers.jsonAuthorized)
+      .headers(Headers.authToken)
       .check(status.is(200))
   )
 
    val postConnection = exec(
      http("Connect user with device")
        .post("/${connectionName}/${entityId}/${connectionType}/${entityId}")
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.is(200))
    )
 

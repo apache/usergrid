@@ -14,19 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.gatling.app.Gatling
-import io.gatling.core.config.GatlingPropertiesBuilder
+package org.apache.usergrid.simulations.deprecated
 
-object Engine extends App {
+import io.gatling.core.Predef._
+import org.apache.usergrid.helpers.Setup
+import org.apache.usergrid.scenarios._
+import org.apache.usergrid.settings.Settings
 
-	val props = new GatlingPropertiesBuilder
-	props.disableCompiler
-	props.dataDirectory(IDEPathHelper.dataDirectory.toString)
-	props.resultsDirectory(IDEPathHelper.resultsDirectory.toString)
-	props.requestBodiesDirectory(IDEPathHelper.requestBodiesDirectory.toString)
-	props.binariesDirectory(IDEPathHelper.mavenBinariesDirectory.toString)
-  val simName = if(System.getProperty("gatling.simulationClass")!=null) System.getProperty("gatling.simulationClass") else "org.apache.usergrid.simulations.deprecated.AppSimulation";
-  props.simulationClass(simName)
+class PushNotificationTargetUserSimulation extends Simulation {
 
-	Gatling.fromMap(props.build)
+
+  before{
+    if (!Settings.skipSetup) {
+      Setup.setupOrg()
+      Setup.setupApplication()
+      Setup.setupNotifier()
+      Setup.setupUsers()
+    } else {
+      println("Skipping setup")
+    }
+  }
+  setUp(
+    NotificationScenarios.createScenario
+      .inject(
+        rampUsers(Settings.rampUsers) over Settings.rampTime,
+        constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration)
+      .protocols( Settings.httpConf.acceptHeader("application/json"))
+  )
+
 }

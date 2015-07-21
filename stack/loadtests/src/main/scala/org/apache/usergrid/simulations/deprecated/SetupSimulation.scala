@@ -18,36 +18,29 @@
  *
  */
 
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
 import io.gatling.core.Predef._
-import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.helpers.Setup
-import org.apache.usergrid.scenarios.{ConnectionScenarios, NotificationScenarios}
+import org.apache.usergrid.scenarios.UserScenarios
 import org.apache.usergrid.settings.Settings
+
 import scala.concurrent.duration._
 
 /**
  * Classy class class.
  */
-class ConnectionsSimulation extends Simulation{
+class SetupSimulation extends Simulation{
 
-  if(!Settings.skipSetup) {
-    println("Begin setup")
-    Setup.setupOrg()
-    Setup.setupApplication()
-    Setup.setupNotifier()
-    Setup.setupUsers()
-    println("End Setup")
-  }else{
-    println("Skipping Setup")
-  }
+  println("Begin setup")
+  Setup.setupOrg()
+  Setup.setupApplication()
+  Setup.setupNotifier()
+  println("End Setup")
 
   setUp(
-    ConnectionScenarios.createScenario
-      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
-      .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
-      .protocols( Settings.httpConf.acceptHeader("application/json"))
+    UserScenarios.createUsersWithDevicesScenario
+      .inject(splitUsers(Settings.rampUsers) into( rampUsers(10) over (10 seconds)) separatedBy (10 seconds))
+      .protocols(Settings.httpConf.acceptHeader("application/json"))
   )
-
 }

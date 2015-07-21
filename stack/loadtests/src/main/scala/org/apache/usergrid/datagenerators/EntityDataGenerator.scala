@@ -16,9 +16,8 @@
  */
  package org.apache.usergrid.datagenerators
 
- import java.util.UUID
-
- import org.apache.usergrid.settings.Utils
+ import org.apache.usergrid.enums.EntityType
+ import org.apache.usergrid.helpers.Utils
 
  import scala.collection.mutable.ArrayBuffer
  import scala.util.parsing.json.JSONObject
@@ -44,7 +43,7 @@
 
   def generateUser(userId: String): Map[String,String] = {
 
-    return Map(
+    Map(
 
       "username" -> "user".concat(userId.toString),
       "profileId" -> Utils.generateRandomInt(10000, 1000000).toString,
@@ -64,7 +63,7 @@
 
   def generateCustomEntity(): Map[String,String] = {
 
-    var entity: Map[String, String] = Map(
+    val entity: Map[String, String] = Map(
       // "name" -> "fdsa",
       "address" -> Utils.generateRandomInt(10000, 1000000).toString,
       "city" -> Utils.generateRandomInt(10000, 1000000).toString,
@@ -82,14 +81,31 @@
       "tables" -> Utils.generateRandomInt(50, 100000).toString,
       "outdoor" -> Utils.generateRandomInt(50, 100000).toString
       )
-    return Map("entity" -> new JSONObject(entity).toString())
 
+    Map("entity" -> new JSONObject(entity).toString())
   }
 
-   def generateCustomEntityJSONString(): String = {
+   /* --------------------------- */
 
-      var entity: Map[String, String] = Map(
-        // "name" -> "fdsa",
+   def generateTrivialEntity(name: String = null): String = {
+
+     val nameKey = if (name != null) "name" else "noname"
+     val nameVal = if (name != null) name else Utils.generateRandomInt(1,10000000).toString
+
+     val entity: Map[String, String] = Map(
+       nameKey -> nameVal
+     )
+
+     new JSONObject(entity).toString()
+   }
+
+   def generateBasicEntity(name: String = null): String = {
+
+     val nameKey = if (name != null) "name" else "noname"
+     val nameVal = if (name != null) name else Utils.generateRandomInt(1,10000000).toString
+
+     val entity: Map[String, String] = Map(
+        nameKey -> nameVal,
         "address" -> Utils.generateRandomInt(10000, 1000000).toString,
         "city" -> Utils.generateRandomInt(10000, 1000000).toString,
         "state" -> Utils.generateRandomInt(10000, 1000000).toString,
@@ -105,9 +121,39 @@
         "bar" -> Utils.generateRandomInt(120, 350).toString,
         "tables" -> Utils.generateRandomInt(50, 100000).toString,
         "outdoor" -> Utils.generateRandomInt(50, 100000).toString
-        )
+     )
 
-     return new JSONObject(entity).toString();
+     new JSONObject(entity).toString()
+   }
 
-    }
+   def generateEntity(entityType: String = EntityType.Basic, entityName: String = null): String = {
+     val entity: String =
+       if (entityType == EntityType.Trivial)
+         generateTrivialEntity(entityName)
+       else // default is basic
+         generateBasicEntity(entityName)
+
+     entity
+   }
+
+   def generateUserEntity(userId: String = "user" + System.currentTimeMillis().toString): String = {
+
+     val entity: Map[String, Any] = Map(
+       "username" -> userId,
+       "profileId" -> Utils.generateRandomInt(10000, 1000000),
+       "displayName" -> Utils.generateRandomInt(10000, 1000000).toString,
+       "showAge" -> Utils.generateRandomInt(0, 1),
+       "ethnicity" -> Utils.generateRandomInt(1, 15),
+       "relationshipStatus" -> Utils.generateRandomInt(1, 4),
+       "headline" -> "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+       "aboutMe" -> "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+       "age" -> Utils.generateRandomInt(18, 65),
+       "height" -> Utils.generateRandomInt(48, 84),
+       "weight" -> Utils.generateRandomInt(120, 350),
+       "seen" -> Utils.generateRandomInt(50, 100000).toString,
+       "password" -> "password"
+     )
+
+     new JSONObject(entity).toString()
+   }
 }
