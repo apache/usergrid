@@ -20,4 +20,16 @@
   "activated" : true,
   "confirmed" : true,
   "disabled" : false
+}, {
+  "uuid" : "USER_UUID_3",
+  "type" : "user",
+  "name" : "USER_NAME_3",
+  "created" : 1433331614002,
+  "modified" : 1433331614002,
+  "username" : "USER_NAME_3",
+  "comment" : "this is a duplicate user, has same email address as user2",
+  "email" : "USER_NAME_2@example.com",
+  "activated" : true,
+  "confirmed" : true,
+  "disabled" : false
 } ]
