@@ -63,65 +63,23 @@ public class ExportAppTest {
         
         // create app with some data
 
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization(
-                "org_" + rand, "user_" + rand, rand.toUpperCase(), rand + "@example.com", rand );
-
-        ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(
-                orgInfo.getOrganization().getUuid(), "app_" + rand );
-
-        final EntityManager em = setup.getEmf().getEntityManager( appInfo.getId() );
+        String orgName = "org_" + rand;
+        String appName = "app_" + rand;
         
-        // create connected things
-
-        final List<Entity> connectedThings = new ArrayList<Entity>();
-        String connectedType = "connected_thing";
-        em.createApplicationCollection(connectedType);
-        for ( int j=0; j<NUM_CONNECTIONS; j++) {
-            final String name = "connected_thing_" + j;
-            connectedThings.add( em.create( connectedType, new HashMap<String, Object>() {{
-                put( "name", name );
-            }} ) );
-        }
-       
-        // create collections of things, every other thing is connected to the connected things
-
-        final AtomicInteger entitiesCount = new AtomicInteger(0);
-        final AtomicInteger connectionCount = new AtomicInteger(0);
-
-        ExecutorService execService = Executors.newFixedThreadPool( 50);
-        final Scheduler scheduler = Schedulers.from( execService );
-
-        for (int i = 0; i < NUM_COLLECTIONS; i++) {
-
-            final String type = "thing_" + i;
-            em.createApplicationCollection( type );
-            connectionCount.getAndIncrement();
-
-            for (int j = 0; j < NUM_ENTITIES; j++) {
-                final String name = "thing_" + j;
-                final Entity source = em.create(
-                        type, new HashMap<String, Object>() {{
-                    put( "name", name );
-                }} );
-                entitiesCount.getAndIncrement();
-
-                for (Entity target : connectedThings) {
-                    em.createConnection( source, "has", target );
-                    connectionCount.getAndIncrement();
-                }
-            }
-        }
-
-        logger.info( "Done. Created {} entities and {} connections", entitiesCount.get(), connectionCount.get() );
-
+        ExportDataCreator creator = new ExportDataCreator();
+        creator.startTool( new String[] {
+                "-organization", orgName,
+                "-application", appName,
+                "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort()
+        }, false);
+        
         long start = System.currentTimeMillis();
         
         String directoryName = "target/export" + rand;
 
         ExportApp exportApp = new ExportApp();
         exportApp.startTool( new String[]{
-                "-application", appInfo.getName(),
-                "-readThreads", "100",
+                "-application", orgName + "/" + appName,
                 "-writeThreads", "100",
                 "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
                 "-outputDir", directoryName
@@ -137,8 +95,7 @@ public class ExportAppTest {
 
         File exportDir1 = new File(directoryName + "1");
         exportApp.startTool( new String[]{
-                "-application", appInfo.getName(),
-                "-readThreads", "1",
+                "-application", orgName + "/" + appName,
                 "-writeThreads", "1",
                 "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
                 "-outputDir", directoryName + "1"

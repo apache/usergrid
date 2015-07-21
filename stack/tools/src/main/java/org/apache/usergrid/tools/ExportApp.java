@@ -102,7 +102,7 @@ public class ExportApp extends ExportingToolBase {
      */
     @Override
     public void runTool(CommandLine line) throws Exception {
-        
+
         applicationName = line.getOptionValue( APPLICATION_NAME );
 
         if (StringUtils.isNotEmpty( line.getOptionValue( WRITE_THREAD_COUNT ) )) {
@@ -122,8 +122,11 @@ public class ExportApp extends ExportingToolBase {
         logger.info( "Export directory: " + outputDir.getAbsolutePath() );
 
         startSpring();
-        
+
         UUID applicationId = emf.lookupApplication( applicationName );
+        if (applicationId == null) {
+            throw new RuntimeException( "Cannot find application " + applicationName );
+        }
         final EntityManager em = emf.getEntityManager( applicationId );
         organizationName = em.getApplication().getOrganizationName();
 
@@ -133,8 +136,9 @@ public class ExportApp extends ExportingToolBase {
         Observable<String> collectionsObservable = Observable.create( new CollectionsObservable( em ) );
         
         collectionsObservable.flatMap( new Func1<String, Observable<ExportEntity>>() {
-            
+
             public Observable<ExportEntity> call(String collection) {
+
                 return Observable.create( new EntityObservable( em, collection ) )
                         .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
             }
@@ -142,16 +146,17 @@ public class ExportApp extends ExportingToolBase {
         }, writeThreadCount ).flatMap( new Func1<ExportEntity, Observable<ExportConnection>>() {
 
             public Observable<ExportConnection> call(ExportEntity exportEntity) {
+
                 return Observable.create( new ConnectionsObservable( em, exportEntity ) )
                         .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
             }
 
-        }, writeThreadCount)
+        }, writeThreadCount )
             .doOnCompleted( new FileWrapUpAction() )
             .toBlocking().last();
     }
-
-
+   
+    
     // ----------------------------------------------------------------------------------------
     // reading data
 
