@@ -4,7 +4,7 @@
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License.  You may obtain a copy of the License at:223
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -26,6 +26,8 @@ import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -40,13 +42,13 @@ import java.io.FilenameFilter;
 import java.util.*;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.junit.Assert.*;
 
 
 public class ExportImportAdminsTest {
     static final Logger logger = LoggerFactory.getLogger( ExportImportAdminsTest.class );
-
+    
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
 
@@ -146,21 +148,28 @@ public class ExportImportAdminsTest {
     public void testImportAdminUsersAndOrgs() throws Exception {
 
         // first: generate the data file with unique user and org IDs and names
+        
+        // data contains three users each with a unique org, one user has a duplicate email
 
         String rand1 = RandomStringUtils.randomAlphanumeric( 10 );
         String rand2 = RandomStringUtils.randomAlphanumeric( 10 );
+        String rand3 = RandomStringUtils.randomAlphanumeric( 10 );
 
         UUID user_uuid_1 = UUIDUtils.newTimeUUID();
         UUID user_uuid_2 = UUIDUtils.newTimeUUID();
+        UUID user_uuid_3 = UUIDUtils.newTimeUUID();
 
         UUID org_uuid_1  = UUIDUtils.newTimeUUID();
         UUID org_uuid_2  = UUIDUtils.newTimeUUID();
+        UUID org_uuid_3  = UUIDUtils.newTimeUUID();
 
-        String user_name_1 = "user_" + rand1;
-        String user_name_2 = "user_" + rand2;
+        String user_name_1 = "user1_" + rand1;
+        String user_name_2 = "user2_" + rand2;
+        String user_name_3 = "user3_" + rand3;
 
-        String org_name_1  = "org_"  + rand1;
-        String org_name_2  = "org_"  + rand2;
+        String org_name_1  = "org1_"  + rand1;
+        String org_name_2  = "org2_"  + rand2;
+        String org_name_3  = "org3_"  + rand3;
 
         // loop through resource files with prefix 'admin-user' those are the data file templates
 
@@ -179,15 +188,19 @@ public class ExportImportAdminsTest {
 
                 fileContent = fileContent.replaceAll( "USER_UUID_1", user_uuid_1.toString() );
                 fileContent = fileContent.replaceAll( "USER_UUID_2", user_uuid_2.toString() );
+                fileContent = fileContent.replaceAll( "USER_UUID_3", user_uuid_3.toString() );
 
                 fileContent = fileContent.replaceAll( "ORG_UUID_1",  org_uuid_1.toString() );
                 fileContent = fileContent.replaceAll( "ORG_UUID_2",  org_uuid_2.toString() );
+                fileContent = fileContent.replaceAll( "ORG_UUID_3",  org_uuid_3.toString() );
 
                 fileContent = fileContent.replaceAll( "USER_NAME_1", user_name_1 );
                 fileContent = fileContent.replaceAll( "USER_NAME_2", user_name_2 );
+                fileContent = fileContent.replaceAll( "USER_NAME_3", user_name_3 );
 
                 fileContent = fileContent.replaceAll( "ORG_NAME_1", org_name_1 );
                 fileContent = fileContent.replaceAll( "ORG_NAME_2", org_name_2 );
+                fileContent = fileContent.replaceAll( "ORG_NAME_3", org_name_3 );
 
                 FileOutputStream os = new FileOutputStream(
                         tempDir.getAbsolutePath() + File.separator + fileName );
@@ -200,35 +213,45 @@ public class ExportImportAdminsTest {
         // import data from temp directory
 
         ImportAdmins importAdmins = new ImportAdmins();
-        importAdmins.startTool( new String[] {
-            "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
-            "-inputDir", tempDir.getAbsolutePath()
+        importAdmins.startTool( new String[]{
+                "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
+                "-inputDir", tempDir.getAbsolutePath()
         }, false );
 
         // verify that users and orgs were created correctly
 
         OrganizationInfo orgInfo1 = setup.getMgmtSvc().getOrganizationByUuid( org_uuid_1 );
-        assertNotNull( orgInfo1 );
-
-        OrganizationInfo orgInfo2 = setup.getMgmtSvc().getOrganizationByUuid( org_uuid_2 );
-        assertNotNull( orgInfo2 );
-
-        BiMap<UUID, String> user1_orgs = setup.getMgmtSvc().getOrganizationsForAdminUser( user_uuid_1 );
-        assertEquals("user1 has two orgs", 2, user1_orgs.size() );
-
-        BiMap<UUID, String> user2_orgs = setup.getMgmtSvc().getOrganizationsForAdminUser( user_uuid_2 );
-        assertEquals("user2 has one orgs", 1, user2_orgs.size() );
-
+        assertNotNull( "org 1 exists", orgInfo1 );
         List<UserInfo> org1_users = setup.getMgmtSvc().getAdminUsersForOrganization( org_uuid_1 );
         assertEquals("org1 has one user", 1, org1_users.size() );
 
+        OrganizationInfo orgInfo2 = setup.getMgmtSvc().getOrganizationByUuid( org_uuid_2 );
+        assertNotNull( "org 2 exists", orgInfo2 );
         List<UserInfo> org2_users = setup.getMgmtSvc().getAdminUsersForOrganization( org_uuid_2 );
-        assertEquals("org2 has two users", 2, org2_users.size() );
+        assertEquals( "org2 has two users", 2, org2_users.size() );
+        
+        OrganizationInfo orgInfo3 = setup.getMgmtSvc().getOrganizationByUuid( org_uuid_3 );
+        assertNotNull( "org 3 exists", orgInfo3 );
+        List<UserInfo> org3_users = setup.getMgmtSvc().getAdminUsersForOrganization( org_uuid_3 );
+        assertEquals( "org 3 has 1 users", 1, org3_users.size() );
 
-        UserInfo user1info = setup.getMgmtSvc().getAdminUserByUuid( user_uuid_1 );
-        Map<String, Object> user1_data = setup.getMgmtSvc().getAdminUserOrganizationData( user1info, false );
-        Map<String, Object> user1_data_orgs = (Map<String, Object>)user1_data.get("organizations");
-        assertEquals( 2, user1_data_orgs.size());
+        BiMap<UUID, String> user1_orgs = setup.getMgmtSvc().getOrganizationsForAdminUser( user_uuid_1 );
+        assertEquals( "user 1 has 2 orgs", 2, user1_orgs.size() );
+        
+        BiMap<UUID, String> user2_orgs = setup.getMgmtSvc().getOrganizationsForAdminUser( user_uuid_2 );
+        assertEquals( "user 2 has two orgs gained one from duplicate", 2, user2_orgs.size() );
+
+        try {
+            BiMap<UUID, String> user3_orgs = setup.getMgmtSvc().getOrganizationsForAdminUser( user_uuid_3 );
+            fail("fetch user 3 should have thrown exception");
+        } catch ( Exception expected ) {
+            logger.info("EXCEPTION EXPECTED");
+        }
+
+        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        Entity user3 = em.get( user_uuid_3 );
+        assertNull( "duplicate user does not exist", user3 );
+
 
     }
 }
