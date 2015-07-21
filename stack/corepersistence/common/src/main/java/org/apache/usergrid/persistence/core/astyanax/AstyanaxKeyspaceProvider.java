@@ -67,6 +67,7 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
         ConnectionPoolConfiguration connectionPoolConfiguration =
                 new ConnectionPoolConfigurationImpl( "UsergridConnectionPool" )
                         .setPort( cassandraFig.getThriftPort() )
+                        .setLocalDatacenter( cassandraFig.getLocalDataCenter() )
                         .setMaxConnsPerHost( cassandraFig.getConnections() )
                         .setSeeds( cassandraFig.getHosts() )
                         .setSocketTimeout( cassandraFig.getTimeout() );
