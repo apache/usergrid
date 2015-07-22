@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import com.codahale.metrics.Timer;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -447,45 +448,42 @@ public abstract class AbstractService implements Service {
      * @param results
      */
     private void importEntitiesParallel(final ServiceRequest request, final Results results ) {
-        Timer.Context timer = entitiesParallelGetTimer.time();
-        try {
-            //create our tuples
-            final Observable<EntityTuple> tuples = Observable.create(new Observable.OnSubscribe<EntityTuple>() {
-                @Override
-                public void call(final Subscriber<? super EntityTuple> subscriber) {
-                    subscriber.onStart();
+        //create our tuples
+        final Observable<EntityTuple> tuples = Observable.create(new Observable.OnSubscribe<EntityTuple>() {
+            @Override
+            public void call(final Subscriber<? super EntityTuple> subscriber) {
+                subscriber.onStart();
 
-                    final List<Entity> entities = results.getEntities();
-                    final int size = entities.size();
-                    for (int i = 0; i < size && !subscriber.isUnsubscribed(); i++) {
-                        subscriber.onNext(new EntityTuple(i, entities.get(i)));
-                    }
-
-                    subscriber.onCompleted();
+                final List<Entity> entities = results.getEntities();
+                final int size = entities.size();
+                for (int i = 0; i < size && !subscriber.isUnsubscribed(); i++) {
+                    subscriber.onNext(new EntityTuple(i, entities.get(i)));
                 }
-            });
 
-            //now process them in parallel up to 10 threads
+                subscriber.onCompleted();
+            }
+        });
 
-            tuples.flatMap(tuple -> {
-                //map the entity into the tuple
-                return Observable.just(tuple).doOnNext(parallelTuple -> {
-                    //import the entity and set it at index
-                    try {
+        //now process them in parallel up to 10 threads
 
-                        final Entity imported = importEntity(request, parallelTuple.entity);
+        Observable tuplesObservable = tuples.flatMap(tuple -> {
+            //map the entity into the tuple
+            return Observable.just(tuple).doOnNext(parallelTuple -> {
+                //import the entity and set it at index
+                try {
 
-                        if (imported != null) {
-                            results.setEntity(parallelTuple.index, imported);
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    final Entity imported = importEntity(request, parallelTuple.entity);
+
+                    if (imported != null) {
+                        results.setEntity(parallelTuple.index, imported);
                     }
-                }).subscribeOn(rxScheduler);
-            }, rxSchedulerFig.getImportThreads()).toBlocking().lastOrDefault(null);
-        } finally {
-            timer.stop();
-        }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).subscribeOn(rxScheduler);
+        }, rxSchedulerFig.getImportThreads());
+
+        ObservableTimer.time(tuplesObservable, entitiesParallelGetTimer).toBlocking().lastOrDefault(null);
     }
 
 
