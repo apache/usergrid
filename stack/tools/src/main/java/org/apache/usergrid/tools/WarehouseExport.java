@@ -17,63 +17,42 @@
 package org.apache.usergrid.tools;
 
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.blobstore.domain.BlobBuilder;
-import org.jclouds.blobstore.options.PutOptions;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.PutObjectResult;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.schema.CollectionInfo;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.schema.CollectionInfo;
-import org.apache.usergrid.utils.InflectionUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Module;
-
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
-import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
@@ -195,40 +174,16 @@ public class WarehouseExport extends ExportingToolBase {
                 .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
                         new NettyPayloadModule() );
 
-        BlobStoreContext context =
-                ContextBuilder.newBuilder( "s3" ).credentials( accessId, secretKey ).modules( MODULES )
-                              .overrides( overrides ).buildView( BlobStoreContext.class );
+        AWSCredentials credentials = new BasicAWSCredentials(accessId, secretKey);
+        ClientConfiguration clientConfig = new ClientConfiguration();
+        clientConfig.setProtocol( Protocol.HTTP);
 
-        // Create Container (the bucket in s3)
-        try {
-            AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
-            // BlobStore (returns false if it already exists)
-            ListenableFuture<Boolean> container = blobStore.createContainerInLocation( null, bucketName );
-            if ( container.get() ) {
-                LOG.info( "Created bucket " + bucketName );
-            }
-        }
-        catch ( Exception ex ) {
-            logger.error( "Could not start binary service: {}", ex.getMessage() );
-            throw new RuntimeException( ex );
-        }
+        AmazonS3Client s3Client = new AmazonS3Client(credentials, clientConfig);
 
-        try {
-            File file = new File( fileName );
-            AsyncBlobStore blobStore = context.getAsyncBlobStore();
-            BlobBuilder blobBuilder =
-                    blobStore.blobBuilder( file.getName() ).payload( file ).calculateMD5().contentType( "text/plain" )
-                             .contentLength( file.length() );
-
-            Blob blob = blobBuilder.build();
-
-            ListenableFuture<String> futureETag = blobStore.putBlob( bucketName, blob, PutOptions.Builder.multipart() );
-
-            LOG.info( "Uploaded file etag=" + futureETag.get() );
-        }
-        catch ( Exception e ) {
-            LOG.error( "Error uploading to blob store", e );
-        }
+        s3Client.createBucket( bucketName );
+        File uploadFile = new File( fileName );
+        PutObjectResult putObjectResult = s3Client.putObject( bucketName, uploadFile.getName(), uploadFile );
+        LOG.info("Uploaded file etag={}", putObjectResult.getETag());
     }
 
 
@@ -453,7 +408,7 @@ public class WarehouseExport extends ExportingToolBase {
 
                 Query query = Query.fromQL( queryString );
                 query.setLimit( MAX_ENTITY_FETCH );
-                query.setResultsLevel( Level.REFS );
+                query.setResultsLevel( Query.Level.REFS );
                 Results results = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
                 while ( results.size() > 0 ) {

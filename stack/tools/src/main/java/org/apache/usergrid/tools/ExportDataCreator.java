@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.tools;
 
-
 import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.company.Company;
 import io.codearte.jfairy.producer.person.Person;
@@ -189,7 +188,7 @@ public class ExportDataCreator extends ToolBase {
             try {
                 EntityRef ref = em.getAlias( "company", company.name() );
                 Entity companyEntity = (ref == null) ? null : em.get( ref );
-              
+
                 // create company if it does not exist yet
                 if ( companyEntity == null ) {
                     final Map<String, Object> companyMap = new HashMap<String, Object>() {{
@@ -213,7 +212,7 @@ public class ExportDataCreator extends ToolBase {
                 logger.error("Error creating or connecting company", e);
                 continue;
             }
-            
+
             try {
                 for (int j = 0; j < 5; j++) {
                     Activity activity = new Activity();
@@ -236,7 +235,7 @@ public class ExportDataCreator extends ToolBase {
                         }
                     }
                 }
-                
+
             } catch (Exception e) {
                 logger.error("Error creating activities", e);
                 continue;
