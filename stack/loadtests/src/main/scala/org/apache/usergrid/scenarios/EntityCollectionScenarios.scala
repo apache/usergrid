@@ -138,7 +138,8 @@ object EntityCollectionScenarios {
         .post(Settings.baseCollectionUrl)
         .headers(Headers.authToken)
         .body(StringBody("""${entity}"""))
-        .check(status.in(Seq(200,400))))
+        // 200 for success, 400 if already exists
+        .check(status.in(Seq(200))))
     }
   )
 
@@ -179,7 +180,8 @@ object EntityCollectionScenarios {
     http("DELETE entity")
       .delete("""${entityUrl}""")
       .headers(Headers.authToken)
-      .check(status.in(Seq(200,404)))
+      // 200 for success, 404 if doesn't exist
+      .check(status.in(Seq(200)))
   )
 
   val deleteEntities = scenario("Delete entities")
