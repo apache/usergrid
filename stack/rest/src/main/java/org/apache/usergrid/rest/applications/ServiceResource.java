@@ -68,7 +68,9 @@ import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.ServiceRequest;
 import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
 import org.apache.usergrid.services.assets.data.BinaryStore;
+import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 
@@ -94,8 +96,14 @@ public class ServiceResource extends AbstractContextResource {
     private static final String FILE_FIELD_NAME = "file";
 
 
-    @Autowired
+   // @Autowired
     private BinaryStore binaryStore;
+
+    @Autowired
+    private LocalFileBinaryStore localFileBinaryStore;
+
+    @Autowired
+    private AwsSdkS3BinaryStore awsSdkS3BinaryStore;
 
     protected ServiceManager services;
 
@@ -103,6 +111,18 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public ServiceResource() {
+    }
+
+
+    public void setBinaryStore(String binaryStoreType){
+
+        //TODO:GREY change this to be a property held elsewhere
+        if(binaryStoreType.equals("local")){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
     }
 
 
