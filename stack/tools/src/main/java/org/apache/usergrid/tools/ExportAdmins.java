@@ -22,28 +22,20 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.StringUtils;
 import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 /**
@@ -155,8 +147,8 @@ public class ExportAdmins extends ExportingToolBase {
 
         Query query = new Query();
         query.setLimit( MAX_ENTITY_FETCH );
-        query.setResultsLevel( Level.IDS );
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        query.setResultsLevel( Query.Level.IDS );
+        EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         Results ids = em.searchCollection( em.getApplicationRef(), "users", query );
 
         while (ids.size() > 0) {
@@ -169,11 +161,6 @@ public class ExportAdmins extends ExportingToolBase {
             }
             query.setCursor( ids.getCursor() );
             ids = em.searchCollection( em.getApplicationRef(), "users", query );
-        }
-
-        adminUserWriter.setDone( true );
-        for (AdminUserReader aur : readers) {
-            aur.setDone( true );
         }
 
         logger.debug( "Waiting for write thread to complete" );
@@ -206,11 +193,11 @@ public class ExportAdmins extends ExportingToolBase {
      */
     private void buildOrgMap() throws Exception {
 
-        logger.info("Building org map");
+        logger.info( "Building org map" );
 
         ExecutorService execService = Executors.newFixedThreadPool( this.readThreadCount );
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         String queryString = "select *";
         Query query = Query.fromQL( queryString );
         query.withLimit( 1000 );
@@ -273,8 +260,6 @@ public class ExportAdmins extends ExportingToolBase {
 
     public class AdminUserReader implements Runnable {
 
-        private boolean done = true;
-
         private final BlockingQueue<UUID> readQueue;
         private final BlockingQueue<AdminUserWriteTask> writeQueue;
 
@@ -296,16 +281,14 @@ public class ExportAdmins extends ExportingToolBase {
 
         private void readAndQueueAdminUsers() throws Exception {
 
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
             while ( true ) {
 
                 UUID uuid = null;
                 try {
                     uuid = readQueue.poll( 30, TimeUnit.SECONDS );
-                    //logger.debug("Got item from entityId queue: " + uuid );
-
-                    if ( uuid == null && done ) {
+                    if ( uuid == null ) {
                         break;
                     }
 
@@ -327,19 +310,33 @@ public class ExportAdmins extends ExportingToolBase {
 
 
         private void addDictionariesToTask(AdminUserWriteTask task, Entity entity) throws Exception {
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+
+            task.dictionariesByName = new HashMap<String, Map<Object, Object>>();
 
             Set<String> dictionaries = em.getDictionaries( entity );
 
             if ( dictionaries.isEmpty() ) {
                 logger.error("User {}:{} has no dictionaries", task.adminUser.getName(), task.adminUser.getUuid() );
+                return;
             }
 
-            task.dictionariesByName = new HashMap<String, Map<Object, Object>>();
+            Map<Object, Object> credentialsDictionary = em.getDictionaryAsMap( entity, "credentials" );
 
-            for (String dictionary : dictionaries) {
-                Map<Object, Object> dict = em.getDictionaryAsMap( entity, dictionary );
-                task.dictionariesByName.put( dictionary, dict );
+            if ( credentialsDictionary != null && !credentialsDictionary.isEmpty() ) {
+                task.dictionariesByName.put( "credentials", credentialsDictionary );
+
+                if (credentialsDictionary.get( "password" ) == null) {
+                    logger.error( "User {}:{} has no password in credential dictionary",
+                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid()} );
+                }
+                if (credentialsDictionary.get( "secret" ) == null) {
+                    logger.error( "User {}:{} has no secret in credential dictionary",
+                        new Object[]{task.adminUser.getName(), task.adminUser.getUuid()} );
+                }
+            } else {
+                logger.error( "User {}:{} has no or empty credentials dictionary",
+                    new Object[]{task.adminUser.getName(), task.adminUser.getUuid()} );
             }
         }
 
@@ -364,15 +361,9 @@ public class ExportAdmins extends ExportingToolBase {
                         task.adminUser.getUuid() } );
             }
         }
-
-        public void setDone(boolean done) {
-            this.done = done;
-        }
     }
 
     class AdminUserWriter implements Runnable {
-
-        private boolean done = false;
 
         private final BlockingQueue<AdminUserWriteTask> taskQueue;
 
@@ -392,7 +383,7 @@ public class ExportAdmins extends ExportingToolBase {
 
 
         private void writeEntities() throws Exception {
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
             // write one JSON file for management application users
             JsonGenerator usersFile =
@@ -408,7 +399,7 @@ public class ExportAdmins extends ExportingToolBase {
 
                 try {
                     AdminUserWriteTask task = taskQueue.poll( 30, TimeUnit.SECONDS );
-                    if ( task == null && done ) {
+                    if ( task == null ) {
                         break;
                     }
 
@@ -497,10 +488,6 @@ public class ExportAdmins extends ExportingToolBase {
             }
 
             jg.writeEndArray();
-        }
-
-        public void setDone(boolean done) {
-            this.done = done;
         }
     }
 }

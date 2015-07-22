@@ -224,7 +224,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
             // upload a file larger than 6mb
 
-            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cat-larger-than-6mb.jpg" ) );
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ) );
             FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
             ApiResponse postResponse = pathResource( getOrgAppPath( "bars" ) ).post( form );
             UUID assetId = postResponse.getEntities().get(0).getUuid();

@@ -82,7 +82,7 @@ public class Cli extends ToolBase {
     public void handleInput() throws QueryParseException {
         BufferedReader d = new BufferedReader( new InputStreamReader( System.in ) );
 
-        UUID applicationId = emf.getDefaultAppId();
+        UUID applicationId = null;
 
         while ( true ) {
             System.out.println();
@@ -103,13 +103,13 @@ public class Cli extends ToolBase {
                 applicationId = UUIDUtils.tryExtractUUID( s );
                 if ( applicationId == null ) {
                     try {
-                        applicationId = emf.lookupApplication( s.trim() );
+                        applicationId = emf.lookupApplication( s.trim() ).get();
                     }
                     catch ( Exception e ) {
                     }
                 }
                 if ( applicationId == null ) {
-                    applicationId = emf.getDefaultAppId();
+                    System.out.print("Cannot find application: " + s.trim() );
                 }
                 System.out.println( "Using application " + applicationId );
                 continue;
