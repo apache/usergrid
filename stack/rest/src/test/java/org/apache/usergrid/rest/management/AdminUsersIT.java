@@ -53,7 +53,7 @@ import com.sun.jersey.api.representation.Form;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_DEFAULT_SYSADMIN_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
 import static org.junit.Assert.assertEquals;
@@ -215,7 +215,7 @@ public class AdminUsersIT extends AbstractRestIT {
             testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             //Requires admins to do email confirmation before they can log in.
             testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-            testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+            testPropertiesMap.put( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
 
             Entity testPropertiesPayload = new Entity( testPropertiesMap );
 
@@ -647,7 +647,7 @@ public class AdminUsersIT extends AbstractRestIT {
             testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             //Requires admins to do email confirmation before they can log in.
             testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-            testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+            testPropertiesMap.put( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
 
             Entity testPropertiesPayload = new Entity( testPropertiesMap );
 
@@ -659,7 +659,7 @@ public class AdminUsersIT extends AbstractRestIT {
             //Retrieve properties and ensure that they are set correctly.
             ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();
 
-            assertEquals( "sysadmin-1@mockserver.com", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_EMAIL ) );
+            assertEquals( "sysadmin-1@mockserver.com", apiResponse.getProperties().get( PROPERTIES_DEFAULT_SYSADMIN_EMAIL ) );
             assertEquals( "true", apiResponse.getProperties().get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) );
             assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS ) );
             assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS ) );
