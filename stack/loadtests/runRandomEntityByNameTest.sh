@@ -34,6 +34,8 @@ mvn compile
 
 #Set the app id to be a date epoch for uniqueness
 #APP=$(date +%s)
+ADMIN_USER=superuser
+ADMIN_PASSWORD=test
 CREATE_ORG=false
 ORG=gatling
 CREATE_APP=false
@@ -56,15 +58,15 @@ END_MINUTES=2
 END_REQUEST_COUNT=100
 
 #Execute the test
-mvn gatling:execute -Dorg=usergrid \
+mvn gatling:execute \
 -DskipSetup=${SKIP_SETUP} \
 -DcreateOrg=${CREATE_ORG} \
 -Dorg=${ORG} \
 -DcreateApp=${CREATE_APP} \
 -Dapp=${APP} \
 -Dbaseurl=${URL} \
--DadminUser=usergrid  \
--DadminPassword=test  \
+-DadminUser=${ADMIN_USER}  \
+-DadminPassword=${ADMIN_PASSWORD}  \
 -DloadEntities=${LOAD_ENTITIES} \
 -DnumEntities=${NUM_ENTITIES} \
 -DentityType=${ENTITY_TYPE} \

@@ -47,14 +47,32 @@ class ConfigurableSimulation extends Simulation {
 
 
   Settings.setTestStartTime()
-  if (Settings.scenarioType == ScenarioType.GetAllByCursor) {
+  if (Settings.scenarioType == ScenarioType.LoadEntities) {
     setUp(
-        EntityCollectionScenarios.getEntityPagesToEnd
-          .inject(
-            rampUsers(Settings.rampUsers) over Settings.rampTime,
-            constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
+      EntityCollectionScenarios.loadEntities
+        .inject(
+          rampUsers(Settings.rampUsers) over Settings.rampTime,
+          constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
 
-          ).protocols(Settings.httpConf.acceptHeader("application/json"))
+        ).protocols(Settings.httpConf.acceptHeader("application/json"))
+    )
+  } else if (Settings.scenarioType == ScenarioType.DeleteEntities) {
+    setUp(
+      EntityCollectionScenarios.deleteEntities
+        .inject(
+          rampUsers(Settings.rampUsers) over Settings.rampTime,
+          constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
+
+        ).protocols(Settings.httpConf.acceptHeader("application/json"))
+    )
+  } else if (Settings.scenarioType == ScenarioType.GetAllByCursor) {
+    setUp(
+      EntityCollectionScenarios.getEntityPagesToEnd
+        .inject(
+          rampUsers(Settings.rampUsers) over Settings.rampTime,
+          constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
+
+        ).protocols(Settings.httpConf.acceptHeader("application/json"))
     )
   } else if (Settings.scenarioType == ScenarioType.NameRandomInfinite) {
     setUp(

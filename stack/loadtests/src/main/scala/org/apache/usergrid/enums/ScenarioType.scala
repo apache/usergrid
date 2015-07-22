@@ -6,4 +6,6 @@ package org.apache.usergrid.enums
 object ScenarioType {
   val GetAllByCursor = "getAllByCursor"
   val NameRandomInfinite = "nameRandomInfinite"
+  val LoadEntities = "loadEntities"
+  val DeleteEntities = "deleteEntities"
 }

@@ -40,8 +40,13 @@ object ConfigProperties {
   val EndConditionType = "endConditionType"
   val EndMinutes = "endMinutes"
   val EndRequestCount = "endRequestCount"
+  val OrgCreationUsername = "orgCreationUsername"
+  val OrgCreationName = "orgCreationName"
+  val OrgCreationEmail = "orgCreationEmail"
+  val OrgCreationPassword = "orgCreationPassword"
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
     NumDevices,CollectionType,RampTime,Throttle,RpsTarget,RpsRampTime,HoldDuration,PushNotifier,EntityPrefix,EntityType,
-    EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount)
+    EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,OrgCreationName,
+    OrgCreationEmail,OrgCreationPassword)
 }
