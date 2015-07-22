@@ -31,6 +31,7 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -315,7 +316,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         final BulkResponse responses;
 
         try {
-            responses = bulkRequest.execute().actionGet(config.getWriteTimeout());
+            responses = bulkRequest.setTimeout( TimeValue.timeValueMillis(config.getWriteTimeout()) ).get();
         } catch (Throwable t) {
             log.error("Unable to communicate with elasticsearch");
             failureMonitor.fail("Unable to execute batch", t);
