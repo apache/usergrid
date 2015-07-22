@@ -138,7 +138,7 @@ public abstract class ExportingToolBase extends ToolBase {
 
         if ( !file.mkdirs() ) {
 
-            throw new RuntimeException( String.format( "Unable to create diretory %s", dirName ) );
+            throw new RuntimeException( String.format( "Unable to create directory %s", dirName ) );
         }
 
         return file;
