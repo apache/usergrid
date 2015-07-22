@@ -17,7 +17,8 @@
 package org.apache.usergrid.settings
 
 import java.nio.charset.StandardCharsets
-import java.util.Base64
+//import java.util.Base64
+
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
@@ -51,7 +52,8 @@ object Settings {
   val userSeed:Int = Integer.getInteger(ConfigProperties.UserSeed,1).toInt
   val appUser = System.getProperty(ConfigProperties.AppUser)
   val appUserPassword = System.getProperty(ConfigProperties.AppUserPassword)
-  val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
+  //val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
+  val appUserBase64 = "BROKEN FOR NOW"
 
   val numEntities:Int = Integer.getInteger(ConfigProperties.NumEntities, 5000).toInt
   val numDevices:Int = Integer.getInteger(ConfigProperties.NumDevices, 4000).toInt
