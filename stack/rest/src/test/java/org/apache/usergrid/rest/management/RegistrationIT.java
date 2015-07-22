@@ -122,7 +122,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             final String username = "registrationUser" + UUIDGenerator.newTimeUUID();
             final String email = username + "@usergrid.com";
