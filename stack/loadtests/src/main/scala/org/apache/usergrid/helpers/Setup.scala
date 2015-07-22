@@ -83,10 +83,10 @@ object Setup {
       .setHeader("Content-Type", "application/json; charset=UTF-8")
       .setBody(Utils.toJSONStr(Map(
                           "organization" -> Settings.org,
-                          "username" -> Settings.adminUser,
-                          "name" -> Settings.adminUser,
-                          "email" -> (Settings.adminUser + "@apigee.com"),
-                          "password" -> Settings.adminPassword
+                          "username" -> Settings.orgCreationUsername,
+                          "name" -> Settings.orgCreationName,
+                          "email" -> Settings.orgCreationEmail,
+                          "password" -> Settings.orgCreationPassword
       )))
       .build()
 
@@ -192,7 +192,7 @@ object Setup {
   }
 
   def setupEntitiesCollection(numEntities: Int, entityType: String, prefix: String, seed: Int = 1) = {
-    val entitiesFeeder = FeederGenerator.generateCustomEntityFeeder(numEntities, entityType, prefix, seed)
+    val entitiesFeeder = FeederGenerator.generateCustomEntityArray(numEntities, entityType, prefix, seed)
     val purgeUsers = Integer.getInteger("purgeUsers", 100)
 
     val list: ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]

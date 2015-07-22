@@ -195,7 +195,7 @@
   * @param prefix Prefix for entities
   * @return
   */
- def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Array[String] = {
+ def generateCustomEntityArray(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Array[String] = {
    //val entityFeeder = Iterator.from(1).take(numEntities).map(i=>Map("entity" -> EntityDataGenerator.generateNamedCustomEntityJSONString(prefix.concat(i.toString()))))
    var entityArray: ArrayBuffer[String] = new ArrayBuffer[String]
    for (i <- seed to numEntities+seed-1) {
@@ -204,6 +204,37 @@
    }
 
    entityArray.toArray
+ }
+
+ def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Array[Map[String, Any]] = {
+   var entityMapArray: ArrayBuffer[Map[String, Any]] = new ArrayBuffer[Map[String, Any]]
+
+   for (i <- seed to numEntities+seed-1) {
+     val entityName = prefix.concat(i.toString)
+     val entity = EntityDataGenerator.generateEntity(entityType, entityName)
+     val entityUrl = Settings.baseCollectionUrl + "/" + entityName
+     entityMapArray += Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl)
+   }
+
+   entityMapArray.toArray
+ }
+
+ def generateCustomEntityFeeder2 (numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Feeder[String] =
+ new Feeder[String] {
+   var counter = new AtomicInteger(seed)
+
+   // runs forever -- users detect when data is done using validEntity field
+   override def hasNext: Boolean = true
+
+   override def next(): Map[String, String] = {
+     val i = counter.getAndIncrement()
+     val entityName = prefix.concat(i.toString)
+     val entity = EntityDataGenerator.generateEntity(entityType, entityName)
+     val entityUrl = Settings.baseCollectionUrl + "/" + entityName
+     val validEntity = if (i >= seed + numEntities) "no" else "yes"
+
+     Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity)
+   }
  }
 
  def generateCustomEntityInfiniteFeeder(seed: Int = Settings.entitySeed, entityType: String = Settings.entityType, prefix: String = Settings.entityPrefix): Iterator[String] = {

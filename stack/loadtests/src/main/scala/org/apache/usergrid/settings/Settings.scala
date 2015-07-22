@@ -17,7 +17,7 @@
 package org.apache.usergrid.settings
 
 import java.nio.charset.StandardCharsets
-//import java.util.Base64
+import java.util.Base64
 
 
 import io.gatling.core.Predef._
@@ -52,8 +52,7 @@ object Settings {
   val userSeed:Int = Integer.getInteger(ConfigProperties.UserSeed,1).toInt
   val appUser = System.getProperty(ConfigProperties.AppUser)
   val appUserPassword = System.getProperty(ConfigProperties.AppUserPassword)
-  //val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
-  val appUserBase64 = "BROKEN FOR NOW"
+  val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
 
   val numEntities:Int = Integer.getInteger(ConfigProperties.NumEntities, 5000).toInt
   val numDevices:Int = Integer.getInteger(ConfigProperties.NumDevices, 4000).toInt
@@ -86,6 +85,12 @@ object Settings {
   val endConditionType = System.getProperty(ConfigProperties.EndConditionType, EndConditionType.MinutesElapsed)
   val endMinutes = Integer.getInteger(ConfigProperties.EndMinutes, 10).toInt
   val endRequestCount = Integer.getInteger(ConfigProperties.EndRequestCount, 10).toInt
+
+  // Org creation fields
+  val orgCreationUsername = System.getProperty(ConfigProperties.OrgCreationUsername, org.concat("_admin"))
+  val orgCreationEmail = System.getProperty(ConfigProperties.OrgCreationEmail, orgCreationUsername.concat("@usergrid.com"))
+  val orgCreationName = System.getProperty(ConfigProperties.OrgCreationName, orgCreationUsername)
+  val orgCreationPassword = System.getProperty(ConfigProperties.OrgCreationPassword, "test")
 
   def getUserFeeder():Array[Map[String, String]]= {
     FeederGenerator.generateUserWithGeolocationFeeder(totalUsers, userLocationRadius, centerLatitude, centerLongitude)

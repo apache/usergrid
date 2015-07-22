@@ -18,6 +18,7 @@ package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums.{EndConditionType, AuthType}
 import org.apache.usergrid.helpers.Extractors._
 import org.apache.usergrid.helpers.Utils
@@ -53,6 +54,9 @@ object EntityCollectionScenarios {
     Utils.randomEntityNameUrl(prefix, numEntities, seed, Settings.baseCollectionUrl)
   }
 
+  /*
+   * Loop through entities using cursor
+   */
   val getEntitiesWithoutCursor = exec(
     http("GET entities")
       .get(entityGetUrl(false))
@@ -87,6 +91,9 @@ object EntityCollectionScenarios {
     }
     //.exec(sessionFunction => { sessionFunction })
 
+  /*
+   * Get random entities
+   */
   val getRandomEntityAnonymous = exec(
     http("GET entity by name (anonymous)")
       .get(_ => randomEntityNameUrl())
@@ -122,6 +129,68 @@ object EntityCollectionScenarios {
       }
     }
 
+  /*
+   * Create entities
+   */
+  val loadEntity = exec(
+    doIf("${validEntity}", "yes") {
+      exec(http("POST load entity")
+        .post(Settings.baseCollectionUrl)
+        .headers(Headers.authToken)
+        .body(StringBody("""${entity}"""))
+        .check(status.in(Seq(200,400))))
+    }
+  )
+
+  val loadEntities = scenario("Load entities")
+    .exec(injectTokenIntoSession())
+    .exec(injectAuthType())
+    .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
+      feed(FeederGenerator.generateCustomEntityFeeder2(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+        .doIf(session => session("validEntity").as[String] == "yes") {
+          exec(loadEntity)
+        }
+    }
+    //.rendezVous(Settings.totalUsers)
+
+  /*
+  val loadEntity = exec(
+    http("POST load entity")
+      .post(Settings.baseCollectionUrl)
+      .headers(Headers.authToken)
+      .body(StringBody("""${entity}"""))
+      .check(status.in(Seq(200,400)))
+  )
+
+  val loadEntities = scenario("Load entities")
+    .exec(injectTokenIntoSession())
+    .exec(injectAuthType())
+    .forever(
+      feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+      .exec(loadEntity)
+    )
+    */
+
+
+  /*
+   * Delete entities
+   */
+  val deleteEntity = exec(
+    http("DELETE entity")
+      .delete("""${entityUrl}""")
+      .headers(Headers.authToken)
+      .check(status.in(Seq(200,404)))
+  )
+
+  val deleteEntities = scenario("Delete entities")
+    .exec(injectTokenIntoSession())
+    .exec(injectAuthType())
+    .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
+      feed(FeederGenerator.generateCustomEntityFeeder2(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+        .doIf(session => session("validEntity").as[String] == "yes") {
+          exec(deleteEntity)
+        }
+    }
   /*
   val createEntityBatchScenario = scenario("Create custom entities")
       .exec(injectStaticTokenToSession())
