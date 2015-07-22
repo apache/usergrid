@@ -250,8 +250,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         init();
 
         EntityManager managementEm = getEntityManager( getManagementAppId() );
+        EntityManager appEm = getEntityManager(applicationId);
 
-        final String appName = buildAppName( organizationName, name );
+        final String appName = buildAppName(organizationName, name);
 
         // check for pre-existing application
 
@@ -260,13 +261,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
+        appEm.initializeIndex();
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(applicationId));
-
         if ( properties == null ) {
             properties = new TreeMap<>( CASE_INSENSITIVE_ORDER);
         }
         properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager(applicationId);
         appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
 
