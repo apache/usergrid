@@ -50,7 +50,7 @@ import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 /**
- * Base class for Usergrid Tools commands. Any class that implements this can be called with 
+ * Base class for Usergrid Tools commands. Any class that implements this can be called with
  * java -jar {jarname} org.apache.usergrid.tools.{classname}.
  */
 public abstract class ToolBase {
