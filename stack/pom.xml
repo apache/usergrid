@@ -112,7 +112,7 @@
       <org.springframework.version>3.2.13.RELEASE</org.springframework.version>
       <shiro-version>1.2.3</shiro-version>
       <slf4j-version>1.6.1</slf4j-version>
-      <snakeyaml-version>1.8</snakeyaml-version>
+      <snakeyaml-version>1.9</snakeyaml-version>
       <tomcat-version>7.0.59</tomcat-version>
       <antlr.version>3.4</antlr.version>
       <tika.version>1.4</tika.version>
