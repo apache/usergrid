@@ -17,43 +17,75 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
-import com.sun.jersey.multipart.FormDataMultiPart;
-import org.apache.commons.io.IOUtils;
-
-import org.apache.usergrid.rest.applications.ServiceResource;
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.apache.usergrid.services.assets.data.AssetUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.core.MediaType;
+
+import org.jclouds.blobstore.BlobStoreContext;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+
+
+import org.apache.commons.io.IOUtils;
+
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.rest.applications.assets.aws.NoAWSCredsRule;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.apache.usergrid.services.assets.data.BinaryStore;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+
+import com.sun.jersey.multipart.FormDataMultiPart;
+
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
-public class AssetResourceIT extends AbstractRestIT {
+
+public class AwsAssetResourceIT extends AbstractRestIT {
 
     private String access_token;
-    private Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
+    private Map<String, Object> originalProperties;
+    private Logger LOG = LoggerFactory.getLogger( AwsAssetResourceIT.class );
+
+//    /**
+//     * Mark tests as ignored if no AWS creds are present
+//     */
+//    @Rule
+//    public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
 
     @Before
     public void setup(){
+        Map<String, Object> originalProperties = getRemoteTestProperties();
+        setTestProperty(PROPERTIES_USERGRID_BINARY_UPLOADER, "AWS");
+
+
         access_token = this.getAdminToken().getAccessToken();
 
     }
 
+    @After
+    public void teardown(){
+        setTestProperties(originalProperties);
+    }
 
     @Test
     public void octetStreamOnDynamicEntity() throws Exception {

@@ -97,6 +97,8 @@ public interface AccountCreationProps {
     public static final String PROPERTIES_TEST_ACCOUNT_APP = "usergrid.test-account.app";
     public static final String PROPERTIES_SETUP_TEST_ACCOUNT = "usergrid.setup-test-account";
 
+    public static final String PROPERTIES_USERGRID_BINARY_UPLOADER="usergrid.binary.uploader";
+
     public boolean newOrganizationsNeedSysAdminApproval();
 
     public boolean newAdminUsersNeedSysAdminApproval();
