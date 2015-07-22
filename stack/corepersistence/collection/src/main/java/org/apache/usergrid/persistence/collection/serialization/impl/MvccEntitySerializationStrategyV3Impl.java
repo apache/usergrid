@@ -9,11 +9,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.netflix.astyanax.serializers.StringSerializer;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,11 +94,11 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
     @Inject
     public MvccEntitySerializationStrategyV3Impl( final Keyspace keyspace, final SerializationFig serializationFig,
-                                                  final CassandraFig cassandraFig ) {
+                                                  final CassandraFig cassandraFig, final MetricsFactory metricsFactory ) {
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
         this.cassandraFig = cassandraFig;
-        this.entitySerializer = new EntitySerializer( serializationFig );
+        this.entitySerializer = new EntitySerializer( serializationFig, metricsFactory );
     }
 
 
@@ -368,13 +371,19 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         private final JsonFactory  JSON_FACTORY = new JsonFactory();
 
         private final ObjectMapper MAPPER = new ObjectMapper( JSON_FACTORY );
+        private final Histogram bytesInHistorgram;
+        private final Histogram bytesOutHistorgram;
+        private final Timer bytesOutTimer;
 
 
         private SerializationFig serializationFig;
 
 
-        public EntitySerializer( final SerializationFig serializationFig ) {
+        public EntitySerializer( final SerializationFig serializationFig, final MetricsFactory metricsFactory) {
             this.serializationFig = serializationFig;
+            this.bytesOutHistorgram = metricsFactory.getHistogram(MvccEntitySerializationStrategyV3Impl.class, "bytes.out");
+            this.bytesOutTimer = metricsFactory.getTimer(MvccEntitySerializationStrategyV3Impl.class, "bytes.out");
+            this.bytesInHistorgram = metricsFactory.getHistogram(MvccEntitySerializationStrategyV3Impl.class, "bytes.in");
 
             //                mapper.enable(SerializationFeature.INDENT_OUTPUT); don't indent output,
             // causes slowness
@@ -384,42 +393,41 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         @Override
         public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
-            if ( wrapper == null ) {
+            if (wrapper == null) {
                 return null;
             }
-
+            final byte[] wrapperBytes;
             //mark this version as empty
-            if ( wrapper.getEntityMap() == null ) {
+            if (wrapper.getEntityMap() == null) {
                 //we're empty
                 try {
                     return ByteBuffer.wrap(MAPPER.writeValueAsBytes(wrapper));
-                }catch (JsonProcessingException jpe){
-                    throw new RuntimeException( "Unable to serialize entity", jpe );
+                } catch (JsonProcessingException jpe) {
+                    throw new RuntimeException("Unable to serialize entity", jpe);
                 }
             }
 
             //we have an entity but status is not complete don't allow it
-            if ( wrapper.getStatus() != MvccEntity.Status.COMPLETE ) {
-                throw new UnsupportedOperationException( "Only states " + MvccEntity.Status.DELETED + " and " + MvccEntity.Status.COMPLETE + " are supported" );
+            if (wrapper.getStatus() != MvccEntity.Status.COMPLETE) {
+                throw new UnsupportedOperationException("Only states " + MvccEntity.Status.DELETED + " and " + MvccEntity.Status.COMPLETE + " are supported");
             }
 
             wrapper.setStatus(MvccEntity.Status.COMPLETE);
 
             //Convert to internal entity map
-            final byte[] wrapperBytes;
             try {
                 wrapperBytes = MAPPER.writeValueAsBytes(wrapper);
 
                 final int maxEntrySize = serializationFig.getMaxEntitySize();
 
+                bytesInHistorgram.update(wrapperBytes.length);
                 if (wrapperBytes.length > maxEntrySize) {
                     throw new EntityTooLargeException(Entity.fromMap(wrapper.getEntityMap()), maxEntrySize, wrapperBytes.length,
                         "Your entity cannot exceed " + maxEntrySize + " bytes. The entity you tried to save was "
                             + wrapperBytes.length + " bytes");
                 }
-            }
-            catch ( JsonProcessingException jpe ) {
-                throw new RuntimeException( "Unable to serialize entity", jpe );
+            } catch (JsonProcessingException jpe) {
+                throw new RuntimeException("Unable to serialize entity", jpe);
             }
 
             return ByteBuffer.wrap(wrapperBytes);
@@ -441,14 +449,17 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
             try {
-                entityWrapper = MAPPER.readValue(byteBuffer.array(), EntityWrapper.class);
-
+                Timer.Context time = bytesOutTimer.time();
+                byte[] arr = byteBuffer.array();
+                bytesOutHistorgram.update( arr == null ? 0 : arr.length);
+                entityWrapper = MAPPER.readValue(arr, EntityWrapper.class);
+                time.stop();
             }
             catch ( Exception e ) {
-                if( log.isDebugEnabled() ){
+                if (log.isDebugEnabled()) {
                     log.debug("Entity Wrapper Deserialized: " + StringSerializer.get().fromByteBuffer(byteBuffer));
                 }
-                throw new DataCorruptionException( "Unable to read entity data", e );
+                throw new DataCorruptionException("Unable to read entity data", e);
             }
 
             // it's been deleted, remove it

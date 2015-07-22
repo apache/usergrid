@@ -23,6 +23,8 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.usergrid.persistence.collection.MvccEntity;
@@ -37,6 +39,7 @@ import org.apache.usergrid.persistence.core.astyanax.FieldBufferSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -78,9 +81,9 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
 
 
     @Inject
-    public MvccEntitySerializationStrategyV2Impl( final Keyspace keyspace, final SerializationFig serializationFig, final CassandraFig cassandraFig ) {
+    public MvccEntitySerializationStrategyV2Impl( final Keyspace keyspace, final SerializationFig serializationFig, final CassandraFig cassandraFig, final MetricsFactory metricsFactory ) {
         super( keyspace, serializationFig, cassandraFig );
-        entitySerializer = new EntitySerializer( serializationFig );
+        entitySerializer = new EntitySerializer( serializationFig, metricsFactory );
     }
 
 
@@ -111,6 +114,9 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
         private final SmileFactory SMILE_FACTORY = new SmileFactory();
 
         private final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
+        private final Histogram bytesInHistorgram;
+        private final Histogram bytesOutHistorgram;
+        private final Timer bytesOutTimer;
 
 
         private SerializationFig serializationFig;
@@ -123,13 +129,17 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
         private byte VERSION = 1;
 
 
-        public EntitySerializer( final SerializationFig serializationFig) {
+        public EntitySerializer( final SerializationFig serializationFig, final MetricsFactory metricsFactory) {
             this.serializationFig = serializationFig;
 //            SimpleModule listModule = new SimpleModule("ListFieldModule", new Version(1, 0, 0, null,null,null))
 //                .addAbstractTypeMapping(ListField.class, ArrayField.class);
 //            MAPPER.registerModule(listModule);
             // causes slowness
             MAPPER.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
+            this.bytesOutHistorgram = metricsFactory.getHistogram(MvccEntitySerializationStrategyV2Impl.class, "bytes.out");
+            this.bytesInHistorgram = metricsFactory.getHistogram(MvccEntitySerializationStrategyV2Impl.class, "bytes.in");
+            this.bytesOutTimer = metricsFactory.getTimer(MvccEntitySerializationStrategyV2Impl.class, "bytes.out");
+
         }
 
 
@@ -185,6 +195,8 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
 
             builder.addBytes( entityBytes );
 
+            bytesInHistorgram.update(entityBytes.length);
+
             return FIELD_BUFFER_SERIALIZER.toByteBuffer( builder.build() );
         }
 
@@ -231,7 +243,10 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
             byte[] array = parser.readBytes();
 
             try {
+                Timer.Context time = bytesOutTimer.time();
+                bytesOutHistorgram.update(array == null ? 0 : array.length);
                 storedEntity = MAPPER.readValue( array, Entity.class );
+                time.stop();
             }
             catch ( Exception e ) {
                 throw new DataCorruptionException( "Unable to read entity data", e );
