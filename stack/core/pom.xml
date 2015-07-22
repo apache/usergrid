@@ -477,7 +477,6 @@
       <artifactId>rxjava-core</artifactId>
       <version>${rx.version}</version>
     </dependency>
-
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-math</artifactId>
