@@ -74,7 +74,9 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_NOT
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_DEFAULT_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ORG_SYSADMIN_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
@@ -111,7 +113,7 @@ public class EmailFlowIT {
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        setup.set( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+        setup.set( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
         setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
 
         final String orgName = uniqueOrg();
@@ -154,7 +156,7 @@ public class EmailFlowIT {
         setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        setup.set( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-2@mockserver.com" );
+        setup.set( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-2@mockserver.com" );
 
         final String orgName = uniqueOrg();
         final String userName = uniqueUsername();
