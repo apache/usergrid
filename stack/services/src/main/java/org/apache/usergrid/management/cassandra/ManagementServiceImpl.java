@@ -114,7 +114,9 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMA
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_MAILER_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SETUP_TEST_ACCOUNT;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ORG_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_DEFAULT_SYSADMIN_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME;
@@ -215,10 +217,10 @@ public class ManagementServiceImpl implements ManagementService {
     protected EncryptionService encryptionService;
 
 
+
     /** Must be constructed with a CassandraClientPool. */
     public ManagementServiceImpl() {
     }
-
 
     @Autowired
     public void setEntityManagerFactory( EntityManagerFactory emf ) {
@@ -230,6 +232,33 @@ public class ManagementServiceImpl implements ManagementService {
     @Autowired
     public void setProperties( Properties properties ) {
         this.properties = new AccountCreationPropsImpl( properties );
+
+
+    }
+
+    String orgSysAdminEmail,defaultSysAdminEmail,adminSysAdminEmail;
+    private String getDefaultSysAdminEmail(){
+        defaultSysAdminEmail = defaultSysAdminEmail != null
+            ? defaultSysAdminEmail
+            : properties.getProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL);
+        return defaultSysAdminEmail;
+    }
+    private String getOrgSystemEmail(){
+        if( orgSysAdminEmail != null ){
+            return orgSysAdminEmail;
+        }
+        orgSysAdminEmail =  properties.getProperty( PROPERTIES_ORG_SYSADMIN_EMAIL );
+        orgSysAdminEmail = orgSysAdminEmail!=null ? orgSysAdminEmail : getDefaultSysAdminEmail();
+        return orgSysAdminEmail;
+    }
+
+    private String getAdminSystemEmail(){
+        if( adminSysAdminEmail != null ){
+            return adminSysAdminEmail;
+        }
+        adminSysAdminEmail = properties.getProperty( PROPERTIES_ADMIN_SYSADMIN_EMAIL );
+        adminSysAdminEmail = adminSysAdminEmail!=null ? adminSysAdminEmail : getDefaultSysAdminEmail();
+        return adminSysAdminEmail;
     }
 
 
@@ -2258,7 +2287,8 @@ public class ManagementServiceImpl implements ManagementService {
             }
             if ( newOrganizationsNeedSysAdminApproval() ) {
                 logger.info( "sending SysAdminApproval confirmation email: {}", organization.getName() );
-                sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+                //TODO: add org email approval
+                sendHtmlMail( properties, getOrgSystemEmail(),
                         properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                         "Request For Organization Account Activation " + organization.getName(), appendEmailFooter(
                         emailMsg( hashMap( "organization_name", organization.getName() )
@@ -2321,7 +2351,8 @@ public class ManagementServiceImpl implements ManagementService {
                 organization_owners = ( organization_owners == null ) ? user.getHTMLDisplayEmailAddress() :
                                       organization_owners + ", " + user.getHTMLDisplayEmailAddress();
             }
-            sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+            //TODO: org email
+            sendHtmlMail( properties, getOrgSystemEmail(),
                     properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                     "Organization Account Activated " + organization.getName(), appendEmailFooter( emailMsg(
                     hashMap( "organization_name", organization.getName() )
@@ -2414,10 +2445,11 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendSysAdminRequestAdminActivationEmail( UserInfo user ) throws Exception {
         String token = getActivationTokenForAdminUser( user.getUuid(), 0 );
+        //TODO: admin specific email
         String activation_url =
                 String.format( properties.getProperty( PROPERTIES_ADMIN_ACTIVATION_URL ), user.getUuid().toString() )
                         + "?token=" + token;
-        sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+        sendHtmlMail( properties, getAdminSystemEmail(),
                 properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                 "Request For Admin User Account Activation " + user.getEmail(), appendEmailFooter(
                 emailMsg( hashMap( "user_email", user.getEmail() ).map( "activation_url", activation_url ),
@@ -2427,7 +2459,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendSysAdminNewAdminActivatedNotificationEmail( UserInfo user ) throws Exception {
         if ( properties.notifySysAdminOfNewAdminUsers() ) {
-            sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+            sendHtmlMail( properties, getAdminSystemEmail(),
                     properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                     "Admin User Account Activated " + user.getEmail(), appendEmailFooter(
                     emailMsg( hashMap( "user_email", user.getEmail() ), PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED ) ) );
