@@ -463,14 +463,14 @@ public interface EntityManager {
      *
      * @param entityRef an entity reference
      * @param connectionType type of connection or null.
-     * @param connectedEntityType type of entity or null.
+     * @param targetEntityType type of entity or null.
      *
      * @return a list of connected entity ids.
      *
      * @throws Exception the exception
      */
     public Results getTargetEntities(EntityRef entityRef, String connectionType,
-                                     String connectedEntityType, Level resultsLevel) throws Exception;
+                                     String targetEntityType, Level resultsLevel) throws Exception;
 
     /**
      * Gets the entities connecting to this entity, optionally with the specified connection

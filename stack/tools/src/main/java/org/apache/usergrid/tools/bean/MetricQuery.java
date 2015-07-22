@@ -21,11 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.AggregateCounter;
-import org.apache.usergrid.persistence.AggregateCounterSet;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.*;
 
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.index.query.CounterResolution;

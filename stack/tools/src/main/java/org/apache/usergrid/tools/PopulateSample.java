@@ -46,7 +46,7 @@ import static org.apache.usergrid.services.ServicePayload.payload;
 
 public class PopulateSample extends ToolBase {
 
-    private static final Logger logger = LoggerFactory.getLogger( Export.class );
+    private static final Logger logger = LoggerFactory.getLogger( PopulateSample.class );
 
 
     @Override

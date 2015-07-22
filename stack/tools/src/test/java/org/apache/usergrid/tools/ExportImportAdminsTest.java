@@ -22,7 +22,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -39,18 +39,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.junit.Assert.*;
 
 
 public class ExportImportAdminsTest {
     static final Logger logger = LoggerFactory.getLogger( ExportImportAdminsTest.class );
-    
+
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl();
 
     @org.junit.Test
     public void testExportUserAndOrg() throws Exception {
@@ -81,7 +83,7 @@ public class ExportImportAdminsTest {
 
         ExportAdmins exportAdmins = new ExportAdmins();
         exportAdmins.startTool( new String[] {
-            "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
+            "-host", "localhost:9120",
             "-outputDir", directoryName
         }, false );
 
@@ -148,7 +150,7 @@ public class ExportImportAdminsTest {
     public void testImportAdminUsersAndOrgs() throws Exception {
 
         // first: generate the data file with unique user and org IDs and names
-        
+
         // data contains three users each with a unique org, one user has a duplicate email
 
         String rand1 = RandomStringUtils.randomAlphanumeric( 10 );
@@ -214,7 +216,7 @@ public class ExportImportAdminsTest {
 
         ImportAdmins importAdmins = new ImportAdmins();
         importAdmins.startTool( new String[]{
-                "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
+                "-host", "localhost:9120",
                 "-inputDir", tempDir.getAbsolutePath()
         }, false );
 
@@ -229,7 +231,7 @@ public class ExportImportAdminsTest {
         assertNotNull( "org 2 exists", orgInfo2 );
         List<UserInfo> org2_users = setup.getMgmtSvc().getAdminUsersForOrganization( org_uuid_2 );
         assertEquals( "org2 has two users", 2, org2_users.size() );
-        
+
         OrganizationInfo orgInfo3 = setup.getMgmtSvc().getOrganizationByUuid( org_uuid_3 );
         assertNotNull( "org 3 exists", orgInfo3 );
         List<UserInfo> org3_users = setup.getMgmtSvc().getAdminUsersForOrganization( org_uuid_3 );
@@ -237,7 +239,7 @@ public class ExportImportAdminsTest {
 
         BiMap<UUID, String> user1_orgs = setup.getMgmtSvc().getOrganizationsForAdminUser( user_uuid_1 );
         assertEquals( "user 1 has 2 orgs", 2, user1_orgs.size() );
-        
+
         BiMap<UUID, String> user2_orgs = setup.getMgmtSvc().getOrganizationsForAdminUser( user_uuid_2 );
         assertEquals( "user 2 has two orgs gained one from duplicate", 2, user2_orgs.size() );
 
@@ -248,7 +250,7 @@ public class ExportImportAdminsTest {
             logger.info("EXCEPTION EXPECTED");
         }
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         Entity user3 = em.get( user_uuid_3 );
         assertNull( "duplicate user does not exist", user3 );
 

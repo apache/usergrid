@@ -23,8 +23,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.utils.StringUtils;
 import org.codehaus.jackson.JsonGenerator;
@@ -345,15 +347,15 @@ public class ExportAdmins extends ExportingToolBase {
                                                 0 : task.dictionariesByName.get( "credentials" ));
 
                     logger.error( "{} admin user {}:{}:{} has organizations={} dictionaries={} credentials={}",
-                            new Object[]{
-                                    actionTaken,
-                                    task.adminUser.getProperty( "username" ),
-                                    task.adminUser.getProperty( "email" ),
-                                    task.adminUser.getUuid(),
-                                    task.orgNamesByUuid.size(),
-                                    task.dictionariesByName.size(),
-                                    creds == null ? 0 : creds.size()
-                            } );
+                        new Object[]{
+                            actionTaken,
+                            task.adminUser.getProperty( "username" ),
+                            task.adminUser.getProperty( "email" ),
+                            task.adminUser.getUuid(),
+                            task.orgNamesByUuid.size(),
+                            task.dictionariesByName.size(),
+                            creds == null ? 0 : creds.size()
+                        } );
 
                 } catch ( Exception e ) {
                     logger.error("Error reading data for user " + uuid, e );
@@ -385,13 +387,9 @@ public class ExportAdmins extends ExportingToolBase {
 
             task.orgNamesByUuid = managementService.getOrganizationsForAdminUser( task.adminUser.getUuid() );
 
-<<<<<<< HEAD
-            List<Org> orgs = orgMap.get( task.adminUser.getProperty( "username" ).toString().toLowerCase() );
 
-=======
             List<Org> orgs = userToOrgsMap.get( task.adminUser.getProperty( "username" ).toString().toLowerCase() );
 
->>>>>>> master
             if ( orgs != null && task.orgNamesByUuid.size() < orgs.size() ) {
 
                 // list of orgs from getOrganizationsForAdminUser() is less than expected, use userToOrgsMap
@@ -401,16 +399,6 @@ public class ExportAdmins extends ExportingToolBase {
                 }
                 task.orgNamesByUuid = bimap;
             }
-<<<<<<< HEAD
-
-            if ( task.orgNamesByUuid.isEmpty() ) {
-                logger.error("{}:{}:{} has no orgs", new Object[] {
-                        task.adminUser.getProperty("username"),
-                        task.adminUser.getProperty("email"),
-                        task.adminUser.getUuid() } );
-            }
-=======
->>>>>>> master
         }
     }
 
