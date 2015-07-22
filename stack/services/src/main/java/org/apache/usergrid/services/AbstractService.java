@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import com.codahale.metrics.Timer;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -105,11 +104,7 @@ public abstract class AbstractService implements Service {
     private Timer entityGetTimer;
     private Timer entitiesGetTimer;
     private Timer entitiesParallelGetTimer;
-    private Timer deleteByNameTimer;
-    private Timer postByNameTimer;
-    private Timer putByNameTimer;
-    private Timer getByNameTimer;
-    private Timer headByNameTimer;
+    private Timer invokeTimer;
 
 
     public AbstractService() {
@@ -127,11 +122,7 @@ public abstract class AbstractService implements Service {
         this.entityGetTimer = metricsFactory.getTimer(this.getClass(), "importEntity.get");
         this.entitiesGetTimer = metricsFactory.getTimer(this.getClass(), "importEntities.get");
         this.entitiesParallelGetTimer = metricsFactory.getTimer( this.getClass(),"importEntitiesP.get" );
-        this.getByNameTimer = metricsFactory.getTimer( this.getClass(),"byname.get" );
-        this.putByNameTimer = metricsFactory.getTimer( this.getClass(),"byname.put" );
-        this.postByNameTimer = metricsFactory.getTimer( this.getClass(),"byname.post" );
-        this.deleteByNameTimer = metricsFactory.getTimer(this.getClass(), "byname.delete");
-        this.headByNameTimer = metricsFactory.getTimer(this.getClass(), "byname.head");
+        this.invokeTimer = metricsFactory.getTimer( this.getClass(),"service.invoke" );
     }
 
 
@@ -710,9 +701,8 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults invoke( ServiceContext context ) throws Exception {
-
         ServiceResults results = null;
-
+        Timer.Context time = invokeTimer.time();
         String metadataType = checkForServiceMetadata( context );
         if ( metadataType != null ) {
             return handleServiceMetadata( context, metadataType );
@@ -740,8 +730,9 @@ public abstract class AbstractService implements Service {
         }
 
         results = handleEntityDictionary( context, results, entityDictionary );
-        results = handleEntityCommand( context, results, entityCommand );
+        results = handleEntityCommand(context, results, entityCommand);
 
+        time.stop();
         return results;
     }
 
@@ -770,47 +761,20 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults invokeItemWithName( ServiceContext context, String name ) throws Exception {
-
-        Timer.Context time;
-        switch ( context.getAction() ) {
+        switch (context.getAction()) {
             case GET:
-                time = getByNameTimer.time();
-                try {
-                    return getItemByName(context, name);
-                } finally {
-                    time.stop();
-                }
+                return getItemByName(context, name);
             case POST:
-                time = postByNameTimer.time();
-                try {
-                    return postItemByName(context, name);
-                } finally {
-                    time.stop();
-                }
+                return postItemByName(context, name);
             case PUT:
-                time = putByNameTimer.time();
-                try {
-                    return putItemByName(context, name);
-                } finally {
-                    time.stop();
-                }
+                return putItemByName(context, name);
             case DELETE:
-                time = deleteByNameTimer.time();
-                try {
-                    return deleteItemByName(context, name);
-                } finally {
-                    time.stop();
-                }
+                return deleteItemByName(context, name);
             case HEAD:
-                time = headByNameTimer.time();
-                try {
-                    return headItemByName(context, name);
-                } finally {
-                    time.stop();
-                }
+                return headItemByName(context, name);
+            default:
+                throw new ServiceInvocationException(context, "Request action unhandled " + context.getAction());
         }
-
-        throw new ServiceInvocationException( context, "Request action unhandled " + context.getAction() );
     }
 
 
