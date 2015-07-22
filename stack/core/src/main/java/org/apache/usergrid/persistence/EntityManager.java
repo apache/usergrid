@@ -728,5 +728,10 @@ public interface EntityManager {
      */
     void addIndex(final String newIndexName,final int shards,final int replicas, final String writeConsistency);
 
+    /**
+     * init the index
+     */
+    void initializeIndex();
+
     IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
 }
