@@ -73,7 +73,7 @@ import org.apache.commons.codec.binary.Base64;
 
 public class AwsSdkS3BinaryStore implements BinaryStore {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AwsSdkS3BinaryStore.class );
+    private static final Logger logger = LoggerFactory.getLogger(AwsSdkS3BinaryStore.class );
     private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
 
     private AmazonS3 s3Client;
@@ -197,6 +197,7 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
 
                     if(written> maxSizeBytes){
                         overSizeLimit = true;
+                        logger.error( "OVERSIZED FILE. STARTING ABORT" );
                         break;
                         //set flag here and break out of loop to run abort
                     }
@@ -235,11 +236,12 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
 
                 //upadte the entity with the error.
                 try {
+                    logger.error("starting update of entity due to oversized asset");
                     fileMetadata.put( "error", "Asset size is larger than max size of " + maxSizeBytes );
                     em.update( entity );
                 }
                 catch ( Exception e ) {
-                    LOG.error( "Error updating entity with error message", e );
+                    logger.error( "Error updating entity with error message", e );
                 }
 
                 //loop and abort all the multipart uploads
