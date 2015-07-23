@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.datagenerators
+package org.apache.usergrid.datagenerators
 
- import org.apache.usergrid.enums.EntityType
- import org.apache.usergrid.helpers.Utils
+import org.apache.usergrid.enums.EntityType
+import org.apache.usergrid.helpers.Utils
 
- import scala.collection.mutable.ArrayBuffer
- import scala.util.parsing.json.JSONObject
+import scala.collection.mutable.ArrayBuffer
+import scala.util.parsing.json.JSONObject
 
- object EntityDataGenerator {
+object EntityDataGenerator {
 
   def generateBlockUserLists(numUsers: Int): Map[String, String] = {
 

@@ -44,9 +44,16 @@ object ConfigProperties {
   val OrgCreationName = "orgCreationName"
   val OrgCreationEmail = "orgCreationEmail"
   val OrgCreationPassword = "orgCreationPassword"
+  val UpdateProperty = "updateProperty"
+  val UpdateValue = "updateValue"
+
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
     NumDevices,CollectionType,RampTime,Throttle,RpsTarget,RpsRampTime,HoldDuration,PushNotifier,EntityPrefix,EntityType,
     EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,OrgCreationName,
-    OrgCreationEmail,OrgCreationPassword)
+    OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue)
+
+  def isValid(str: String): Boolean = {
+    Values.contains(str)
+  }
 }

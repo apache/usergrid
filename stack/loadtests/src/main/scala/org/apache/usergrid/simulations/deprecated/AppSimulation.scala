@@ -28,9 +28,6 @@ import org.apache.usergrid.settings.Settings
 
 import scala.concurrent.duration._
 
-/**
- * Classy class class.
- */
 class AppSimulation extends Simulation {
   println("Begin setup")
   Setup.setupNotifier()

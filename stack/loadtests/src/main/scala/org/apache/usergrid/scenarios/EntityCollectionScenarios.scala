@@ -147,31 +147,15 @@ object EntityCollectionScenarios {
     .exec(injectTokenIntoSession())
     .exec(injectAuthType())
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
-      feed(FeederGenerator.generateCustomEntityFeeder2(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+      feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+        .exec{
+          session => if (session("validEntity").as[String] == "yes") { println("Loading entity #" + session("entityNum").as[String]) }
+          session
+        }
         .doIf(session => session("validEntity").as[String] == "yes") {
           exec(loadEntity)
         }
     }
-    //.rendezVous(Settings.totalUsers)
-
-  /*
-  val loadEntity = exec(
-    http("POST load entity")
-      .post(Settings.baseCollectionUrl)
-      .headers(Headers.authToken)
-      .body(StringBody("""${entity}"""))
-      .check(status.in(Seq(200,400)))
-  )
-
-  val loadEntities = scenario("Load entities")
-    .exec(injectTokenIntoSession())
-    .exec(injectAuthType())
-    .forever(
-      feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
-      .exec(loadEntity)
-    )
-    */
-
 
   /*
    * Delete entities
@@ -188,15 +172,39 @@ object EntityCollectionScenarios {
     .exec(injectTokenIntoSession())
     .exec(injectAuthType())
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
-      feed(FeederGenerator.generateCustomEntityFeeder2(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+    feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+      .exec {
+      session => if (session("validEntity").as[String] == "yes") { println("Deleting entity #" + session("entityNum").as[String]) }
+        session
+    }
+      .doIf(session => session("validEntity").as[String] == "yes") {
+      exec(deleteEntity)
+    }
+  }
+
+  /*
+   * Delete entities
+   */
+  val updateEntity = exec(
+    http("UPDATE entity")
+      .put("""${entityUrl}""")
+      .headers(Headers.authToken)
+      .body(StringBody(Settings.updateBody))
+      // 200 for success, 404 if doesn't exist
+      .check(status.in(Seq(200)))
+  )
+
+  val updateEntities = scenario("Update entities")
+    .exec(injectTokenIntoSession())
+    .exec(injectAuthType())
+    .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
+      feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
+        .exec {
+          session => if (session("validEntity").as[String] == "yes") { println("Updating entity #" + session("entityNum").as[String]) }
+          session
+        }
         .doIf(session => session("validEntity").as[String] == "yes") {
-          exec(deleteEntity)
+          exec(updateEntity)
         }
     }
-  /*
-  val createEntityBatchScenario = scenario("Create custom entities")
-      .exec(injectStaticTokenToSession())
-      .feed(FeederGenerator.generateCustomEntityCreateFeeder(Settings.entityPrefix, Settings.numEntities))
-      .exec(EntityScenarios.postEntity)
-  */
 }

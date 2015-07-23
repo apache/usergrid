@@ -103,31 +103,4 @@ object Extractors {
     session => session.set("authType", Settings.authType)
   }
 
-  /*
-  def injectTokenToSession(authType: String, tokenType: String): Expression[Session] = {
-    session => {
-      if (authType == AuthType.Token && tokenType == TokenType.User) {
-        session.set("authToken", Setup.getUserToken)
-      } else if (authType == AuthType.Token && tokenType == TokenType.Management) {
-        session.set("authToken", Setup.getManagementToken())
-      } else {
-        session.set("authToken", "")
-      }
-    }
-  }
-
-  def injectAuth(authType: String, tokenType: String): Expression[Session] = {
-    session => {
-      if (authType == AuthType.Token && tokenType == TokenType.User) {
-        session.set("authToken", Setup.getUserToken)
-      } else if (authType == AuthType.Token && tokenType == TokenType.Management) {
-        session.set("authToken", Setup.getManagementToken())
-      } else {
-        session.set("authToken", "")
-      }
-      session.set("authType", authType)
-    }
-  }
-  */
-
 }

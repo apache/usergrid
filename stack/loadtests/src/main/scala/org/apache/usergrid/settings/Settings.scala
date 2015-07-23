@@ -17,14 +17,13 @@
 package org.apache.usergrid.settings
 
 import java.nio.charset.StandardCharsets
-import java.util.Base64
+import java.util.{Date, Base64}
 
 
-import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums._
-import scala.concurrent.duration._
+import org.apache.usergrid.helpers.Utils
 
 object Settings {
 
@@ -91,6 +90,11 @@ object Settings {
   val orgCreationEmail = System.getProperty(ConfigProperties.OrgCreationEmail, orgCreationUsername.concat("@usergrid.com"))
   val orgCreationName = System.getProperty(ConfigProperties.OrgCreationName, orgCreationUsername)
   val orgCreationPassword = System.getProperty(ConfigProperties.OrgCreationPassword, "test")
+
+  // Entity update
+  val updateProperty = System.getProperty(ConfigProperties.UpdateProperty, "updateProp")
+  val updateValue = System.getProperty(ConfigProperties.UpdateValue, new Date().toString)
+  val updateBody = Utils.toJSONStr(Map(updateProperty -> updateValue))
 
   def getUserFeeder():Array[Map[String, String]]= {
     FeederGenerator.generateUserWithGeolocationFeeder(totalUsers, userLocationRadius, centerLatitude, centerLongitude)

@@ -20,24 +20,14 @@
 
 package org.apache.usergrid.helpers
 
-import java.util
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ning.http.client.{ListenableFuture, AsyncHttpClient,Response}
-import io.gatling.core.Predef._
-import io.gatling.http.Predef._
-import io.gatling.http.request.StringBody
-import io.gatling.jsonpath.JsonPath
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums.TokenType
-import org.apache.usergrid.settings.{Settings, Headers}
+import org.apache.usergrid.settings.Settings
 
 import scala.collection.mutable.ArrayBuffer
-import scala.util.parsing.json.JSONObject
 
-/**
- * Classy class class.
- */
 object Setup {
   var managementToken:String = null
   val client = new AsyncHttpClient()
