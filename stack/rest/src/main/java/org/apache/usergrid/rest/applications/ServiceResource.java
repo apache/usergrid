@@ -83,6 +83,8 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
+
 
 @Component
 @Scope("prototype")
@@ -582,6 +584,14 @@ public class ServiceResource extends AbstractContextResource {
     private JSONWithPadding executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
                                               ServiceAction serviceAction ) throws Exception {
 
+        //needed for testing
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
+
         // collect form data values
         List<BodyPart> bodyParts = multiPart.getBodyParts();
         HashMap<String, Object> data = new HashMap<String, Object>();
@@ -638,6 +648,14 @@ public class ServiceResource extends AbstractContextResource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response uploadDataStream( @Context UriInfo ui, InputStream uploadedInputStream ) throws Exception {
 
+        //needed for testing
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
+
         ApiResponse response = createApiResponse();
         response.setAction( "get" );
         response.setApplication( services.getApplication() );
@@ -661,6 +679,14 @@ public class ServiceResource extends AbstractContextResource {
                                       @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
 
         LOG.debug( "ServiceResource.executeStreamGet" );
+
+        //Needed for testing
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "get" );

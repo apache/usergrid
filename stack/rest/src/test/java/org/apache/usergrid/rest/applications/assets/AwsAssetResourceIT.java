@@ -50,6 +50,8 @@ import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import com.sun.jersey.multipart.FormDataMultiPart;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
@@ -59,18 +61,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-
+@NotThreadSafe
 public class AwsAssetResourceIT extends AbstractRestIT {
 
     private String access_token;
     private Map<String, Object> originalProperties;
     private Logger LOG = LoggerFactory.getLogger( AwsAssetResourceIT.class );
 
-//    /**
-//     * Mark tests as ignored if no AWS creds are present
-//     */
-//    @Rule
-//    public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
+    /**
+     * Mark tests as ignored if no AWS creds are present
+     */
+    @Rule
+    public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
 
     @Before
     public void setup(){
@@ -230,7 +232,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
         UUID assetId = postResponse.getEntities().get(0).getUuid();
         LOG.info( "Waiting for upload to finish..." );
-        Thread.sleep( 2000 );
+        Thread.sleep( 5000 );
 
         // check that entire file was uploaded
 
@@ -251,10 +253,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         this.refreshIndex();
 
         // set max file size down to 6mb
-
-        Map<String, String> props = new HashMap<String, String>();
-        props.put( "usergrid.binary.max-size-mb", "6" );
-        pathResource( "testproperties" ).post( props );
+        setTestProperty( "usergrid.binary.max-size-mb","6" );
 
         try {
 
@@ -267,20 +266,21 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
             String errorMessage = null;
             LOG.info( "Waiting for upload to finish..." );
-            Thread.sleep( 2000 );
+            Thread.sleep( 1000 );
 
             // attempt to get asset entity, it should contain error
 
+            refreshIndex();
             ApiResponse getResponse = pathResource( getOrgAppPath( "bars/" +assetId ) ).get( ApiResponse.class );
             Map<String, Object> fileMetadata = (Map<String, Object>)getResponse.getEntities().get(0).get("file-metadata");
+            assertNotNull( fileMetadata );
+            assertNotNull( fileMetadata.get( "error" ) );
             assertTrue( fileMetadata.get( "error" ).toString().startsWith( "Asset size " ) );
 
         } finally {
 
             // set max upload size back to default 25mb
-
-            props.put( "usergrid.binary.max-size-mb", "25" );
-            pathResource( "testproperties" ).post( props );
+            setTestProperties( originalProperties );
         }
     }
 
