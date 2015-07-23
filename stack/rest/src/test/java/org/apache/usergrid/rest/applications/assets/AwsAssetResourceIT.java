@@ -74,7 +74,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
     @Before
     public void setup(){
-        Map<String, Object> originalProperties = getRemoteTestProperties();
+        originalProperties = getRemoteTestProperties();
         setTestProperty(PROPERTIES_USERGRID_BINARY_UPLOADER, "AWS");
 
 
