@@ -24,11 +24,10 @@ import java.util.Map;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 
-import org.apache.usergrid.rest.test.resource.CollectionResource;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,7 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PutTest extends AbstractRestIT {
     private static final Logger log= LoggerFactory.getLogger( PutTest.class );
-    
+
 
     @Test //USERGRID-545
     public void putMassUpdateTest() throws IOException {

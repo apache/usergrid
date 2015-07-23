@@ -21,9 +21,10 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
-
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.User;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
@@ -33,7 +34,9 @@ import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
 import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.junit.Assert.*;
@@ -122,7 +125,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             String t = this.getAdminToken().getAccessToken();
             Form form = new Form();
@@ -149,7 +152,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             postAddAdminToOrg(this.clientSetup.getOrganizationName(), UUIDGenerator.newTimeUUID()+"@email.com", "password");
         } finally {
@@ -172,7 +175,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             // this should send resetpwd  link in email to newly added org admin user(that did not exist
             ///in usergrid) and "User Invited To Organization" email
@@ -234,7 +237,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             // svcSetup an admin user
             String adminUserName = "AdminUserFromOtherOrg";

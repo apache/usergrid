@@ -27,11 +27,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
 import static org.junit.Assert.*;
 
@@ -158,7 +158,7 @@ public class PagingResourceIT extends AbstractRestIT {
         createEntities( trinketCollectionName, numOfEntities );
 
         //checks to make sure we don't get a cursor for just 5 entities.
-        //Created a new query parameter because when generated it store the cursor token back into it. 
+        //Created a new query parameter because when generated it store the cursor token back into it.
         queryParameters = new QueryParameters();
         queryParameters.setQuery( "select * ORDER BY created" );
         pageAndVerifyEntities( trinketCollectionName,queryParameters,numOfPages, numOfEntities );

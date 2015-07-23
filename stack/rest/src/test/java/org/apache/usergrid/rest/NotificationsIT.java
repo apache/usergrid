@@ -27,10 +27,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.usergrid.rest.test.resource2point0.*;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.*;
+import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
+import org.apache.usergrid.rest.test.resource.model.*;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Test creating, sending and paging through Notifications via the REST API.
  */
-public class NotificationsIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
+public class NotificationsIT extends org.apache.usergrid.rest.test.resource.AbstractRestIT {
     private static final Logger logger = LoggerFactory.getLogger( NotificationsIT.class );
 
     private static final MetricRegistry registry = new MetricRegistry();

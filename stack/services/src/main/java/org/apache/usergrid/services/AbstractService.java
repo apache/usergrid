@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.codahale.metrics.Timer;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -39,6 +42,8 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.core.rx.RxSchedulerFig;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
@@ -47,6 +52,12 @@ import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceInvocationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
+
+import com.google.inject.Injector;
+
+import rx.Observable;
+import rx.Scheduler;
+import rx.Subscriber;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.apache.usergrid.services.ServiceParameter.filter;
@@ -88,6 +99,14 @@ public abstract class AbstractService implements Service {
 
     protected Map<String, Object> defaultEntityMetadata;
 
+    private Scheduler rxScheduler;
+    private RxSchedulerFig rxSchedulerFig;
+    private MetricsFactory metricsFactory;
+    private Timer entityGetTimer;
+    private Timer entitiesGetTimer;
+    private Timer entitiesParallelGetTimer;
+    private Timer invokeTimer;
+
 
     public AbstractService() {
 
@@ -97,6 +116,14 @@ public abstract class AbstractService implements Service {
     public void setServiceManager( ServiceManager sm ) {
         this.sm = sm;
         em = sm.getEntityManager();
+        final Injector injector = sm.getApplicationContext().getBean( Injector.class );
+        rxScheduler = injector.getInstance( RxTaskScheduler.class ).getAsyncIOScheduler();
+        rxSchedulerFig = injector.getInstance(RxSchedulerFig.class);
+        metricsFactory = injector.getInstance(MetricsFactory.class);
+        this.entityGetTimer = metricsFactory.getTimer(this.getClass(), "importEntity.get");
+        this.entitiesGetTimer = metricsFactory.getTimer(this.getClass(), "importEntities.get");
+        this.entitiesParallelGetTimer = metricsFactory.getTimer( this.getClass(),"importEntitiesP.get" );
+        this.invokeTimer = metricsFactory.getTimer( this.getClass(),"service.invoke" );
     }
 
 
@@ -154,9 +181,9 @@ public abstract class AbstractService implements Service {
             return false;
         }
         if ( "application".equals( context.getOwner().getType() ) ) {
-            return Schema.getDefaultSchema().isCollectionReversed( "application", pluralize( info.getItemType() ) );
+            return Schema.getDefaultSchema().isCollectionReversed("application", pluralize(info.getItemType()));
         }
-        return Schema.getDefaultSchema().isCollectionReversed( info.getContainerType(), info.getCollectionName() );
+        return Schema.getDefaultSchema().isCollectionReversed(info.getContainerType(), info.getCollectionName());
     }
 
 
@@ -165,9 +192,9 @@ public abstract class AbstractService implements Service {
             return null;
         }
         if ( "application".equals( context.getOwner().getType() ) ) {
-            return Schema.getDefaultSchema().getCollectionSort( "application", pluralize( info.getItemType() ) );
+            return Schema.getDefaultSchema().getCollectionSort("application", pluralize(info.getItemType()));
         }
-        return Schema.getDefaultSchema().getCollectionSort( info.getContainerType(), info.getCollectionName() );
+        return Schema.getDefaultSchema().getCollectionSort(info.getContainerType(), info.getCollectionName());
     }
 
 
@@ -175,7 +202,7 @@ public abstract class AbstractService implements Service {
         if ( privateConnections == null ) {
             privateConnections = new LinkedHashSet<String>();
         }
-        privateConnections.add( connection );
+        privateConnections.add(connection);
     }
 
 
@@ -183,7 +210,7 @@ public abstract class AbstractService implements Service {
         if ( privateConnections == null ) {
             privateConnections = new LinkedHashSet<String>();
         }
-        privateConnections.addAll( connections );
+        privateConnections.addAll(connections);
     }
 
 
@@ -191,7 +218,7 @@ public abstract class AbstractService implements Service {
         if ( declaredConnections == null ) {
             declaredConnections = new LinkedHashSet<String>();
         }
-        declaredConnections.add( connection );
+        declaredConnections.add(connection);
     }
 
 
@@ -199,7 +226,7 @@ public abstract class AbstractService implements Service {
         if ( declaredConnections == null ) {
             declaredConnections = new LinkedHashSet<String>();
         }
-        declaredConnections.addAll( connections );
+        declaredConnections.addAll(connections);
     }
 
 
@@ -207,7 +234,7 @@ public abstract class AbstractService implements Service {
         if ( privateCollections == null ) {
             privateCollections = new LinkedHashSet<String>();
         }
-        privateCollections.add( collection );
+        privateCollections.add(collection);
     }
 
 
@@ -215,7 +242,7 @@ public abstract class AbstractService implements Service {
         if ( privateCollections == null ) {
             privateCollections = new LinkedHashSet<String>();
         }
-        privateCollections.addAll( collections );
+        privateCollections.addAll(collections);
     }
 
 
@@ -223,7 +250,7 @@ public abstract class AbstractService implements Service {
         if ( declaredCollections == null ) {
             declaredCollections = new LinkedHashSet<String>();
         }
-        declaredCollections.add( collection );
+        declaredCollections.add(collection);
     }
 
 
@@ -231,7 +258,7 @@ public abstract class AbstractService implements Service {
         if ( declaredCollections == null ) {
             declaredCollections = new LinkedHashSet<String>();
         }
-        declaredCollections.addAll( collections );
+        declaredCollections.addAll(collections);
     }
 
 
@@ -239,7 +266,7 @@ public abstract class AbstractService implements Service {
         if ( replaceParameters == null ) {
             replaceParameters = new LinkedHashMap<List<String>, List<String>>();
         }
-        replaceParameters.put( find, replace );
+        replaceParameters.put(find, replace);
     }
 
 
@@ -247,7 +274,7 @@ public abstract class AbstractService implements Service {
         if ( serviceCommands == null ) {
             serviceCommands = new LinkedHashSet<String>();
         }
-        serviceCommands.add( command );
+        serviceCommands.add(command);
     }
 
 
@@ -255,7 +282,7 @@ public abstract class AbstractService implements Service {
         if ( serviceCommands == null ) {
             serviceCommands = new LinkedHashSet<String>();
         }
-        serviceCommands.addAll( commands );
+        serviceCommands.addAll(commands);
     }
 
 
@@ -263,7 +290,7 @@ public abstract class AbstractService implements Service {
         if ( entityDictionaries == null ) {
             entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
         }
-        entityDictionaries.add( dictionary );
+        entityDictionaries.add(dictionary);
     }
 
 
@@ -289,7 +316,7 @@ public abstract class AbstractService implements Service {
         if ( metadataTypes == null ) {
             metadataTypes = new LinkedHashSet<String>();
         }
-        metadataTypes.add( type );
+        metadataTypes.add(type);
     }
 
 
@@ -297,7 +324,7 @@ public abstract class AbstractService implements Service {
         if ( metadataTypes == null ) {
             metadataTypes = new LinkedHashSet<String>();
         }
-        metadataTypes.addAll( typeList );
+        metadataTypes.addAll(typeList);
     }
 
 
@@ -305,7 +332,7 @@ public abstract class AbstractService implements Service {
         if ( entityCommands == null ) {
             entityCommands = new LinkedHashSet<String>();
         }
-        entityCommands.add( command );
+        entityCommands.add(command);
     }
 
 
@@ -313,7 +340,7 @@ public abstract class AbstractService implements Service {
         if ( entityCommands == null ) {
             entityCommands = new LinkedHashSet<String>();
         }
-        entityCommands.addAll( commands );
+        entityCommands.addAll(commands);
     }
 
 
@@ -338,76 +365,139 @@ public abstract class AbstractService implements Service {
 
     @Override
     public Entity importEntity( ServiceRequest request, Entity entity ) throws Exception {
-        if ( entity == null ) {
-            return null;
-        }
-
-        if ( !isRootService() ) {
-            return sm.importEntity( request, entity );
-        }
-
-        String path = request.getPath() + "/" + entity.getUuid();
-        Map<String, Object> metadata = new LinkedHashMap<String, Object>();
-        metadata.put( "path", path );
-
-        if ( defaultEntityMetadata != null ) {
-            metadata.putAll( defaultEntityMetadata );
-        }
-
-        Set<Object> connections = getConnectedTypesSet( entity );
-        if ( connections != null ) {
-            Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( Object n : connections ) {
-                m.put( n.toString(), path + "/" + n );
+        Timer.Context getEntityTimer = entityGetTimer.time();
+        try {
+            if (entity == null) {
+                return null;
             }
-            metadata.put( "connections", m );
-        }
 
-        Set<Object> connecting = getConnectingTypesSet( entity );
-        if ( connecting != null ) {
-            Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( Object n : connecting ) {
-                m.put( n.toString(), path + "/connecting/" + n );
+            if (!isRootService()) {
+                return sm.importEntity(request, entity);
             }
-            metadata.put( "connecting", m );
-        }
 
-        Set<String> collections = getCollectionSet( entity );
-        if ( collections != null ) {
-            Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( Object n : collections ) {
-                m.put( n.toString(), path + "/" + n );
+
+            String path = request.getPath() + "/" + entity.getUuid();
+            Map<String, Object> metadata = new LinkedHashMap<String, Object>();
+            metadata.put("path", path);
+
+            if (defaultEntityMetadata != null) {
+                metadata.putAll(defaultEntityMetadata);
             }
-            metadata.put( "collections", m );
-        }
 
-        if ( entityDictionaries != null ) {
-            Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( EntityDictionaryEntry dict : entityDictionaries ) {
-                m.put( dict.getName(), path + "/" + dict.getPath() );
+            Set<Object> connections = getConnectedTypesSet(entity);
+            if (connections != null) {
+                Map<String, Object> m = new LinkedHashMap<String, Object>();
+                for (Object n : connections) {
+                    m.put(n.toString(), path + "/" + n);
+                }
+                metadata.put("connections", m);
             }
-            metadata.put( "sets", m );
-        }
 
-        if ( metadata.size() > 0 ) {
-            entity.mergeMetadata( metadata );
+            Set<Object> connecting = getConnectingTypesSet(entity);
+            if (connecting != null) {
+                Map<String, Object> m = new LinkedHashMap<String, Object>();
+                for (Object n : connecting) {
+                    m.put(n.toString(), path + "/connecting/" + n);
+                }
+                metadata.put("connecting", m);
+            }
+
+            Set<String> collections = getCollectionSet(entity);
+            if (collections != null) {
+                Map<String, Object> m = new LinkedHashMap<String, Object>();
+                for (Object n : collections) {
+                    m.put(n.toString(), path + "/" + n);
+                }
+                metadata.put("collections", m);
+            }
+
+            if (entityDictionaries != null) {
+                Map<String, Object> m = new LinkedHashMap<String, Object>();
+                for (EntityDictionaryEntry dict : entityDictionaries) {
+                    m.put(dict.getName(), path + "/" + dict.getPath());
+                }
+                metadata.put("sets", m);
+            }
+
+            if (metadata.size() > 0) {
+                entity.mergeMetadata(metadata);
+            }
+            return entity;
+        }finally {
+            getEntityTimer.stop();
         }
-        return entity;
     }
 
 
     public void importEntities( ServiceRequest request, Results results ) throws Exception {
-
-        List<Entity> entities = results.getEntities();
-        if ( entities != null ) {
-            for ( Entity entity : entities ) {
-                Entity imported = importEntity( request, entity );
-                if ( imported != entity ) {
-                    logger.debug( "Import returned new entity instace for {} replacing in results set",
-                            entity.getUuid() );
-                    results.replace( imported );
-                }
+        Timer.Context timer = entitiesGetTimer.time();
+        try {
+            List<Entity> entities = results.getEntities();
+            if (entities != null) {
+                importEntitiesParallel(request, results);
             }
+        }finally {
+            timer.stop();
+        }
+    }
+
+
+    /**
+     * Import entities in parallel
+     * @param request
+     * @param results
+     */
+    private void importEntitiesParallel(final ServiceRequest request, final Results results ) {
+        //create our tuples
+        final Observable<EntityTuple> tuples = Observable.create(new Observable.OnSubscribe<EntityTuple>() {
+            @Override
+            public void call(final Subscriber<? super EntityTuple> subscriber) {
+                subscriber.onStart();
+
+                final List<Entity> entities = results.getEntities();
+                final int size = entities.size();
+                for (int i = 0; i < size && !subscriber.isUnsubscribed(); i++) {
+                    subscriber.onNext(new EntityTuple(i, entities.get(i)));
+                }
+
+                subscriber.onCompleted();
+            }
+        });
+
+        //now process them in parallel up to 10 threads
+
+        Observable tuplesObservable = tuples.flatMap(tuple -> {
+            //map the entity into the tuple
+            return Observable.just(tuple).doOnNext(parallelTuple -> {
+                //import the entity and set it at index
+                try {
+
+                    final Entity imported = importEntity(request, parallelTuple.entity);
+
+                    if (imported != null) {
+                        results.setEntity(parallelTuple.index, imported);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).subscribeOn(rxScheduler);
+        }, rxSchedulerFig.getImportThreads());
+
+        ObservableTimer.time(tuplesObservable, entitiesParallelGetTimer).toBlocking().lastOrDefault(null);
+    }
+
+
+    /**
+     * Simple tuple representing and entity and it's location within the results
+     */
+    private static final class EntityTuple {
+        private final int index;
+        private final Entity entity;
+
+
+        private EntityTuple( final int index, final Entity entity ) {
+            this.index = index;
+            this.entity = entity;
         }
     }
 
@@ -459,7 +549,7 @@ public abstract class AbstractService implements Service {
             entity.addProperties( payload.getProperties() );
             return entity;
         }
-        logger.error( "Attempted update of entity reference rather than full entity, currently unsupport - MUSTFIX" );
+        logger.error("Attempted update of entity reference rather than full entity, currently unsupport - MUSTFIX");
         throw new NotImplementedException();
     }
 
@@ -486,7 +576,7 @@ public abstract class AbstractService implements Service {
 
 
     public Set<Object> getConnectedTypesSet( EntityRef ref ) throws Exception {
-        final Set<String> connections = em.getConnectionsAsSource( ref );
+        final Set<String> connections = em.getConnectionsAsSource(ref);
 
         if ( connections == null ) {
             return null;
@@ -505,7 +595,7 @@ public abstract class AbstractService implements Service {
 
 
     public Set<Object> getConnectingTypesSet( EntityRef ref ) throws Exception {
-        final Set<String> connections = em.getConnectionsAsTarget( ref );
+        final Set<String> connections = em.getConnectionsAsTarget(ref);
 
         if ( connections == null ) {
             return null;
@@ -524,7 +614,7 @@ public abstract class AbstractService implements Service {
 
 
     public Set<String> getCollectionSet( EntityRef ref ) {
-        Set<String> set = Schema.getDefaultSchema().getCollectionNames( ref.getType() );
+        Set<String> set = Schema.getDefaultSchema().getCollectionNames(ref.getType());
         set = new LinkedHashSet<String>( set );
         if ( declaredCollections != null ) {
             set.addAll( declaredCollections );
@@ -543,7 +633,7 @@ public abstract class AbstractService implements Service {
     public ServiceResults invoke( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
                                   ServicePayload payload ) throws Exception {
 
-        ServiceContext context = getContext( action, request, previousResults, payload );
+        ServiceContext context = getContext(action, request, previousResults, payload);
 
         return invoke( context );
     }
@@ -560,7 +650,7 @@ public abstract class AbstractService implements Service {
         EntityRef owner = request.getOwner();
         String collectionName =
                 "application".equals( owner.getType() ) ? pluralize( info.getItemType() ) : info.getCollectionName();
-        List<ServiceParameter> parameters = filter( request.getParameters(), replaceParameters );
+        List<ServiceParameter> parameters = filter(request.getParameters(), replaceParameters);
 
         ServiceParameter first_parameter = null;
         if ( !isEmpty( parameters ) ) {
@@ -583,7 +673,7 @@ public abstract class AbstractService implements Service {
         if ( first_parameter instanceof QueryParameter ) {
             query = first_parameter.getQuery();
         }
-        parameters = mergeQueries( query, parameters );
+        parameters = mergeQueries(query, parameters);
 
         if ( first_parameter instanceof IdParameter ) {
             UUID id = first_parameter.getId();
@@ -609,9 +699,8 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults invoke( ServiceContext context ) throws Exception {
-
         ServiceResults results = null;
-
+        Timer.Context time = invokeTimer.time();
         String metadataType = checkForServiceMetadata( context );
         if ( metadataType != null ) {
             return handleServiceMetadata( context, metadataType );
@@ -639,8 +728,9 @@ public abstract class AbstractService implements Service {
         }
 
         results = handleEntityDictionary( context, results, entityDictionary );
-        results = handleEntityCommand( context, results, entityCommand );
+        results = handleEntityCommand(context, results, entityCommand);
 
+        time.stop();
         return results;
     }
 
@@ -649,19 +739,19 @@ public abstract class AbstractService implements Service {
 
         switch ( context.getAction() ) {
             case GET:
-                return getItemById( context, id );
+                return getItemById(context, id);
 
             case POST:
-                return postItemById( context, id );
+                return postItemById(context, id);
 
             case PUT:
-                return putItemById( context, id );
+                return putItemById(context, id);
 
             case DELETE:
-                return deleteItemById( context, id );
+                return deleteItemById(context, id);
 
             case HEAD:
-                return headItemById( context, id );
+                return headItemById(context, id);
         }
 
         throw new ServiceInvocationException( context, "Request action unhandled " + context.getAction() );
@@ -669,25 +759,20 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults invokeItemWithName( ServiceContext context, String name ) throws Exception {
-
-        switch ( context.getAction() ) {
+        switch (context.getAction()) {
             case GET:
-                return getItemByName( context, name );
-
+                return getItemByName(context, name);
             case POST:
-                return postItemByName( context, name );
-
+                return postItemByName(context, name);
             case PUT:
-                return putItemByName( context, name );
-
+                return putItemByName(context, name);
             case DELETE:
-                return deleteItemByName( context, name );
-
+                return deleteItemByName(context, name);
             case HEAD:
-                return headItemByName( context, name );
+                return headItemByName(context, name);
+            default:
+                throw new ServiceInvocationException(context, "Request action unhandled " + context.getAction());
         }
-
-        throw new ServiceInvocationException( context, "Request action unhandled " + context.getAction() );
     }
 
 

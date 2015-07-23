@@ -25,9 +25,9 @@ import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.*;
+import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -37,7 +37,6 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.usergrid.rest.AbstractRestIT.logNode;
 import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
@@ -49,7 +48,7 @@ import static org.junit.Assert.*;
 public class ManagementResourceIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ManagementResourceIT.class);
-    private org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource management;
+    private org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource management;
 
     public ManagementResourceIT() throws Exception {
 
@@ -411,7 +410,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         JsonNode node = management.me().post( JsonNode.class, payload );
 
-        logNode( node );
+        logger.info("node:", node);
         String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
@@ -429,15 +428,16 @@ public class ManagementResourceIT extends AbstractRestIT {
         form.add( "password", clientSetup.getPassword() );
 
         JsonNode node = management.me().post( JsonNode.class, form );
+        logger.info("node:", node);
 
-        logNode( node );
         String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
 
         node = resource().path( "/management/me" ).queryParam( "access_token", token )
                          .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        logNode( node );
+        logger.info("node:", node );
+
     }
 
 

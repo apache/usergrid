@@ -20,14 +20,14 @@ package org.apache.usergrid.rest.applications.collection;
 import java.io.IOException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Collection;
 
-import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource.model.Credentials;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource.model.Token;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -126,6 +126,35 @@ public class CollectionsResourceIT extends AbstractRestIT {
 */
     }
 
+    @Test
+    public void postToReservedField() throws Exception {
+        Entity payload = new Entity();
+        payload.put( "term_date", "12/31/9999" );
+        payload.put( "effective_date","2015-04-20T17:41:38.035Z" );
+        payload.put("junk","TEST");
+
+        this.app().collection( "testCollection" ).post( payload );
+        refreshIndex();
+        Thread.sleep( 1000 );
+
+        Collection collection = this.app().collection( "testCollection" ).get();
+
+        assertNotEquals(0, collection.getNumOfEntities() );
+
+        payload = new Entity();
+        payload.put( "term_date","1991-17-10" );
+        payload.put( "effective_date","HELLO WORLD!" );
+        payload.put("junk","TEST");
+
+        this.app().collection( "testCollection" ).post( payload );
+        refreshIndex();
+        Thread.sleep( 1000 );
+
+        collection = this.app().collection( "testCollection" ).get();
+
+        assertEquals( 2, collection.getNumOfEntities() );
+
+    }
 
     /**
      * Test posts with a user level token on a path with permissions
