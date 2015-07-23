@@ -17,46 +17,31 @@
 
 package org.apache.usergrid.rest.management;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMultipart;
-
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.representation.Form;
+import org.apache.usergrid.management.MockImapClient;
+import org.apache.usergrid.persistence.core.util.StringUtils;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMultipart;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-
-import org.apache.usergrid.management.MockImapClient;
-import org.apache.usergrid.persistence.core.util.StringUtils;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
-
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_DEFAULT_SYSADMIN_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.apache.usergrid.management.AccountCreationProps.*;
+import static org.junit.Assert.*;
 
 
 /**

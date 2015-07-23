@@ -116,8 +116,6 @@ public interface AccountCreationProps {
     /**
      * Retrieves the maximum number of organizations to show when the admin logs in.
      * Default is 10
-     *
-     * @return
      */
     public int getMaxOrganizationsForSuperUserLogin();
 
