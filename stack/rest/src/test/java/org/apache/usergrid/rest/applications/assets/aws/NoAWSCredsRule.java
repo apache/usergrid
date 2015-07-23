@@ -26,7 +26,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
+
 import com.amazonaws.AmazonClientException;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 
 /**
@@ -72,6 +75,14 @@ public class NoAWSCredsRule implements TestRule {
                 //swallow
                 return true;
             }
+        }
+
+        if(t instanceof UniformInterfaceException){
+            return true;
+        }
+
+        if( t instanceof AwsPropertiesNotFoundException ){
+            return true;
         }
 
         /**

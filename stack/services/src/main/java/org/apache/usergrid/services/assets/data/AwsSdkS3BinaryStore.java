@@ -34,12 +34,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
+import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
 import org.apache.usergrid.utils.StringUtils;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
@@ -97,13 +101,33 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
     }
 
     public AwsSdkS3BinaryStore( String accessId, String secretKey, String bucketName ) {
-        this.accessId = accessId;
-        this.secretKey = secretKey;
-        this.bucketName = bucketName;
+//        this.accessId = accessId;
+//        this.secretKey = secretKey;
+//        this.bucketName = bucketName;
+    }
+
+    public AwsSdkS3BinaryStore( ) {
+
+        //need to add bucket name here
     }
 
     private AmazonS3 getS3Client() {
         if ( s3Client == null ) {
+            try {
+                final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+                this.accessId = ugProvider.getCredentials().getAWSAccessKeyId();
+                this.secretKey = ugProvider.getCredentials().getAWSSecretKey();
+                this.bucketName = ugProvider.getBucketName();
+            }
+            catch(Exception e){
+                if(e instanceof AmazonClientException){
+                    //TODO:GREY Move this exception into the service tier
+                    throw new AwsPropertiesNotFoundException( "Access Keys" );
+                }
+
+            }
+
+
             AWSCredentials credentials = new BasicAWSCredentials(accessId, secretKey);
             ClientConfiguration clientConfig = new ClientConfiguration();
             clientConfig.setProtocol(Protocol.HTTP);

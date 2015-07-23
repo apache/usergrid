@@ -33,6 +33,7 @@ public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
 
     private AWSCredentials creds = new UsergridAwsCredentials();
 
+
     public  UsergridAwsCredentialsProvider(){
         init();
     }
@@ -51,6 +52,10 @@ public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
         return creds;
     }
 
+    public String getBucketName(){
+
+        return getBucketName();
+    }
 
     @Override
     public void refresh() {
