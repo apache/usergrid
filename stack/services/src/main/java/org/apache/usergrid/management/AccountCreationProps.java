@@ -85,7 +85,9 @@ public interface AccountCreationProps {
     public static final String PROPERTIES_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
     public static final String PROPERTIES_SYSADMIN_LOGIN_ALLOWED = "usergrid.sysadmin.login.allowed";
 
-    public static final String PROPERTIES_SYSADMIN_EMAIL = "usergrid.sysadmin.email";
+    public static final String PROPERTIES_ADMIN_SYSADMIN_EMAIL = "usergrid.admin.sysadmin.email";
+    public static final String PROPERTIES_ORG_SYSADMIN_EMAIL = "usergrid.org.sysadmin.email";
+    public static final String PROPERTIES_DEFAULT_SYSADMIN_EMAIL = "usergrid.sysadmin.email";
 
     public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD =
             "usergrid.test-account.admin-user.password";
@@ -114,8 +116,6 @@ public interface AccountCreationProps {
     /**
      * Retrieves the maximum number of organizations to show when the admin logs in.
      * Default is 10
-     *
-     * @return
      */
     public int getMaxOrganizationsForSuperUserLogin();
 

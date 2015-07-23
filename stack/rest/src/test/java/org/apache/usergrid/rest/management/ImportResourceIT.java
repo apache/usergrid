@@ -30,12 +30,12 @@ import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.management.importer.S3Upload;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.Organization;
+import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import org.jclouds.ContextBuilder;

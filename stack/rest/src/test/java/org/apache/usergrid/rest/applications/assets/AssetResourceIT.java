@@ -19,9 +19,9 @@ package org.apache.usergrid.rest.applications.assets;
 
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -224,7 +224,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
             // upload a file larger than 6mb
 
-            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cat-larger-than-6mb.jpg" ) );
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ) );
             FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
             ApiResponse postResponse = pathResource( getOrgAppPath( "bars" ) ).post( form );
             UUID assetId = postResponse.getEntities().get(0).getUuid();

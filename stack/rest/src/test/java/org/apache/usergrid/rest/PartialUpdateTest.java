@@ -18,8 +18,8 @@ package org.apache.usergrid.rest;
 
 
 import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.utils.MapUtils;
 import org.junit.Test;
 import org.slf4j.Logger;

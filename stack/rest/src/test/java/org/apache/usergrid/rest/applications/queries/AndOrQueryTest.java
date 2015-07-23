@@ -17,9 +17,9 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +66,37 @@ public class AndOrQueryTest extends QueryTestBase {
             // make sure the correct ordinal properties are returned
             assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
         }
+
+    }
+    @Test
+    public void someTestProp() throws IOException {
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        // create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+        // Query where madeup = true (the last half) and the last quarter of entries
+        QueryParameters params = new QueryParameters()
+            .setQuery("where sometestprop = 'testprop'");
+        Collection activities = this.app().collection("activities").get(params);
+        // results should have madeup = true and ordinal 15-19
+        assertEquals(10, activities.getResponse().getEntityCount());
+
+
+    }
+
+    @Test
+    public void someTestPropPartialContains() throws IOException {
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        // create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+        // Query where madeup = true (the last half) and the last quarter of entries
+        QueryParameters params = new QueryParameters()
+            .setQuery("where sometestprop contains 'test*'");
+        Collection activities = this.app().collection("activities").get(params);
+        // results should have madeup = true and ordinal 15-19
+        assertEquals(10, activities.getResponse().getEntityCount());
+
 
     }
 
