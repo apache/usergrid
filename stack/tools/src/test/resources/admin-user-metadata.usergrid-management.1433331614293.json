@@ -81,5 +81,57 @@
         }
       }
     }
+  }, 
+  "USER_UUID_3" : {
+    "activities": [],
+    "devices": [],
+    "feed": [
+      "4c8fee64-09e5-11e5-b3c6-57cd4e12c0b1"
+    ],
+    "groups": [
+      "4c88c26a-09e5-11e5-8a66-594dd93a503d"
+    ],
+    "roles": [],
+    "connections": {},
+    "organizations": [
+      {
+        "uuid": "ORG_UUID_3",
+        "name": "ORG_NAME_3"
+      }
+    ],
+    "dictionaries": {
+      "credentials": {
+        "mongo_pwd": {
+          "recoverable": true,
+          "encrypted": false,
+          "secret": "e7b4fc7db5b97088997e44eced015d42",
+          "hashType": null,
+          "created": 1433331614067,
+          "cryptoChain": [
+            "plaintext"
+          ]
+        },
+        "password": {
+          "recoverable": false,
+          "encrypted": true,
+          "secret": "JDJhJDA5JER0RTdNSldMRjkxSUlJVm5hZWJMTy5DelFLemwvd2tXdUttaHViZWdyRjRURVdxYk5TUGJt",
+          "hashType": null,
+          "created": 1433331614018,
+          "cryptoChain": [
+            "bcrypt"
+          ]
+        },
+        "secret": {
+          "recoverable": true,
+          "encrypted": false,
+          "secret": "YWQ6Rx9A-m5U-TihpkPVS4PmyQO4qig",
+          "hashType": null,
+          "created": 1433331614067,
+          "cryptoChain": [
+            "plaintext"
+          ]
+        }
+      }
+    }
   }
 }

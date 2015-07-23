@@ -164,18 +164,8 @@ fi
 # This should be a clean repo we are working against. Run clean just to ensure it is.
 git clean -fdxq
 
-echo "Generating changelog"
-${base_dir}/release/changelog.rb $current_version
-git add CHANGELOG
-git commit -m "Updating CHANGELOG for ${current_version} release."
-
 echo "Creating ${current_version_tag} branch"
 git branch $current_version_tag $(git rev-parse HEAD)
-
-echo "Committing updated .usergridversion on master"
-echo $new_snapshot_version > .usergridversion
-git add .usergridversion
-git commit -m "Incrementing snapshot version to ${new_snapshot_version}."
 
 # Build the source distribution from the new branch
 echo "Checking out ${current_version_tag} branch and updating .usergridversion"
