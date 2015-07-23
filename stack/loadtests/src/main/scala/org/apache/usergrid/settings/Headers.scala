@@ -17,7 +17,6 @@
  package org.apache.usergrid.settings
 
  import org.apache.usergrid.enums.AuthType
- import org.apache.usergrid.helpers.Setup
 
  /**
  *

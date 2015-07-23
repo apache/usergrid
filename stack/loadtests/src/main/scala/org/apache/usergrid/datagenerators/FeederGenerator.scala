@@ -14,18 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.datagenerators
+package org.apache.usergrid.datagenerators
 
- import java.util
- import java.util.UUID
- import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
- import io.gatling.core.Predef._
- import org.apache.usergrid.helpers.Utils
- import org.apache.usergrid.settings.Settings
- import scala.collection.mutable.ArrayBuffer
- import scala.util.Random
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import io.gatling.core.Predef._
+import org.apache.usergrid.helpers.Utils
+import org.apache.usergrid.settings.Settings
+import scala.collection.mutable.ArrayBuffer
 
- object FeederGenerator {
+object FeederGenerator {
 
   def generateUserWithGeolocationFeeder(numUsers: Int, radius: Double, centerLatitude: Double, centerLongitude: Double): Array[Map[String, String]] = {
     var userArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
@@ -206,20 +204,32 @@
    entityArray.toArray
  }
 
- def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Array[Map[String, Any]] = {
-   var entityMapArray: ArrayBuffer[Map[String, Any]] = new ArrayBuffer[Map[String, Any]]
+ /*
+  * Gatling doesn't handle feeders running out of data well -- ending test with failure and not building a report.
+  * This feeder will serve data forever, but validEntity will be set to "no" when data has run out. Each user can
+  * then exit in a controlled fashion.
+  */
+ def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Feeder[String] =
+ new Feeder[String] {
+   var counter = new AtomicInteger(0)
 
-   for (i <- seed to numEntities+seed-1) {
-     val entityName = prefix.concat(i.toString)
+   // runs forever -- users detect when data is done using validEntity field
+   override def hasNext: Boolean = true
+
+   override def next(): Map[String, String] = {
+     val i = counter.getAndIncrement()
+     val seededVal = i + seed
+     val entityName = prefix.concat(seededVal.toString)
      val entity = EntityDataGenerator.generateEntity(entityType, entityName)
      val entityUrl = Settings.baseCollectionUrl + "/" + entityName
-     entityMapArray += Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl)
-   }
+     val validEntity = if (i >= numEntities) "no" else "yes"
 
-   entityMapArray.toArray
+     Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity, "entityNum" -> (i+1).toString)
+   }
  }
 
- def generateCustomEntityFeeder2 (numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Feeder[String] =
+   /*
+ def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Feeder[String] =
  new Feeder[String] {
    var counter = new AtomicInteger(seed)
 
@@ -236,6 +246,8 @@
      Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity)
    }
  }
+
+    */
 
  def generateCustomEntityInfiniteFeeder(seed: Int = Settings.entitySeed, entityType: String = Settings.entityType, prefix: String = Settings.entityPrefix): Iterator[String] = {
    Iterator.from(seed).map(i=>EntityDataGenerator.generateEntity(entityType, prefix.concat(i.toString)))

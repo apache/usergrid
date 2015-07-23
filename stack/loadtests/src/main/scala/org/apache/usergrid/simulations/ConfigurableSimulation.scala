@@ -17,6 +17,7 @@
 package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
+import io.gatling.core.structure.ScenarioBuilder
 import org.apache.usergrid.enums.ScenarioType
 import org.apache.usergrid.helpers.Setup
 import org.apache.usergrid.scenarios.EntityCollectionScenarios
@@ -33,6 +34,17 @@ import org.apache.usergrid.settings.Settings
  * getAllByCursor scenario: searchQuery, searchLimit
  */
 class ConfigurableSimulation extends Simulation {
+
+  def getScenario(scenarioType: String): ScenarioBuilder = {
+    scenarioType match {
+      case ScenarioType.LoadEntities => EntityCollectionScenarios.loadEntities
+      case ScenarioType.DeleteEntities => EntityCollectionScenarios.deleteEntities
+      case ScenarioType.UpdateEntities => EntityCollectionScenarios.updateEntities
+      case ScenarioType.GetAllByCursor => EntityCollectionScenarios.getEntityPagesToEnd
+      case ScenarioType.NameRandomInfinite => EntityCollectionScenarios.getRandomEntitiesByName
+    }
+  }
+
   before(
     if (!Settings.skipSetup) {
       println("Begin setup")
@@ -44,43 +56,14 @@ class ConfigurableSimulation extends Simulation {
     }
   )
 
-
-
   Settings.setTestStartTime()
-  if (Settings.scenarioType == ScenarioType.LoadEntities) {
+  if (ScenarioType.isValid(Settings.scenarioType)) {
+    val scenario: ScenarioBuilder = getScenario(Settings.scenarioType)
     setUp(
-      EntityCollectionScenarios.loadEntities
+      scenario
         .inject(
           rampUsers(Settings.rampUsers) over Settings.rampTime,
           constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
-
-        ).protocols(Settings.httpConf.acceptHeader("application/json"))
-    )
-  } else if (Settings.scenarioType == ScenarioType.DeleteEntities) {
-    setUp(
-      EntityCollectionScenarios.deleteEntities
-        .inject(
-          rampUsers(Settings.rampUsers) over Settings.rampTime,
-          constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
-
-        ).protocols(Settings.httpConf.acceptHeader("application/json"))
-    )
-  } else if (Settings.scenarioType == ScenarioType.GetAllByCursor) {
-    setUp(
-      EntityCollectionScenarios.getEntityPagesToEnd
-        .inject(
-          rampUsers(Settings.rampUsers) over Settings.rampTime,
-          constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
-
-        ).protocols(Settings.httpConf.acceptHeader("application/json"))
-    )
-  } else if (Settings.scenarioType == ScenarioType.NameRandomInfinite) {
-    setUp(
-      EntityCollectionScenarios.getRandomEntitiesByName
-        .inject(
-          rampUsers(Settings.rampUsers) over Settings.rampTime,
-          constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
-
         ).protocols(Settings.httpConf.acceptHeader("application/json"))
     )
   } else {

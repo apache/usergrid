@@ -22,7 +22,6 @@ import org.apache.usergrid.datagenerators.{EntityDataGenerator, FeederGenerator}
 import org.apache.usergrid.helpers.{Extractors,Utils}
 import org.apache.usergrid.settings.{Headers, Settings}
 
-import scala.util.parsing.json.JSONObject
 
 /**
  * Provides CRUD methods for custom entities

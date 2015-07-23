@@ -37,16 +37,16 @@ mvn compile
 #APP=$(date +%s)
 ADMIN_USER=superuser
 ADMIN_PASSWORD=test
-CREATE_ORG=true
+CREATE_ORG=false
 ORG=gatling
-CREATE_APP=true
+CREATE_APP=false
 APP=millionentities
 COLLECTION_TYPE=trivialentities
-SCENARIO_TYPE=loadEntities
+SCENARIO_TYPE=updateEntities
 # don't load entities as part of setup
 LOAD_ENTITIES=false
 
-SKIP_SETUP=FALSE
+SKIP_SETUP=TRUE
 #SEARCH_QUERY=order%20by%20specials%20desc
 #SEARCH_LIMIT=1000
 ENTITY_TYPE=trivial

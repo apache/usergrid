@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.scenarios
+package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
- import org.apache.usergrid.datagenerators.FeederGenerator
- import org.apache.usergrid.settings.{Settings, Headers}
+import org.apache.usergrid.datagenerators.FeederGenerator
+import org.apache.usergrid.settings.{Settings, Headers}
 
- object ConnectionScenarios {
+object ConnectionScenarios {
 
   val postUserConnection = exec(
     http("POST connection")
