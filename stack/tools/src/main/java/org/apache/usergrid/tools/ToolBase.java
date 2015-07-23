@@ -116,7 +116,7 @@ public abstract class ToolBase {
     public void printCliHelp( String message ) {
         System.out.println( message );
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp( "java -jar usergrid-tools-0.0.1-SNAPSHOT.jar " + getToolName(), createOptions() );
+        formatter.printHelp( "java -jar usergrid-tools-1.0.2.jar " + getToolName(), createOptions() );
         System.exit( -1 );
     }
 

@@ -17,90 +17,232 @@
 package org.apache.usergrid.tools;
 
 
-import java.util.UUID;
-
-import org.apache.usergrid.management.ManagementService;
+import io.codearte.jfairy.Fairy;
+import io.codearte.jfairy.producer.company.Company;
+import io.codearte.jfairy.producer.person.Person;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.entities.Activity;
-import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 
-import static org.junit.Assert.assertNotNull;
+import java.util.*;
 
 
 /**
- * Simple class to create test for for exporting
- *
- * @author tnine
+ * Create an app full of users and data.
  */
-public class ExportDataCreator {
+public class ExportDataCreator extends ToolBase {
 
-    private EntityManagerFactory emf;
+    public static final String APP_NAME = "application";
+    public static final String ORG_NAME = "organization";
+    public static final String NUM_USERS = "users";
+    public static final String NUM_COLLECTIONS = "collections";
+    public static final String NUM_ENTITIES = "entities";
+    public static final String ADMIN_USERNAME = "username";
+    public static final String ADMIN_PASSWORD = "password";
 
-    private ManagementService managementService;
+    public String appName = "test-app";
+    public String orgName = "test-organization";
+    public int numUsers = 100;
+    public int numCollections = 20;
+    public int numEntities = 100;
+    public String adminUsername = "adminuser";
+    public String adminPassword = "test";
 
 
-    /**
-     * @param emf
-     * @param managementService
-     */
-    public ExportDataCreator( EntityManagerFactory emf, ManagementService managementService ) {
-        super();
-        this.emf = emf;
-        this.managementService = managementService;
+    @Override
+    public void runTool(CommandLine line) throws Exception {
+
+        startSpring();
+
+        setVerbose( line );
+
+        if (line.hasOption( APP_NAME )) {
+            appName = line.getOptionValue( APP_NAME );
+        }
+        if (line.hasOption( ORG_NAME )) {
+            orgName = line.getOptionValue( ORG_NAME );
+        }
+        if (line.hasOption( NUM_USERS )) {
+            numUsers = Integer.parseInt( line.getOptionValue( NUM_USERS ) );
+        }
+        if (line.hasOption( NUM_COLLECTIONS )) {
+            numCollections = Integer.parseInt( line.getOptionValue( NUM_COLLECTIONS ) );
+        }
+        if (line.hasOption( NUM_ENTITIES )) {
+            numEntities = Integer.parseInt( line.getOptionValue( NUM_ENTITIES ) );
+        }
+        if (line.hasOption( ADMIN_USERNAME )) {
+            adminUsername = line.getOptionValue( ADMIN_USERNAME );
+        }
+        if (line.hasOption( ADMIN_PASSWORD )) {
+            adminPassword = line.getOptionValue( ADMIN_PASSWORD );
+        }
+
+        createTestData();
+    }
+
+
+    @Override
+    @SuppressWarnings("static-access")
+    public Options createOptions() {
+
+        Options options = super.createOptions();
+
+        Option appName = OptionBuilder.hasArg()
+                .withDescription( "Application name to use" ).create( APP_NAME );
+
+        Option orgName = OptionBuilder.hasArg()
+                .withDescription( "Organization to use (will create if not present)" ).create( ORG_NAME );
+
+        Option numUsers = OptionBuilder.hasArg()
+                .withDescription( "Number of users create (in addition to users)" ).create( NUM_USERS );
+
+        Option numCollection = OptionBuilder.hasArg()
+                .withDescription( "Number of collections to create (in addition to users)" ).create( NUM_COLLECTIONS );
+
+        Option numEntities = OptionBuilder.hasArg()
+                .withDescription( "Number of entities to create per collection" ).create( NUM_ENTITIES );
+
+        Option adminUsername = OptionBuilder.hasArg()
+                .withDescription( "Admin Username" ).create( ADMIN_USERNAME );
+
+        Option adminPassword = OptionBuilder.hasArg()
+                .withDescription( "Admin Password" ).create( ADMIN_PASSWORD );
+
+        options.addOption( appName );
+        options.addOption( orgName );
+        options.addOption( numUsers );
+        options.addOption( numCollection );
+        options.addOption( numEntities );
+        options.addOption( adminUsername );
+        options.addOption( adminPassword );
+
+        return options;
     }
 
 
     public void createTestData() throws Exception {
 
-        String orgName = "testexportorg";
+        OrganizationInfo orgInfo = managementService.getOrganizationByName( orgName );
 
-        //nothing to do 
-        if ( managementService.getOrganizationByName( orgName ) != null ) {
-            return;
+        if (orgInfo == null) {
+            OrganizationOwnerInfo ownerInfo = managementService.createOwnerAndOrganization(
+                    orgName, adminUsername + "@example.com", adminUsername,
+                    adminUsername + "@example.com", adminPassword, true, false );
+            orgInfo = ownerInfo.getOrganization();
         }
 
-        OrganizationOwnerInfo orgInfo = managementService
-                .createOwnerAndOrganization( orgName, "textExportUser@apigee.com", "Test User",
-                        "textExportUser@apigee.com", "password", true, false );
+        ApplicationInfo appInfo = managementService.getApplicationInfo( orgName + "/" + appName );
 
-        UUID appId = managementService.createApplication( orgInfo.getOrganization().getUuid(), "application" ).getId();
+        if (appInfo == null) {
+            UUID appId = managementService.createApplication( orgInfo.getUuid(), appName ).getId();
+            appInfo = managementService.getApplicationInfo( appId );
+        }
 
-        EntityManager em = emf.getEntityManager( appId );
+        EntityManager em = emf.getEntityManager( appInfo.getId() );
 
-        User first = new User();
-        first.setUsername( "first" );
-        first.setEmail( "first@usergrid.com" );
+        Fairy fairy = Fairy.create();
 
-        Entity firstUserEntity = em.create( first );
+        List<Entity> users = new ArrayList<Entity>( numUsers );
 
-        assertNotNull( firstUserEntity );
+        for (int i = 0; i < numUsers; i++) {
 
-        User second = new User();
-        second.setUsername( "second" );
-        second.setEmail( "second@usergrid.com" );
+            final Person person = fairy.person();
+            Entity userEntity = null;
+            try {
+                final Map<String, Object> userMap = new HashMap<String, Object>() {{
+                    put( "username", person.username() );
+                    put( "password", person.password() );
+                    put( "email", person.email() );
+                    put( "companyEmail", person.companyEmail() );
+                    put( "dateOfBirth", person.dateOfBirth() );
+                    put( "firstName", person.firstName() );
+                    put( "lastName", person.lastName() );
+                    put( "nationalIdentificationNumber", person.nationalIdentificationNumber() );
+                    put( "telephoneNumber", person.telephoneNumber() );
+                    put( "passportNumber", person.passportNumber() );
+                    put( "address", person.getAddress() );
+                }};
 
-        Entity secondUserEntity = em.create( second );
+                userEntity = em.create( "user", userMap );
+                users.add( userEntity );
 
-        assertNotNull( secondUserEntity );
+            } catch (DuplicateUniquePropertyExistsException e) {
+                logger.error( "Dup user generated: " + person.username() );
+                continue;
+            } catch (Exception e) {
+                logger.error("Error creating user", e);
+                continue;
+            }
 
-        em.createConnection( firstUserEntity, "likes", secondUserEntity );
+            final Company company = person.getCompany();
+            try {
+                EntityRef ref = em.getAlias( "company", company.name() );
+                Entity companyEntity = (ref == null) ? null : em.get( ref );
+              
+                // create company if it does not exist yet
+                if ( companyEntity == null ) {
+                    final Map<String, Object> companyMap = new HashMap<String, Object>() {{
+                        put( "name", company.name() );
+                        put( "domain", company.domain() );
+                        put( "email", company.email() );
+                        put( "url", company.url() );
+                        put( "vatIdentificationNumber", company.vatIdentificationNumber() );
+                    }};
+                    companyEntity = em.create( "company", companyMap );
+                } else {
+                    logger.info("Company {} already exists", company.name());
+                }
 
-        em.createConnection( secondUserEntity, "dislikes", firstUserEntity );
+                em.createConnection( userEntity, "employer", companyEntity );
 
-        // now create some activities and put them into the user stream
+            } catch (DuplicateUniquePropertyExistsException e) {
+                logger.error( "Dup company generated {} property={}", company.name(), e.getPropertyName() );
+                continue;
+            } catch (Exception e) {
+                logger.error("Error creating or connecting company", e);
+                continue;
+            }
+            
+            try {
+                for (int j = 0; j < 5; j++) {
+                    Activity activity = new Activity();
+                    Activity.ActivityObject actor = new Activity.ActivityObject();
+                    actor.setEntityType( "user" );
+                    actor.setId( userEntity.getUuid().toString() );
+                    activity.setActor( actor );
+                    activity.setVerb( "POST" );
+                    activity.setContent( "User " + person.username() + " generated a random string "
+                            + RandomStringUtils.randomAlphanumeric( 5 ) );
+                    em.createItemInCollection( userEntity, "activities", "activity", activity.getProperties() );
+                }
 
-        Activity activity = new Activity();
+                if (users.size() > 10) {
+                    for (int j = 0; j < 5; j++) {
+                        try {
+                            em.createConnection( userEntity, "associate", users.get( (int) (Math.random() * users.size()) ) );
+                        } catch (Exception e) {
+                            logger.error( "Error connecting user to user: " + e.getMessage() );
+                        }
+                    }
+                }
+                
+            } catch (Exception e) {
+                logger.error("Error creating activities", e);
+                continue;
+            }
 
-        Activity.ActivityObject actor = new Activity.ActivityObject();
-        actor.setEntityType( "user" );
-        actor.setId( firstUserEntity.getUuid().toString() );
-
-        activity.setActor( actor );
-        activity.setVerb( "POST" );
-
-        em.createItemInCollection( firstUserEntity, "activities", "activity", activity.getProperties() );
+        }
     }
+
 }

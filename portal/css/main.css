@@ -49,21 +49,6 @@ a {
     font-style: normal;
 }
 
-@font-face {
-    font-family: 'marquette-medium';
-    src: url('arsmarquette/ARSMaquettePro-Medium.otf'), url('arsmarquette/ARSMaquettePro-Medium.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'marquette-regular';
-    src: url('arsmarquette/ARSMaquettePro-Regular.otf'), url('arsmarquette/ARSMaquettePro-Regular.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'marquette-light';
-    src: url('arsmarquette/ARSMaquettePro-Light.otf'), url('arsmarquette/ARSMaquettePro-Light.otf') format('opentype');
-}
-
 .bold {
     font-family: 'marquette-medium';
 }
