@@ -2630,14 +2630,7 @@ public class CpEntityManager implements EntityManager {
                     applicationId,
                     CpEntityMapUtils.toMap( cpEntity )
                 } );
-            //
-            //            if ( entity.getType().equals("group")) {
-            //                logger.debug("Writing Group");
-            //                for ( Field field : cpEntity.getFields() ) {
-            //                    logger.debug(
-            //                        "   Writing Group name={} value={}", field.getName(), field.getValue() );
-            //                }
-            //            }
+
         }
 
         try {

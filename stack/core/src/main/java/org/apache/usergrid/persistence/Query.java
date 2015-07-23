@@ -853,9 +853,11 @@ public class Query {
      * Return true if no query is present and we should perform a graph search
      * @return
      */
+    @JsonIgnore
     public boolean isGraphSearch(){
         return ql == null || ql.trim().toLowerCase().equals("select *");
     }
+
 
     public Query setQl( String ql ) {
         this.ql = ql;
