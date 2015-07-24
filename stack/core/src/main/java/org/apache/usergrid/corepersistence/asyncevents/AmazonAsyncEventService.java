@@ -70,6 +70,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
     private static final Logger logger = LoggerFactory.getLogger(AmazonAsyncEventService.class);
+
+    // SQS maximum receive messages is 10
     private static final int MAX_TAKE = 10;
     private static final String QUEUE_NAME = "es_queue";
 
@@ -83,6 +85,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     private final Timer readTimer;
     private final Timer writeTimer;
+    private final Timer ackTimer;
 
     private final Object mutex = new Object();
 
@@ -116,6 +119,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.write");
         this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.read");
+        this.ackTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.ack");
         this.indexErrorCounter = metricsFactory.getCounter(AmazonAsyncEventService.class, "async_event.error");
         this.messageCycle = metricsFactory.getHistogram(AmazonAsyncEventService.class, "async_event.message_cycle");
 
@@ -167,7 +171,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
      */
     private Observable<QueueMessage> take() {
 
-        //SQS doesn't support more than 10
         final Timer.Context timer = this.readTimer.time();
 
         try {
@@ -188,14 +191,26 @@ public class AmazonAsyncEventService implements AsyncEventService {
      */
     public void ack(final List<QueueMessage> messages) {
 
-        /**
-         * No op
-         */
-        if (messages.size() == 0) {
-            return;
+        final Timer.Context timer = this.ackTimer.time();
+
+        try{
+            // no op
+            if (messages.size() == 0) {
+                return;
+            }
+            queue.commitMessages(messages);
+
+            //decrement our in-flight counter
+            inFlight.addAndGet(-1 * messages.size());
+
+        }catch(Exception e){
+            throw new RuntimeException("Unable to ack messages", e);
+        }
+        finally {
+            timer.stop();
         }
 
-        queue.commitMessages(messages);
+
     }
 
     /**
@@ -203,11 +218,24 @@ public class AmazonAsyncEventService implements AsyncEventService {
      */
     public void ack(final QueueMessage message) {
 
-        queue.commitMessage(message);
+        final Timer.Context timer = this.ackTimer.time();
+
+        try{
+            queue.commitMessage(message);
+
+            //decrement our in-flight counter
+            inFlight.decrementAndGet();
+
+        }catch(Exception e){
+            throw new RuntimeException("Unable to ack messages", e);
+        }finally {
+            timer.stop();
+        }
+
+
     }
 
     private void handleMessages(final List<QueueMessage> messages) {
-
         if (logger.isDebugEnabled()) logger.debug("handleMessages with {} message", messages.size());
 
         for (QueueMessage message : messages) {
@@ -424,11 +452,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
                             List<QueueMessage> drainList = null;
 
                             do {
-                                Timer.Context timer = readTimer.time();
-
                                 try {
                                     drainList = take().toList().toBlocking().lastOrDefault(null);
-
                                     //emit our list in it's entity to hand off to a worker pool
                                     subscriber.onNext(drainList);
 
@@ -451,8 +476,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     }
 
                                     indexErrorCounter.inc();
-                                } finally {
-                                    timer.stop();
                                 }
                             }
                             while (true);
