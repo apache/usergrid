@@ -52,7 +52,6 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
