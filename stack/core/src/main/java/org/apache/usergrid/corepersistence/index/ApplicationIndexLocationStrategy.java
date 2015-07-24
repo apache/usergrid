@@ -45,8 +45,8 @@ class ApplicationIndexLocationStrategy implements IndexLocationStrategy {
         this.indexFig = indexFig;
         this.applicationScope = applicationScope;
         this.indexRootName  = clusterFig.getClusterName() + "_" + cassandraFig.getApplicationKeyspace().toLowerCase();
-        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexRootName);
         this.indexBucketName = indexRootName + "_applications_" + applicationIndexBucketLocator.getBucket(applicationScope);
+        this.alias =  new ApplicationIndexAlias(indexFig, applicationScope, indexRootName);
     }
 
 

@@ -19,6 +19,7 @@ package org.apache.usergrid.tools;
 
 import java.util.Properties;
 
+import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.services.ServiceManagerFactory;
 
@@ -50,7 +50,7 @@ import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 /**
- * Base class for Usergrid Tools commands. Any class that implements this can be called with 
+ * Base class for Usergrid Tools commands. Any class that implements this can be called with
  * java -jar {jarname} org.apache.usergrid.tools.{classname}.
  */
 public abstract class ToolBase {
@@ -179,7 +179,7 @@ public abstract class ToolBase {
 
     public void setupCassandra() throws Exception {
 
-        Setup setup = ( ( EntityManagerFactoryImpl ) emf ).getSetup();
+        Setup setup = ( (CpEntityManagerFactory) emf ).getSetup();
         logger.info( "Setting up Usergrid schema" );
         setup.init();
         logger.info( "Usergrid schema setup" );

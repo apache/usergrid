@@ -17,44 +17,27 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-
 import com.google.common.base.Optional;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.exception.ConflictException;
-import org.apache.usergrid.management.exceptions.*;
-import org.apache.usergrid.persistence.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
-import org.apache.usergrid.management.AccountCreationProps;
-import org.apache.usergrid.management.ActivationState;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
-import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.management.*;
+import org.apache.usergrid.management.exceptions.*;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.EncryptionService;
@@ -71,83 +54,28 @@ import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServiceManager;
-import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.services.ServiceRequest;
-import org.apache.usergrid.services.ServiceResults;
-import org.apache.usergrid.utils.ConversionUtils;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.MailUtils;
-import org.apache.usergrid.utils.StringUtils;
-import org.apache.usergrid.utils.UUIDUtils;
+import org.apache.usergrid.services.*;
+import org.apache.usergrid.utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.Map.Entry;
 
+import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_ACTIVATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_CONFIRMATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_RESETPW_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_INVITED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_FOOTER;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PASSWORD_RESET;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PIN_REQUEST;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_MAILER_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SETUP_TEST_ACCOUNT;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_PASSWORD;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_APP;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ORGANIZATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
+import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.apache.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
 import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_CATEGORY;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_CONTENT;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_DISPLAY_NAME;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ENTITY_TYPE;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_ENTITY_TYPE;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_NAME;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
+import static org.apache.usergrid.persistence.entities.Activity.*;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_VERB;
-import org.apache.usergrid.persistence.Query.Level;
-import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
-import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION;
-import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION_USER;
-import static org.apache.usergrid.security.AuthPrincipalType.ORGANIZATION;
+import static org.apache.usergrid.security.AuthPrincipalType.*;
 import static org.apache.usergrid.security.oauth.ClientCredentialsInfo.getTypeFromClientId;
 import static org.apache.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.apache.usergrid.security.tokens.TokenCategory.ACCESS;
@@ -161,8 +89,6 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.ListUtils.anyNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.PasswordUtils.mongoPassword;
-
-import static java.lang.Boolean.parseBoolean;
 
 
 public class ManagementServiceImpl implements ManagementService {
@@ -215,10 +141,10 @@ public class ManagementServiceImpl implements ManagementService {
     protected EncryptionService encryptionService;
 
 
+
     /** Must be constructed with a CassandraClientPool. */
     public ManagementServiceImpl() {
     }
-
 
     @Autowired
     public void setEntityManagerFactory( EntityManagerFactory emf ) {
@@ -230,6 +156,33 @@ public class ManagementServiceImpl implements ManagementService {
     @Autowired
     public void setProperties( Properties properties ) {
         this.properties = new AccountCreationPropsImpl( properties );
+
+
+    }
+
+    String orgSysAdminEmail,defaultSysAdminEmail,adminSysAdminEmail;
+    private String getDefaultSysAdminEmail(){
+        defaultSysAdminEmail = defaultSysAdminEmail != null
+            ? defaultSysAdminEmail
+            : properties.getProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL);
+        return defaultSysAdminEmail;
+    }
+    private String getOrgSystemEmail(){
+        if( orgSysAdminEmail != null ){
+            return orgSysAdminEmail;
+        }
+        orgSysAdminEmail =  properties.getProperty( PROPERTIES_ORG_SYSADMIN_EMAIL );
+        orgSysAdminEmail = orgSysAdminEmail!=null ? orgSysAdminEmail : getDefaultSysAdminEmail();
+        return orgSysAdminEmail;
+    }
+
+    private String getAdminSystemEmail(){
+        if( adminSysAdminEmail != null ){
+            return adminSysAdminEmail;
+        }
+        adminSysAdminEmail = properties.getProperty( PROPERTIES_ADMIN_SYSADMIN_EMAIL );
+        adminSysAdminEmail = adminSysAdminEmail!=null ? adminSysAdminEmail : getDefaultSysAdminEmail();
+        return adminSysAdminEmail;
     }
 
 
@@ -2258,7 +2211,8 @@ public class ManagementServiceImpl implements ManagementService {
             }
             if ( newOrganizationsNeedSysAdminApproval() ) {
                 logger.info( "sending SysAdminApproval confirmation email: {}", organization.getName() );
-                sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+                //TODO: add org email approval
+                sendHtmlMail( properties, getOrgSystemEmail(),
                         properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                         "Request For Organization Account Activation " + organization.getName(), appendEmailFooter(
                         emailMsg( hashMap( "organization_name", organization.getName() )
@@ -2321,7 +2275,8 @@ public class ManagementServiceImpl implements ManagementService {
                 organization_owners = ( organization_owners == null ) ? user.getHTMLDisplayEmailAddress() :
                                       organization_owners + ", " + user.getHTMLDisplayEmailAddress();
             }
-            sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+            //TODO: org email
+            sendHtmlMail( properties, getOrgSystemEmail(),
                     properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                     "Organization Account Activated " + organization.getName(), appendEmailFooter( emailMsg(
                     hashMap( "organization_name", organization.getName() )
@@ -2414,10 +2369,11 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendSysAdminRequestAdminActivationEmail( UserInfo user ) throws Exception {
         String token = getActivationTokenForAdminUser( user.getUuid(), 0 );
+        //TODO: admin specific email
         String activation_url =
                 String.format( properties.getProperty( PROPERTIES_ADMIN_ACTIVATION_URL ), user.getUuid().toString() )
                         + "?token=" + token;
-        sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+        sendHtmlMail( properties, getAdminSystemEmail(),
                 properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                 "Request For Admin User Account Activation " + user.getEmail(), appendEmailFooter(
                 emailMsg( hashMap( "user_email", user.getEmail() ).map( "activation_url", activation_url ),
@@ -2427,7 +2383,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendSysAdminNewAdminActivatedNotificationEmail( UserInfo user ) throws Exception {
         if ( properties.notifySysAdminOfNewAdminUsers() ) {
-            sendHtmlMail( properties, properties.getProperty( PROPERTIES_SYSADMIN_EMAIL ),
+            sendHtmlMail( properties, getAdminSystemEmail(),
                     properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                     "Admin User Account Activated " + user.getEmail(), appendEmailFooter(
                     emailMsg( hashMap( "user_email", user.getEmail() ), PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED ) ) );

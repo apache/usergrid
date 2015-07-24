@@ -42,12 +42,12 @@ public class ReplicatedIndexLocationStrategy implements IndexLocationStrategy {
     }
 
     public ReplicatedIndexLocationStrategy(IndexLocationStrategy indexLocationStrategy){
-        alias = new ReplicatedIndexAlias( indexLocationStrategy.getAlias() );
         rootName = indexLocationStrategy.getIndexRootName();
         indexInitialName = indexLocationStrategy.getIndexInitialName();
         applicationScope = indexLocationStrategy.getApplicationScope();
         numberShards = indexLocationStrategy.getNumberOfShards();
         numberReplicas = indexLocationStrategy.getNumberOfReplicas();
+        alias = new ReplicatedIndexAlias( indexLocationStrategy.getAlias() );
     }
 
     @Override

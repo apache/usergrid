@@ -182,6 +182,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             //get index name with bucket attached
             Preconditions.checkNotNull(indexName,"must have an indexname");
 
+            Preconditions.checkArgument(!indexName.contains("alias"),indexName + " name cannot contain alias " );
+
             //Create index
             try {
                 final AdminClient admin = esProvider.getClient().admin();

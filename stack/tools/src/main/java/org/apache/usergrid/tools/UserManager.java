@@ -17,10 +17,19 @@
 package org.apache.usergrid.tools;
 
 
+import com.google.common.collect.BiMap;
 import org.apache.usergrid.management.UserInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.entities.User;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
@@ -48,8 +57,21 @@ public class UserManager extends ToolBase {
             return;
         }
 
+        logger.info("--- User information:");
         logger.info( mapToFormattedJsonString( userInfo ) );
 
+        logger.info("--- User organizations:");
+        final BiMap<UUID, String> orgs = managementService.getOrganizationsForAdminUser( userInfo.getUuid() );
+        logger.info( mapToFormattedJsonString( orgs ) );
+
+        logger.info("--- User dictionaries:");
+        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        User user = em.get( userInfo.getUuid(), User.class );
+        Set<String> dictionaries = em.getDictionaries( user );
+        for (String dictionary : dictionaries) {
+            Map<Object, Object> dict = em.getDictionaryAsMap( user, dictionary );
+            logger.info( dictionary + " : " + mapToFormattedJsonString( dict ) );
+        }
 
         if ( line.hasOption( "p" ) ) {
             String password = line.getOptionValue( "p" );
