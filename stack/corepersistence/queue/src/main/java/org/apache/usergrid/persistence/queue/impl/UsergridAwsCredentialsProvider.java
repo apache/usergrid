@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.queue.impl;
 
 
+import java.util.Properties;
+
 import org.apache.commons.lang.StringUtils;
 
 import com.amazonaws.AmazonClientException;
@@ -30,6 +32,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
  * Pulls the aws keys from system properties.
  */
 public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
+
 
     private AWSCredentials creds = new UsergridAwsCredentials();
 
@@ -50,11 +53,6 @@ public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
     @Override
     public AWSCredentials getCredentials() {
         return creds;
-    }
-
-    public String getBucketName(){
-
-        return getBucketName();
     }
 
     @Override
