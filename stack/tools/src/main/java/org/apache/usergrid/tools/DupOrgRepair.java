@@ -17,31 +17,25 @@
 package org.apache.usergrid.tools;
 
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.utils.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileWriter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.utils.JsonUtils;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 
 /**
@@ -220,7 +214,7 @@ public class DupOrgRepair extends ExportingToolBase {
                 // check to see if this orgname/appname lookup returns the app we're
                 // about to re-assign. If it does NOT, then we need to rename this app
                 // before performing the link.
-                UUID appIdToKeep = emf.lookupApplication( app.getKey() );
+                UUID appIdToKeep = emf.lookupApplication( app.getKey() ).get();
 
                 UUID appIdToChange =
                         appIdToKeep.equals( app.getValue() ) ? targetApps.get( app.getKey() ) : app.getValue();
