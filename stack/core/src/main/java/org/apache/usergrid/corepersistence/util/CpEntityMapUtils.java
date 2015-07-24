@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.util;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -53,7 +54,8 @@ public class CpEntityMapUtils {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityMapUtils.class );
 
     public static JsonFactory jsonFactory = new JsonFactory();
-    public static ObjectMapper objectMapper = new ObjectMapper( jsonFactory  ).registerModule(new GuavaModule());
+    public static ObjectMapper objectMapper = new ObjectMapper(  jsonFactory )
+        .registerModule(new GuavaModule());
 
 
     /**
@@ -122,15 +124,26 @@ public class CpEntityMapUtils {
                 entity.setField( new StringField( fieldName, value.toString(), unique && topLevel ));
 
 			} else if ( value != null ) {
-                String valueSerialized;
+//                String valueSerialized;
+//                try {
+//                    valueSerialized = objectMapper.writeValueAsString(value);
+//                }
+//                catch ( JsonProcessingException e ) {
+//                    throw new RuntimeException( "Can't serialize object ",e );
+//                }
+//
+//                SerializedObjectField bf = new SerializedObjectField( fieldName, valueSerialized, value.getClass() );
+//                entity.setField( bf );
+                byte[] valueSerialized;
                 try {
-                    valueSerialized = objectMapper.writeValueAsString(value);
+                    valueSerialized = objectMapper.writeValueAsBytes( value );
                 }
                 catch ( JsonProcessingException e ) {
                     throw new RuntimeException( "Can't serialize object ",e );
                 }
 
-                SerializedObjectField bf = new SerializedObjectField( fieldName, valueSerialized, value.getClass() );
+                ByteBuffer byteBuffer = ByteBuffer.wrap(valueSerialized);
+                ByteArrayField bf = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
                 entity.setField( bf );
             }
         }
@@ -138,122 +151,7 @@ public class CpEntityMapUtils {
         return entity;
     }
 
-    private static void processMapValue(
-            Object value, String fieldName, Entity entity, String entityType) {
 
-        // is the map really a location element?
-        if ("location" .equals(fieldName.toString().toLowerCase()) ) {
-
-            // get the object to inspect
-            Map<String, Object> origMap = (Map<String, Object>) value;
-            Map<String, Object> m = new HashMap<String, Object>();
-
-            // Tests expect us to treat "Longitude" the same as "longitude"
-            for ( String key : origMap.keySet() ) {
-                m.put( key.toLowerCase(), origMap.get(key) );
-            }
-
-            // Expect at least two fields in a Location object
-            if (m.size() >= 2) {
-
-                Double lat = null;
-                Double lon = null;
-
-                // check the properties to make sure they are set and are doubles
-                if (m.get("latitude") != null && m.get("longitude") != null) {
-                    try {
-                        lat = Double.parseDouble(m.get("latitude").toString());
-                        lon = Double.parseDouble(m.get("longitude").toString());
-
-                    } catch (NumberFormatException ignored) {
-                        throw new IllegalArgumentException(
-                                "Latitude and longitude must be doubles (e.g. 32.1234).");
-                    }
-                } else if (m.get("lat") != null && m.get("lon") != null) {
-                    try {
-                        lat = Double.parseDouble(m.get("lat").toString());
-                        lon = Double.parseDouble(m.get("lon").toString());
-                    } catch (NumberFormatException ignored) {
-                        throw new IllegalArgumentException(""
-                                + "Latitude and longitude must be doubles (e.g. 32.1234).");
-                    }
-                } else {
-                    throw new IllegalArgumentException("Location properties require two fields - "
-                            + "latitude and longitude, or lat and lon");
-                }
-
-                if (lat != null && lon != null) {
-                    entity.setField( new LocationField(fieldName, new Location(lat, lon)));
-                } else {
-                    throw new IllegalArgumentException( "Unable to parse location field properties "
-                            + "- make sure they conform - lat and lon, and should be doubles.");
-                }
-            } else {
-                throw new IllegalArgumentException("Location properties requires two fields - "
-                        + "latitude and longitude, or lat and lon.");
-            }
-        } else {
-            // not a location element, process it as map
-            entity.setField(new EntityObjectField(fieldName,
-                    fromMap((Map<String, Object>) value, entityType, false))); // recursion
-        }
-    }
-
-
-    private static ListField listToListField( String fieldName, List list, String entityType ) {
-
-        if (list.isEmpty()) {
-            return new ArrayField( fieldName );
-        }
-
-        Object sample = list.get(0);
-
-        if ( sample instanceof Map ) {
-            return new ArrayField<Entity>( fieldName, processListForField( list, entityType ));
-
-        } else if ( sample instanceof List ) {
-            return new ArrayField<List>( fieldName, processListForField( list, entityType ));
-        } else if ( sample instanceof String ) {
-            return new ArrayField<String>( fieldName, (List<String>)list );
-
-        } else if ( sample instanceof Boolean ) {
-            return new ArrayField<Boolean>( fieldName, (List<Boolean>)list );
-
-        } else if ( sample instanceof Integer ) {
-            return new ArrayField<Integer>( fieldName, (List<Integer>)list );
-
-        } else if ( sample instanceof Double ) {
-            return new ArrayField<Double>( fieldName, (List<Double>)list );
-
-        } else if ( sample instanceof Long ) {
-            return new ArrayField<Long>( fieldName, (List<Long>)list );
-
-        } else {
-            throw new RuntimeException("Unknown type " + sample.getClass().getName());
-        }
-    }
-
-
-    private static List processListForField( List list, String entityType ) {
-        if ( list.isEmpty() ) {
-            return list;
-        }
-        Object sample = list.get(0);
-
-        if ( sample instanceof Map ) {
-            List<Entity> newList = new ArrayList<Entity>();
-            for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
-                newList.add( fromMap( map, entityType, false ) );
-            }
-            return newList;
-
-        } else if ( sample instanceof List ) {
-            return processListForField( list, entityType ); // recursion
-
-        } else {
-            return list;
-        }
-    }
 
 
     /**
@@ -326,7 +224,122 @@ public class CpEntityMapUtils {
         return entityMap;
     }
 
+    private static void processMapValue(
+        Object value, String fieldName, Entity entity, String entityType) {
 
+        // is the map really a location element?
+        if ("location" .equals(fieldName.toString().toLowerCase()) ) {
+
+            // get the object to inspect
+            Map<String, Object> origMap = (Map<String, Object>) value;
+            Map<String, Object> m = new HashMap<String, Object>();
+
+            // Tests expect us to treat "Longitude" the same as "longitude"
+            for ( String key : origMap.keySet() ) {
+                m.put( key.toLowerCase(), origMap.get(key) );
+            }
+
+            // Expect at least two fields in a Location object
+            if (m.size() >= 2) {
+
+                Double lat = null;
+                Double lon = null;
+
+                // check the properties to make sure they are set and are doubles
+                if (m.get("latitude") != null && m.get("longitude") != null) {
+                    try {
+                        lat = Double.parseDouble(m.get("latitude").toString());
+                        lon = Double.parseDouble(m.get("longitude").toString());
+
+                    } catch (NumberFormatException ignored) {
+                        throw new IllegalArgumentException(
+                            "Latitude and longitude must be doubles (e.g. 32.1234).");
+                    }
+                } else if (m.get("lat") != null && m.get("lon") != null) {
+                    try {
+                        lat = Double.parseDouble(m.get("lat").toString());
+                        lon = Double.parseDouble(m.get("lon").toString());
+                    } catch (NumberFormatException ignored) {
+                        throw new IllegalArgumentException(""
+                            + "Latitude and longitude must be doubles (e.g. 32.1234).");
+                    }
+                } else {
+                    throw new IllegalArgumentException("Location properties require two fields - "
+                        + "latitude and longitude, or lat and lon");
+                }
+
+                if (lat != null && lon != null) {
+                    entity.setField( new LocationField(fieldName, new Location(lat, lon)));
+                } else {
+                    throw new IllegalArgumentException( "Unable to parse location field properties "
+                        + "- make sure they conform - lat and lon, and should be doubles.");
+                }
+            } else {
+                throw new IllegalArgumentException("Location properties requires two fields - "
+                    + "latitude and longitude, or lat and lon.");
+            }
+        } else {
+            // not a location element, process it as map
+            entity.setField(new EntityObjectField(fieldName,
+                fromMap((Map<String, Object>) value, entityType, false))); // recursion
+        }
+    }
+
+
+    private static ListField listToListField( String fieldName, List list, String entityType ) {
+
+        if (list.isEmpty()) {
+            return new ArrayField( fieldName );
+        }
+
+        Object sample = list.get(0);
+
+        if ( sample instanceof Map ) {
+            return new ArrayField<Entity>( fieldName, processListForField( list, entityType ));
+
+        } else if ( sample instanceof List ) {
+            return new ArrayField<List>( fieldName, processListForField( list, entityType ));
+        } else if ( sample instanceof String ) {
+            return new ArrayField<String>( fieldName, (List<String>)list );
+
+        } else if ( sample instanceof Boolean ) {
+            return new ArrayField<Boolean>( fieldName, (List<Boolean>)list );
+
+        } else if ( sample instanceof Integer ) {
+            return new ArrayField<Integer>( fieldName, (List<Integer>)list );
+
+        } else if ( sample instanceof Double ) {
+            return new ArrayField<Double>( fieldName, (List<Double>)list );
+
+        } else if ( sample instanceof Long ) {
+            return new ArrayField<Long>( fieldName, (List<Long>)list );
+
+        } else {
+            throw new RuntimeException("Unknown type " + sample.getClass().getName());
+        }
+    }
+
+
+    private static List processListForField( List list, String entityType ) {
+        if ( list.isEmpty() ) {
+            return list;
+        }
+        Object sample = list.get(0);
+
+        if ( sample instanceof Map ) {
+            List<Entity> newList = new ArrayList<Entity>();
+            for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
+                newList.add( fromMap( map, entityType, false ) );
+            }
+            return newList;
+
+        } else if ( sample instanceof List ) {
+            return processListForField( list, entityType ); // recursion
+
+        } else {
+            return list;
+        }
+    }
     private static Collection processCollectionForMap(Collection c) {
         if (c.isEmpty()) {
             return c;

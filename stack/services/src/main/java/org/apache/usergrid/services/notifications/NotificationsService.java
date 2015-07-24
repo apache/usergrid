@@ -17,11 +17,7 @@
 package org.apache.usergrid.services.notifications;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.usergrid.persistence.queue.DefaultQueueManager;
 import org.slf4j.Logger;
@@ -141,9 +137,9 @@ public class NotificationsService extends AbstractCollectionService {
         postMeter.mark();
         try {
             validate(null, context.getPayload());
-            PathQuery<Device> pathQuery = getPathQuery(context.getRequest().getOriginalParameters());
+            Notification.PathTokens pathTokens = getPathTokens(context.getRequest().getOriginalParameters());
             context.getProperties().put("state", Notification.State.CREATED);
-            context.getProperties().put("pathQuery", pathQuery);
+            context.getProperties().put("pathTokens", pathTokens);
             context.setOwner(sm.getApplication());
             ServiceResults results = super.postCollection(context);
             Notification notification = (Notification) results.getEntity();
@@ -156,46 +152,37 @@ public class NotificationsService extends AbstractCollectionService {
                 properties.put("started", notification.getStarted());
                 properties.put("state", notification.getState());
                 notification.addProperties(properties);
-                LOG.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
+                LOG.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
             }
 
             long now = System.currentTimeMillis();
             notificationQueueManager.queueNotification(notification, null);
-            LOG.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(),System.currentTimeMillis() - now);
+            LOG.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(), System.currentTimeMillis() - now);
             // future: somehow return 202?
             return results;
+        }catch (Exception e){
+            LOG.error("serialization failed",e);
+            throw e;
         }finally {
             timer.stop();
         }
     }
 
-    private PathQuery<Device> getPathQuery(List<ServiceParameter> parameters)
-            throws Exception {
-
-        PathQuery pathQuery = null;
+    private Notification.PathTokens getPathTokens(List<ServiceParameter> parameters){
+        Notification.PathTokens pathTokens = new Notification.PathTokens();
+        pathTokens.setApplicationRef((SimpleEntityRef)em.getApplicationRef());
         for (int i = 0; i < parameters.size() - 1; i += 2) {
             String collection = pluralize(parameters.get(i).getName());
+            Identifier identifier = null;
             ServiceParameter sp = parameters.get(i + 1);
-            Query query = sp.getQuery();
-            if (query == null) {
-                query = new Query();
                 if(collection.equals("devices") && sp.isName() && sp.getName().equals("notifications")) {
-                        //look for queries to /devices;ql=/notifications
+                    //look for queries to /devices;ql=/notifications
                 }else{
-                    query.addIdentifier(sp.getIdentifier());
+                    identifier = sp.getIdentifier();
                 }
-            }
-            query.setLimit(PAGE);
-            query.setCollection(collection);
-
-            if (pathQuery == null) {
-                pathQuery = new PathQuery((SimpleEntityRef)em.getApplicationRef(), query);
-            } else {
-                pathQuery = pathQuery.chain(query);
-            }
+            pathTokens.getPathTokens().add(new Notification.PathToken( collection, identifier));
         }
-
-        return pathQuery;
+        return pathTokens;
     }
 
     @Override
