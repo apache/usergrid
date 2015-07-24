@@ -20,15 +20,21 @@
 package org.apache.usergrid.rest.applications.assets.aws;
 
 
+import java.util.Map;
+import java.util.Properties;
+
 import org.junit.Assume;
 import org.junit.internal.runners.model.MultipleFailureException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.SDKGlobalConfiguration;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 
@@ -38,15 +44,31 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  *
  * Until then, simply marks as passed, which is a bit dangerous
  */
-public class NoAWSCredsRule implements TestRule {
+public class NoAWSCredsRule  extends AbstractRestIT implements TestRule {
+
+    @Autowired
+    private Properties properties;
+
 
     public Statement apply( final Statement base, final Description description ) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-
+                String accessId;
+                String secretKey;
+                String bucketName;
                 try {
+                     Map<String,Object> properties = getRemoteTestProperties();
+                    //TODO: GREY change this so that it checks for the properties, then if it doesn't have them, mark the tests as ignored.
+                    accessId = (String)properties.get( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+                    secretKey = (String)properties.get( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+                    bucketName =(String) properties.get( "usergrid.binary.bucketname" );
+
+                    if(accessId==null||secretKey==null||bucketName==null){
+                        throw new AwsPropertiesNotFoundException( "Access Keys" );
+                    }
                     base.evaluate();
+
                 }
                 catch ( Throwable t ) {
 
@@ -75,10 +97,6 @@ public class NoAWSCredsRule implements TestRule {
                 //swallow
                 return true;
             }
-        }
-
-        if(t instanceof UniformInterfaceException){
-            return true;
         }
 
         if( t instanceof AwsPropertiesNotFoundException ){

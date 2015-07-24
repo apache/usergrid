@@ -46,6 +46,7 @@ import org.apache.commons.io.IOUtils;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
+import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
@@ -113,17 +114,14 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
 
     private AmazonS3 getS3Client() {
         if ( s3Client == null ) {
-            try {
-                final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-                this.accessId = ugProvider.getCredentials().getAWSAccessKeyId();
-                this.secretKey = ugProvider.getCredentials().getAWSSecretKey();
-                this.bucketName = ugProvider.getBucketName();
-            }
-            catch(Exception e){
-                if(e instanceof AmazonClientException){
-                    //TODO:GREY Move this exception into the service tier
-                    throw new AwsPropertiesNotFoundException( "Access Keys" );
-                }
+
+
+            this.accessId = properties.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+            this.secretKey = properties.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+            this.bucketName = properties.getProperty( "usergrid.binary.bucketname" );
+
+            if(accessId==null||secretKey==null||bucketName==null){
+                throw new AwsPropertiesNotFoundException( "Access Keys" );
 
             }
 
@@ -182,6 +180,8 @@ public class AwsSdkS3BinaryStore implements BinaryStore {
             Boolean isFirstChunck = true;
             List<PartETag> partETags = new ArrayList<PartETag>();
 
+            //get the s3 client in order to initialize the multipart request
+            getS3Client();
             InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(bucketName, uploadFileName);
             InitiateMultipartUploadResult initResponse = getS3Client().initiateMultipartUpload(initRequest);
 
