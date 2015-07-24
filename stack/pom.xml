@@ -1562,6 +1562,7 @@
 		    <exclude>**/catalina_base/**</exclude>
                     <exlude>loadtests/gatling/lib/**</exlude>
                     <exlude>loadtests/gatling/user-files/**</exlude>
+                    <exlude>rest_integration_tests/node_modules/**</exlude>
 
                 </excludes>
             </configuration>
