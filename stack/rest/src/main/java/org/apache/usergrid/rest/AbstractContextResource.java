@@ -18,6 +18,7 @@ package org.apache.usergrid.rest;
 
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
@@ -48,6 +49,7 @@ import static org.apache.commons.lang.StringUtils.removeEnd;
 
 public abstract class AbstractContextResource {
 
+    private static final Pattern SECURE_PARAMETER_PATTERN = Pattern.compile("[A-Za-z0-9\\-\\._~]+");
     protected AbstractContextResource parent;
 
     @Context
@@ -89,77 +91,78 @@ public abstract class AbstractContextResource {
     @Autowired
     protected TokenService tokens;
 
-
     public AbstractContextResource() {
     }
-
 
     public AbstractContextResource getParent() {
         return parent;
     }
 
-
-    public void setParent( AbstractContextResource parent ) {
+    public void setParent(AbstractContextResource parent) {
         this.parent = parent;
     }
 
-
-    public <T extends AbstractContextResource> T getSubResource( Class<T> t ) {
-        T subResource = resourceContext.getResource( t );
-        subResource.setParent( this );
+    public <T extends AbstractContextResource> T getSubResource(Class<T> t) {
+        T subResource = resourceContext.getResource(t);
+        subResource.setParent(this);
         return subResource;
     }
 
-
-    public PathSegment getFirstPathSegment( String name ) {
-        if ( name == null ) {
+    public PathSegment getFirstPathSegment(String name) {
+        if (name == null) {
             return null;
         }
         List<PathSegment> segments = uriInfo.getPathSegments();
-        for ( PathSegment segment : segments ) {
-            if ( name.equals( segment.getPath() ) ) {
+        for (PathSegment segment : segments) {
+            if (name.equals(segment.getPath())) {
                 return segment;
             }
         }
         return null;
     }
 
-
     public boolean useReCaptcha() {
-        return isNotBlank( properties.getRecaptchaPublic() ) && isNotBlank( properties.getRecaptchaPrivate() );
+        return isNotBlank(properties.getRecaptchaPublic()) && isNotBlank(properties.getRecaptchaPrivate());
     }
 
-
     public String getReCaptchaHtml() {
-        if ( !useReCaptcha() ) {
+        if (!useReCaptcha()) {
             return "";
         }
         ReCaptcha c = ReCaptchaFactory
-                .newSecureReCaptcha( properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false );
-        return c.createRecaptchaHtml( null, null );
+                .newSecureReCaptcha(properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false);
+        return c.createRecaptchaHtml(null, null);
     }
 
-
-    public void sendRedirect( String location ) {
-        if ( isNotBlank( location ) ) {
-            throw new RedirectionException( location );
+    public void sendRedirect(String location) {
+        if (isNotBlank(location)) {
+            throw new RedirectionException(location);
         }
     }
 
-
-    public Viewable handleViewable( String template, Object model ) {
-        String template_property = "usergrid.view" + removeEnd( this.getClass().getName().toLowerCase(), "resource" )
-                .substring( AbstractContextResource.class.getPackage().getName().length() ) + "." + template
+    public Viewable handleViewable(String template, Object model) {
+        String template_property = "usergrid.view" + removeEnd(this.getClass().getName().toLowerCase(), "resource")
+                .substring(AbstractContextResource.class.getPackage().getName().length()) + "." + template
                 .toLowerCase();
-        String redirect_url = properties.getProperty( template_property );
-        if ( isNotBlank( redirect_url ) ) {
-            sendRedirect( redirect_url );
+        String redirect_url = properties.getProperty(template_property);
+        if (isNotBlank(redirect_url)) {
+            sendRedirect(redirect_url);
         }
-        return new Viewable( template, model, this.getClass() );
+        return new Viewable(template, model, this.getClass());
     }
-
 
     protected ApiResponse createApiResponse() {
         return new ApiResponse( properties );
+    }
+
+    /**
+     * Checks if the given parameter contains only unreserved characters (as per RFC3986)
+     * This ensures that characters like < > which could be used by malicious scripts
+     * are not included.
+     * @param parameter the parameter to be tested
+     * @return true if safe to use, false otherwise
+     */
+    protected boolean isSafe(String parameter) {
+        return SECURE_PARAMETER_PATTERN.matcher(parameter).matches();
     }
 }
