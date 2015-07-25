@@ -16,26 +16,26 @@
  */
 package org.apache.usergrid.rest.management.organizations;
 
-
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.JsonNode;
-import org.junit.Rule;
-import org.junit.Test;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import junit.framework.Assert;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
+import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
+import org.junit.Test;
+import org.usergrid.java.client.response.ApiResponse;
 
-import junit.framework.Assert;
+import javax.ws.rs.core.MediaType;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
+
+import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 
 @Concurrent()
@@ -83,5 +83,24 @@ public class OrganizationResourceIT extends AbstractRestIT {
         Assert.assertEquals( 6,
                 node.get( "organization" ).get( OrganizationsResource.ORGANIZATION_PROPERTIES ).get( "securityLevel" )
                     .asInt() );
+    }
+
+    @Test
+    /**
+     * Test that non-permitted characters in application name results in IllegalArgumentException
+     */
+    public void testInvalidApplicationName() throws Exception {
+        try {
+            final String encodedAppName = URLEncoder.encode("<bob>", "UTF-8");
+            resource().path("/applications/" + encodedAppName).get( String.class );
+            Assert.fail("Expected exception");
+        }
+        catch (UniformInterfaceException e) {
+            final ApiResponse response = e.getResponse().getEntity(ApiResponse.class);
+            assertEquals("Incorrect exception type",
+                    IllegalArgumentException.class.getName(), response.getException());
+            Assert.assertEquals("Incorrect error description",
+                    "Invalid application name", response.getErrorDescription());
+        }
     }
 }
