@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -60,19 +61,10 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final IndexFig config;
     private final FailureMonitorImpl failureMonitor;
     private final Client client;
-
     private final Timer flushTimer;
-    private final Counter indexErrorCounter;
-    private final Meter flushMeter;
-    private final Timer produceTimer;
     private final IndexFig indexFig;
-
-
     private final Counter indexSizeCounter;
-
     private final Timer offerTimer;
-
-
     private final BufferProducer bufferProducer;
     private final Histogram roundtripTimer;
 
@@ -84,9 +76,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     public EsIndexBufferConsumerImpl( final IndexFig config, final EsProvider provider,
                                       final MetricsFactory metricsFactory, final IndexFig indexFig ) {
         this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.flush");
-        this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index_buffer.flush");
         this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.size");
-        this.indexErrorCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.error");
         this.offerTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.producer");
         this.roundtripTimer = metricsFactory.getHistogram(EsIndexBufferConsumerImpl.class, "index_buffer.message_cycle");
 
@@ -96,7 +86,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.config = config;
         this.failureMonitor = new FailureMonitorImpl(config, provider);
         this.client = provider.getClient();
-        this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.consumer_messageFetch");
         this.indexFig = indexFig;
 
         this.bufferProducer = new BufferProducer();
@@ -132,7 +121,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
             //hand off to processor in new observable thread so we can continue to buffer faster
             return Observable.just( indexOpBuffer ).flatMap(
-                indexOpBufferObservable -> processBatch( indexOpBufferObservable ) )
+                indexOpBufferObservable -> ObservableTimer.time( processBatch( indexOpBufferObservable ),flushTimer )
+            )
 
                 //use the I/O scheduler for thread re-use and efficiency in context switching then use our concurrent
                 // flatmap count or higher throughput of batches once buffered

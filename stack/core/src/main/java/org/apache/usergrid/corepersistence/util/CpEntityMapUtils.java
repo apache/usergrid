@@ -30,23 +30,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.BooleanField;
-import org.apache.usergrid.persistence.model.field.ByteArrayField;
-import org.apache.usergrid.persistence.model.field.DoubleField;
-import org.apache.usergrid.persistence.model.field.EntityObjectField;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.FloatField;
-import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.field.ListField;
-import org.apache.usergrid.persistence.model.field.LocationField;
-import org.apache.usergrid.persistence.model.field.LongField;
-import org.apache.usergrid.persistence.model.field.SetField;
-import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
 
@@ -61,9 +50,12 @@ import org.slf4j.LoggerFactory;
  * Aware of unique properties via Schema.
  */
 public class CpEntityMapUtils {
+
     private static final Logger logger = LoggerFactory.getLogger( CpEntityMapUtils.class );
 
-    public static ObjectMapper objectMapper = new ObjectMapper(  );
+    public static JsonFactory jsonFactory = new JsonFactory();
+    public static ObjectMapper objectMapper = new ObjectMapper(  jsonFactory )
+        .registerModule(new GuavaModule());
 
 
     /**
@@ -101,10 +93,6 @@ public class CpEntityMapUtils {
             Object value = map.get( fieldName );
             boolean unique = Schema.getDefaultSchema().isPropertyUnique(entityType, fieldName);
 
-//            if ( unique ) {
-//                logger.debug("{} is a unique property", fieldName );
-//            }
-
             if ( value instanceof String ) {
                 entity.setField( new StringField( fieldName, (String)value, unique && topLevel ));
 
@@ -136,6 +124,16 @@ public class CpEntityMapUtils {
                 entity.setField( new StringField( fieldName, value.toString(), unique && topLevel ));
 
 			} else if ( value != null ) {
+//                String valueSerialized;
+//                try {
+//                    valueSerialized = objectMapper.writeValueAsString(value);
+//                }
+//                catch ( JsonProcessingException e ) {
+//                    throw new RuntimeException( "Can't serialize object ",e );
+//                }
+//
+//                SerializedObjectField bf = new SerializedObjectField( fieldName, valueSerialized, value.getClass() );
+//                entity.setField( bf );
                 byte[] valueSerialized;
                 try {
                     valueSerialized = objectMapper.writeValueAsBytes( value );
@@ -143,10 +141,8 @@ public class CpEntityMapUtils {
                 catch ( JsonProcessingException e ) {
                     throw new RuntimeException( "Can't serialize object ",e );
                 }
-                catch ( IOException e ) {
-                    throw new RuntimeException( "Can't serialize object ",e );
-                }
-                ByteBuffer byteBuffer = ByteBuffer.wrap( valueSerialized );
+
+                ByteBuffer byteBuffer = ByteBuffer.wrap(valueSerialized);
                 ByteArrayField bf = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
                 entity.setField( bf );
             }
@@ -155,8 +151,81 @@ public class CpEntityMapUtils {
         return entity;
     }
 
+
+
+
+    /**
+     * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
+     * StringField.
+     */
+    public static Map toMap(EntityObject entity) {
+
+        Map<String, Object> entityMap = new TreeMap<>();
+
+        for (Object f : entity.getFields().toArray()) {
+            Field field = (Field) f;
+
+            if (f instanceof ListField || f instanceof ArrayField) {
+                List list = (List) field.getValue();
+                entityMap.put(field.getName(),
+                        new ArrayList( processCollectionForMap(list)));
+
+            } else if (f instanceof SetField) {
+                Set set = (Set) field.getValue();
+                entityMap.put(field.getName(),
+                        new ArrayList( processCollectionForMap(set)));
+
+            } else if (f instanceof EntityObjectField) {
+                EntityObject eo = (EntityObject) field.getValue();
+                entityMap.put( field.getName(), toMap(eo)); // recursion
+
+            } else if (f instanceof StringField) {
+                entityMap.put(field.getName(), ((String) field.getValue()));
+
+            } else if (f instanceof LocationField) {
+                LocationField locField = (LocationField) f;
+                Map<String, Object> locMap = new HashMap<String, Object>();
+
+                // field names lat and lon trigger ElasticSearch geo location
+                locMap.put("lat", locField.getValue().getLatitude());
+                locMap.put("lon", locField.getValue().getLongitude());
+                entityMap.put( field.getName(), field.getValue());
+
+            } else if (f instanceof ByteArrayField) {
+                    ByteArrayField bf = ( ByteArrayField ) f;
+
+                    byte[] serilizedObj =  bf.getValue();
+                    Object o;
+                    try {
+                        o = objectMapper.readValue( serilizedObj, bf.getClassinfo() );
+                    }
+                    catch ( IOException e ) {
+                        throw new RuntimeException( "Can't deserialize object ",e );
+                    }
+                    entityMap.put( bf.getName(), o );
+            }
+            else if (f instanceof SerializedObjectField) {
+                SerializedObjectField bf = (SerializedObjectField) f;
+
+                String serilizedObj =  bf.getValue();
+                Object o;
+                try {
+                    o = objectMapper.readValue( serilizedObj, bf.getClassinfo() );
+                }
+                catch ( IOException e ) {
+                    throw new RuntimeException( "Can't deserialize object "+serilizedObj,e );
+                }
+                entityMap.put( bf.getName(), o );
+            }else {
+                entityMap.put( field.getName(), field.getValue());
+            }
+        }
+
+        return entityMap;
+    }
+
     private static void processMapValue(
-            Object value, String fieldName, Entity entity, String entityType) {
+        Object value, String fieldName, Entity entity, String entityType) {
 
         // is the map really a location element?
         if ("location" .equals(fieldName.toString().toLowerCase()) ) {
@@ -184,7 +253,7 @@ public class CpEntityMapUtils {
 
                     } catch (NumberFormatException ignored) {
                         throw new IllegalArgumentException(
-                                "Latitude and longitude must be doubles (e.g. 32.1234).");
+                            "Latitude and longitude must be doubles (e.g. 32.1234).");
                     }
                 } else if (m.get("lat") != null && m.get("lon") != null) {
                     try {
@@ -192,27 +261,27 @@ public class CpEntityMapUtils {
                         lon = Double.parseDouble(m.get("lon").toString());
                     } catch (NumberFormatException ignored) {
                         throw new IllegalArgumentException(""
-                                + "Latitude and longitude must be doubles (e.g. 32.1234).");
+                            + "Latitude and longitude must be doubles (e.g. 32.1234).");
                     }
                 } else {
                     throw new IllegalArgumentException("Location properties require two fields - "
-                            + "latitude and longitude, or lat and lon");
+                        + "latitude and longitude, or lat and lon");
                 }
 
                 if (lat != null && lon != null) {
                     entity.setField( new LocationField(fieldName, new Location(lat, lon)));
                 } else {
                     throw new IllegalArgumentException( "Unable to parse location field properties "
-                            + "- make sure they conform - lat and lon, and should be doubles.");
+                        + "- make sure they conform - lat and lon, and should be doubles.");
                 }
             } else {
                 throw new IllegalArgumentException("Location properties requires two fields - "
-                        + "latitude and longitude, or lat and lon.");
+                    + "latitude and longitude, or lat and lon.");
             }
         } else {
             // not a location element, process it as map
             entity.setField(new EntityObjectField(fieldName,
-                    fromMap((Map<String, Object>) value, entityType, false))); // recursion
+                fromMap((Map<String, Object>) value, entityType, false))); // recursion
         }
     }
 
@@ -271,67 +340,6 @@ public class CpEntityMapUtils {
             return list;
         }
     }
-
-
-    /**
-     * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
-     * StringField.
-     */
-    public static Map toMap(EntityObject entity) {
-
-        Map<String, Object> entityMap = new TreeMap<>();
-
-        for (Object f : entity.getFields().toArray()) {
-            Field field = (Field) f;
-
-            if (f instanceof ListField || f instanceof ArrayField) {
-                List list = (List) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList( processCollectionForMap(list)));
-
-            } else if (f instanceof SetField) {
-                Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList( processCollectionForMap(set)));
-
-            } else if (f instanceof EntityObjectField) {
-                EntityObject eo = (EntityObject) field.getValue();
-                entityMap.put( field.getName(), toMap(eo)); // recursion
-
-            } else if (f instanceof StringField) {
-                entityMap.put(field.getName(), ((String) field.getValue()));
-
-            } else if (f instanceof LocationField) {
-                LocationField locField = (LocationField) f;
-                Map<String, Object> locMap = new HashMap<String, Object>();
-
-                // field names lat and lon trigger ElasticSearch geo location
-                locMap.put("lat", locField.getValue().getLatitude());
-                locMap.put("lon", locField.getValue().getLongitude());
-                entityMap.put( field.getName(), field.getValue());
-
-            } else if (f instanceof ByteArrayField) {
-                    ByteArrayField bf = ( ByteArrayField ) f;
-
-                    byte[] serilizedObj =  bf.getValue();
-                    Object o;
-                    try {
-                        o = objectMapper.readValue( serilizedObj, bf.getClassinfo() );
-                    }
-                    catch ( IOException e ) {
-                        throw new RuntimeException( "Can't deserialize object ",e );
-                    }
-                    entityMap.put( bf.getName(), o );
-            }
-            else {
-                entityMap.put( field.getName(), field.getValue());
-            }
-        }
-
-        return entityMap;
-    }
-
-
     private static Collection processCollectionForMap(Collection c) {
         if (c.isEmpty()) {
             return c;
