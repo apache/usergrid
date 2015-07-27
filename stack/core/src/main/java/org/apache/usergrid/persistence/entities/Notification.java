@@ -229,28 +229,6 @@ public class Notification extends TypedEntity {
         return State.CREATED;
     }
 
-    @JsonIgnore
-    public PathQuery<Device> getPathQuery() {
-        PathQuery pathQuery = null;
-        for (PathToken pathToken : pathTokens.getPathTokens()) {
-            String collection = pathToken.getCollection();
-            Query query = new Query();
-            if (pathToken.getIdentifier()!=null) {
-                query.addIdentifier(pathToken.getIdentifier());
-            }
-            query.setLimit(100);
-            query.setCollection(collection);
-
-            if (pathQuery == null) {
-                pathQuery = new PathQuery(pathTokens.getApplicationRef(), query);
-            } else {
-                pathQuery = pathQuery.chain(query);
-            }
-        }
-
-        return pathQuery;
-    }
-
 
     @JsonIgnore
     public int getExpireTimeInSeconds() {
@@ -305,6 +283,28 @@ public class Notification extends TypedEntity {
         }
         public void setApplicationRef(SimpleEntityRef applicationRef){
             this.applicationRef = applicationRef;
+        }
+
+        @JsonIgnore
+        public PathQuery<Device> getPathQuery() {
+            PathQuery pathQuery = null;
+            for (PathToken pathToken : getPathTokens()) {
+                String collection = pathToken.getCollection();
+                Query query = new Query();
+                if (pathToken.getIdentifier()!=null) {
+                    query.addIdentifier(pathToken.getIdentifier());
+                }
+                query.setLimit(100);
+                query.setCollection(collection);
+
+                if (pathQuery == null) {
+                    pathQuery = new PathQuery(getApplicationRef(), query);
+                } else {
+                    pathQuery = pathQuery.chain(query);
+                }
+            }
+
+            return pathQuery;
         }
 
     }
