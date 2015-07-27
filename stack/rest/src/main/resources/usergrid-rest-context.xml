@@ -74,7 +74,7 @@
         <property name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>
 
-    <bean id="awsS3BinaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
+    <bean id="awsSdkS3BinaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
     </bean>
 
 
