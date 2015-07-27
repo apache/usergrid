@@ -41,6 +41,16 @@ object Extractors {
   }
 
   /**
+   * Will extract the uuid from the create response.  If the uuid is not present, an empty string will be set
+   */
+  def extractUuid(saveAsName: String) = {
+    jsonPath("$.entities[0].uuid").transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as an empty string
+      extract.orElse(Some(""))
+    }).saveAs(saveAsName)
+  }
+
+  /**
    * tries to extract the cursor from the session, if it exists, it returns true. if it's the default, returns false
    * @param nameInSession The name of the variable in the session
    * @return

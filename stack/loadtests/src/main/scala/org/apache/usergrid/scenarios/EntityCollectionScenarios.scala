@@ -34,6 +34,7 @@ object EntityCollectionScenarios {
 
   //The value for the cursor
   val SessionVarCursor: String = "cursor"
+  val SessionVarUuid: String = "createUuid"
 
   def entityGetUrl(useCursor: Boolean): String = {
     val url = Settings.baseAppUrl + "/" + Settings.collectionType + "?dummy" +

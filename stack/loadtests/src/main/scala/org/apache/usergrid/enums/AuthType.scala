@@ -9,7 +9,6 @@ object AuthType {
   val Basic = "basic"
 
   val Values = Seq(Anonymous,Token,Basic)
-
   def isValid(str: String): Boolean = {
     Values.contains(str)
   }

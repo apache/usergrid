@@ -39,9 +39,9 @@ object Settings {
   val tokenType = System.getProperty(ConfigProperties.TokenType, TokenType.User)
 
   val skipSetup:Boolean = System.getProperty(ConfigProperties.SkipSetup) == "true"
-  val createOrg:Boolean = System.getProperty(ConfigProperties.CreateOrg) == "true"
-  val createApp:Boolean = System.getProperty(ConfigProperties.CreateApp) != "false"
-  val loadEntities:Boolean = System.getProperty(ConfigProperties.LoadEntities) != "false"
+  val createOrg:Boolean = !skipSetup && (System.getProperty(ConfigProperties.CreateOrg) == "true")
+  val createApp:Boolean = !skipSetup && (System.getProperty(ConfigProperties.CreateApp) != "false")
+  val loadEntities:Boolean = !skipSetup && (System.getProperty(ConfigProperties.LoadEntities) != "false")
   val scenarioType = System.getProperty(ConfigProperties.ScenarioType, ScenarioType.NameRandomInfinite)
 
   val rampUsers:Int = Integer.getInteger(ConfigProperties.RampUsers, 0).toInt
@@ -53,7 +53,8 @@ object Settings {
   val appUserPassword = System.getProperty(ConfigProperties.AppUserPassword)
   val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
 
-  val numEntities:Int = Integer.getInteger(ConfigProperties.NumEntities, 5000).toInt
+  var numEntities:Int = Integer.getInteger(ConfigProperties.NumEntities, 5000).toInt
+  val totalNumEntities:Int = numEntities
   val numDevices:Int = Integer.getInteger(ConfigProperties.NumDevices, 4000).toInt
 
   val collectionType = System.getProperty(ConfigProperties.CollectionType, "customentities")
@@ -78,7 +79,8 @@ object Settings {
   // Large Entity Collection settings
   val entityPrefix = System.getProperty(ConfigProperties.EntityPrefix, "entity")
   val entityType = System.getProperty(ConfigProperties.EntityType, EntityType.Basic) // basic/trivial/?
-  val entitySeed = Integer.getInteger(ConfigProperties.EntitySeed, 1).toInt
+  var entitySeed = Integer.getInteger(ConfigProperties.EntitySeed, 1).toInt
+  val overallEntitySeed = entitySeed
   val searchLimit = Integer.getInteger(ConfigProperties.SearchLimit, 0).toInt
   val searchQuery = System.getProperty(ConfigProperties.SearchQuery, "")
   val endConditionType = System.getProperty(ConfigProperties.EndConditionType, EndConditionType.MinutesElapsed)
@@ -96,6 +98,20 @@ object Settings {
   val updateValue = System.getProperty(ConfigProperties.UpdateValue, new Date().toString)
   val updateBody = Utils.toJSONStr(Map(updateProperty -> updateValue))
 
+  // Entity workers
+  val entityWorkerCount = Integer.getInteger(ConfigProperties.EntityWorkerCount,1)
+  val entityWorkerNum = Integer.getInteger(ConfigProperties.EntityWorkerNum, 1)
+
+  if (entityWorkerCount > 1 && entityWorkerNum >= 1 && entityWorkerNum <= entityWorkerCount) {
+    // split entities across multiple workers
+    val entitiesPerWorkerFloor = totalNumEntities / entityWorkerCount
+    val leftOver = totalNumEntities % entityWorkerCount
+    val zeroBasedWorkerNum = entityWorkerNum - 1
+    val takeExtraEntity = if (entityWorkerNum <= leftOver) 1 else 0
+    entitySeed = overallEntitySeed + zeroBasedWorkerNum * entitiesPerWorkerFloor + (if (takeExtraEntity == 1) zeroBasedWorkerNum else leftOver)
+    numEntities = entitiesPerWorkerFloor + takeExtraEntity
+  }
+
   def getUserFeeder():Array[Map[String, String]]= {
     FeederGenerator.generateUserWithGeolocationFeeder(totalUsers, userLocationRadius, centerLatitude, centerLongitude)
   }
@@ -109,5 +125,30 @@ object Settings {
   def setTestStartTime(): Unit = {
     testStartTime = System.currentTimeMillis()
   }
+
+  def printSettingsSummary(): Unit = {
+    val authTypeStr = authType + (if (authType == AuthType.Token) s"(${tokenType})" else "")
+    val endConditionStr = if (endConditionType == EndConditionType.MinutesElapsed) s"${endMinutes} minutes elapsed" else s"${endRequestCount} requests"
+    println("-----------------------------------------------------------------------------")
+    println("SIMULATION SETTINGS")
+    println("-----------------------------------------------------------------------------")
+    println()
+    println(s"Org:${org}  App:${app}  Collection:${collectionType}")
+    println(s"CreateOrg:${createOrg}  CreateApp:${createApp}  LoadEntities:${loadEntities}")
+    println(s"ScenarioType:${scenarioType}  AuthType:${authTypeStr}")
+    println()
+    println(s"Entity Type:${entityType}  Prefix:${entityPrefix}")
+    println()
+    println(s"Overall: NumEntities:${totalNumEntities}  Seed:${overallEntitySeed}  Workers:${entityWorkerCount}")
+    println(s"Worker:  NumEntities:${numEntities}  Seed:${entitySeed}  WorkerNum:${entityWorkerNum}")
+    println()
+    println(s"Ramp: Users:${rampUsers}  Time:${rampTime}")
+    println(s"Constant: UsersPerSec:${constantUsersPerSec}  Time:${constantUsersDuration}")
+    println(s"End Condition:${endConditionStr}")
+    println()
+    println("-----------------------------------------------------------------------------")
+  }
+
+  printSettingsSummary()
 
 }

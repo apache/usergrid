@@ -70,5 +70,9 @@ class ConfigurableSimulation extends Simulation {
     println(s"scenarioType ${Settings.scenarioType} not found.")
   }
 
+  after(
+    Settings.printSettingsSummary()
+  )
+
 }
 

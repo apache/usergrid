@@ -19,7 +19,7 @@ die() { echo "$@" 1>&2 ; exit 1; }
 #This is a script to simplify running gatling tests.  It will default several parameters, invoke the maven plugins
 #Then aggregate the results
 ####
-[ "$#" -ge 6 ] || die "At least 6 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) CONSTANT_USERS_PER_SEC, CONSTANT_USERS_DURATION(seconds) NUM_ENTITIES"
+[ "$#" -ge 8 ] || die "At least 8 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) CONSTANT_USERS_PER_SEC, CONSTANT_USERS_DURATION(seconds) NUM_ENTITIES ENTITY_WORKER_NUM ENTITY_WORKER_COUNT"
 
 URL="$1"
 RAMP_USERS="$2"
@@ -27,8 +27,10 @@ RAMP_TIME="$3"
 CONSTANT_USERS_PER_SEC="$4"
 CONSTANT_USERS_DURATION="$5"
 NUM_ENTITIES="$6"
+ENTITY_WORKER_NUM="$7"
+ENTITY_WORKER_COUNT="$8"
 
-shift 6
+shift 8
 
 #Compile everything
 mvn compile
@@ -85,6 +87,8 @@ mvn gatling:execute \
 -DendConditionType=${END_CONDITION_TYPE} \
 -DendMinutes=${END_MINUTES} \
 -DendRequestCount=${END_REQUEST_COUNT} \
+-DentityWorkerCount=${ENTITY_WORKER_COUNT} \
+-DentityWorkerNum=${ENTITY_WORKER_NUM} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 
 
