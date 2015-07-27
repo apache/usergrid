@@ -104,7 +104,9 @@ public class GeoIT extends AbstractCoreIT {
 
         //3. Remove the entity's location
         properties.remove("location");
+        user.getDynamicProperties().remove("location");
         em.updateProperties(user, properties);
+        em.update(user);
         app.refreshIndex();
 
         //4. Repeat the query, expecting no results
@@ -241,8 +243,10 @@ public class GeoIT extends AbstractCoreIT {
         assertEquals("total number of 'stores'", LOCATION_PROPERTIES.size(), listResults.size());
         //3. verify each entity has geo data
         for (Entity entity : listResults.entities) {
-            Location location = (Location) entity.getProperty("location");
+            Map location =  (Map)entity.getProperty("location");
             assertNotNull(location);
+            assertNotNull(location.get("longitude"));
+            assertNotNull(location.get("latitude"));
         }
 
     }

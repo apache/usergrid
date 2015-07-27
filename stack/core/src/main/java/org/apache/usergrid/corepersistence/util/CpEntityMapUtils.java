@@ -33,7 +33,10 @@ import java.util.UUID;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.model.collection.SchemaManager;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.EntityToMapConverter;
+import org.apache.usergrid.persistence.model.entity.MapToEntityConverter;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
@@ -51,12 +54,9 @@ import org.slf4j.LoggerFactory;
  */
 public class CpEntityMapUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger( CpEntityMapUtils.class );
 
-    public static JsonFactory jsonFactory = new JsonFactory();
-    public static ObjectMapper objectMapper = new ObjectMapper(  jsonFactory )
-        .registerModule(new GuavaModule());
-
+    private static final MapToEntityConverter mapConverter = new MapToEntityConverter();
+    private static final EntityToMapConverter entityConverter = new EntityToMapConverter();
 
     /**
      * Convert a usergrid 1.0 entity into a usergrid 2.0 entity
@@ -78,7 +78,7 @@ public class CpEntityMapUtils {
 
 
     public static Entity fromMap( Map<String, Object> map, String entityType, boolean topLevel ) {
-        return fromMap( null, map, entityType, topLevel );
+        return fromMap(null, map, entityType, topLevel);
     }
 
     public static Entity fromMap(
@@ -88,67 +88,8 @@ public class CpEntityMapUtils {
             entity = new Entity();
         }
 
-        for ( String fieldName : map.keySet() ) {
-
-            Object value = map.get( fieldName );
-            boolean unique = Schema.getDefaultSchema().isPropertyUnique(entityType, fieldName);
-
-            if ( value instanceof String ) {
-                entity.setField( new StringField( fieldName, (String)value, unique && topLevel ));
-
-            } else if ( value instanceof Boolean ) {
-                entity.setField( new BooleanField( fieldName, (Boolean)value, unique && topLevel ));
-
-            } else if ( value instanceof Integer ) {
-                entity.setField( new IntegerField( fieldName, (Integer)value, unique && topLevel ));
-
-            } else if ( value instanceof Double ) {
-                entity.setField( new DoubleField( fieldName, (Double)value, unique && topLevel ));
-
-		    } else if ( value instanceof Float ) {
-                entity.setField( new FloatField( fieldName, (Float)value, unique && topLevel ));
-
-            } else if ( value instanceof Long ) {
-                entity.setField( new LongField( fieldName, (Long)value, unique && topLevel ));
-
-            } else if ( value instanceof List) {
-                entity.setField( listToListField( fieldName, (List)value, entityType ));
-
-            } else if ( value instanceof UUID) {
-                entity.setField( new UUIDField( fieldName, (UUID)value, unique && topLevel ));
-
-            } else if ( value instanceof Map ) {
-                processMapValue( value, fieldName, entity, entityType);
-
-            } else if ( value instanceof Enum ) {
-                entity.setField( new StringField( fieldName, value.toString(), unique && topLevel ));
-
-			} else if ( value != null ) {
-//                String valueSerialized;
-//                try {
-//                    valueSerialized = objectMapper.writeValueAsString(value);
-//                }
-//                catch ( JsonProcessingException e ) {
-//                    throw new RuntimeException( "Can't serialize object ",e );
-//                }
-//
-//                SerializedObjectField bf = new SerializedObjectField( fieldName, valueSerialized, value.getClass() );
-//                entity.setField( bf );
-                byte[] valueSerialized;
-                try {
-                    valueSerialized = objectMapper.writeValueAsBytes( value );
-                }
-                catch ( JsonProcessingException e ) {
-                    throw new RuntimeException( "Can't serialize object ",e );
-                }
-
-                ByteBuffer byteBuffer = ByteBuffer.wrap(valueSerialized);
-                ByteArrayField bf = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
-                entity.setField( bf );
-            }
-        }
-
-        return entity;
+        SchemaManager schemaManager = Schema.getDefaultSchema();
+        return mapConverter.fromMap(entity,map, schemaManager, entityType,topLevel);
     }
 
 
@@ -160,217 +101,8 @@ public class CpEntityMapUtils {
      */
     public static Map toMap(EntityObject entity) {
 
-        Map<String, Object> entityMap = new TreeMap<>();
+        return entityConverter.toMap(entity);
 
-        for (Object f : entity.getFields().toArray()) {
-            Field field = (Field) f;
-
-            if (f instanceof ListField || f instanceof ArrayField) {
-                List list = (List) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList( processCollectionForMap(list)));
-
-            } else if (f instanceof SetField) {
-                Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList( processCollectionForMap(set)));
-
-            } else if (f instanceof EntityObjectField) {
-                EntityObject eo = (EntityObject) field.getValue();
-                entityMap.put( field.getName(), toMap(eo)); // recursion
-
-            } else if (f instanceof StringField) {
-                entityMap.put(field.getName(), ((String) field.getValue()));
-
-            } else if (f instanceof LocationField) {
-                LocationField locField = (LocationField) f;
-                Map<String, Object> locMap = new HashMap<String, Object>();
-
-                // field names lat and lon trigger ElasticSearch geo location
-                locMap.put("lat", locField.getValue().getLatitude());
-                locMap.put("lon", locField.getValue().getLongitude());
-                entityMap.put( field.getName(), field.getValue());
-
-            } else if (f instanceof ByteArrayField) {
-                    ByteArrayField bf = ( ByteArrayField ) f;
-
-                    byte[] serilizedObj =  bf.getValue();
-                    Object o;
-                    try {
-                        o = objectMapper.readValue( serilizedObj, bf.getClassinfo() );
-                    }
-                    catch ( IOException e ) {
-                        throw new RuntimeException( "Can't deserialize object ",e );
-                    }
-                    entityMap.put( bf.getName(), o );
-            }
-            else if (f instanceof SerializedObjectField) {
-                SerializedObjectField bf = (SerializedObjectField) f;
-
-                String serilizedObj =  bf.getValue();
-                Object o;
-                try {
-                    o = objectMapper.readValue( serilizedObj, bf.getClassinfo() );
-                }
-                catch ( IOException e ) {
-                    throw new RuntimeException( "Can't deserialize object "+serilizedObj,e );
-                }
-                entityMap.put( bf.getName(), o );
-            }else {
-                entityMap.put( field.getName(), field.getValue());
-            }
-        }
-
-        return entityMap;
-    }
-
-    private static void processMapValue(
-        Object value, String fieldName, Entity entity, String entityType) {
-
-        // is the map really a location element?
-        if ("location" .equals(fieldName.toString().toLowerCase()) ) {
-
-            // get the object to inspect
-            Map<String, Object> origMap = (Map<String, Object>) value;
-            Map<String, Object> m = new HashMap<String, Object>();
-
-            // Tests expect us to treat "Longitude" the same as "longitude"
-            for ( String key : origMap.keySet() ) {
-                m.put( key.toLowerCase(), origMap.get(key) );
-            }
-
-            // Expect at least two fields in a Location object
-            if (m.size() >= 2) {
-
-                Double lat = null;
-                Double lon = null;
-
-                // check the properties to make sure they are set and are doubles
-                if (m.get("latitude") != null && m.get("longitude") != null) {
-                    try {
-                        lat = Double.parseDouble(m.get("latitude").toString());
-                        lon = Double.parseDouble(m.get("longitude").toString());
-
-                    } catch (NumberFormatException ignored) {
-                        throw new IllegalArgumentException(
-                            "Latitude and longitude must be doubles (e.g. 32.1234).");
-                    }
-                } else if (m.get("lat") != null && m.get("lon") != null) {
-                    try {
-                        lat = Double.parseDouble(m.get("lat").toString());
-                        lon = Double.parseDouble(m.get("lon").toString());
-                    } catch (NumberFormatException ignored) {
-                        throw new IllegalArgumentException(""
-                            + "Latitude and longitude must be doubles (e.g. 32.1234).");
-                    }
-                } else {
-                    throw new IllegalArgumentException("Location properties require two fields - "
-                        + "latitude and longitude, or lat and lon");
-                }
-
-                if (lat != null && lon != null) {
-                    entity.setField( new LocationField(fieldName, new Location(lat, lon)));
-                } else {
-                    throw new IllegalArgumentException( "Unable to parse location field properties "
-                        + "- make sure they conform - lat and lon, and should be doubles.");
-                }
-            } else {
-                throw new IllegalArgumentException("Location properties requires two fields - "
-                    + "latitude and longitude, or lat and lon.");
-            }
-        } else {
-            // not a location element, process it as map
-            entity.setField(new EntityObjectField(fieldName,
-                fromMap((Map<String, Object>) value, entityType, false))); // recursion
-        }
-    }
-
-
-    private static ListField listToListField( String fieldName, List list, String entityType ) {
-
-        if (list.isEmpty()) {
-            return new ArrayField( fieldName );
-        }
-
-        Object sample = list.get(0);
-
-        if ( sample instanceof Map ) {
-            return new ArrayField<Entity>( fieldName, processListForField( list, entityType ));
-
-        } else if ( sample instanceof List ) {
-            return new ArrayField<List>( fieldName, processListForField( list, entityType ));
-        } else if ( sample instanceof String ) {
-            return new ArrayField<String>( fieldName, (List<String>)list );
-
-        } else if ( sample instanceof Boolean ) {
-            return new ArrayField<Boolean>( fieldName, (List<Boolean>)list );
-
-        } else if ( sample instanceof Integer ) {
-            return new ArrayField<Integer>( fieldName, (List<Integer>)list );
-
-        } else if ( sample instanceof Double ) {
-            return new ArrayField<Double>( fieldName, (List<Double>)list );
-
-        } else if ( sample instanceof Long ) {
-            return new ArrayField<Long>( fieldName, (List<Long>)list );
-
-        } else {
-            throw new RuntimeException("Unknown type " + sample.getClass().getName());
-        }
-    }
-
-
-    private static List processListForField( List list, String entityType ) {
-        if ( list.isEmpty() ) {
-            return list;
-        }
-        Object sample = list.get(0);
-
-        if ( sample instanceof Map ) {
-            List<Entity> newList = new ArrayList<Entity>();
-            for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
-                newList.add( fromMap( map, entityType, false ) );
-            }
-            return newList;
-
-        } else if ( sample instanceof List ) {
-            return processListForField( list, entityType ); // recursion
-
-        } else {
-            return list;
-        }
-    }
-    private static Collection processCollectionForMap(Collection c) {
-        if (c.isEmpty()) {
-            return c;
-        }
-        List processed = new ArrayList();
-        Object sample = c.iterator().next();
-
-        if (sample instanceof Entity) {
-            for (Object o : c.toArray()) {
-                Entity e = (Entity) o;
-                processed.add(toMap(e));
-            }
-
-        } else if (sample instanceof List) {
-            for (Object o : c.toArray()) {
-                List list = (List) o;
-                processed.add(processCollectionForMap(list)); // recursion;
-            }
-
-        } else if (sample instanceof Set) {
-            for (Object o : c.toArray()) {
-                Set set = (Set) o;
-                processed.add(processCollectionForMap(set)); // recursion;
-            }
-
-        } else {
-            for (Object o : c.toArray()) {
-                processed.add(o);
-            }
-        }
-        return processed;
     }
 
 }

@@ -24,12 +24,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +134,12 @@ public class EntityMappingParser implements FieldParser {
         if ( value instanceof Map ) {
             //if it's a location, then create a location field.
             if ( EntityMap.isLocationField( (Map)value ) ) {
-                fields.add( EntityField.create( fieldStack.peek(), ( Map ) value ) );
+                Map<String,Object> map = ( Map ) value;
+                Map<String,Object> location = new HashMap<>(2);
+                //normalize location field to use lat/lon for es
+                location.put("lat",map.get("latitude"));
+                location.put("lon",map.get("longitude"));
+                fields.add( EntityField.create( fieldStack.peek(), location) );
                 return;
             }
 

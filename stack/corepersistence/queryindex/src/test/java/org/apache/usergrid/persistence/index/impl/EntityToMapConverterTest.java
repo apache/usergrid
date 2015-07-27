@@ -187,9 +187,9 @@ public class EntityToMapConverterTest {
             final Map<String, Double> latLong = ( Map<String, Double> ) entityField.get( IndexingUtils.FIELD_LOCATION );
 
             assertEquals( Double.valueOf( 10 ),
-                latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LAT ) );
+                latLong.get( "lat" ) );
             assertEquals( Double.valueOf( 20 ),
-                latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LON ) );
+                latLong.get( "lon" ) );
         } );
     }
 
@@ -404,9 +404,9 @@ public class EntityToMapConverterTest {
             final Map<String, Double> latLong = ( Map<String, Double> ) entityField.get( IndexingUtils.FIELD_LOCATION );
 
             assertEquals( Double.valueOf( 10 ),
-                latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LAT ) );
+                latLong.get( "lat" ) );
             assertEquals( Double.valueOf( 20 ),
-                latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LON ) );
+                latLong.get( "lon" ) );
         } );
     }
 
@@ -518,9 +518,9 @@ public class EntityToMapConverterTest {
             final Map<String, Double> latLong = ( Map<String, Double> ) entityField.get( IndexingUtils.FIELD_LOCATION );
 
             assertEquals( Double.valueOf( 10 ),
-                latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LAT ) );
+                latLong.get("lat" ) );
             assertEquals( Double.valueOf( 20 ),
-                latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LON ) );
+                latLong.get("lon" ) );
         } );
     }
 
