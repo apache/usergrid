@@ -75,9 +75,6 @@
     </bean>
 
     <bean id="awsS3BinaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
-        <constructor-arg name="accessId" value="xx" />
-        <constructor-arg name="secretKey" value="xx" />
-        <constructor-arg name="bucketName" value="xx" />
     </bean>
 
 
