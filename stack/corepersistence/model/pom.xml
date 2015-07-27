@@ -63,6 +63,13 @@
         <version>${jackson-2-version}</version>
       </dependency>
 
+        <!-- Serialize Guava Types -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-guava</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+
       <!-- smile (binary JSON). Other artifacts in this group do other formats. -->
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>

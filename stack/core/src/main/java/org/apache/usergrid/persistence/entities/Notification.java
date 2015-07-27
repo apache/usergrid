@@ -18,18 +18,17 @@ package org.apache.usergrid.persistence.entities;
 
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.usergrid.persistence.PathQuery;
-import org.apache.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.annotations.EntityCollection;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 import org.apache.usergrid.persistence.entities.Device;
+import org.apache.usergrid.persistence.index.query.Identifier;
+
+import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
 /**
  * The entity class for representing Notifications.
@@ -44,6 +43,9 @@ public class Notification extends TypedEntity {
     /** Total count */
     @EntityProperty
     protected int expectedCount;
+
+    @EntityProperty
+    private PathTokens pathTokens;
 
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
@@ -92,12 +94,9 @@ public class Notification extends TypedEntity {
     @EntityProperty
     protected Map<String, Long> statistics;
 
-    /** stats (sent & errors) */
-    @EntityProperty
-    @JsonIgnore
-    protected PathQuery<Device> pathQuery;
 
     public Notification() {
+        pathTokens = new PathTokens();
     }
 
     @JsonIgnore
@@ -232,12 +231,26 @@ public class Notification extends TypedEntity {
 
     @JsonIgnore
     public PathQuery<Device> getPathQuery() {
+        PathQuery pathQuery = null;
+        for (PathToken pathToken : pathTokens.getPathTokens()) {
+            String collection = pathToken.getCollection();
+            Query query = new Query();
+            if (pathToken.getIdentifier()!=null) {
+                query.addIdentifier(pathToken.getIdentifier());
+            }
+            query.setLimit(100);
+            query.setCollection(collection);
+
+            if (pathQuery == null) {
+                pathQuery = new PathQuery(pathTokens.getApplicationRef(), query);
+            } else {
+                pathQuery = pathQuery.chain(query);
+            }
+        }
+
         return pathQuery;
     }
 
-    public void setPathQuery(PathQuery<Device> pathQuery) {
-        this.pathQuery = pathQuery;
-    }
 
     @JsonIgnore
     public int getExpireTimeInSeconds() {
@@ -259,4 +272,71 @@ public class Notification extends TypedEntity {
 
     @org.codehaus.jackson.map.annotate.JsonSerialize(include = org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL)
     public int getExpectedCount() {  return expectedCount;  }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public PathTokens getPathTokens(){
+        return pathTokens;
+    }
+
+    public void setPathTokens(PathTokens pathTokens){
+        this.pathTokens = pathTokens;
+    }
+
+    public static class PathTokens{
+        private  SimpleEntityRef applicationRef;
+        private List<PathToken> pathTokens;
+        public PathTokens(){
+            pathTokens = new ArrayList<>();
+
+        }
+        public PathTokens(final SimpleEntityRef applicationRef, final List<PathToken> pathTokens){
+            this.applicationRef = applicationRef;
+            this.pathTokens = pathTokens;
+        }
+
+        public void setPathTokens(final List<PathToken> pathTokens){
+            this.pathTokens = pathTokens;
+        }
+        public List<PathToken> getPathTokens(){
+            return pathTokens;
+        }
+        public EntityRef getApplicationRef() {
+            return applicationRef;
+        }
+        public void setApplicationRef(SimpleEntityRef applicationRef){
+            this.applicationRef = applicationRef;
+        }
+
+    }
+    public static class PathToken{
+        private  String collection;
+        private  Identifier identifier;
+
+        public PathToken(){
+
+        }
+
+        public PathToken( final String collection, final Identifier identifier){
+            this.collection = collection;
+
+            this.identifier = identifier;
+
+        }
+
+        public String getCollection() {
+            return collection;
+        }
+        public void setCollection(final String collection){
+            this.collection = collection;
+        }
+
+        public Identifier getIdentifier() {
+            return identifier;
+        }
+        public void setIdentifier(Identifier identifier){
+            this.identifier = identifier;
+        }
+
+
+    }
 }
