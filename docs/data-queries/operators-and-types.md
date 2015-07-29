@@ -1,6 +1,6 @@
 # Supported query operators & data types
 
-The following operators and data types are supported by the SQL-like query language in API BaaS.
+The following operators and data types are supported by the SQL-like query language in Usergrid.
 
 ## Operators
 
