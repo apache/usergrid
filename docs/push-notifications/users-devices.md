@@ -5,7 +5,7 @@ Users and Devices are the primary ways to identify access to the system. Devices
 Users
 -----
 
-### Properties
+## Properties
 
 Property     Type      Description
 ------------ --------- ---------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ Property     Type      Description
   picture      string    User picture
 
 
-### Sets
+## Sets
 
   Set           Type     Description
   ------------- -------- ---------------------------------------
@@ -34,7 +34,7 @@ Property     Type      Description
   permissions   string   Set of user permissions
   credentials   string   Set of user credentials
 
-### Relationshops
+## Relationshops
 
   Collection   Type       Description
   ------------ ---------- -----------------------------------------------------
@@ -44,7 +44,7 @@ Property     Type      Description
   feed         activity   Inbox of activity notifications a user has received
   roles        role       Set of roles assigned to a user
 
-### Facebook Sign-in
+## Facebook Sign-in
 
 You can authenticate your Apache Usergrid requests by logging into
 Facebook. To access Apache Usergrid resources, you need to provide an
@@ -88,7 +88,7 @@ where:
 Devices
 -------
 
-### Properties
+## Properties
 
 Property   Type     Description
 ---------- -------- ---------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ Property   Type     Description
   name       string   Device name (mandatory)
 
 
-### Relationships
+## Relationships
 
 Devices have the following associated collection.
 
