@@ -8,13 +8,13 @@ Query examples in this content are shown unencoded to make them easier to read. 
 
 ## Basic query usage
 
-The following examples show how to query the Apigee API to return the first 5 entities in the users collection that contain the property status:'active'.
+The following examples show how to query the Usergrid API to return the first 5 entities in the users collection that contain the property status:'active'.
 
 ### Optimizing queries
 
 As a best practice, you should include no more than 3 parameters in your queries. The API will not prevent you from submitting a query with more than 3 parameters; however, due to the nature of NoSQL, queries with many parameters can quickly become very inefficient.
 
-For more information, see our API BaaS DBMS overview and Data store best practices.
+For more information, see our Usergrid DBMS overview and Data store best practices.
 
 ### Request Syntax
 

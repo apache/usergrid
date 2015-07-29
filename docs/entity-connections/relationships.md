@@ -1,7 +1,6 @@
 # Relationships
 
-Creating connections between entities
--------------------------------------
+## Creating connections between entities
 
 One of the most useful features of App services is the ability to create
 connections between entities. A simple example of this is the
@@ -51,8 +50,7 @@ call:
 
     GET https://api.usergrid.com/my-org/my-app/users/fred/followers
 
-Creating other connections
---------------------------
+## Creating other connections
 
 You can extend this connection structure to create connections using any
 "verb" that can link two entities. For example, you could use likes to
