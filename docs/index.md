@@ -51,7 +51,9 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Entity Connections 
   
-   entity-connections/relationships
+   entity-connections/connecting-entities
+   entity-connections/retrieving-entities
+   entity-connections/disconnecting-entities
    
 .. _push-notifications:
 
