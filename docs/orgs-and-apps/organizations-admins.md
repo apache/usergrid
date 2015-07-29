@@ -1,18 +1,6 @@
 Organizations & Admins
 ==================================================
 
-.. toctree::
-	concepts/applications
-	concepts/events-and-counters
-	concepts/roles-and-permissions
-	concepts/relationships
-	concepts/collections
-	concepts/query-language
-	concepts/users-devices
-	concepts/groups
-	concepts/activity
-	concepts/assets
-
 Organizations
              
 
