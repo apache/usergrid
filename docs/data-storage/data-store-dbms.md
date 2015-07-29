@@ -1,12 +1,12 @@
 # The Usergrid Data Store
 
-The API BaaS data store is backed by Cassandra, an open source distributed DBMS. Cassandra isn’t a relational database system (RDBMS), and is sometimes placed in the category of “NoSQL” or “schema-less” databases. 
+The Usergrid data store is backed by Cassandra, an open source distributed DBMS. Cassandra isn’t a relational database system (RDBMS), and is sometimes placed in the category of “NoSQL” or “schema-less” databases. 
 
 .. note:: Usergrid is not a relational database
  
-Optimizing for performance on a DBMS like Cassandra differs a bit from relational databases. For more information, see Optimizing access to your API BaaS data store.
+Optimizing for performance on a DBMS like Cassandra differs a bit from relational databases. For more information, see Optimizing access to your Usergrid data store.
 
-Cassandra is specifically designed to support applications that need flexibility and high scalability, particularly web and mobile applications. API BaaS client applications write and read data formatted as JavaScript Object Notation (JSON). (Apigee provides SDKs through which client apps can do much of this work in their native language. For more information, see API BaaS SDKs.)
+Cassandra is specifically designed to support applications that need flexibility and high scalability, particularly web and mobile applications. Usergrid client applications write and read data formatted as JavaScript Object Notation (JSON). (Usergrid provides SDKs through which client apps can do much of this work in their native language. For more information, see Usergrid SDKs.)
 
 With Cassandra as the underlying DBMS, apps benefit from:
 
@@ -15,7 +15,7 @@ Fast writes to the data store.
 * Flexibility in data model design. You aren't constrained by a schema.
 * Linear scalability.
 
-If you have experience with relational databases and are unfamiliar with "NoSQL" databases, the following table might be a helpful start. It maps the high-level concepts of an RDBMS’s data model both to Cassandra’s and to the API BaaS, which is backed by Cassandra.
+If you have experience with relational databases and are unfamiliar with "NoSQL" databases, the following table might be a helpful start. It maps the high-level concepts of an RDBMS’s data model both to Cassandra’s and to the Usergrid, which is backed by Cassandra.
 
 .. raw:: html
     <table class="usergrid-table">
@@ -55,7 +55,7 @@ A Cassandra column family includes rows that can have differing column sets.
 
 .. image:: cassandra.png
    
-In the JSON from the API BaaS application, the products are represented as entities. Note that each entity in the entities array below has a slightly different set of properties, like the columns in a Cassandra column family.
+In the JSON from the Usergrid application, the products are represented as entities. Note that each entity in the entities array below has a slightly different set of properties, like the columns in a Cassandra column family.
 
     { 
         "action" : "get", 

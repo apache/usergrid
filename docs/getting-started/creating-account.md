@@ -1,5 +1,5 @@
 # Creating an Usergrid Account
-To get started using the API Services BaaS, you'll need an Usergrid account. (Before reading this, you should already be familiar with what Usergrid can do to support your apps. If you're still curious about that, you might want to read API BaaS features first.)
+To get started using the API Services BaaS, you'll need an Usergrid account. (Before reading this, you should already be familiar with what Usergrid can do to support your apps. If you're still curious about that, you might want to read Usergrid features first.)
 
 With an account, you get the following useful things:
 
@@ -17,5 +17,5 @@ With an account, you get the following useful things:
 Ready to learn and do more?
 
 * Install an SDK that will be most useful for your application environment. For more about Usergrid's SDKs, see SDKs.
-* Review API BaaS features for information on concepts and features.
+* Review Usergrid features for information on concepts and features.
 * Consult the API Reference for usage details.

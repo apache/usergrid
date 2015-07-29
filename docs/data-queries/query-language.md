@@ -14,7 +14,7 @@ sorting the list in ascending order by name:
 
 ## Basic syntax
 
-Queries of Apigee data for Apache Usergrid are made up of two kinds of
+Queries of Usergrid data for Apache Usergrid are made up of two kinds of
 statements: the path to the collection you want to query, followed by
 the query language statement containing your query. These two statements
 are separated by "?ql=" to indicate where the query language statement
