@@ -199,7 +199,7 @@ public class GroupResourceIT extends AbstractRestIT {
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
-            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+            assertEquals( "entity_not_found", node.get( "error" ).textValue() );
         }
 
     }
@@ -305,7 +305,7 @@ public class GroupResourceIT extends AbstractRestIT {
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
-            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+            assertEquals( "entity_not_found", node.get( "error" ).textValue() );
         }
 
     }
