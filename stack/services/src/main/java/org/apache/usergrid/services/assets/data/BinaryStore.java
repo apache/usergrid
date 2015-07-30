@@ -31,14 +31,14 @@ public interface BinaryStore {
      * writes the inputStream to the store and updates the entity's file-metadata field. however, it doesn't persistent
      * the entity.
      */
-    void write( UUID appId, Entity entity, InputStream inputStream ) throws IOException, NoSuchAlgorithmException;
+    void write( UUID appId, Entity entity, InputStream inputStream ) throws Exception;
 
     /** read the entity's file data from the store */
-    InputStream read( UUID appId, Entity entity ) throws IOException;
+    InputStream read( UUID appId, Entity entity ) throws Exception;
 
     /** read partial data from the store */
-    InputStream read( UUID appId, Entity entity, long offset, long length ) throws IOException;
+    InputStream read( UUID appId, Entity entity, long offset, long length ) throws Exception;
 
     /** delete the entity data from the store. */
-    void delete( UUID appId, Entity entity );
+    void delete( UUID appId, Entity entity ) throws Exception;
 }

@@ -25,6 +25,8 @@ import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.services.assets.data.AssetUtils;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,19 +41,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import net.jcip.annotations.NotThreadSafe;
+
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
-
+@NotThreadSafe
 public class AssetResourceIT extends AbstractRestIT {
 
     private String access_token;
     private Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
+    private Map<String, Object> originalProperties;
+
+
 
     @Before
     public void setup(){
+        originalProperties = getRemoteTestProperties();
+        setTestProperty(PROPERTIES_USERGRID_BINARY_UPLOADER, "local");
+
+
         access_token = this.getAdminToken().getAccessToken();
 
+    }
+
+    @After
+    public void teardown(){
+        setTestProperties(originalProperties);
     }
 
 

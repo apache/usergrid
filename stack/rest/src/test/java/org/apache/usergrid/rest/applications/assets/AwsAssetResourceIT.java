@@ -46,8 +46,11 @@ import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.apache.usergrid.services.assets.data.BinaryStore;
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
+import com.amazonaws.SDKGlobalConfiguration;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.multipart.FormDataMultiPart;
 
 import net.jcip.annotations.NotThreadSafe;
@@ -58,6 +61,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 @NotThreadSafe
@@ -86,6 +90,114 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @After
     public void teardown(){
         setTestProperties(originalProperties);
+    }
+
+    @Test
+    public void errorCheckingMissingProperties() throws Exception {
+        Map<String, Object> errorTestProperties;
+        errorTestProperties = getRemoteTestProperties();
+        //test that we fail gracefully if we have missing properties
+        setTestProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "xxx" );
+
+        try {
+
+            Map<String, String> payload = hashMap( "name", "assetname" );
+            ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+            UUID assetId = postResponse.getEntities().get( 0 ).getUuid();
+            assertNotNull( assetId );
+
+            // post a binary asset to that entity
+
+            byte[] data = IOUtils.toByteArray( getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+            ApiResponse putResponse =
+                pathResource( getOrgAppPath( "foos/" + assetId ) ).put( data, MediaType.APPLICATION_OCTET_STREAM_TYPE );
+
+
+        }catch ( AwsPropertiesNotFoundException e ){
+            fail("Shouldn't interrupt runtime if access key isnt found.");
+        }
+        catch( UniformInterfaceException uie){
+            assertEquals(500,uie.getResponse().getStatus());
+        }
+        finally{
+            setTestProperties( errorTestProperties );
+        }
+    }
+
+    @Test
+         public void errorCheckingInvalidProperties() throws Exception {
+        Map<String, Object> errorTestProperties;
+        errorTestProperties = getRemoteTestProperties();
+        //test that we fail gracefully if we have missing properties
+        setTestProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "xxx");
+        setTestProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR, "xxx" );
+        setTestProperty( "usergrid.binary.bucketname", "xxx" );
+
+        try {
+
+            Map<String, String> payload = hashMap( "name", "assetname" );
+            ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+            UUID assetId = postResponse.getEntities().get( 0 ).getUuid();
+            assertNotNull( assetId );
+
+            // post a binary asset to that entity
+
+            byte[] data = IOUtils.toByteArray( getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+            ApiResponse putResponse =
+                pathResource( getOrgAppPath( "foos/" + assetId ) ).put( data, MediaType.APPLICATION_OCTET_STREAM_TYPE );
+
+
+        }catch ( AwsPropertiesNotFoundException e ){
+            fail("Shouldn't interrupt runtime if access key isnt found.");
+        }
+        catch( UniformInterfaceException uie){
+            assertEquals( 500, uie.getResponse().getStatus() );
+        }
+        finally{
+            setTestProperties( errorTestProperties );
+        }
+    }
+
+    @Test
+    public void errorCheckingInvalidPropertiesMultipartUpload() throws Exception {
+        Map<String, Object> errorTestProperties;
+        errorTestProperties = getRemoteTestProperties();
+        //test that we fail gracefully if we have missing properties
+        setTestProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "xxx");
+        setTestProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR, "xxx" );
+        setTestProperty( "usergrid.binary.bucketname", "xxx" );
+
+        try {
+
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
+            FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+            ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
+            UUID assetId = postResponse.getEntities().get(0).getUuid();
+            LOG.info( "Waiting for upload to finish..." );
+            Thread.sleep( 5000 );
+
+            // check that entire file was uploaded
+
+            ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
+            LOG.info( "Upload complete!" );
+            InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
+            byte[] foundData = IOUtils.toByteArray( is );
+            assertEquals( data.length, foundData.length );
+
+            // delete file
+
+            pathResource( getOrgAppPath( "foos/" + assetId ) ).delete();
+
+
+        }catch ( AwsPropertiesNotFoundException e ){
+            fail("Shouldn't interrupt runtime if access key isnt found.");
+        }
+        catch( UniformInterfaceException uie){
+            assertEquals( 500, uie.getResponse().getStatus() );
+        }
+        finally{
+            setTestProperties( errorTestProperties );
+        }
     }
 
     @Test
@@ -258,7 +370,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
             // upload a file larger than 6mb
 
-            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cat-larger-than-6mb.jpg" ) );
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ) );
             FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
             ApiResponse postResponse = pathResource( getOrgAppPath( "bars" ) ).post( form );
             UUID assetId = postResponse.getEntities().get(0).getUuid();

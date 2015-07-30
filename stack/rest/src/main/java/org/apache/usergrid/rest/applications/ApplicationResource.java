@@ -445,7 +445,7 @@ public class ApplicationResource extends ServiceResource {
             @FormParam("username") String username,
             @FormParam("password") String password ) {
 
-        LOG.debug( "ApplicationResource /authorize: {}/{}", username, password );
+        logger.debug( "ApplicationResource /authorize: {}/{}", username, password );
 
         try {
             responseType = response_type;
@@ -489,7 +489,7 @@ public class ApplicationResource extends ServiceResource {
             throw e;
         }
         catch ( Exception e ) {
-            LOG.debug("handleAuthorizeForm failed", e);
+            logger.debug("handleAuthorizeForm failed", e);
             return Response.ok( handleViewable( "error", this ) ).build() ;
         }
     }
