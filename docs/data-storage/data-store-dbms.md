@@ -17,33 +17,32 @@ Fast writes to the data store.
 
 If you have experience with relational databases and are unfamiliar with "NoSQL" databases, the following table might be a helpful start. It maps the high-level concepts of an RDBMS’s data model both to Cassandra’s and to the Usergrid, which is backed by Cassandra.
 
-.. raw:: html
-    <table class="usergrid-table">
-    <tr>
-        <td></td>
-        <td>RDBMS</td>
-        <td>Cassandra</td>
-        <td>Usergrid</td>
-    </tr>
-    <tr>
-        <td>Each tuple is modeled as</td>
-        <td>A row.</td>
-        <td>A row.</td>
-        <td>An entity. Written and retrieved as JSON, an entity contains values for all of its properties in the way a row has values for columns.</td>
-    </tr>
-    <tr>
-        <td>Each data attribute is modeled as</td>
-        <td>A column.</td>
-        <td>A column. Many thousands of columns are supported.</td>
-        <td>A entity property. An entity has a default set of properties, including the entity’s UUID. You can add many more to support your application.</td>
-    </tr>
-    <tr>
-        <td>Each group of attributes is modeled as</td>
-        <td>A table.</td>
-        <td>A column family. Unlike rows in tables, rows in a column family can have differing numbers of columns. Because you’re not using a schema to define the model, you can update the column list for a row at any time.</td>
-        <td>An entity collection. As with its underlying Cassandra column family, a collection can have entities with differing numbers of properties. In other words, just because one entity has an authorId property doesn’t mean that other entities in its collection need to.</td>
-    </tr>
-    </table>
+<table class="usergrid-table">
+<tr>
+    <td></td>
+    <td>RDBMS</td>
+    <td>Cassandra</td>
+    <td>Usergrid</td>
+</tr>
+<tr>
+    <td>Each tuple is modeled as</td>
+    <td>A row.</td>
+    <td>A row.</td>
+    <td>An entity. Written and retrieved as JSON, an entity contains values for all of its properties in the way a row has values for columns.</td>
+</tr>
+<tr>
+    <td>Each data attribute is modeled as</td>
+    <td>A column.</td>
+    <td>A column. Many thousands of columns are supported.</td>
+    <td>A entity property. An entity has a default set of properties, including the entity’s UUID. You can add many more to support your application.</td>
+</tr>
+<tr>
+    <td>Each group of attributes is modeled as</td>
+    <td>A table.</td>
+    <td>A column family. Unlike rows in tables, rows in a column family can have differing numbers of columns. Because you’re not using a schema to define the model, you can update the column list for a row at any time.</td>
+    <td>An entity collection. As with its underlying Cassandra column family, a collection can have entities with differing numbers of properties. In other words, just because one entity has an authorId property doesn’t mean that other entities in its collection need to.</td>
+</tr>
+</table>
 
 The following examples from a product database provide simple illustrations of these differences.
 
