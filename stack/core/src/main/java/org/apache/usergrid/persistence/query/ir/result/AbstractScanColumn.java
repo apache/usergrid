@@ -19,7 +19,10 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
+
 import org.apache.cassandra.utils.ByteBufferUtil;
+
+import org.apache.usergrid.persistence.cassandra.CursorCache;
 
 
 /**
@@ -29,13 +32,17 @@ import org.apache.cassandra.utils.ByteBufferUtil;
  */
 public abstract class AbstractScanColumn implements ScanColumn {
 
-    private final UUID uuid;
-    private final ByteBuffer buffer;
+    protected final UUID uuid;
+    protected final ByteBuffer buffer;
+    protected final CursorGenerator sliceCursorGenerator;
+    protected ScanColumn child;
 
 
-    protected AbstractScanColumn( UUID uuid, ByteBuffer buffer ) {
+    protected AbstractScanColumn( final UUID uuid, final ByteBuffer columnNameBuffer,
+                                  final CursorGenerator sliceCursorGenerator ) {
         this.uuid = uuid;
-        this.buffer = buffer;
+        this.buffer = columnNameBuffer;
+        this.sliceCursorGenerator = sliceCursorGenerator;
     }
 
 
@@ -45,9 +52,9 @@ public abstract class AbstractScanColumn implements ScanColumn {
     }
 
 
-    @Override
+
     public ByteBuffer getCursorValue() {
-        return buffer == null ? null :buffer.duplicate();
+        return buffer == null ? null : buffer.duplicate();
     }
 
 
@@ -56,14 +63,13 @@ public abstract class AbstractScanColumn implements ScanColumn {
         if ( this == o ) {
             return true;
         }
-        if ( !( o instanceof AbstractScanColumn ) ) {
+        if ( !( o instanceof ScanColumn ) ) {
             return false;
         }
 
-        AbstractScanColumn that = ( AbstractScanColumn ) o;
+        ScanColumn that = ( ScanColumn ) o;
 
-        return uuid.equals(that.uuid);
-
+        return uuid.equals( that.getUUID() );
     }
 
 
@@ -79,5 +85,10 @@ public abstract class AbstractScanColumn implements ScanColumn {
                 "uuid=" + uuid +
                 ", buffer=" + ByteBufferUtil.bytesToHex( buffer ) +
                 '}';
+    }
+
+    @Override
+    public void addToCursor( final CursorCache cache ) {
+        this.sliceCursorGenerator.addToCursor( cache, this );
     }
 }

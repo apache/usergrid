@@ -19,7 +19,6 @@ package org.apache.usergrid.persistence.cassandra;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
@@ -47,14 +46,15 @@ import org.apache.usergrid.persistence.query.ir.OrNode;
 import org.apache.usergrid.persistence.query.ir.OrderByNode;
 import org.apache.usergrid.persistence.query.ir.QueryNode;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
-import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 import org.apache.usergrid.persistence.query.ir.SliceNode;
 import org.apache.usergrid.persistence.query.ir.UuidIdentifierNode;
 import org.apache.usergrid.persistence.query.ir.WithinNode;
+import org.apache.usergrid.persistence.query.ir.result.GatherIterator;
 import org.apache.usergrid.persistence.query.ir.result.ResultIterator;
 import org.apache.usergrid.persistence.query.ir.result.ResultsLoader;
 import org.apache.usergrid.persistence.query.ir.result.ResultsLoaderFactory;
 import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
+import org.apache.usergrid.persistence.query.ir.result.SearchVisitorFactory;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;
@@ -87,6 +87,7 @@ public class QueryProcessor {
     private final CollectionInfo collectionInfo;
     private final EntityManager em;
     private final ResultsLoaderFactory loaderFactory;
+    private final QueryExecutorService executorService;
 
     private Operand rootOperand;
     private List<SortPredicate> sorts;
@@ -99,11 +100,12 @@ public class QueryProcessor {
     private int sliceCount;
 
 
-    public QueryProcessor( Query query, CollectionInfo collectionInfo, EntityManager em,
+    public QueryProcessor(  EntityManager em, QueryExecutorService executorService, Query query, CollectionInfo collectionInfo,
                            ResultsLoaderFactory loaderFactory ) throws PersistenceException {
         setQuery( query );
         this.collectionInfo = collectionInfo;
         this.em = em;
+        this.executorService = executorService;
         this.loaderFactory = loaderFactory;
         process();
     }
@@ -138,6 +140,7 @@ public class QueryProcessor {
         if ( rootOperand != null ) {
             // visit the tree
 
+            //TODO, evaluate for each shard and generate a tree in this class?
             TreeEvaluator visitor = new TreeEvaluator();
 
             rootOperand.visit( visitor );
@@ -217,7 +220,7 @@ public class QueryProcessor {
      * Apply cursor position and sort order to this slice. This should only be invoke at evaluation time to ensure that
      * the IR tree has already been fully constructed
      */
-    public void applyCursorAndSort( QuerySlice slice ) {
+    public  void applyCursorAndSort( QuerySlice slice ) {
         // apply the sort first, since this can change the hash code
         SortPredicate sort = getSort( slice.getPropertyName() );
 
@@ -259,18 +262,19 @@ public class QueryProcessor {
     /**
      * Return the iterator results, ordered if required
      */
-    public Results getResults( SearchVisitor visitor ) throws Exception {
+    public Results getResults( final SearchVisitorFactory searchVisitorFactory ) throws Exception {
         // if we have no order by just load the results
 
         if ( rootNode == null ) {
             return null;
         }
 
-        rootNode.visit( visitor );
+        //use the gather iterator to collect all the          '
+        final int resultSetSize = Math.min( size, Query.MAX_LIMIT );
 
-        ResultIterator itr = visitor.getResults();
+        ResultIterator itr = new GatherIterator(resultSetSize, rootNode, searchVisitorFactory.createVisitors(), executorService.getExecutor()  );
 
-        List<ScanColumn> entityIds = new ArrayList<ScanColumn>( Math.min( size, Query.MAX_LIMIT ) );
+        List<ScanColumn> entityIds = new ArrayList<ScanColumn>( );
 
         CursorCache resultsCursor = new CursorCache();
 
@@ -283,8 +287,9 @@ public class QueryProcessor {
             int resultSize = Math.min( entityIds.size(), size );
             entityIds = entityIds.subList( 0, resultSize );
 
+            //set our cursor on the last results
             if ( resultSize == size ) {
-                itr.finalizeCursor( resultsCursor, entityIds.get( resultSize - 1 ).getUUID() );
+                entityIds.get( resultSize -1 ).addToCursor( resultsCursor );
             }
         }
         if ( logger.isDebugEnabled() ) {
@@ -304,7 +309,7 @@ public class QueryProcessor {
 
         results.setQuery( query );
         results.setQueryProcessor( this );
-        results.setSearchVisitor( visitor );
+        results.setSearchVisitorFactory( searchVisitorFactory );
 
         return results;
     }
@@ -446,7 +451,7 @@ public class QueryProcessor {
                 node = newSliceNode();
             }
             else {
-                node = getUnionNode( op );
+                node = getUnionNode( );
             }
 
             String fieldName = op.getProperty().getIndexedValue();
@@ -483,7 +488,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setFinish( propertyName, op.getLiteral().getValue(), false );
+            getUnionNode( ).setFinish( propertyName, op.getLiteral().getValue(), false );
         }
 
 
@@ -500,7 +505,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setFinish( propertyName, op.getLiteral().getValue(), true );
+            getUnionNode( ).setFinish( propertyName, op.getLiteral().getValue(), true );
         }
 
 
@@ -517,7 +522,7 @@ public class QueryProcessor {
             //checkIndexed( fieldName );
 
             Literal<?> literal = op.getLiteral();
-            SliceNode node = getUnionNode( op );
+            SliceNode node = getUnionNode( );
 
             // this is an edge case. If we get more edge cases, we need to push
             // this down into the literals and let the objects
@@ -552,7 +557,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setStart( propertyName, op.getLiteral().getValue(), false );
+            getUnionNode( ).setStart( propertyName, op.getLiteral().getValue(), false );
         }
 
 
@@ -568,7 +573,7 @@ public class QueryProcessor {
 
             checkIndexed( propertyName );
 
-            getUnionNode( op ).setStart( propertyName, op.getLiteral().getValue(), true );
+            getUnionNode( ).setStart( propertyName, op.getLiteral().getValue(), true );
         }
 
 
@@ -576,9 +581,8 @@ public class QueryProcessor {
          * Return the current leaf node to add to if it exists. This means that we can compress multiple 'AND'
          * operations and ranges into a single node. Otherwise a new node is created and pushed to the stack
          *
-         * @param current The current operand node
          */
-        private SliceNode getUnionNode( EqualityOperand current ) {
+        private SliceNode getUnionNode( ) {
 
             /**
              * we only create a new slice node in 3 situations 1. No nodes exist 2.
@@ -681,4 +685,7 @@ public class QueryProcessor {
     public EntityManager getEntityManager() {
         return em;
     }
+
+
+
 }

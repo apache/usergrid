@@ -30,7 +30,7 @@ import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 
-public class EntityLocationRef implements EntityRef {
+public class EntityLocationRef implements EntityRef, Comparable<EntityLocationRef> {
 
     private UUID uuid;
 
@@ -43,10 +43,6 @@ public class EntityLocationRef implements EntityRef {
     private double longitude;
 
     private double distance;
-
-
-    public EntityLocationRef() {
-    }
 
 
     public EntityLocationRef( EntityRef entity, double latitude, double longitude ) {
@@ -223,5 +219,20 @@ public class EntityLocationRef implements EntityRef {
             return false;
         }
         return true;
+    }
+
+
+    /**
+     * Compares 2 locations by comparing their distance
+     * @param other
+     * @return
+     */
+    @Override
+    public int compareTo( final EntityLocationRef other ) {
+        if(other == null){
+            return 1;
+        }
+
+        return Double.compare( distance, other.distance );
     }
 }
