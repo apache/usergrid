@@ -12,7 +12,7 @@ The following example shows how to create an empty collection. Alternatively, yo
 
 ### Request Syntax
 
-curl -X POST https://api.usergrid.com/<org>/<app>/<collection_name>
+    curl -X POST https://api.usergrid.com/<org>/<app>/<collection_name>
 
 Parameters
 
@@ -49,7 +49,7 @@ Response:
 
 This article describes how to retrieve all of the entities in a collection.
 
-By default, the API Services BaaS API returns 10 entities per request. For collections with more than 10 entities, use the returned 'cursor' property to retrieve the next 10 entities in the result set. You may also use the LIMIT parameter in a query string to increase the number of results returned. For more information on using cursors, see Managing large sets of results.
+<div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> By default, the API Services BaaS API returns 10 entities per request. For collections with more than 10 entities, use the returned 'cursor' property to retrieve the next 10 entities in the result set. You may also use the LIMIT parameter in a query string to increase the number of results returned. For more information on using cursors, see [Query Parameters](../data-queries/query-parameters.html).</p></div>
 
 __Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
 

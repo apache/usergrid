@@ -8,17 +8,22 @@ When you create a new Usergrid account (see Creating an Usergrid Account) to use
 
 To keep things simple and make it easier for you to try things out, the sandbox application has all authentication disabled. That way, it doesn’t require an access token for application-level calls to the API. Permissions are so open on the sandbox application because its "guest" role offers full permissions for all access paths -- that is, GET, POST, PUT, and DELETE for /**. Learn more about roles and permissions in Managing access by defining permission rules.
 
-.. warning:: Never use a Sandbox Application for a production 
-
+<!-- workaround a Sphinx bug -->
+<div class="admonition warning"><p class="first admonition-title">Warning</p><p class="last">
+<p class="last">Never use a sandbox app for production.
 Keep in mind that the lack of authentication means that a sandbox application is not secure enough for important or sensitive data. A sandbox is just for experimentation while you learn how the services work, and should never be used for a production application. As with other Usergrid applications you create, a sandbox application is an area of the data store where you can put your own data. You can create as many other applications as you like, including more sandbox applications. When it comes to production (secured) applications, a good rule of thumb is to create one application for each mobile app you develop.
+</p>
+</div>
 
 ## Creating a New Sandbox Application
 
 You may want to create (or re-create) a sandbox application. For example, you may want to create a sandbox application for another organization or you may want to create another application for testing purposes.
 
-.. warning:: Guest Role should never be given full permissions
-    
+<!-- workaround a Sphinx bug -->
+<div class="admonition warning"><p class="first admonition-title">Warning</p><p class="last">
+Guest Role should never be given full permissions.
 Giving the guest role full permissions should be used only for testing and should not be used in production. Before you make your app “live”, you should remove the guest permissions for /**.
+</p></div>
 
 Use the following steps to create a sandbox app:
 
