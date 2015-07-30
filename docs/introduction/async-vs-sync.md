@@ -1,4 +1,4 @@
-# Asynchronous vs. synchronous calls
+# Async vs. sync calls
 The Usergrid SDKs work by making RESTful API calls from your application to the API. In some cases, both synchronous and asynchronous calls are supported for most methods, as in the case of the Usergrid Android SDK, while in others only asynchronous calls are supported, as in the Usergrid JavaScript SDK. The following is a brief explanation of synchronous vs. asynchronous API calls.
 
 ## Synchronous
