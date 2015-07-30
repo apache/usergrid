@@ -221,7 +221,13 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error getting administrators');
         }
-        $rootScope.$broadcast('administrators-received', administrators);
+        var enabledAdmins = [];
+        for(var i=0; i<administrators.length; i++){
+          if(administrators[i].disabled === false){
+            enabledAdmins.push(administrators[i]);
+          }
+        }
+        $rootScope.$broadcast('administrators-received', enabledAdmins);
       });
     },
     createApplication: function (appName) {
@@ -239,7 +245,13 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error creating administrator');
         }
-        $rootScope.$broadcast('administrators-received', administrators);
+        var enabledAdmins = [];
+        for(var i=0; i<administrators.length; i++){
+          if(administrators[i].disabled === false){
+            enabledAdmins.push(administrators[i]);
+          }
+        }
+        $rootScope.$broadcast('administrators-received', enabledAdmins);
       });
     },
     getFeed: function () {
