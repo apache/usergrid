@@ -20,6 +20,7 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
@@ -27,6 +28,7 @@ import org.safehaus.guicyfig.Key;
 /**
  * Application id cache fig
  */
+@FigSingleton
 public interface IndexProcessorFig extends GuicyFig {
 
 

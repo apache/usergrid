@@ -20,12 +20,14 @@
 package org.apache.usergrid.corepersistence.index;
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 /**
  * configuration for index in core
  */
+@FigSingleton
 public interface CoreIndexFig extends GuicyFig {
 
     String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS = "elasticsearch.management_number_shards";
