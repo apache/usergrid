@@ -10,13 +10,16 @@ files.each() { fileName ->
 
             def inputFile = new File(fileName);
             def count = 0;
-            writer.writeLine "# ${baseName}"
+            writer.writeLine "# ${baseName.capitalize()}"
+            writer.writeLine ""
             writer.writeLine ""
             writer.writeLine "<!-- DO NOT EDIT THIS GENERATED FILE -->";
+            writer.writeLine ""
             writer.writeLine "<table class='usergrid-table rest-endpoints-table'>";
 
             inputFile.eachLine { line ->
-                def parts = line.split("\\t")
+                def parts = line.split("\\t");
+                def evenodd = count % 2 ? "even" : "odd";
                 if ( count == 0 ) {
                     writer.writeLine  "  <tr>";
                     parts.each() { part ->
@@ -24,7 +27,7 @@ files.each() { fileName ->
                     }
                     writer.writeLine  "  </tr>";
                 } else {
-                    writer.writeLine  "  <tr>";
+                    writer.writeLine  "  <tr class='ug-${evenodd} usergrid-table'>";
                     parts.each() { part ->
                         writer.writeLine  "    <td>" + part + "</td>";
                     }
