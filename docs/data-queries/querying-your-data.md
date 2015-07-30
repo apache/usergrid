@@ -2,19 +2,21 @@
 
 This article describes how to use queries to filter data retrieved from your backend data store. Queries allow you to work with only the data you need, making your app more efficient and manageable by reducing the number of entities returned or acted on by the API. A query can be sent with any GET, PUT or DELETE request. For example, you might query the API to retrieve only the user entities with the property status:'active' to get a list of your users that have active accounts.
 
-For information on more advanced query usage and syntax, see Query parameters & clauses.
+For information on more advanced query usage and syntax, see [Query parameters & clauses](query-parameters.html).
 
+<div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> 
 Query examples in this content are shown unencoded to make them easier to read. Keep in mind that you might need to encode query strings if you're sending them as part of URLs, such as when you're executing them with the cURL tool.
+</p></div>
 
 ## Basic query usage
 
 The following examples show how to query the Usergrid API to return the first 5 entities in the users collection that contain the property status:'active'.
 
-### Optimizing queries
+<div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> 
+Optimizing queries: As a best practice, you should include no more than 3 parameters in your queries. The API will not prevent you from submitting a query with more than 3 parameters; however, due to the nature of NoSQL, queries with many parameters can quickly become very inefficient.
+</p></div>
 
-As a best practice, you should include no more than 3 parameters in your queries. The API will not prevent you from submitting a query with more than 3 parameters; however, due to the nature of NoSQL, queries with many parameters can quickly become very inefficient.
-
-For more information, see our Usergrid DBMS overview and Data store best practices.
+For more information, see our [Usergrid DBMS overview](../data-store/data-storage-dbms.html) and [Data store best practices](../data-storage/optimizing-access).
 
 ### Request Syntax
 

@@ -1,43 +1,44 @@
-# folder
+# Folder
 
 <!-- DO NOT EDIT THIS GENERATED FILE -->
-<table class='usergrid-table rest-endpoints-table'>
+
+<table class='usergrid-table entities-table'>
   <tr>
     <th>uuid</th>
     <th>UUID</th>
     <th>Unique entity ID</th>
   </tr>
-  <tr>
+  <tr class='ug-even usergrid-table'>
     <td>type</td>
     <td>string</td>
     <td>Type of entity, in this case 'folder'</td>
   </tr>
-  <tr>
+  <tr class='ug-odd usergrid-table'>
     <td>name</td>
     <td>string</td>
     <td>Optional. Folder name</td>
   </tr>
-  <tr>
+  <tr class='ug-even usergrid-table'>
     <td>created</td>
     <td>long</td>
     <td>UTC timestamp in milliseconds of when the entity was created</td>
   </tr>
-  <tr>
+  <tr class='ug-odd usergrid-table'>
     <td>modified</td>
     <td>long</td>
     <td>UTC timestamp in milliseconds of when the entity was last modified</td>
   </tr>
-  <tr>
+  <tr class='ug-even usergrid-table'>
     <td>owner</td>
     <td>UUID</td>
     <td>Required. UUID of the folder's owner</td>
   </tr>
-  <tr>
+  <tr class='ug-odd usergrid-table'>
     <td>path</td>
     <td>string</td>
     <td>Required. Relative path to the folder</td>
   </tr>
-  <tr>
+  <tr class='ug-even usergrid-table'>
     <td>metadata</td>
     <td>object</td>
     <td>A nested, JSON-formatted object that provides the relative path to the folder entity, as well as additional data entities associated with the asset. The following properties are included in metadata: path: Path to retrieve the folder entity</td>
