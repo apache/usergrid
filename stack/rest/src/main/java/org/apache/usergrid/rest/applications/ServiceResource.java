@@ -477,7 +477,6 @@ public class ServiceResource extends AbstractContextResource {
                     }catch(AwsPropertiesNotFoundException apnfe){
                         logger.error( "Amazon Property needed for this operation not found",apnfe );
                         response.setError( "500","Amazon Property needed for this operation not found",apnfe );
-                        //return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
                     }
                 }
             }
