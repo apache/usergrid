@@ -158,9 +158,9 @@ object Settings {
   val feedUuidFilename = if (feedUuids) uuidFilename else dummyCsv
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
 
-  private var uuidMap: Map[String, String] = Map()
-  def addUuid(name: String, uuid: String): Unit = {
-    if (captureUuids) uuidMap += (name -> uuid)
+  private var uuidMap: Map[Int, String] = Map()
+  def addUuid(num: Int, uuid: String): Unit = {
+    if (captureUuids) uuidMap += (num -> uuid)
     // println(s"UUID: ${name},${uuid}")
   }
 
@@ -171,8 +171,9 @@ object Settings {
         new PrintWriter(fos, false)
       }
       writer.println("name,uuid")
-      uuidMap.keys.foreach { name =>
-        writer.println(s"${Settings.entityPrefix}${name},${uuidMap(name)}")
+      val uuidList: List[(Int, String)] = uuidMap.toList.sortBy(l => l._1)
+      uuidList.foreach { l =>
+        writer.println(s"${Settings.entityPrefix}${l._1},${l._2}")
       }
       writer.flush()
       writer.close()

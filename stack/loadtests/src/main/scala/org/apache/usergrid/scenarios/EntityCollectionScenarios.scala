@@ -196,7 +196,7 @@ object EntityCollectionScenarios {
         // 200 for success, 400 if already exists
         .check(status.in(Seq(200)), extractCreateUuid(SessionVarUuid)))
         .exec(session => {
-          Settings.addUuid(session("entityNum").as[String], session(SessionVarUuid).as[String])
+          Settings.addUuid(session("entityNum").as[String].toInt, session(SessionVarUuid).as[String])
           session
         })
     }
@@ -234,10 +234,10 @@ object EntityCollectionScenarios {
     .exec(injectAuthType())
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
     feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
-      .exec {
+      /*.exec {
       session => if (session("validEntity").as[String] == "yes") { println("Deleting entity #" + session("entityNum").as[String]) }
         session
-      }
+      }*/
       .doIf(session => session("validEntity").as[String] == "yes") {
         exec(deleteEntity)
       }
