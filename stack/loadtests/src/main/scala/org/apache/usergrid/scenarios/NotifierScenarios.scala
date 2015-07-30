@@ -54,13 +54,13 @@ object NotifierScenarios {
     )
 
     .exec(http("Create Notifier")
-    .post(Settings.baseAppUrl+"/notifiers")
-    .headers(Headers.authToken)
-    .body(StringBody("{\"name\":\"" + notifier + "\",\"provider\":\"" + provider + "\"}"))
-    .check(status.in(200 to 400)))
+      .post("/notifiers")
+      .headers(Headers.authToken)
+      .body(StringBody(_ => """{ "name": """" + notifier + """", "provider": """" + provider + """"}"""))
+      .check(status.in(Range(200,400))))
 
   val checkNotifier = exec(http("Get Notifier")
-    .get(Settings.baseAppUrl+"/notifiers/"+notifier)
+    .get("/notifiers/"+notifier)
     .headers(Headers.authToken)
     .check(status.is(200),status.saveAs("notifierStatus"))
   )

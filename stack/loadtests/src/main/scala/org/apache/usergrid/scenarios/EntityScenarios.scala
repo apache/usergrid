@@ -31,7 +31,7 @@ object EntityScenarios {
 
   val getEntity = exec(
     http("GET custom entity")
-      .get(Settings.baseAppUrl+"/${collectionType}/${entityName}")
+      .get("/${collection}/${entityName}")
       .headers(Headers.authAnonymous)
       .check(status.is(200))
   )
@@ -39,7 +39,7 @@ object EntityScenarios {
   // not sure why I have to put stringToExpression -- thought String -> Expression[String] conversion would be automatic
   val putEntity = exec(
     http("Put custom entity")
-      .put(stringToExpression(Settings.baseAppUrl + "/${collectionType}/${entityName}"))
+      .put("/${collection}/${entityName}")
       .body(StringBody("""${entity}"""))
       .headers(Headers.auth("${authType}"))
       .check(status.is(200))
@@ -48,14 +48,14 @@ object EntityScenarios {
 
   val deleteEntity = exec(
     http("DELETE custom entity")
-      .get(Settings.baseAppUrl + "/${collectionType}/${entityName}")
+      .delete("/${collection}/${entityName}")
       .headers(Headers.auth("${authType}"))
       .check(status.is(200))
   )
 
   val postEntity = exec(
     http("Post custom entity")
-      .post(stringToExpression(Settings.baseAppUrl + "/${collectionType}"))
+      .post("/${collection}")
       .body(StringBody("""${entity}"""))
       .headers(Headers.auth("${authType}"))
       .check(status.is(200))
@@ -64,7 +64,7 @@ object EntityScenarios {
   /*
   val postEntityWithToken = exec(
     http("Post custom entity")
-      .post(stringToExpression(Settings.baseAppUrl + "/${collectionType}"))
+      .post("/${collection}")
       .body(StringBody("""${entity}"""))
       .headers(Headers.authToken)
       .check(status.is(200))
@@ -72,7 +72,7 @@ object EntityScenarios {
 
   val postEntityWithBasicAuth = exec(
     http("Post custom entity")
-      .post(stringToExpression(Settings.baseAppUrl + "/${collectionType}"))
+      .post("/${collection}")
       .body(StringBody("""${entity}"""))
       .headers(Headers.authBasic)
       .check(status.is(200))

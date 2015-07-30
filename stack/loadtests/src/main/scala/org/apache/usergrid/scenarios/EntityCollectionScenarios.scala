@@ -17,6 +17,7 @@
 package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
+import io.gatling.core.feeder.RecordSeqFeederBuilder
 import io.gatling.http.Predef._
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums.{EndConditionType, AuthType}
@@ -37,22 +38,27 @@ object EntityCollectionScenarios {
   val SessionVarUuid: String = "createUuid"
 
   def entityGetUrl(useCursor: Boolean): String = {
-    val url = Settings.baseAppUrl + "/" + Settings.collectionType + "?dummy" +
-      (if (useCursor) "&cursor=${" + SessionVarCursor + "}" else "") +
-      (if (Settings.searchLimit > 0) "&limit=" + Settings.searchLimit.toString() else "") +
-      (if (Settings.searchQuery != "") "&ql=" + Settings.searchQuery else "")
+    val url = s"/${Settings.collection}?" +
+      (if (useCursor) "cursor=${" + SessionVarCursor + "}&" else "") +
+      (if (Settings.searchQuery != "") s"ql=${Settings.searchQuery}&" else "") +
+      (if (Settings.searchLimit > 0) s"limit=${Settings.searchLimit}&" else "")
 
-    url
+    // remove trailing & or ?
+    url.dropRight(1)
   }
 
   def entityGetByNameUrl(entityName: String): String = {
-    val url = Settings.baseCollectionUrl + "/" + entityName
+    val url = s"/${Settings.collection}/$entityName"
 
     url
   }
 
   def randomEntityNameUrl(prefix: String = Settings.entityPrefix, numEntities: Int = Settings.numEntities, seed: Int = Settings.entitySeed): String = {
     Utils.randomEntityNameUrl(prefix, numEntities, seed, Settings.baseCollectionUrl)
+  }
+
+  def uuidFeeder(): RecordSeqFeederBuilder[String] = {
+    csv(Settings.feedUuidFilename).random
   }
 
   /*
@@ -75,15 +81,15 @@ object EntityCollectionScenarios {
   val getEntityPagesToEnd = scenario("Get all entities")
     .exec(injectTokenIntoSession())
     .exec(injectAuthType())
-    .doIfOrElse(session => Settings.endConditionType == EndConditionType.MinutesElapsed) {
-      asLongAs(session => (System.currentTimeMillis() - Settings.testStartTime) < Settings.endMinutes*60*1000,"loopCounter",true) {
+    .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
+      asLongAs(_ => Settings.continueMinutesTest, exitASAP = true) {
         exec(getEntitiesWithoutCursor)
           .asLongAs(stringParamExists(SessionVarCursor)) {
           exec(getEntitiesWithCursor)
         }
       }
     } {
-      repeat(Settings.endRequestCount) {
+      repeat(_ => Settings.endRequestCount.toInt) {
         exec(getEntitiesWithoutCursor)
           .asLongAs(stringParamExists(SessionVarCursor)) {
           exec(getEntitiesWithCursor)
@@ -93,18 +99,18 @@ object EntityCollectionScenarios {
     //.exec(sessionFunction => { sessionFunction })
 
   /*
-   * Get random entities
+   * Get random entities by name
    */
   val getRandomEntityAnonymous = exec(
     http("GET entity by name (anonymous)")
-      .get(_ => randomEntityNameUrl())
+      .get(randomEntityNameUrl())
       .headers(Headers.authAnonymous)
       .check(status.is(200))
   )
 
   val getRandomEntityWithToken = exec(
     http("GET entity by name (token)")
-      .get(_ => randomEntityNameUrl())
+      .get(randomEntityNameUrl())
       .headers(Headers.authToken)
       .check(status.is(200))
   )
@@ -112,21 +118,69 @@ object EntityCollectionScenarios {
   val getRandomEntitiesByName = scenario("Get entities by name randomly")
     .exec(injectTokenIntoSession())
     .exec(injectAuthType())
-    .doIfOrElse(session => Settings.endConditionType == EndConditionType.MinutesElapsed) {
-      asLongAs(session => (System.currentTimeMillis() - Settings.testStartTime) < Settings.endMinutes*60*1000) {
-        doIfOrElse(session => Settings.authType == AuthType.Anonymous) {
-          exec(getRandomEntityAnonymous)
-        } {
-          exec(getRandomEntityWithToken)
-        }
+    .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
+    asLongAs(_ => Settings.continueMinutesTest) {
+      doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+        exec(getRandomEntityAnonymous)
+      } {
+        exec(getRandomEntityWithToken)
+      }
+    }
+  } {
+    repeat(_ => Settings.endRequestCount.toInt) {
+      doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+        exec(getRandomEntityAnonymous)
+      } {
+        exec(getRandomEntityWithToken)
+      }
+    }
+  }
+
+  /*
+   * Get random entities by UUID
+   */
+  val getRandomEntityByUuidAnonymous = exec(
+    http("GET entity by UUID (anonymous)")
+      .get("/" + Settings.collection + "/${uuid}")
+      .headers(Headers.authAnonymous)
+      .check(status.is(200))
+  )
+
+  val getRandomEntityByUuidWithToken = exec(
+    http("GET entity by UUID (token)")
+      .get("/" + Settings.collection + "/${uuid}")
+      .headers(Headers.authToken)
+      .check(status.is(200))
+  )
+
+  val getRandomEntitiesByUuid = scenario("Get entities by uuid randomly")
+    .exec(injectTokenIntoSession())
+    .exec(injectAuthType())
+    .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
+      asLongAs(_ => Settings.continueMinutesTest) {
+        feed(uuidFeeder())
+          /*.exec{
+            session => println(s"UUID: ${session("uuid").as[String]}")
+            session
+          }*/
+          .doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+            exec(getRandomEntityByUuidAnonymous)
+          } {
+            exec(getRandomEntityByUuidWithToken)
+          }
       }
     } {
-      repeat(Settings.endRequestCount) {
-        doIfOrElse(session => Settings.authType == AuthType.Anonymous) {
-          exec(getRandomEntityAnonymous)
-        } {
-          exec(getRandomEntityWithToken)
-        }
+      repeat(_ => Settings.endRequestCount.toInt) {
+        feed(uuidFeeder())
+          /*.exec {
+            session => println(s"UUID: ${session("uuid").as[String]}")
+            session
+          }*/
+          .doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+            exec(getRandomEntityByUuidAnonymous)
+          } {
+            exec(getRandomEntityByUuidWithToken)
+          }
       }
     }
 
@@ -136,11 +190,15 @@ object EntityCollectionScenarios {
   val loadEntity = exec(
     doIf("${validEntity}", "yes") {
       exec(http("POST load entity")
-        .post(Settings.baseCollectionUrl)
+        .post(_ => "/" + Settings.collection)
         .headers(Headers.authToken)
         .body(StringBody("""${entity}"""))
         // 200 for success, 400 if already exists
-        .check(status.in(Seq(200))))
+        .check(status.in(Seq(200)), extractCreateUuid(SessionVarUuid)))
+        .exec(session => {
+          Settings.addUuid(session("entityNum").as[String], session(SessionVarUuid).as[String])
+          session
+        })
     }
   )
 
@@ -149,12 +207,14 @@ object EntityCollectionScenarios {
     .exec(injectAuthType())
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
       feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
-        .exec{
+        /*.exec{
           session => if (session("validEntity").as[String] == "yes") { println("Loading entity #" + session("entityNum").as[String]) }
           session
-        }
+        }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
-          exec(loadEntity)
+          tryMax(5) {
+            exec(loadEntity)
+          }
         }
     }
 
@@ -177,14 +237,14 @@ object EntityCollectionScenarios {
       .exec {
       session => if (session("validEntity").as[String] == "yes") { println("Deleting entity #" + session("entityNum").as[String]) }
         session
-    }
+      }
       .doIf(session => session("validEntity").as[String] == "yes") {
-      exec(deleteEntity)
-    }
+        exec(deleteEntity)
+      }
   }
 
   /*
-   * Delete entities
+   * Update entities
    */
   val updateEntity = exec(
     http("UPDATE entity")
@@ -200,10 +260,10 @@ object EntityCollectionScenarios {
     .exec(injectAuthType())
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
       feed(FeederGenerator.generateCustomEntityFeeder(Settings.numEntities, Settings.entityType, Settings.entityPrefix, Settings.entitySeed))
-        .exec {
+        /*.exec {
           session => if (session("validEntity").as[String] == "yes") { println("Updating entity #" + session("entityNum").as[String]) }
           session
-        }
+        }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
           exec(updateEntity)
         }

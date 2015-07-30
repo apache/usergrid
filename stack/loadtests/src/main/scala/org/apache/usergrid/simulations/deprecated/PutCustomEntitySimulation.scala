@@ -29,7 +29,7 @@ import org.apache.usergrid.settings.Settings
  * PostCustomEntitySimulation - creates lots of custom entities
  *
  * Run this way:
- * mvn gatling:execute -DrampTime=10 -DmaxPossibleUsers=10 -Dduration=120 -Dorg=yourorgname -Dapp=sandbox -Dbaseurl=https://api.usergrid.com -DadminUser=yourusername -DadminPassword='yourpassword' -Dgatling.simulationClass=org.apache.usergrid.simulations.deprecated.PostCustomEntitySimulation -DcollectionType=yourcollection
+ * mvn gatling:execute -DrampTime=10 -DmaxPossibleUsers=10 -Dduration=120 -Dorg=yourorgname -Dapp=sandbox -Dbaseurl=https://api.usergrid.com -DadminUser=yourusername -DadminPassword='yourpassword' -Dgatling.simulationClass=org.apache.usergrid.simulations.deprecated.PostCustomEntitySimulation -Dcollection=yourcollection
  *
  *
  */
@@ -45,8 +45,8 @@ class PutCustomEntitySimulation extends Simulation {
   }
 
   val numEntities:Int = Settings.numEntities
-  val collectionType = Settings.collectionType
-  println("collection type = " + collectionType)
+  val collection = Settings.collection
+  println("collection type = " + collection)
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
   val feeder = FeederGenerator.generateCustomEntityPutInfinite(0)

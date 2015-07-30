@@ -36,10 +36,10 @@ import org.apache.usergrid.settings.{Settings, Headers}
 object ApplicationScenarios {
 
   val createApplication = exec(http("Create Application")
-    .post(Settings.baseUrl +  "/management/organizations/"+Settings.org+"/applications")
+    .post(_ => Settings.baseUrl + "/management/organizations/" + Settings.org + "/applications")
     .headers(Headers.authToken)
-    .body(StringBody("{\"name\":\"" + Settings.app + "\"}"))
-    .check(status.in(200 to 204))
+    .body(StringBody(_ => """ { "name": """" + Settings.app + """" } """))
+    .check(status.in(Range(200,204)))
 
     )
 

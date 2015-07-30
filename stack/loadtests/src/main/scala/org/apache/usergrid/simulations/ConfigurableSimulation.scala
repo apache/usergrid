@@ -29,7 +29,7 @@ import org.apache.usergrid.settings.Settings
  * Configuration items:
  * skipSetup, createOrg, org, createApp, app, adminUser, adminPassword, baseUrl,
  * numEntities, entityType, entityPrefix, entitySeed, rampUsers, rampTime,
- * constantUsersPerSec, constantUsersDuration, collectionType, scenarioType
+ * constantUsersPerSec, constantUsersDuration, collection, scenarioType
  *
  * getAllByCursor scenario: searchQuery, searchLimit
  */
@@ -42,10 +42,11 @@ class ConfigurableSimulation extends Simulation {
       case ScenarioType.UpdateEntities => EntityCollectionScenarios.updateEntities
       case ScenarioType.GetAllByCursor => EntityCollectionScenarios.getEntityPagesToEnd
       case ScenarioType.NameRandomInfinite => EntityCollectionScenarios.getRandomEntitiesByName
+      case ScenarioType.UuidRandomInfinite => EntityCollectionScenarios.getRandomEntitiesByUuid
     }
   }
 
-  before(
+  before{
     if (!Settings.skipSetup) {
       println("Begin setup")
       if (Settings.createOrg) Setup.setupOrg()
@@ -54,7 +55,8 @@ class ConfigurableSimulation extends Simulation {
     } else {
       println("Skipping setup")
     }
-  )
+    if (Settings.sandboxCollection) Setup.sandboxCollection()
+  }
 
   Settings.setTestStartTime()
   if (ScenarioType.isValid(Settings.scenarioType)) {
@@ -70,9 +72,10 @@ class ConfigurableSimulation extends Simulation {
     println(s"scenarioType ${Settings.scenarioType} not found.")
   }
 
-  after(
+  after {
+    if (Settings.captureUuids) Settings.writeUuidsToFile()
     Settings.printSettingsSummary()
-  )
+  }
 
 }
 

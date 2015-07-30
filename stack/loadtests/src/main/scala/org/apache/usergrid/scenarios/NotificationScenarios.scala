@@ -48,21 +48,21 @@ object NotificationScenarios {
    * send the notification now
    */
   val sendNotification = exec(http("Send Single Notification")
-      .post("/devices/${entityName}/notifications")
-      .body(StringBody("{\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
-      .headers(Headers.authToken)
-      .check(status.is(200))
-    )
+    .post("/devices/${entityName}/notifications")
+    .body(StringBody(_ => """{ "payloads": { """" + notifier + """": "testmessage"} }"""))
+    .headers(Headers.authToken)
+    .check(status.is(200))
+  )
 
   val sendNotificationToUser= exec(http("Send Notification to All Devices")
     .post("/users/${userId}/notifications")
-    .body(StringBody("{\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
+    .body(StringBody(_ => """{ "payloads": {"""" + notifier + """": "testmessage"} }"""))
     .headers(Headers.authToken)
     .check(status.is(200))
   )
 
 
-  val userFeeder = Settings.getInfiniteUserFeeder()
+  val userFeeder = Settings.getInfiniteUserFeeder
   val createScenario = scenario("Create Push Notification")
     .feed(userFeeder)
     .exec(TokenScenarios.getUserToken)

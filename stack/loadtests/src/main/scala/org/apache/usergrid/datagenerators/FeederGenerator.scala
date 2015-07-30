@@ -65,6 +65,7 @@ object FeederGenerator {
     val geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
     val blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(1)
 
+    // merge maps
     user ++ geolocation ++ blockLists
   }
 
@@ -223,6 +224,8 @@ object FeederGenerator {
      val entity = EntityDataGenerator.generateEntity(entityType, entityName)
      val entityUrl = Settings.baseCollectionUrl + "/" + entityName
      val validEntity = if (i >= numEntities) "no" else "yes"
+
+     // println(entityName)
 
      Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity, "entityNum" -> (i+1).toString)
    }

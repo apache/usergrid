@@ -52,7 +52,7 @@ object ConnectionScenarios {
      .exec( UserScenarios.getUserByUsername)
      .repeat(2){
        feed(entityNameFeeder)
-         .exec( DeviceScenarios.postDeviceWithNotifier)
+         .exec(DeviceScenarios.postDeviceWithNotifier)
          .exec(ConnectionScenarios.postUserToDeviceConnection)
      }
      .exec(session => {

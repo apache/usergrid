@@ -47,20 +47,15 @@ object DeviceScenarios {
   val postDeviceWithNotifier = exec(http("Create device with notifier")
     .post("/devices")
     .headers(Headers.authToken)
-    .body(StringBody("""{"deviceModel":"Fake Device",
-    "deviceOSVerion":"Negative Version",
-    """" + notifier + """.notifier.id":"${entityName}"}"""))
+    .body(StringBody(session => """{ "deviceModel": "Fake Device", "deviceOSVersion": "Negative Version", """" + notifier + """.notifier.id": "${entityName}" }"""))
     .check(status.is(200),  jsonPath("$..entities[0]").exists , jsonPath("$..entities[0].uuid").exists , jsonPath("$..entities[0].uuid").saveAs("deviceId")))
 
 
   val postDeviceWithNotifier400ok = exec(http("Create device with notifier")
     .post("/devices")
     .headers(Headers.authToken)
-    .body(StringBody("""{"name":"${entityName}",
-    "deviceModel":"Fake Device",
-    "deviceOSVerion":"Negative Version",
-    "${notifier}.notifier.id":"${entityName}"}"""))
-    .check(status.in(200 to 400), jsonPath("$.entities[0].uuid").saveAs("deviceId")))
+    .body(StringBody(session => """{ "name":"${entityName}", "deviceModel":"Fake Device", "deviceOSVersion":"Negative Version", """" + notifier + """.notifier.id":"${entityName}" }"""))
+    .check(status.in(Range(200, 400)), jsonPath("$.entities[0].uuid").saveAs("deviceId")))
 
 
   /**
@@ -79,11 +74,11 @@ object DeviceScenarios {
       } )
     //create the device if we got a 404
     .doIf("${devices}","[]") {
-      exec(session =>{
+      /*exec(session =>{
         println("adding devices")
         session
-      } )
-      .exec(postDeviceWithNotifier)
+      } )*/
+      exec(postDeviceWithNotifier)
       .exec(ConnectionScenarios.postUserToDeviceConnection)
     }
 }

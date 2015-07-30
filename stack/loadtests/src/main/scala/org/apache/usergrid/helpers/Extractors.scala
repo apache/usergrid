@@ -43,7 +43,7 @@ object Extractors {
   /**
    * Will extract the uuid from the create response.  If the uuid is not present, an empty string will be set
    */
-  def extractUuid(saveAsName: String) = {
+  def extractCreateUuid(saveAsName: String) = {
     jsonPath("$.entities[0].uuid").transformOption(extract => {
       //it may or may not be present.  If it is, save it, otherwise save it as an empty string
       extract.orElse(Some(""))
@@ -83,8 +83,8 @@ object Extractors {
    * under the variable "authToken"
    * @return
    */
-  def injectManagementTokenIntoSession(): Expression[Session] = {
-    session => session.set("authToken", Setup.getManagementToken())
+  def injectManagementTokenIntoSession: Expression[Session] = {
+    session => session.set("authToken", Setup.getManagementToken)
   }
 
   def injectUserTokenIntoSession(): Expression[Session] = {
@@ -93,7 +93,7 @@ object Extractors {
 
   // handles different types of tokens
   def injectTokenIntoSession(): Expression[Session] = {
-    session => session.set("authToken", Setup.getToken())
+    session => session.set("authToken", Setup.getToken)
   }
 
   def injectAnonymousAuth(): Expression[Session] = {

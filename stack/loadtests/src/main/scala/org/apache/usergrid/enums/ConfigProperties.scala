@@ -1,5 +1,7 @@
 package org.apache.usergrid.enums
 
+import java.util.Date
+
 /**
  * Created by mdunker on 7/20/15.
  */
@@ -24,7 +26,7 @@ object ConfigProperties {
   val AppUserPassword = "appUserPassword"
   val NumEntities = "numEntities"
   val NumDevices = "numDevices"
-  val CollectionType = "collectionType"
+  val Collection = "collection"
   val RampTime = "rampTime"
   val Throttle = "throttle"
   val RpsTarget = "rpsTarget"
@@ -48,14 +50,75 @@ object ConfigProperties {
   val UpdateValue = "updateValue"
   val EntityWorkerCount = "entityWorkerCount"
   val EntityWorkerNum = "entityWorkerNum"
+  val UuidFilename = "uuidFilename"
+  val SandboxCollection = "sandboxCollection"
+  val PurgeUsers = "purgeUsers"
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
-    NumDevices,CollectionType,RampTime,Throttle,RpsTarget,RpsRampTime,HoldDuration,PushNotifier,EntityPrefix,EntityType,
-    EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,OrgCreationName,
-    OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum)
+    NumDevices,Collection,RampTime,Throttle,RpsTarget,RpsRampTime,HoldDuration,PushNotifier,PushProvider,EntityPrefix,
+    EntityType,EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,
+    OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
+    UuidFilename,SandboxCollection,PurgeUsers)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
+  }
+
+  // defaults for all the configuration items
+  def getDefault(cfg: String): Any = {
+    if (isValid(cfg)) {
+      cfg match {
+        case Org => ""
+        case App => ""
+        case AdminUser => ""
+        case AdminPassword => ""
+        case BaseUrl => ""
+        case AuthType => org.apache.usergrid.enums.AuthType.Anonymous
+        case TokenType => org.apache.usergrid.enums.TokenType.User
+        case SkipSetup => false
+        case CreateOrg => false
+        case CreateApp => false
+        case LoadEntities => false
+        case ScenarioType => org.apache.usergrid.enums.ScenarioType.NameRandomInfinite
+        case RampUsers => 0
+        case ConstantUsersPerSec => 0
+        case ConstantUsersDuration => 10
+        case UserSeed => 1
+        case AppUser => ""
+        case AppUserPassword => ""
+        case NumEntities => 5000
+        case NumDevices => 4000
+        case Collection => "customentities"
+        case RampTime => 0
+        case Throttle => 50
+        case RpsTarget => 50
+        case RpsRampTime => 10
+        case HoldDuration => 300
+        case PushNotifier => "loadNotifier"
+        case PushProvider => "noop"
+        case EntityPrefix => "entity"
+        case EntityType => org.apache.usergrid.enums.EntityType.Basic
+        case EntitySeed => 1
+        case SearchLimit => 0
+        case SearchQuery => ""
+        case EndConditionType => org.apache.usergrid.enums.EndConditionType.MinutesElapsed
+        case EndMinutes => 10
+        case EndRequestCount => 1000
+        case OrgCreationUsername => ""     // actual default is {org}_admin
+        case OrgCreationName => ""         // actual default is {org}_admin
+        case OrgCreationEmail => ""        // actual default is {org}_admin@usergrid.com
+        case OrgCreationPassword => "test"
+        case UpdateProperty => "updateProp"
+        case UpdateValue => new Date().toString
+        case EntityWorkerCount => 0
+        case EntityWorkerNum => 0
+        case UuidFilename => "dummy.csv"
+        case SandboxCollection => false
+        case PurgeUsers => 100
+      }
+    } else {
+      null
+    }
   }
 }

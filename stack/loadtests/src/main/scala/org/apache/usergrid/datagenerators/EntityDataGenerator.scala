@@ -45,7 +45,7 @@ object EntityDataGenerator {
 
     Map(
 
-      "username" -> "user".concat(userId.toString),
+      "username" -> "user".concat(userId),
       "profileId" -> Utils.generateRandomInt(10000, 1000000).toString,
       "displayName" -> Utils.generateRandomInt(10000, 1000000).toString,
       "showAge" -> Utils.generateRandomInt(0, 1).toString,
