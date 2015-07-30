@@ -84,9 +84,9 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Geolocation
+   :caption: Geo-location
    
-   geolocation
+   geolocation/geolocation
    
 .. _asset-and-file-management:
 
@@ -125,6 +125,41 @@ Apache Usergrid Documentation
    sdks/javascript
    sdks/usage
    
+.. _rest-endpoints:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: REST End-Points
+
+   rest-endpoints/access-token
+   rest-endpoints/activities
+   rest-endpoints/admin-users
+   rest-endpoints/collections
+   rest-endpoints/events
+   rest-endpoints/groups
+   rest-endpoints/organization
+   rest-endpoints/roles
+   rest-endpoints/users
+
+.. _default-entities:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Default Entities
+
+   default-entities/activity             
+   default-entities/asset                
+   default-entities/event                
+   default-entities/group                
+   default-entities/notifier             
+   default-entities/role                 
+   default-entities/user
+   default-entities/application          
+   default-entities/device               
+   default-entities/folder               
+   default-entities/notification         
+   default-entities/receipt              
+          
 .. _references:
 
 .. toctree::
@@ -133,12 +168,26 @@ Apache Usergrid Documentation
 
    reference/presentations
    reference/videos
-    
+          
 .. _installation:
 
 .. toctree::
    :maxdepth: 2
    :caption: Installing the Usergrid stack
 
-   installation
+   installation/deploy-local
+   installation/get-2.0-running-locally
+   installation/get-up-and-running-locally
+   installation/upgrading
        
+.. _other:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Other (obsolete?)
+
+   entity-connections/relationships
+   data-queries/query-language
+   contribute-code
+   sdks/usage
+   
