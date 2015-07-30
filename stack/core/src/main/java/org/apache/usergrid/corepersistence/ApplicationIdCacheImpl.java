@@ -83,7 +83,6 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
                 appCache.invalidate(applicationName.toLowerCase());
                 return Optional.absent();
             }
-            logger.debug("Returning for key {} value {}", applicationName, optionalUuid );
             return optionalUuid;
         } catch (Exception e) {
             logger.debug("Returning for key {} value null", applicationName );
@@ -120,9 +119,10 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             Id id = idObs.toBlocking().lastOrDefault(null);
             if(id != null) {
                 value = id.getUuid();
-                logger.debug("Loaded for key {} value {}", applicationName, value );
             }else{
-                logger.debug("Could not load value for key {} ", applicationName );
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Could not load value for key {} ", applicationName);
+                }
             }
             return value;
         }
@@ -135,13 +135,17 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     @Override
     public void evictAppId( final String applicationName ) {
         appCache.invalidate( applicationName.toLowerCase() );
-        logger.debug("Invalidated key {}", applicationName.toLowerCase());
+        if(logger.isDebugEnabled()) {
+            logger.debug("Invalidated key {}", applicationName.toLowerCase());
+        }
     }
 
 
     @Override
     public void evictAll() {
         appCache.invalidateAll();
-        logger.debug("Invalidated all keys");
+        if(logger.isDebugEnabled()) {
+            logger.debug("Invalidated all keys");
+        }
     }
 }
