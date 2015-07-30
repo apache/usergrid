@@ -28,17 +28,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.locking.LockManager;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
+import org.apache.usergrid.persistence.cassandra.index.UUIDStartToBytes;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
@@ -67,7 +64,6 @@ import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.ColumnQuery;
-import me.prettyprint.hector.api.query.CountQuery;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
@@ -76,7 +72,6 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import static me.prettyprint.cassandra.service.FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE;
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMultigetSliceQuery;
-
 import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createVirtualKeyspace;
@@ -84,7 +79,6 @@ import static org.apache.commons.collections.MapUtils.getIntValue;
 import static org.apache.commons.collections.MapUtils.getString;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.buildSetIdListMutator;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
@@ -1027,27 +1021,28 @@ public class CassandraService {
      *
      * @throws Exception the exception
      */
-    public IndexScanner getIdList( Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
-                                   IndexBucketLocator locator, UUID applicationId, String collectionName, boolean keepFirst )
-            throws Exception {
+       public IndexScanner getIdList( Object key, UUID start, UUID finish, int count, boolean reversed,
+                                      final String bucket, UUID applicationId, boolean keepFirst )
+               throws Exception {
 
-        if ( count <= 0 ) {
-            count = DEFAULT_COUNT;
-        }
+           if ( count <= 0 ) {
+               count = DEFAULT_COUNT;
+           }
 
-        if ( NULL_ID.equals( start ) ) {
-            start = null;
-        }
+           if ( NULL_ID.equals( start ) ) {
+               start = null;
+           }
 
 
-        final boolean skipFirst = start != null && !keepFirst;
+           final boolean skipFirst = start != null && !keepFirst;
 
-        IndexScanner scanner =
-                new IndexBucketScanner( this, locator, ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key, start,
-                        finish, reversed, count, skipFirst, collectionName );
 
-        return scanner;
-    }
+           IndexScanner scanner =
+                   new IndexBucketScanner<UUID>( this, ENTITY_ID_SETS, UUIDStartToBytes.INSTANCE, applicationId, key, bucket, start,
+                           finish, reversed, count, skipFirst );
+
+           return scanner;
+       }
 
 
 
@@ -1061,4 +1056,5 @@ public class CassandraService {
     	}
     	cluster = null;
     }
+
 }

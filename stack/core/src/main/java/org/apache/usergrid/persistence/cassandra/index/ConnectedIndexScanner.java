@@ -19,12 +19,11 @@ package org.apache.usergrid.persistence.cassandra.index;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.util.Assert;
+
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 
 import com.yammer.metrics.annotation.Metered;
@@ -63,7 +62,7 @@ public class ConnectedIndexScanner implements IndexScanner {
     /**
      * Iterator for our results from the last page load
      */
-    private LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>> lastResults;
+    private List<HColumn<ByteBuffer, ByteBuffer>> results;
 
     /**
      * True if our last load loaded a full page size.
@@ -121,52 +120,35 @@ public class ConnectedIndexScanner implements IndexScanner {
             return false;
         }
 
-        boolean skipFirst = this.skipFirst && start == scanStart;
+        boolean shouldDropFirst = skipFirst && start == scanStart;
 
         int totalSelectSize = pageSize + 1;
 
         //we're discarding the first, so increase our total size by 1 since this value will be inclusive in the seek
-        if ( skipFirst ) {
+        if ( shouldDropFirst ) {
             totalSelectSize++;
         }
 
 
-        lastResults = new LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>>();
-
-
-        //cleanup columns for later logic
-        //pointer to the first col we load
-        HColumn<ByteBuffer, ByteBuffer> first = null;
-
-        //pointer to the last column we load
-        HColumn<ByteBuffer, ByteBuffer> last = null;
-
         //go through each connection type until we exhaust the result sets
         while ( currentConnectionType != null ) {
 
+            final int lastResultsSize = results == null ? 0 : results.size();
+
             //only load a delta size to get this next page
-            int selectSize = totalSelectSize - lastResults.size();
+            final int selectSize = totalSelectSize - lastResultsSize;
 
 
-            Object key = key( entityId, dictionaryType, currentConnectionType );
+            final Object key = key( entityId, dictionaryType, currentConnectionType );
 
 
-            List<HColumn<ByteBuffer, ByteBuffer>> results =
+            final List<HColumn<ByteBuffer, ByteBuffer>> results =
                     cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_COMPOSITE_DICTIONARIES, key,
                             start, null, selectSize, reversed );
 
             final int resultSize = results.size();
 
-            if(resultSize > 0){
-
-                last = results.get( resultSize -1 );
-
-                if(first == null ){
-                    first = results.get( 0 );
-                }
-            }
-
-            lastResults.addAll( results );
+            this.results = results;
 
 
             // we loaded a full page, there might be more
@@ -193,17 +175,17 @@ public class ConnectedIndexScanner implements IndexScanner {
         }
 
         //remove the first element, we need to skip it
-        if ( skipFirst && first != null) {
-            lastResults.remove( first  );
+        if ( shouldDropFirst  ) {
+
+          results.remove( 0 );
         }
 
-        if ( hasMore && last != null ) {
+        if ( hasMore && results != null && results.size() > 0 ) {
             // set the bytebuffer for the next pass
-            start = last.getName();
-            lastResults.remove( last );
+            start = results.remove( results.size() - 1 ).getName();
         }
 
-        return lastResults != null && lastResults.size() > 0;
+        return results != null && results.size() > 0;
     }
 
 
@@ -213,7 +195,7 @@ public class ConnectedIndexScanner implements IndexScanner {
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
+    public Iterator<List<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
         return this;
     }
 
@@ -230,7 +212,7 @@ public class ConnectedIndexScanner implements IndexScanner {
         // "next page" pointer
         // Our currently buffered results don't exist or don't have a next. Try to
         // load them again if they're less than the page size
-        if ( lastResults == null && hasMore ) {
+        if ( results == null && hasMore ) {
             try {
                 return load();
             }
@@ -250,10 +232,10 @@ public class ConnectedIndexScanner implements IndexScanner {
      */
     @Override
     @Metered( group = "core", name = "IndexBucketScanner_load" )
-    public Set<HColumn<ByteBuffer, ByteBuffer>> next() {
-        Set<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
+    public List<HColumn<ByteBuffer, ByteBuffer>> next() {
+        List<HColumn<ByteBuffer, ByteBuffer>> returnVal = results;
 
-        lastResults = null;
+        results = null;
 
         return returnVal;
     }
@@ -278,5 +260,11 @@ public class ConnectedIndexScanner implements IndexScanner {
     @Override
     public int getPageSize() {
         return pageSize;
+    }
+
+
+    @Override
+    public boolean isReversed() {
+        return this.reversed;
     }
 }

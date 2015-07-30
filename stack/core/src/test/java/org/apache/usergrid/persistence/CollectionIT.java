@@ -1444,7 +1444,7 @@ public class CollectionIT extends AbstractCoreIT {
         Query query = Query.fromQL( s );
 
         Results r = em.searchCollection( em.getApplicationRef(), "loveobjects", query );
-        assertTrue( r.size() == 1 );
+        assertEquals(1,  r.size() );
 
         String username = ( String ) ( ( Map ) r.getEntities().get( 0 ).getProperty( "Recipient" ) ).get( "Username" );
         // selection results should be a list of lists

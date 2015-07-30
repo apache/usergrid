@@ -31,14 +31,14 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+
+import org.apache.usergrid.persistence.IndexBucketLocator;
+import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
 
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.MetricPredicate;
@@ -60,8 +60,9 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_IND
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.persistence.cassandra.Serializers.dce;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -262,7 +263,7 @@ public class EntityReadBenchMark extends ToolBase {
         private boolean read( String value ) {
 
 
-            List<String> buckets = indexBucketLocator.getBuckets( appId, IndexType.UNIQUE, "tests" );
+            List<String> buckets = indexBucketLocator.getBuckets( );
 
             List<Object> cassKeys = new ArrayList<Object>( buckets.size() );
 

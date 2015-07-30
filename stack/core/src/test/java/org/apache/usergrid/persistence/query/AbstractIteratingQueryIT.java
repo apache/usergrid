@@ -372,6 +372,7 @@ public abstract class AbstractIteratingQueryIT {
         io.doSetup();
 
         int size = 2000;
+//        int size = 3;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -390,6 +391,8 @@ public abstract class AbstractIteratingQueryIT {
             String name = String.valueOf( i );
             boolean intersect1 = i % intersectIncrement == 0;
             boolean intersect2 = i % secondIncrement == 0;
+//            boolean intersect1 = i == 1;
+//            boolean intersect2 = i == 1;
             entity.put( "name", name );
             // if we hit the increment, set this to true
 

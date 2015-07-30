@@ -35,6 +35,8 @@ import org.apache.usergrid.persistence.geo.GeoIndexSearcher.SearchResults;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 
+import com.fasterxml.uuid.UUIDComparator;
+
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
@@ -138,11 +140,13 @@ public class GeoIterator implements ResultIterator {
 
         lastCellsSearched = results.lastSearchedGeoCells;
 
+        final GeoCursorGenerator cursorGenerator = new GeoCursorGenerator( slice, lastCellsSearched );
+
         for (final EntityLocationRef location : locations) {
 
             final UUID id = location.getUuid();
 
-            final LocationScanColumn locationScan = new LocationScanColumn(location);
+            final LocationScanColumn locationScan = new LocationScanColumn(location, cursorGenerator );
 
             idOrder.put(id, locationScan);
             lastLoaded.add(locationScan);
@@ -210,60 +214,6 @@ public class GeoIterator implements ResultIterator {
     }
 
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
-     * org.apache.usergrid.persistence.cassandra.CursorCache, java.util.UUID)
-     */
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID uuid ) {
-
-        LocationScanColumn col = idOrder.get( uuid );
-
-        if ( col == null ) {
-            return;
-        }
-
-        final EntityLocationRef location = col.location;
-
-        if ( location == null ) {
-            return;
-        }
-
-        final int sliceHash = slice.hashCode();
-
-        // get our next distance
-        final double latitude = location.getLatitude();
-
-        final double longitude = location.getLongitude();
-
-        // now create a string value for this
-        final StringBuilder builder = new StringBuilder();
-
-        builder.append( uuid ).append( DELIM );
-        builder.append( latitude ).append( DELIM );
-        builder.append( longitude );
-
-        if ( lastCellsSearched != null ) {
-            builder.append( DELIM );
-
-            for ( String geoCell : lastCellsSearched ) {
-                builder.append( geoCell ).append( TILE_DELIM );
-            }
-
-            int length = builder.length();
-
-            builder.delete( length - TILE_DELIM.length() - 1, length );
-        }
-
-        ByteBuffer buff = se.toByteBuffer( builder.toString() );
-
-
-        cache.setNextCursor( sliceHash, buff );
-    }
-
 
     /** Get the last cells searched in the iteraton */
     public List<String> getLastCellsSearched() {
@@ -308,10 +258,11 @@ public class GeoIterator implements ResultIterator {
     private class LocationScanColumn implements ScanColumn {
 
         private final EntityLocationRef location;
+        private final GeoCursorGenerator geoCursorGenerator;
 
-
-        public LocationScanColumn( EntityLocationRef location ) {
+        public LocationScanColumn( EntityLocationRef location, final GeoCursorGenerator geoCursorGenerator ) {
             this.location = location;
+            this.geoCursorGenerator = geoCursorGenerator;
         }
 
 
@@ -321,11 +272,12 @@ public class GeoIterator implements ResultIterator {
         }
 
 
+
         @Override
-        public ByteBuffer getCursorValue() {
-            throw new UnsupportedOperationException(
-                    "This is not supported for location scan columns.  It requires iterator information" );
+        public void addToCursor( final CursorCache cache ) {
+            geoCursorGenerator.addToCursor( cache, this );
         }
+
 
 
         @Override
@@ -347,5 +299,89 @@ public class GeoIterator implements ResultIterator {
         public int hashCode() {
             return location.getUuid().hashCode();
         }
+
+
+        @Override
+        public int compareTo( final ScanColumn o ) {
+
+            if(!(o instanceof LocationScanColumn)){
+                throw new UnsupportedOperationException( "Cannot compare another ScanColumn that is not an instance of LocationScanColumn" );
+            }
+
+            //sort by location (closest first) if that's the same compare uuids
+            final int locationCompare = this.location.compareTo( ( ( LocationScanColumn ) o ).location ) ;
+
+            if(locationCompare == 0) {
+                //same distance, return compare by uuid
+                final int uuidCompare = UUIDComparator.staticCompare( getUUID(), o.getUUID() );
+
+
+                return uuidCompare;
+            }
+
+            return locationCompare;
+        }
+    }
+
+    private static final class GeoCursorGenerator implements CursorGenerator<LocationScanColumn>{
+
+        private final QuerySlice slice;
+        private final List<String> lastCellsSearched;
+
+
+        private GeoCursorGenerator( final QuerySlice slice, final List<String> lastCellsSearched ) {
+            this.slice = slice;
+            this.lastCellsSearched = lastCellsSearched;
+        }
+
+
+        @Override
+        public void addToCursor( final CursorCache cache, final LocationScanColumn col ) {
+
+
+
+                  if ( col == null ) {
+                      throw new IllegalArgumentException( "Could not generate cursor for column because column could not be found" );
+                  }
+
+                  final EntityLocationRef location = col.location;
+
+                  if ( location == null ) {
+                      return;
+                  }
+
+                  final int sliceHash = slice.hashCode();
+
+                  // get our next distance
+                  final double latitude = location.getLatitude();
+
+                  final double longitude = location.getLongitude();
+
+                  // now create a string value for this
+                  final StringBuilder builder = new StringBuilder();
+
+                  builder.append( col.getUUID() ).append( DELIM );
+                  builder.append( latitude ).append( DELIM );
+                  builder.append( longitude );
+
+                  if ( lastCellsSearched != null ) {
+                      builder.append( DELIM );
+
+                      for ( String geoCell : lastCellsSearched ) {
+                          builder.append( geoCell ).append( TILE_DELIM );
+                      }
+
+                      int length = builder.length();
+
+                      builder.delete( length - TILE_DELIM.length() - 1, length );
+                  }
+
+                  ByteBuffer buff = se.toByteBuffer( builder.toString() );
+
+
+                  cache.setNextCursor( sliceHash, buff );
+
+        }
     }
 }
+

@@ -21,14 +21,14 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.cassandra.CursorCache;
-import org.apache.usergrid.utils.UUIDUtils;
+
+import com.fasterxml.uuid.UUIDComparator;
 
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
@@ -39,11 +39,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.*;
  */
 public class UnionIterator extends MultiIterator {
 
-    private static final ScanColumnComparator COMP = new ScanColumnComparator();
-
     private SortedColumnList list;
-
-    private final int id;
 
 
     /**
@@ -53,16 +49,17 @@ public class UnionIterator extends MultiIterator {
      */
     public UnionIterator( int pageSize, int id, ByteBuffer minUuid ) {
         super( pageSize );
-
-        this.id = id;
-
         UUID parseMinUuid = null;
 
         if(minUuid != null)      {
             parseMinUuid = ue.fromByteBuffer( minUuid );
         }
 
-        list = new SortedColumnList( pageSize, parseMinUuid );
+        final UUIDCursorGenerator uuidCursorGenerator = new UUIDCursorGenerator( id );
+
+        list = new SortedColumnList( pageSize, parseMinUuid, uuidCursorGenerator );
+
+
     }
 
 
@@ -100,21 +97,6 @@ public class UnionIterator extends MultiIterator {
     }
 
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
-     * org.apache.usergrid.persistence.cassandra.CursorCache)
-     */
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
-
-        ByteBuffer buff = ue.toByteBuffer( lastLoaded );
-        cache.setNextCursor( id, buff );
-        //get our scan column and put them in the cache
-        //we finalize the cursor of the min
-    }
 
 
     @Override
@@ -133,23 +115,25 @@ public class UnionIterator extends MultiIterator {
      */
     public static final class SortedColumnList {
 
-        private static final ScanColumnComparator COMP = new ScanColumnComparator();
-
         private final int maxSize;
 
-        private final List<ScanColumn> list;
+        private final List<UnionScanColumn> list;
+
+        private final UUIDCursorGenerator uuidCursorGenerator;
+
+        private UnionScanColumn min;
 
 
-        private ScanColumn min;
+        public SortedColumnList( final int maxSize, final UUID minUuid, final UUIDCursorGenerator uuidCursorGenerator ) {
 
 
-        public SortedColumnList( final int maxSize, final UUID minUuid ) {
+            this.uuidCursorGenerator = uuidCursorGenerator;
             //we need to allocate the extra space if required
-            this.list = new ArrayList<ScanColumn>( maxSize );
+            this.list = new ArrayList<UnionScanColumn>( maxSize );
             this.maxSize = maxSize;
 
             if ( minUuid != null ) {
-                min = new AbstractScanColumn( minUuid, null ) {};
+                min = new UnionScanColumn(new UUIDColumn( minUuid, 1, uuidCursorGenerator), uuidCursorGenerator ) ;
             }
         }
 
@@ -158,12 +142,15 @@ public class UnionIterator extends MultiIterator {
          * Add the column to this list
          */
         public void add( ScanColumn col ) {
+
+            final UnionScanColumn unionScanColumn = new UnionScanColumn(col, uuidCursorGenerator );
+
             //less than our min, don't add
-            if ( COMP.compare( min, col ) >= 0 ) {
+            if ( min != null && min.compareTo( unionScanColumn ) >= 0 ) {
                 return;
             }
 
-            int index = Collections.binarySearch( this.list, col, COMP );
+            int index = Collections.binarySearch( this.list, unionScanColumn );
 
             //already present
             if ( index > -1 ) {
@@ -177,7 +164,7 @@ public class UnionIterator extends MultiIterator {
                 return;
             }
 
-            this.list.add( index, col );
+            this.list.add( index, unionScanColumn );
 
             final int size = this.list.size();
 
@@ -238,27 +225,58 @@ public class UnionIterator extends MultiIterator {
         }
     }
 
+    private static class UnionScanColumn implements ScanColumn{
 
-    /**
-     * Simple comparator for comparing scan columns.  Orders them by time uuid
-     */
-    private static class ScanColumnComparator implements Comparator<ScanColumn> {
+        private final ScanColumn delegate;
+        private final UUIDCursorGenerator uuidCursorGenerator;
+        private ScanColumn child;
+
+
+
+        private UnionScanColumn( final ScanColumn delegate, final UUIDCursorGenerator uuidCursorGenerator ) {
+            super();
+            this.delegate = delegate;
+            this.uuidCursorGenerator = uuidCursorGenerator;
+        }
+
 
         @Override
-        public int compare( final ScanColumn o1, final ScanColumn o2 ) {
-            if ( o1 == null ) {
-                if ( o2 == null ) {
-                    return 0;
-                }
+        public int compareTo( final ScanColumn o ) {
+            return UUIDComparator.staticCompare( delegate.getUUID(), o.getUUID() );
+        }
 
-                return -1;
+
+        @Override
+        public UUID getUUID() {
+            return delegate.getUUID();
+        }
+
+
+        @Override
+        public void addToCursor( final CursorCache cache ) {
+            this.uuidCursorGenerator.addToCursor( cache, this );
+        }
+
+
+
+        @Override
+        public boolean equals( final Object o ) {
+            if ( this == o ) {
+                return true;
+            }
+            if ( !( o instanceof UnionScanColumn ) ) {
+                return false;
             }
 
-            else if ( o2 == null ) {
-                return 1;
-            }
+            final UnionScanColumn that = ( UnionScanColumn ) o;
 
-            return UUIDUtils.compare( o1.getUUID(), o2.getUUID() );
+            return delegate.getUUID().equals( that.delegate.getUUID() );
+        }
+
+
+        @Override
+        public int hashCode() {
+            return delegate.getUUID().hashCode();
         }
     }
 }

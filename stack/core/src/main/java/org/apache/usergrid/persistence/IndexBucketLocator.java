@@ -29,48 +29,22 @@ import java.util.UUID;
  */
 public interface IndexBucketLocator {
 
-    public enum IndexType {
-        COLLECTION( "collection" ), CONNECTION( "connection" ), GEO( "geo" ), UNIQUE( "unique" );
-
-        private final String type;
-
-
-        private IndexType( String type ) {
-            this.type = type;
-        }
-
-
-        public String getType() {
-            return type;
-        }
-
-    }
 
     /**
      * Return the bucket to use for indexing this entity
-     *
-     * @param applicationId The application id
-     * @param type The type of the index. This way indexing on the same property value for different types of indexes
-     * does not cause collisions on partitioning and lookups
      * @param entityId The entity id to be indexed
-     * @param components The strings and uniquely identify the path to this index. I.E entityType and propName,
-     * collection name etc This string must remain the same for all reads and writes
      *
      * @return A bucket to use.  Note that ALL properties for the given entity should be in the same bucket.  This
      *         allows us to shard and execute queries in parallel.  Generally speaking, sharding on entityId is the best
      *         strategy, since this is an immutable value
      */
-    public String getBucket( UUID applicationId, IndexType type, UUID entityId, String... components );
+    String getBucket( UUID entityId );
 
     /**
      * Get all buckets that exist for this application with the given entity type, and property name
-     *
-     * @param applicationId The application id
-     * @param type The type of index
-     * @param components The strings and uniquely identify the path to this index. I.E entityType and propName,
-     * collection name etc
+
      *
      * @return All buckets for this application at the given component path
      */
-    public List<String> getBuckets( UUID applicationId, IndexType type, String... components );
+    List<String> getBuckets();
 }

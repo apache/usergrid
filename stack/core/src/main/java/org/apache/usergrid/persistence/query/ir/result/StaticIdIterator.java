@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence.query.ir.result;
 
 
-import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -38,7 +37,7 @@ public class StaticIdIterator implements ResultIterator {
      *
      */
     public StaticIdIterator( UUID id ) {
-        final ScanColumn col = new UUIDIndexSliceParser.UUIDColumn( id, ByteBuffer.allocate( 0 ) );
+        final ScanColumn col = new UUIDColumn( id, 1, new UUIDCursorGenerator( -1 ) );
 
         ids = Collections.singleton( col );
     }
@@ -49,11 +48,6 @@ public class StaticIdIterator implements ResultIterator {
         //no op
     }
 
-
-    @Override
-    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
-        //no cursor, it's a static list
-    }
 
 
     @Override
