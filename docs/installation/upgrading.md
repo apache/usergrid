@@ -1,3 +1,0 @@
-# Upgrading from Previous Versions
-
-If you built and used a previous version of Usergrid, that may be using a different schema, we have an easy built-in tool to audit your Cassandra column family structure and upgrade the dataset as necessary. Once you have pulled, built and launched the new version of Usergrid, just hit [http://localhost:8080/system/database/setup](http://localhost:8080/system/database/setup) to run the upgrade tool.

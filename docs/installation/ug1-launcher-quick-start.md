@@ -1,4 +1,4 @@
-# Getting Up & Running Locally
+# Usegrid 1: Launcher Quick-start
 
 ## Requirements
 
