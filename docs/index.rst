@@ -175,10 +175,9 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Installing the Usergrid stack
 
-   installation/deploy-local
-   installation/get-2.0-running-locally
-   installation/get-up-and-running-locally
-   installation/upgrading
+   installation/ug1-deploy-to-tomcat
+   installation/ug1-launcher-quick-start
+   installation/ug2-deploy-to-tomcat
        
 .. _other:
 
@@ -188,6 +187,6 @@ Apache Usergrid Documentation
 
    entity-connections/relationships
    data-queries/query-language
-   contribute-code
+   reference/contribute-code
    sdks/usage
    

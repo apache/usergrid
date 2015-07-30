@@ -1,4 +1,4 @@
-# Deploying to local Tomcat & Cassandra
+# Usegrid 1: Deploying to Tomcat
 
 This is a guide that explains how to install and run Usergrid using stock Tomcat and Cassandra on a single computer.
 

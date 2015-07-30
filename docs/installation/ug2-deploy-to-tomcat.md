@@ -1,4 +1,6 @@
-# Get 2.0 Running Locally
+# Usergrid 2: Deploy to Tomcat
+
+__NOTE__: Beware that Usergrid 2 is UNRELEASED SOFTWARE
 
 ## Requirements
 
