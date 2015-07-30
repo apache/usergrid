@@ -250,7 +250,6 @@ Response:
         "applicationName" : "sandbox"
     }
 
-
 ### Retrieving multiple entities
 
 This example describes how to retrieve multiple entities by UUID. You can also retrieve a set of entities by using a query string. For more information on querying your data, see Querying your data.
@@ -451,8 +450,6 @@ Response:
       "applicationName" : "your-app"
     }
  
-.. --------------------------------------------------------------------------------
-
 ## Deleting Data Entities
 
 This article describes how to delete data entities.
