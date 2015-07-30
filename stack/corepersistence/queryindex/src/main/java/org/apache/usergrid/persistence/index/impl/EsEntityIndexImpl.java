@@ -89,6 +89,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private final IndexLocationStrategy indexLocationStrategy;
     private final Timer addTimer;
     private final Timer updateAliasTimer;
+    private final Timer searchTimer;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -148,7 +149,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         this.addTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.add");
         this.updateAliasTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.update_alias");
         this.mappingTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.create_mapping");
-        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class, "index.refresh_index");
+        this.refreshIndexMeter = metricsFactory.getMeter( EsEntityIndexImpl.class, "index.refresh_index" );
+        this.searchTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "search" );
 
     }
 
@@ -385,7 +387,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
 
         final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset )
-            .setTimeout( TimeValue.timeValueMillis(queryTimeout) );
+            .setTimeout( TimeValue.timeValueMillis( queryTimeout ) );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -393,8 +395,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 searchTypes.getTypeNames( applicationScope ), srb );
         }
 
+         //Added For Graphite Metrics
+        final Timer.Context timerContext = searchTimer.time();
+
         try {
-            //Added For Graphite Metrics
+
             searchResponse = srb.execute().actionGet();
         }
         catch ( Throwable t ) {
@@ -402,9 +407,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
+        finally{
+            timerContext.stop();
+        }
+
         failureMonitor.success();
 
-        return parseResults(searchResponse, parsedQuery, limit, offset);
+        return parseResults( searchResponse, parsedQuery, limit, offset);
     }
 
 
