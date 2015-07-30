@@ -40,8 +40,8 @@ object GeoScenarios {
 
   val updateGeolocation = exec(
     http("PUT user location")
-      .put(stringToExpression("/users/user" + Utils.generateRandomInt(1, Settings.totalUsers)))
-      .body(StringBody("{\"location\":{\"latitude\":\"${latitude}\",\"longitude\":\"${longitude}\"}}"))
+      .put(_ => "/users/user" + Utils.generateRandomInt(1, Settings.totalUsers))
+      .body(StringBody("""{ "location": { "latitude": "${latitude}", "longitude": "${longitude}"} }"""))
       .headers(Headers.authToken)
       .check(status.is(200))
   )

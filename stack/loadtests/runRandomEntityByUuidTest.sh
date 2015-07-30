@@ -19,14 +19,14 @@ die() { echo "$@" 1>&2 ; exit 1; }
 #This is a script to simplify running gatling tests.  It will default several parameters, invoke the maven plugins
 #Then aggregate the results
 ####
-[ "$#" -ge 6 ] || die "At least 6 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) CONSTANT_USERS_PER_SEC, CONSTANT_USERS_DURATION(seconds) NUM_ENTITIES"
+[ "$#" -ge 6 ] || die "At least 6 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) CONSTANT_USERS_PER_SEC, CONSTANT_USERS_DURATION(seconds) UUID_FILENAME"
 
 URL="$1"
 RAMP_USERS="$2"
 RAMP_TIME="$3"
 CONSTANT_USERS_PER_SEC="$4"
 CONSTANT_USERS_DURATION="$5"
-NUM_ENTITIES="$6"
+UUID_FILENAME="$6"
 
 shift 6
 
@@ -42,17 +42,16 @@ ORG=gatling
 CREATE_APP=false
 APP=millionentities
 COLLECTION=trivialentities
-SCENARIO_TYPE=deleteEntities
-# don't load entities as part of setup
+SCENARIO_TYPE=uuidRandomInfinite
 LOAD_ENTITIES=false
-
-SKIP_SETUP=true
+NUM_ENTITIES=10000
+SKIP_SETUP=false
 #SEARCH_QUERY=order%20by%20specials%20desc
 #SEARCH_LIMIT=1000
 ENTITY_TYPE=trivial
 ENTITY_PREFIX=trivial
 ENTITY_SEED=1
-AUTH_TYPE=token
+AUTH_TYPE=anonymous
 TOKEN_TYPE=management
 END_CONDITION_TYPE=minutesElapsed
 #END_CONDITION_TYPE=requestCount
@@ -85,6 +84,7 @@ mvn gatling:execute \
 -DendConditionType=${END_CONDITION_TYPE} \
 -DendMinutes=${END_MINUTES} \
 -DendRequestCount=${END_REQUEST_COUNT} \
+-DuuidFilename=${UUID_FILENAME} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 
 

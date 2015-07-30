@@ -16,55 +16,89 @@
  */
 package org.apache.usergrid.settings
 
+import java.io.{PrintWriter, FileOutputStream}
 import java.nio.charset.StandardCharsets
 import java.util.{Date, Base64}
 
 
 import io.gatling.http.Predef._
+import io.gatling.http.config.HttpProtocolBuilder
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums._
 import org.apache.usergrid.helpers.Utils
 
 object Settings {
 
+  def initStrSetting(cfg: String): String = {
+    val setting = System.getProperty(cfg)
+
+    if (setting != null) setting else ConfigProperties.getDefault(cfg).toString
+  }
+
+  def initBoolSetting(cfg: String): Boolean = {
+    val strSetting = System.getProperty(cfg)
+    val default:Boolean = ConfigProperties.getDefault(cfg).asInstanceOf[Boolean]
+
+    if (strSetting != null) {
+      if (default) // default is true
+        strSetting.toLowerCase != "false"
+      else // default is false
+        strSetting.toLowerCase == "true"
+    } else {
+      default
+    }
+  }
+
+  def initIntSetting(cfg: String): Int = {
+    val integerSetting:Integer = Integer.getInteger(cfg)
+
+    if (integerSetting != null)
+      integerSetting.toInt
+    else
+      ConfigProperties.getDefault(cfg).asInstanceOf[Int]
+  }
+
   // load configuration settings via property or default
-  val org = System.getProperty(ConfigProperties.Org)
-  val app = System.getProperty(ConfigProperties.App)
-  val adminUser = System.getProperty(ConfigProperties.AdminUser)
-  val adminPassword = System.getProperty(ConfigProperties.AdminPassword)
-  val baseUrl = System.getProperty(ConfigProperties.BaseUrl)
-  val baseAppUrl = baseUrl + "/" + org + "/" + app
-  val httpConf = http.baseURL(baseAppUrl)
-  val authType = System.getProperty(ConfigProperties.AuthType, AuthType.Anonymous)
-  val tokenType = System.getProperty(ConfigProperties.TokenType, TokenType.User)
+  val org = initStrSetting(ConfigProperties.Org)
+  val app = initStrSetting(ConfigProperties.App)
+  val adminUser = initStrSetting(ConfigProperties.AdminUser)
+  val adminPassword = initStrSetting(ConfigProperties.AdminPassword)
 
-  val skipSetup:Boolean = System.getProperty(ConfigProperties.SkipSetup) == "true"
-  val createOrg:Boolean = !skipSetup && (System.getProperty(ConfigProperties.CreateOrg) == "true")
-  val createApp:Boolean = !skipSetup && (System.getProperty(ConfigProperties.CreateApp) != "false")
-  val loadEntities:Boolean = !skipSetup && (System.getProperty(ConfigProperties.LoadEntities) != "false")
-  val scenarioType = System.getProperty(ConfigProperties.ScenarioType, ScenarioType.NameRandomInfinite)
+  private val cfgBaseUrl = initStrSetting(ConfigProperties.BaseUrl)
+  val baseUrl = if (cfgBaseUrl.takeRight(1) == "/") cfgBaseUrl.dropRight(1) else cfgBaseUrl
+  val baseAppUrl:String = baseUrl + "/" + org + "/" + app
 
-  val rampUsers:Int = Integer.getInteger(ConfigProperties.RampUsers, 0).toInt
-  val constantUsersPerSec:Int = Integer.getInteger(ConfigProperties.ConstantUsersPerSec, 0).toInt // users to add per second during constant injection
-  val constantUsersDuration:Int = Integer.getInteger(ConfigProperties.ConstantUsersDuration, 10).toInt // number of seconds
+  val httpConf: HttpProtocolBuilder = http.baseURL(baseAppUrl)
+  val authType = initStrSetting(ConfigProperties.AuthType)
+  val tokenType = initStrSetting(ConfigProperties.TokenType)
+
+  val skipSetup:Boolean = initBoolSetting(ConfigProperties.SkipSetup)
+  val createOrg:Boolean = !skipSetup && initBoolSetting(ConfigProperties.CreateOrg)
+  val createApp:Boolean = !skipSetup && initBoolSetting(ConfigProperties.CreateApp)
+  val loadEntities:Boolean = !skipSetup && initBoolSetting(ConfigProperties.LoadEntities)
+  val sandboxCollection:Boolean = initBoolSetting(ConfigProperties.SandboxCollection)
+  val scenarioType = initStrSetting(ConfigProperties.ScenarioType)
+
+  val rampUsers:Int = initIntSetting(ConfigProperties.RampUsers)
+  val constantUsersPerSec:Int = initIntSetting(ConfigProperties.ConstantUsersPerSec) // users to add per second during constant injection
+  val constantUsersDuration:Int = initIntSetting(ConfigProperties.ConstantUsersDuration) // number of seconds
   val totalUsers:Int = rampUsers + (constantUsersPerSec * constantUsersDuration)
-  val userSeed:Int = Integer.getInteger(ConfigProperties.UserSeed,1).toInt
-  val appUser = System.getProperty(ConfigProperties.AppUser)
-  val appUserPassword = System.getProperty(ConfigProperties.AppUserPassword)
+  val userSeed:Int = initIntSetting(ConfigProperties.UserSeed)
+  val appUser = initStrSetting(ConfigProperties.AppUser)
+  val appUserPassword = initStrSetting(ConfigProperties.AppUserPassword)
   val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
 
-  var numEntities:Int = Integer.getInteger(ConfigProperties.NumEntities, 5000).toInt
-  val totalNumEntities:Int = numEntities
-  val numDevices:Int = Integer.getInteger(ConfigProperties.NumDevices, 4000).toInt
+  val totalNumEntities:Int = initIntSetting(ConfigProperties.NumEntities)
+  val numDevices:Int = initIntSetting(ConfigProperties.NumDevices)
 
-  val collectionType = System.getProperty(ConfigProperties.CollectionType, "customentities")
-  val baseCollectionUrl = baseAppUrl + "/" + collectionType
+  val collection = initStrSetting(ConfigProperties.Collection)
+  val baseCollectionUrl = baseAppUrl + "/" + collection
 
-  val rampTime:Int = Integer.getInteger(ConfigProperties.RampTime, 0).toInt // in seconds
-  val throttle:Int = Integer.getInteger(ConfigProperties.Throttle, 50).toInt // in seconds
-  val rpsTarget:Int = Integer.getInteger(ConfigProperties.RpsTarget, 50).toInt // requests per second target
-  val rpsRampTime:Int = Integer.getInteger(ConfigProperties.RpsRampTime, 10).toInt // in seconds
-  val holdDuration:Int = Integer.getInteger(ConfigProperties.HoldDuration, 300).toInt // in seconds
+  val rampTime:Int = initIntSetting(ConfigProperties.RampTime) // in seconds
+  val throttle:Int = initIntSetting(ConfigProperties.Throttle) // in seconds
+  val rpsTarget:Int = initIntSetting(ConfigProperties.RpsTarget) // requests per second target
+  val rpsRampTime:Int = initIntSetting(ConfigProperties.RpsRampTime) // in seconds
+  val holdDuration:Int = initIntSetting(ConfigProperties.HoldDuration) // in seconds
 
   // Geolocation settings
   val centerLatitude:Double = 37.442348 // latitude of center point
@@ -73,78 +107,119 @@ object Settings {
   val geoSearchRadius:Int = 8000 // search area in meters
 
   // Push Notification settings
-  val pushNotifier = System.getProperty(ConfigProperties.PushNotifier, "loadNotifier")
-  val pushProvider = System.getProperty(ConfigProperties.PushProvider, "noop")
+  val pushNotifier = initStrSetting(ConfigProperties.PushNotifier)
+  val pushProvider = initStrSetting(ConfigProperties.PushProvider)
 
   // Large Entity Collection settings
-  val entityPrefix = System.getProperty(ConfigProperties.EntityPrefix, "entity")
-  val entityType = System.getProperty(ConfigProperties.EntityType, EntityType.Basic) // basic/trivial/?
-  var entitySeed = Integer.getInteger(ConfigProperties.EntitySeed, 1).toInt
-  val overallEntitySeed = entitySeed
-  val searchLimit = Integer.getInteger(ConfigProperties.SearchLimit, 0).toInt
-  val searchQuery = System.getProperty(ConfigProperties.SearchQuery, "")
-  val endConditionType = System.getProperty(ConfigProperties.EndConditionType, EndConditionType.MinutesElapsed)
-  val endMinutes = Integer.getInteger(ConfigProperties.EndMinutes, 10).toInt
-  val endRequestCount = Integer.getInteger(ConfigProperties.EndRequestCount, 10).toInt
+  val entityPrefix = initStrSetting(ConfigProperties.EntityPrefix)
+  val entityType = initStrSetting(ConfigProperties.EntityType) // basic/trivial/?
+  val overallEntitySeed = initIntSetting(ConfigProperties.EntitySeed)
+  val searchLimit:Int = initIntSetting(ConfigProperties.SearchLimit)
+  val searchQuery = initStrSetting(ConfigProperties.SearchQuery)
+  val endConditionType = initStrSetting(ConfigProperties.EndConditionType)
+  val endMinutes:Int = initIntSetting(ConfigProperties.EndMinutes)
+  val endRequestCount:Int = initIntSetting(ConfigProperties.EndRequestCount)
 
   // Org creation fields
-  val orgCreationUsername = System.getProperty(ConfigProperties.OrgCreationUsername, org.concat("_admin"))
-  val orgCreationEmail = System.getProperty(ConfigProperties.OrgCreationEmail, orgCreationUsername.concat("@usergrid.com"))
-  val orgCreationName = System.getProperty(ConfigProperties.OrgCreationName, orgCreationUsername)
-  val orgCreationPassword = System.getProperty(ConfigProperties.OrgCreationPassword, "test")
+  private val cfgOrgCreationUsername = initStrSetting(ConfigProperties.OrgCreationUsername)
+  private val cfgOrgCreationEmail = initStrSetting(ConfigProperties.OrgCreationEmail)
+  private val cfgOrgCreationName = initStrSetting(ConfigProperties.OrgCreationName)
+  val orgCreationUsername = if (cfgOrgCreationUsername == "") org.concat("_admin") else cfgOrgCreationUsername
+  val orgCreationEmail = if (cfgOrgCreationEmail == "") orgCreationUsername.concat("@usergrid.com") else cfgOrgCreationEmail
+  val orgCreationName = if (cfgOrgCreationName == "") orgCreationUsername else cfgOrgCreationName
+  val orgCreationPassword = initStrSetting(ConfigProperties.OrgCreationPassword)
 
   // Entity update
-  val updateProperty = System.getProperty(ConfigProperties.UpdateProperty, "updateProp")
-  val updateValue = System.getProperty(ConfigProperties.UpdateValue, new Date().toString)
+  val updateProperty = initStrSetting(ConfigProperties.UpdateProperty)
+  val updateValue = initStrSetting(ConfigProperties.UpdateValue)
   val updateBody = Utils.toJSONStr(Map(updateProperty -> updateValue))
 
   // Entity workers
-  val entityWorkerCount = Integer.getInteger(ConfigProperties.EntityWorkerCount,1)
-  val entityWorkerNum = Integer.getInteger(ConfigProperties.EntityWorkerNum, 1)
+  private val cfgEntityWorkerCount:Int = initIntSetting(ConfigProperties.EntityWorkerCount)
+  private val cfgEntityWorkerNum:Int = initIntSetting(ConfigProperties.EntityWorkerNum)
+  val useWorkers:Boolean = cfgEntityWorkerCount > 1 && cfgEntityWorkerNum >= 1 && cfgEntityWorkerNum <= cfgEntityWorkerCount
+  val entityWorkerCount:Int = if (useWorkers) cfgEntityWorkerCount else 1
+  val entityWorkerNum:Int = if (useWorkers) cfgEntityWorkerNum else 1
 
-  if (entityWorkerCount > 1 && entityWorkerNum >= 1 && entityWorkerNum <= entityWorkerCount) {
-    // split entities across multiple workers
-    val entitiesPerWorkerFloor = totalNumEntities / entityWorkerCount
-    val leftOver = totalNumEntities % entityWorkerCount
-    val zeroBasedWorkerNum = entityWorkerNum - 1
-    val takeExtraEntity = if (entityWorkerNum <= leftOver) 1 else 0
-    entitySeed = overallEntitySeed + zeroBasedWorkerNum * entitiesPerWorkerFloor + (if (takeExtraEntity == 1) zeroBasedWorkerNum else leftOver)
-    numEntities = entitiesPerWorkerFloor + takeExtraEntity
+  // if only one worker system, these numbers will still be fine
+  private val entitiesPerWorkerFloor:Int = totalNumEntities / entityWorkerCount
+  private val leftOver:Int = totalNumEntities % entityWorkerCount  // will be 0 if only one worker
+  private val extraEntity:Int = if (entityWorkerNum <= leftOver) 1 else 0
+  private val zeroBasedWorkerNum:Int = entityWorkerNum - 1
+  val entitySeed:Int = overallEntitySeed + zeroBasedWorkerNum * entitiesPerWorkerFloor + (if (extraEntity == 1) zeroBasedWorkerNum else leftOver)
+  val numEntities:Int = entitiesPerWorkerFloor + extraEntity
+
+  // UUID log file, have to go through this because creating a csv feeder with an invalid csv file fails at maven compile time
+  private val dummyCsv = ConfigProperties.getDefault(ConfigProperties.UuidFilename).toString
+  private val uuidFilename = initStrSetting(ConfigProperties.UuidFilename)
+  val captureUuids = uuidFilename != dummyCsv && scenarioType == ScenarioType.LoadEntities
+  val feedUuids = uuidFilename != dummyCsv && scenarioType == ScenarioType.UuidRandomInfinite
+  val captureUuidFilename = if (captureUuids) uuidFilename else dummyCsv
+  val feedUuidFilename = if (feedUuids) uuidFilename else dummyCsv
+  val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
+
+  private var uuidMap: Map[String, String] = Map()
+  def addUuid(name: String, uuid: String): Unit = {
+    if (captureUuids) uuidMap += (name -> uuid)
+    // println(s"UUID: ${name},${uuid}")
   }
 
-  def getUserFeeder():Array[Map[String, String]]= {
+  def writeUuidsToFile(): Unit = {
+    if (captureUuids) {
+      val writer = {
+        val fos = new FileOutputStream(captureUuidFilename)
+        new PrintWriter(fos, false)
+      }
+      writer.println("name,uuid")
+      uuidMap.keys.foreach { name =>
+        writer.println(s"${Settings.entityPrefix}${name},${uuidMap(name)}")
+      }
+      writer.flush()
+      writer.close()
+    }
+  }
+
+  def getUserFeeder:Array[Map[String, String]]= {
     FeederGenerator.generateUserWithGeolocationFeeder(totalUsers, userLocationRadius, centerLatitude, centerLongitude)
   }
 
-  def getInfiniteUserFeeder():Iterator[Map[String, String]]= {
+  def getInfiniteUserFeeder:Iterator[Map[String, String]]= {
     FeederGenerator.generateUserWithGeolocationFeederInfinite(userSeed, userLocationRadius, centerLatitude, centerLongitude)
   }
 
-  var testStartTime = System.currentTimeMillis()
+  private var testStartTime: Long = System.currentTimeMillis()
+
+  def getTestStartTime: Long = {
+    testStartTime
+  }
 
   def setTestStartTime(): Unit = {
     testStartTime = System.currentTimeMillis()
   }
 
+  def continueMinutesTest: Boolean = {
+    (System.currentTimeMillis() - testStartTime) < (endMinutes.toLong*60L*1000L)
+  }
+
   def printSettingsSummary(): Unit = {
-    val authTypeStr = authType + (if (authType == AuthType.Token) s"(${tokenType})" else "")
-    val endConditionStr = if (endConditionType == EndConditionType.MinutesElapsed) s"${endMinutes} minutes elapsed" else s"${endRequestCount} requests"
+    val authTypeStr = authType + (if (authType == AuthType.Token) s"($tokenType)" else "")
+    val endConditionStr = if (endConditionType == EndConditionType.MinutesElapsed) s"$endMinutes minutes elapsed" else s"$endRequestCount requests"
     println("-----------------------------------------------------------------------------")
     println("SIMULATION SETTINGS")
     println("-----------------------------------------------------------------------------")
     println()
-    println(s"Org:${org}  App:${app}  Collection:${collectionType}")
-    println(s"CreateOrg:${createOrg}  CreateApp:${createApp}  LoadEntities:${loadEntities}")
-    println(s"ScenarioType:${scenarioType}  AuthType:${authTypeStr}")
+    println(s"Org:$org  App:$app  Collection:$collection")
+    println(s"CreateOrg:$createOrg  CreateApp:$createApp  LoadEntities:$loadEntities")
+    println(s"ScenarioType:$scenarioType  AuthType:$authTypeStr")
     println()
-    println(s"Entity Type:${entityType}  Prefix:${entityPrefix}")
+    println(s"Entity Type:$entityType  Prefix:$entityPrefix")
     println()
-    println(s"Overall: NumEntities:${totalNumEntities}  Seed:${overallEntitySeed}  Workers:${entityWorkerCount}")
-    println(s"Worker:  NumEntities:${numEntities}  Seed:${entitySeed}  WorkerNum:${entityWorkerNum}")
+    println(s"Overall: NumEntities:$totalNumEntities  Seed:$overallEntitySeed  Workers:$entityWorkerCount")
+    println(s"Worker:  NumEntities:$numEntities  Seed:$entitySeed  WorkerNum:$entityWorkerNum")
     println()
-    println(s"Ramp: Users:${rampUsers}  Time:${rampTime}")
-    println(s"Constant: UsersPerSec:${constantUsersPerSec}  Time:${constantUsersDuration}")
-    println(s"End Condition:${endConditionStr}")
+    println(s"Ramp: Users:$rampUsers  Time:$rampTime")
+    println(s"Constant: UsersPerSec:$constantUsersPerSec  Time:$constantUsersDuration")
+    println(s"End Condition:$endConditionStr")
     println()
     println("-----------------------------------------------------------------------------")
   }

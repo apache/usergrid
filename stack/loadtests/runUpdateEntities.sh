@@ -41,12 +41,12 @@ CREATE_ORG=false
 ORG=gatling
 CREATE_APP=false
 APP=millionentities
-COLLECTION_TYPE=trivialentities
+COLLECTION=trivialentities
 SCENARIO_TYPE=updateEntities
 # don't load entities as part of setup
 LOAD_ENTITIES=false
 
-SKIP_SETUP=TRUE
+SKIP_SETUP=true
 #SEARCH_QUERY=order%20by%20specials%20desc
 #SEARCH_LIMIT=1000
 ENTITY_TYPE=trivial
@@ -78,7 +78,7 @@ mvn gatling:execute \
 -DrampTime=${RAMP_TIME}  \
 -DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
 -DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
--DcollectionType=${COLLECTION_TYPE} \
+-Dcollection=${COLLECTION} \
 -DscenarioType=${SCENARIO_TYPE} \
 -DauthType=${AUTH_TYPE} \
 -DtokenType=${TOKEN_TYPE} \

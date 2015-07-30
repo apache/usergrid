@@ -68,7 +68,7 @@ object UserScenarios {
      exec(
        http("POST geolocated Users")
          .post("/users")
-         .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+         .body(StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
            "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
            "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
            "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
@@ -91,7 +91,7 @@ object UserScenarios {
      http("PUT geolocated Users")
        .put("/users/${username}")
        .headers(Headers.authToken)
-       .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+       .body(StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
         "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
         "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
         "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
@@ -156,7 +156,7 @@ object UserScenarios {
     * Logs in as the user, then creates 2 devices if they do not exist
     */
    val createUsersWithDevicesScenario = scenario("Create Users")
-     .feed(Settings.getInfiniteUserFeeder())
+     .feed(Settings.getInfiniteUserFeeder)
      .exec(TokenScenarios.getManagementToken)
      .exec(UserScenarios.postUserIfNotExists)
      .exec(TokenScenarios.getUserToken)
@@ -170,7 +170,7 @@ object UserScenarios {
     * Posts a new user every time
     */
    val postUsersInfinitely =  scenario("Post Users")
-        .feed(Settings.getInfiniteUserFeeder())
+        .feed(Settings.getInfiniteUserFeeder)
         .exec(postUser)
 
 
@@ -178,14 +178,14 @@ object UserScenarios {
     * Puts a new user every time
     */
    val putUsersInfinitely =  scenario("Put Users").exec(injectManagementTokenIntoSession)
-     .feed(Settings.getInfiniteUserFeeder())
+     .feed(Settings.getInfiniteUserFeeder)
      .exec(putUser)
 
    /**
     * Deletes user every time
     */
    val deleteUsersInfinitely =  scenario("Delete Users").exec(injectManagementTokenIntoSession)
-     .feed(Settings.getInfiniteUserFeeder())
+     .feed(Settings.getInfiniteUserFeeder)
      .exec(deleteUser)
 
    /**
@@ -202,7 +202,7 @@ object UserScenarios {
    })
 
   val getUsersByUsername = scenario("Get User By Username").exec(injectManagementTokenIntoSession)
-    .feed(Settings.getInfiniteUserFeeder())
+    .feed(Settings.getInfiniteUserFeeder)
          //get users without a cursor
          .exec(getUserByUsername)
 

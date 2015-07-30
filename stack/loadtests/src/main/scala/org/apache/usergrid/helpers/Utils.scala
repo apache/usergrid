@@ -72,11 +72,12 @@ object Utils {
     var queryString = ""
 
     for (numParams <- 1 to generateRandomInt(1, queryParams.length)) {
-      queryString = "age=" + Utils.generateRandomInt(18, 65).toString
-      if (numParams == 2) {
-        queryString += "%20AND%20height=" + Utils.generateRandomInt(48, 84).toString
-      } else if (numParams == 3) {
-        queryString += "%20AND%20weight=" + Utils.generateRandomInt(120, 350).toString
+      queryString = s"age=${Utils.generateRandomInt(18,65).toString}"
+      if (numParams >= 2) {
+        queryString += s"%20AND%20height=${Utils.generateRandomInt(48,84).toString}"
+      }
+      if (numParams >= 3) {
+        queryString += s"%20AND%20weight=${Utils.generateRandomInt(120,350).toString}"
       }
     }
 
@@ -86,7 +87,7 @@ object Utils {
    def randomEntityNameUrl(prefix: String, numEntities: Int, seed: Int, baseUrl: String): String = {
      val randomVal = generateRandomInt(seed, seed+numEntities-1)
 
-     baseUrl + "/" + prefix.concat(randomVal.toString)
+     s"$baseUrl/$prefix$randomVal"
    }
 
   def createRandomPushNotifierName:String = {

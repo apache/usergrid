@@ -39,10 +39,10 @@ import org.apache.usergrid.settings.Settings
 
 object TokenScenarios {
   val getManagementToken = exec(http("POST Org Token")
-    .post(Settings.baseUrl+"/management/token")
+    .post(_ => Settings.baseUrl + "/management/token")
     .headers(Headers.authAnonymous)
     //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
-    .body(StringBody("{\"username\":\"" + Settings.adminUser + "\",\"password\":\""+Settings.adminPassword+"\",\"grant_type\":\"password\"}"))
+    .body(StringBody(_ => """{ "username": """" + Settings.adminUser + """", "password": """" + Settings.adminPassword + """", "grant_type": "password" }"""))
     .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
   )
 
@@ -50,7 +50,7 @@ object TokenScenarios {
     exec(
       http("POST user token")
         .post("/token")
-        .body(StringBody("{\"grant_type\":\"password\",\"username\":\"${username}\",\"password\":\"password\"}"))
+        .body(StringBody("""{ "grant_type": "password", "username": "${username}", "password": "password" }"""))
         .check(status.is(200),jsonPath("$..access_token").exists,jsonPath("$..access_token").saveAs("authToken"))
     )
 }
