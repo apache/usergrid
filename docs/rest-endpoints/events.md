@@ -1,6 +1,8 @@
-# events
+# Events
+
 
 <!-- DO NOT EDIT THIS GENERATED FILE -->
+
 <table class='usergrid-table rest-endpoints-table'>
   <tr>
     <th>End-Point</th>
@@ -9,7 +11,7 @@
     <th>Description</th>
     <th>Detail</th>
   </tr>
-  <tr>
+  <tr class='ug-even usergrid-table'>
     <td>/{org_id}/{app_id}/events</td>
     <td>POST</td>
     <td>application/json</td>
