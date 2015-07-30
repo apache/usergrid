@@ -18,10 +18,13 @@ package org.apache.usergrid.persistence.query.ir;
 
 
 import java.util.Stack;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
@@ -30,6 +33,7 @@ import org.apache.usergrid.persistence.query.ir.result.IntersectionIterator;
 import org.apache.usergrid.persistence.query.ir.result.OrderByIterator;
 import org.apache.usergrid.persistence.query.ir.result.ResultIterator;
 import org.apache.usergrid.persistence.query.ir.result.SecondaryIndexSliceParser;
+import org.apache.usergrid.persistence.query.ir.result.SliceCursorGenerator;
 import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
 import org.apache.usergrid.persistence.query.ir.result.StaticIdIterator;
 import org.apache.usergrid.persistence.query.ir.result.SubtractionIterator;
@@ -46,8 +50,6 @@ import org.apache.usergrid.persistence.query.ir.result.UnionIterator;
  */
 public abstract class SearchVisitor implements NodeVisitor {
 
-    private static final SecondaryIndexSliceParser COLLECTION_PARSER = new SecondaryIndexSliceParser();
-
     protected final Query query;
 
     protected final QueryProcessor queryProcessor;
@@ -56,15 +58,37 @@ public abstract class SearchVisitor implements NodeVisitor {
 
     protected final Stack<ResultIterator> results = new Stack<ResultIterator>();
 
+    protected final String bucket;
+
+    protected final EntityRef headEntity;
+    protected final CassandraService cassandraService;
+    protected final IndexBucketLocator indexBucketLocator;
+    protected final UUID applicationId;
+
 
     /**
+     * @param cassandraService
+     * @param indexBucketLocator
+     * @param applicationId
+     * @param headEntity
      * @param queryProcessor
      */
-    public SearchVisitor( QueryProcessor queryProcessor ) {
+    public SearchVisitor( final CassandraService cassandraService, final IndexBucketLocator indexBucketLocator,
+                          final UUID applicationId, final EntityRef headEntity, QueryProcessor queryProcessor, final String bucket ) {
+
+
+        this.cassandraService = cassandraService;
+        this.indexBucketLocator = indexBucketLocator;
+        this.applicationId = applicationId;
+        this.headEntity = headEntity;
         this.query = queryProcessor.getQuery();
         this.queryProcessor = queryProcessor;
         this.em = queryProcessor.getEntityManager();
+        this.bucket = bucket;
     }
+
+
+
 
 
     /** Return the results if they exist, null otherwise */
@@ -137,7 +161,7 @@ public abstract class SearchVisitor implements NodeVisitor {
 
         final int nodeId = node.getId();
 
-        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId, queryProcessor.getCursorCache(nodeId  ) );
+        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId, queryProcessor.getCursorCache( nodeId ) );
 
         if ( left != null ) {
             union.addIterator( left );
@@ -185,8 +209,11 @@ public abstract class SearchVisitor implements NodeVisitor {
             //only order by with no query, start scanning the first field
             if ( subResults == null ) {
                 QuerySlice firstFieldSlice = new QuerySlice( slice.getPropertyName(), -1 );
+
+                final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( firstFieldSlice );
+
                 subResults =
-                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), COLLECTION_PARSER );
+                        new SliceIterator( secondaryIndexScan( orderByNode, firstFieldSlice ), new SecondaryIndexSliceParser( sliceCursorGenerator ) );
             }
 
             orderIterator = new OrderByIterator( slice, orderByNode.getSecondarySorts(), subResults, em,
@@ -202,10 +229,13 @@ public abstract class SearchVisitor implements NodeVisitor {
                 scanner = new NoOpIndexScanner();
             }
             else {
-                scanner = secondaryIndexScan( orderByNode, slice );
+                scanner = secondaryIndexScan( orderByNode, slice.duplicate() );
             }
 
-            SliceIterator joinSlice = new SliceIterator( slice, scanner, COLLECTION_PARSER);
+            final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
+
+            SliceIterator joinSlice = new SliceIterator( scanner, new SecondaryIndexSliceParser(
+                    sliceCursorGenerator ));
 
             IntersectionIterator union = new IntersectionIterator( queryProcessor.getPageSizeHint( orderByNode ) );
             union.addIterator( joinSlice );
@@ -234,9 +264,12 @@ public abstract class SearchVisitor implements NodeVisitor {
         IntersectionIterator intersections = new IntersectionIterator( queryProcessor.getPageSizeHint( node ) );
 
         for ( QuerySlice slice : node.getAllSlices() ) {
-            IndexScanner scanner = secondaryIndexScan( node, slice );
+            IndexScanner scanner = secondaryIndexScan( node, slice.duplicate() );
 
-            intersections.addIterator( new SliceIterator( slice, scanner, COLLECTION_PARSER) );
+            final SliceCursorGenerator sliceCursorGenerator = new SliceCursorGenerator( slice );
+
+            intersections.addIterator( new SliceIterator( scanner, new SecondaryIndexSliceParser(
+                    sliceCursorGenerator )) );
         }
 
         results.push( intersections );

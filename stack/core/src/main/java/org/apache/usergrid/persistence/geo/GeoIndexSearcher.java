@@ -29,16 +29,16 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.cassandra.index.IndexMultiBucketSetLoader;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.geo.model.Tuple;
-
-import org.apache.commons.lang.StringUtils;
 
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -47,8 +47,10 @@ import me.prettyprint.hector.api.beans.HColumn;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_GEOCELL;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.Serializers.de;
+import static org.apache.usergrid.persistence.cassandra.Serializers.se;
+import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.utils.CompositeUtils.setEqualityFlag;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 public abstract class GeoIndexSearcher {
 
@@ -80,10 +82,6 @@ public abstract class GeoIndexSearcher {
      * @param maxResults The maximum number of results to include
      * @param minDistance The minimum distance (inclusive)
      * @param maxDistance The maximum distance (exclusive)
-     * @param entityClass The entity class
-     * @param baseQuery The base query
-     * @param queryEngine The query engine to use
-     * @param maxGeocellResolution The max resolution to use when searching
      */
     public final SearchResults proximitySearch( final EntityLocationRef minMatch, final List<String> geoCells,
                                                 Point searchPoint, String propertyName, double minDistance,
@@ -328,7 +326,9 @@ public abstract class GeoIndexSearcher {
 
             // add buckets for each geoCell
 
-            for ( String indexBucket : locator.getBuckets( appId, IndexType.GEO, geoCell ) ) {
+            //TODO, use merge logic here
+
+            for ( String indexBucket : locator.getBuckets( ) ) {
                 keys.add( key( key, DICTIONARY_GEOCELL, geoCell, indexBucket ) );
             }
         }

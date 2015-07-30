@@ -18,16 +18,10 @@ package org.apache.usergrid.persistence.cassandra.index;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NavigableSet;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 
@@ -44,52 +38,55 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
  *
  * @author tnine
  */
-public class IndexBucketScanner implements IndexScanner {
+public class IndexBucketScanner<T> implements IndexScanner {
 
     private final CassandraService cass;
-    private final IndexBucketLocator indexBucketLocator;
     private final UUID applicationId;
     private final Object keyPrefix;
     private final ApplicationCF columnFamily;
-    private final Object finish;
+    private final ByteBuffer finish;
     private final boolean reversed;
     private final int pageSize;
-    private final String[] indexPath;
-    private final IndexType indexType;
     private final boolean skipFirst;
+    private final String bucket;
+    private final StartToBytes<T> scanStartSerializer;
+    private final T initialStartValue;
 
     /** Pointer to our next start read */
-    private Object start;
+    private ByteBuffer start;
 
-    /** Set to the original value to start scanning from */
-    private Object scanStart;
+    private boolean resumedFromCursor = false;
+
 
     /** Iterator for our results from the last page load */
-    private TreeSet<HColumn<ByteBuffer, ByteBuffer>> lastResults;
+    private List<HColumn<ByteBuffer, ByteBuffer>> lastResults;
 
     /** True if our last load loaded a full page size. */
     private boolean hasMore = true;
 
 
 
-    public IndexBucketScanner( CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily,
-                               UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish,
-                               boolean reversed, int pageSize, boolean skipFirst, String... indexPath) {
+
+    public IndexBucketScanner( CassandraService cass, ApplicationCF columnFamily, StartToBytes<T> scanStartSerializer,
+                               UUID applicationId, Object keyPrefix, String bucket,  T start, T finish,
+                               boolean reversed, int pageSize, boolean skipFirst) {
         this.cass = cass;
-        this.indexBucketLocator = locator;
+        this.scanStartSerializer = scanStartSerializer;
         this.applicationId = applicationId;
         this.keyPrefix = keyPrefix;
         this.columnFamily = columnFamily;
-        this.start = start;
-        this.finish = finish;
         this.reversed = reversed;
         this.skipFirst = skipFirst;
+        this.bucket = bucket;
 
-        //we always add 1 to the page size.  This is because we pop the last column for the next page of results
-        this.pageSize = pageSize+1;
-        this.indexPath = indexPath;
-        this.indexType = indexType;
-        this.scanStart = start;
+        this.pageSize = pageSize;
+
+        //the initial value set when we started scanning
+
+        this.finish = scanStartSerializer.toBytes( finish );
+        this.initialStartValue = start;
+
+        reset();
     }
 
 
@@ -99,7 +96,8 @@ public class IndexBucketScanner implements IndexScanner {
     @Override
     public void reset() {
         hasMore = true;
-        start = scanStart;
+        start = scanStartSerializer.toBytes( initialStartValue );
+        resumedFromCursor = start != null && skipFirst;
     }
 
 
@@ -117,54 +115,55 @@ public class IndexBucketScanner implements IndexScanner {
             return false;
         }
 
-        List<String> keys = indexBucketLocator.getBuckets( applicationId, indexType, indexPath );
-
-        List<Object> cassKeys = new ArrayList<Object>( keys.size() );
-
-        for ( String bucket : keys ) {
-            cassKeys.add( key( keyPrefix, bucket ) );
-        }
+       final Object rowKey =  key( keyPrefix, bucket );
 
         //if we skip the first we need to set the load to page size +2, since we'll discard the first
         //and start paging at the next entity, otherwise we'll just load the page size we need
-        int selectSize = pageSize;
+        int selectSize = pageSize+1;
 
         //we purposefully use instance equality.  If it's a pointer to the same value, we need to increase by 1
         //since we'll be skipping the first value
 
-        final boolean firstPageSkipFirst = this.skipFirst &&  start == scanStart;
 
-        if(firstPageSkipFirst){
+        if(resumedFromCursor){
             selectSize++;
         }
 
-        TreeSet<HColumn<ByteBuffer, ByteBuffer>> resultsTree = IndexMultiBucketSetLoader
-                .load( cass, columnFamily, applicationId, cassKeys, start, finish, selectSize, reversed );
+        final List<HColumn<ByteBuffer, ByteBuffer>>
+                results = cass.getColumns( cass.getApplicationKeyspace( applicationId ), columnFamily, rowKey,
+                start, finish, selectSize, reversed );
 
         //remove the first element, it's from a cursor value and we don't want to retain it
 
 
         // we loaded a full page, there might be more
-        if ( resultsTree.size() == selectSize ) {
+        if ( results.size() == selectSize ) {
             hasMore = true;
 
-
             // set the bytebuffer for the next pass
-            start = resultsTree.pollLast().getName();
+            start = results.remove( results.size() - 1 ).getName();
         }
         else {
             hasMore = false;
         }
 
+
+
         //remove the first element since it needs to be skipped AFTER the size check. Otherwise it will fail
-        if ( firstPageSkipFirst ) {
-            resultsTree.pollFirst();
+        //we only want to skip if our byte value are the same as our expected start.  Since we aren't stateful you can't
+        //be sure your start even comes back, and you don't want to erroneously remove columns
+        if ( resumedFromCursor ) {
+            CassandraColumnUtils.maybeRemoveFirst( results, scanStartSerializer.toBytes( initialStartValue ) );
+            resumedFromCursor = false;
         }
 
-        lastResults = resultsTree;
+        lastResults = results;
 
         return lastResults != null && lastResults.size() > 0;
     }
+
+
+
 
 
     /*
@@ -173,7 +172,7 @@ public class IndexBucketScanner implements IndexScanner {
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
+    public Iterator<List<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
         return this;
     }
 
@@ -210,8 +209,8 @@ public class IndexBucketScanner implements IndexScanner {
      */
     @Override
     @Metered(group = "core", name = "IndexBucketScanner_load")
-    public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next() {
-        NavigableSet<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
+    public List<HColumn<ByteBuffer, ByteBuffer>> next() {
+        List<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 
         lastResults = null;
 
@@ -237,4 +236,11 @@ public class IndexBucketScanner implements IndexScanner {
     public int getPageSize() {
         return pageSize;
     }
+
+
+    @Override
+    public boolean isReversed() {
+        return this.reversed;
+    }
+
 }

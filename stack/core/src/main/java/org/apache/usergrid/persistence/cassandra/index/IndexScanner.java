@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.cassandra.index;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
@@ -30,11 +30,22 @@ import me.prettyprint.hector.api.beans.HColumn;
  * @author tnine
  */
 public interface IndexScanner
-        extends Iterable<Set<HColumn<ByteBuffer, ByteBuffer>>>, Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> {
+        extends Iterable<List<HColumn<ByteBuffer, ByteBuffer>>>, Iterator<List<HColumn<ByteBuffer, ByteBuffer>>> {
 
     /** Reset the scanner back to the start */
-    public void reset();
+    void reset();
 
-    public int getPageSize();
+    /**
+     * Return the page size of the index
+     * @return
+     */
+    int getPageSize();
+
+    /**
+     * Return true if this iterator iterates in reverse
+     * @return
+     */
+    boolean isReversed();
+
 
 }

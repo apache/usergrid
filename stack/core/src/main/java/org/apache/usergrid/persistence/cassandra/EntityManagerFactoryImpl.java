@@ -144,7 +144,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     private EntityManager _getEntityManager( UUID applicationId ) {
         //EntityManagerImpl em = new EntityManagerImpl();
-        EntityManager em = applicationContext.getBean( "entityManager", EntityManager.class );
+        EntityManager  em = applicationContext.getBean( "entityManager", EntityManager.class );
         //em.init(this,cass,counterUtils,applicationId, skipAggregateCounters);
         em.setApplicationId( applicationId );
         return em;
