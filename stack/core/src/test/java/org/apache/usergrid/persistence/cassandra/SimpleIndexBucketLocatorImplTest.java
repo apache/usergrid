@@ -25,8 +25,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.yammer.metrics.Metrics;
@@ -48,7 +48,7 @@ public class SimpleIndexBucketLocatorImplTest {
 
         SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl( 1 );
 
-        List<String> buckets = locator.getBuckets( appId, IndexType.COLLECTION, entityType, propName );
+        List<String> buckets = locator.getBuckets(  );
 
         assertEquals( 1, buckets.size() );
 
@@ -58,11 +58,11 @@ public class SimpleIndexBucketLocatorImplTest {
 
         UUID testId3 = UUIDUtils.minTimeUUID( Long.MAX_VALUE );
 
-        String bucket1 = locator.getBucket( appId, IndexType.COLLECTION, testId1, entityType, propName );
+        String bucket1 = locator.getBucket( testId1);
 
-        String bucket2 = locator.getBucket( appId, IndexType.COLLECTION, testId2, entityType, propName );
+        String bucket2 = locator.getBucket( testId2);
 
-        String bucket3 = locator.getBucket( appId, IndexType.COLLECTION, testId3, entityType, propName );
+        String bucket3 = locator.getBucket( testId3 );
 
         assertEquals( bucket1, "000000000000000000000000000000000000000" );
         assertEquals( bucket2, "000000000000000000000000000000000000000" );
@@ -79,7 +79,7 @@ public class SimpleIndexBucketLocatorImplTest {
 
         SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl( 2 );
 
-        List<String> buckets = locator.getBuckets( appId, IndexType.COLLECTION, entityType, propName );
+        List<String> buckets = locator.getBuckets( );
 
         assertEquals( 2, buckets.size() );
 
@@ -89,11 +89,11 @@ public class SimpleIndexBucketLocatorImplTest {
 
         UUID testId3 = UUIDUtils.minTimeUUID( Long.MAX_VALUE );
 
-        String bucket1 = locator.getBucket( appId, IndexType.COLLECTION, testId1, entityType, propName );
+        String bucket1 = locator.getBucket( testId1  );
 
-        String bucket2 = locator.getBucket( appId, IndexType.COLLECTION, testId2, entityType, propName );
+        String bucket2 = locator.getBucket(  testId2);
 
-        String bucket3 = locator.getBucket( appId, IndexType.COLLECTION, testId3, entityType, propName );
+        String bucket3 = locator.getBucket( testId3);
 
         assertEquals( bucket1, "000000000000000000000000000000000000000" );
         assertEquals( bucket2, "085070591730234615865843651857942052863" );
@@ -114,7 +114,7 @@ public class SimpleIndexBucketLocatorImplTest {
         // test 100 elements
         SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl( bucketSize );
 
-        List<String> buckets = locator.getBuckets( appId, IndexType.COLLECTION, entityType, propName );
+        List<String> buckets = locator.getBuckets( );
 
         assertEquals( bucketSize, buckets.size() );
 
@@ -136,7 +136,7 @@ public class SimpleIndexBucketLocatorImplTest {
 
             final TimerContext context = hashes.time();
 
-            String bucket = locator.getBucket( appId, IndexType.COLLECTION, id, entityType, propName );
+            String bucket = locator.getBucket(  id );
 
             context.stop();
 

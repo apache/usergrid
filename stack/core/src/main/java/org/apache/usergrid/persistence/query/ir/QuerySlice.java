@@ -53,6 +53,25 @@ public class QuerySlice {
     }
 
 
+
+    /**
+     * Create a deep copy of the query slice from the original query slice
+     * @param original
+     */
+    private QuerySlice(final QuerySlice original){
+        this.propertyName = original.propertyName;
+        this.nodeId = original.nodeId;
+        this.start = original.start;
+        this.finish = original.finish;
+        this.cursor = original.cursor;
+        this.reversed = original.reversed;
+    }
+
+
+    public QuerySlice duplicate(){
+        return new QuerySlice( this );
+    }
+
     /** Reverse this slice. Flips the reversed switch and correctly changes the start and finish */
     public void reverse() {
         reversed = !reversed;

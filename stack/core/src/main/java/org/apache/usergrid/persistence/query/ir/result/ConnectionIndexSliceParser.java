@@ -22,6 +22,8 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.Schema;
 
+import com.fasterxml.uuid.UUIDComparator;
+
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
 
@@ -33,11 +35,15 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
 public class ConnectionIndexSliceParser implements SliceParser {
 
     private final String connectedEntityType;
+    private final SliceCursorGenerator sliceCurosrGenerator;
 
 
-    /** @param connectedEntityType Could be null if we want to return all types */
-    public ConnectionIndexSliceParser( String connectedEntityType ) {
+    /**
+     * @param connectedEntityType Could be null if we want to return all types
+     * @param sliceCurosrGenerator */
+    public ConnectionIndexSliceParser( String connectedEntityType, final SliceCursorGenerator sliceCurosrGenerator ) {
         this.connectedEntityType = connectedEntityType;
+        this.sliceCurosrGenerator = sliceCurosrGenerator;
     }
 
 
@@ -45,7 +51,7 @@ public class ConnectionIndexSliceParser implements SliceParser {
      * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff ) {
+    public ScanColumn parse( ByteBuffer buff, final boolean isReversed ) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
         String connectedType = ( String ) composite.get( 1 );
@@ -62,10 +68,12 @@ public class ConnectionIndexSliceParser implements SliceParser {
             return null;
         }
 
-        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff );
+        return new ConnectionColumn( ( UUID ) composite.get( 0 ), connectedType, buff, sliceCurosrGenerator );
         //    return composite;
         //    return null;
     }
+
+
 
 
     public static class ConnectionColumn extends AbstractScanColumn {
@@ -73,8 +81,9 @@ public class ConnectionIndexSliceParser implements SliceParser {
         private final String connectedType;
 
 
-        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column ) {
-            super( uuid, column );
+        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column,
+                                 final SliceCursorGenerator sliceCursorGenerator ) {
+            super( uuid, column, sliceCursorGenerator );
             this.connectedType = connectedType;
         }
 
@@ -82,6 +91,22 @@ public class ConnectionIndexSliceParser implements SliceParser {
         /** Get the target type from teh column */
         public String getTargetType() {
             return connectedType;
+        }
+
+
+        @Override
+        public int compareTo( final ScanColumn o ) {
+            if(o == null){
+                return 1;
+            }
+
+            final int compare =  UUIDComparator.staticCompare( uuid, o.getUUID() );
+
+            if(compare == 0){
+                return connectedType.compareTo( ((ConnectionColumn)o).connectedType );
+            }
+
+            return compare;
         }
     }
 }

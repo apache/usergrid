@@ -89,20 +89,30 @@ public class OrderByTest extends AbstractRestIT {
         props.put( "verb", "go" );
         props.put( "content", "bragh" );
 
+        final List<JsonNode> saved = new ArrayList<JsonNode>( 20  );
+
         for ( int i = 0; i < 20; i++ ) {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
+
+            saved.add( getEntity( activity, 0 ) );
         }
 
         String query = "select * where created > " + 1 + " order by created desc";
 
-        JsonNode incorrectNode = activities.withQuery( query ).withLimit( 5 ).get();
+        JsonNode results = activities.withQuery( query ).withLimit( 5 ).get();
 
-        assertEquals( 5, incorrectNode.get( "entities" ).size() );
+        assertEquals( 5, results.get( "entities" ).size() );
+
+
 
         while ( checkResultsNum < 5 ) {
-            assertEquals( activities.entityIndex( query, checkResultsNum ),
-                    activities.entityIndexLimit( query, 5, checkResultsNum ) );
+
+
+            final JsonNode expected = saved.get( saved.size() - checkResultsNum -1 );
+            final JsonNode returned = getEntity( results, checkResultsNum  );
+
+            assertEquals(expected , returned);
             checkResultsNum++;
         }
     }
@@ -119,7 +129,7 @@ public class OrderByTest extends AbstractRestIT {
 
         CustomCollection activities = context.collection( "activities" );
 
-        int size = 200;
+        int size = 50;
 
         Map<String, String> actor = hashMap( "displayName", "Erin" );
         Map<String, Object> props = new HashMap<String, Object>();
@@ -138,12 +148,12 @@ public class OrderByTest extends AbstractRestIT {
 
         long lastCreated = activites.get( activites.size() - 1 ).get( "created" ).asLong();
 
-        String errorQuery = String.format( "select * where created <= %d order by created desc", lastCreated );
+        String query = String.format( "select * where created <= %d order by created desc", lastCreated );
         String cursor = null;
         int index = size - 1;
 
         do {
-            JsonNode response = activities.withQuery( errorQuery ).get();
+            JsonNode response = activities.withQuery( query ).get();
             JsonNode cursorNode = response.get( "cursor" );
 
             cursor = cursorNode != null ? cursorNode.asText() : null;

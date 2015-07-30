@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -173,7 +172,7 @@ public class EntityInsertBenchMark extends ToolBase {
 
 
                 String bucketId =
-                        indexBucketLocator.getBucket( appId, IndexType.COLLECTION, dynEntity.getUuid(), "test" );
+                        indexBucketLocator.getBucket( dynEntity.getUuid());
 
                 Object index_name = key( appId, "tests", "test", bucketId );
 

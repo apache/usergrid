@@ -20,13 +20,22 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cassandra.CursorCache;
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+
 
 /** An interface that represents a column */
-public interface ScanColumn {
+public interface ScanColumn extends Comparable<ScanColumn> {
 
     /** Get the uuid from the column */
-    public UUID getUUID();
+    UUID getUUID();
 
-    /** Get the cursor value of this column */
-    public ByteBuffer getCursorValue();
+
+    /**
+     * Use the generator to add this value to the cursor cache
+     * @param cache
+     */
+    void addToCursor( final CursorCache cache );
+
+
 }

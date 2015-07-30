@@ -19,6 +19,8 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
 
+import org.apache.usergrid.persistence.cassandra.index.DynamicCompositeComparator;
+
 
 /**
  * Interface to parse and compare range slices
@@ -28,5 +30,5 @@ import java.nio.ByteBuffer;
 public interface SliceParser {
 
     /** Parse the slice and return it's parse type.  If null is returned, the column should be considered discarded */
-    public ScanColumn parse( ByteBuffer buff );
+    ScanColumn parse( final ByteBuffer columnNameBytes, final boolean isReversed );
 }
