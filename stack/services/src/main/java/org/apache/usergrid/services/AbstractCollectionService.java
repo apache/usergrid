@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.services.ServiceResults.Type;
@@ -93,7 +94,9 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         if ( entity == null ) {
-            throw new ServiceResourceNotFoundException( context );
+            logger.info( "miss on entityType: {} with uuid: {}", getEntityType(), id );
+            String msg = "Cannot find entity associated with uuid: " + id;
+            throw new EntityNotFoundException( msg );
         }
 
 
@@ -148,7 +151,8 @@ public class AbstractCollectionService extends AbstractService {
 
         if ( entity == null ) {
             logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
-            throw new ServiceResourceNotFoundException( context );
+            String msg = "Cannot find entity with name: "+name;
+            throw new EntityNotFoundException( msg );
         }
 
         // the context of the entity they're trying to load isn't owned by the owner
