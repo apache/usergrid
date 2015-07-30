@@ -71,6 +71,7 @@ import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
 import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 
@@ -94,7 +95,7 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USE
 })
 public class ServiceResource extends AbstractContextResource {
 
-    protected static final Logger LOG = LoggerFactory.getLogger( ServiceResource.class );
+    protected static final Logger logger = LoggerFactory.getLogger( ServiceResource.class );
     private static final String FILE_FIELD_NAME = "file";
 
 
@@ -207,7 +208,7 @@ public class ServiceResource extends AbstractContextResource {
 
     @Path("file")
     public AbstractContextResource getFileResource( @Context UriInfo ui ) throws Exception {
-        LOG.debug( "in assets in ServiceResource" );
+        logger.debug( "in assets in ServiceResource" );
         ServiceParameter.addParameter( getServiceParameters(), "assets" );
 
         PathSegment ps = getFirstPathSegment( "assets" );
@@ -223,7 +224,7 @@ public class ServiceResource extends AbstractContextResource {
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 
-        LOG.debug( "ServiceResource.addIdParameter" );
+        logger.debug( "ServiceResource.addIdParameter" );
 
         UUID itemId = UUID.fromString( entityId.getPath() );
 
@@ -239,9 +240,9 @@ public class ServiceResource extends AbstractContextResource {
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
 
-        LOG.debug( "ServiceResource.addNameParameter" );
+        logger.debug( "ServiceResource.addNameParameter" );
 
-        LOG.debug( "Current segment is {}", itemName.getPath() );
+        logger.debug( "Current segment is {}", itemName.getPath() );
 
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
@@ -262,7 +263,7 @@ public class ServiceResource extends AbstractContextResource {
     public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
                                                  ServicePayload payload ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeServiceRequest" );
+        logger.debug( "ServiceResource.executeServiceRequest" );
 
         boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
         boolean collectionGet = false;
@@ -311,7 +312,7 @@ public class ServiceResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        LOG.debug( "ServiceResource.executeGet" );
+        logger.debug( "ServiceResource.executeGet" );
 
         ApiResponse response = createApiResponse();
 
@@ -360,7 +361,7 @@ public class ServiceResource extends AbstractContextResource {
     public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        LOG.debug( "ServiceResource.executePostWithMap" );
+        logger.debug( "ServiceResource.executePostWithMap" );
 
         ApiResponse response = createApiResponse();
 
@@ -405,7 +406,7 @@ public class ServiceResource extends AbstractContextResource {
     public JSONWithPadding executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        LOG.debug( "ServiceResource.executePost: body = " + body );
+        logger.debug( "ServiceResource.executePost: body = " + body );
 
         Object json;
         if ( StringUtils.isEmpty( body ) ) {
@@ -437,7 +438,7 @@ public class ServiceResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        LOG.debug( "ServiceResource.executePut" );
+        logger.debug( "ServiceResource.executePut" );
 
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> json = mapper.readValue( body, mapTypeReference );
@@ -454,7 +455,7 @@ public class ServiceResource extends AbstractContextResource {
         @QueryParam("app_delete_confirm") String confirmAppDelete )
         throws Exception {
 
-        LOG.debug( "ServiceResource.executeDelete" );
+        logger.debug( "ServiceResource.executeDelete" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
@@ -471,7 +472,12 @@ public class ServiceResource extends AbstractContextResource {
 
             for ( Entity entity : sr.getEntities() ) {
                 if ( entity.getProperty( AssetUtils.FILE_METADATA ) != null ) {
-                    binaryStore.delete( services.getApplicationId(), entity );
+                    try {
+                        binaryStore.delete( services.getApplicationId(), entity );
+                    }catch(AwsPropertiesNotFoundException apnfe){
+                        logger.error( "Amazon Property needed for this operation not found",apnfe );
+                        response.setError( "500","Amazon Property needed for this operation not found",apnfe );
+                    }
                 }
             }
         }
@@ -564,7 +570,7 @@ public class ServiceResource extends AbstractContextResource {
                                                  @QueryParam("callback") @DefaultValue("callback") String callback,
                                                  FormDataMultiPart multiPart ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeMultiPartPost" );
+        logger.debug( "ServiceResource.executeMultiPartPost" );
         return executeMultiPart( ui, callback, multiPart, ServiceAction.POST );
     }
 
@@ -576,7 +582,7 @@ public class ServiceResource extends AbstractContextResource {
                                                 @QueryParam("callback") @DefaultValue("callback") String callback,
                                                 FormDataMultiPart multiPart ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeMultiPartPut" );
+        logger.debug( "ServiceResource.executeMultiPartPut" );
         return executeMultiPart( ui, callback, multiPart, ServiceAction.PUT );
     }
 
@@ -601,7 +607,7 @@ public class ServiceResource extends AbstractContextResource {
                 data.put( bodyPart.getName(), bodyPart.getValue() );
             }
             else {
-                LOG.info( "skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType() );
+                logger.info( "skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType() );
             }
         }
 
@@ -625,7 +631,17 @@ public class ServiceResource extends AbstractContextResource {
             if ( fileInput != null ) {
                 Entity entity = serviceResults.getEntity();
                 EntityManager em = emf.getEntityManager( getApplicationId() );
-                binaryStore.write( getApplicationId(), entity, fileInput );
+                try {
+                    binaryStore.write( getApplicationId(), entity, fileInput );
+                }
+                catch ( AwsPropertiesNotFoundException apnfe){
+                    logger.error( "Amazon Property needed for this operation not found",apnfe );
+                    response.setError( "500","Amazon Property needed for this operation not found",apnfe );
+                }
+                catch ( RuntimeException re){
+                    logger.error(re.getMessage());
+                    response.setError( "500", re );
+                }
                 em.update( entity );
                 serviceResults.setEntity( entity );
             }
@@ -663,7 +679,15 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
 
         Entity entity = serviceResults.getEntity();
-        binaryStore.write( getApplicationId(), entity, uploadedInputStream );
+        try {
+            binaryStore.write( getApplicationId(), entity, uploadedInputStream );
+        }catch(AwsPropertiesNotFoundException apnfe){
+            logger.error( "Amazon Property needed for this operation not found",apnfe );
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }catch ( RuntimeException re ){
+            logger.error(re.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
 
         EntityManager em = emf.getEntityManager( getApplicationId() );
         em.update( entity );
@@ -678,7 +702,7 @@ public class ServiceResource extends AbstractContextResource {
                                       @HeaderParam("range") String rangeHeader,
                                       @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeStreamGet" );
+        logger.debug( "ServiceResource.executeStreamGet" );
 
         //Needed for testing
         if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
@@ -695,8 +719,8 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
         Entity entity = serviceResults.getEntity();
 
-        LOG.info( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
-                new Object[] { entityId, rangeHeader, modifiedSince } );
+        logger.info( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
+            new Object[] { entityId, rangeHeader, modifiedSince } );
 
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
 
@@ -711,7 +735,7 @@ public class ServiceResource extends AbstractContextResource {
 
         boolean range = StringUtils.isNotBlank( rangeHeader );
         long start = 0, end = 0, contentLength = 0;
-        InputStream inputStream;
+        InputStream inputStream = null;
 
         if ( range ) { // honor range request, calculate start & end
 
@@ -734,12 +758,27 @@ public class ServiceResource extends AbstractContextResource {
                     }
                 }
             }
-
-            inputStream = binaryStore.read( getApplicationId(), entity, start, end - start );
+            try {
+                inputStream = binaryStore.read( getApplicationId(), entity, start, end - start );
+            }catch(AwsPropertiesNotFoundException apnfe){
+                logger.error( "Amazon Property needed for this operation not found",apnfe );
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }catch(RuntimeException re){
+                logger.error(re.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
         }
         else { // no range
-
-            inputStream = binaryStore.read( getApplicationId(), entity );
+            try {
+                inputStream = binaryStore.read( getApplicationId(), entity );
+            }catch(AwsPropertiesNotFoundException apnfe){
+                logger.error( "Amazon Property needed for this operation not found",apnfe );
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+            catch(RuntimeException re){
+                logger.error(re.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
         }
 
         // return 404 if not found

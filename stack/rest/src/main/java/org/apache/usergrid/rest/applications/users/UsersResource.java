@@ -212,7 +212,7 @@ public class UsersResource extends ServiceResource {
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        LOG.debug( "UsersResource.executePost: body = " + body);
+        logger.debug( "UsersResource.executePost: body = " + body);
 
         Object json = readJsonToObject( body );
 
@@ -224,7 +224,7 @@ public class UsersResource extends ServiceResource {
 
         boolean activated = !( ( confRequred != null ) && confRequred );
 
-        LOG.debug("Confirmation required: {} Activated: {}", confRequred, activated );
+        logger.debug("Confirmation required: {} Activated: {}", confRequred, activated );
 
         if ( json instanceof Map ) {
             @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) json;
