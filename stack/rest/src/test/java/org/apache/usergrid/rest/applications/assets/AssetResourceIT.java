@@ -386,7 +386,7 @@ public class AssetResourceIT extends AbstractRestIT {
      * Deleting a connection to an asset should not delete the asset or the asset's data
      */
     @Test
-    public void deleteConnectionToAsset() throws IOException {
+    public void deleteConnectionToAsset() throws Exception {
 
         this.refreshIndex();
 
@@ -400,7 +400,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
         Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
 
-        JsonNode node = resource().path("/test-organization/test-app/foos")
+        JsonNode node = resource().path(orgAppPath+"/foos")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -438,12 +438,12 @@ public class AssetResourceIT extends AbstractRestIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class);
-        LOG.debug( mapToFormattedJsonString(connectNode) );
+        LOG.debug( mapToFormattedJsonString( connectNode ) );
 
         this.refreshIndex();
 
         // verify connection from imagegallery to asset
-
+        Thread.sleep( 1000 );
         JsonNode listConnectionsNode = resource()
                 .path(orgAppPath + "/imagegalleries/" + imageGalleryId + "/contains/")
                 .queryParam("access_token", access_token)
@@ -464,6 +464,7 @@ public class AssetResourceIT extends AbstractRestIT {
         this.refreshIndex();
 
         // verify that connection is gone
+        Thread.sleep( 1000 );
 
         listConnectionsNode = resource()
                 .path(orgAppPath + "/imagegalleries/" + imageGalleryId + "/contains/")
