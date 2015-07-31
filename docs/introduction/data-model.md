@@ -13,7 +13,7 @@ In Usergrid, you can create one or more applications within an organization. App
 Each application provides the infrastructure for storing, retrieving, updating and deleting the entities and collections associated with a specific app instance.
 
 ## Collections
-The BaaS stores all data entities in uniquely-named collections. Collections are created automatically for every entity type, including custom entities, and are named using the plural form of the entity type they store. For example, all user entities are stored in the /users collection, and all device entities in the /devices collection. An entity can belong to only one collection.
+Usergrid stores all data entities in uniquely-named collections. Collections are created automatically for every entity type, including custom entities, and are named using the plural form of the entity type they store. For example, all user entities are stored in the /users collection, and all device entities in the /devices collection. An entity can belong to only one collection.
 
 Currently, collections cannot be renamed or deleted; however, all of the data entities in a collection can be updated or deleted.
 
