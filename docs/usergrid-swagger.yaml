@@ -69,13 +69,13 @@ paths:
     post:
       summary: "Completing a password reset."
       description: "Complete the password reset through getting the newpassword and the old one for identification."
-#      parameters:
-#        - name: ResetPWMsg
-#          in: body
-#          description: "Parameters and value for the Captcha challenge, the admin user's response to the Captcha challenge, and the admin user's email address."
-#          required: true
-#          schema: 
-#            $ref: ResetPWMsg
+      parameters:
+        - name: ResetPWMsg
+          in: body
+          description: "Parameters and value for the Captcha challenge, the admin user's response to the Captcha challenge, and the admin user's email address."
+          required: true
+          schema: 
+            $ref: ResetPWMsg
       tags:
         - Action
       responses:
@@ -1643,11 +1643,11 @@ definitions:
       created:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was created."
-        format: int32
+        format: int64
       modified:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was last modified."
-        format: int32
+        format: int64
       payloads:
         type: string
         description:  "The push notifications to be delivered."
@@ -1661,9 +1661,9 @@ definitions:
         type: number
         description:  "UTC timestamp in milliseconds for when the notification was sent."
       metadata:
-          $ref: Metadata   
+        $ref: Metadata   
       completeMsg:
-          $ref: Action
+        $ref: Action
   Device:
     properties:
       uuid:
@@ -1678,31 +1678,31 @@ definitions:
       created:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was created."
-        format: int32
+        format: int64
       modified:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was last modified."
-        format: int32
+        format: int64
       metadata:
-          $ref: Metadata   
+        $ref: Metadata   
       completeMsg:
-          $ref: Action
-  ScheduleNotification:
-    required:
-      - timestamp
-    properties:
-      timestamp:
-        type: number
-        description: "UTC timestamp in milliseconds of when schedule notifications."
-        format: int32
-  SetExpiration:
-    required:
-      - timestamp
-    properties:
-      timestamp:
-        type: number
-        description: "UTC timestamp in milliseconds of when set expirations."
-        format: int32
+        $ref: Action
+#  ScheduleNotification:
+#    required:
+#      - timestamp
+#    properties:
+#      timestamp:
+#        type: number
+#        description: "UTC timestamp in milliseconds of when schedule notifications."
+#        format: int64
+#  SetExpiration:
+#    required:
+#      - timestamp
+#    properties:
+#      timestamp:
+#        type: number
+#        description: "UTC timestamp in milliseconds of when set expirations."
+#        format: int64
   Notification:
     required:
       - payloads
@@ -1716,11 +1716,11 @@ definitions:
       created:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was created."
-        format: int32
+        format: int64
       modified:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was last modified."
-        format: int32
+        format: int64
       payloads:
         type: string
         description:  "The push notifications to be delivered."
@@ -1734,9 +1734,9 @@ definitions:
         type: string
         description:  "The current delivery status of the notification 'FINISHED', 'SCHEDULED' or 'CANCELED'."
       metadata:
-          $ref: Metadata 
+        $ref: Metadata 
       completeMsg:
-          $ref: Action
+        $ref: Action
   Notifier:
     required:
       - provider
@@ -1754,11 +1754,11 @@ definitions:
       created:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was created."
-        format: int32
+        format: int64
       modified:
         type: number
         description:  "UTC timestamp in milliseconds of when the entity was last modified."
-        format: int32
+        format: int64
       provider:
         type: string
         description:  "Push notification provider 'apple' or 'google'."
@@ -1766,7 +1766,7 @@ definitions:
         type: string
         description:  "The environment that corresponds to your app 'development' or 'production'."
       metadata:
-          $ref: Metadata
+        $ref: Metadata
   CreateNotifications:
     type: array
     items:
@@ -1777,7 +1777,7 @@ definitions:
       - message
     properties:
       notifier:
-          $ref: Notifier
+        $ref: Notifier
       message:
         type: string
         description:  "The push notitfication message that will be delivered to the user."
@@ -1787,7 +1787,7 @@ definitions:
         type: string
         description:  "The name of the application of the permission."
       entity:
-          $ref: Entity
+        $ref: Entity
       url:
         type: string
         description:  "The url of the permission."
@@ -1823,7 +1823,7 @@ definitions:
         description:  "The numebr of the roles."
         format: int32
       entity:
-          $ref: Entity
+        $ref: Entity
       url:
         type: string
         description:  "The url of the event."
@@ -1837,7 +1837,7 @@ definitions:
         type: string
         description:  "The title of the orgnization."
       completeMsg:
-         $ref: Action    
+        $ref: Action    
       path:
         type: string  
         description:  "The path of the role."
@@ -1858,7 +1858,7 @@ definitions:
         type: string
         description:  "The application name of the event."
       entity:
-          $ref: Entity
+        $ref: Entity
       url:
         type: string
         description:  "The url of the event."
@@ -1872,14 +1872,14 @@ definitions:
         type: string
         description:  "The title of the orgnization."
       completeMsg:
-         $ref: Action
-  CreateEvent:
-    required:
-      - timestamp
-    properties:
-      timestamp:
-        type: number
-        format : int32
+        $ref: Action
+#  CreateEvent:
+#    required:
+#      - timestamp
+#    properties:
+#      timestamp:
+#        type: number
+#        format : int32
   Group:
     properties:
       uuid:
@@ -1898,12 +1898,12 @@ definitions:
         type: string
         description:  "The path of the group."
       metadata:
-          $ref: Metadata
+        $ref: Metadata
       title:
         type: string
         description:  "The title of the group."
       completeMsg:
-          $ref: Action
+        $ref: Action
   CreateGroup:
     required:
       - title
@@ -1954,7 +1954,7 @@ definitions:
         description:  "The number of the entities retrieved."
         format: int32
       completeMsg:
-          $ref: Action
+        $ref: Action
   CreateApp:
     required:
       - token
@@ -1975,7 +1975,7 @@ definitions:
         type: string
         description:  "The secret of the client."
       completeMsg:
-          $ref: Action
+        $ref: Action
   Orgnization:
     properties:
       applicationId:
@@ -2015,9 +2015,9 @@ definitions:
         type: string
         description:  "The UUID of the orgnization."
       applicationdata:
-          $ref: AppData
+        $ref: AppData
       completeMsg:
-          $ref: Action
+        $ref: Action
   AppData:
     properties:
       tester/sandbox: 
@@ -2030,7 +2030,7 @@ definitions:
         type: string
         description:  "The UUID of tester/app2."
       completeMsg:
-          $ref: Action
+        $ref: Action
   CreateOrg:
     required:
       - orgnization
@@ -2064,7 +2064,7 @@ definitions:
       username:
         type: string
       image:
-          $ref: ImageModel
+        $ref: ImageModel
       verb:
         type: string
       content:
@@ -2176,7 +2176,7 @@ definitions:
         type: string
         description:  "The path of the user."
       completeMsg:
-          $ref: Action
+        $ref: Action
   Action:
     properties:
       action:
@@ -2188,7 +2188,7 @@ definitions:
       timestamp:
         type: number
         description:  "The timestamp of the requested action."
-        format: int32
+        format: int64
       duration:
         type: number
         description:  "The duration of the requested action."
@@ -2199,14 +2199,14 @@ definitions:
   ActivityFeed:
     properties:
       entityproperty:
-          $ref: Entity
+        $ref: Entity
       category:
         type: string
         description:  "The category of the activity."
       metadataproperty:
-          $ref: Metadata
+        $ref: Metadata
       objectproperty:
-          $ref: Object
+        $ref: Object
       title:
         type: string
         description:  "The title of the activity."
@@ -2215,13 +2215,13 @@ definitions:
         description:  "The verb of the activity."
       published:
         type: number
-        description:  "The published Id of the activity."
-        format: int32
+        description:  "UTC timestamp of the feed publish time."
+        format: int64
       verb:
         type: string
         description:  "The verb of the activity."
       completeMsg:
-          $ref: Action
+        $ref: Action
   Object:
     properties:
       displayname:
@@ -2245,9 +2245,9 @@ definitions:
         type: string
         description:  "The path of the metadata."
       sets:
-          $ref: Sets    
+        $ref: Sets    
       collections:
-          $ref: Collections
+        $ref: Collections
   Collections:
     properties:
       activities:
@@ -2288,26 +2288,19 @@ definitions:
         description:  "The type of the entity."
       created:
         type: number
-        description:  "The Id of the created one."
-        format: int32
+        description:  "UTC timestamp of entity creation time."
+        format: int64
       modified:
         type: number
-        description:  "The Id of the modified one."
-        format: int32
+        description:  "UTC timestamp of entity modified time."
+        format: int64
       actorproperty:
-          $ref: Actor
+        $ref: Actor
       metadata:
-          $ref: Metadata
+        $ref: Metadata
       name:
         type: string
         description:  "The name of the entity."
-      price:
-        type: number
-        description:  "The price of the entity."
-        format: int32
-      timestamp:
-        type: number
-        format: int32
       message:
         type: string
   Error:

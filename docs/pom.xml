@@ -5,8 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!--
-    This POM is here just to make the IDE play nice with 
-    Groovy code that uses Grape for dependency management.
+    Includes dependencies used by Groovy scripts in the docs directories.
     -->
     
     <groupId>org.apache.usergrid</groupId>
@@ -15,7 +14,16 @@
     
     <build>
         <plugins>
-            <plugin>
+          
+            <!-- Ran into these problems when trying to use Swagger-Codegen to generate HTML: -->
+            <!--                                                                              -->
+            <!--   1. Usergrid Swagger file uses references and there's a bug in codegen:     -->
+            <!--      https://github.com/swagger-api/swagger-codegen/issues/552               -->
+            <!--                                                                              -->
+            <!--   2. The swagger-codegen-maven-plugin points at a discontinued version       --> 
+            <!--      of the Swagger-Codegen project (the old Wordnik version                 -->
+            
+            <!-- <plugin>
                 <groupId>com.garethevans.plugin</groupId>
                 <artifactId>swagger-codegen-maven-plugin</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
@@ -27,10 +35,12 @@
                         <configuration>
                             <inputSpec>usergrid-swagger.yaml</inputSpec>
                             <language>html</language>
+                            <output>${project.build.directory}/generated-sources/swagger</output>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>            
+            </plugin> -->     
+            
         </plugins>
     </build>
 
