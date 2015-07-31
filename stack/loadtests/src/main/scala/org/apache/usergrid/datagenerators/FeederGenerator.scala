@@ -227,7 +227,7 @@ object FeederGenerator {
 
      // println(entityName)
 
-     Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity, "entityNum" -> (i+1).toString)
+     Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity, "entityNum" -> (i+1).toString, "seededEntityNum" -> seededVal.toString)
    }
  }
 
