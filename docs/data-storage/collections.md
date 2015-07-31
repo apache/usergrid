@@ -2,7 +2,7 @@
 
 ## Creating Collections
 
-This article describes how to create collections in Advanced API Services. All entities are automatically associated with a corresponding collection based on the type property of the entity. You may create empty collections if you wish, but creating an entity of a new type will automatically create a corresponding collection for you. For example, creating a new custom "item" entity, creates an "items" collection.
+This article describes how to create collections in Advanced Usergrid. All entities are automatically associated with a corresponding collection based on the type property of the entity. You may create empty collections if you wish, but creating an entity of a new type will automatically create a corresponding collection for you. For example, creating a new custom "item" entity, creates an "items" collection.
 
 __Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
 
@@ -22,7 +22,7 @@ org	            Organization UUID or organization name
 app	            Application UUID or application name
 collection name	Name of the collection to create. 
 
-If the provided value is not a plural word, API Services will pluralize it. For example, providing 'item' will create a collection named 'items' but providing 'items' will not create 'itemses'.
+If the provided value is not a plural word, Usergrid will pluralize it. For example, providing 'item' will create a collection named 'items' but providing 'items' will not create 'itemses'.
 
 ### Example Request/Response
 
@@ -49,7 +49,7 @@ Response:
 
 This article describes how to retrieve all of the entities in a collection.
 
-<div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> By default, the API Services BaaS API returns 10 entities per request. For collections with more than 10 entities, use the returned 'cursor' property to retrieve the next 10 entities in the result set. You may also use the LIMIT parameter in a query string to increase the number of results returned. For more information on using cursors, see [Query Parameters](../data-queries/query-parameters.html).</p></div>
+<div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> By default, the Usergrid API returns 10 entities per request. For collections with more than 10 entities, use the returned 'cursor' property to retrieve the next 10 entities in the result set. You may also use the LIMIT parameter in a query string to increase the number of results returned. For more information on using cursors, see [Query Parameters](../data-queries/query-parameters.html).</p></div>
 
 __Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
 
