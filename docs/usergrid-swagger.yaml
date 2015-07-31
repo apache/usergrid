@@ -1,4 +1,4 @@
-swagger: 2
+swagger: "2.0"
 info:
   title: Usergrid API
   description:  "Usergrid API"
@@ -127,7 +127,7 @@ paths:
   management/users/{userId}/activate:
     get:
       summary: "Activating an admin user."
-      description: "Activate an admin user from a link provIded in an email notification. The complete request URL should be GET /management/organizations/{org}/users/{user|username|email|UUID}/activate?token={token}&confirm={confirm_email}."
+      description: "Activate an admin user from a link provIded in an email notification."
       parameters:
         - $ref: "#/parameters/userId"
         - name: token
@@ -2204,7 +2204,7 @@ definitions:
         type: string
         description:  "The status of the requested action."
       timestamp:
-        type: numebr
+        type: number
         description:  "The timestamp of the requested action."
         format: int32
       duration:
