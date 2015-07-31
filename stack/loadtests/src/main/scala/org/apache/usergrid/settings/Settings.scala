@@ -17,10 +17,7 @@
 package org.apache.usergrid.settings
 
 import java.io.{PrintWriter, FileOutputStream}
-import java.nio.charset.StandardCharsets
-import java.util.{Date, Base64}
-
-
+import javax.xml.bind.DatatypeConverter
 import io.gatling.http.Predef._
 import io.gatling.http.config.HttpProtocolBuilder
 import org.apache.usergrid.datagenerators.FeederGenerator
@@ -86,7 +83,9 @@ object Settings {
   val userSeed:Int = initIntSetting(ConfigProperties.UserSeed)
   val appUser = initStrSetting(ConfigProperties.AppUser)
   val appUserPassword = initStrSetting(ConfigProperties.AppUserPassword)
-  val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
+
+  // val appUserBase64 = Base64.getEncoder.encodeToString((appUser + ":" + appUserPassword).getBytes(StandardCharsets.UTF_8))
+  val appUserBase64: String = DatatypeConverter.printBase64Binary((appUser + ":" + appUserPassword).getBytes("UTF-8"))
 
   val totalNumEntities:Int = initIntSetting(ConfigProperties.NumEntities)
   val numDevices:Int = initIntSetting(ConfigProperties.NumDevices)
@@ -152,7 +151,7 @@ object Settings {
   // UUID log file, have to go through this because creating a csv feeder with an invalid csv file fails at maven compile time
   private val dummyCsv = ConfigProperties.getDefault(ConfigProperties.UuidFilename).toString
   private val uuidFilename = initStrSetting(ConfigProperties.UuidFilename)
-  val captureUuids = uuidFilename != dummyCsv && scenarioType == ScenarioType.LoadEntities
+  val captureUuids = uuidFilename != dummyCsv && (scenarioType == ScenarioType.LoadEntities || scenarioType == ScenarioType.GetByNameSequential)
   val feedUuids = uuidFilename != dummyCsv && scenarioType == ScenarioType.UuidRandomInfinite
   val captureUuidFilename = if (captureUuids) uuidFilename else dummyCsv
   val feedUuidFilename = if (feedUuids) uuidFilename else dummyCsv
