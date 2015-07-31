@@ -17,6 +17,9 @@
 package org.apache.usergrid.rest.applications.events;
 
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +29,7 @@ import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
@@ -46,12 +50,16 @@ public class ApplicationRequestCounterIT extends AbstractRestIT {
         ApiResponse defaultApp = org().app( clientSetup.getAppName() ).get();
 
         QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "resolution", "all" ).addParam( "counter","application.requests" );
+        queryParameters.addParam( "resolution", "all" ).addParam( "counter", "application.requests" );
         Collection countersResponse = org().app( clientSetup.getAppName() ).collection( "counters" ).get( queryParameters ,true );
 
         assertNotNull( countersResponse );
-//        ArrayList counterValues = ( ArrayList ) countersResponse.getResponse().getProperties().get( "counters" );
-//        assertEquals( 1, counterValues.indexOf( 1 ));
+        ArrayList counterValues = ( ArrayList ) countersResponse.getResponse().getProperties().get( "counters" );
+        LinkedHashMap counters = ( LinkedHashMap ) counterValues.get( 0 );
+        assertEquals( "application.requests", counters.get( "name" ) );
+
+        //Since it was accessed twice above.
+        assertEquals( 2, ( ( LinkedHashMap ) ( ( ArrayList)counters.get( "values" )).get( 0 )).get( "value" ));
 
     }
 }
