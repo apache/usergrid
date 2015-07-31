@@ -58,5 +58,5 @@
 		</property>
 	</bean>
 
-	<import resource="classpath:/usergrid-rest-context.xml"/>
+	<import resource="classpath:/usergrid-services-context.xml"/>
 </beans>

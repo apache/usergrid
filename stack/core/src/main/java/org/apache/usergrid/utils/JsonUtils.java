@@ -173,7 +173,7 @@ public class JsonUtils {
                     return UUID.fromString( s );
                 }
                 catch ( IllegalArgumentException e ) {
-                    LOG.warn( "Argument to UUID.fromString({}) was invalid.", s, e );
+                    LOG.debug( "Argument to UUID.fromString({}) was invalid.", s, e );
                 }
             }
         }
