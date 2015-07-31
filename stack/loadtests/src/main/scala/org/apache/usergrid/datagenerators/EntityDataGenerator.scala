@@ -87,16 +87,24 @@ object EntityDataGenerator {
 
    /* --------------------------- */
 
-   def generateTrivialEntity(name: String = null): String = {
+  def generateTrivialEntity(name: String = null): String = {
 
-     val nameKey = if (name != null) "name" else "noname"
-     val nameVal = if (name != null) name else Utils.generateRandomInt(1,10000000).toString
+    val nameKey = if (name != null) "name" else "noname"
+    val nameVal = if (name != null) name else Utils.generateRandomInt(1,10000000).toString
 
-     val entity: Map[String, String] = Map(
-       nameKey -> nameVal
-     )
+    val entity: Map[String, String] = Map(
+      nameKey -> nameVal
+    )
 
-     new JSONObject(entity).toString()
+    new JSONObject(entity).toString()
+  }
+
+   def generateTrivialSortableEntity(name: String = null): String = {
+
+     if (name != null)
+       new JSONObject(Map("name" -> name, "sortField" -> Utils.generateRandomInt(1,10000000))).toString()
+     else
+       new JSONObject(Map("sortField" -> Utils.generateRandomInt(1,10000000))).toString()
    }
 
    def generateBasicEntity(name: String = null): String = {
@@ -127,13 +135,12 @@ object EntityDataGenerator {
    }
 
    def generateEntity(entityType: String = EntityType.Basic, entityName: String = null): String = {
-     val entity: String =
-       if (entityType == EntityType.Trivial)
-         generateTrivialEntity(entityName)
-       else // default is basic
-         generateBasicEntity(entityName)
 
-     entity
+     entityType match {
+       case EntityType.Trivial => generateTrivialEntity(entityName)
+       case EntityType.TrivialSortable => generateTrivialSortableEntity(entityName)
+       case EntityType.Basic => generateBasicEntity(entityName)
+     }
    }
 
    def generateUserEntity(userId: String = "user" + System.currentTimeMillis().toString): String = {

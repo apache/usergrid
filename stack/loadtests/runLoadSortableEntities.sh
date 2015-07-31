@@ -19,34 +19,40 @@ die() { echo "$@" 1>&2 ; exit 1; }
 #This is a script to simplify running gatling tests.  It will default several parameters, invoke the maven plugins
 #Then aggregate the results
 ####
-[ "$#" -ge 6 ] || die "At least 6 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) CONSTANT_USERS_PER_SEC, CONSTANT_USERS_DURATION(seconds) SEARCH_LIMIT"
+[ "$#" -ge 8 ] || die "At least 8 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) CONSTANT_USERS_PER_SEC, CONSTANT_USERS_DURATION(seconds) NUM_ENTITIES ENTITY_WORKER_NUM ENTITY_WORKER_COUNT [UUID_FILENAME]"
 
 URL="$1"
 RAMP_USERS="$2"
 RAMP_TIME="$3"
 CONSTANT_USERS_PER_SEC="$4"
 CONSTANT_USERS_DURATION="$5"
-SEARCH_LIMIT="$6"
+NUM_ENTITIES="$6"
+ENTITY_WORKER_NUM="$7"
+ENTITY_WORKER_COUNT="$8"
+UUID_FILENAME="$9"
 
-shift 6
+shift 9
 
 #Compile everything
 mvn compile
 
 #Set the app id to be a date epoch for uniqueness
+#APP=$(date +%s)
 ADMIN_USER=superuser
 ADMIN_PASSWORD=test
 CREATE_ORG=false
 ORG=gatling
 CREATE_APP=false
-#APP=$(date +%s)
 APP=millionentities
 COLLECTION=sortableentities
-SCENARIO_TYPE=getAllByCursor
+SANDBOX_COLLECTION=true
+SCENARIO_TYPE=loadEntities
+# don't load entities as part of setup
 LOAD_ENTITIES=false
-NUM_ENTITIES=10000
+
 SKIP_SETUP=false
-SEARCH_QUERY=order%20by%20sortField%20desc
+#SEARCH_QUERY=order%20by%20specials%20desc
+#SEARCH_LIMIT=1000
 ENTITY_TYPE=trivialSortable
 ENTITY_PREFIX=sortable
 ENTITY_SEED=1
@@ -58,7 +64,7 @@ END_MINUTES=2
 END_REQUEST_COUNT=100
 
 #Execute the test
-mvn gatling:execute -Dorg=usergrid \
+mvn gatling:execute \
 -DskipSetup=${SKIP_SETUP} \
 -DcreateOrg=${CREATE_ORG} \
 -Dorg=${ORG} \
@@ -72,8 +78,6 @@ mvn gatling:execute -Dorg=usergrid \
 -DentityType=${ENTITY_TYPE} \
 -DentityPrefix=${ENTITY_PREFIX} \
 -DentitySeed=${ENTITY_SEED} \
--DsearchQuery=${SEARCH_QUERY} \
--DsearchLimit=${SEARCH_LIMIT} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
 -DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
@@ -85,14 +89,18 @@ mvn gatling:execute -Dorg=usergrid \
 -DendConditionType=${END_CONDITION_TYPE} \
 -DendMinutes=${END_MINUTES} \
 -DendRequestCount=${END_REQUEST_COUNT} \
+-DentityWorkerCount=${ENTITY_WORKER_COUNT} \
+-DentityWorkerNum=${ENTITY_WORKER_NUM} \
+-DuuidFilename=${UUID_FILENAME} \
+-DsandboxCollection=${SANDBOX_COLLECTION} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
+
 
 
 #Now move all the reports
 #AGGREGATE_DIR="target/aggregate-$(date +%s)"
 
 #mkdir -p ${AGGREGATE_DIR}
-
 
 #copy to the format of target/aggregate(date)/(simnulationame)-simulation.log
 #find target -name "simulation.log" -exec cp {} ${AGGREGATE_DIR}/$(basename $(dirname {} ))-simulation.log  \;
