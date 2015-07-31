@@ -34,7 +34,7 @@ object Extractors {
    * Will extract the cursor from the response.  If the cursor is not present, an empty string will be set
    */
   def maybeExtractCursor(saveAsName: String) = {
-    jsonPath("$..cursor").transformOption(extract => {
+    jsonPath("$.cursor").transformOption(extract => {
       //it may or may not be present.  If it is, save it, otherwise save it as an empty string
       extract.orElse(Some(""))
     }).saveAs(saveAsName)
