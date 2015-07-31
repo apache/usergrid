@@ -15,10 +15,4 @@ are are step-by-step guide for both both external contributors and committers:
 
 Website and Documentation Contributions
 ---
-If you want to contribute to the documentation you'll find that we use a different
-system. Our website and documentation is managed in Subversion. Here's a README file
-that explains how to get the website and documentation source code and make changes:
-
-* [README.md for website](http://svn.apache.org/viewvc/incubator/usergrid/site/README.md?view=markup)
-
-* [README.md for documentation](https://github.com/apache/incubator-usergrid/tree/master/docs)
+Documentation is in the /docs directory of our Git repo, written in Markdown format and managed by the Sphinx documentation system. See the README.md there for more information.

@@ -1,8 +1,8 @@
 # Usergrid Features
 
-Edge Developer Services includes a backend-as-a-service (BaaS) solution that provides developers with access to a flexible data store and enables you to quickly integrate valuable features into your app, including social graphs, user management, data storage, push notifications, performance monitoring, and more.
+Usergrid provides developers with access to a flexible data store and enables you to quickly integrate valuable features into your app, including social graphs, user management, data storage, push notifications, performance monitoring, and more.
 
-Using Usergrid, you can set up your own cloud-based data platform in minutes instead of months – no server-side coding or back-end development needed. This allows your team to focus on developing the rich features and user experience that truly differentiate your app, rather than on the time-consuming details of implementing core back-end services and infrastructure.
+With Usergrid, developers can set up their own cloud-based data platform in minutes instead of months – no server-side coding or back-end development needed. This allows your developers to focus on developing the rich features and user experience that truly differentiate your app, rather than on the time-consuming details of implementing core back-end services and infrastructure.
 
 ## Data storage & management
 

@@ -3,12 +3,12 @@
 ## Creating Custom Data Entities
 This article describes how to create custom data entities and entity properties. Entity types correspond to the name of collection to which they are posted. For example, if you create a new custom "dog" entity, a "dogs" collection will be created if one did not already exist. If a "dogs" collection already exists, the new "dog" entity will be saved in it. All user-defined properties are indexed, and strings that contain multiple words are keyword-indexed.
 
-The methods cited in this article should be used to create custom data entities. If you are using one of the API Services BaaS SDKs, use one of the entity type-specific SDK methods to create default data entities.
+The methods cited in this article should be used to create custom data entities. If you are using one of the Usergrid SDKs, use one of the entity type-specific SDK methods to create default data entities.
 
 __Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
 
 ### Creating a custom entity
-When a new entity is created, API Services will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type. For example, creating a custom entity of type 'item' will automatically create a collection named 'items' in which all future 'item' entities will be saved.
+When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type. For example, creating a custom entity of type 'item' will automatically create a collection named 'items' in which all future 'item' entities will be saved.
 
 ### Request Syntax
 

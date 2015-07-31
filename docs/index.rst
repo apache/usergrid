@@ -113,17 +113,7 @@ Apache Usergrid Documentation
    
    orgs-and-apps/applications
    orgs-and-apps/organizations-admins
-    
-.. _sdks:
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Software Development Kits (SDKs)
-
-   sdks/ios
-   sdks/java
-   sdks/javascript
-   sdks/usage
    
 .. _rest-endpoints:
 
@@ -159,34 +149,34 @@ Apache Usergrid Documentation
    default-entities/folder               
    default-entities/notification         
    default-entities/receipt              
-          
-.. _references:
+         
+.. _sdks:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Reference and other docs
+   :caption: Client SDKs
 
-   reference/presentations
-   reference/videos
-          
+   sdks/ios
+   sdks/java
+   sdks/javascript
+   sdks/usage
+   
 .. _installation:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Installing the Usergrid stack
+   :caption: Installing the Stack
 
    installation/ug1-deploy-to-tomcat
    installation/ug1-launcher-quick-start
    installation/ug2-deploy-to-tomcat
-       
-.. _other:
+    
+.. _about:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Other (obsolete?)
+   :caption: More about Usergrid
 
-   entity-connections/relationships
-   data-queries/query-language
-   reference/contribute-code
-   sdks/usage
-   
+   reference/presos-and-videos
+   reference/contribute-code       
+       
