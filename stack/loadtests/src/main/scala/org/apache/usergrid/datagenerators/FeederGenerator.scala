@@ -19,9 +19,10 @@ package org.apache.usergrid.datagenerators
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import io.gatling.core.Predef._
-import org.apache.usergrid.helpers.Utils
+import org.apache.usergrid.helpers.{Setup, Utils}
 import org.apache.usergrid.settings.Settings
 import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 
 object FeederGenerator {
 
@@ -231,26 +232,51 @@ object FeederGenerator {
    }
  }
 
-   /*
- def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Feeder[String] =
- new Feeder[String] {
-   var counter = new AtomicInteger(seed)
+  def collectionNameFeeder: Feeder[String] = new Feeder[String] {
+    val list: List[String] = Setup.getCollectionsList
+    var counter = new AtomicInteger(0)
 
-   // runs forever -- users detect when data is done using validEntity field
-   override def hasNext: Boolean = true
+    override def hasNext: Boolean = true
 
-   override def next(): Map[String, String] = {
-     val i = counter.getAndIncrement()
-     val entityName = prefix.concat(i.toString)
-     val entity = EntityDataGenerator.generateEntity(entityType, entityName)
-     val entityUrl = Settings.baseCollectionUrl + "/" + entityName
-     val validEntity = if (i >= seed + numEntities) "no" else "yes"
+    override def next(): Map[String, String] = {
+      val i = counter.getAndIncrement()
+      val collectionName = if (i < list.length) list(i) else ""
+      val validEntity = if (i >= list.length) "no" else "yes"
 
-     Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity)
-   }
- }
+      Map("collectionName" -> collectionName, "validEntity" -> validEntity)
+    }
+  }
 
-    */
+  def collectionCsvFeeder: Feeder[String] = new Feeder[String] {
+    val csvLines = if (Settings.feedAuditUuids) Source.fromFile(Settings.feedAuditUuidFilename).getLines().toArray else Array[String]()
+    val csvLinesLen = csvLines.length
+    var counter = new AtomicInteger(0)
+
+    override def hasNext: Boolean = true
+
+    def getNextLine: String = {
+      do {
+        val i = counter.getAndIncrement()
+        if (i >= csvLinesLen) return null
+
+        val line = csvLines(i)
+        if (line != Settings.auditUuidsHeader) return line
+
+      } while (true)
+
+      null
+    }
+
+    override def next: Map[String, String] = {
+      val line = getNextLine
+      val validEntity = if (line == null) "no" else "yes"
+      val array = if (line != null) line.split(",") else null
+      val collectionName = if (line != null) array(0) else ""
+      val uuid = if (line != null) array(1) else ""
+
+      Map("collectionName" -> collectionName, "uuid" -> uuid, "validEntity" -> validEntity)
+    }
+  }
 
  def generateCustomEntityInfiniteFeeder(seed: Int = Settings.entitySeed, entityType: String = Settings.entityType, prefix: String = Settings.entityPrefix): Iterator[String] = {
    Iterator.from(seed).map(i=>EntityDataGenerator.generateEntity(entityType, prefix.concat(i.toString)))

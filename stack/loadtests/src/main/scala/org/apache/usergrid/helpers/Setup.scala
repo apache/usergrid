@@ -22,11 +22,13 @@ package org.apache.usergrid.helpers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ning.http.client.{ListenableFuture, AsyncHttpClient,Response}
+import io.gatling.jsonpath.JsonPath
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums.TokenType
 import org.apache.usergrid.settings.Settings
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.parsing.json.JSON
 
 object Setup {
   var managementToken:String = null
@@ -107,6 +109,31 @@ object Setup {
     printResponse("POST APP", statusCode, appResponse.getResponseBody)
 
     statusCode
+  }
+
+  def getCollectionsList: List[String] = {
+    val appInfoGet = client
+      .prepareGet(s"${Settings.baseAppUrl}")
+      .setHeader("Cache-Control", "no-cache")
+      .setHeader("Accept", "application/json; charset=UTF-8")
+      .setHeader("Authorization", s"Bearer $getManagementToken")
+      .build()
+
+    val getResponse = client.executeRequest(appInfoGet).get()
+    val topLevel: Map[String, Any] = JSON.parseFull(getResponse.getResponseBody).get.asInstanceOf[Map[String,Any]]
+    val entities: List[Map[String, Any]] = topLevel("entities").asInstanceOf[List[Map[String,Any]]]
+    //println(s"entities: $entities")
+    val firstEntity: Map[String, Any] = entities.head
+    //println(s"firstEntity: $firstEntity")
+    val metadata: Map[String, Any] = firstEntity("metadata").asInstanceOf[Map[String, Any]]
+    //println(s"metadata: $metadata")
+    val collections: Map[String, Any] = metadata("collections").asInstanceOf[Map[String, Any]]
+    //println(s"collections: $collections")
+
+    val collectionsList: List[String] = (collections map { case (key, value) => key }).toList
+    //println(collectionsList)
+
+    collectionsList
   }
 
   def sandboxCollection(): Integer = {

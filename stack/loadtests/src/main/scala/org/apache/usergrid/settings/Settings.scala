@@ -17,6 +17,7 @@
 package org.apache.usergrid.settings
 
 import java.io.{PrintWriter, FileOutputStream}
+import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.bind.DatatypeConverter
 import io.gatling.http.Predef._
 import io.gatling.http.config.HttpProtocolBuilder
@@ -149,12 +150,32 @@ object Settings {
   val numEntities:Int = entitiesPerWorkerFloor + extraEntity
 
   // UUID log file, have to go through this because creating a csv feeder with an invalid csv file fails at maven compile time
-  private val dummyCsv = ConfigProperties.getDefault(ConfigProperties.UuidFilename).toString
+  private val dummyTestCsv = ConfigProperties.getDefault(ConfigProperties.UuidFilename).toString
+  private val dummyAuditCsv = ConfigProperties.getDefault(ConfigProperties.AuditUuidFilename).toString
+  private val dummyAuditFailedCsv = ConfigProperties.getDefault(ConfigProperties.FailedUuidFilename).toString
+
   private val uuidFilename = initStrSetting(ConfigProperties.UuidFilename)
-  val captureUuids = uuidFilename != dummyCsv && (scenarioType == ScenarioType.LoadEntities || scenarioType == ScenarioType.GetByNameSequential)
-  val feedUuids = uuidFilename != dummyCsv && scenarioType == ScenarioType.UuidRandomInfinite
-  val captureUuidFilename = if (captureUuids) uuidFilename else dummyCsv
-  val feedUuidFilename = if (feedUuids) uuidFilename else dummyCsv
+  private val auditUuidFilename = initStrSetting(ConfigProperties.AuditUuidFilename)
+  private val failedUuidFilename = initStrSetting(ConfigProperties.FailedUuidFilename)
+
+  // feeds require valid files, even if test won't be run
+  val feedUuids = uuidFilename != dummyTestCsv && scenarioType == ScenarioType.UuidRandomInfinite
+  val feedUuidFilename = uuidFilename
+
+  val feedAuditUuids = uuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities
+  val feedAuditUuidFilename = auditUuidFilename
+
+  // also uses uuidFilename
+  val captureUuids = uuidFilename != dummyTestCsv && (scenarioType == ScenarioType.LoadEntities || scenarioType == ScenarioType.GetByNameSequential)
+  val captureUuidFilename = uuidFilename
+
+  val captureAuditUuids = (auditUuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditGetCollectionEntities) ||
+                          (failedUuidFilename != dummyAuditFailedCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities)
+  println(s"auditUuidFilename=$auditUuidFilename")
+  println(s"captureAuditUuids=$captureAuditUuids")
+  val captureAuditUuidFilename = if (scenarioType == ScenarioType.AuditVerifyCollectionEntities) failedUuidFilename else auditUuidFilename
+  println(s"captureAuditUuidFilename=$captureAuditUuidFilename")
+
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
 
   private var uuidMap: Map[Int, String] = Map()
@@ -173,6 +194,32 @@ object Settings {
       val uuidList: List[(Int, String)] = uuidMap.toList.sortBy(l => l._1)
       uuidList.foreach { l =>
         writer.println(s"${Settings.entityPrefix}${l._1},${l._2}")
+      }
+      writer.flush()
+      writer.close()
+    }
+  }
+
+
+  val auditUuidsHeader = "collection,uuid"
+
+  // key: uuid, value: collection
+  private var auditUuidMap: Map[String,String] = Map()
+  def addAuditUuid(uuid: String, collection: String): Unit = {
+    if (captureAuditUuids) auditUuidMap += (uuid -> collection)
+  }
+
+  def writeAuditUuidsToFile(uuidDesc: String): Unit = {
+    if (captureAuditUuids) {
+      println(s"Sorting and writing ${auditUuidMap.size} ${uuidDesc} UUIDs in CSV file ${captureAuditUuidFilename}")
+      val writer = {
+        val fos = new FileOutputStream(captureAuditUuidFilename)
+        new PrintWriter(fos, false)
+      }
+      writer.println(auditUuidsHeader)
+      val uuidList: List[(String, String)] = auditUuidMap.toList.sortBy(l => (l._2, l._1))
+      uuidList.foreach { l =>
+        writer.println(s"${l._2},${l._1}")
       }
       writer.flush()
       writer.close()
@@ -201,9 +248,48 @@ object Settings {
     (System.currentTimeMillis() - testStartTime) < (endMinutes.toLong*60L*1000L)
   }
 
+  private val countAuditSuccess = new AtomicInteger(0)
+  private val countAuditNotFound = new AtomicInteger(0)
+  private val countAuditBadResponse = new AtomicInteger(0)
+
+  def incAuditSuccess(): Unit = {
+    countAuditSuccess.incrementAndGet()
+  }
+
+  def incAuditNotFound(): Unit = {
+    countAuditNotFound.incrementAndGet()
+  }
+
+  def incAuditBadResponse(): Unit = {
+    countAuditBadResponse.incrementAndGet()
+  }
+
+  def printAuditResults(): Unit = {
+    if (scenarioType == ScenarioType.AuditVerifyCollectionEntities) {
+      val countSuccess = countAuditSuccess.get
+      val countNotFound = countAuditNotFound.get
+      val countBadResponse = countAuditBadResponse.get
+      val countTotal = countSuccess + countNotFound + countBadResponse
+
+      println()
+      println("-----------------------------------------------------------------------------")
+      println("AUDIT RESULTS")
+      println("-----------------------------------------------------------------------------")
+      println()
+      println(s"Successful:   ${countSuccess}")
+      println(s"Not Found:    ${countNotFound}")
+      println(s"Bad Response: ${countBadResponse}")
+      println(s"Total:        ${countTotal}")
+      println()
+      println("-----------------------------------------------------------------------------")
+      println()
+    }
+  }
+
   def printSettingsSummary(): Unit = {
     val authTypeStr = authType + (if (authType == AuthType.Token) s"($tokenType)" else "")
     val endConditionStr = if (endConditionType == EndConditionType.MinutesElapsed) s"$endMinutes minutes elapsed" else s"$endRequestCount requests"
+    println()
     println("-----------------------------------------------------------------------------")
     println("SIMULATION SETTINGS")
     println("-----------------------------------------------------------------------------")
@@ -222,6 +308,7 @@ object Settings {
     println(s"End Condition:$endConditionStr")
     println()
     println("-----------------------------------------------------------------------------")
+    println()
   }
 
   printSettingsSummary()

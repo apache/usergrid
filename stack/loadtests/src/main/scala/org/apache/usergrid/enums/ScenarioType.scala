@@ -8,9 +8,11 @@ object ScenarioType {
   val UpdateEntities = "updateEntities"
   val UuidRandomInfinite = "uuidRandomInfinite"
   val GetByNameSequential = "getByNameSequential"
+  val AuditGetCollectionEntities = "auditGetCollectionEntities"
+  val AuditVerifyCollectionEntities = "auditVerifyCollectionEntities"
 
   val Values = Seq(GetAllByCursor,NameRandomInfinite,LoadEntities,DeleteEntities,UpdateEntities,UuidRandomInfinite,
-    GetByNameSequential)
+    GetByNameSequential,AuditGetCollectionEntities,AuditVerifyCollectionEntities)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
