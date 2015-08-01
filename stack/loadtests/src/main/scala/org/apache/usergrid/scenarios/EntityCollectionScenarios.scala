@@ -48,16 +48,17 @@ object EntityCollectionScenarios {
   }
 
   def entityGetByNameUrl(entityName: String): String = {
-    val url = s"/${Settings.collection}/$entityName"
 
-    url
+    s"/${Settings.collection}/$entityName"
   }
 
   def randomEntityNameUrl(prefix: String = Settings.entityPrefix, numEntities: Int = Settings.numEntities, seed: Int = Settings.entitySeed): String = {
+
     Utils.randomEntityNameUrl(prefix, numEntities, seed, Settings.baseCollectionUrl)
   }
 
   def uuidFeeder(): RecordSeqFeederBuilder[String] = {
+
     csv(Settings.feedUuidFilename).random
   }
 

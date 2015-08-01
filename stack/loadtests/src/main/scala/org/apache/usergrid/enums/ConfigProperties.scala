@@ -51,6 +51,8 @@ object ConfigProperties {
   val EntityWorkerCount = "entityWorkerCount"
   val EntityWorkerNum = "entityWorkerNum"
   val UuidFilename = "uuidFilename"
+  val AuditUuidFilename = "auditUuidFilename"
+  val FailedUuidFilename = "failedUuidFilename"
   val SandboxCollection = "sandboxCollection"
   val PurgeUsers = "purgeUsers"
 
@@ -59,7 +61,7 @@ object ConfigProperties {
     NumDevices,Collection,RampTime,Throttle,RpsTarget,RpsRampTime,HoldDuration,PushNotifier,PushProvider,EntityPrefix,
     EntityType,EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
-    UuidFilename,SandboxCollection,PurgeUsers)
+    UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -113,7 +115,9 @@ object ConfigProperties {
         case UpdateValue => new Date().toString
         case EntityWorkerCount => 0
         case EntityWorkerNum => 0
-        case UuidFilename => "dummy.csv"
+        case UuidFilename => "dummyUuid.csv"
+        case AuditUuidFilename => "dummyAuditUuid.csv"
+        case FailedUuidFilename => "/tmp/dummy.csv"
         case SandboxCollection => false
         case PurgeUsers => 100
       }

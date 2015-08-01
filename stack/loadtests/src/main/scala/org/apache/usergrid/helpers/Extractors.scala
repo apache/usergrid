@@ -51,6 +51,13 @@ object Extractors {
   }
 
   /**
+   * Will extract the uuids from the get collection response.
+   */
+  def extractCollectionUuids(saveAsName: String) = {
+    jsonPath("$.entities[*]").ofType[Map[String,Any]].findAll.transformOption(extract => { extract.orElse(Some(Seq.empty)) }).saveAs(saveAsName)
+  }
+
+  /**
    * tries to extract the cursor from the session, if it exists, it returns true. if it's the default, returns false
    * @param nameInSession The name of the variable in the session
    * @return
