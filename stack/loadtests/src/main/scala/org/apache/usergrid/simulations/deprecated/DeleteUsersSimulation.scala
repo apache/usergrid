@@ -18,28 +18,39 @@
  *
  */
 
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
 import io.gatling.core.Predef._
+import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.helpers.Setup
-import org.apache.usergrid.scenarios.{UserScenarios}
+import org.apache.usergrid.scenarios.UserScenarios
 import org.apache.usergrid.settings.Settings
-import scala.concurrent.duration._
 
 /**
- * Classy class class.
+ * Deletes application users continually to an application.  Expects the following parameters
+ *
+ * -DmaxPossibleUsers : The maximum number of users to be making requests as fast as possible.  Think of this as conccurrent users in the system
+ * -DrampTime: The amount of time (in seconds) to allow for maxPossibleUsers to be reached.  This will add new users linearlly
+ * -Dduration: The amount of time (in seconds) to continue to perform requests up with the maxPossibleUsers
  */
-class SetupSimulation extends Simulation{
+class DeleteUsersSimulation extends Simulation {
 
   println("Begin setup")
   Setup.setupOrg()
   Setup.setupApplication()
-  Setup.setupNotifier()
   println("End Setup")
 
+
   setUp(
-    UserScenarios.createUsersWithDevicesScenario
-      .inject(splitUsers(Settings.maxPossibleUsers) into( rampUsers(10) over (10 seconds)) separatedBy (10 seconds))
-      .protocols(Settings.httpConf.acceptHeader("application/json"))
-  )
+    UserScenarios.deleteUsersInfinitely
+      .inject(
+        /**
+         * injection steps take from this forum post
+         * https://groups.google.com/forum/#!topic/gatling/JfYHaWCbA-w
+         */
+        rampUsers(Settings.rampUsers) over Settings.rampTime,
+        constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
+
+      )).protocols(Settings.httpConf.acceptHeader("application/json"))
+
 }

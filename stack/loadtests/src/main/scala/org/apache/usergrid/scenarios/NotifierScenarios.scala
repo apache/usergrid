@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.scenarios
+package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
- import org.apache.usergrid.settings.{Headers, Settings}
- import scala.concurrent.duration._
+import org.apache.usergrid.settings.{Headers, Settings}
 
 /**
  *
@@ -38,7 +37,7 @@ import io.gatling.http.Predef._
  *
  */
 object NotifierScenarios {
-  
+
   val notifier = Settings.pushNotifier
   val provider = Settings.pushProvider
   val org = Settings.org
@@ -55,14 +54,14 @@ object NotifierScenarios {
     )
 
     .exec(http("Create Notifier")
-    .post(Settings.baseAppUrl+"/notifiers")
-    .headers(Headers.jsonAuthorized)
-    .body(StringBody("{\"name\":\"" + notifier + "\",\"provider\":\"" + provider + "\"}"))
-    .check(status.in(200 to 400)))
+      .post("/notifiers")
+      .headers(Headers.authToken)
+      .body(StringBody(_ => """{ "name": """" + notifier + """", "provider": """" + provider + """"}"""))
+      .check(status.in(Range(200,400))))
 
   val checkNotifier = exec(http("Get Notifier")
-    .get(Settings.baseAppUrl+"/notifiers/"+notifier)
-    .headers(Headers.jsonAuthorized)
+    .get("/notifiers/"+notifier)
+    .headers(Headers.authToken)
     .check(status.is(200),status.saveAs("notifierStatus"))
   )
 

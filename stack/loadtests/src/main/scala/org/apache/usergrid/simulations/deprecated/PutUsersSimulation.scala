@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
 import io.gatling.core.Predef._
 import io.gatling.core.scenario.Simulation
@@ -48,8 +48,8 @@ class PutUsersSimulation extends Simulation {
          * injection steps take from this forum post
          * https://groups.google.com/forum/#!topic/gatling/JfYHaWCbA-w
          */
-        rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
-        constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
+        rampUsers(Settings.rampUsers) over Settings.rampTime,
+        constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
 
       )).protocols(Settings.httpConf.acceptHeader("application/json"))
 

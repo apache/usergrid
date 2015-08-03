@@ -18,7 +18,7 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
- import org.apache.usergrid.settings.{Settings, Headers}
+import org.apache.usergrid.settings.{Settings, Headers}
 
  /**
  * Performs organization registration
@@ -36,16 +36,16 @@ import io.gatling.http.Predef._
 object ApplicationScenarios {
 
   val createApplication = exec(http("Create Application")
-    .post(Settings.baseUrl +  "/management/organizations/"+Settings.org+"/applications")
-    .headers(Headers.jsonAuthorized)
-    .body(StringBody("{\"name\":\"" + Settings.app + "\"}"))
-    .check(status.in(200 to 204))
+    .post(_ => Settings.baseUrl + "/management/organizations/" + Settings.org + "/applications")
+    .headers(Headers.authToken)
+    .body(StringBody(_ => """ { "name": """" + Settings.app + """" } """))
+    .check(status.in(Range(200,204)))
 
     )
 
    val checkApplication = exec(http("Get Application")
      .get(Settings.baseAppUrl)
-     .headers(Headers.jsonAuthorized)
+     .headers(Headers.authToken)
      .check(status.saveAs("applicationStatus"))
    )
 

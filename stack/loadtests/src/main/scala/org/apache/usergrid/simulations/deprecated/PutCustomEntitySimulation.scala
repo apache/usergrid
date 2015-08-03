@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
 import io.gatling.core.Predef._
 import io.gatling.core.scenario.Simulation
@@ -29,7 +29,7 @@ import org.apache.usergrid.settings.Settings
  * PostCustomEntitySimulation - creates lots of custom entities
  *
  * Run this way:
- * mvn gatling:execute -DrampTime=10 -DmaxPossibleUsers=10 -Dduration=120 -Dorg=yourorgname -Dapp=sandbox -Dbaseurl=https://api.usergrid.com -DadminUser=yourusername -DadminPassword='yourpassword' -Dgatling.simulationClass=org.apache.usergrid.simulations.PostCustomEntitySimulation -DcollectionType=yourcollection
+ * mvn gatling:execute -DrampTime=10 -DmaxPossibleUsers=10 -Dduration=120 -Dorg=yourorgname -Dapp=sandbox -Dbaseurl=https://api.usergrid.com -DadminUser=yourusername -DadminPassword='yourpassword' -Dgatling.simulationClass=org.apache.usergrid.simulations.deprecated.PostCustomEntitySimulation -Dcollection=yourcollection
  *
  *
  */
@@ -45,8 +45,8 @@ class PutCustomEntitySimulation extends Simulation {
   }
 
   val numEntities:Int = Settings.numEntities
-  val collectionType = Settings.collectionType
-  println("collection type = " + collectionType)
+  val collection = Settings.collection
+  println("collection type = " + collection)
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
   val feeder = FeederGenerator.generateCustomEntityPutInfinite(0)
@@ -68,8 +68,8 @@ class PutCustomEntitySimulation extends Simulation {
 
 
   setUp(scnToRun.inject(
-    rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
-    constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
-  ).protocols(httpConf)).maxDuration(Settings.duration)
+    rampUsers(Settings.rampUsers) over Settings.rampTime,
+    constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
+  ).protocols(httpConf)).maxDuration(Settings.holdDuration)
 
 }
