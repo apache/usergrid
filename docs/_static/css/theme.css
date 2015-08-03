@@ -5352,6 +5352,10 @@ h2.usergrid-DELETE-heading {
     background-color: red;
 }
 
+.rst-footer-buttons {
+    margin-bottom: 2em;
+}
+
 /* css from petstore example */
 
 body {
