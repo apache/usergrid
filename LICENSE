@@ -280,7 +280,7 @@ Released under the MIT license.
 This product bundles Bootstrap v2.3.2 Copyright 2012 (c) Twitter, Inc
 Licensed under the MIT license.
 
-The product bundles Intro.js (MIT licensed)
+The product bundles Intro.js v0.7.1 (MIT licensed)
 Copyright (c) usabli.ca - A weekend project by Afshin Mehrabani (@afshinmeh)
 
 This product bundles jQuery v1.9.1
@@ -292,7 +292,7 @@ Licensed under MIT license.
 This product bundles jQuery Sparklines v2.1.1 (New BSD License)
 Copyright (c) Splunk Inc.
 
-This product bundles Mocha. 
+This product bundles Mocha. v1.16.2 
 All rights reserved. Licensed under MIT.
 Copyright (c) TJ Holowaychuk <tj@vision-media.ca>
 
@@ -301,12 +301,12 @@ This product bundles NewtonSoft.Json v4.5.11 under MIT license
 This product bundles NPM MD5 (BSD-3 licensed)
 Copyright (c) Paul Vorbach and Copyright (C), Jeff Mott.
 
-This product bundles NSubsttute under BSD license 
+This product bundles NSubstitute v1.6.0.0 under BSD license 
 
-This product bundles SBJson, which is available under a "3-clause BSD" license.
+This product bundles SBJson v3.1, which is available under a "3-clause BSD" license.
 For details, see sdks/ios/UGAPI/SBJson/ .
 
-This product bundles Sphinx under BSD license 
+This product bundles Sphinx v0.1.5 under BSD license 
 
 This product bundles SSKeychain, which is available under a "MIT/X11" license.
 For details, see sdks/ios/UGAPI/SSKeychain/.
@@ -321,7 +321,7 @@ This product bundles date.min.js, MIT license
 
 This product bundles jquery.ui.timepicker.min.js, MIT license
 
-This product bundles blanket_mocha.min.js, MIT license
+This product bundles blanket_mocha.min.js v1.0.4, MIT license
 
 This product bundles FontAwesome v4.1.0, SIL Open Font License 
 
