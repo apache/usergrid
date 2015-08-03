@@ -38,7 +38,8 @@ ADMIN_PASSWORD=test
 ORG=gatling
 APP=millionentities
 SCENARIO_TYPE=auditGetCollectionEntities
-SEARCH_LIMIT=1000
+SEARCH_LIMIT=177
+SEARCH_QUERY=order%20by%20name
 
 AUTH_TYPE=token
 TOKEN_TYPE=management
@@ -57,6 +58,7 @@ mvn gatling:execute \
 -DtokenType=${TOKEN_TYPE} \
 -DauditUuidFilename=${AUDIT_UUID_FILENAME} \
 -DsearchLimit=${SEARCH_LIMIT} \
+-DsearchQuery=${SEARCH_QUERY} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.AuditSimulation
 
 

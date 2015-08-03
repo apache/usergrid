@@ -43,6 +43,7 @@ object AuditScenarios {
       (if (Settings.searchLimit > 0) s"limit=${Settings.searchLimit}&" else "")
 
     // remove trailing & or ?
+    println (url.dropRight(1))
     url.dropRight(1)
   }
 

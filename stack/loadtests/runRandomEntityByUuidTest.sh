@@ -55,7 +55,7 @@ AUTH_TYPE=anonymous
 TOKEN_TYPE=management
 END_CONDITION_TYPE=minutesElapsed
 #END_CONDITION_TYPE=requestCount
-END_MINUTES=2
+END_MINUTES=10
 END_REQUEST_COUNT=100
 
 #Execute the test
