@@ -270,33 +270,33 @@ For the SSKeychain component:
 Other components:
 -----------------
 
-This product bundles angular.js
+This product bundles angular.js, specifically AngularJS v1.2.5 (c) 2010-2014
 Copyright(c) Google, Inc. Released under the MIT license.
 
 This product bundles angular-scenario.js, part of jQuery JavaScript Library
-which Includes Sizzle.js Copyright (c) jQuery Foundation, Inc. and others.
+which Includes Sizzle.js v1.10.16 Copyright (c) jQuery Foundation, Inc. and others.
 Released under the MIT license.
 
-This product bundles Bootstrap Copyright (c) Twitter, Inc
+This product bundles Bootstrap v2.3.2 Copyright 2012 (c) Twitter, Inc
 Licensed under the MIT license.
 
 The product bundles Intro.js (MIT licensed)
 Copyright (c) usabli.ca - A weekend project by Afshin Mehrabani (@afshinmeh)
 
-This product bundles jQuery
+This product bundles jQuery v1.9.1
 Licensed under MIT license.
 
-This product bundles jQuery-UI
+This product bundles jQuery-UI v1.8.9
 Licensed under MIT license.
 
-This product bundles jQuery Sparklines (New BSD License)
+This product bundles jQuery Sparklines v2.1.1 (New BSD License)
 Copyright (c) Splunk Inc.
 
 This product bundles Mocha. 
 All rights reserved. Licensed under MIT.
 Copyright (c) TJ Holowaychuk <tj@vision-media.ca>
 
-This product bundles NewtonSoft.Json under MIT license 
+This product bundles NewtonSoft.Json v4.5.11 under MIT license 
 
 This product bundles NPM MD5 (BSD-3 licensed)
 Copyright (c) Paul Vorbach and Copyright (C), Jeff Mott.
@@ -313,7 +313,7 @@ For details, see sdks/ios/UGAPI/SSKeychain/.
 
 This product bundles SSToolkit.
 Copyright (c) Sam Soffes. All rights reserved.
-These files can be located within the /sdks/ios package.
+These files can be located within the /sdfks/ios package.
 
 This product bundles Entypo, CC by SA license
 
@@ -323,5 +323,5 @@ This product bundles jquery.ui.timepicker.min.js, MIT license
 
 This product bundles blanket_mocha.min.js, MIT license
 
-This product bundles FontAwesome, SIL Open Font License 
+This product bundles FontAwesome v4.1.0, SIL Open Font License 
 
