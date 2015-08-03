@@ -46,6 +46,7 @@ module.exports = {
                 results.from.uuid + "/" +
                 relationship + "/" +
                 results.to.uuid;
+            url = urls.appendOrgCredentials(url)
             request.post({
                 url: url,
                 json: true
@@ -119,6 +120,7 @@ module.exports = {
                 results.from.uuid + "/" +
                 relationship + "/" +
                 results.to.uuid;
+            url = urls.appendOrgCredentials(url);
             request.del({
                 url: url,
                 json: true

@@ -20,29 +20,49 @@ var random = require("./random");
 var responseLib = require("./response");
 var async = require('async');
 var request = require("request");
+var random = require("./random");
+
 
 module.exports = {
+
     create: function(message, cb) {
+        var notifierName = config.notifierName + "_" + random.randomString(5);
+
         // Need to ensure at least one device exists in the devices collection
         request.post({
-            url: urls.appendOrgCredentials(urls.appUrl() + "/devices"),
+            url: urls.appendOrgCredentials(urls.appUrl() + "notifiers"),
             json: true,
             body: {
-                name: "testDevice"
+                name: notifierName,
+                provider: "noop"
             }
         }, function(e, r, body) {
-            payload = {};
-            payload[config.notifierName] = message;
+            var error = responseLib.getError(e, r);
+            if(error){
+                return cb(error)
+            }
             request.post({
-                url: urls.appendOrgCredentials(urls.appUrl() + "/devices;ql=select */notifications"),
+                url: urls.appendOrgCredentials(urls.appUrl() + "devices"),
                 json: true,
                 body: {
-                    payloads: payload
+                    name: "testDevice"
                 }
             }, function(e, r, body) {
-                var error = responseLib.getError(e, r);
-                cb(error, error ? error : body);
+                payload = {};
+                payload[notifierName] = message;
+                request.post({
+                    url: urls.appendOrgCredentials(urls.appUrl() + "devices;ql=/notifications"),
+                    json: true,
+                    body: {
+                        payloads: payload
+                    }
+                }, function(e, r, body) {
+                    var error = responseLib.getError(e, r);
+                    cb(error, error ? error : body);
+                });
             });
         });
+
+
     }
 };

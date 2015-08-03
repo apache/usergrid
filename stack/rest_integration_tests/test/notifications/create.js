@@ -27,7 +27,7 @@ module.exports = {
                 notifications.create("Hello World!", function(err, body) {
                     should(err).be.null;
                     body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(1);
-                    body.entities[0].state.should.equal('CREATED');
+                    body.entities[0].state.should.equal('FINISHED');
                     done();
                 });
             });

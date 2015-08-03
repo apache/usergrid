@@ -33,5 +33,5 @@ module.exports = {
         latitude: 51.51279,
         longitude: -0.09184
     },
-    notifierName: "apple-dev"
+    notifierName: "noop-dev"
 };
