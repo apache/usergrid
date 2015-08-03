@@ -1,9 +1,9 @@
 # Security best practices
 
-There a number of actions you should take to ensure that your app is secure before you put it into production. The following is not an exhaustive list, but offers some common best practices you should consider following to keep your app secure when using the API BaaS.
+There a number of actions you should take to ensure that your app is secure before you put it into production. The following is not an exhaustive list, but offers some common best practices you should consider following to keep your app secure when using the Usergrid.
 
 ## Never use the 'sandbox' for a production app
-By default, every new API BaaS account has an app named “sandbox” that is already created under your new organization. This app is no different than any other app that you might create, except that the Guest role has been given full permissions (that is, /** for GET, POST, PUT, and DELETE). This eliminates the need for a token when making application level calls, and can make it much easier to get your app up and running; however, it also means that any data in the sandbox application is completely unsecured.
+By default, every new Usergrid account has an app named “sandbox” that is already created under your new organization. This app is no different than any other app that you might create, except that the Guest role has been given full permissions (that is, /** for GET, POST, PUT, and DELETE). This eliminates the need for a token when making application level calls, and can make it much easier to get your app up and running; however, it also means that any data in the sandbox application is completely unsecured.
 
 As with any other app, you can secure the sandbox application by updating its roles and permissions. For more on working with permissions and roles, see [Using Permissions](using-permissions.html).
 
@@ -41,4 +41,4 @@ The client secret-client id combination should be used only in secure, server-si
 ## Treat mobile clients as untrustworthy
 For mobile access, it is recommended that you connect as an application user with configured access control policies. Mobile applications are inherently untrusted because they can be easily examined and even decompiled.
 
-Any credentials stored in a mobile app should be considered secure only to the Application User level. This means that if you don’t want the user to be able to access or delete data in your API BaaS application, you need to make sure that you don’t enable that capability through roles or permissions. Because most web applications talk to the database using some elevated level of permissions, such as root, it’s generally a good idea for mobile applications to connect with a more restricted set of permissions. For more information on restricting access through permission rules, see [Using Permissions](using-permissions.html).
+Any credentials stored in a mobile app should be considered secure only to the Application User level. This means that if you don’t want the user to be able to access or delete data in your Usergrid application, you need to make sure that you don’t enable that capability through roles or permissions. Because most web applications talk to the database using some elevated level of permissions, such as root, it’s generally a good idea for mobile applications to connect with a more restricted set of permissions. For more information on restricting access through permission rules, see [Using Permissions](using-permissions.html).

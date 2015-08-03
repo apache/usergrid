@@ -1,6 +1,6 @@
 # Authenticating users & app clients
 
-To protect your App Services application data, one of the steps you'll take is to authenticate your app's users. By ensuring that they are who they say they are, you can help ensure that your application's data is available in secure ways. After you've created permission rules that define access to your application and have associated these rules with users, you'll want to add code that authenticates your user, as described in this topic.
+To protect your Usergrid application data, one of the steps you'll take is to authenticate your app's users. By ensuring that they are who they say they are, you can help ensure that your application's data is available in secure ways. After you've created permission rules that define access to your application and have associated these rules with users, you'll want to add code that authenticates your user, as described in this topic.
 
 <div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> 
 You manage access to your application's data by creating permission rules that govern which users can do what. Users authenticated as Application User have access according to these rules. For more about managing permissions, see [Using Permissions](using-permissions.html).
@@ -8,7 +8,7 @@ You manage access to your application's data by creating permission rules that g
 
 
 ## Authentication levels
-App Services supports four levels of authentication:
+Usergrid supports four levels of authentication:
 
 * __Application user__: Grant's user access to an API Services application, based on the roles and permissions assigned to the user.
 * __Application client__: Grants full access to perform API requests against an API Services application.
@@ -20,10 +20,10 @@ Because the scope of access provided by the application client, organization cli
 For a more detailed description of available authentication levels, see [Authentication levels](user-authentication-types.html).
 
 ## Application user authentication (user login)
-Using the username and password values specified when the user entity was created, your app can connect to the App Services application endpoint to request an access token. It's also acceptable to use the user's email address in place of the username.
+Using the username and password values specified when the user entity was created, your app can connect to the Usergrid application endpoint to request an access token. It's also acceptable to use the user's email address in place of the username.
 
 ### Using the SDKs
-When a user is logged in using the Apigee iOS, JavaScript, node.JS and Android SDKs, the returned token is automatically stored in the ApigeeDataClient (iOS), DataClient (Android), or Apigee.Client (JavaScript/node.JS) class instance, and will be sent to the API with all subsequent method calls.
+When a user is logged in using the Usergrid iOS, JavaScript, node.JS and Android SDKs, the returned token is automatically stored in the UsergridDataClient (iOS), DataClient (Android), or Usergrid.Client (JavaScript/node.JS) class instance, and will be sent to the API with all subsequent method calls.
 
 #### Request syntax
 
@@ -46,7 +46,7 @@ The results include the access token needed to make subsequent API requests on b
     }
 		
 ## Application client authentication
-Using your app’s client id and client secret values, your app can connect to the App Services application endpoint to request an access token. The client ID and secret for your app can be found in 'Getting Started' section of the API Services admin portal, under 'Server App Credentials'.
+Using your app’s client id and client secret values, your app can connect to the Usergrid application endpoint to request an access token. The client ID and secret for your app can be found in 'Getting Started' section of the API Services admin portal, under 'Server App Credentials'.
 
 <div class="admonition warning"> <p class="first admonition-title">WARNING</p> <p class="last"> 
 Warning: You should never authenticate this way from a client-side app such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. See "safe mobile access" in [Authenticating API requests](authenticating-api-requests.html) for additional considerations in keeping access to your app and its data secure.
@@ -73,7 +73,7 @@ The results include the access token needed to make subsequent API requests on b
     }
 		
 ## Admin user authentication
-If you do require admin user access, your app can connect to the App Services management endpoint to request an access token. Your app supplies the username and password of an admin user in the request.
+If you do require admin user access, your app can connect to the Usergrid management endpoint to request an access token. Your app supplies the username and password of an admin user in the request.
 
 <div class="admonition warning"> <p class="first admonition-title">WARNING</p> <p class="last"> 
 Warning: Authenticating as an admin user grants full access to one or more organizations and all of the applications contained in those organizations. Due to this, be cautious when implementing this type of authentication in client-side code. Instead, consider implementing admin user access in server-side code only. See "safe mobile access" in [Authenticating API requests](authenticating-api-requests.html) for additional considerations in keeping access to your app and its data secure.
@@ -100,7 +100,7 @@ The results include the access token needed to make subsequent API requests on b
     }		    
 		
 ## Organization client authentication
-If you do require organization level access, your app can connect to the App Services management endpoint to request an access token. Access to an organization requires the client id and client secret credentials. The client ID and secret for your organization can be found on the 'Org Administration' page of the API Services admin console under 'Organization API Credentials'.
+If you do require organization level access, your app can connect to the Usergrid management endpoint to request an access token. Access to an organization requires the client id and client secret credentials. The client ID and secret for your organization can be found on the 'Org Administration' page of the API Services admin console under 'Organization API Credentials'.
 
 <div class="admonition warning"> <p class="first admonition-title">WARNING</p> <p class="last"> 
 Warning: You should never authenticate this way from a client-side app such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. See "safe mobile access" in [Authenticating API requests](authenticating-api-requests.html for additional considerations in keeping access to your app and its data secure.

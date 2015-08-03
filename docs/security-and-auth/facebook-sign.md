@@ -1,14 +1,14 @@
 # Facebook sign in
 
-You can authenticate your App Services requests by logging into Facebook. To access App Services resources, you need to provide an access token with each request (unless you use the sandbox app). You can get an access token by connecting to an appropriate web service endpoint and providing the correct client credentials — this is further described in Authenticating users and application clients. However, you can also obtain an access token by logging into Facebook.
+You can authenticate your Usergrid requests by logging into Facebook. To access Usergrid resources, you need to provide an access token with each request (unless you use the sandbox app). You can get an access token by connecting to an appropriate web service endpoint and providing the correct client credentials — this is further described in Authenticating users and application clients. However, you can also obtain an access token by logging into Facebook.
 
-To enable authentication to App Services through Facebook, do the following in your app:
+To enable authentication to Usergrid through Facebook, do the following in your app:
 
 1. Make a login call to the Facebook API (do this using the Facebook SDK or API). If the login succeeds, a Facebook access token is returned.
-2. Send the Facebook access token to App Services. If the Facebook access token is valid and the user does not already exist in App Services, App Services provisions a new App Services user. It also returns an App Services access token, which you can use for subsequent App Services API calls. Behind the scenes, App Services uses the Facebook access token to retrieve the user's profile information from Facebook.
+2. Send the Facebook access token to Usergrid. If the Facebook access token is valid and the user does not already exist in Usergrid, Usergrid provisions a new Usergrid user. It also returns an Usergrid access token, which you can use for subsequent Usergrid API calls. Behind the scenes, Usergrid uses the Facebook access token to retrieve the user's profile information from Facebook.
 3. If the Facebook access token is invalid, Facebook returns an OAuth authentication error, and the login does not succeed.
 
-The request to authenticate to App Services using a Facebook access token is:
+The request to authenticate to Usergrid using a Facebook access token is:
 
     GET https://api.usergrid.com/{my_org}/{my_app}/auth/facebook?fb_access_token={fb_access_token}
     
@@ -21,7 +21,7 @@ where:
 ## Facebook login example
 The Facebook technical guides for login present detailed information on how to add Facebook login to your app. Instructions are provided for JavaScript, iOS, and Android.
 
-In brief, here are the steps for JavaScript. You can see these steps implemented in the Facebook login example packaged with the JavaScript SDK for App Services (which you can download in ZIP format or tar.gz format). The Facebook login example is in the /examples/facebook directory of the extracted download. The code example snippets shown below are taken from the Facebook login example.
+In brief, here are the steps for JavaScript. You can see these steps implemented in the Facebook login example packaged with the JavaScript SDK for Usergrid (which you can download in ZIP format or tar.gz format). The Facebook login example is in the /examples/facebook directory of the extracted download. The code example snippets shown below are taken from the Facebook login example.
 
 ### Step 1: Create a Facebook app
 Create a new app on the Facebook App Dashboard. Enter your app's basic information. Once created, note the app ID shown at the top of the dashboard page.
@@ -118,11 +118,11 @@ Here is how ``FB.login()`` is implemented in the Facebook login example:
         })
       }
  
-The ``client.loginFacebook()`` function is provided by the App Services JavaScript SDK. It uses the Facebook auth token to obtain an App Services auth token. If the Facebook access token is valid and the user does not already exist in App Services, the function creates a user entity for the user. It also uses the Facebook access token to retrieve the user's profile information from Facebook.
+The ``client.loginFacebook()`` function is provided by the Usergrid JavaScript SDK. It uses the Facebook auth token to obtain an Usergrid auth token. If the Facebook access token is valid and the user does not already exist in Usergrid, the function creates a user entity for the user. It also uses the Facebook access token to retrieve the user's profile information from Facebook.
 
 Here is what the ``client.loginFacebook()`` function looks like:
 
-    Apigee.Client.prototype.loginFacebook = function (facebookToken, callback) {
+    Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
       var self = this;
       var options = {
         method:'GET',
@@ -136,7 +136,7 @@ Here is what the ``client.loginFacebook()`` function looks like:
         if (err && self.logging) {
           console.log('error trying to log user in');
         } else {
-          user = new Apigee.Entity('users', data.user);
+          user = new Usergrid.Entity('users', data.user);
           self.setToken(data.access_token);
         }
         if (typeof(callback) === 'function') {
@@ -145,11 +145,11 @@ Here is what the ``client.loginFacebook()`` function looks like:
       });
     }
 
-Notice that the function also returns an App Services access token, which you can use for subsequent App Services API calls.
+Notice that the function also returns an Usergrid access token, which you can use for subsequent Usergrid API calls.
 
-Remember to create a client for your app, which is the main entry point to the JavaScript SDK for App Services. You need to do this before you can use the SDK. Here’s the code to create a client:
+Remember to create a client for your app, which is the main entry point to the JavaScript SDK for Usergrid. You need to do this before you can use the SDK. Here’s the code to create a client:
 
-    var client = new Apigee.Client({
+    var client = new Usergrid.Client({
         orgName:'yourorgname',
         appName:'yourappname',
         logging: true, //optional - turn on logging, off by default
