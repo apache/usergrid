@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.settings
+package org.apache.usergrid.settings
 
- import org.apache.usergrid.helpers.Setup
+import org.apache.usergrid.enums.AuthType
 
  /**
  *
@@ -26,7 +26,7 @@ object Headers {
   /**
    * Headers for anonymous posts
    */
-  val jsonAnonymous = Map(
+  val authAnonymous = Map(
     "Cache-Control" -> """no-cache""",
     "Content-Type" -> """application/json; charset=UTF-8"""
   )
@@ -34,14 +34,29 @@ object Headers {
   /**
    * Headers for authorized users with token and json content type
    */
-  val jsonAuthorized = Map(
+  val authToken = Map(
     "Cache-Control" -> """no-cache""",
     "Content-Type" -> """application/json; charset=UTF-8""",
     "Authorization" -> "Bearer ${authToken}"
   )
 
+  /**
+  * Headers for basic auth
+  */
+  val authBasic = Map(
+    "Cache-Control" -> """no-cache""",
+    "Content-Type" -> """application/json; charset=UTF-8""",
+    "Authorization" -> ("Basic " + Settings.appUserBase64)
+  )
 
-
+  /**
+  * Header selector
+  */
+  def auth(authType:String): Map[String, String] = {
+    if (authType == AuthType.Basic) authBasic
+    else if (authType == AuthType.Token) authToken
+    else authAnonymous
+  }
 
 
 }

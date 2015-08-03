@@ -1,5 +1,3 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<!--
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,23 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
--->
-<configuration>
+package org.apache.usergrid.simulations.deprecated
 
-	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
-			<immediateFlush>false</immediateFlush>
-		</encoder>
-	</appender>
+import io.gatling.core.Predef._
+import org.apache.usergrid.helpers.Setup
+import org.apache.usergrid.scenarios._
+import org.apache.usergrid.settings.Settings
 
-	<!-- Uncomment for logging ALL HTTP request and responses -->
-	 	<!-- <logger name="io.gatling.http.ahc.AsyncHandlerActor" level="TRACE" /> -->
-	<!-- Uncomment for logging ONLY FAILED HTTP request and responses -->
-	 	<logger name="io.gatling.http.ahc.AsyncHandlerActor" level="DEBUG" />
+class PushNotificationTargetUserSimulation extends Simulation {
 
-	<root level="WARN">
-		<appender-ref ref="CONSOLE" />
-	</root>
 
-</configuration>
+  before{
+    if (!Settings.skipSetup) {
+      Setup.setupOrg()
+      Setup.setupApplication()
+      Setup.setupNotifier()
+      Setup.setupUsers()
+    } else {
+      println("Skipping setup")
+    }
+  }
+  setUp(
+    NotificationScenarios.createScenario
+      .inject(
+        rampUsers(Settings.rampUsers) over Settings.rampTime,
+        constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration)
+      .protocols( Settings.httpConf.acceptHeader("application/json"))
+  )
+
+}

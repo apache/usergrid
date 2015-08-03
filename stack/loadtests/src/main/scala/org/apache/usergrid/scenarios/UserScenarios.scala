@@ -21,8 +21,9 @@ import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import io.gatling.http.request.StringBody
 import org.apache.usergrid.datagenerators.FeederGenerator
-import org.apache.usergrid.settings.{Headers, Settings, Utils}
+import org.apache.usergrid.settings.{Headers, Settings}
 import org.apache.usergrid.helpers.Extractors._
+import org.apache.usergrid.helpers.Utils
 
 
 object UserScenarios {
@@ -46,7 +47,7 @@ object UserScenarios {
    val getRandomUser = exec(
      http("GET user")
        .get("/users/user" + Utils.generateRandomInt(1, Settings.numEntities))
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.is(200))
    )
 
@@ -54,7 +55,7 @@ object UserScenarios {
    val getUserByUsername = exec(
      http("GET user")
        .get("/users/${username}")
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.saveAs(SessionVarUserStatus), jsonPath("$..entities[0]").exists, jsonPath("$..entities[0].uuid").exists, jsonPath("$..entities[0].uuid").saveAs(SessionVarUserId))
    )
 
@@ -67,7 +68,7 @@ object UserScenarios {
      exec(
        http("POST geolocated Users")
          .post("/users")
-         .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+         .body(StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
            "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
            "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
            "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
@@ -85,24 +86,24 @@ object UserScenarios {
        exec(postUser)
      }
 
-  
+
    val putUser = exec(
      http("PUT geolocated Users")
        .put("/users/${username}")
-       .headers(Headers.jsonAuthorized)
-       .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+       .headers(Headers.authToken)
+       .body(StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
         "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
         "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
         "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
        .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs(SessionVarUserId))
 
        )
-      
+
 
    val deleteUser = exec(
      http("DELETE geolocated Users")
        .delete("/users/${username}")
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.in(Seq(200,404)))
    )
 
@@ -118,7 +119,7 @@ object UserScenarios {
    val getUsersWithoutCursor = exec(
      http("GET user")
        .get("/users")
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.is(200), maybeExtractEntities(SessionVarUsers), maybeExtractCursor(SessionVarCursor))
    )
 
@@ -129,7 +130,7 @@ object UserScenarios {
    val getUsersWithCursor = exec(
      http("GET user")
        .get("/users?cursor=${" + SessionVarCursor + "}")
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.is(200), maybeExtractEntities(SessionVarUsers), maybeExtractCursor(SessionVarCursor))
    ) /**
      * Debugging block
@@ -146,7 +147,7 @@ object UserScenarios {
    val deleteUserByUsername = exec(
      http("DELETE user")
        .delete("/users/${username}")
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs(SessionVarUserId))
    )
 
@@ -155,7 +156,7 @@ object UserScenarios {
     * Logs in as the user, then creates 2 devices if they do not exist
     */
    val createUsersWithDevicesScenario = scenario("Create Users")
-     .feed(Settings.getInfiniteUserFeeder())
+     .feed(Settings.getInfiniteUserFeeder)
      .exec(TokenScenarios.getManagementToken)
      .exec(UserScenarios.postUserIfNotExists)
      .exec(TokenScenarios.getUserToken)
@@ -169,28 +170,28 @@ object UserScenarios {
     * Posts a new user every time
     */
    val postUsersInfinitely =  scenario("Post Users")
-        .feed(Settings.getInfiniteUserFeeder())
+        .feed(Settings.getInfiniteUserFeeder)
         .exec(postUser)
 
 
    /**
     * Puts a new user every time
     */
-   val putUsersInfinitely =  scenario("Put Users").exec(injectStaticTokenToSession)
-     .feed(Settings.getInfiniteUserFeeder())
+   val putUsersInfinitely =  scenario("Put Users").exec(injectManagementTokenIntoSession)
+     .feed(Settings.getInfiniteUserFeeder)
      .exec(putUser)
 
    /**
     * Deletes user every time
     */
-   val deleteUsersInfinitely =  scenario("Delete Users").exec(injectStaticTokenToSession)
-     .feed(Settings.getInfiniteUserFeeder())
+   val deleteUsersInfinitely =  scenario("Delete Users").exec(injectManagementTokenIntoSession)
+     .feed(Settings.getInfiniteUserFeeder)
      .exec(deleteUser)
 
    /**
     * Get the users a page at a time until exhausted
     */
-   val getUserPagesToEnd = scenario("Get User Pages").exec(injectStaticTokenToSession)
+   val getUserPagesToEnd = scenario("Get User Pages").exec(injectManagementTokenIntoSession)
      //get users without a cursor
      .exec(getUsersWithoutCursor)
      //as long as we have a cursor, keep getting results
@@ -200,8 +201,8 @@ object UserScenarios {
      sessionFunction
    })
 
-  val getUsersByUsername = scenario("Get User By Username").exec(injectStaticTokenToSession)
-    .feed(Settings.getInfiniteUserFeeder())
+  val getUsersByUsername = scenario("Get User By Username").exec(injectManagementTokenIntoSession)
+    .feed(Settings.getInfiniteUserFeeder)
          //get users without a cursor
          .exec(getUserByUsername)
 

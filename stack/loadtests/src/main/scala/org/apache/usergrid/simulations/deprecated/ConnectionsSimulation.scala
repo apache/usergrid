@@ -18,18 +18,16 @@
  *
  */
 
-package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations.deprecated
 
 import io.gatling.core.Predef._
 import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.helpers.Setup
-import org.apache.usergrid.scenarios.{ConnectionScenarios, NotificationScenarios}
+import org.apache.usergrid.scenarios.ConnectionScenarios
 import org.apache.usergrid.settings.Settings
+
 import scala.concurrent.duration._
 
-/**
- * Classy class class.
- */
 class ConnectionsSimulation extends Simulation{
 
   if(!Settings.skipSetup) {
@@ -45,8 +43,8 @@ class ConnectionsSimulation extends Simulation{
 
   setUp(
     ConnectionScenarios.createScenario
-      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
-      .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
+      .inject(constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration) // wait for 15 seconds so create org can finish, need to figure out coordination
+      .throttle(reachRps(Settings.throttle) in Settings.rampTime.seconds)
       .protocols( Settings.httpConf.acceptHeader("application/json"))
   )
 
