@@ -3,7 +3,7 @@
 Under certain circumstances, you may need to explicitly revoke one or more tokens associated with a user entity, such as when a user logs out of your app. This is accomplished by making a PUT request to the /revoketoken and /revoketokens endpoints.
 
 ## Revoking tokens (user logout)
-If a user has been logged in using the Apigee iOS, Android, JavaScript or node.JS SDKs, the returned token is automatically stored in the ApigeeDataClient (iOS), DataClient (Android), Apigee.Client (JavaScript), Usergrid.Client (node.JS) class instance. Calling the logout method of the SDK will destroy the token on the server, as well as in the client object.
+If a user has been logged in using the Usergrid iOS, Android, JavaScript or node.JS SDKs, the returned token is automatically stored in the UsergridDataClient (iOS), DataClient (Android), Usergrid.Client (JavaScript), Usergrid.Client (node.JS) class instance. Calling the logout method of the SDK will destroy the token on the server, as well as in the client object.
 
 ### Request syntax
 
