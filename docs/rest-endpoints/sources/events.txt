@@ -1,1 +1,0 @@
-End-Point	Method	Content-type	Description	Detail/{org_id}/{app_id}/events	POST	application/json	Create an event	Detail

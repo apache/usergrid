@@ -118,37 +118,10 @@ Apache Usergrid Documentation
 .. _rest-endpoints:
 
 .. toctree::
-   :maxdepth: 2
-   :caption: REST End-Points
+   :maxdepth: 0
+   :caption: API Reference
 
-   rest-endpoints/access-token
-   rest-endpoints/activities
-   rest-endpoints/admin-users
-   rest-endpoints/collections
-   rest-endpoints/events
-   rest-endpoints/groups
-   rest-endpoints/organization
-   rest-endpoints/roles
-   rest-endpoints/users
-
-.. _default-entities:
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Default Entities
-
-   default-entities/activity             
-   default-entities/asset                
-   default-entities/event                
-   default-entities/group                
-   default-entities/notifier             
-   default-entities/role                 
-   default-entities/user
-   default-entities/application          
-   default-entities/device               
-   default-entities/folder               
-   default-entities/notification         
-   default-entities/receipt              
+   rest-endpoints/api-docs            
          
 .. _sdks:
 
