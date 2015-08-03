@@ -101,7 +101,9 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Counters and Events
   
-   counters-and-events/tbd
+   counters-and-events/events-and-counters
+   counters-and-events/creating-and-incrementing-counters
+   counters-and-events/retrieving-counters
    
 .. _organization-and-application-management:
 
