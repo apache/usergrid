@@ -237,47 +237,47 @@ paths:
             $ref: Error 
   /management/orgs:
     post:
-      summary: "Creating an orgnization."
-      description: "Create an orgnization through a form post."
+      summary: "Creating an organization."
+      description: "Create an organization through a form post."
       parameters:
         - name: CreateOrg
           in: body
-          description: "A set of orgnization properties supplied through a form."
+          description: "A set of organization properties supplied through a form."
           required: true
           schema:
             $ref: CreateOrg
       tags:
-        - Orgnization
+        - Organization
       responses:
         "200":
-          description: "An array of created Orgnization."
+          description: "An array of created Organization."
           schema:
-            $ref: Orgnization
+            $ref: Organization
         default:
           description: "Unexpected error."
           schema:
             $ref: Error 
   /management/orgs/{orgId}:
     get:
-      summary: "Getting an orgnization."
-      description: "Retrieve an orgnization given a specified UUId or username."
+      summary: "Getting an organization."
+      description: "Retrieve an organization given a specified UUID or username."
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
-        - Orgnization
+        - Organization
       responses:
         "200":
-          description: "An array of created Orgnization."
+          description: "An array of created Organization."
           schema:
-            $ref: Orgnization
+            $ref: Organization
         default:
           description: "Unexpected error."
           schema:
             $ref: Error 
   /management/orgs/{orgId}/activate:
     get:
-      summary: "Activating an orgnization."
-      description: "Activate an orgnization from a link provIded in an email notification."
+      summary: "Activating an organization."
+      description: "Activate an organization from a link provIded in an email notification."
       parameters:
         - $ref: "#/parameters/orgId"
         - name: token
@@ -303,8 +303,8 @@ paths:
             $ref: Error   
   /management/orgs/{orgId}/reactivate:    
     get:
-      summary: "Reactivating an orgnization"
-      description: "Reactivate an expired orgnization."
+      summary: "Reactivating an organization"
+      description: "Reactivate an expired organization."
       parameters:   
         - $ref: "#/parameters/orgId"
       tags:
@@ -320,8 +320,8 @@ paths:
             $ref: Error 
   /management/orgs/{orgId}/credentials:
     post:
-      summary: "Generating orgnization client credentials."
-      description: "Generate whole new credentials for an orgnization client."
+      summary: "Generating organization client credentials."
+      description: "Generate whole new credentials for an organization client."
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
@@ -336,8 +336,8 @@ paths:
           schema:
             $ref: Error 
     get:
-      summary: "Retrieving orgnization client credentials."
-      description: "Retrieve the credentials for an orgnization client."
+      summary: "Retrieving organization client credentials."
+      description: "Retrieve the credentials for an organization client."
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
@@ -353,15 +353,15 @@ paths:
             $ref: Error 
   /management/orgs/{orgId}/feed:
     get:
-      summary: "Getting an orgnization's activity feed."
-      description: "Retrieve an orgnization's activity feed."
+      summary: "Getting an organization's activity feed."
+      description: "Retrieve an organization's activity feed."
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
         - ActivityFeed
       responses:
         "200":
-          description: "An array of the orgnization's ActivityFeed."
+          description: "An array of the organization's ActivityFeed."
           schema:
             $ref: ActivityFeed
         default:
@@ -370,13 +370,13 @@ paths:
             $ref: Error   
   /management/orgs/{orgId}/apps:
     post:
-      summary: "Creating an orgnization application."
-      description: "Create an application for an orgnization through a form post."
+      summary: "Creating an organization application."
+      description: "Create an application for an organization through a form post."
       parameters:   
         - $ref: "#/parameters/orgId"
         - name: CreateApp
           in: body
-          description: "A set of orgnization properties supplied through a form."
+          description: "A set of organization properties supplied through a form."
           required: true
           schema:
             $ref: CreateApp   
@@ -393,8 +393,8 @@ paths:
             $ref: Error 
   /management/orgs/{orgId}/apps/{appId}:
     delete:
-      summary: "Removing an application from the orgnization."
-      description: "Remove an application from an orgnization through providing both Id of application and organization."
+      summary: "Removing an application from the organization."
+      description: "Remove an application from an organization through providing both Id of application and organization."
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId"
@@ -412,7 +412,7 @@ paths:
   /management/orgs/{orgId}/apps/{appId}/credentials:
     post:
       summary: "Generating application credentials."
-      description: "Generate the client Id and client secret credentials for an application in an orgnization."
+      description: "Generate the client Id and client secret credentials for an application in an organization."
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId"
@@ -429,7 +429,7 @@ paths:
             $ref: Error
     get:
       summary: "Getting application credentials."
-      description: "Retrieve the client Id and client secret credentials for an application in an orgnization."
+      description: "Retrieve the client Id and client secret credentials for an application in an organization."
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId"
@@ -446,8 +446,8 @@ paths:
             $ref: Error
   /management/orgs/{orgId}/apps:
     get:
-      summary: "Getting the applications in an orgnization."
-      description: "Retrieve the applications in an orgnization through providing both Id of application and organization."
+      summary: "Getting the applications in an organization."
+      description: "Retrieve the applications in an organization through providing both Id of application and organization."
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
@@ -463,8 +463,8 @@ paths:
             $ref: Error 
   /management/orgs/{orgId}/users/{userId}:
     put:
-      summary: "Adding an admin user to an orgnization."
-      description: "Add an existing admin user to an orgnization."
+      summary: "Adding an admin user to an organization."
+      description: "Add an existing admin user to an organization."
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/userId-2"     
@@ -481,8 +481,8 @@ paths:
             $ref: Error
   /management/orgs/{orgId}/users:
     get:
-      summary: "Getting the admin users in an orgnization."
-      description: "Retrieve details about the admin users in an orgnization."
+      summary: "Getting the admin users in an organization."
+      description: "Retrieve details about the admin users in an organization."
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
@@ -498,8 +498,8 @@ paths:
             $ref: Error
   /management/orgs/{orgId}/users/{userId}:
     delete:
-      summary: "Removing an admin user from an orgnization."
-      description: "Remove an admin user from an orgnization through providing both Id of application and organization."
+      summary: "Removing an admin user from an organization."
+      description: "Remove an admin user from an organization through providing both Id of application and organization."
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/userId-2" 
@@ -744,7 +744,7 @@ paths:
   /{orgId}/{appId}/events:
     post:
       summary: "Create an event."
-      description: "Create an event through providing both Id of orgnization and application."
+      description: "Create an event through providing both Id of organization and application."
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId"  
@@ -768,7 +768,7 @@ paths:
   /{orgId}/{appId}/groups:
     post:
       summary: "Create a new group."
-      description: "Create a new group through providing both Id of orgnization and application."
+      description: "Create a new group through providing both Id of organization and application."
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId"  
@@ -1155,7 +1155,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/userID-2" 
+        - $ref: "#/parameters/userId-2" 
       tags:
         - User
       responses:
@@ -1173,7 +1173,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/userID-3" 
+        - $ref: "#/parameters/userId-3" 
       tags:
         - User
       responses:
@@ -1191,7 +1191,7 @@ paths:
       parameters:    
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/userID-3" 
+        - $ref: "#/parameters/userId-3" 
       tags:
         - User
       responses:
@@ -1210,7 +1210,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/userID-3"      
+        - $ref: "#/parameters/userId-3"      
         - name: relation
           in: path
           description:  "The relation between user and collections."
@@ -1239,7 +1239,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/userID-3"         
+        - $ref: "#/parameters/userId-3"         
       tags:
         - ActivityFeed
       responses:
@@ -1261,7 +1261,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/deviceId"
         - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotificaiton" 
+        - $ref: "#/parameters/scheduleNotification" 
         - $ref: "#/parameters/setExpiration"
       tags:
         - Notification
@@ -1282,7 +1282,7 @@ paths:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotificaiton" 
+        - $ref: "#/parameters/scheduleNotification" 
         - $ref: "#/parameters/setExpiration"
       tags:
         - Notification
@@ -1304,7 +1304,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/userId-3" 
         - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotificaiton" 
+        - $ref: "#/parameters/scheduleNotification" 
         - $ref: "#/parameters/setExpiration"
       tags:
         - Notification
@@ -1330,7 +1330,7 @@ paths:
           required: true
           type: string
         - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotificaiton" 
+        - $ref: "#/parameters/scheduleNotification" 
         - $ref: "#/parameters/setExpiration"
       tags:
         - Notification
@@ -1351,7 +1351,7 @@ paths:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotificaiton" 
+        - $ref: "#/parameters/scheduleNotification" 
         - $ref: "#/parameters/setExpiration"
         - name: queryStatement
           in: query
@@ -1558,7 +1558,7 @@ parameters:
   orgId:
     name: orgId
     in: path
-    description: "One of the orgnization's identification which includes name or uuid."
+    description: "One of the organization's identification which includes name or uuid."
     required: true
     type: string 
   groupId:
@@ -1687,22 +1687,24 @@ definitions:
         $ref: Metadata   
       completeMsg:
         $ref: Action
-#  ScheduleNotification:
-#    required:
-#      - timestamp
-#    properties:
-#      timestamp:
-#        type: number
-#        description: "UTC timestamp in milliseconds of when schedule notifications."
-#        format: int64
-#  SetExpiration:
-#    required:
-#      - timestamp
-#    properties:
-#      timestamp:
-#        type: number
-#        description: "UTC timestamp in milliseconds of when set expirations."
-#        format: int64
+  ScheduleNotification:
+    # TODO should be a long and not a string
+    required:
+      - timestamp
+    properties:
+      timestamp:
+        type: string
+        description: "UTC timestamp in milliseconds of when schedule notifications."
+        #format: int64
+  SetExpiration:
+    # TODO should be a long and not a string
+    required:
+      - timestamp
+    properties:
+      timestamp:
+        type: string 
+        description: "UTC timestamp in milliseconds of when set expirations."
+        #format: int64
   Notification:
     required:
       - payloads
@@ -1797,9 +1799,9 @@ definitions:
       parameters:
         type: string
         description:  "The parameters of the permission."
-      orgnization:
+      organization:
         type: string
-        description:  "The orgnization of the permission."
+        description:  "The organization of the permission."
       permissiondata:
           $ref: AddPermission
   AddPermission:
@@ -1833,9 +1835,9 @@ definitions:
       parameters:
         type: string
         description:  "The parameters of the event."
-      orgnization:
+      organization:
         type: string
-        description:  "The title of the orgnization."
+        description:  "The title of the organization."
       completeMsg:
         $ref: Action    
       path:
@@ -1868,18 +1870,19 @@ definitions:
       parameters:
         type: string
         description:  "The parameters of the event."
-      orgnization:
+      organization:
         type: string
-        description:  "The title of the orgnization."
+        description:  "The title of the organization."
       completeMsg:
         $ref: Action
-#  CreateEvent:
-#    required:
-#      - timestamp
-#    properties:
-#      timestamp:
-#        type: number
-#        format : int32
+  CreateEvent:
+    # TODO should be a number and not a string
+    required:
+      - timestamp
+    properties:
+      timestamp:
+        type: string
+#       format : int32
   Group:
     properties:
       uuid:
@@ -1943,9 +1946,9 @@ definitions:
         description:  "The url of the entity."
       entityproperty:
         $ref: Entity
-      orgnization:
+      organization:
         type: string
-        description:  "The name of the orgnization."
+        description:  "The name of the organization."
       applicationName:
         type: string
         description:  "The name of the application."
@@ -1976,7 +1979,7 @@ definitions:
         description:  "The secret of the client."
       completeMsg:
         $ref: Action
-  Orgnization:
+  Organization:
     properties:
       applicationId:
         type: string
@@ -2010,10 +2013,10 @@ definitions:
         description:  "The HTML display of the email of the owner."
       orgname:
         type: string
-        description:  "The name of the orgnization."
+        description:  "The name of the organization."
       orguuId: 
         type: string
-        description:  "The UUID of the orgnization."
+        description:  "The UUID of the organization."
       applicationdata:
         $ref: AppData
       completeMsg:
@@ -2033,13 +2036,13 @@ definitions:
         $ref: Action
   CreateOrg:
     required:
-      - orgnization
+      - organization
       - username
       - name
       - email
       - password
     properties:
-      orgnization:
+      organization:
         type: string
       username:
         type: string
@@ -2163,9 +2166,9 @@ definitions:
       htmldisplayEmail:
         type: string
         description:  "The HTML display of the email of a user."
-      orgnization:
+      organization:
         type: string
-        description:  "The orgnization of the user."
+        description:  "The organization of the user."
       picture:
         type: string
         description:  "The uri of the user's picture."
