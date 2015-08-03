@@ -116,6 +116,7 @@ object Settings {
   val overallEntitySeed = initIntSetting(ConfigProperties.EntitySeed)
   val searchLimit:Int = initIntSetting(ConfigProperties.SearchLimit)
   val searchQuery = initStrSetting(ConfigProperties.SearchQuery)
+  println(s"searchQuery=${searchQuery}")
   val endConditionType = initStrSetting(ConfigProperties.EndConditionType)
   val endMinutes:Int = initIntSetting(ConfigProperties.EndMinutes)
   val endRequestCount:Int = initIntSetting(ConfigProperties.EndRequestCount)
@@ -153,27 +154,76 @@ object Settings {
   private val dummyTestCsv = ConfigProperties.getDefault(ConfigProperties.UuidFilename).toString
   private val dummyAuditCsv = ConfigProperties.getDefault(ConfigProperties.AuditUuidFilename).toString
   private val dummyAuditFailedCsv = ConfigProperties.getDefault(ConfigProperties.FailedUuidFilename).toString
+  private val dummyCaptureCsv = "/tmp/notused.csv"
 
   private val uuidFilename = initStrSetting(ConfigProperties.UuidFilename)
   private val auditUuidFilename = initStrSetting(ConfigProperties.AuditUuidFilename)
   private val failedUuidFilename = initStrSetting(ConfigProperties.FailedUuidFilename)
 
   // feeds require valid files, even if test won't be run
-  val feedUuids = uuidFilename != dummyTestCsv && scenarioType == ScenarioType.UuidRandomInfinite
-  val feedUuidFilename = uuidFilename
+  val feedUuids = scenarioType match {
+    case ScenarioType.UuidRandomInfinite => true
+    case _ => false
+  }
+  val feedUuidFilename = scenarioType match {
+    case ScenarioType.UuidRandomInfinite => uuidFilename
+    case _ => dummyTestCsv
+  }
+  if (feedUuids && feedUuidFilename == dummyTestCsv) {
+    println("Scenario requires CSV file containing UUIDs")
+    System.exit(1)
+  }
 
-  val feedAuditUuids = uuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities
-  val feedAuditUuidFilename = auditUuidFilename
+  val feedAuditUuids = scenarioType match {
+    case ScenarioType.AuditVerifyCollectionEntities => true
+    case _ => false
+  }
+  val feedAuditUuidFilename = scenarioType match {
+    case ScenarioType.AuditVerifyCollectionEntities => auditUuidFilename
+    case _ => dummyAuditCsv
+  }
+  if (feedAuditUuids && feedAuditUuidFilename == dummyAuditCsv) {
+    println("Scenario requires CSV file containing audit UUIDs")
+    System.exit(1)
+  }
 
-  // also uses uuidFilename
-  val captureUuids = uuidFilename != dummyTestCsv && (scenarioType == ScenarioType.LoadEntities || scenarioType == ScenarioType.GetByNameSequential)
-  val captureUuidFilename = uuidFilename
+  val captureUuidFilename = scenarioType match {
+    case ScenarioType.LoadEntities => uuidFilename
+    case ScenarioType.GetByNameSequential => uuidFilename
+    case _ => dummyCaptureCsv   // won't write to this file
+  }
+  val captureUuids = if (captureUuidFilename == dummyCaptureCsv) false
+    else scenarioType match {
+      case ScenarioType.LoadEntities => true
+      case ScenarioType.GetByNameSequential => true
+      case _ => false
+    }
 
-  val captureAuditUuids = (auditUuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditGetCollectionEntities) ||
-                          (failedUuidFilename != dummyAuditFailedCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities)
-  println(s"auditUuidFilename=$auditUuidFilename")
+  val captureAuditUuidFilename = scenarioType match {
+    case ScenarioType.AuditGetCollectionEntities => auditUuidFilename
+    case ScenarioType.AuditVerifyCollectionEntities => failedUuidFilename
+    case _ => dummyCaptureCsv   // won't write to this file
+  }
+  if (scenarioType == ScenarioType.AuditGetCollectionEntities && captureAuditUuidFilename == dummyCaptureCsv) {
+    println("Scenario requires CSV file location to capture audit UUIDs")
+    System.exit(1)
+  }
+  val captureAuditUuids = (scenarioType == ScenarioType.AuditGetCollectionEntities) ||
+                          (scenarioType == ScenarioType.AuditVerifyCollectionEntities && captureAuditUuidFilename != dummyAuditFailedCsv)
+
+  //val feedUuids = uuidFilename != dummyTestCsv && scenarioType == ScenarioType.UuidRandomInfinite
+  //val feedAuditUuids = uuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities
+  // val captureUuids = uuidFilename != dummyTestCsv && (scenarioType == ScenarioType.LoadEntities || scenarioType == ScenarioType.GetByNameSequential)
+
+  //val captureAuditUuids = (auditUuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditGetCollectionEntities) ||
+  //                        (failedUuidFilename != dummyAuditFailedCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities)
+  println(s"feedUuids=$feedUuids")
+  println(s"feedUuidFilename=$feedUuidFilename")
+  println(s"feedAuditUuids=$feedAuditUuids")
+  println(s"feedAuditUuidFilename=$feedAuditUuidFilename")
+  println(s"captureUuids=$captureUuids")
+  println(s"captureUuidFilename=$captureUuidFilename")
   println(s"captureAuditUuids=$captureAuditUuids")
-  val captureAuditUuidFilename = if (scenarioType == ScenarioType.AuditVerifyCollectionEntities) failedUuidFilename else auditUuidFilename
   println(s"captureAuditUuidFilename=$captureAuditUuidFilename")
 
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
