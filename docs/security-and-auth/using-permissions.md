@@ -1,9 +1,9 @@
 # Using permissions
 
-Permissions allow you to define user access to perform GET, POST, PUT, or DELETE operations on specific resources. When the user submits a request via your app code to the API BaaS API, the user’s permissions are checked against the resource paths that the user is trying to access. The request succeeds only if access to the resource is allowed by the permission rules you specify.
+Permissions allow you to define user access to perform GET, POST, PUT, or DELETE operations on specific resources. When the user submits a request via your app code to the Usergrid API, the user’s permissions are checked against the resource paths that the user is trying to access. The request succeeds only if access to the resource is allowed by the permission rules you specify.
 
 ## Permissions syntax
-In API BaaS, permissions are represented in the following format:
+In Usergrid, permissions are represented in the following format:
 
     <operations>:<resource_path>
     
