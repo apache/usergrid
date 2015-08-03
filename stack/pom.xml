@@ -1553,6 +1553,11 @@
                     <exclude>loadtests/loadtest_setup.sh</exclude>
 		    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
 
+                    <!-- gatling loadtest data files -->
+                    <exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/datafiles/**.txt</exclude>
+                    <exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/**.txt</exclude>
+                    <exclude>loadtests/src/test/resources/**.csv</exclude>
+
                     <!-- other -->
                     <exclude>**/catalina_base/**</exclude>
                     <exclude>**/m2/**</exclude>

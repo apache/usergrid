@@ -52,12 +52,14 @@ object AuditScenarios {
       .get(collectionGetUrl(false))
       .headers(Headers.authToken)
       .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids), maybeExtractCursor(SessionVarCursor)))
-      .foreach("${" + SessionVarCollectionUuids + "}", "singleUuid") {
+      .foreach("${" + SessionVarCollectionUuids + "}", "singleResult") {
         exec(session => {
-          val uuidObj = session("singleUuid").as[Map[String,Any]]
-          val uuid = uuidObj("uuid").asInstanceOf[String]
+          val resultObj = session("singleResult").as[Map[String,Any]]
+          val uuid = resultObj("uuid").asInstanceOf[String]
+          val entityName = resultObj("name").asInstanceOf[String]
+          val modified = resultObj("modified").asInstanceOf[Long]
           val collectionName = session(SessionVarCollectionName).as[String]
-          Settings.addAuditUuid(uuid, collectionName)
+          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
           session
         })
       }
@@ -67,12 +69,14 @@ object AuditScenarios {
       .get(collectionGetUrl(true))
       .headers(Headers.authToken)
       .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids), maybeExtractCursor(SessionVarCursor)))
-      .foreach("${" + SessionVarCollectionUuids + "}", "singleUuid") {
+      .foreach("${" + SessionVarCollectionUuids + "}", "singleResult") {
         exec(session => {
-          val uuidObj = session("singleUuid").as[Map[String,Any]]
-          val uuid = uuidObj("uuid").asInstanceOf[String]
+          val resultObj = session("singleResult").as[Map[String,Any]]
+          val uuid = resultObj("uuid").asInstanceOf[String]
+          val entityName = resultObj("name").asInstanceOf[String]
+          val modified = resultObj("modified").asInstanceOf[Long]
           val collectionName = session(SessionVarCollectionName).as[String]
-          Settings.addAuditUuid(uuid, collectionName)
+          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
           session
         })
       }
@@ -102,19 +106,21 @@ object AuditScenarios {
         .exec(session => {
           val count = session("count").as[String].toInt
           val uuid = session("uuid").as[String]
+          val entityName = session("name").as[String]
+          val modified = session("modified").as[Long]
           val collectionName = session(SessionVarCollectionName).as[String]
 
           // save items not found
           if (count < 1) {
-            Settings.addAuditUuid(uuid, collectionName)
+            Settings.addAuditUuid(uuid, collectionName, entityName, modified)
             Settings.incAuditNotFound()
-            println(s"NOT FOUND: $collectionName.$uuid")
+            println(s"NOT FOUND: $collectionName.$entityName $uuid")
           } else if (count > 1) {
-            Settings.addAuditUuid(uuid, collectionName)
+            Settings.addAuditUuid(uuid, collectionName, entityName, modified)
             Settings.incAuditBadResponse()
-            println(s"INVALID RESPONSE (count=$count): $collectionName.$uuid")
+            println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName $uuid")
           } else {
-            // println(s"FOUND: $collectionName.$uuid")
+            // println(s"FOUND: $collectionName.$entityName $uuid")
             Settings.incAuditSuccess()
           }
 
