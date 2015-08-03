@@ -38,8 +38,9 @@ ADMIN_PASSWORD=test
 ORG=gatling
 APP=millionentities
 SCENARIO_TYPE=auditGetCollectionEntities
-SEARCH_LIMIT=177
-SEARCH_QUERY=order%20by%20name
+SEARCH_LIMIT=1000
+#SEARCH_QUERY=order%20by%20name
+SEARCH_QUERY=
 
 AUTH_TYPE=token
 TOKEN_TYPE=management

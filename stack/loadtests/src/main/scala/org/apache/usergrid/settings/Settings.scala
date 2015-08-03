@@ -230,7 +230,11 @@ object Settings {
 
   private var uuidMap: Map[Int, String] = Map()
   def addUuid(num: Int, uuid: String): Unit = {
-    if (captureUuids) uuidMap += (num -> uuid)
+    if (captureUuids) {
+      uuidMap.synchronized {
+        uuidMap += (num -> uuid)
+      }
+    }
     // println(s"UUID: ${name},${uuid}")
   }
 
