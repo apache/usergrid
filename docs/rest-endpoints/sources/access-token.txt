@@ -1,1 +1,0 @@
-End-Point	Method	Content-type	Description	Detail/management/token	POST	application/json	Obtain an access token (access type = organization)	Detail/{org_id}/{app_id}/token	POST	application/json	Obtain an access token (access type = application)	Detail/{org_id}/{app_id}/token	POST	application/json	Obtain an access token (access type = application user)	Detail
