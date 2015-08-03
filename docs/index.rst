@@ -61,7 +61,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Push Notifications
   
-   push-notifications/users-devices
+   push-notifications/tbd.md
    
 .. _security-and-authentication:
 
@@ -69,7 +69,15 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Security and Authentication
   
-   security-and-auth/roles-and-permissions
+   security-and-auth/app-security
+   security-and-auth/using-permissions
+   security-and-auth/authenticating-users-and-application-clients
+   security-and-auth/user-authentication-types
+   security-and-auth/changing-token-time-live-ttl
+   security-and-auth/authenticating-api-requests
+   security-and-auth/revoking-tokens-logout
+   security-and-auth/facebook-sign
+   security-and-auth/securing-your-app
    
 .. _user-management-and-social-graph:
 
@@ -77,8 +85,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: User Management and Social Graph
   
-   user-management/activity
-   user-management/groups
+   user-management/tbd
    
 .. _geolocation:
 
@@ -86,7 +93,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Geo-location
    
-   geolocation/geolocation
+   geolocation/tbd
    
 .. _asset-and-file-management:
 
@@ -94,8 +101,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Assets and Files
   
-   asset-and-files/assets
-   asset-and-files/file-storage-configuration
+   asset-and-files/tbd
    
 .. _counters-and-events:
 
@@ -103,7 +109,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Counters and Events
   
-   counters-and-events/events-and-counters
+   counters-and-events/tbd
    
 .. _organization-and-application-management:
 
@@ -111,9 +117,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Organizations and Applications
    
-   orgs-and-apps/applications
-   orgs-and-apps/organizations-admins
-
+   orgs-and-apps/tbd
    
 .. _rest-endpoints:
 
@@ -129,10 +133,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Client SDKs
 
-   sdks/ios
-   sdks/java
-   sdks/javascript
-   sdks/usage
+   sdks/tbd
    
 .. _installation:
 
