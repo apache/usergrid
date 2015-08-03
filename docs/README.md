@@ -43,6 +43,27 @@ A note about tables: simple tables are easy and you can find examples (e.g. conn
 but for tables with multiple lines in each cell, you'll probably want to use a raw HTML table,
 and there are plenty of examples of that around too.
 
-### The REST documentation 
+### The REST API documentation 
 
-TBD
+The REST API documentation in ``rest-endpoints/api-docs.md`` is generated from a Swagger file in the 
+directory ``src/main/resources``, so DO NOT edit that file directly.
+
+If you need to update the REST API docs, you should edit the usergrid-swagger.yaml file and then
+ re-generate the file. 
+
+If you need to change the formatting of the REST API docs, then you will need to edit the Mustache
+templates in ``src/main/resource`` and you may need to edit the Groovy script that does the 
+generation: ``src/main/groovy/ApiDocGenerator``.
+ 
+You will need:
+* Groovy 2.x
+* [Mustache.java](https://github.com/spullara/mustache.java) 
+
+Unfortunately, you will have to Git Clone Mustatche.java before you can run the generation script.
+
+This is the command to run the generation:
+
+	groovy src/main/groovy/ApiDocGenerator.groovy
+	
+The script will update the file ``rest-endpoints/api-docs.md`` and when you are happy with your
+update you should commit and push that file with Git.
