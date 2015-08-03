@@ -55,14 +55,6 @@ Apache Usergrid Documentation
    entity-connections/retrieving-entities
    entity-connections/disconnecting-entities
    
-.. _push-notifications:
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Push Notifications
-  
-   push-notifications/tbd.md
-   
 .. _security-and-authentication:
 
 .. toctree::
@@ -93,7 +85,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Geo-location
    
-   geolocation/tbd
+   geolocation/geolocation
    
 .. _asset-and-file-management:
 
@@ -118,7 +110,15 @@ Apache Usergrid Documentation
    :caption: Organizations and Applications
    
    orgs-and-apps/tbd
-   
+  
+.. _push-notifications:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Push Notifications
+  
+   push-notifications/tbd.md
+      
 .. _rest-endpoints:
 
 .. toctree::
