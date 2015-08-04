@@ -1,0 +1,29 @@
+
+
+.panel-default > .panel-heading.GET{
+    background-color: rgba(54, 180, 255, 0.42);
+    background-image: none;
+}
+.panel-default > .panel-heading.POST {
+    background-color: rgba(0, 128, 0, 0.38);
+    background-image: none;
+}
+.panel-default > .panel-heading.PUT{
+    background-color: rgba(255, 165, 0, 0.41);
+    background-image: none;
+}
+.panel-default > .panel-heading.DELETE {
+    background-color: rgba(255, 0, 0, 0.29);
+    background-image: none;
+}
+
+.panel-heading a.collapse-button:after {
+    font-family:'Glyphicons Halflings';
+    content:"\e114";
+    float: right;
+    color: grey;
+}
+.panel-heading a.collapse-button.collapsed:after {
+    content:"\e080";
+}
+
