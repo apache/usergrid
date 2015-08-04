@@ -48,8 +48,6 @@ import java.util.List;
 @Singleton
 public class InMemoryAsyncEventService implements AsyncEventService {
 
-    private static final Logger log = LoggerFactory.getLogger( InMemoryAsyncEventService.class );
-
     private final EventBuilder eventBuilder;
     private final RxTaskScheduler rxTaskScheduler;
     private final boolean resolveSynchronously;
