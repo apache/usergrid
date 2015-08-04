@@ -1,7 +1,5 @@
 
-                        THIS IS A DRAFT 
-
-	  TOP LEVEL PROJET RESOLUTION FOR APACHE USERGRID
+	  TOP LEVEL PROJECT RESOLUTION FOR APACHE USERGRID
 
 
        WHEREAS, the Board of Directors deems it to be in the best
