@@ -19,20 +19,31 @@
  */
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 
 /**
  * event to init app index
  */
-@JsonDeserialize(as = AsyncEvent.class)
-public class InitializeApplicationIndexEvent extends AsyncEvent {
-    public InitializeApplicationIndexEvent() {
-        super(EventType.APPLICATION_INDEX);
-    }
-    public InitializeApplicationIndexEvent(final IndexLocationStrategy indexLocationStrategy) {
-        super(EventType.APPLICATION_INDEX, indexLocationStrategy);
 
+public class InitializeApplicationIndexEvent extends AsyncEvent {
+
+
+    @JsonProperty
+    protected IndexLocationStrategy indexLocationStrategy;
+
+    public InitializeApplicationIndexEvent(final IndexLocationStrategy indexLocationStrategy) {
+        this.indexLocationStrategy = indexLocationStrategy;
+
+    }
+
+
+    public IndexLocationStrategy getIndexLocationStrategy() {
+        return indexLocationStrategy;
     }
 }
