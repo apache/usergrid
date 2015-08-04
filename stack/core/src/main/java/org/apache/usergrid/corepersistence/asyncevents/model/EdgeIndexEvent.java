@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -28,13 +30,19 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.io.Serializable;
 
-/**
- * Created by Jeff West on 5/25/15.
- */
-@JsonDeserialize(as = AsyncEvent.class)
+
 public final class EdgeIndexEvent
-    extends AsyncEvent
-    implements Serializable {
+    extends AsyncEvent {
+
+
+    @JsonProperty
+    protected ApplicationScope applicationScope;
+
+    @JsonProperty
+    protected Id entityId;
+
+    @JsonProperty
+    protected Edge edge;
 
     /**
      * Needed by jackson
@@ -43,6 +51,23 @@ public final class EdgeIndexEvent
     }
 
     public EdgeIndexEvent(ApplicationScope applicationScope, Id entityId, Edge edge) {
-        super(EventType.EDGE_INDEX, applicationScope, entityId, edge);
+        this.applicationScope = applicationScope;
+        this.entityId = entityId;
+        this.edge = edge;
+    }
+
+
+    public ApplicationScope getApplicationScope() {
+        return applicationScope;
+    }
+
+
+    public Edge getEdge() {
+        return edge;
+    }
+
+
+    public Id getEntityId() {
+        return entityId;
     }
 }
