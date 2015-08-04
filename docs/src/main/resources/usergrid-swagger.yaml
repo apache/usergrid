@@ -381,7 +381,7 @@ paths:
           schema:
             $ref: CreateApp   
       tags:
-        - Action
+        - Admin
       responses:
         "200":
           description: "An array of complete messages."
