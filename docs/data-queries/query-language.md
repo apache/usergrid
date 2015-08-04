@@ -281,7 +281,7 @@ determine the user's position and then use this data to further enhance
 the user's experience. For example, apps can capture the exact location
 where a picture was taken or a message was created.
 
-App services support geolocation on any entity, both built in (e.g.,
+Usergrid support geolocation on any entity, both built in (e.g.,
 users, groups) and user defined.
 
 To add a location to any entity, include the following member to the

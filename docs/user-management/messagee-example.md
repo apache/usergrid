@@ -1,23 +1,25 @@
 # App Example - Messagee
 
-Messagee is a simple Twitter-style messaging application that leverages the extensive functionality of App services. This section describes some of the features of Messagee.
+Messagee is a simple Twitter-style messaging application that leverages the extensive functionality of Usergrid. This section describes some of the features of Messagee.
 
 There are three client versions of Messagee:
 
-* An iOS client
-* An Android client
-* An HTML5 client
+* [An iOS client version](https://github.com/apigee/usergrid-sample-ios-messagee)
+* [An Android client version](https://github.com/apigee/usergrid-sample-android-messagee)
+* [An HTML5 client](https://github.com/apigee/usergrid-sample-html5-messagee)
 
-The sections below describe how to create a new app, enter some test users, and run the app. You also learn how to use the App services admin portal, a user interface that streamlines data and application management in the App services system. The portal is also a reference application that shows how to incorporate App services APIs with JavaScript. For a more detailed discussion of the portal's functionality, see Admin portal.
+The sections below describe how to create a new app, enter some test users, and run the app. You also learn how to use the Usergrid admin portal, a user interface that streamlines data and application management in the Usergrid system. The portal is also a reference application that shows how to incorporate Usergrid APIs with JavaScript. For a more detailed discussion of the portal's functionality, see Admin portal.
 
-## Creating a user account in App services
-Go to [https://apigee.com/appservices/#!/] to access the login screen for the App services admin portal. If you are new to App services, sign up for an account to access the portal, specifying an organization (e.g., the name of your company or project team) and a username and password that you can use to authenticate. Because App services are designed for use by development teams, the same username can be associated with one or more organizations.
+## Creating a user account in Usergrid
+
+Go to the Usergrid portal and login. If you are new to Usergrid, sign up for an account, specifying an organization (e.g., the name of your company or project team) and a username and password that you can use to authenticate. Because Usergrid are designed for use by development teams, the same username can be associated with one or more organizations.
 
 If you create a new account, you receive a confirmation email that contains a URL that you must click to activate the account. After this, simply log in to the portal with your username and password.
 
 .. image:: login.png
 
 ## Creating an app and users
+
 When you have logged in, you need to create a new application.
 
 .. image:: portal1.png
@@ -58,7 +60,7 @@ To continue with the example, follow the instructions for a client app (iOS clie
 
 ## iOS client
 
-Messagee is available as an iPhone app that uses App Services and RestKit. The source for the iOS version of Messagee is available in the /samples/messagee directory of the App Services iOS SDK
+Messagee is available as an iPhone app that uses Usergrid and RestKit. The source for the iOS version of Messagee is available in the /samples/messagee directory of the Usergrid iOS SDK
 
 Here are the steps to run the Messagee app on iOS:
 
@@ -119,16 +121,17 @@ Because test-user-1 follows test-user-2, you should see the message sent by test
 .. image:: iOS10seeusermsg.jpg
 
 ## iOS SDK
-If you want to write iOS applications that connect to App services, [download the App Services iOS SDK].
 
-__Note__: The Messagee iOS application uses RestKit, a popular REST framework for iOS, to communicate with App services. Because App services use a REST API, you can use any REST framework to talk with the service. However, the official App services iOS SDK provides a more convenient communication mechanism that you should use unless you're already using RestKit or some other framework in your project.
+If you want to write iOS applications that connect to Usergrid, [download the Usergrid iOS SDK](https://github.com/apache/incubator-usergrid/tree/master/sdks/ios).
+
+__Note__: The Messagee iOS application uses RestKit, a popular REST framework for iOS, to communicate with Usergrid. Because Usergrid use a REST API, you can use any REST framework to talk with the service. However, the official Usergrid iOS SDK provides a more convenient communication mechanism that you should use unless you're already using RestKit or some other framework in your project.
 
 ## Android client and SDK
-Messagee is available as a sample Android app that acts as a App services client. The source for the Android version is packaged with the App Services Android SDK in the /samples/messagee directory.
+Messagee is available as a sample Android app that acts as a Usergrid client. The source for the Android version is packaged with the Usergrid Android SDK in the /samples/messagee directory.
 
-[Download the App Services Android SDK]
+[Download the Usergrid Android SDK](https://github.com/apache/incubator-usergrid/tree/master/sdks/android)
 
 ## Javascript/HTML5 client and SDK
-Messagee is also available as a sample HTML5 app that behaves in much the same way as the two previous examples. The source for the HTML5 version is packaged with the App Services Javascript/HTML5 SDK in the /samples/messagee directory.
+Messagee is also available as a sample HTML5 app that behaves in much the same way as the two previous examples. The source for the HTML5 version is packaged with the Usergrid Javascript/HTML5 SDK in the /samples/messagee directory.
 
-[Download the App Services Javascript/HTML5 SDK]
+[Download the Usergrid Javascript/HTML5 SDK](https://github.com/apache/incubator-usergrid/tree/master/sdks/html5-javascript)
