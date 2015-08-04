@@ -17,24 +17,35 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.corepersistence;
-
-import org.safehaus.guicyfig.Default;
-import org.safehaus.guicyfig.FigSingleton;
-import org.safehaus.guicyfig.GuicyFig;
-import org.safehaus.guicyfig.Key;
+package org.apache.usergrid.persistence.model.field;
 
 /**
- * em fig
+ * Classy class class.
  */
-@FigSingleton
-public interface EntityManagerFig extends GuicyFig {
+public class SerializedObjectField extends AbstractField<String> {
+    Class classinfo;
 
-    @Key( "usergrid.entitymanager_poll_timeout_ms" )
-    @Default( "5000" )
-    int pollForRecordsTimeout();
+    public SerializedObjectField(String name, String value, Class classinfo) {
+        super( name, value );
+        this.classinfo = classinfo;
+    }
 
-    @Key( "usergrid.entityManager_sleep_ms" )
-    @Default( "100" )
-    int sleep();
+    public SerializedObjectField() {
+
+    }
+
+    @Override
+    public String getValue() {
+        return value;
+    }
+
+    public Class getClassinfo() {
+        return classinfo;
+    }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+        return FieldTypeName.SERIALIZED_OBJECT;
+    }
 }

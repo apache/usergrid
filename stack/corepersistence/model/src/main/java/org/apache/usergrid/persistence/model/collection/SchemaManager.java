@@ -17,24 +17,19 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.corepersistence;
-
-import org.safehaus.guicyfig.Default;
-import org.safehaus.guicyfig.FigSingleton;
-import org.safehaus.guicyfig.GuicyFig;
-import org.safehaus.guicyfig.Key;
+package org.apache.usergrid.persistence.model.collection;
 
 /**
- * em fig
+ * interface encapsulates schema structure
  */
-@FigSingleton
-public interface EntityManagerFig extends GuicyFig {
+public interface SchemaManager {
+    boolean isPropertyMutable(String entityType, String propertyName);
 
-    @Key( "usergrid.entitymanager_poll_timeout_ms" )
-    @Default( "5000" )
-    int pollForRecordsTimeout();
+    boolean isPropertyUnique(String entityType, String propertyName);
 
-    @Key( "usergrid.entityManager_sleep_ms" )
-    @Default( "100" )
-    int sleep();
+    boolean isPropertyIndexed(String entityType, String propertyName);
+
+    boolean isPropertyFulltextIndexed(String entityType, String propertyName);
+
+    boolean isPropertyTimestamp(String entityType, String propertyName);
 }

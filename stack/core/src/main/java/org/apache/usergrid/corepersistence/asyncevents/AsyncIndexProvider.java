@@ -44,7 +44,6 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
     private final QueueManagerFactory queueManagerFactory;
     private final MetricsFactory metricsFactory;
-    private final IndexService indexService;
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EventBuilder eventBuilder;
@@ -58,7 +57,6 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     public AsyncIndexProvider(final IndexProcessorFig indexProcessorFig,
                               final QueueManagerFactory queueManagerFactory,
                               final MetricsFactory metricsFactory,
-                              final IndexService indexService,
                               final RxTaskScheduler rxTaskScheduler,
                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
                               final EventBuilder eventBuilder,
@@ -68,7 +66,6 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
         this.metricsFactory = metricsFactory;
-        this.indexService = indexService;
         this.rxTaskScheduler = rxTaskScheduler;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.eventBuilder = eventBuilder;
@@ -97,11 +94,11 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
             case LOCAL:
                 return new InMemoryAsyncEventService(eventBuilder, rxTaskScheduler, indexProcessorFig.resolveSynchronously());
             case SQS:
-                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory );
+                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory,
+                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, rxTaskScheduler );
             case SNS:
-                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory );
+                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory,
+                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, rxTaskScheduler );
             default:
                 throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
         }

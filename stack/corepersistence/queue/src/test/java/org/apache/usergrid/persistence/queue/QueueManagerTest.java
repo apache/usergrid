@@ -53,7 +53,7 @@ public class QueueManagerTest {
     protected QueueManagerFactory qmf;
 
     /**
-     * Mark tests as ignored if now AWS creds are present
+     * Mark tests as ignored if no AWS creds are present
      */
     @Rule
     public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();

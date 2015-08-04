@@ -32,6 +32,7 @@ import org.apache.usergrid.rest.test.resource.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import org.junit.Rule;
@@ -40,6 +41,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -126,7 +128,7 @@ public class AbstractRestIT extends JerseyTest {
 
     //myorg/myapp
     protected ApplicationsResource app(){
-        return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
+        return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app( clientSetup.getAppName() );
 
     }
 
@@ -134,7 +136,7 @@ public class AbstractRestIT extends JerseyTest {
         return clientSetup.restClient.management();
     }
 
-    protected NamedResource pathResource(String path){ return clientSetup.restClient.pathResource(path);}
+    protected NamedResource pathResource(String path){ return clientSetup.restClient.pathResource( path );}
 
     protected String getOrgAppPath(String additionalPath){
         return clientSetup.orgName + "/" + clientSetup.appName + "/" + (additionalPath !=null ? additionalPath : "");
@@ -146,7 +148,7 @@ public class AbstractRestIT extends JerseyTest {
 
 
     protected Token getAppUserToken(String username, String password){
-        return this.app().token().post(new Token(username,password));
+        return this.app().token().post( new Token( username, password ) );
     }
 
     public void refreshIndex() {
@@ -181,4 +183,32 @@ public class AbstractRestIT extends JerseyTest {
                 new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null,false
         );
     }
+    public Map<String, Object> getRemoteTestProperties() {
+        return clientSetup.getRestClient().testPropertiesResource().get().getProperties();
+    }
+
+    /**
+     * Sets a management service property locally and remotely.
+     */
+    public void setTestProperty(String key, Object value) {
+        // set the value remotely (in the Usergrid instance running in Tomcat classloader)
+        Entity props = new Entity();
+        props.put(key, value);
+        clientSetup.getRestClient().testPropertiesResource().post(props);
+
+    }
+
+    public void setTestProperties(Map<String, Object> props) {
+        Entity properties = new Entity();
+        // set the values locally (in the Usergrid instance here in the JUnit classloader
+        for (String key : props.keySet()) {
+            properties.put(key, props.get(key));
+
+        }
+
+        // set the values remotely (in the Usergrid instance running in Tomcat classloader)
+        clientSetup.getRestClient().testPropertiesResource().post(properties);
+    }
+
+
 }

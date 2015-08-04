@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.core.rx;
 
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
@@ -28,6 +29,7 @@ import org.safehaus.guicyfig.Key;
 /**
  *
  */
+@FigSingleton
 public interface RxSchedulerFig extends GuicyFig {
 
 

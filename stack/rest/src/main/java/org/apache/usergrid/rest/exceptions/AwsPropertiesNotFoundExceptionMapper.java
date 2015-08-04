@@ -14,24 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module.exports = {
-    serverUrl: "http://localhost:8080/",
-    orgName: "test-organization", //must
-    appName: "test-app", //must pre create app
-    numberOfUsers: 5,
-    numberOfEntities: 20,
-    org: {
-        clientId: "",
-        clientSecret: ""
-    },
-    usersCollection: "users",
-    entitiesTestCollection: "cats",
-    genericTestCollection1: "dogs",
-    genericTestCollection2: "horses",
-    consumableTestCollection: "food",
-    location: { // London
-        latitude: 51.51279,
-        longitude: -0.09184
-    },
-    notifierName: "noop-dev"
-};
+package org.apache.usergrid.rest.exceptions;
+
+
+import javax.ws.rs.core.Response;
+
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
+
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+
+/**
+ * Maps the AwsPropertiesNotFoundExceptionMapper to a 500 error due to having a legit response
+ * but there is an error in the properties file.
+ */
+public class AwsPropertiesNotFoundExceptionMapper extends AbstractExceptionMapper<AwsPropertiesNotFoundException> {
+    @Override
+    public Response toResponse( AwsPropertiesNotFoundException e ) {
+        return toResponse( INTERNAL_SERVER_ERROR, e );
+    }
+}

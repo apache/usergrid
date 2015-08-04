@@ -73,7 +73,7 @@ public class EventBuilderImpl implements EventBuilder {
 
 
     @Override
-    public Observable<IndexOperationMessage> queueEntityIndexUpdate( final ApplicationScope applicationScope,
+    public Observable<IndexOperationMessage> buildEntityIndexUpdate( final ApplicationScope applicationScope,
                                                                      final Entity entity ) {
 
         //process the entity immediately
@@ -89,7 +89,7 @@ public class EventBuilderImpl implements EventBuilder {
 
 
     @Override
-    public Observable<IndexOperationMessage> queueNewEdge( final ApplicationScope applicationScope, final Entity entity,
+    public Observable<IndexOperationMessage> buildNewEdge( final ApplicationScope applicationScope, final Entity entity,
                                                            final Edge newEdge ) {
 
         log.debug( "Indexing  in app scope {} with entity {} and new edge {}",
@@ -103,8 +103,8 @@ public class EventBuilderImpl implements EventBuilder {
 
 
     @Override
-    public Observable<IndexOperationMessage> queueDeleteEdge( final ApplicationScope applicationScope,
-                                                              final Edge edge ) {
+    public Observable<IndexOperationMessage> buildDeleteEdge( final ApplicationScope applicationScope, final Edge
+        edge ) {
         log.debug( "Deleting in app scope {} with edge {} }", applicationScope, edge );
 
         final Observable<IndexOperationMessage> edgeObservable =
@@ -121,7 +121,7 @@ public class EventBuilderImpl implements EventBuilder {
     //it'll need to be pushed up higher so we can do the marking that isn't async or does it not matter?
 
     @Override
-    public EntityDeleteResults queueEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
+    public EntityDeleteResults buildEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
         log.debug( "Deleting entity id from index in app scope {} with entityId {} }", applicationScope, entityId );
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
@@ -163,7 +163,7 @@ public class EventBuilderImpl implements EventBuilder {
 
 
     @Override
-    public Observable<IndexOperationMessage> index( final EntityIndexOperation entityIndexOperation ) {
+    public Observable<IndexOperationMessage> buildEntityIndex( final EntityIndexOperation entityIndexOperation ) {
 
         final ApplicationScope applicationScope = entityIndexOperation.getApplicationScope();
 
@@ -174,8 +174,15 @@ public class EventBuilderImpl implements EventBuilder {
             entity -> {
                 final Field<Long> modified = entity.getField( Schema.PROPERTY_MODIFIED );
 
+                /**
+                 * We don't have a modified field, so we can't check, pass it through
+                 */
+                if ( modified == null ) {
+                    return true;
+                }
+
                 //only re-index if it has been updated and been updated after our timestamp
-                return modified != null && modified.getValue() >= entityIndexOperation.getUpdatedSince();
+                return  modified.getValue() >= entityIndexOperation.getUpdatedSince();
             } )
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );
