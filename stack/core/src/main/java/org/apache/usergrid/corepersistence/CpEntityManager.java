@@ -454,12 +454,6 @@ public class CpEntityManager implements EntityManager {
 
         Id id = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
-
-        //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
-        //            throw new IllegalArgumentException(
-        //                "Entity Id " + id.getType() + ":"+ id.getUuid() +" uuid not time based");
-        //        }
-
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = load( id );
 
         if ( cpEntity == null ) {
@@ -472,31 +466,11 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        //        if ( entityRef.getType().equals("group") ) {
-        //            logger.debug("Reading Group");
-        //            for ( Field field : cpEntity.getFields() ) {
-        //                logger.debug("   Reading prop name={} value={}", field.getName(), field.getValue() );
-        //            }
-        //        }
-
         Class clazz = Schema.getDefaultSchema().getEntityClass( entityRef.getType() );
 
         Entity entity = EntityFactory.newEntity( entityRef.getUuid(), entityRef.getType(), clazz );
         entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
 
-        //        if ( entityRef.getType().equals("group") ) {
-        //            logger.debug("Reading Group " + entity.getProperties());
-        //        }
-
-        //        if ( logger.isDebugEnabled() ) {
-        //            logger.debug( "Loaded entity {}:{} from scope\n   app {}\n   owner {}\n   name {}",
-        //                new Object[] {
-        //                    id.getType(), id.getUuid(),
-        //                    collectionScope.getApplication(),
-        //                    collectionScope.getOwner(),
-        //                    collectionScope.getName()
-        //            } );
-        //        }
 
         return entity;
     }
