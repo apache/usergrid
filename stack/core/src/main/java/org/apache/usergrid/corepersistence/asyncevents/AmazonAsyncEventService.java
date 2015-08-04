@@ -299,7 +299,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final Observable<IndexOperationMessage> observable = eventBuilder.buildEntityIndex( entityIndexOperation );
 
-        subscibeAndAck( observable, message );
+        subscribeAndAck( observable, message );
     }
 
 
@@ -334,7 +334,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(edgeIndexEvent.getEntityId()).flatMap( entity -> eventBuilder.buildNewEdge(
             applicationScope, entity, edge ) );
 
-        subscibeAndAck( edgeIndexObservable, message );
+        subscribeAndAck( edgeIndexObservable, message );
     }
 
     @Override
@@ -363,7 +363,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final Observable<IndexOperationMessage> observable = eventBuilder.buildDeleteEdge( applicationScope, edge );
 
-        subscibeAndAck( observable, message );
+        subscribeAndAck( observable, message );
     }
 
 
@@ -399,7 +399,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final Observable merged = Observable.merge( entityDeleteResults.getEntitiesCompacted(),
             entityDeleteResults.getIndexObservable() );
 
-        subscibeAndAck( merged, message );
+        subscribeAndAck( merged, message );
     }
 
 
@@ -520,7 +520,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
      * @param observable
      * @param message
      */
-    private void subscibeAndAck( final Observable<?> observable, final QueueMessage message ){
+    private void subscribeAndAck( final Observable<?> observable, final QueueMessage message ){
        observable.doOnCompleted( ()-> ack(message)  ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
     }
 }
