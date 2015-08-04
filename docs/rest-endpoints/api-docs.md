@@ -1,5 +1,5 @@
 ## Methods
-## Action Methods>
+### Action Methods
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/activate</h2>
 
@@ -190,7 +190,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## ActivityFeed Methods>
+### ActivityFeed Methods
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/feed</h2>
 
@@ -343,7 +343,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## AppData Methods>
+### AppData Methods
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps</h2>
 
@@ -390,7 +390,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Credential Methods>
+### Credential Methods
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps/{appId}/credentials</h2>
 
@@ -483,7 +483,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Devices Methods>
+### Devices Methods
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/{notificationId}/*/queue</h2>
 
@@ -510,7 +510,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Entity Methods>
+### Entity Methods
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/{relation}</h2>
 
@@ -775,7 +775,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Event Methods>
+### Event Methods
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/events</h2>
 
@@ -802,7 +802,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Group Methods>
+### Group Methods
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups</h2>
 
@@ -881,7 +881,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Notification Methods>
+### Notification Methods
 
 <h2 class="usergrid-PUT-heading">PUT /my-org/sandbox/notifications/{notificationId}</h2>
 
@@ -1140,7 +1140,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Organization Methods>
+### Organization Methods
 
 <h2 class="usergrid-POST-heading">POST /management/orgs</h2>
 
@@ -1185,7 +1185,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Permission Methods>
+### Permission Methods
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/permissions</h2>
 
@@ -1214,7 +1214,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Receipt Methods>
+### Receipt Methods
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/receipts</h2>
 
@@ -1291,7 +1291,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## Role Methods>
+### Role Methods
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles</h2>
 
@@ -1368,7 +1368,7 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-## User Methods>
+### User Methods
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/users</h2>
 
@@ -1753,7 +1753,7 @@ __default__
 ## Models
 Properties for Usergrid default entities.
 
-## Action
+### Action
 
 __Properties__ 
 
@@ -1784,7 +1784,7 @@ __Properties__
     </tr>
 </table>
 
-## ActivityFeed
+### ActivityFeed
 
 __Properties__ 
 
@@ -1839,7 +1839,7 @@ __Properties__
     </tr>
 </table>
 
-## Actor
+### Actor
 
 __Properties__ 
 
@@ -1876,7 +1876,7 @@ __Properties__
     </tr>
 </table>
 
-## AddPermission
+### AddPermission
 
 __Properties__ 
 
@@ -1901,7 +1901,7 @@ __Properties__
     </tr>
 </table>
 
-## AddRole
+### AddRole
 
 __Properties__ 
 
@@ -1926,7 +1926,7 @@ __Properties__
     </tr>
 </table>
 
-## AdminUserUpdate
+### AdminUserUpdate
 
 __Properties__ 
 
@@ -1951,7 +1951,7 @@ __Properties__
     </tr>
 </table>
 
-## AppData
+### AppData
 
 __Properties__ 
 
@@ -1988,7 +1988,7 @@ __Properties__
     </tr>
 </table>
 
-## CancelMSG
+### CancelMSG
 
 __Properties__ 
 
@@ -2007,7 +2007,7 @@ __Properties__
     </tr>
 </table>
 
-## Collections
+### Collections
 
 __Properties__ 
 
@@ -2044,7 +2044,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateActivity
+### CreateActivity
 
 __Properties__ 
 
@@ -2093,7 +2093,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateAdminUser
+### CreateAdminUser
 
 __Properties__ 
 
@@ -2130,7 +2130,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateApp
+### CreateApp
 
 __Properties__ 
 
@@ -2155,7 +2155,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateEntities
+### CreateEntities
 
 __Properties__ 
 
@@ -2168,7 +2168,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateEntity
+### CreateEntity
 
 __Properties__ 
 
@@ -2193,7 +2193,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateEvent
+### CreateEvent
 
 __Properties__ 
 
@@ -2212,7 +2212,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateGroup
+### CreateGroup
 
 __Properties__ 
 
@@ -2237,7 +2237,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateNotification
+### CreateNotification
 
 __Properties__ 
 
@@ -2262,7 +2262,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateNotifications
+### CreateNotifications
 
 __Properties__ 
 
@@ -2275,7 +2275,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateOrg
+### CreateOrg
 
 __Properties__ 
 
@@ -2318,7 +2318,7 @@ __Properties__
     </tr>
 </table>
 
-## CreateUser
+### CreateUser
 
 __Properties__ 
 
@@ -2337,7 +2337,7 @@ __Properties__
     </tr>
 </table>
 
-## Credential
+### Credential
 
 __Properties__ 
 
@@ -2368,7 +2368,7 @@ __Properties__
     </tr>
 </table>
 
-## Device
+### Device
 
 __Properties__ 
 
@@ -2411,7 +2411,7 @@ __Properties__
     </tr>
 </table>
 
-## Entity
+### Entity
 
 __Properties__ 
 
@@ -2460,7 +2460,7 @@ __Properties__
     </tr>
 </table>
 
-## Error
+### Error
 
 __Properties__ 
 
@@ -2491,7 +2491,7 @@ __Properties__
     </tr>
 </table>
 
-## Event
+### Event
 
 __Properties__ 
 
@@ -2546,7 +2546,7 @@ __Properties__
     </tr>
 </table>
 
-## Group
+### Group
 
 __Properties__ 
 
@@ -2607,7 +2607,7 @@ __Properties__
     </tr>
 </table>
 
-## ImageModel
+### ImageModel
 
 __Properties__ 
 
@@ -2638,7 +2638,7 @@ __Properties__
     </tr>
 </table>
 
-## Metadata
+### Metadata
 
 __Properties__ 
 
@@ -2675,7 +2675,7 @@ __Properties__
     </tr>
 </table>
 
-## Notification
+### Notification
 
 __Properties__ 
 
@@ -2736,7 +2736,7 @@ __Properties__
     </tr>
 </table>
 
-## Notifier
+### Notifier
 
 __Properties__ 
 
@@ -2785,7 +2785,7 @@ __Properties__
     </tr>
 </table>
 
-## Object
+### Object
 
 __Properties__ 
 
@@ -2822,7 +2822,7 @@ __Properties__
     </tr>
 </table>
 
-## Organization
+### Organization
 
 __Properties__ 
 
@@ -2919,7 +2919,7 @@ __Properties__
     </tr>
 </table>
 
-## Permission
+### Permission
 
 __Properties__ 
 
@@ -2974,7 +2974,7 @@ __Properties__
     </tr>
 </table>
 
-## Receipt
+### Receipt
 
 __Properties__ 
 
@@ -3035,7 +3035,7 @@ __Properties__
     </tr>
 </table>
 
-## ResetPW
+### ResetPW
 
 __Properties__ 
 
@@ -3060,7 +3060,7 @@ __Properties__
     </tr>
 </table>
 
-## ResetPWMsg
+### ResetPWMsg
 
 __Properties__ 
 
@@ -3091,7 +3091,7 @@ __Properties__
     </tr>
 </table>
 
-## Role
+### Role
 
 __Properties__ 
 
@@ -3152,7 +3152,7 @@ __Properties__
     </tr>
 </table>
 
-## ScheduleNotification
+### ScheduleNotification
 
 __Properties__ 
 
@@ -3171,7 +3171,7 @@ __Properties__
     </tr>
 </table>
 
-## SetExpiration
+### SetExpiration
 
 __Properties__ 
 
@@ -3190,7 +3190,7 @@ __Properties__
     </tr>
 </table>
 
-## Sets
+### Sets
 
 __Properties__ 
 
@@ -3215,7 +3215,7 @@ __Properties__
     </tr>
 </table>
 
-## User
+### User
 
 __Properties__ 
 
