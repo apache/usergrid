@@ -131,7 +131,7 @@ public abstract class AsyncIndexServiceTest {
 
 
         /**
-         * Write 10k edges 10 at a time in parallel
+         * Write 500 edges
          */
 
 
@@ -139,18 +139,18 @@ public abstract class AsyncIndexServiceTest {
             final Id connectingId = createId("connecting");
             final Edge edge = CpNamingUtils.createConnectionEdge(connectingId, "likes", testEntity.getId());
 
-            return graphManager.writeEdge(edge).subscribeOn(Schedulers.io());
+            return graphManager.writeEdge( edge );
         }).toList().toBlocking().last();
 
 
+        //queue up processing
         asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity );
 
-        emf.refreshIndex(applicationScope.getApplication().getUuid());
-
-        //        Thread.sleep( 1000000000000l );
 
         final EntityIndex EntityIndex =
             entityIndexFactory.createEntityIndex( indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+
+        emf.refreshIndex(applicationScope.getApplication().getUuid());
 
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
 
@@ -176,13 +176,13 @@ public abstract class AsyncIndexServiceTest {
     }
 
 
-    private CandidateResults getResults( final EntityIndex EntityIndex,
+    private CandidateResults getResults( final EntityIndex entityIndex,
                                          final SearchEdge searchEdge, final SearchTypes searchTypes, final int expectedSize, final int attempts ) {
 
 
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                EntityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
+                entityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

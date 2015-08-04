@@ -174,8 +174,15 @@ public class EventBuilderImpl implements EventBuilder {
             entity -> {
                 final Field<Long> modified = entity.getField( Schema.PROPERTY_MODIFIED );
 
+                /**
+                 * We don't have a modified field, so we can't check, pass it through
+                 */
+                if ( modified == null ) {
+                    return true;
+                }
+
                 //only re-index if it has been updated and been updated after our timestamp
-                return modified != null && modified.getValue() >= entityIndexOperation.getUpdatedSince();
+                return  modified.getValue() >= entityIndexOperation.getUpdatedSince();
             } )
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );
