@@ -25,6 +25,8 @@ import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums._
 import org.apache.usergrid.helpers.Utils
 
+import scala.collection.mutable
+
 object Settings {
 
   def initStrSetting(cfg: String): String = {
@@ -255,25 +257,31 @@ object Settings {
   }
 
 
-  val auditUuidsHeader = "collection,uuid"
+  val auditUuidsHeader = "collection,name,uuid,modified"
+
+  case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long)
 
   // key: uuid, value: collection
-  private var auditUuidMap: Map[String,String] = Map()
-  def addAuditUuid(uuid: String, collection: String): Unit = {
-    if (captureAuditUuids) auditUuidMap += (uuid -> collection)
+  private var auditUuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
+  def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long): Unit = {
+    if (captureAuditUuids) {
+      auditUuidList.synchronized {
+        auditUuidList += AuditList(collection, entityName, uuid, modified)
+      }
+    }
   }
 
   def writeAuditUuidsToFile(uuidDesc: String): Unit = {
     if (captureAuditUuids) {
-      println(s"Sorting and writing ${auditUuidMap.size} ${uuidDesc} UUIDs in CSV file ${captureAuditUuidFilename}")
+      println(s"Sorting and writing ${auditUuidList.size} $uuidDesc UUIDs in CSV file $captureAuditUuidFilename")
       val writer = {
         val fos = new FileOutputStream(captureAuditUuidFilename)
         new PrintWriter(fos, false)
       }
       writer.println(auditUuidsHeader)
-      val uuidList: List[(String, String)] = auditUuidMap.toList.sortBy(l => (l._2, l._1))
-      uuidList.foreach { l =>
-        writer.println(s"${l._2},${l._1}")
+      val uuidList: List[AuditList] = auditUuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
+      uuidList.foreach { e =>
+        writer.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified}")
       }
       writer.flush()
       writer.close()

@@ -97,6 +97,7 @@
       <!-- =================================================================== -->
 
       <amber-version>0.22-incubating</amber-version>
+      <aws.version>1.10.6</aws.version>
       <cassandra-version>1.2.18</cassandra-version>
       <guava.version>18.0</guava.version>
       <guice.version>4.0-beta5</guice.version>
@@ -283,7 +284,7 @@
       <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-s3</artifactId>
-        <version>1.10.6</version>
+        <version>${aws.version}</version>
       </dependency>
 
 
@@ -1552,6 +1553,11 @@
                     <exclude>**/tempExport*</exclude>
                     <exclude>loadtests/loadtest_setup.sh</exclude>
 		    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
+
+                    <!-- gatling loadtest data files -->
+                    <exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/datafiles/**.txt</exclude>
+                    <exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/**.txt</exclude>
+                    <exclude>loadtests/src/test/resources/**.csv</exclude>
 
                     <!-- other -->
                     <exclude>**/catalina_base/**</exclude>
