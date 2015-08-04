@@ -1,0 +1,38 @@
+
+<div>
+    <a name="{{name}}"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">{{name}}
+            <a data-toggle="collapse" data-target="#collapse-{{modelid}}"
+               href="#collapse-{{modelid}}" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-{{modelid}}" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+            {{#properties}}
+                <tr>
+                    <td>{{name}}</td>
+                    <td>{{type}}</td>
+                    <td>{{description}}</td>
+                    <td>{{required}}</td>
+                </tr>
+            {{/properties}}
+        </table>
+
+    </div>
+    
+</div>
