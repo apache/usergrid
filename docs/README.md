@@ -53,7 +53,7 @@ If you need to update the REST API docs, you should edit the usergrid-swagger.ya
 
 If you need to change the formatting of the REST API docs, then you will need to edit the Mustache
 templates in ``src/main/resource`` and you may need to edit the Groovy script that does the 
-generation: ``src/main/groovy/ApiDocGenerator``.
+generation: ``src/main/groovy/usergrid.ApiDocGenerator``.
  
 You will need:
 * Groovy 2.x
@@ -63,7 +63,7 @@ Unfortunately, you will have to Git Clone Mustatche.java before you can run the 
 
 This is the command to run the generation:
 
-	groovy src/main/groovy/ApiDocGenerator.groovy
+	groovy src/main/groovy/usergrid.ApiDocGenerator.groovy
 	
 The script will update the file ``rest-endpoints/api-docs.md`` and when you are happy with your
 update you should commit and push that file with Git.
