@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.query.ir.result;
 
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -75,10 +76,13 @@ public class ShardFilterIteratorTest {
 
         for ( final String shard : shards.keySet() ) {
             //create a copy of our expected uuids
-            final Set<ScanColumn> expected = new HashSet<ScanColumn>( shards.get( shard ) );
+
+            final Collection<ScanColumn> shardColumns = shards.get( shard );
+
+            final Set<ScanColumn> expected = new HashSet<ScanColumn>( shardColumns );
 
 
-            final TestIterator testIterator = new TestIterator( new HashSet<ScanColumn>( shards.get( shard ) ) );
+            final TestIterator testIterator = new TestIterator( new HashSet<ScanColumn>( shardColumns ) );
 
 
             final TestEntityFilter collectionSliceShardFilter =
