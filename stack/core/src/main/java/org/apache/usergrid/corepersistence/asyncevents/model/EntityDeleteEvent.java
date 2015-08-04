@@ -19,20 +19,28 @@
 
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-/**
- * Created by Jeff West on 5/25/15.
- */
-@JsonDeserialize(as = AsyncEvent.class)
 public final class EntityDeleteEvent extends AsyncEvent {
+
+
+    @JsonProperty
+    protected EntityIdScope entityIdScope;
+
     public EntityDeleteEvent() {
     }
 
     public EntityDeleteEvent(EntityIdScope entityIdScope) {
-        super(EventType.ENTITY_DELETE, entityIdScope);
+        this.entityIdScope =  entityIdScope;
+    }
+
+
+    public EntityIdScope getEntityIdScope() {
+        return entityIdScope;
     }
 }

@@ -761,13 +761,7 @@ public class CpRelationManager implements RelationManager {
         Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
         org.apache.usergrid.persistence.model.entity.Entity targetEntity = ( ( CpEntityManager ) em ).load( entityId );
 
-        // Delete graph edge connection from head entity to member entity
-        Edge edge = new SimpleEdge( new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
-            connectionType, targetEntity.getId(), System.currentTimeMillis() );
-
-
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-
 
         final Id sourceId = new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() );
 

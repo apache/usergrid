@@ -20,6 +20,7 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
@@ -27,6 +28,7 @@ import org.safehaus.guicyfig.Key;
 /**
  * Application id cache fig
  */
+@FigSingleton
 public interface IndexProcessorFig extends GuicyFig {
 
 
@@ -59,9 +61,12 @@ public interface IndexProcessorFig extends GuicyFig {
     int getIndexQueueTimeout();
 
     /**
-     * Set the visibility timeout for messages created in the queue. (in milliseconds)
+     * Set the visibility timeout for messages received from the queue. (in milliseconds).
+     * AWS default is also currently 30 seconds.  Received messages will remain 'in flight' until
+     * they are ack'd(deleted) or this timeout occurs.  If the timeout occurs, the messages will become
+     * visible again for re-processing.
      */
-    @Default( "12000000" )
+    @Default( "30000" )
     @Key( INDEX_QUEUE_VISIBILITY_TIMEOUT )
     int getIndexQueueVisibilityTimeout();
 

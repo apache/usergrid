@@ -20,7 +20,7 @@ var random = require("./random");
 var responseLib = require("./response");
 var async = require('async');
 var request = require("request");
-
+var sleep = require('sleep');
 module.exports = {
     create: function(fromCollection, toCollection, relationship, cb) {
         async.parallel({
@@ -46,6 +46,7 @@ module.exports = {
                 results.from.uuid + "/" +
                 relationship + "/" +
                 results.to.uuid;
+            url = urls.appendOrgCredentials(url)
             request.post({
                 url: url,
                 json: true
@@ -118,11 +119,15 @@ module.exports = {
                 fromCollection + "/" +
                 results.from.uuid + "/" +
                 relationship + "/" +
+                //toCollection + "/" +
                 results.to.uuid;
+            url = urls.appendOrgCredentials(url);
+            sleep.sleep(1);
             request.del({
                 url: url,
                 json: true
             }, function(e, r, body) {
+                sleep.sleep(1);
                 module.exports.get(fromCollection, toCollection, relationship, function(err, results) {
                     cb(err, results);
                 });

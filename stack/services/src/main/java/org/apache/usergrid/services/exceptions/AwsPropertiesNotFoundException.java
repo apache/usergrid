@@ -14,24 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module.exports = {
-    serverUrl: "http://localhost:8080/",
-    orgName: "test-organization", //must
-    appName: "test-app", //must pre create app
-    numberOfUsers: 5,
-    numberOfEntities: 20,
-    org: {
-        clientId: "",
-        clientSecret: ""
-    },
-    usersCollection: "users",
-    entitiesTestCollection: "cats",
-    genericTestCollection1: "dogs",
-    genericTestCollection2: "horses",
-    consumableTestCollection: "food",
-    location: { // London
-        latitude: 51.51279,
-        longitude: -0.09184
-    },
-    notifierName: "noop-dev"
-};
+package org.apache.usergrid.services.exceptions;
+
+
+
+import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
+
+
+/**
+ * Created by ApigeeCorporation on 7/23/15.
+ */
+public class AwsPropertiesNotFoundException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+
+    public AwsPropertiesNotFoundException() {
+        super();
+    }
+
+
+    public AwsPropertiesNotFoundException( String propertyName ) {
+        super( "The following property was not found in the properties file: " + propertyName );
+    }
+
+}

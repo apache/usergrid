@@ -21,12 +21,14 @@ package org.apache.usergrid.corepersistence;
 
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 /**
  * Application id cache fig
  */
+@FigSingleton
 public interface ApplicationIdCacheFig extends GuicyFig {
 
 

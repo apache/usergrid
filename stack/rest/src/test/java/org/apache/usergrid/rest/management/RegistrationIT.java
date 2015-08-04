@@ -46,33 +46,6 @@ public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(RegistrationIT.class);
 
-    public Map<String, Object> getRemoteTestProperties() {
-        return clientSetup.getRestClient().testPropertiesResource().get().getProperties();
-    }
-
-    /**
-     * Sets a management service property locally and remotely.
-     */
-    public void setTestProperty(String key, Object value) {
-        // set the value remotely (in the Usergrid instance running in Tomcat classloader)
-        Entity props = new Entity();
-        props.put(key, value);
-        clientSetup.getRestClient().testPropertiesResource().post(props);
-
-    }
-
-    public void setTestProperties(Map<String, Object> props) {
-        Entity properties = new Entity();
-        // set the values locally (in the Usergrid instance here in the JUnit classloader
-        for (String key : props.keySet()) {
-            properties.put(key, props.get(key));
-
-        }
-
-        // set the values remotely (in the Usergrid instance running in Tomcat classloader)
-        clientSetup.getRestClient().testPropertiesResource().post(properties);
-    }
-
     public String getTokenFromMessage(Message msg) throws IOException, MessagingException {
         String body = ((MimeMultipart) msg.getContent()).getBodyPart(0).getContent().toString();
         // TODO better token extraction

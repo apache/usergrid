@@ -17,15 +17,15 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
-import com.sun.jersey.multipart.FormDataMultiPart;
-import org.apache.commons.io.IOUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-import org.apache.usergrid.rest.applications.ServiceResource;
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.apache.usergrid.services.assets.data.AssetUtils;
+import javax.ws.rs.core.MediaType;
 
+import org.jclouds.blobstore.BlobStoreContext;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,33 +33,54 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+
+import org.apache.commons.io.IOUtils;
+
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.rest.applications.assets.aws.NoAWSCredsRule;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.apache.usergrid.services.assets.data.BinaryStore;
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+
+import com.amazonaws.SDKGlobalConfiguration;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.multipart.FormDataMultiPart;
 
 import net.jcip.annotations.NotThreadSafe;
 
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 
 @NotThreadSafe
-public class AssetResourceIT extends AbstractRestIT {
+public class AwsAssetResourceIT extends AbstractRestIT {
 
     private String access_token;
-    private Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
     private Map<String, Object> originalProperties;
+    private Logger LOG = LoggerFactory.getLogger( AwsAssetResourceIT.class );
 
-
+    /**
+     * Mark tests as ignored if no AWS creds are present
+     */
+    @Rule
+    public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
 
     @Before
     public void setup(){
         originalProperties = getRemoteTestProperties();
-        setTestProperty(PROPERTIES_USERGRID_BINARY_UPLOADER, "local");
+        setTestProperty(PROPERTIES_USERGRID_BINARY_UPLOADER, "AWS");
 
 
         access_token = this.getAdminToken().getAccessToken();
@@ -71,6 +92,113 @@ public class AssetResourceIT extends AbstractRestIT {
         setTestProperties(originalProperties);
     }
 
+    @Test
+    public void errorCheckingMissingProperties() throws Exception {
+        Map<String, Object> errorTestProperties;
+        errorTestProperties = getRemoteTestProperties();
+        //test that we fail gracefully if we have missing properties
+        setTestProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "xxx" );
+
+        try {
+
+            Map<String, String> payload = hashMap( "name", "assetname" );
+            ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+            UUID assetId = postResponse.getEntities().get( 0 ).getUuid();
+            assertNotNull( assetId );
+
+            // post a binary asset to that entity
+
+            byte[] data = IOUtils.toByteArray( getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+            ApiResponse putResponse =
+                pathResource( getOrgAppPath( "foos/" + assetId ) ).put( data, MediaType.APPLICATION_OCTET_STREAM_TYPE );
+
+
+        }catch ( AwsPropertiesNotFoundException e ){
+            fail("Shouldn't interrupt runtime if access key isnt found.");
+        }
+        catch( UniformInterfaceException uie){
+            assertEquals(500,uie.getResponse().getStatus());
+        }
+        finally{
+            setTestProperties( errorTestProperties );
+        }
+    }
+
+    @Test
+         public void errorCheckingInvalidProperties() throws Exception {
+        Map<String, Object> errorTestProperties;
+        errorTestProperties = getRemoteTestProperties();
+        //test that we fail gracefully if we have missing properties
+        setTestProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "xxx");
+        setTestProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR, "xxx" );
+        setTestProperty( "usergrid.binary.bucketname", "xxx" );
+
+        try {
+
+            Map<String, String> payload = hashMap( "name", "assetname" );
+            ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+            UUID assetId = postResponse.getEntities().get( 0 ).getUuid();
+            assertNotNull( assetId );
+
+            // post a binary asset to that entity
+
+            byte[] data = IOUtils.toByteArray( getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+            ApiResponse putResponse =
+                pathResource( getOrgAppPath( "foos/" + assetId ) ).put( data, MediaType.APPLICATION_OCTET_STREAM_TYPE );
+
+
+        }catch ( AwsPropertiesNotFoundException e ){
+            fail("Shouldn't interrupt runtime if access key isnt found.");
+        }
+        catch( UniformInterfaceException uie){
+            assertEquals( 500, uie.getResponse().getStatus() );
+        }
+        finally{
+            setTestProperties( errorTestProperties );
+        }
+    }
+
+    @Test
+    public void errorCheckingInvalidPropertiesMultipartUpload() throws Exception {
+        Map<String, Object> errorTestProperties;
+        errorTestProperties = getRemoteTestProperties();
+        //test that we fail gracefully if we have missing properties
+        setTestProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "xxx");
+        setTestProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR, "xxx" );
+        setTestProperty( "usergrid.binary.bucketname", "xxx" );
+
+        try {
+
+            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
+            FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+            ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
+            UUID assetId = postResponse.getEntities().get(0).getUuid();
+            LOG.info( "Waiting for upload to finish..." );
+            Thread.sleep( 5000 );
+
+            // check that entire file was uploaded
+
+            ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
+            LOG.info( "Upload complete!" );
+            InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
+            byte[] foundData = IOUtils.toByteArray( is );
+            assertEquals( data.length, foundData.length );
+
+            // delete file
+
+            pathResource( getOrgAppPath( "foos/" + assetId ) ).delete();
+
+
+        }catch ( AwsPropertiesNotFoundException e ){
+            fail("Shouldn't interrupt runtime if access key isnt found.");
+        }
+        catch( UniformInterfaceException uie){
+            assertEquals( 500, uie.getResponse().getStatus() );
+        }
+        finally{
+            setTestProperties( errorTestProperties );
+        }
+    }
 
     @Test
     public void octetStreamOnDynamicEntity() throws Exception {
@@ -215,7 +343,7 @@ public class AssetResourceIT extends AbstractRestIT {
         ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
         UUID assetId = postResponse.getEntities().get(0).getUuid();
         LOG.info( "Waiting for upload to finish..." );
-        Thread.sleep( 2000 );
+        Thread.sleep( 5000 );
 
         // check that entire file was uploaded
 
@@ -236,10 +364,7 @@ public class AssetResourceIT extends AbstractRestIT {
         this.refreshIndex();
 
         // set max file size down to 6mb
-
-        Map<String, String> props = new HashMap<String, String>();
-        props.put( "usergrid.binary.max-size-mb", "6" );
-        pathResource( "testproperties" ).post( props );
+        setTestProperty( "usergrid.binary.max-size-mb","6" );
 
         try {
 
@@ -252,20 +377,21 @@ public class AssetResourceIT extends AbstractRestIT {
 
             String errorMessage = null;
             LOG.info( "Waiting for upload to finish..." );
-            Thread.sleep( 2000 );
+            Thread.sleep( 1000 );
 
             // attempt to get asset entity, it should contain error
 
+            refreshIndex();
             ApiResponse getResponse = pathResource( getOrgAppPath( "bars/" +assetId ) ).get( ApiResponse.class );
             Map<String, Object> fileMetadata = (Map<String, Object>)getResponse.getEntities().get(0).get("file-metadata");
+            assertNotNull( fileMetadata );
+            assertNotNull( fileMetadata.get( "error" ) );
             assertTrue( fileMetadata.get( "error" ).toString().startsWith( "Asset size " ) );
 
         } finally {
 
             // set max upload size back to default 25mb
-
-            props.put( "usergrid.binary.max-size-mb", "25" );
-            pathResource( "testproperties" ).post( props );
+            setTestProperties( originalProperties );
         }
     }
 

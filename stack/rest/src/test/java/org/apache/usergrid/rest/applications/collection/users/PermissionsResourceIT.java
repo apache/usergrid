@@ -22,6 +22,9 @@ import java.util.UUID;
 
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
+import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+import org.apache.usergrid.utils.UUIDUtils;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -140,7 +143,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         //Get the user and make sure that they are part of the group
         Collection groups = this.app().collection("users").entity(user).collection("groups").get();
 
-        assertEquals(groups.next().get("name"), groupPath);
+        assertEquals( groups.next().get( "name" ), groupPath );
 
         // now delete the group
 
@@ -174,20 +177,49 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         // add the perms to the guest to allow users in the role to create roles
         // themselves
-        addPermission(  "guest", "get,put,post:/roles/**" );
+        addPermission( "guest", "get,put,post:/roles/**" );
 
         Entity data = new Entity().chainPut("name", "usercreatedrole");
 
         // create a role as the user
-        Entity entity  = this.app().collection("roles").post(data);
+        Entity entity  = this.app().collection( "roles" ).post( data );
 
         assertNull( entity.getError() );
 
         refreshIndex();
 
         // now try to add permission as the user, this should work
-        addPermission(  "usercreatedrole", "get,put,post:/foo/**" );
+        addPermission( "usercreatedrole", "get,put,post:/foo/**" );
     }
+
+    @Test
+    public void getNonExistantEntityReturns404() throws Exception {
+
+        //Call a get on a existing entity with no access token and check if we get a 401
+        try {
+            this.app().collection( "roles" ).entity( "guest" ).get( false );
+        }catch(UniformInterfaceException uie){
+            assertEquals( 401,uie.getResponse().getStatus() );
+        }
+
+        // add the perms such that anybody can do a get call
+        addPermission(  "guest", "get:/**" );
+
+
+        //Call a get on a non existing entity that doesn't need permissions and check it we get a 404.
+        try {
+            this.app().collection( "roles" ).entity( "banana" ).get( false );
+        }catch(UniformInterfaceException uie){
+            assertEquals( 404,uie.getResponse().getStatus() );
+        }
+
+        try {
+            this.app().collection( "roles" ).entity( UUIDUtils.newTimeUUID() ).get( false );
+        }catch(UniformInterfaceException uie){
+            assertEquals( 404,uie.getResponse().getStatus() );
+        }
+    }
+
 
 
     /**

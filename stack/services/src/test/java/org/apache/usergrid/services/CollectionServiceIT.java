@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
@@ -64,7 +65,7 @@ public class CollectionServiceIT extends AbstractServiceIT {
         catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
-        catch ( ServiceResourceNotFoundException srnfe ) {
+        catch ( EntityNotFoundException enfe ) {
             // ok
         }
 
@@ -173,7 +174,7 @@ public class CollectionServiceIT extends AbstractServiceIT {
             app.testRequest( ServiceAction.GET, 0, "cats", "Danny" );
             Assert.fail();
         }
-        catch ( ServiceResourceNotFoundException srnfe ) {
+        catch ( EntityNotFoundException enfe ) {
             // ok
         }
 
