@@ -215,7 +215,7 @@ public class ApiDocGenerator {
     }
     
     def generateMethodsTitle(String tag) {
-        writer.println "## ${tag} Methods>";
+        writer.println "### ${tag} Methods";
     }
     
     def generateModelsTitle() {
