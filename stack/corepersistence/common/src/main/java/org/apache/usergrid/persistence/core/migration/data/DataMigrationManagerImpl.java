@@ -148,6 +148,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         Preconditions.checkArgument( version >= 0, "You must specify a version of 0 or greater" );
 
         migrationInfoSerialization.setVersion( pluginName, version );
+        migrationInfoCache.invalidateAll();
     }
 
 
