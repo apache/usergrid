@@ -17,11 +17,14 @@
 package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
+import io.gatling.core.controller.inject.InjectionStep
 import io.gatling.core.structure.ScenarioBuilder
 import org.apache.usergrid.enums.ScenarioType
 import org.apache.usergrid.helpers.Setup
 import org.apache.usergrid.scenarios.EntityCollectionScenarios
 import org.apache.usergrid.settings.Settings
+
+import scala.collection.mutable
 
 /**
  * Configurable simulations.
@@ -58,25 +61,37 @@ class ConfigurableSimulation extends Simulation {
       println("Skipping setup")
     }
     if (Settings.sandboxCollection) Setup.sandboxCollection()
+    Settings.setTestStartTime()
   }
 
-  Settings.setTestStartTime()
   if (ScenarioType.isValid(Settings.scenarioType)) {
     val scenario: ScenarioBuilder = getScenario(Settings.scenarioType)
+    var stepCount:Int = 0
+    if (Settings.rampUsers > 0) stepCount += 1
+    if (Settings.constantUsersPerSec > 0) stepCount += 1
+    val injectStepList = new mutable.ArraySeq[InjectionStep](stepCount)
+    var currentStep = 0
+    if (Settings.rampUsers > 0) {
+      injectStepList(currentStep) = rampUsers(Settings.rampUsers) over Settings.rampTime
+      currentStep += 1
+    }
+    if (Settings.constantUsersPerSec > 0) {
+      injectStepList(currentStep) = constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
+      currentStep += 1
+    }
     setUp(
       scenario
-        .inject(
-          rampUsers(Settings.rampUsers) over Settings.rampTime,
-          constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
-        ).protocols(Settings.httpConf.acceptHeader("application/json"))
+        .inject(injectStepList)
+          .protocols(Settings.httpConf.acceptHeader("application/json"))
     )
   } else {
     println(s"scenarioType ${Settings.scenarioType} not found.")
   }
 
   after {
+    Settings.setTestEndTime()
     if (Settings.captureUuids) Settings.writeUuidsToFile()
-    Settings.printSettingsSummary()
+    Settings.printSettingsSummary(true)
   }
 
 }

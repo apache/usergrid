@@ -37,9 +37,14 @@ object AuditScenarios {
   val SessionVarCollectionUuids: String = "collectionUuids"
 
   def collectionGetUrl(useCursor: Boolean): String = {
+    val searchQuery =
+      // later than timestamp replaces query
+      if (Settings.laterThanTimestamp > 0) s"modified%20gte%20${Settings.laterThanTimestamp}"
+      else if (Settings.searchQuery != "") s"${Settings.searchQuery}"
+      else ""
     val url = "/${" + SessionVarCollectionName + "}?" +
       (if (useCursor) "cursor=${" + SessionVarCursor + "}&" else "") +
-      (if (Settings.searchQuery != "") s"ql=${Settings.searchQuery}&" else "") +
+      (if (searchQuery != "") s"ql=$searchQuery&" else "") +
       (if (Settings.searchLimit > 0) s"limit=${Settings.searchLimit}&" else "")
 
     // remove trailing & or ?
@@ -51,7 +56,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(false))
       .headers(Headers.authToken)
-      .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids), maybeExtractCursor(SessionVarCursor)))
+      .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionUuids + "}", "singleResult") {
         exec(session => {
           val resultObj = session("singleResult").as[Map[String,Any]]
@@ -68,7 +73,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(true))
       .headers(Headers.authToken)
-      .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids), maybeExtractCursor(SessionVarCursor)))
+      .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionUuids + "}", "singleResult") {
         exec(session => {
           val resultObj = session("singleResult").as[Map[String,Any]]
@@ -91,9 +96,12 @@ object AuditScenarios {
           session
         }
         .doIf(session => session("validEntity").as[String] == "yes") {
-          exec(getCollectionsWithoutCursor)
-            .asLongAs(stringParamExists(SessionVarCursor)) {
+          tryMax(Settings.retryCount) {
+            exec(getCollectionsWithoutCursor)
+          }.asLongAs(stringParamExists(SessionVarCursor)) {
+            tryMax(Settings.retryCount) {
               exec(getCollectionsWithCursor)
+            }
           }
         }
     }

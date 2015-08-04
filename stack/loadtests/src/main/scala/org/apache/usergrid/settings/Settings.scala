@@ -17,6 +17,7 @@
 package org.apache.usergrid.settings
 
 import java.io.{PrintWriter, FileOutputStream}
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.bind.DatatypeConverter
 import io.gatling.http.Predef._
@@ -56,6 +57,15 @@ object Settings {
       integerSetting.toInt
     else
       ConfigProperties.getDefault(cfg).asInstanceOf[Int]
+  }
+
+  def initLongSetting(cfg: String): Long = {
+    val longSetting:java.lang.Long = java.lang.Long.getLong(cfg)
+
+    if (longSetting != null)
+      longSetting.toLong
+    else
+      ConfigProperties.getDefault(cfg).asInstanceOf[Long]
   }
 
   // load configuration settings via property or default
@@ -131,6 +141,11 @@ object Settings {
   val orgCreationEmail = if (cfgOrgCreationEmail == "") orgCreationUsername.concat("@usergrid.com") else cfgOrgCreationEmail
   val orgCreationName = if (cfgOrgCreationName == "") orgCreationUsername else cfgOrgCreationName
   val orgCreationPassword = initStrSetting(ConfigProperties.OrgCreationPassword)
+
+  val retryCount:Int = initIntSetting(ConfigProperties.RetryCount)
+  val laterThanTimestamp:Long = initLongSetting(ConfigProperties.LaterThanTimestamp)
+  val entityProgressCount:Long = initLongSetting(ConfigProperties.EntityProgressCount)
+  private val logEntityProgress: Boolean = entityProgressCount > 0L
 
   // Entity update
   val updateProperty = initStrSetting(ConfigProperties.UpdateProperty)
@@ -213,12 +228,7 @@ object Settings {
   val captureAuditUuids = (scenarioType == ScenarioType.AuditGetCollectionEntities) ||
                           (scenarioType == ScenarioType.AuditVerifyCollectionEntities && captureAuditUuidFilename != dummyAuditFailedCsv)
 
-  //val feedUuids = uuidFilename != dummyTestCsv && scenarioType == ScenarioType.UuidRandomInfinite
-  //val feedAuditUuids = uuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities
-  // val captureUuids = uuidFilename != dummyTestCsv && (scenarioType == ScenarioType.LoadEntities || scenarioType == ScenarioType.GetByNameSequential)
-
-  //val captureAuditUuids = (auditUuidFilename != dummyAuditCsv && scenarioType == ScenarioType.AuditGetCollectionEntities) ||
-  //                        (failedUuidFilename != dummyAuditFailedCsv && scenarioType == ScenarioType.AuditVerifyCollectionEntities)
+  /*
   println(s"feedUuids=$feedUuids")
   println(s"feedUuidFilename=$feedUuidFilename")
   println(s"feedAuditUuids=$feedAuditUuids")
@@ -227,14 +237,22 @@ object Settings {
   println(s"captureUuidFilename=$captureUuidFilename")
   println(s"captureAuditUuids=$captureAuditUuids")
   println(s"captureAuditUuidFilename=$captureAuditUuidFilename")
+  */
 
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
 
   private var uuidMap: Map[Int, String] = Map()
+  private var entityCounter: Long = 0
+  private var lastEntityCountPrinted: Long = 0
   def addUuid(num: Int, uuid: String): Unit = {
     if (captureUuids) {
       uuidMap.synchronized {
         uuidMap += (num -> uuid)
+        entityCounter += 1
+        if (logEntityProgress && (entityCounter >= lastEntityCountPrinted + entityProgressCount)) {
+          println(s"Entity: $entityCounter")
+          lastEntityCountPrinted = entityCounter
+        }
       }
     }
     // println(s"UUID: ${name},${uuid}")
@@ -262,11 +280,18 @@ object Settings {
   case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long)
 
   // key: uuid, value: collection
+  private var auditEntityCounter: Long = 0
+  private var lastAuditEntityCountPrinted: Long = 0
   private var auditUuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
   def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long): Unit = {
     if (captureAuditUuids) {
       auditUuidList.synchronized {
         auditUuidList += AuditList(collection, entityName, uuid, modified)
+        auditEntityCounter += 1
+        if (logEntityProgress && (auditEntityCounter >= lastAuditEntityCountPrinted + entityProgressCount)) {
+          println(s"Entity: $auditEntityCounter")
+          lastAuditEntityCountPrinted = auditEntityCounter
+        }
       }
     }
   }
@@ -297,6 +322,7 @@ object Settings {
   }
 
   private var testStartTime: Long = System.currentTimeMillis()
+  private var testEndTime: Long = 0
 
   def getTestStartTime: Long = {
     testStartTime
@@ -304,6 +330,10 @@ object Settings {
 
   def setTestStartTime(): Unit = {
     testStartTime = System.currentTimeMillis()
+  }
+
+  def setTestEndTime(): Unit = {
+    testEndTime = System.currentTimeMillis()
   }
 
   def continueMinutesTest: Boolean = {
@@ -333,46 +363,87 @@ object Settings {
       val countBadResponse = countAuditBadResponse.get
       val countTotal = countSuccess + countNotFound + countBadResponse
 
+      val seconds = ((testEndTime - testStartTime) / 1000).toInt
+      val s:Int = seconds % 60
+      val m:Int = (seconds/60) % 60
+      val h:Int = seconds/(60*60)
+      val elapsedStr = f"$h%d:$m%02d:$s%02d"
+
       println()
       println("-----------------------------------------------------------------------------")
       println("AUDIT RESULTS")
       println("-----------------------------------------------------------------------------")
       println()
-      println(s"Successful:   ${countSuccess}")
-      println(s"Not Found:    ${countNotFound}")
-      println(s"Bad Response: ${countBadResponse}")
-      println(s"Total:        ${countTotal}")
+      println(s"Successful:          $countSuccess")
+      println(s"Not Found:           $countNotFound")
+      println(s"Bad Response:        $countBadResponse")
+      println(s"Total:               $countTotal")
+      println()
+      println(s"Start Timestamp(ms): $testStartTime")
+      println(s"End Timestamp(ms):   $testEndTime")
+      println(s"Elapsed Time:        $elapsedStr")
       println()
       println("-----------------------------------------------------------------------------")
       println()
     }
   }
 
-  def printSettingsSummary(): Unit = {
+  def printSettingsSummary(afterTest: Boolean): Unit = {
     val authTypeStr = authType + (if (authType == AuthType.Token) s"($tokenType)" else "")
     val endConditionStr = if (endConditionType == EndConditionType.MinutesElapsed) s"$endMinutes minutes elapsed" else s"$endRequestCount requests"
+    val seconds = ((testEndTime - testStartTime) / 1000).toInt
+    val s:Int = seconds % 60
+    val m:Int = (seconds/60) % 60
+    val h:Int = seconds/(60*60)
+    val elapsedStr = f"$h%d:$m%02d:$s%02d"
     println()
     println("-----------------------------------------------------------------------------")
     println("SIMULATION SETTINGS")
     println("-----------------------------------------------------------------------------")
     println()
-    println(s"Org:$org  App:$app  Collection:$collection")
-    println(s"CreateOrg:$createOrg  CreateApp:$createApp  LoadEntities:$loadEntities")
     println(s"ScenarioType:$scenarioType  AuthType:$authTypeStr")
     println()
-    println(s"Entity Type:$entityType  Prefix:$entityPrefix")
+    println(s"BaseURL:$baseUrl")
+    println(s"Org:$org  App:$app  Collection:$collection")
+    println(s"CreateOrg:$createOrg  CreateApp:$createApp  LoadEntities:$loadEntities")
+    println(s"SandboxCollection:$sandboxCollection  SkipSetup:$skipSetup")
+    println(s"AuthType:$authType  TokenType:$tokenType  AdminUser:$adminUser")
+    println()
+    println(s"EntityType:$entityType  Prefix:$entityPrefix RetryCount:$retryCount")
+    if (scenarioType == ScenarioType.AuditGetCollectionEntities && laterThanTimestamp > 0) {
+      if (laterThanTimestamp > 0) println(s"SearchLimit:$searchLimit  OnlyForEntriesAtOrLater:$laterThanTimestamp")
+    } else {
+      println(s"SearchLimit:$searchLimit  SearchQuery:$searchQuery")
+    }
     println()
     println(s"Overall: NumEntities:$totalNumEntities  Seed:$overallEntitySeed  Workers:$entityWorkerCount")
     println(s"Worker:  NumEntities:$numEntities  Seed:$entitySeed  WorkerNum:$entityWorkerNum")
     println()
     println(s"Ramp: Users:$rampUsers  Time:$rampTime")
     println(s"Constant: UsersPerSec:$constantUsersPerSec  Time:$constantUsersDuration")
-    println(s"End Condition:$endConditionStr")
+    println(s"EndCondition:$endConditionStr")
+    println()
+    if (feedUuids) println(s"Feed CSV: $feedUuidFilename")
+    if (feedAuditUuids) println(s"Audit Feed CSV: $feedAuditUuidFilename")
+    if (captureUuids) println(s"Capture CSV:$captureUuidFilename")
+    if (captureAuditUuids) {
+      if (scenarioType == ScenarioType.AuditVerifyCollectionEntities)
+        println(s"Audit Capture CSV (failed entities):$captureAuditUuidFilename")
+      else
+        println(s"Audit Capture CSV:$captureAuditUuidFilename")
+    }
+    println()
+    println()
+    if (afterTest) {
+      println(s"TestStarted:$testStartTime  TestEnded:$testEndTime Elapsed: $elapsedStr")
+    } else {
+      println(s"TestStarted:$testStartTime")
+    }
     println()
     println("-----------------------------------------------------------------------------")
     println()
   }
 
-  printSettingsSummary()
+  printSettingsSummary(false)
 
 }

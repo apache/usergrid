@@ -127,7 +127,7 @@ object FeederGenerator {
 
     var nameArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
 
-    for (entityCount <- 1 to numEntities) {
+    for (_ <- 1 to numEntities) {
       nameArray += Map("entityName" -> prefix.concat(Utils.generateRandomInt(0, 100000000).toString))
     }
 
