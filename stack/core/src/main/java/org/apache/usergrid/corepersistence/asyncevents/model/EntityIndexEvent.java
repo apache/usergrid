@@ -27,10 +27,24 @@ import org.apache.usergrid.persistence.collection.serialization.impl.migration.E
  */
 @JsonDeserialize(as = AsyncEvent.class)
 public final class EntityIndexEvent extends AsyncEvent {
+
+    private long updatedAfter;
+
     public EntityIndexEvent() {
     }
 
-    public EntityIndexEvent(EntityIdScope entityIdScope) {
+    public EntityIndexEvent(EntityIdScope entityIdScope, final long updatedAfter ) {
         super(EventType.ENTITY_INDEX, entityIdScope);
+        this.updatedAfter = updatedAfter;
+    }
+
+
+    public long getUpdatedAfter() {
+        return updatedAfter;
+    }
+
+
+    public void setUpdatedAfter( long updatedAfter ) {
+        this.updatedAfter = updatedAfter;
     }
 }

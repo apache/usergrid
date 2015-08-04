@@ -27,14 +27,15 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
 import com.google.common.base.Preconditions;
-import org.apache.usergrid.corepersistence.CpEntityManager;
+
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
 import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.utils.UUIDUtils;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,15 +79,19 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final QueueManager queue;
     private final QueueScope queueScope;
     private final IndexProcessorFig indexProcessorFig;
-    private final IndexService indexService;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final EntityIndexFactory entityIndexFactory;
+    private final EventBuilder eventBuilder;
+    private final RxTaskScheduler rxTaskScheduler;
 
     private final Timer readTimer;
     private final Timer writeTimer;
     private final Timer ackTimer;
 
+    /**
+     * This mutex is used to start/stop workers to ensure we're not concurrently modifying our subscriptions
+     */
     private final Object mutex = new Object();
 
     private final Counter indexErrorCounter;
@@ -99,19 +104,17 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
     @Inject
-    public AmazonAsyncEventService(final QueueManagerFactory queueManagerFactory,
-                                   final IndexProcessorFig indexProcessorFig,
-                                   final MetricsFactory metricsFactory,
-                                   final IndexService indexService,
-                                   final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                   final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                                   final EntityIndexFactory entityIndexFactory
-    ) {
+    public AmazonAsyncEventService( final QueueManagerFactory queueManagerFactory, final IndexProcessorFig indexProcessorFig,
+                                    final MetricsFactory metricsFactory,  final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                    final IndexLocationStrategyFactory indexLocationStrategyFactory, final EntityIndexFactory entityIndexFactory,
+                                    final EventBuilder eventBuilder,
+                                    final RxTaskScheduler rxTaskScheduler ) {
 
-        this.indexService = indexService;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.entityIndexFactory = entityIndexFactory;
+        this.eventBuilder = eventBuilder;
+        this.rxTaskScheduler = rxTaskScheduler;
 
         this.queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALLREGIONS);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
@@ -144,7 +147,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         try {
             //signal to SQS
-            this.queue.sendMessage(operation);
+            this.queue.sendMessage( operation );
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
@@ -157,7 +160,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         try {
             //signal to SQS
-            this.queue.sendMessages(operations);
+            this.queue.sendMessages( operations );
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
@@ -185,33 +188,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
         }
     }
 
-
-    /**
-     * Ack message in SQS
-     */
-    public void ack(final List<QueueMessage> messages) {
-
-        final Timer.Context timer = this.ackTimer.time();
-
-        try{
-            // no op
-            if (messages.size() == 0) {
-                return;
-            }
-            queue.commitMessages(messages);
-
-            //decrement our in-flight counter
-            inFlight.addAndGet(-1 * messages.size());
-
-        }catch(Exception e){
-            throw new RuntimeException("Unable to ack messages", e);
-        }
-        finally {
-            timer.stop();
-        }
-
-
-    }
 
     /**
      * Ack message in SQS
@@ -290,7 +266,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
                                        final Entity entity) {
 
-        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, entity.getId())));
+        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, entity.getId()), 0));
     }
 
 
@@ -298,7 +274,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEntityIndexUpdate");
 
-        final AsyncEvent event = (AsyncEvent) message.getBody();
+        final EntityIndexEvent event = (EntityIndexEvent) message.getBody();
 
         Preconditions.checkNotNull(message, "QueueMessage Body cannot be null for handleEntityIndexUpdate");
         Preconditions.checkArgument(event.getEventType() == AsyncEvent.EventType.ENTITY_INDEX, String.format("Event Type for handleEntityIndexUpdate must be ENTITY_INDEX, got %s", event.getEventType()));
@@ -307,13 +283,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
         //only process the same version, otherwise ignore
         final EntityIdScope entityIdScope = event.getEntityIdScope();
         final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
+        final Id entityId = entityIdScope.getId();
+        final long updatedAfter = event.getUpdatedAfter();
 
-        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager(applicationScope);
+        final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, entityId, updatedAfter);
 
-        ecm.load(entityIdScope.getId())
-                .first()
-                .flatMap(entity -> indexService.indexEntity(applicationScope, entity))
-                .doOnNext(ignore -> ack(message)).subscribe();
+        final Observable<IndexOperationMessage> observable = eventBuilder.buildEntityIndex( entityIndexOperation );
+
+        subscibeAndAck( observable, message );
     }
 
 
@@ -324,7 +301,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         EdgeIndexEvent operation = new EdgeIndexEvent(applicationScope, entity.getId(), newEdge);
 
-        offer(operation);
+        offer( operation );
     }
 
     public void handleEdgeIndex(final QueueMessage message) {
@@ -339,18 +316,21 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final ApplicationScope applicationScope = event.getApplicationScope();
         final Edge edge = event.getEdge();
 
-        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager(applicationScope);
 
-        ecm.load(event.getEntityId())
-                .flatMap(entity -> indexService.indexEdge(applicationScope, entity, edge))
-                .doOnNext(ignore -> ack(message)).subscribe();
+
+        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
+
+        final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(event.getEntityId()).flatMap( entity -> eventBuilder.buildNewEdge(
+            applicationScope, entity, edge ) );
+
+        subscibeAndAck( edgeIndexObservable, message );
     }
 
     @Override
     public void queueDeleteEdge(final ApplicationScope applicationScope,
                                 final Edge edge) {
 
-        offer(new EdgeDeleteEvent(applicationScope, edge));
+        offer( new EdgeDeleteEvent( applicationScope, edge ) );
     }
 
     public void handleEdgeDelete(final QueueMessage message) {
@@ -367,15 +347,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         if (logger.isDebugEnabled()) logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
 
-        indexService.deleteIndexEdge(applicationScope, edge)
-                .doOnNext(ignore -> ack(message)).subscribe();
+        final Observable<IndexOperationMessage> observable = eventBuilder.buildDeleteEdge( applicationScope, edge );
+
+        subscibeAndAck( observable, message );
     }
 
 
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
 
-        offer(new EntityDeleteEvent(new EntityIdScope(applicationScope, entityId)));
+        offer( new EntityDeleteEvent( new EntityIdScope( applicationScope, entityId ) ) );
     }
 
     public void handleEntityDelete(final QueueMessage message) {
@@ -384,7 +365,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final AsyncEvent event = (AsyncEvent) message.getBody();
         Preconditions.checkNotNull(message, "QueueMessage Body cannot be null for handleEntityDelete");
-        Preconditions.checkArgument(event.getEventType() == AsyncEvent.EventType.ENTITY_DELETE, String.format("Event Type for handleEntityDelete must be ENTITY_DELETE, got %s", event.getEventType()));
+        Preconditions.checkArgument( event.getEventType() == AsyncEvent.EventType.ENTITY_DELETE,
+            String.format( "Event Type for handleEntityDelete must be ENTITY_DELETE, got %s", event.getEventType() ) );
 
         final ApplicationScope applicationScope = event.getApplicationScope();
         final Id entityId = event.getEntityId();
@@ -392,10 +374,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
         if (logger.isDebugEnabled())
             logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
 
-        ack(message);
+        ack( message );
 
-        indexService.deleteEntityIndexes(applicationScope, entityId, UUIDUtils.maxTimeUUID(Long.MAX_VALUE))
-                .doOnNext(ignore -> ack(message)).subscribe();
+        final EventBuilderImpl.EntityDeleteResults
+            entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
+
+
+        final Observable merged = Observable.merge( entityDeleteResults.getEntitiesCompacted(),
+            entityDeleteResults.getIndexObservable() );
+
+        subscibeAndAck( merged, message );
     }
 
 
@@ -407,9 +395,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
         Preconditions.checkArgument(event.getEventType() == AsyncEvent.EventType.APPLICATION_INDEX, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getEventType()));
 
         final IndexLocationStrategy indexLocationStrategy = event.getIndexLocationStrategy();
-        final EntityIndex index = entityIndexFactory.createEntityIndex(indexLocationStrategy);
+        final EntityIndex index = entityIndexFactory.createEntityIndex( indexLocationStrategy );
         index.initialize();
-        ack(message);
+        ack( message );
     }
 
     /**
@@ -494,7 +482,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
         //change to id scope to avoid serialization issues
-        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, id)));
+        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, id), updatedSince));
     }
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
@@ -502,8 +490,18 @@ public class AmazonAsyncEventService implements AsyncEventService {
         List batch = new ArrayList<EdgeScope>();
         for ( EdgeScope e : edges){
             //change to id scope to avoid serialization issues
-            batch.add(new EntityIndexEvent(new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode())));
+            batch.add(new EntityIndexEvent(new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
         }
-        offerBatch(batch);
+        offerBatch( batch );
+    }
+
+
+    /**
+     * Subscribes to the observable and acks the message via SQS on completion
+     * @param observable
+     * @param message
+     */
+    private void subscibeAndAck( final Observable<?> observable, final QueueMessage message ){
+       observable.doOnCompleted( ()-> ack(message)  ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
     }
 }

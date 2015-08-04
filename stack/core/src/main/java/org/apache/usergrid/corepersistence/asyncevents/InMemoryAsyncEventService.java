@@ -20,8 +20,6 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
-import com.amazonaws.services.opsworks.model.App;
-import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,19 +75,19 @@ public class InMemoryAsyncEventService implements AsyncEventService {
         //only process the same version, otherwise ignore
 
 
-        run( eventBuilder.queueEntityIndexUpdate(applicationScope, entity) );
+        run( eventBuilder.buildEntityIndexUpdate( applicationScope, entity ) );
     }
 
 
     @Override
     public void queueNewEdge( final ApplicationScope applicationScope, final Entity entity, final Edge newEdge ) {
-        run( eventBuilder.queueNewEdge(applicationScope, entity, newEdge) );
+        run( eventBuilder.buildNewEdge( applicationScope, entity, newEdge ) );
     }
 
 
     @Override
     public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
-        run( eventBuilder.queueDeleteEdge(applicationScope, edge) );
+        run( eventBuilder.buildDeleteEdge( applicationScope, edge ) );
     }
 
 
@@ -97,7 +95,7 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     public void queueEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
 
         final EventBuilderImpl.EntityDeleteResults results =
-            eventBuilder.queueEntityDelete( applicationScope, entityId );
+            eventBuilder.buildEntityDelete( applicationScope, entityId );
 
         run( results.getIndexObservable() );
         run( results.getEntitiesCompacted() );
@@ -107,7 +105,7 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     public void index( final ApplicationScope applicationScope, final Id id, final long updatedSince ) {
         final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, id, updatedSince );
 
-        run(eventBuilder.index( entityIndexOperation ));
+        run(eventBuilder.buildEntityIndex( entityIndexOperation ));
     }
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
@@ -115,7 +113,7 @@ public class InMemoryAsyncEventService implements AsyncEventService {
             final EntityIndexOperation entityIndexOperation = new EntityIndexOperation(e.getApplicationScope(),
                 e.getEdge().getTargetNode(), updatedSince);
 
-            run(eventBuilder.index (entityIndexOperation));
+            run(eventBuilder.buildEntityIndex( entityIndexOperation ));
         }
 
     }
