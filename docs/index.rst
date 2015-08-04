@@ -59,7 +59,7 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Security and Authentication
+   :caption: Security & Authentication
   
    security-and-auth/app-security
    security-and-auth/using-permissions
@@ -75,9 +75,14 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Management and Social Graph
+   :caption: User Management & Social Graph
   
-   user-management/tbd
+   user-management/user-management
+   user-management/working-user-data
+   user-management/group
+   user-management/activity
+   user-management/user-connections
+   user-management/messagee-example
    
 .. _geolocation:
 
@@ -91,7 +96,7 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Assets and Files
+   :caption: Assets & Files
   
    asset-and-files/tbd
    
@@ -99,7 +104,7 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Counters and Events
+   :caption: Counters & Events
   
    counters-and-events/events-and-counters
    counters-and-events/creating-and-incrementing-counters
@@ -109,7 +114,7 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Organizations and Applications
+   :caption: Organizations & Applications
    
    orgs-and-apps/tbd
   
