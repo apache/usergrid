@@ -19,22 +19,26 @@
 
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 
-/**
- * Created by Jeff West on 5/25/15.
- */
-@JsonDeserialize(as = AsyncEvent.class)
+
 public final class EntityIndexEvent extends AsyncEvent {
 
+
+    @JsonProperty
+    protected EntityIdScope entityIdScope;
+
+    @JsonProperty
     private long updatedAfter;
 
     public EntityIndexEvent() {
     }
 
     public EntityIndexEvent(EntityIdScope entityIdScope, final long updatedAfter ) {
-        super(EventType.ENTITY_INDEX, entityIdScope);
+        this.entityIdScope = entityIdScope;
         this.updatedAfter = updatedAfter;
     }
 
@@ -44,7 +48,7 @@ public final class EntityIndexEvent extends AsyncEvent {
     }
 
 
-    public void setUpdatedAfter( long updatedAfter ) {
-        this.updatedAfter = updatedAfter;
+    public EntityIdScope getEntityIdScope() {
+        return entityIdScope;
     }
 }

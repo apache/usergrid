@@ -67,9 +67,6 @@ public class AmazonAsyncEventServiceTest extends AsyncIndexServiceTest {
     public MetricsFactory metricsFactory;
 
     @Inject
-    public IndexService indexService;
-
-    @Inject
     public RxTaskScheduler rxTaskScheduler;
 
     @Inject
