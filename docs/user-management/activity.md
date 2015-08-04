@@ -7,7 +7,7 @@ amounts of data in a data stream. Beyond that, additions to a data
 stream must often be routed automatically to subscribers or filtered or
 counted.
 
-App services provides an activity entity that is specifically designed
+Usergrid provides an activity entity that is specifically designed
 for data streams. An activity is an entity type that represents activity
 stream actions (see the [JSON Activity Streams 1.0
 specification](http://activitystrea.ms/specs/json/1.0/) for more
@@ -35,7 +35,7 @@ posts a short, 140-character or less, "tweet", that activity gets added
 to the user's activity stream for display as well as to the activity
 streams of any of the user's followers.
 
-Using App services APIs you can create, retrieve, update, and delete
+Using Usergrid APIs you can create, retrieve, update, and delete
 activity entities. See You do not have access to view this node for
 descriptions of these APIs.
 

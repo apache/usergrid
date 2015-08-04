@@ -2,7 +2,7 @@
 
 ## Creating connections between entities
 
-One of the most useful features of App services is the ability to create
+One of the most useful features of Usergrid is the ability to create
 connections between entities. A simple example of this is the
 Twitter-like use of *following*, where one user forms a connection with
 another by subscribing to any tweets they post. [Messagee
