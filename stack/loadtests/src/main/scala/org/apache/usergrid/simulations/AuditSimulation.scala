@@ -37,9 +37,9 @@ class AuditSimulation extends Simulation {
   }
 
   before{
+    Settings.setTestStartTime()
   }
 
-  Settings.setTestStartTime()
   if (ScenarioType.isValid(Settings.scenarioType)) {
     val scenario: ScenarioBuilder = getScenario(Settings.scenarioType)
     setUp(
@@ -53,6 +53,7 @@ class AuditSimulation extends Simulation {
   }
 
   after {
+    Settings.setTestEndTime()
     if (Settings.captureAuditUuids) {
       val uuidDesc = Settings.scenarioType match {
         case ScenarioType.AuditGetCollectionEntities => "found"
@@ -60,7 +61,7 @@ class AuditSimulation extends Simulation {
       }
       Settings.writeAuditUuidsToFile(uuidDesc)
     }
-    Settings.printSettingsSummary()
+    Settings.printSettingsSummary(true)
     Settings.printAuditResults()
   }
 

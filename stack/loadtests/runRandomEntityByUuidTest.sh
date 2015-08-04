@@ -13,87 +13,72 @@
 # limitations under the License.
 #
 
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/testConfig.sh"
+
+# from testConfig.sh
+#URL=
+#ADMIN_USER=
+#ADMIN_PASSWORD=
+#ORG=
+#APP=
+#AUTH_TYPE=
+#TOKEN_TYPE=
+#CREATE_ORG=
+#CREATE_APP=
+#LOAD_ENTITIES=
+#SANDBOX_COLLECTION=
+#NUM_ENTITIES=
+#SKIP_SETUP=
+#COLLECTION=
+#RETRY_COUNT=
+#END_CONDITION_TYPE=
+#END_MINUTES=
+#END_REQUEST_COUNT=
+#CONSTANT_USERS_PER_SEC=
+#CONSTANT_USERS_DURATION=
+
 die() { echo "$@" 1>&2 ; exit 1; }
 
-####
-#This is a script to simplify running gatling tests.  It will default several parameters, invoke the maven plugins
-#Then aggregate the results
-####
-[ "$#" -ge 6 ] || die "At least 6 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) CONSTANT_USERS_PER_SEC, CONSTANT_USERS_DURATION(seconds) UUID_FILENAME"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) UUID_FILENAME"
 
-URL="$1"
-RAMP_USERS="$2"
-RAMP_TIME="$3"
-CONSTANT_USERS_PER_SEC="$4"
-CONSTANT_USERS_DURATION="$5"
-UUID_FILENAME="$6"
+RAMP_USERS="$1"
+RAMP_TIME="$2"
+UUID_FILENAME="$3"
 
-shift 6
+shift 3
+
+SCENARIO_TYPE=uuidRandomInfinite
 
 #Compile everything
 mvn compile
 
-#Set the app id to be a date epoch for uniqueness
-#APP=$(date +%s)
-ADMIN_USER=superuser
-ADMIN_PASSWORD=test
-CREATE_ORG=false
-ORG=gatling
-CREATE_APP=false
-APP=millionentities
-COLLECTION=trivialentities
-SCENARIO_TYPE=uuidRandomInfinite
-LOAD_ENTITIES=false
-NUM_ENTITIES=10000
-SKIP_SETUP=false
-#SEARCH_QUERY=order%20by%20specials%20desc
-#SEARCH_LIMIT=1000
-ENTITY_TYPE=trivial
-ENTITY_PREFIX=trivial
-ENTITY_SEED=1
-AUTH_TYPE=anonymous
-TOKEN_TYPE=management
-END_CONDITION_TYPE=minutesElapsed
-#END_CONDITION_TYPE=requestCount
-END_MINUTES=10
-END_REQUEST_COUNT=100
-
 #Execute the test
 mvn gatling:execute \
--DskipSetup=${SKIP_SETUP} \
--DcreateOrg=${CREATE_ORG} \
--Dorg=${ORG} \
--DcreateApp=${CREATE_APP} \
--Dapp=${APP} \
--Dbaseurl=${URL} \
+-DbaseUrl=${URL} \
 -DadminUser=${ADMIN_USER}  \
 -DadminPassword=${ADMIN_PASSWORD}  \
--DloadEntities=${LOAD_ENTITIES} \
--DnumEntities=${NUM_ENTITIES} \
--DentityType=${ENTITY_TYPE} \
--DentityPrefix=${ENTITY_PREFIX} \
--DentitySeed=${ENTITY_SEED} \
--DrampUsers=${RAMP_USERS}  \
--DrampTime=${RAMP_TIME}  \
--DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
--DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
--Dcollection=${COLLECTION} \
--DscenarioType=${SCENARIO_TYPE} \
+-Dorg=${ORG} \
+-Dapp=${APP} \
 -DauthType=${AUTH_TYPE} \
 -DtokenType=${TOKEN_TYPE} \
+-DcreateOrg=${CREATE_ORG} \
+-DcreateApp=${CREATE_APP} \
+-DloadEntities=${LOAD_ENTITIES} \
+-DsandboxCollection=${SANDBOX_COLLECTION} \
+-DnumEntities=${NUM_ENTITIES} \
+-DskipSetup=${SKIP_SETUP} \
+-Dcollection=${COLLECTION} \
+-DretryCount=${RETRY_COUNT} \
 -DendConditionType=${END_CONDITION_TYPE} \
 -DendMinutes=${END_MINUTES} \
 -DendRequestCount=${END_REQUEST_COUNT} \
+-DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
+-DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
+-DscenarioType=${SCENARIO_TYPE} \
+-DrampUsers=${RAMP_USERS}  \
+-DrampTime=${RAMP_TIME}  \
 -DuuidFilename=${UUID_FILENAME} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
-
-
-
-#Now move all the reports
-#AGGREGATE_DIR="target/aggregate-$(date +%s)"
-
-#mkdir -p ${AGGREGATE_DIR}
-
-#copy to the format of target/aggregate(date)/(simnulationame)-simulation.log
-#find target -name "simulation.log" -exec cp {} ${AGGREGATE_DIR}/$(basename $(dirname {} ))-simulation.log  \;
 

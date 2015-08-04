@@ -71,7 +71,7 @@ object Extractors {
    * @param saveAsName The name to use when saving to the session
    */
   def maybeExtractEntities(saveAsName: String) = {
-    jsonPath("$..entities").ofType[Seq[Any]].transformOption(extract => {
+    jsonPath("$.entities").ofType[Seq[Any]].transformOption(extract => {
       extract.orElse(Some(Seq()))
     }).saveAs(saveAsName)
   }
