@@ -1,6 +1,6 @@
 # Changing token expiration (time-to-live)
 
-An access token has a “time-to-live” (ttl), which is the maximum time that the access token will be valid for use within the application. With the API Baas, you can change the default ttl for all application user tokens, set the ttl for an individual token at the time of creation, or revoke one or more tokens. This gives you a high degree of control over access to your API Baas account and data store.
+An access token has a “time-to-live” (ttl), which is the maximum time that the access token will be valid for use within the application. With the Usergrid, you can change the default ttl for all application user tokens, set the ttl for an individual token at the time of creation, or revoke one or more tokens. This gives you a high degree of control over access to your Usergrid account and data store.
 
 ## Default ttl
 By default, all tokens have a system-defined time-to-live of 7 days (604800 seconds). Note that Token ttl is specified in milliseconds, but when a token is created, the API response will return the ttl in seconds.
