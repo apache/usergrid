@@ -272,9 +272,12 @@ object FeederGenerator {
       val validEntity = if (line == null) "no" else "yes"
       val array = if (line != null) line.split(",") else null
       val collectionName = if (line != null) array(0) else ""
-      val uuid = if (line != null) array(1) else ""
+      val name = if (line != null) array(1) else ""
+      val uuid = if (line != null) array(2) else ""
+      val modified = if (line != null) array(3) else ""
+      //println(s"$collectionName|$name|$uuid|$modified")
 
-      Map("collectionName" -> collectionName, "uuid" -> uuid, "validEntity" -> validEntity)
+      Map("collectionName" -> collectionName, "name" -> name,  "uuid" -> uuid, "modified" -> modified, "validEntity" -> validEntity)
     }
   }
 
