@@ -2,7 +2,7 @@
 Whether you're developing apps for mobile or the Web, it's almost certain that you will need to be able to handle user management, as well as offer the types of social features users have come to expect from a rich app experience. Usergrid makes all of this easy with default entity types and functionality available right out of the box. From user registration and profiles to login and authentication to activity feeds and social graph, you can create a social experience quickly and easily with just a few types of API calls.
 
 ## User management
-The default user entity in API BaaS is designed to model app users, meaning registering users and managing their profiles is as simple as sending and updating JSON via the API. Used in conjunction with our available social graph, as well as our OAuth 2.0 authentication and token authorization features, you have all the tools you need to manage your user base.
+The default user entity in Usergrid is designed to model app users, meaning registering users and managing their profiles is as simple as sending and updating JSON via the API. Used in conjunction with our available social graph, as well as our OAuth 2.0 authentication and token authorization features, you have all the tools you need to manage your user base.
 
 Learn more about:
 
@@ -11,7 +11,7 @@ Learn more about:
 * [Permissions and roles](../security-and-auth/using-permissions.html)
 
 ## Group management
-One of the most basic social features of any app is the ability to create groups of users to limit shared access to user or other app data. The default group entity in API BaaS was designed for this exact purpose. Associate a user with as many groups or sub-groups as you need, then apply permissions or roles to define shared access to API BaaS data.
+One of the most basic social features of any app is the ability to create groups of users to limit shared access to user or other app data. The default group entity in Usergrid was designed for this exact purpose. Associate a user with as many groups or sub-groups as you need, then apply permissions or roles to define shared access to Usergrid data.
 
 Learn more about:
 
@@ -19,7 +19,7 @@ Learn more about:
 * [Permissions and roles](../security-and-auth/using-permissions.html)
 
 ## Social connections
-To create a rich social graph, your app needs to be able to create connections between users. API BaaS makes this process lightweight by allowing you to create social connections and generic entity connections between users to model relationships by working with simple URI paths.
+To create a rich social graph, your app needs to be able to create connections between users. Usergrid makes this process lightweight by allowing you to create social connections and generic entity connections between users to model relationships by working with simple URI paths.
 
 For example, you could create a 'likes' relationship between two users with a POST:
 

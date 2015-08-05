@@ -1,11 +1,11 @@
 # Uploading assets
 
-Using Apigee's API BaaS, you can store and retrieve files and assets that hold data objects such as images, video, and audio content.
+With Usergrid, you can store and retrieve files and assets that hold data objects such as images, video, and audio content.
 
-API BaaS manages these objects as Asset entities. Optionally, you can use Folder entities to organize related assets.
+Usergrid manages these objects as Asset entities. Optionally, you can use Folder entities to organize related assets.
 
 ## Uploading assets
-Assets can be any file type and can be attached to any entity. When an asset is uploaded, API BaaS will automatically detect the file metadata for the asset and save it in the associated entity as a ``file-metadata`` property. Only 1 asset can be attached to an entity.
+Assets can be any file type and can be attached to any entity. When an asset is uploaded, Usergrid will automatically detect the file metadata for the asset and save it in the associated entity as a ``file-metadata`` property. Only 1 asset can be attached to an entity.
 
 To attach an asset to an entity, do the following:
 
