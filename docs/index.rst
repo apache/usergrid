@@ -98,7 +98,9 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Assets & Files
   
-   asset-and-files/tbd
+   asset-and-files/uploading-assets.md
+   asset-and-files/retrieving-assets.md
+   asset-and-files/folders.md
    
 .. _counters-and-events:
 
