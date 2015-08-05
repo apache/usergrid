@@ -48,6 +48,7 @@ import com.google.inject.Injector;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
@@ -55,8 +56,8 @@ import static org.junit.Assert.fail;
 //@UseModules({ GuiceModule.class })
 
 
-public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
-    private static final Logger logger = LoggerFactory.getLogger( PerformanceEntityRebuildIndexTest.class );
+public class RebuildIndexTest extends AbstractCoreIT {
+    private static final Logger logger = LoggerFactory.getLogger( RebuildIndexTest.class );
 
     private static final MetricRegistry registry = new MetricRegistry();
 
@@ -300,6 +301,105 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     }
 
 
+
+    @Test( timeout = 120000 )
+    public void rebuildUpdatedSince() throws Exception {
+
+        logger.info( "Started rebuildIndex()" );
+
+        String rand = RandomStringUtils.randomAlphanumeric( 5 );
+        final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
+
+        final EntityManager em = setup.getEmf().getEntityManager( appId );
+
+        final ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+
+        // ----------------- create a bunch of entities
+
+
+        Map<String, Object> entityData = new HashMap<String, Object>() {{
+            put( "key1", 1000 );
+        }};
+
+
+        final Entity firstEntity = em.create( "thing", entityData );
+
+
+        final Entity secondEntity = em.create( "thing",  entityData);
+
+        app.refreshIndex();
+
+        // ----------------- test that we can read them, should work fine
+
+        logger.debug( "Read the data" );
+        final String collectionName = "things";
+
+        countEntities( em, collectionName, 2 );
+
+        // ----------------- delete the system and application indexes
+
+        logger.debug( "Deleting app index" );
+
+        deleteIndex( em.getApplicationId() );
+
+        // ----------------- test that we can read them, should fail
+
+        // deleting sytem app index will interfere with other concurrently running tests
+        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+
+        // ----------------- test that we can read them, should fail
+
+        logger.debug( "Reading data, should fail this time " );
+
+        countEntities( em, collectionName, 0);
+
+
+
+        // ----------------- rebuild index
+
+        final long firstUpdatedTimestamp = firstEntity.getModified();
+        final long secondUpdatedTimestamp = secondEntity.getModified();
+
+        assertTrue( "second should be updated after second", firstUpdatedTimestamp < secondUpdatedTimestamp );
+
+
+        try {
+
+
+            final long updatedTimestamp = secondEntity.getModified();
+
+
+            logger.debug( "Preparing to rebuild all indexes with timestamp {}", updatedTimestamp );
+
+            //set our update timestamp
+            final ReIndexRequestBuilder builder =
+                reIndexService.getBuilder().withApplicationId( em.getApplicationId() ).withStartTimestamp(
+                    updatedTimestamp );
+
+            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );
+
+            assertNotNull( status.getJobId(), "JobId is present" );
+
+            logger.info( "Rebuilt index" );
+
+            waitForRebuild( status, reIndexService );
+
+            logger.info( "Rebuilt index" );
+
+            app.refreshIndex();
+        }
+        catch ( Exception ex ) {
+            logger.error( "Error rebuilding index", ex );
+            fail();
+        }
+
+        // ----------------- test that we can read them
+
+        Thread.sleep( 2000 );
+        countEntities( em, collectionName, 1 );
+    }
+
+
     /**
      * Wait for the rebuild to occur
      */
@@ -379,7 +479,37 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             }
         }
 
-        assertEquals("Did not get expected entities", expectedEntities, count);
+        assertEquals( "Did not get expected entities", expectedEntities, count );
         return count;
     }
+
+    private int countEntities( EntityManager em, String collectionName, int expectedEntities)
+           throws Exception {
+
+           app.refreshIndex();
+
+           Query q = Query.fromQL( "select * where key1=1000" ).withLimit( 1000 );
+           Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, expectedEntities );
+
+           int count = 0;
+           while ( true ) {
+
+               count += results.size();
+
+
+               if ( results.hasCursor() ) {
+                   logger.info( "Counted {} : query again with cursor", count );
+                   q.setCursor( results.getCursor() );
+                   results = em.searchCollection( em.getApplicationRef(), collectionName, q );
+               }
+               else {
+                   break;
+               }
+           }
+
+           assertEquals( "Did not get expected entities", expectedEntities, count );
+           return count;
+       }
+
+
 }
