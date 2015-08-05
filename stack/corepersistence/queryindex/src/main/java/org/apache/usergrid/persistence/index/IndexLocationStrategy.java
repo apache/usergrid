@@ -19,6 +19,8 @@
  */
 package org.apache.usergrid.persistence.index;
 
+import java.io.Serializable;
+
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 /**
  * location strategy for index
@@ -33,7 +35,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
  applicationIndexName = {indexRoot}_applications_{bucketId}
  applicationAliasName = {indexRoot}_{appId}_read_alias || {indexRoot}_{appId}_write_alias
  */
-public interface IndexLocationStrategy {
+public interface IndexLocationStrategy extends Serializable {
     /**
      * get the alias name
      * @return
