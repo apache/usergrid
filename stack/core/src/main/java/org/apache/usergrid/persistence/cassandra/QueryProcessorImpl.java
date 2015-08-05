@@ -71,6 +71,7 @@ import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -469,7 +470,7 @@ public class QueryProcessorImpl implements QueryProcessor {
 
             // change the property name to coordinates
             nodes.push( new WithinNode( op.getProperty().getIndexedName(), op.getDistance().getFloatValue(),
-                    op.getLatitude().getFloatValue(), op.getLongitude().getFloatValue(), ++contextCount ) );
+                op.getLatitude().getFloatValue(), op.getLongitude().getFloatValue(), ++contextCount ) );
         }
 
 
@@ -626,6 +627,11 @@ public class QueryProcessorImpl implements QueryProcessor {
 
         @Override
         public FilterBuilder getFilterBuilder() {
+            throw new UnsupportedOperationException("Not supported by this vistor implementation.");
+        }
+
+        @Override
+        public GeoDistanceSortBuilder getGeoDistanceSortBuilder() {
             throw new UnsupportedOperationException("Not supported by this vistor implementation.");
         }
     }

@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 
 
 /**
@@ -93,10 +94,15 @@ public interface QueryVisitor {
      */
     public void visit( GreaterThanEqual op ) throws NoIndexException;
 
-    /** 
+    /**
      * Returns resulting query builder.
      */
     public QueryBuilder getQueryBuilder();
 
-	public FilterBuilder getFilterBuilder();
+    public FilterBuilder getFilterBuilder();
+
+    /**
+     * Returns resulting geo distance sort builder.
+     */
+    public GeoDistanceSortBuilder getGeoDistanceSortBuilder();
 }

@@ -213,6 +213,22 @@ public class Query {
         return filterBuilder;
 	}
 
+    public QueryVisitor getQueryVisitor() {
+
+        if ( getRootOperand() != null ) {
+            QueryVisitor v = new EsQueryVistor();
+            try {
+                getRootOperand().visit( v );
+
+            } catch ( IndexException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+            return v;
+        }
+
+        return null;
+    }
+
 
     /**
      * Create a query instance from the QL.  If the string is null, return an empty query

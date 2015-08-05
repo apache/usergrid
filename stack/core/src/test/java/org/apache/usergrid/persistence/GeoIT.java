@@ -419,53 +419,6 @@ public class GeoIT extends AbstractCoreIT {
         assertEquals(numEntities, count);
     }
 
-
-    @Test
-    public void testSamePointPaging() throws Exception {
-
-        EntityManager em = app.getEntityManager();
-        assertNotNull(em);
-
-        // save objects in a diagonal line from -90 -180 to 90 180
-
-        int numEntities = 500;
-
-        for (int i = 0; i < numEntities; i++) {
-            Map<String, Object> data = new HashMap<String, Object>(2);
-            data.put("name", String.valueOf(i));
-            setPos(data, 0, 0);
-
-            em.create("store", data);
-        }
-
-        em.refreshIndex();
-
-        Query query = new Query();
-        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
-        // just to be save
-        query.addFilter("location within 50000000 of 0, 0");
-        query.setLimit(100);
-
-        int count = 0;
-        Results results;
-
-        do {
-            results = em.searchCollection(em.getApplicationRef(), "stores", query);
-
-            for (Entity entity : results.getEntities()) {
-                assertEquals(String.valueOf(count), entity.getName());
-                count++;
-            }
-
-            // set for the next "page"
-            query.setCursor(results.getCursor());
-        }
-        while (results.getCursor() != null);
-
-        // check we got back all 500 entities
-        assertEquals(numEntities, count);
-    }
-
     @Test
     public void testDistanceByLimit() throws Exception {
 
@@ -578,6 +531,73 @@ public class GeoIT extends AbstractCoreIT {
         while (r.hasCursor());
 
         assertEquals(startDelta - (size - max), count);
+    }
+
+    /**
+     * Verify that elasticsearch does a secondary ordering on paging such that we get consistent results
+     * back from a cursor despite having a geoquery with all the positions in the same location.
+     * @throws Exception
+     */
+    @Test
+    public void testSamePointConsistantPaging() throws Exception {
+
+        EntityManager em = app.getEntityManager();
+        assertNotNull(em);
+
+        // save objects in a diagonal line from -90 -180 to 90 180
+
+        int numEntities = 500;
+
+        for (int i = 0; i < numEntities; i++) {
+            Map<String, Object> data = new HashMap<String, Object>(2);
+            data.put("name", String.valueOf(i));
+            setPos(data, 0, 0);
+
+            em.create("store", data);
+        }
+
+        em.refreshIndex();
+
+        Query query = new Query();
+        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
+        // just to be save
+        query.addFilter("location within 50000000 of 0, 0");
+        query.setLimit(100);
+        List<String> names = new ArrayList<String>();
+
+        int count = 0;
+        Results results;
+        //get arraylist of entities from a search
+        do {
+            results = em.searchCollection(em.getApplicationRef(), "stores", query);
+
+            for (Entity entity : results.getEntities()) {
+                names.add( count,entity.getName() );
+                count++;
+            }
+
+            // set for the next "page"
+            query.setCursor(results.getCursor());
+        }
+        while (results.getCursor() != null);
+        //verify that entities come out in the same order when doing the same query against the same data.
+        //aka make sure the elasticsearch does a secondary search.
+        count = 0;
+        do {
+            results = em.searchCollection(em.getApplicationRef(), "stores", query);
+
+            for (Entity entity : results.getEntities()) {
+                assertEquals( names.get( count ),entity.getName() );
+                count++;
+            }
+
+            // set for the next "page"
+            query.setCursor(results.getCursor());
+        }
+        while (results.getCursor() != null);
+
+        // check we got back all 500 entities
+        assertEquals(numEntities, count);
     }
 
 
