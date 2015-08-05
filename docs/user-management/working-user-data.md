@@ -227,7 +227,7 @@ Usergrid provides a standard password reset flow that can be implemented to allo
 
 Note that you can also implement your own password reset flow using application-level authentication and the /password endpoint. For more, see [Changing a user password](#changing-a-user-password).
 
-To use the API BaaS password reset flow, do the following:
+To use the Usergrid password reset flow, do the following:
 
 ### STEP 1: Get the password reset request form.
 
