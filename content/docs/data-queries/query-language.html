@@ -1,0 +1,730 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Query Language &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Query Language</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/data-queries/query-language.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="query-language">
+<h1>Query Language<a class="headerlink" href="#query-language" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div>Query examples in this content are shown unencoded to make them
+easier to read. Keep in mind that you might need to encode query
+strings if you&#8217;re sending them as part of URLs, such as when you&#8217;re
+executing them with the cURL tool.</div></blockquote>
+<p>The following example retrieves a list of restaurants (from a
+restaurants collection) whose name property contains the value &#8220;diner&#8221;,
+sorting the list in ascending order by name:</p>
+<div class="highlight-python"><div class="highlight"><pre>/restaurants?ql=select * where name contains &#39;diner&#39; order by name asc
+</pre></div>
+</div>
+<div class="section" id="basic-syntax">
+<h2>Basic syntax<a class="headerlink" href="#basic-syntax" title="Permalink to this headline">¶</a></h2>
+<p>Queries of Usergrid data for Apache Usergrid are made up of two kinds of
+statements: the path to the collection you want to query, followed by
+the query language statement containing your query. These two statements
+are separated by &#8221;?ql=&#8221; to indicate where the query language statement
+starts.</p>
+<p>To retrieve items from a collection, you would use a syntax such as the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre>/&lt;collection&gt;?ql=&lt;query_statement&gt;
+</pre></div>
+</div>
+<p>In the following example, the query is retrieving all users whose name
+is Gladys Kravitz.</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = &#39;Gladys Kravitz&#39;
+</pre></div>
+</div>
+<p>The following example selects all items except those that have an a
+property value of 5:</p>
+<div class="highlight-python"><div class="highlight"><pre>/items?ql=select * where NOT a = 5
+</pre></div>
+</div>
+<p>Note that there is a shortcut available when your query selects all
+items matching certain criteria &#8211; in other words, where you use a
+statement that starts &#8220;select * where&#8221;. In this case, you can omit the
+first part of the statement and abbreviate it this way:</p>
+<div class="highlight-python"><div class="highlight"><pre>/items?ql=NOT a = 5
+</pre></div>
+</div>
+<p>You query your Apache Usergrid data by using a query syntax that&#8217;s like
+Structured Query Language (SQL), the query language for relational
+databases. Unlike a relational database, where you specify tables and
+columns containing the data you want to query, in your Apache Usergrid
+queries you specify collections and entities.</p>
+<p>The syntax of Apache Usergrid queries only <em>resembles</em> SQL to make
+queries familiar and easier to write. However, the language isn&#8217;t SQL.
+Only the syntax items documented here are supported.</p>
+</div>
+<div class="section" id="supported-operators">
+<h2>Supported operators<a class="headerlink" href="#supported-operators" title="Permalink to this headline">¶</a></h2>
+<p>Comparisons</p>
+<ul class="simple">
+<li>Less than <code class="docutils literal"><span class="pre">&lt;</span></code> or <code class="docutils literal"><span class="pre">lt</span></code></li>
+<li>Less than or equal <code class="docutils literal"><span class="pre">&lt;=</span></code> or <code class="docutils literal"><span class="pre">lte</span></code></li>
+<li>Equal <code class="docutils literal"><span class="pre">=</span></code> or <code class="docutils literal"><span class="pre">eq</span></code></li>
+<li>Greater than or equal <code class="docutils literal"><span class="pre">&gt;=</span></code> or <code class="docutils literal"><span class="pre">gte</span></code></li>
+<li>Greater than <code class="docutils literal"><span class="pre">&gt;</span></code> or <code class="docutils literal"><span class="pre">gt</span></code></li>
+<li>Not equal <code class="docutils literal"><span class="pre">NOT</span></code></li>
+</ul>
+<p>Logical operations</p>
+<ul class="simple">
+<li>Intersection of results <code class="docutils literal"><span class="pre">and</span></code></li>
+<li>Union of results <code class="docutils literal"><span class="pre">or</span></code></li>
+<li>Subtraction of results <code class="docutils literal"><span class="pre">not</span></code></li>
+</ul>
+</div>
+<div class="section" id="query-response-format">
+<h2>Query Response Format<a class="headerlink" href="#query-response-format" title="Permalink to this headline">¶</a></h2>
+<p>the query’s response is formatted in JavaScript Object Notation (JSON).
+This is a common format used for parameter and return values in REST web
+services.</p>
+<p>So for the following query:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = ‘Gladys Kravitz’
+</pre></div>
+</div>
+<p>...you would get a response such as the the one below. The JSON format
+arranges the data in name/value pairs. Many of the values correspond to
+specifics of the request, including the request’s HTTP action (GET), the
+application’s UUID, the request’s parameters (the query string you
+sent), and so on.</p>
+<p>Here, the query is asking for whole entities in the users collection.
+Data corresponding to the response is captured in the response’s
+<code class="docutils literal"><span class="pre">entities</span></code> array. The array has one member here, corresponding to the
+one user found by the query (another kind of query might have found more
+users). That one member gives the UUID of the entity (user), the entity
+type, and values for properties such as name, username, email, and so
+on.</p>
+<div class="code json highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span> <span class="p">:</span> <span class="s">&quot;get&quot;</span><span class="p">,</span>
+  <span class="s">&quot;application&quot;</span> <span class="p">:</span> <span class="s">&quot;8272c9b0-d86a-11e2-92e2-cdf1ce04c1c0&quot;</span><span class="p">,</span>
+  <span class="s">&quot;params&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;ql&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s">&quot;select * where name = &#39;Gladys Kravitz&#39;&quot;</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;uri&quot;</span> <span class="p">:</span> <span class="s">&quot;http://api.usergrid.com/myorg/myapp/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;entities&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="p">{</span>
+    <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;d0d7d0ba-e97b-11e2-8cef-411c466c4f2c&quot;</span><span class="p">,</span>
+    <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;user&quot;</span><span class="p">,</span>
+    <span class="s">&quot;name&quot;</span> <span class="p">:</span> <span class="s">&quot;Gladys Kravitz&quot;</span><span class="p">,</span>
+    <span class="s">&quot;created&quot;</span> <span class="p">:</span> <span class="mi">1373472876859</span><span class="p">,</span>
+    <span class="s">&quot;modified&quot;</span> <span class="p">:</span> <span class="mi">1373472876859</span><span class="p">,</span>
+    <span class="s">&quot;username&quot;</span> <span class="p">:</span> <span class="s">&quot;gladys&quot;</span><span class="p">,</span>
+    <span class="s">&quot;email&quot;</span> <span class="p">:</span> <span class="s">&quot;gladys@example.com&quot;</span><span class="p">,</span>
+    <span class="s">&quot;activated&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s">&quot;picture&quot;</span> <span class="p">:</span> <span class="s">&quot;http://www.gravatar.com/avatar/20c57d4f41cf51f2db44165eb058b3b2&quot;</span><span class="p">,</span>
+    <span class="s">&quot;metadata&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c&quot;</span><span class="p">,</span>
+      <span class="s">&quot;sets&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;rolenames&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/rolenames&quot;</span><span class="p">,</span>
+        <span class="s">&quot;permissions&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/permissions&quot;</span>
+      <span class="p">},</span>
+      <span class="s">&quot;connections&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;firstname&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/firstname&quot;</span><span class="p">,</span>
+        <span class="s">&quot;lastname&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/lastname&quot;</span>
+      <span class="p">},</span>
+      <span class="s">&quot;collections&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;activities&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/activities&quot;</span><span class="p">,</span>
+        <span class="s">&quot;devices&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/devices&quot;</span><span class="p">,</span>
+        <span class="s">&quot;feed&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/feed&quot;</span><span class="p">,</span>
+        <span class="s">&quot;groups&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/groups&quot;</span><span class="p">,</span>
+        <span class="s">&quot;roles&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/roles&quot;</span><span class="p">,</span>
+        <span class="s">&quot;following&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/following&quot;</span><span class="p">,</span>
+        <span class="s">&quot;followers&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/followers&quot;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="p">],</span>
+  <span class="s">&quot;timestamp&quot;</span> <span class="p">:</span> <span class="mi">1374694196061</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">48</span><span class="p">,</span>
+  <span class="s">&quot;organization&quot;</span> <span class="p">:</span> <span class="s">&quot;myorg&quot;</span><span class="p">,</span>
+  <span class="s">&quot;applicationName&quot;</span> <span class="p">:</span> <span class="s">&quot;myapp&quot;</span><span class="p">,</span>
+  <span class="s">&quot;count&quot;</span> <span class="p">:</span> <span class="mi">1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Compare the preceding example with the following for another kind of
+query. Imagine the following request string, where the query string is
+asking for only the values of two of the entity’s properties (username
+and name):</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select username,name where name=’Gladys Kravitz’
+</pre></div>
+</div>
+<p>In the response JSON from this query, the return value is specified as
+the property of the <code class="docutils literal"><span class="pre">list</span></code> item &#8211; here, an array containing only the
+values of the properties the query asked for, in the order they were
+requested (username first, then name).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span> <span class="p">:</span> <span class="s">&quot;get&quot;</span><span class="p">,</span>
+  <span class="s">&quot;application&quot;</span> <span class="p">:</span> <span class="s">&quot;8272c9b0-d86a-11e2-92e2-cdf1ce04c1c0&quot;</span><span class="p">,</span>
+  <span class="s">&quot;params&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;ql&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s">&quot;select username,name where name=&#39;Gladys Kravitz&#39;&quot;</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;uri&quot;</span> <span class="p">:</span> <span class="s">&quot;http://api.usergrid.com/myorg/myapp/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;list&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="p">[</span> <span class="s">&quot;gladys&quot;</span><span class="p">,</span> <span class="s">&quot;Gladys Kravitz&quot;</span> <span class="p">]</span> <span class="p">],</span>
+  <span class="s">&quot;timestamp&quot;</span> <span class="p">:</span> <span class="mi">1374697463190</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+  <span class="s">&quot;organization&quot;</span> <span class="p">:</span> <span class="s">&quot;myorg&quot;</span><span class="p">,</span>
+  <span class="s">&quot;applicationName&quot;</span> <span class="p">:</span> <span class="s">&quot;myapp&quot;</span><span class="p">,</span>
+  <span class="s">&quot;count&quot;</span> <span class="p">:</span> <span class="mi">1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="data-types-supported-in-queries">
+<h2>Data types supported in queries<a class="headerlink" href="#data-types-supported-in-queries" title="Permalink to this headline">¶</a></h2>
+<p>As you develop queries for your Apache Usergrid data, remember that
+entity properties each conform to a particular data type (whether the
+entity is included by default or an entity you defined). Your queries
+must acknowledge this, testing with values that conform to each
+property&#8217;s data type. (You can view the list of property data types for
+the default entities at <a class="reference external" href="/default-data-entities">Default Data
+Entities</a>.)</p>
+<p>For example, in the default entity <code class="docutils literal"><span class="pre">User</span></code>, the <code class="docutils literal"><span class="pre">name</span></code> property is
+stored as a <code class="docutils literal"><span class="pre">string</span></code>, the created date as a <code class="docutils literal"><span class="pre">long</span></code>, and metadata is
+stored as a JSON object. Your queries must be data type-aware so that
+you can be sure that query results are as you expect them to be.</p>
+<p>So imagine you define an entity with a <code class="docutils literal"><span class="pre">price</span></code> property whose value
+might be <code class="docutils literal"><span class="pre">100.00</span></code>. Querying for <code class="docutils literal"><span class="pre">100</span></code> will return no results even if
+there are occurrences of <code class="docutils literal"><span class="pre">100.00</span></code> as <code class="docutils literal"><span class="pre">price</span></code> values in your data
+set. That&#8217;s because the database expected a decimal-delimited <code class="docutils literal"><span class="pre">float</span></code>
+value in your query.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="22%" />
+<col width="73%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Data Type</th>
+<th class="head">Examples</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">string</span></code></td>
+<td><code class="docutils literal"><span class="pre">'value'</span></code>, <code class="docutils literal"><span class="pre">unicode</span> <span class="pre">'\uFFFF'</span></code>, <code class="docutils literal"><span class="pre">octal</span> <span class="pre">'\0707'</span></code></td>
+<td>true | false</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">long</span></code></td>
+<td>1357412326021</td>
+<td>Timestamps are typically stored as <code class="docutils literal"><span class="pre">long</span></code> values.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">float</span></code></td>
+<td>10.1, -10.1, 10e10, 10e-10, 10E10, 10e-10</td>
+<td>Your query must be specific about the value you&#8217;re looking for, down to the value (if any) after the decimal point.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">boolean</span></code></td>
+<td>true | false</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">UUID</span></code></td>
+<td>ee912c4b-5769-11e2-924d-02e81ac5a17b</td>
+<td>UUID types are typically used for the unique IDs of entities. The value must conform to the following format (do not enclose with quotation marks): xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">object</span></code> For a JSON object like this one:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;items&quot;</span><span class="p">:[</span>
+    <span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;rocks&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;boats&quot;</span><span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>you can use dot notation to reach property values in the object:
+/mycollection/thing?ql=&#8221;select * where items.name = &#8216;rocks&#8217;&#8221; Objects
+are often used to contain entity metadata, such as the activities
+associated with a user, the users associated with a role, and so on.</p>
+</div>
+<div class="section" id="retrieving-values-for-multiple-properties">
+<h2>Retrieving values for multiple properties<a class="headerlink" href="#retrieving-values-for-multiple-properties" title="Permalink to this headline">¶</a></h2>
+<p>Your query can return multiple kinds of values &#8211; such as the values of
+multiple properties &#8211; by specifying the property names in your select
+statement as a comma-separated list.</p>
+<p>For example, the following request returns the address and phone number
+of users whose name is Gladys Kravitz:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select address,phone_number where name = &#39;Gladys Kravitz&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="querying-for-the-contents-of-text">
+<h2>Querying for the contents of text<a class="headerlink" href="#querying-for-the-contents-of-text" title="Permalink to this headline">¶</a></h2>
+<p>Your query can search the text of entity values of the string data type.
+For example, you can search a postal code field for values that start
+with a specific three numbers.</p>
+<p>For example, the following query selects all restaurants with the word
+<code class="docutils literal"><span class="pre">diner</span></code> in the name:</p>
+<div class="highlight-python"><div class="highlight"><pre>/restaurants?ql=select * where name contains &#39;diner&#39;
+</pre></div>
+</div>
+<p><strong>Note:</strong> Not all string properties of the default entities are indexed
+for searching. This includes the <code class="docutils literal"><span class="pre">User</span></code> entity&#8217;s <code class="docutils literal"><span class="pre">username</span></code>
+property.</p>
+<p>This will return all users whose name property contains the word
+&#8216;Kravitz&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name contains &#39;Kravitz&#39;
+</pre></div>
+</div>
+<p>This will return all users whose name property contains a word beginning
+with &#8216;Krav&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name contains &#39;Krav*&#39;
+</pre></div>
+</div>
+<p>This will return all users whose name is exactly &#8216;Gladys Kravitz&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = &#39;Gladys Kravitz&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="sorting-results">
+<h2>Sorting results<a class="headerlink" href="#sorting-results" title="Permalink to this headline">¶</a></h2>
+<p>You can return query results that are sorted in the order you specify.
+Use the <code class="docutils literal"><span class="pre">order</span> <span class="pre">by</span></code> clause to specify the property to sort by, along
+with the order in which results should be sorted. The syntax for the
+clause is as follows <code class="docutils literal"><span class="pre">order</span> <span class="pre">by</span> <span class="pre">&lt;property_name&gt;</span> <span class="pre">asc</span> <span class="pre">|</span> <span class="pre">desc</span></code></p>
+<p>The following table includes a few examples:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where lastname = &#39;Smith&#39; order by firstname asc
+
+
+/users?ql=select * where lastname = &#39;Smith&#39; order by firstname desc
+
+
+/users?ql=select * where lastname contains &#39;Sm*&#39; order by lastname asc, firstname asc
+</pre></div>
+</div>
+</div>
+<div class="section" id="geoqueries">
+<h2>Geoqueries<a class="headerlink" href="#geoqueries" title="Permalink to this headline">¶</a></h2>
+<p>Many of today&#8217;s apps are enhanced by the use of <em>geolocation</em>, wireless
+detection of the physical location of a remote device. These apps are
+said to be <em>geolocation-aware</em> in that they query the device to
+determine the user&#8217;s position and then use this data to further enhance
+the user&#8217;s experience. For example, apps can capture the exact location
+where a picture was taken or a message was created.</p>
+<p>Usergrid support geolocation on any entity, both built in (e.g., users,
+groups) and user defined.</p>
+<p>To add a location to any entity, include the following member to the
+JSON in a POST or PUT call:</p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;location&quot;: {
+    &quot;latitude&quot;: 37.779632,
+    &quot;longitude&quot;: -122.395131
+}
+</pre></div>
+</div>
+<p>For example, to store a listing of restaurants and their locations,
+start by creating a collection called restaurants:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/org_name/app_name/restaurants
+</pre></div>
+</div>
+<p>Next, add a new entity to the collection:</p>
+<div class="highlight-python"><div class="highlight"><pre>POST https://api.usergrid.com/org_name/app_name/restaurants
+{
+  &quot;name&quot;: &quot;Rockadero&quot;,
+  &quot;address&quot;: &quot;21 Slate Street, Bedrock, CA&quot;,
+  &quot;location&quot;: {
+    &quot;latitude&quot;: 37.779632,
+    &quot;longitude&quot;: -122.395131
+  }
+}
+</pre></div>
+</div>
+<p>This creates a new restaurant entity called &#8220;Rockadero&#8221; with the
+longitude and latitude included as part of the object.</p>
+<p>When a location is added to an entity, it is easy to make queries
+against that data. For example, to see all restaurants within a 10 mile
+radius of the user&#8217;s location, make a GET call against that entity, and
+include a search query in the following format:</p>
+<div class="highlight-python"><div class="highlight"><pre>location within &lt;distance in meters&gt; of &lt;latitude&gt;, &lt;longitude&gt;
+</pre></div>
+</div>
+<p>If we use the location of our user Fred, we first need to convert miles
+to meters. 1 mile is equivalent to 1609.344 meters, so 10 miles is about
+16093 meters. Thus, the API call looks like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/org_name/app_name/restaurants?ql=location within 16093 of 37.776753, -122.407846
+</pre></div>
+</div>
+</div>
+<div class="section" id="managing-large-sets-of-results">
+<h2>Managing large sets of results<a class="headerlink" href="#managing-large-sets-of-results" title="Permalink to this headline">¶</a></h2>
+<p>When your query might return more results than you want to display to
+the user at once, you can use the limit parameter with cursors or API
+methods to manage the display of results. By default, query results are
+limited to 10 at a time. You can adjust this by setting the limit
+parameter to a value you prefer.</p>
+<p>For example, you might execute a query that could potentially return
+hundreds of results, but you want to display 20 of those at a time to
+users. To do this, your code sets the limit parameter to 20 when
+querying for data, then provides a way for the user to request more of
+the results when they&#8217;re ready.</p>
+<p>You would use the following parameters in your query:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">limit</span></code></td>
+<td>integer</td>
+<td><p class="first">Number of results to
+return. The maximum
+number of results is
+1,000. Specifying a
+limit greater than
+1,000 will result in a
+limit of 1,000.</p>
+<p>Limit is applied to the
+collection, not the
+query string. For
+example, the following
+query will find the
+first 100 entities in
+the books collection,
+then from that set
+return the ones with
+author=&#8217;Hemingway&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>/books?ql=author =
+</pre></div>
+</div>
+<p>&#8216;Hemingway&#8217;&amp;limit=100</p>
+<p>You can also use the
+limit parameter on a
+request without a query
+string. The following
+example is shorthand
+for selecting all books
+and limiting by 100 at
+a time:</p>
+<div class="highlight-python"><div class="highlight"><pre>/books?limit=100
+</pre></div>
+</div>
+<p>Using a limit on a
+DELETE can help you
+manage the amount of
+time it takes to delete
+data. For example you
+can delete all of the
+books, 1000 at a time,
+with the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>DELETE /books?limit
+</pre></div>
+</div>
+<p>=1000</p>
+<p class="last">Keep in mind that
+DELETE operations can
+take longer to execute.
+Yet even though the
+DELETE query call might
+time out (such as with
+a very large limit),
+the operation will
+continue on the server
+even if the client
+stops waiting for the
+result.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">cursor</span></code></td>
+<td>string</td>
+<td>An encoded
+representation of the
+query position pointing
+to a set of results. To
+retrieve the next set
+of results, pass the
+cursor with your next
+call for most results.</td>
+</tr>
+</tbody>
+</table>
+<p>For example:</p>
+<p>Select all users whose name starts with fred, and returns the first 50
+results:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = &#39;fred*&#39;&amp;limit=50
+</pre></div>
+</div>
+<p>Retrieve the next batch of users whose name is &#8220;fred&#8221;, passing the
+cursor received from the last request to specify where the next set of
+results should begin:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = &#39;fred*&#39;&amp;limit=50&amp;cursor=LTIxNDg0NDUxNDpnR2tBQVFFQWdITUFDWFJ2YlM1emJXbDBhQUNBZFFBUUQyMVZneExfRWVLRlV3TG9Hc1doZXdDQWRRQVFIYVdjb0JwREVlS1VCd0xvR3NWT0JRQQ
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
