@@ -3,7 +3,7 @@
 One of the most useful features of Usergrid is the ability to create connections between entities, which allow you to model arbitrary relationships between entities. This feature is particularly powerful when applied to user entities by allowing you to model complex social graphs between users as well as groups of users.
 
 ## Following/followers
-To make the social graph possibilities of entity connections even easier to achieve, API BaaS also has special support for a default following/followers relationship, which offers these additional features:
+To make the social graph possibilities of entity connections even easier to achieve, Usergrid also has special support for a default following/followers relationship, which offers these additional features:
 
 Reciprocal connection: If a following connection is made between a user and another user, a reciprocal followers relationship will be created automatically. In contrast, all of other entity connections are one-way, meaning any reciprocal relationship must be created manually.
 
