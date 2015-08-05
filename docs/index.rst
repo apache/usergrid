@@ -123,14 +123,6 @@ Apache Usergrid Documentation
    orgs-and-apps/application
    orgs-and-apps/adminuser
   
-.. _push-notifications:
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Push Notifications
-  
-   push-notifications/tbd.md
-      
 .. _rest-endpoints:
 
 .. toctree::
