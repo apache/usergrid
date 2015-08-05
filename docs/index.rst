@@ -116,7 +116,10 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Organizations & Applications
    
-   orgs-and-apps/tbd
+   orgs-and-apps/managing
+   orgs-and-apps/organization
+   orgs-and-apps/application
+   orgs-and-apps/adminuser
   
 .. _push-notifications:
 
