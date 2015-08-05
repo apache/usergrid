@@ -51,10 +51,17 @@ object Extractors {
   }
 
   /**
-   * Will extract the uuids from the get collection response.
+   * Will extract the audit entities from the get collection response.
    */
-  def extractCollectionUuids(saveAsName: String) = {
+  def extractAuditEntities(saveAsName: String) = {
     jsonPath("$.entities[*]").ofType[Map[String,Any]].findAll.transformOption(extract => { extract.orElse(Some(Seq.empty)) }).saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the audit entities from the get collection response.
+   */
+  def extractAuditEntity(saveAsName: String) = {
+    jsonPath("$.entities[0]").ofType[Map[String,Any]].findAll.transformOption(extract => { extract.orElse(Some(Seq.empty)) }).saveAs(saveAsName)
   }
 
   /**
