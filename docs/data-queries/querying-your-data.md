@@ -42,7 +42,7 @@ For example, the following request returns the address and phone number of users
 
 When you query your data, the API response is formatted in JavaScript Object Notation (JSON). This is a common format used for parameter and return values in REST web services.
 
-Data corresponding to the response is captured in the response’s entities array. The array will include one JSON-object for each entity returned for the query. Each returned entity will include a number of default properties, including the UUID of the entity, the entity type, and values for properties such as name, username, email, and so on. For a complete list of default properties by entity type, see Default Data Entity Types.
+Data corresponding to the response is captured in the response’s entities array. The array will include one JSON-object for each entity returned for the query. Each returned entity will include a number of default properties, including the UUID of the entity, the entity type, and values for properties such as name, username, email, and so on. For a complete list of default properties by entity type, see [Default Data Entities](../rest-endpoints/api-doc.html#models).
 
 For example, the following query for all entities of type user where the name property equals 'Gladys Kravitz':
 
