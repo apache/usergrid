@@ -10,6 +10,95 @@ basePath: /
 produces:
   - application/json
 paths:
+
+  /management/token:
+    post:
+      summary: "Admin-User Login."
+      description: "Login with Admin-User or Organization credentials."
+      parameters:
+        - name: login-credentials
+          in: body
+          description: "Login credentials either username/password or id/secret."
+          required: true
+          schema:
+            $ref: LoginCredentials
+      tags:
+        - Access-Tokens
+      responses:
+        "200":
+          description: "Object containing access_token."
+          schema:
+            $ref: AccessTokenReponse
+        default:
+          description: "Unexpected error."
+          schema:
+            $ref: Error
+  /{orgId}/{appId}/token:
+    post:
+      summary: "App-User Login."
+      description: "Login with App-User or Application credentials."
+      parameters:
+        - name: login-credentials
+          in: body
+          description: "Login credentials either username/password or id/secret."
+          required: true
+          schema:
+            $ref: LoginCredentials
+      tags:
+        - Access-Tokens
+      responses:
+        "200":
+          description: "An array of new created Admin user's info."
+          schema:
+            $ref: AccessTokenReponse
+        default:
+          description: "Unexpected error."
+          schema:
+            $ref: Error
+#  /management/users:
+#    post:
+#      summary: ""
+#      description: ""
+#      parameters:
+#        - name: adminuserproperty
+#          in: body
+#          description: "One or more sets of user properties of which username is mandatory and must be unique."
+#          required: true
+#          schema:
+#            $ref: CreateAdminUser
+#      tags:
+#        - Access-Tokens
+#      responses:
+#        "200":
+#          description: "An array of new created Admin user's info."
+#          schema:
+#            $ref: User
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error
+#  /management/users:
+#    post:
+#      summary: ""
+#      description: ""
+#      parameters:
+#        - name: adminuserproperty
+#          in: body
+#          description: "One or more sets of user properties of which username is mandatory and must be unique."
+#          required: true
+#          schema:
+#            $ref: CreateAdminUser
+#      tags:
+#        - Access-Tokens
+#      responses:
+#        "200":
+#          description: "An array of new created Admin user's info."
+#          schema:
+#            $ref: User
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error
   /management/users:
     post:
       summary: "Creating an admin user."
@@ -22,7 +111,7 @@ paths:
           schema:
             $ref: CreateAdminUser
       tags:
-        - User
+        - Admin-Users
       responses:
         "200":
           description: "An array of new created Admin user's info."
@@ -32,6 +121,9 @@ paths:
           description: "Unexpected error."
           schema:
             $ref: Error
+            
+            
+            
   /management/users/{userId}:     
     put:
       summary: "Updating an admin user."
@@ -39,7 +131,7 @@ paths:
       parameters:
         - $ref: "#/parameters/userId"
       tags:
-        - User
+        - Admin-Users
       responses:
         "200":
           description: "An array of user's details."
@@ -55,7 +147,7 @@ paths:
       parameters:
         - $ref: "#/parameters/userId"
       tags:
-        - User
+        - Admin-Users
       responses:
         "200":
           description: "An array of user's details"
@@ -77,7 +169,7 @@ paths:
           schema: 
             $ref: ResetPWMsg
       tags:
-        - Action
+        - Admin-Users
       responses:
         "200":
           description: "An array of complete messages."
@@ -91,7 +183,7 @@ paths:
       summary: "Initiating a password reset."
       description: "Initiate the reset of an admin user's password."
       tags:
-        - Action
+        - Admin-Users
       responses:
         "200":
           description: "An array of complete messages."
@@ -114,7 +206,7 @@ paths:
           schema:
             $ref: ResetPW
       tags:
-        - Action
+        - Admin-Users
       responses:
         "200":
           description: "An array of complete messages."
@@ -141,7 +233,7 @@ paths:
           required: true
           type: boolean
       tags:
-        - Action
+        - Admin-Users
       responses:
         "200":
           description: "An array of complete messages."
@@ -158,7 +250,7 @@ paths:
       parameters:
         - $ref: "#/parameters/userId"
       tags:
-        - Action
+        - Admin-Users
       responses:
         "200":
           description: "An array of complete messages."
@@ -175,7 +267,7 @@ paths:
       parameters:
         - $ref: "#/parameters/userId"
       tags:
-        - ActivityFeed
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of user's activity"
@@ -200,7 +292,7 @@ paths:
           schema:
             $ref: CreateActivity
       tags:
-        - ActivityFeed
+        - Activities
       responses:
         "200":
           description: "An array of user's activity."
@@ -225,7 +317,7 @@ paths:
           schema:
             $ref: CreateActivity
       tags:
-        - ActivityFeed
+        - Groups
       responses:
         "200":
           description:  "An array of user's activity."
@@ -247,7 +339,7 @@ paths:
           schema:
             $ref: CreateOrg
       tags:
-        - Organization
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of created Organization."
@@ -264,7 +356,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
-        - Organization
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of created Organization."
@@ -291,7 +383,7 @@ paths:
           required: true
           type: boolean  
       tags:
-        - Action
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of complete messages."
@@ -308,7 +400,7 @@ paths:
       parameters:   
         - $ref: "#/parameters/orgId"
       tags:
-        - Action
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of complete messages."
@@ -325,7 +417,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
-        - Credential
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of Credential"
@@ -341,7 +433,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
-        - Credential
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of Credential"
@@ -358,7 +450,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
-        - ActivityFeed
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of the organization's ActivityFeed."
@@ -391,24 +483,24 @@ paths:
           description: "Unexpected error."
           schema:
             $ref: Error 
-  /management/orgs/{orgId}/apps/{appId}:
-    delete:
-      summary: "Removing an application from the organization."
-      description: "Remove an application from an organization through providing both Id of application and organization."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId"
-      tags:
-        - AppData
-      responses:
-        "200":
-          description: "An array of deleted application info."
-          schema:
-            $ref: AppData
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error
+#  /management/orgs/{orgId}/apps/{appId}:
+#    delete:
+#      summary: "Removing an application from the organization."
+#      description: "Remove an application from an organization through providing both Id of application and organization."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId"
+#      tags:
+#        - Organizations-Applications
+#      responses:
+#        "200":
+#          description: "An array of deleted application info."
+#          schema:
+#            $ref: AppData
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error
   /management/orgs/{orgId}/apps/{appId}/credentials:
     post:
       summary: "Generating application credentials."
@@ -417,7 +509,7 @@ paths:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId"
       tags:
-        - Credential
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of generated credentials info."
@@ -434,7 +526,7 @@ paths:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId"
       tags:
-        - Credential
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of retrieved credentials info."
@@ -451,7 +543,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
-        - AppData
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of retrieved application data."
@@ -469,7 +561,7 @@ paths:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/userId-2"     
       tags:
-        - User
+        - Organizations-Applications
       responses:
         "200":
           description: "An array of new added Admin user's info."
@@ -486,7 +578,7 @@ paths:
       parameters:
         - $ref: "#/parameters/orgId"
       tags:
-        - User
+        - Admin-Users
       responses:
         "200":
           description: "An array of retrieved Admin user's info."
@@ -504,7 +596,7 @@ paths:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/userId-2" 
       tags:
-        - User
+        - Admin-Users 
       responses:
         "200":
           description: "An array of deleted Admin user's info."
@@ -524,7 +616,7 @@ paths:
         - $ref: "#/parameters/appId"
         - $ref: "#/parameters/collectionId"
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of retrieved collection's info."
@@ -553,7 +645,7 @@ paths:
           schema:
             $ref: CreateEntities  
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of created custom entity's info."
@@ -573,7 +665,7 @@ paths:
         - $ref: "#/parameters/collectionId"
         - $ref: "#/parameters/entityId"  
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of retrieved entity's info."
@@ -598,7 +690,7 @@ paths:
           schema:
             $ref: CreateEntities 
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of updated entity's info."
@@ -617,7 +709,7 @@ paths:
         - $ref: "#/parameters/collectionId"
         - $ref: "#/parameters/entityId" 
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of deleted entity's info."
@@ -641,7 +733,7 @@ paths:
           required: true
           type: string
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of retrieved collection's info."
@@ -664,7 +756,7 @@ paths:
           required: true
           type: string
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of updated collection's info."
@@ -698,7 +790,7 @@ paths:
           required: true
           type: string
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of added entity's info."
@@ -731,7 +823,7 @@ paths:
           required: true
           type: string
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of deleted entity's info."
@@ -755,7 +847,7 @@ paths:
           schema:
             $ref: CreateEvent        
       tags:
-        - Event
+        - Events
       responses:
         "200":
           description: "An array of created event's info."
@@ -779,7 +871,7 @@ paths:
           schema:
             $ref: CreateGroup
       tags:
-        - Group
+        - Groups
       responses:
         "200":
           description: "An array of created group's info."
@@ -789,6 +881,7 @@ paths:
           description: "Unexpected error."
           schema:
             $ref: Error  
+            
   /{orgId}/{appId}/groups/{groupId}/users/{userId}:
     post:
       summary: "Add a user to a group."
@@ -799,7 +892,7 @@ paths:
         - $ref: "#/parameters/groupId"
         - $ref: "#/parameters/userId-3" 
       tags:
-        - User
+      - Groups
       responses:
         "200":
           description: "An array of added user's info."
@@ -818,7 +911,7 @@ paths:
         - $ref: "#/parameters/groupId"
         - $ref: "#/parameters/userId-3" 
       tags:
-        - User
+        - Groups
       responses:
         "200":
           description: "An array of deleted user's info."
@@ -837,7 +930,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/groupId"
       tags:
-        - Group
+        - Groups
       responses:
         "200":
           description: "An array of retrieved group's info."
@@ -855,7 +948,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/groupId"
       tags:
-        - Group
+        - Groups
       responses:
         "200":
           description: "An array of updated group's info."
@@ -874,7 +967,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/groupId" 
       tags:
-        - ActivityFeed
+        - Activities
       responses:
         "200":
           description: "An array of group's activity."
@@ -898,7 +991,7 @@ paths:
           schema:
             $ref: AddRole      
       tags:
-        - Role
+        - Permissions-Roles
       responses:
         "200":
           description: "An array of created role's info."
@@ -915,7 +1008,7 @@ paths:
         - $ref: "#/parameters/orgId"
         - $ref: "#/parameters/appId" 
       tags:
-        - Role
+        - Permissions-Roles
       responses:
         "200":
           description: "An array of retrieved role's info."
@@ -938,7 +1031,7 @@ paths:
           required: true
           type: string
       tags:
-        - Role
+        - Permissions-Roles
       responses:
         "200":
           description: "An array of deleted role's info."
@@ -963,7 +1056,7 @@ paths:
           schema:
             $ref: AddPermission
       tags:
-        - Permission
+        - Permissions-Roles
       responses:
         "200":
           description: "An array of created permission's info."
@@ -981,7 +1074,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/roleId"
       tags:
-        - Permission
+        - Permissions-Roles
       responses:
         "200":
           description: "An array of retrieved permission's info."
@@ -1005,7 +1098,7 @@ paths:
           required: true
           type: string
       tags:
-        - Permission
+        - Permissions-Roles
       responses:
         "200":
           description: "An array of deleted permission's info."
@@ -1025,7 +1118,7 @@ paths:
         - $ref: "#/parameters/roleId"
         - $ref: "#/parameters/userId-3"
       tags:
-        - User
+      - Permissions-Roles
       responses:
         "200":
           description: "An array of added user's info."
@@ -1044,7 +1137,7 @@ paths:
         - $ref: "#/parameters/roleId"
         - $ref: "#/parameters/userId-3" 
       tags:
-        - User
+      - Permissions-Roles
       responses:
         "200":
           description: "An array of deleted user's info."
@@ -1063,7 +1156,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/roleId"
       tags:
-        - User
+      - Permissions-Roles
       responses:
         "200":
           description: "An array of retrieved user's info."
@@ -1087,7 +1180,7 @@ paths:
           schema:
             $ref: CreateUser
       tags:
-        - User
+      - App-Users
       responses:
         "200":
           description: "An array of created user's info."
@@ -1109,7 +1202,7 @@ paths:
           required: true
           type: string
       tags:
-        - User
+      - App-Users
       responses:
         "200":
           description: "An array of retrieved user's info."
@@ -1138,7 +1231,7 @@ paths:
           schema:
             $ref: ResetPW    
       tags:
-        - Action
+      - App-Users
       responses:
         "200":
           description: "An array of complete messages."
@@ -1157,7 +1250,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/userId-2" 
       tags:
-        - User
+      - App-Users
       responses:
         "200":
           description: "An array of retrieved user's info."
@@ -1175,7 +1268,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/userId-3" 
       tags:
-        - User
+      - App-Users
       responses:
         "200":
           description: "An array of updated user's info."
@@ -1193,7 +1286,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/userId-3" 
       tags:
-        - User
+      - App-Users
       responses:
         "200":
           description: "An array of deleted user's info."
@@ -1222,7 +1315,7 @@ paths:
           required: true
           type: string
       tags:
-        - Entity
+        - Entities-Collections
       responses:
         "200":
           description: "An array of user's collections info."
@@ -1241,7 +1334,7 @@ paths:
         - $ref: "#/parameters/appId" 
         - $ref: "#/parameters/userId-3"         
       tags:
-        - ActivityFeed
+        - Activities
       responses:
         "200":
           description: "An array of user's activity feed."
@@ -1252,277 +1345,277 @@ paths:
           schema:
             $ref: Error
 
-  /{orgId}/{appId}/devices/{deviceId}/notifications:
-    post:
-      summary: "Creating notifications for a single device."
-      description: "Create notifications for a single device. This request will target a specific device entity."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/deviceId"
-        - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotification" 
-        - $ref: "#/parameters/setExpiration"
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of created notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error
-  /{orgId}/{appId}/devices/*/notifications:
-    post:
-      summary: "Creating notifications for all devices."
-      description:  "Create notifications for all devices. This request will target all device entities."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotification" 
-        - $ref: "#/parameters/setExpiration"
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of created notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description:  "Unexpected error."
-          schema:
-            $ref: Error
-  /{orgId}/{appId}/users/{userId}/notifications:
-    post:
-      summary: "Creating notifications for a user."
-      description: "Create notifications for a user. This request will target a specific user entity."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/userId-3" 
-        - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotification" 
-        - $ref: "#/parameters/setExpiration"
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of created notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error
-  /{orgId}/{appId}/groups/{path}/notifications:
-    post:
-      summary: "Creating notifications for a group."
-      description: "Create notifications for a group. This request will target all users associated with a specific group entity."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - name: path
-          in: path
-          description:  "The path of the group."
-          required: true
-          type: string
-        - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotification" 
-        - $ref: "#/parameters/setExpiration"
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of created notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error           
-  /{orgId}/{appId}/devices:
-    post:
-      summary: "Creating notifications for user through location."
-      description: "Create notifications for user through targeting by location and providing all the identifications."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/notification"
-        - $ref: "#/parameters/scheduleNotification" 
-        - $ref: "#/parameters/setExpiration"
-        - name: queryStatement
-          in: query
-          description: "The query statement of the location of the user."
-          required: true
-          type: string
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of created notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error       
-  /{orgId}/{appId}/notifications:
-    get:
-      summary: "Getting one or more notifications."
-      description: "Retrieve one or more notifications through providing all the identifications."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId"    
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of retrieved notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error             
-  /{orgId}/{appId}/{receiptId}/*/notifications:
-    get:
-      summary: "Getting notifications associated with one or more receipts."
-      description: "Retrieve notifications associated with one or more receipts through providing all the identifications."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/receiptId" 
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of retrieved notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error 
-  /{orgId}/{appId}/{notificationId}/*/queue:
-    get:
-      summary: "Getting the list of devices associated with one or more notifications before the notifications are sent"
-      description: "Retrieve the list of devices associated with one or more notifications before the notifications are sent through providing all the identifications."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/notificationId" 
-      tags:
-        - Devices
-      responses:
-        "200":
-          description: "An array of retrieved device's info."
-          schema:
-            $ref: Device
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error 
-  "/my-org/sandbox/notifications/{notificationId}":
-    put:
-      summary: "Canceling sent notifications."
-      description: "Cancel sent notifications through providing the Id of the notification."
-      parameters:
-        - $ref: "#/parameters/notificationId"
-        - name: cancelMsg
-          in: body
-          description: "Indicete whether is canceled or not."
-          required: true
-          schema:
-            $ref: CancelMSG        
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of canceled notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error 
-  /{orgId}/{appId}/notifications/{notificationId}:
-    delete:
-      summary: "Deleting unsent notifications."
-      description: "Remove unsent notifications through providing all the identifications."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/notificationId"
-      tags:
-        - Notification
-      responses:
-        "200":
-          description: "An array of deleted notification's info."
-          schema:
-            $ref: Notification
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error  
-  /{orgId}/{appId}/receipts:
-    get:
-      summary: "Getting one or more receipts."
-      description: "Retrieve one or more receipts through providing all the identifications."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId"        
-      tags:
-        - Receipt
-      responses:
-        "200":
-          description: "An array of retrieved receipt's info."
-          schema:
-            $ref: Receipt
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error 
-  /{orgId}/{appId}/{deviceId}/*/receipts:
-    get:
-      summary: "Getting receipts associated with one or more devices."
-      description: "Retrieve receipts associated with one or more devices through providing all the identifications."
-      parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/deviceId"
-      tags:
-        - Receipt
-      responses:
-        "200":
-          description: "An array of retrieved receipt's info."
-          schema:
-            $ref: "#/definitions/Receipt"
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error 
-  /{orgId}/{appId}/{notificationId}/*/receipts:
-   get:
-     summary: Get receipts for one or more notifications."
-     description: Retrieve receipts for one or more notifications through providing all the identifications."
-     parameters:
-        - $ref: "#/parameters/orgId"
-        - $ref: "#/parameters/appId" 
-        - $ref: "#/parameters/notificationId"
-     tags:
-        - Receipt
-     responses:
-        "200":
-          description: "An array of retrieved receipt's info."
-          schema:
-            $ref: "Receipt"
-        default:
-          description: "Unexpected error."
-          schema:
-            $ref: Error       
+#  /{orgId}/{appId}/devices/{deviceId}/notifications:
+#    post:
+#      summary: "Creating notifications for a single device."
+#      description: "Create notifications for a single device. This request will target a specific device entity."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/deviceId"
+#        - $ref: "#/parameters/notification"
+#        - $ref: "#/parameters/scheduleNotification" 
+#        - $ref: "#/parameters/setExpiration"
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of created notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error
+#  /{orgId}/{appId}/devices/*/notifications:
+#    post:
+#      summary: "Creating notifications for all devices."
+#      description:  "Create notifications for all devices. This request will target all device entities."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/notification"
+#        - $ref: "#/parameters/scheduleNotification" 
+#        - $ref: "#/parameters/setExpiration"
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of created notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description:  "Unexpected error."
+#          schema:
+#            $ref: Error
+#  /{orgId}/{appId}/users/{userId}/notifications:
+#    post:
+#      summary: "Creating notifications for a user."
+#      description: "Create notifications for a user. This request will target a specific user entity."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/userId-3" 
+#        - $ref: "#/parameters/notification"
+#        - $ref: "#/parameters/scheduleNotification" 
+#        - $ref: "#/parameters/setExpiration"
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of created notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error
+#  /{orgId}/{appId}/groups/{path}/notifications:
+#    post:
+#      summary: "Creating notifications for a group."
+#      description: "Create notifications for a group. This request will target all users associated with a specific group entity."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - name: path
+#          in: path
+#          description:  "The path of the group."
+#          required: true
+#          type: string
+#        - $ref: "#/parameters/notification"
+#        - $ref: "#/parameters/scheduleNotification" 
+#        - $ref: "#/parameters/setExpiration"
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of created notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error           
+#  /{orgId}/{appId}/devices:
+#    post:
+#      summary: "Creating notifications for user through location."
+#      description: "Create notifications for user through targeting by location and providing all the identifications."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/notification"
+#        - $ref: "#/parameters/scheduleNotification" 
+#        - $ref: "#/parameters/setExpiration"
+#        - name: queryStatement
+#          in: query
+#          description: "The query statement of the location of the user."
+#          required: true
+#          type: string
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of created notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error       
+#  /{orgId}/{appId}/notifications:
+#    get:
+#      summary: "Getting one or more notifications."
+#      description: "Retrieve one or more notifications through providing all the identifications."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId"    
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of retrieved notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error             
+#  /{orgId}/{appId}/{receiptId}/*/notifications:
+#    get:
+#      summary: "Getting notifications associated with one or more receipts."
+#      description: "Retrieve notifications associated with one or more receipts through providing all the identifications."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/receiptId" 
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of retrieved notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error 
+#  /{orgId}/{appId}/{notificationId}/*/queue:
+#    get:
+#      summary: "Getting the list of devices associated with one or more notifications before the notifications are sent"
+#      description: "Retrieve the list of devices associated with one or more notifications before the notifications are sent through providing all the identifications."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/notificationId" 
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of retrieved device's info."
+#          schema:
+#            $ref: Device
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error 
+#  "/{orgId}/{appId}/notifications/{notificationId}":
+#    put:
+#      summary: "Canceling sent notifications."
+#      description: "Cancel sent notifications through providing the Id of the notification."
+#      parameters:
+#        - $ref: "#/parameters/notificationId"
+#        - name: cancelMsg
+#          in: body
+#          description: "Indicete whether is canceled or not."
+#          required: true
+#          schema:
+#            $ref: CancelMSG        
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of canceled notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error 
+#  /{orgId}/{appId}/notifications/{notificationId}:
+#    delete:
+#      summary: "Deleting unsent notifications."
+#      description: "Remove unsent notifications through providing all the identifications."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/notificationId"
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of deleted notification's info."
+#          schema:
+#            $ref: Notification
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error  
+#  /{orgId}/{appId}/receipts:
+#    get:
+#      summary: "Getting one or more receipts."
+#      description: "Retrieve one or more receipts through providing all the identifications."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId"        
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of retrieved receipt's info."
+#          schema:
+#            $ref: Receipt
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error 
+#  /{orgId}/{appId}/{deviceId}/*/receipts:
+#    get:
+#      summary: "Getting receipts associated with one or more devices."
+#      description: "Retrieve receipts associated with one or more devices through providing all the identifications."
+#      parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/deviceId"
+#      tags:
+#        - Notifications
+#      responses:
+#        "200":
+#          description: "An array of retrieved receipt's info."
+#          schema:
+#            $ref: "#/definitions/Receipt"
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error 
+#  /{orgId}/{appId}/{notificationId}/*/receipts:
+#   get:
+#     summary: Get receipts for one or more notifications."
+#     description: Retrieve receipts for one or more notifications through providing all the identifications."
+#     parameters:
+#        - $ref: "#/parameters/orgId"
+#        - $ref: "#/parameters/appId" 
+#        - $ref: "#/parameters/notificationId"
+#     tags:
+#        - Notifications
+#     responses:
+#        "200":
+#          description: "An array of retrieved receipt's info."
+#          schema:
+#            $ref: "Receipt"
+#        default:
+#          description: "Unexpected error."
+#          schema:
+#            $ref: Error       
 
 parameters:
   userId:
@@ -1979,6 +2072,39 @@ definitions:
         description:  "The secret of the client."
       completeMsg:
         $ref: Action
+  LoginCredentials:
+    properties:
+      grant_type:
+          type: string
+          required: true
+          description:  "Grant-type must be 'password' or 'client_credentials'."
+      username:
+          type: string
+          required: true
+          description:  "Username of user attempting login, required only if grant_type is 'password'."
+      password:
+          type: string
+          required: true
+          description:  "Password of user attempting login, required only if grant_type is 'password'."
+      client_id:
+          type: string
+          required: true
+          description:  "Client-ID portion of credentials, required only if grant_type is 'client_credentials'."
+      client_secret:
+          type: string
+          required: true
+          description:  "Client-Secret portion of credentials, required only if grant_type is 'client_credentials'."
+  AccessTokenResponse:
+    properties:
+      access_token:
+        type: string
+        description:  "Access-token that may be used on subsequent requests."
+      expires_in:
+        type: number 
+        description:  "Time (in milliseconds) until access-token expires."
+      user:
+        $ref: User
+        description: "User object if login was done as a user."
   Organization:
     properties:
       applicationId:
