@@ -18,8 +18,8 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Getting Started
 
-   getting-started/creating-a-new-application
    getting-started/creating-account
+   getting-started/creating-a-new-application
    getting-started/using-a-sandbox-app
    getting-started/using-the-api.md
      

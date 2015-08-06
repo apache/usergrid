@@ -49,7 +49,7 @@ The results include the access token needed to make subsequent API requests on b
 Using your app’s client id and client secret values, your app can connect to the Usergrid application endpoint to request an access token. The client ID and secret for your app can be found in 'Getting Started' section of the API Services admin portal, under 'Server App Credentials'.
 
 <div class="admonition warning"> <p class="first admonition-title">WARNING</p> <p class="last"> 
-Warning: You should never authenticate this way from a client-side app such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. See "safe mobile access" in [Authenticating API requests](authenticating-api-requests.html) for additional considerations in keeping access to your app and its data secure.
+Warning: You should never authenticate this way from a client-side app such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. See [Security Best Practices](../security-and-auth/securing-your-app.html) for additional considerations in keeping access to your app and its data secure.
 </p></div>
 
 ### Request syntax
@@ -76,7 +76,7 @@ The results include the access token needed to make subsequent API requests on b
 If you do require admin user access, your app can connect to the Usergrid management endpoint to request an access token. Your app supplies the username and password of an admin user in the request.
 
 <div class="admonition warning"> <p class="first admonition-title">WARNING</p> <p class="last"> 
-Warning: Authenticating as an admin user grants full access to one or more organizations and all of the applications contained in those organizations. Due to this, be cautious when implementing this type of authentication in client-side code. Instead, consider implementing admin user access in server-side code only. See "safe mobile access" in [Authenticating API requests](authenticating-api-requests.html) for additional considerations in keeping access to your app and its data secure.
+Warning: Authenticating as an admin user grants full access to one or more organizations and all of the applications contained in those organizations. Due to this, be cautious when implementing this type of authentication in client-side code. Instead, consider implementing admin user access in server-side code only. See [Security Best Practices](../security-and-auth/securing-your-app.html) for additional considerations in keeping access to your app and its data secure.
 </p></div>
 
 ### Request syntax
@@ -103,7 +103,7 @@ The results include the access token needed to make subsequent API requests on b
 If you do require organization level access, your app can connect to the Usergrid management endpoint to request an access token. Access to an organization requires the client id and client secret credentials. The client ID and secret for your organization can be found on the 'Org Administration' page of the API Services admin console under 'Organization API Credentials'.
 
 <div class="admonition warning"> <p class="first admonition-title">WARNING</p> <p class="last"> 
-Warning: You should never authenticate this way from a client-side app such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. See "safe mobile access" in [Authenticating API requests](authenticating-api-requests.html for additional considerations in keeping access to your app and its data secure.
+Warning: You should never authenticate this way from a client-side app such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. See [Security Best Practices](../security-and-auth/securing-your-app.html) for additional considerations in keeping access to your app and its data secure.
 </p></div>
 
 ### Request syntax

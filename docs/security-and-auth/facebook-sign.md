@@ -21,7 +21,7 @@ where:
 ## Facebook login example
 The Facebook technical guides for login present detailed information on how to add Facebook login to your app. Instructions are provided for JavaScript, iOS, and Android.
 
-In brief, here are the steps for JavaScript. You can see these steps implemented in the Facebook login example packaged with the JavaScript SDK for Usergrid (which you can download in ZIP format or tar.gz format). The Facebook login example is in the /examples/facebook directory of the extracted download. The code example snippets shown below are taken from the Facebook login example.
+In brief, here are the steps for JavaScript. You can see these steps implemented in the Facebook login example packaged with the JavaScript SDK for Usergrid (which you can download in ZIP format or tar.gz format). The Facebook login example is in the ``/examples/facebook`` directory of the extracted download. The code example snippets shown below are taken from the Facebook login example.
 
 ### Step 1: Create a Facebook app
 Create a new app on the Facebook App Dashboard. Enter your app's basic information. Once created, note the app ID shown at the top of the dashboard page.
