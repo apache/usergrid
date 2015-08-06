@@ -162,7 +162,7 @@ public class ApiDocGenerator {
             if (parameter.in == "body" && parameter.schema != null) {
                 param.schemaRef = parameter.schema.ref;
                 param.schemaAnchor = parameter.schema.ref.toLowerCase();
-            } else if (parameter.in == "path") {
+            } else { // if (parameter.in == "path") {
                 param.type = parameter.type;
             }
             params.add(param);
@@ -260,12 +260,12 @@ class HtmlApiDocGenerator extends ApiDocGenerator {
 
     def generateMethodsTitle(String tag) {
         writer.println "<a name='${tag}-method'></a>";
-        writer.println "<h2>${tag} Methods</h2>";
+        writer.println "<h2>${tag}</h2>";
     }
 
     def generateModelsTitle() {
         writer.println "<a name='models'></a>";
-        writer.println "<h2>Default Entity Models</h2>" +
+        writer.println "<br><h1>Default Entity Models</h1>" +
                 "<p>This section lists the properties for the following Usergrid Default Entities:</p>";
     }
 
