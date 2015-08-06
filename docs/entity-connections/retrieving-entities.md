@@ -1,13 +1,12 @@
 # Retrieving connections
 
-Viewing all of an entities connections
 To see all of the connection types associated with an entity, simply retrieve the entity.
 
-All of the connection types the entity has made to other entities will appear in the metadata.connections property.
+All of the connection types the entity has made to other entities will appear in the ``metadata.connections`` property.
 
-All of the connection types that other entities have made to the entity will appear in the metadata.connecting property.
+All of the connection types that other entities have made to the entity will appear in the ``metadata.connecting`` property.
 
-For user entities, following/followers connections can be accessed by sending a GET request to the URL in the collections.following and collections.followers properties.
+For user entities, following/followers connections can be accessed by sending a ``GET`` request to the URL in the ``collections.following`` and ``collections.follower``s properties.
 
 Retrieve connected entities by connection type
 To get a list of entities a specified entity has connected to with a specific connection type, do the following:
@@ -83,7 +82,7 @@ All of the entities that have made a connection of that type to the specified en
 
 ## Retrieve all connecting entities by type
 
-To get a list of all the entities that have created a connection of a specific type to a specified entity, use the same method as shown above in Retrieve connected entities by connection type, and set the relationship to connecting/<relationship>.
+To get a list of all the entities that have created a connection of a specific type to a specified entity, use the same method as shown above in Retrieve connected entities by connection type, and set the relationship to ``connecting/<relationship>``.
 
 All of the entities that have made a connection to the specified entity will be returned in the entities property of the response.
 

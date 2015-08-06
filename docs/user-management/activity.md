@@ -16,13 +16,13 @@ information about these actions).
 When a user creates an activity, it creates a relationship between the
 activity and the user who created it. Because this relationship exists,
 the activity will appear in the feed of any of the user’s followers.
-Think of the Activities endpoint (/users/{uuid|username}/activities) as
+Think of the Activities endpoint (``/users/{uuid|username}/activities``) as
 an "outbox" of news items created by the user. Think of the Feed
-endpoint (/users/{uuid|username}/feed) as an "inbox" of news items meant
+endpoint (``/users/{uuid|username}/feed``) as an "inbox" of news items meant
 to be seen or consumed by the user.
 
 A user can also post an activity to a group (located at
-/groups/{uuid|groupname}/activities). This allows you to emulate
+``/groups/{uuid|groupname}/activities``). This allows you to emulate
 Facebook-style group functionality, where a limited number of users can
 share content on a common "wall". In any of these cases, there is no
 need to construct publish/subscribe relationships manually.
@@ -36,10 +36,9 @@ to the user's activity stream for display as well as to the activity
 streams of any of the user's followers.
 
 Using Usergrid APIs you can create, retrieve, update, and delete
-activity entities. See You do not have access to view this node for
-descriptions of these APIs.
+activity entities. 
 
-**Note:** Although not shown in the API examples below, you need to
+__Note:__ Although not shown in the API examples below, you need to
 provide a valid access token with each API call. See 
 [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 

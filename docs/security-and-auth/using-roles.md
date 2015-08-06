@@ -67,7 +67,7 @@ Generally, it is easiest to a create a role for each access type you want to ena
 The following shows how to create a new role and assign permissions to it.
 
 ### Request syntax
-With cURL requests a role entity is created with a POST request, then permissions must be assigned to it with a separate request. For more on assigning permissions with cURL, see Using permissions.
+With cURL requests a role entity is created with a POST request, then permissions must be assigned to it with a separate request. For more on assigning permissions with cURL, see [Using Permissions](security-and-auth/using-permissions.html).
 
 The following details how to create a new role entity.
 

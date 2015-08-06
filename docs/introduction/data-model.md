@@ -8,7 +8,7 @@ An organization contains one or more applications, and represents administrator-
 An organization with the same name as your username is automatically created for you when you sign up. By default, you are assigned as the administrator of this organization.
 
 ## Applications
-In Usergrid, you can create one or more applications within an organization. Applications represent an instance of application data associated with an app, and you may create as many applications as you wish. This allows you to utilize the backend in a way that corresponds to your development process. For example, you might create separate applications for development and production instances of your app. By default, all organization have a sandbox application (see Using a Sandbox Application for important information regarding the default sandbox application).
+In Usergrid, you can create one or more applications within an organization. Applications represent an instance of application data associated with an app, and you may create as many applications as you wish. This allows you to utilize the backend in a way that corresponds to your development process. For example, you might create separate applications for development and production instances of your app. By default, all organization have a sandbox application (see Using a [Sandbox Application](../getting-started/using-a-sandbox-app.html) for important information regarding the default sandbox application).
 
 Each application provides the infrastructure for storing, retrieving, updating and deleting the entities and collections associated with a specific app instance.
 

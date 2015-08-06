@@ -64,7 +64,7 @@ As you develop queries, remember that entity properties each conform to a partic
 
 For example, if you create an entity with a price property with a value of 100.00, querying for 100 will return no results, since the API expected a decimal-delimited float value in your query.
 
-For a list of property data types for each default entities, see Default Data Entity Types.
+For a list of property data types for each default entities, see [Default Data Entities](../rest-endpoints/api-doc.html#models)s.
 
 <table class="usergrid-table">
     <tr>

@@ -33,7 +33,7 @@ Complex paths can be defined using [Apache Ant pattern syntax](http://ant.apache
 </table>
 
 ## Assigning permissions
-Permissions can only be assigned to user, group or role entities. Assigning permissions to roles can be particularly useful, as it allows you to create sets of permissions that represent complex access definitions, which can then be assigned to user and group entities. For more on roles, see Using roles.
+Permissions can only be assigned to user, group or role entities. Assigning permissions to roles can be particularly useful, as it allows you to create sets of permissions that represent complex access definitions, which can then be assigned to user and group entities. For more on roles, see [Using Roles](security-and-auth/using-roles.html).
        
 ### Request syntax
 
