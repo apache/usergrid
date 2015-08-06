@@ -47,7 +47,7 @@ org	        Organization UUID or organization name
 app	        Application UUID or application name
 collection	The collection of the entity that the permissions are to be assigned to. 
 entity	    The UUID of the entity to assign the permissions to. For users, username and for groups, name are also accepted.
-permissions	The permissions to assign to the entity. See Permissions syntax for format.
+permissions	The permissions to assign to the entity. See [Permissions syntax](security-and-auth/using-permissions.html#permissions-syntax) for format.
 
 For collections, Valid values are users and groups.
 

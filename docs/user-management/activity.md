@@ -131,13 +131,13 @@ The ``/users/me`` endpoint is accessible only if you provide an access token wit
 
 When you create an activity it creates a relationship between the activity and the user who created it. In other words, the newly created activity above belongs to john.doe. Another way of saying this is the user "owns" the activity. And because this relationship exists, the activity will appear in the feed of any of the user’s followers (in this example, anyone who is following john.doe). However, it will not appear in the feed of people the user follows. The activity is accessible at the ``/activities`` endpoint to users who have the permission to read that endpoint.
 
-Notice the properties specified in the request body in the previous example are actor, verb, and content. The actor, verb, and content properties are built into the Activity entity (see Default Data Entity Types). The actor property specifies properties of the entity that performs the action (here, user john.doe). The gravatar URL is used to create an icon for the activity. And because an Activity is simply an API Services data entity, you can also create custom properties.
+Notice the properties specified in the request body in the previous example are actor, verb, and content. The actor, verb, and content properties are built into the Activity entity (see [Activity entity properties](../rest-endpoints/api-doc.html#activity) ). The actor property specifies properties of the entity that performs the action (here, user john.doe). The gravatar URL is used to create an icon for the activity. And because an Activity is simply an API Services data entity, you can also create custom properties.
 
 The verb parameter is descriptive. You can use it to indicate what type of activity is posted, for example, an image versus text. The value post is defined in the JSON Activity Streams specification as “the act of authoring an object and then publishing it online.“
 
 ## Posting an activity to a group
 
-Use the POST method to post an activity to a specific group. In this case the activity is created in the activities collection and is accessible at the /activities endpoint to users who have the permission to read that endpoint. In addition, a relationship is established between the activity and the group, and because of that, the activity will appear in the group’s feed. The group "owns" the activity. Also, the activity will be published in the feed of all users that are members of the group.
+Use the POST method to post an activity to a specific group. In this case the activity is created in the activities collection and is accessible at the ``/activities`` endpoint to users who have the permission to read that endpoint. In addition, a relationship is established between the activity and the group, and because of that, the activity will appear in the group’s feed. The group "owns" the activity. Also, the activity will be published in the feed of all users that are members of the group.
 
 ### Request URI
 
@@ -223,7 +223,7 @@ When you create an activity for a user’s followers in a group:
 
 The activity is accessible at the ``/activities`` endpoint to users who have the permission to read that endpoint. The activity will not be cross-posted to the group’s activity endpoint (``/groups/{uuid|groupname}/activities``)
 A relationship is automatically created between the activity entity that was just created and the user within that group (``/groups/{uuid|groupname}/users/{uuid|username}``)
-The user within the group (``/groups/{uuid|groupname}/users/{uuid|username}```) becomes the owner of the activity (through the owner property in the activity).
+The user within the group (``/groups/{uuid|groupname}/users/{uuid|username}``) becomes the owner of the activity (through the owner property in the activity).
 
 ### Request URI
 

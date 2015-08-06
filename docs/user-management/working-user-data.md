@@ -1,7 +1,7 @@
 # Working with User Data
 You can store and manage user data as User entities. With user data in your application, you can add support for a wide variety of features common to mobile apps. For example, you can:
 
-* Control access to data by defining permission rules. (See Security & token authentication for more.)
+* Control access to data by defining permission rules. (See [Security & token authentication](../security-and-auth/app-security.html) for more.)
 * Present content specific to each user, such as their list of favorites.
 * Support social features, such as letting users "follow" one another, for example.
 
@@ -9,7 +9,7 @@ In mobile applications, data about users is typically added by users themselves 
 
 ## Creating users
 
-A user entity represents an application user. Using API Services you can create, retrieve, update, delete, and query user entities. See User entity properties for a list of the system-defined  properties for user entities. In addition, you can create user properties specific to your application.
+A user entity represents an application user. Using API Services you can create, retrieve, update, delete, and query user entities. See [User entity properties](../rest-endpoints/api-doc.html#user) for a list of the system-defined  properties for user entities. In addition, you can create user properties specific to your application.
 
 ### Request Syntax
 
@@ -38,13 +38,13 @@ The username is mandatory and must be unique. Here's an example:
         "password" : "test1234"
     }
 
-Although the password parameter is not mandatory, if you don't specify it, the user will not be able to log in using username and password credentials. If a password is not specified for the user, and you're an Admin, you can set a password for the user (see Setting a password).
+Although the password parameter is not mandatory, if you don't specify it, the user will not be able to log in using username and password credentials. If a password is not specified for the user, and you're an Admin, you can set a password for the user (see [Changing a User Password](#changing-a-user-password)).
 
 __ Note__: The username can contain any combination of characters, including those that represent letters, numbers, and symbols.
 
 ### Example
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Request
 
@@ -96,7 +96,7 @@ __Note__: Although not shown in the API examples below, you need to provide a va
 
 You can retrieve data about users through cURL or one of the SDKs. Each provides a way to filter the list of users by data associated with the user, such as username or UUID, or other properties in the user entity.
 
-See User entity properties for a list of the system-defined  properties for user entities. In addition, you can create user properties specific to your application.
+See [User entity properties](../rest-endpoints/api-doc.html#user) for a list of the system-defined  properties for user entities. In addition, you can create user properties specific to your application.
 
 ### Request Syntax
 
@@ -116,7 +116,7 @@ uuid | org_id	Organization UUID or organization name
 uuid | app_id	Application UUID or application name
 user identifier User UUID, username, or email address. 
 
-The alias ``/users/me`` can be used in place of the current user’s uuid, username, or email address. Note: The ``/users/me`` endpoint is accessible only if you provide an access token with the request (see Authenticating users and application clients). If you make an anonymous ("guest") call, the system will not be able to determine which user to return as /users/me.
+The alias ``/users/me`` can be used in place of the current user’s uuid, username, or email address. Note: The ``/users/me`` endpoint is accessible only if you provide an access token with the request (see [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html)). If you make an anonymous ("guest") call, the system will not be able to determine which user to return as ``/users/me``.
 
 __Note__: The username can contain any combination of characters, including those that represent letters, numbers, and symbols.
 
