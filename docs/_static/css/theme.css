@@ -5321,6 +5321,10 @@ span[id*='MathJax-Span'] {
     margin-bottom: 2em;
 }
 
+.usergrid-30 {
+    width:30%;
+}
+
 .usergrid-table tr td {
     padding: 0.5em;
     border: 1px solid grey;
@@ -5356,7 +5360,7 @@ h2.usergrid-DELETE-heading {
     margin-bottom: 2em;
 }
 
-/* css from petstore example */
+/* css from petstore example 
 
 body {
     font-family: Trebuchet MS, sans-serif;
@@ -5510,5 +5514,5 @@ code {
     text-decoration: none;
 }
 
-
+*/
 

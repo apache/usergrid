@@ -63,6 +63,7 @@ Apache Usergrid Documentation
   
    security-and-auth/app-security
    security-and-auth/using-permissions
+   security-and-auth/using-roles
    security-and-auth/authenticating-users-and-application-clients
    security-and-auth/user-authentication-types
    security-and-auth/changing-token-time-live-ttl
@@ -98,9 +99,9 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Assets & Files
   
-   asset-and-files/uploading-assets.md
-   asset-and-files/retrieving-assets.md
-   asset-and-files/folders.md
+   assets-and-files/uploading-assets.md
+   assets-and-files/retrieving-assets.md
+   assets-and-files/folders.md
    
 .. _counters-and-events:
 
