@@ -1,5 +1,4 @@
-Usergrid Android SDK Overview
-=======================
+# Android SDK 
 
 Installing the SDK
 --------------------
