@@ -33,20 +33,20 @@ Here is a simple example of an entity:
     }
     
 ## Default entities
-The following entity types are predefined in Usergrid. For more details, see Default Data Entity Types.
+The following entity types are predefined in Usergrid. For more details, see the [API Reference](../rest-endpoints/api-docs.html)
 
-* user
-* group
-* role
-* application
-* activity
-* device
-* asset
-* folder
-* event
-* notifier
-* notification
-* receipt
+* [user](../rest-endpoints/api-docs.html#user)
+* [group](../rest-endpoints/api-docs.html#group)
+* [role](../rest-endpoints/api-docs.html#role)
+* [application](../rest-endpoints/api-docs.html#application)
+* [activity](../rest-endpoints/api-docs.html#activity)
+* [device](../rest-endpoints/api-docs.html#device)
+* [asset](../rest-endpoints/api-docs.html#asset)
+* [folder](../rest-endpoints/api-docs.html#folder)
+* [event](../rest-endpoints/api-docs.html#event)
+* [notifier](../rest-endpoints/api-docs.html#notifier)
+* [notification](../rest-endpoints/api-docs.html#notification)
+* [receipt](../rest-endpoints/api-docs.html#recept)
 
 ## Properties
 

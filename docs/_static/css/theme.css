@@ -5314,9 +5314,9 @@ span[id*='MathJax-Span'] {
 
 /*# sourceMappingURL=theme.css.map */
 
-/* Usergrid specific */
+/* Start - Usergrid Additions */
 
-.usergrid-table {
+.usergrid-table, docutils {
     border: 1px solid grey;
     margin-bottom: 2em;
 }
@@ -5329,6 +5329,10 @@ span[id*='MathJax-Span'] {
     padding: 0.5em;
     border: 1px solid grey;
     font-size: 80%;
+}
+
+.usergrid-table th, .docutils th {
+    background-color: #e5ebeb;
 }
 
 .caption-text {
@@ -5360,159 +5364,21 @@ h2.usergrid-DELETE-heading {
     margin-bottom: 2em;
 }
 
-/* css from petstore example 
-
-body {
-    font-family: Trebuchet MS, sans-serif;
+div.wy-menu-vertical li {
     font-size: 15px;
-    color: #444;
-    margin-right: 24px;
+    margin-bottom: 0.0em;
+    margin-left: 1.5em;
 }
 
-h1	{
-    font-size: 25px;
-}
-h2	{
-    font-size: 20px;
-}
-h3	{
+ul.simple li, ol.simple li {
     font-size: 16px;
-    font-weight: bold;
-}
-hr	{
-    height: 1px;
-    border: 0;
-    color: #ddd;
-    background-color: #ddd;
-    display: none;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
 }
 
-.app-desc {
-    clear: both;
-    margin-left: 20px;
-}
-.param-name {
-    width: 100%;
-}
-.license-info {
-    margin-left: 20px;
+h1 p {
+    font-size:150%; 
 }
 
-.license-url {
-    margin-left: 20px;
-}
-
-.model {
-    margin: 0 0 0px 20px;
-}
-
-.method {
-    margin-left: 20px;
-}
-
-.method-notes	{
-    margin: 10px 0 20px 0;
-    font-size: 90%;
-    color: #555;
-}
-
-pre {
-    padding: 10px;
-    margin-bottom: 2px;
-}
-
-pre.get {
-    background-color: #0f6ab4;
-}
-
-pre.post {
-    background-color: #10a54a;
-}
-
-pre.put {
-    background-color: #c5862b;
-}
-
-pre.delete {
-    background-color: #a41e22;
-}
-
-.huge	{
-    color: #fff;
-}
-
-pre.example {
-    background-color: #f3f3f3;
-    padding: 10px;
-    border: 1px solid #ddd;
-}
-
-code {
-    white-space: pre;
-}
-
-.nickname {
-    font-weight: bold;
-}
-
-.method-path {
-    font-size: 1.5em;
-    background-color: #0f6ab4;
-}
-
-.parameter {
-    width: 500px;
-}
-
-.param {
-    width: 500px;
-    padding: 10px 0 0 20px;
-    font-weight: bold;
-}
-
-.param-desc {
-    width: 700px;
-    padding: 0 0 0 20px;
-    color: #777;
-}
-
-.param-type {
-    font-style: italic;
-}
-
-.field-label {
-    padding: 0;
-    margin: 0;
-    clear: both;
-}
-
-.field-items	{
-    padding: 0 0 15px 0;
-    margin-bottom: 15px;
-}
-
-.return-type {
-    clear: both;
-    padding-bottom: 10px;
-}
-
-.param-header {
-    font-weight: bold;
-}
-
-.method-tags {
-    text-align: right;
-}
-
-.method-tag {
-    background: none repeat scroll 0% 0% #24A600;
-    border-radius: 3px;
-    padding: 2px 10px;
-    margin: 2px;
-    color: #FFF;
-    display: inline-block;
-    text-decoration: none;
-}
-
-*/
+/* End - Usergrid Additions */
 

@@ -8,6 +8,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Introduction
 
+   introduction/overview.md
    introduction/usergrid-features
    introduction/data-model
    introduction/async-vs-sync
@@ -122,7 +123,7 @@ Apache Usergrid Documentation
    orgs-and-apps/managing
    orgs-and-apps/organization
    orgs-and-apps/application
-   orgs-and-apps/adminuser
+   orgs-and-apps/admin-user
   
 .. _rest-endpoints:
 
@@ -139,7 +140,7 @@ Apache Usergrid Documentation
    :caption: Client SDKs
 
    sdks/tbd
-   
+      
 .. _installation:
 
 .. toctree::
