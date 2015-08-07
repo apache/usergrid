@@ -65,6 +65,6 @@ __NOTE__: Mustache.hava is not in Maven Central so unfortunately, you will have 
 
 This is the command to run the generation:
 
-	groovy src/main/groovy/usergrid.ApiDocGenerator.groovy
+	groovy src/main/groovy/usergrid/ApiDocGenerator.groovy
 	
 The script will update the file ``rest-endpoints/api-docs.md`` and when you are happy with your update you should commit and push that file with Git.
