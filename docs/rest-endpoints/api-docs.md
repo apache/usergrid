@@ -1,5 +1,28 @@
+<h1>Usergrid API Reference</h1>
+    
+Methods are organized by tag. Follow the methods are the [Model Definitions](#models).
+
+<h2>Table of Contents</h2>
+
+* [Access-Tokens](#access-tokens)
+* [Activities](#activities)
+* [Admin-Users](#admin-users)
+* [App-Users](#app-users)
+* [Entities-Collections](#entities-collections)
+* [Events](#events)
+* [Groups](#groups)
+* [Organizations-Applications](#organizations-applications)
+* [Permissions-Roles](#permissions-roles)
+
+<br>
+<br>
+
+
 ## Methods
-### Access-Tokens Methods
+
+
+### Access-Tokens
+
 
 <h2 class="usergrid-POST-heading">POST /management/token</h2>
 
@@ -44,7 +67,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### Activities Methods
+
+### Activities
+
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/groups/{groupId}/feed</h2>
 
@@ -125,7 +150,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### Admin-Users Methods
+
+### Admin-Users
+
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/users</h2>
 
@@ -352,7 +379,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### App-Users Methods
+
+### App-Users
+
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users</h2>
 
@@ -511,7 +540,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### Entities-Collections Methods
+
+### Entities-Collections
+
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/{relation}</h2>
 
@@ -776,7 +807,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### Events Methods
+
+### Events
+
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/events</h2>
 
@@ -803,7 +836,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### Groups Methods
+
+### Groups
+
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups</h2>
 
@@ -966,7 +1001,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### Organizations-Applications Methods
+
+### Organizations-Applications
+
 
 <h2 class="usergrid-POST-heading">POST /management/orgs</h2>
 
@@ -1217,7 +1254,9 @@ __default__
 * Description: Unexpected error.
 * Schema: [Error](#error)
     
-### Permissions-Roles Methods
+
+### Permissions-Roles
+
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles</h2>
 
