@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
-        <link rel="next" title="Using a Sandbox Application" href="using-a-sandbox-app.html"/>
-        <link rel="prev" title="Creating a new application" href="creating-a-new-application.html"/> 
+        <link rel="next" title="Creating a new application" href="creating-a-new-application.html"/>
+        <link rel="prev" title="Async vs. sync calls" href="../introduction/async-vs-sync.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -82,17 +82,18 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Creating an Usergrid Account</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="using-the-api.html">Using the API</a></li>
 </ul>
@@ -120,6 +121,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -144,9 +146,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -161,6 +163,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -231,7 +234,8 @@ might want to read Usergrid features first.)</p>
 create one for you with your new account). The sandbox is a
 partitioned area of the data store where you can add example data and
 try out API calls. The sandbox isn&#8217;t secure, but it&#8217;s handy to play
-in. For more about the sandbox, see &#8220;Using Your Application Sandbox&#8221;.</li>
+in. For more about the sandbox, see <a class="reference external" href="../getting-started/using-a-sandbox-app.html">Using Your Application
+Sandbox</a>.</li>
 <li>The ability to create more applications (in addition to the sandbox).
 You can (and should!) make these as secure as you need to. These are
 the applications that you&#8217;ll have behind the apps you make available
@@ -242,14 +246,16 @@ including access levels. ** Manage the data in your app. **
 Manage app features, including push notifications, activities,
 analytics, and so on. ** Try out API calls with a shell command
 window. ** To create an Usergrid account and see a very short
-tutorial to get started with, go to the get started page.</li>
+tutorial to get started with, go to the get started page of the
+Portal.</li>
 </ul>
 <div class="section" id="next-steps">
 <h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
 <p>Ready to learn and do more?</p>
 <ul class="simple">
 <li>Install an SDK that will be most useful for your application
-environment. For more about Usergrid&#8217;s SDKs, see SDKs.</li>
+environment. For more about Usergrid&#8217;s SDKs, see
+<a class="reference external" href="../sdks/tbd.html">SDKs</a>.</li>
 <li>Review Usergrid features for information on concepts and features.</li>
 <li>Consult the API Reference for usage details.</li>
 </ul>
@@ -263,10 +269,10 @@ environment. For more about Usergrid&#8217;s SDKs, see SDKs.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="using-a-sandbox-app.html" class="btn btn-neutral float-right" title="Using a Sandbox Application" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="creating-a-new-application.html" class="btn btn-neutral float-right" title="Creating a new application" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="creating-a-new-application.html" class="btn btn-neutral" title="Creating a new application" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../introduction/async-vs-sync.html" class="btn btn-neutral" title="Async vs. sync calls" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

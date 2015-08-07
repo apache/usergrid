@@ -80,14 +80,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -115,6 +116,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -139,9 +141,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -156,6 +158,7 @@
 <li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -230,9 +233,6 @@ $ sudo easy_install pip
 </pre></div>
 </div>
 </div>
-<div class="section" id="how-to-change-update-the-usergrid-documentation">
-<h2>How to change/update the Usergrid documentation<a class="headerlink" href="#how-to-change-update-the-usergrid-documentation" title="Permalink to this headline">¶</a></h2>
-</div>
 <div class="section" id="how-to-build-the-usergrid-documentation-using-sphinx">
 <h2>How to build the Usergrid documentation using Sphinx<a class="headerlink" href="#how-to-build-the-usergrid-documentation-using-sphinx" title="Permalink to this headline">¶</a></h2>
 <p>Sphinx runs via a Makefile in this, the docs directory. So, cd to this
@@ -275,6 +275,12 @@ examples of that around too.</p>
 </div>
 <div class="section" id="how-to-publish-the-usergrid-docs-to-usergrid-website">
 <h2>How to publish the Usergrid docs to Usergrid website<a class="headerlink" href="#how-to-publish-the-usergrid-docs-to-usergrid-website" title="Permalink to this headline">¶</a></h2>
+<p>First you generate the HTML for the docs from the Markdown and reST
+sources like so:</p>
+<div class="highlight-python"><div class="highlight"><pre>cd $usergrid/docs
+make clean html
+</pre></div>
+</div>
 <p>To update the Usergrid website you must copy the udpated docs files from
 <code class="docutils literal"><span class="pre">target/html</span></code> directory to the website directory at the root of the
 Usergrid project, i.e. <code class="docutils literal"><span class="pre">${usergrid-project-dir}/website/docs</span></code>.</p>
@@ -299,7 +305,7 @@ need to edit the Groovy script that does the generation:
 will have to Git Clone Mustache.java before you can run the generation
 script.</p>
 <p>This is the command to run the generation:</p>
-<div class="highlight-python"><div class="highlight"><pre>groovy src/main/groovy/usergrid.ApiDocGenerator.groovy
+<div class="highlight-python"><div class="highlight"><pre>groovy src/main/groovy/usergrid/ApiDocGenerator.groovy
 </pre></div>
 </div>
 <p>The script will update the file <code class="docutils literal"><span class="pre">rest-endpoints/api-docs.md</span></code> and when

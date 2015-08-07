@@ -80,14 +80,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -115,6 +116,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -139,9 +141,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -156,6 +158,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -216,6 +219,128 @@
             
   <div class="section" id="ios-sdk">
 <h1>iOS SDK<a class="headerlink" href="#ios-sdk" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="version">
+<h2>Version<a class="headerlink" href="#version" title="Permalink to this headline">¶</a></h2>
+<p>Current Version: <strong>0.9.2</strong></p>
+<p>Change log:</p>
+<p><a class="reference external" href="https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md">https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md</a></p>
+</div>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This open source SDK simplifies writing iOS applications that connect to
+App Services (Usergrid). The repo is located here:</p>
+<p><a class="reference external" href="https://github.com/apigee/usergrid-ios-sdk">https://github.com/apigee/usergrid-ios-sdk</a></p>
+<p>You can download the SDK here:</p>
+<ul class="simple">
+<li>Download as a zip file:
+<a class="reference external" href="https://github.com/apigee/usergrid-ios-sdk/archive/master.zip">https://github.com/apigee/usergrid-ios-sdk/archive/master.zip</a></li>
+<li>Download as a tar.gz file:
+<a class="reference external" href="https://github.com/apigee/usergrid-ios-sdk/archive/master.tar.gz">https://github.com/apigee/usergrid-ios-sdk/archive/master.tar.gz</a></li>
+</ul>
+<p>To find out more about App Services, which is Apigee&#8217;s hosted Usergrid
+solution, see:</p>
+<p><a class="reference external" href="http://apigee.com/about/developers">http://apigee.com/about/developers</a></p>
+<p>To view the Apigee App Services documentation, see:</p>
+<p><a class="reference external" href="http://apigee.com/docs/app_services">http://apigee.com/docs/app_services</a></p>
+</div>
+<div class="section" id="installing">
+<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<p>Once you have downloaded the SDK, add the UGAPI folder to your project
+by dragging and dropping it into your project.</p>
+<p><strong>Note:</strong> Make sure you check the &#8220;Copy items into destination group&#8217;s
+folder&#8221;, and also make sure the appropriate boxes are checked next to
+&#8220;Add to targets&#8221;.</p>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>If you haven&#8217;t done so, make sure you know your organization name and
+your application name. Your organization name will be the same as the
+username you signed up with.</p>
+<p>Within your organization, you can have multiple application namespaces.
+By default, an application named &#8220;Sandbox&#8221; has been created for you to
+use for testing, but you can also log into the <a class="reference external" href="http://apigee.com/usergrid">Admin
+Portal</a> and create an application with
+any name you want.</p>
+<p>Once you have your application name, you will want to create a UGClient
+object like so:</p>
+<div class="highlight-python"><div class="highlight"><pre>//configure the org and app
+NSString * orgName = @&quot;ApigeeOrg&quot;;
+NSString * appName = @&quot;MessageeApp&quot;;
+
+//make new client
+usergridClient = [[UGClient alloc]initWithOrganizationId: orgName withApplicationID: appName];
+</pre></div>
+</div>
+<p>Now use the usergridClient object to invoke other methods that access
+the API. For example, to log a user in:</p>
+<div class="highlight-python"><div class="highlight"><pre>[usergridClient logInUser:username password:password];
+UGUser *user = [usergridClient getLoggedInUser];
+</pre></div>
+</div>
+<p>Or, to create a user:</p>
+<div class="highlight-python"><div class="highlight"><pre>UGClientResponse *response = [usergridClient addUser:@&quot;myusername&quot; email:@&quot;email@email.com&quot; name:@&quot;my name&quot; password:@&quot;mypassword&quot;];
+if (response.transactionState == 0) {
+    //user created!
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="sample-code">
+<h2>Sample Code<a class="headerlink" href="#sample-code" title="Permalink to this headline">¶</a></h2>
+<p>If you are ready to look at a fully functional app that uses this SDK,
+check out our Messagee application. It is a twitter-type app that
+exercises many parts of the API including: Login / Authentication, GET
+and POST operations, activities (tweets), and social features such as
+following relationships.</p>
+<p>The Messagee Xcode project is located here:</p>
+<p><a class="reference external" href="https://github.com/apigee/usergrid-sample-ios-messagee">https://github.com/apigee/usergrid-sample-ios-messagee</a></p>
+</div>
+<div class="section" id="running-tests">
+<h2>Running Tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
+<p>The iOS SDK unit tests are written with Nu. You&#8217;ll need to install the
+language itself to run the tests, and use the Nukefile to create a
+Usergrid.framework. For installation directions go
+<a class="reference external" href="https://github.com/timburks/nu">here</a></p>
+<p>To compile the Usergrid SDK as an Objective-C framework simple type
+<code class="docutils literal"><span class="pre">nuke</span></code> to build the framework and then <code class="docutils literal"><span class="pre">nuke</span> <span class="pre">install</span></code> to install it
+in the /Library/Frameworks path.</p>
+<p>To run the unit tests written for the SDK use the command <code class="docutils literal"><span class="pre">nuke</span> <span class="pre">test</span></code>
+this will run all tests.</p>
+</div>
+<div class="section" id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h2>
+<p>We welcome your enhancements!</p>
+<p>Like <a class="reference external" href="https://github.com/apigee/usergrid-node-module">Usergrid</a>, the
+Usergrid Objective-C SDK is open source and licensed under the Apache
+License, Version 2.0.</p>
+<ol class="arabic simple">
+<li>Fork it</li>
+<li>Create your feature branch (<code class="docutils literal"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">my-new-feature</span></code>)</li>
+<li>Commit your changes (<code class="docutils literal"><span class="pre">git</span> <span class="pre">commit</span> <span class="pre">-am</span> <span class="pre">'Added</span> <span class="pre">some</span> <span class="pre">feature'</span></code>)</li>
+<li>Push your changes to the upstream branch
+(<code class="docutils literal"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">my-new-feature</span></code>)</li>
+<li>Create new Pull Request (make sure you describe what you did and why
+your mod is needed)</li>
+</ol>
+</div>
+<div class="section" id="more-information">
+<h2>More information<a class="headerlink" href="#more-information" title="Permalink to this headline">¶</a></h2>
+<p>For more information on Apigee App Services, visit
+<a class="reference external" href="http://apigee.com/about/developers">http://apigee.com/about/developers</a>.</p>
+</div>
+<div class="section" id="copyright">
+<h2>Copyright<a class="headerlink" href="#copyright" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2013 Apigee Corporation</p>
+<p>Licensed under the Apache License, Version 2.0 (the &#8220;License&#8221;); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at</p>
+<p><a class="reference external" href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#8220;AS IS&#8221; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</div>
 </div>
 
 

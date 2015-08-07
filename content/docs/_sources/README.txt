@@ -9,10 +9,6 @@ Sphinx requires Python and pip. Once you have Python, you can install sphinx and
 	$ sudo easy_install sphinx
 	$ sudo easy_install pip
 
-## How to change/update the Usergrid documentation 
-
-
-
 ## How to build the Usergrid documentation using Sphinx
 
 Sphinx runs via a Makefile in this, the docs directory. So, cd to this directory and make html:
@@ -40,6 +36,11 @@ A note about tables. Markdown and reST do not have very good table support. Simp
 
 ## How to publish the Usergrid docs to Usergrid website
 
+First you generate the HTML for the docs from the Markdown and reST sources like so:
+
+	cd $usergrid/docs
+	make clean html
+	
 To update the Usergrid website you must copy the udpated docs files from ``target/html`` directory to the website directory at the root of the Usergrid project, i.e. ``${usergrid-project-dir}/website/docs``.
 
 You can do this by running the script ``update-website.sh``.
@@ -64,6 +65,6 @@ __NOTE__: Mustache.hava is not in Maven Central so unfortunately, you will have 
 
 This is the command to run the generation:
 
-	groovy src/main/groovy/usergrid.ApiDocGenerator.groovy
+	groovy src/main/groovy/usergrid/ApiDocGenerator.groovy
 	
 The script will update the file ``rest-endpoints/api-docs.md`` and when you are happy with your update you should commit and push that file with Git.
