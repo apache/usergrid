@@ -82,14 +82,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -117,6 +118,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -168,9 +170,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -185,6 +187,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -249,8 +252,9 @@
 your application, you can add support for a wide variety of features
 common to mobile apps. For example, you can:</p>
 <ul class="simple">
-<li>Control access to data by defining permission rules. (See Security &amp;
-token authentication for more.)</li>
+<li>Control access to data by defining permission rules. (See <a class="reference external" href="../security-and-auth/app-security.html">Security &amp;
+token authentication</a> for
+more.)</li>
 <li>Present content specific to each user, such as their list of
 favorites.</li>
 <li>Support social features, such as letting users &#8220;follow&#8221; one another,
@@ -263,10 +267,10 @@ things done with user data.</p>
 <div class="section" id="creating-users">
 <h2>Creating users<a class="headerlink" href="#creating-users" title="Permalink to this headline">¶</a></h2>
 <p>A user entity represents an application user. Using API Services you can
-create, retrieve, update, delete, and query user entities. See User
-entity properties for a list of the system-defined properties for user
-entities. In addition, you can create user properties specific to your
-application.</p>
+create, retrieve, update, delete, and query user entities. See <a class="reference external" href="../rest-endpoints/api-doc.html#user">User
+entity properties</a> for a list of
+the system-defined properties for user entities. In addition, you can
+create user properties specific to your application.</p>
 <div class="section" id="request-syntax">
 <h3>Request Syntax<a class="headerlink" href="#request-syntax" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/your-org/your-app/users&quot; -d &#39;{ &quot;username&quot;: &quot;john.doe&quot;, &quot;email&quot;: &quot;john.doe@gmail.com&quot;, &quot;name&quot;: &quot;John Doe&quot;, &quot;password&quot;: &quot;test1234&quot; }&#39;
@@ -314,15 +318,18 @@ application.</p>
 <p>Although the password parameter is not mandatory, if you don&#8217;t specify
 it, the user will not be able to log in using username and password
 credentials. If a password is not specified for the user, and you&#8217;re an
-Admin, you can set a password for the user (see Setting a password).</p>
+Admin, you can set a password for the user (see <a class="reference external" href="#changing-a-user-password">Changing a User
+Password</a>).</p>
 <p>__ Note__: The username can contain any combination of characters,
 including those that represent letters, numbers, and symbols.</p>
 </div>
 <div class="section" id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p><strong>Note</strong>: Although not shown in the API examples below, you need to
-provide a valid access token with each API call. See Authenticating
-users and application clients for details.</p>
+provide a valid access token with each API call. See <a class="reference external" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating
+users and application
+clients</a>
+for details.</p>
 </div>
 <div class="section" id="request">
 <h3>Request<a class="headerlink" href="#request" title="Permalink to this headline">¶</a></h3>
@@ -379,9 +386,9 @@ users and application clients for details.</p>
 <p>You can retrieve data about users through cURL or one of the SDKs. Each
 provides a way to filter the list of users by data associated with the
 user, such as username or UUID, or other properties in the user entity.</p>
-<p>See User entity properties for a list of the system-defined properties
-for user entities. In addition, you can create user properties specific
-to your application.</p>
+<p>See <a class="reference external" href="../rest-endpoints/api-doc.html#user">User entity properties</a> for
+a list of the system-defined properties for user entities. In addition,
+you can create user properties specific to your application.</p>
 <div class="section" id="id1">
 <h3>Request Syntax<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/your-org/your-app/users&quot;
@@ -420,9 +427,10 @@ to your application.</p>
 <p>The alias <code class="docutils literal"><span class="pre">/users/me</span></code> can be used in place of the current user’s uuid,
 username, or email address. Note: The <code class="docutils literal"><span class="pre">/users/me</span></code> endpoint is
 accessible only if you provide an access token with the request (see
-Authenticating users and application clients). If you make an anonymous
-(&#8220;guest&#8221;) call, the system will not be able to determine which user to
-return as /users/me.</p>
+<a class="reference external" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>).
+If you make an anonymous (&#8220;guest&#8221;) call, the system will not be able to
+determine which user to return as <code class="docutils literal"><span class="pre">/users/me</span></code>.</p>
 <p><strong>Note</strong>: The username can contain any combination of characters,
 including those that represent letters, numbers, and symbols.</p>
 </div>

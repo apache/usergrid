@@ -59,7 +59,7 @@ For example, this request retrieves users whose Facebook first name is john:
 
     /users?ql=select * where facebook.first_name ='john'
 
-For further information about queries, see Queries and parameters.
+For further information about queries, see [Querying your Data](../data-queries/querying-your-data.html)
 
 ## Authentication (OAuth)
 Usergrid implements the OAuth 2.0 standard for authenticating users, clients and API requests.

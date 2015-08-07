@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
-        <link rel="next" title="Methods" href="../rest-endpoints/api-docs.html"/>
+        <link rel="next" title="Admin user" href="admin-user.html"/>
         <link rel="prev" title="Organization" href="organization.html"/> 
 
   
@@ -82,14 +82,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -117,6 +118,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -141,9 +143,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -178,6 +180,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -240,11 +243,12 @@
 <h1>Application<a class="headerlink" href="#application" title="Permalink to this headline">¶</a></h1>
 <p>You can create a new application in an organization through the Admin
 portal. The Admin portal creates the new application by issuing a post
-against the management endpoint (see the &#8220;Creating an organization
-application&#8221; section in Organization for details). If you need to create
-an application programmatically in your app, you can also use the API to
-do this. You can access application entities using your app name or
-UUID, prefixed with the organization name or UUID:</p>
+against the management endpoint (see the <a class="reference external" href="../orgs-and-apps/application.html#creating-an-application">Creating an
+Application</a>
+section in Organization for details). If you need to create an
+application programmatically in your app, you can also use the API to do
+this. You can access application entities using your app name or UUID,
+prefixed with the organization name or UUID:</p>
 <div class="highlight-python"><div class="highlight"><pre>https://api.usergrid.com/{org_name|uuid}/{app_name|uuid}
 </pre></div>
 </div>
@@ -431,7 +435,7 @@ for details.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../rest-endpoints/api-docs.html" class="btn btn-neutral float-right" title="Methods" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="admin-user.html" class="btn btn-neutral float-right" title="Admin user" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="organization.html" class="btn btn-neutral" title="Organization" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -82,14 +82,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -117,6 +118,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -183,9 +185,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -200,6 +202,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -279,10 +282,10 @@ create group properties specific to your application.</p>
 <div class="section" id="creating-groups">
 <h2>Creating groups<a class="headerlink" href="#creating-groups" title="Permalink to this headline">¶</a></h2>
 <p>A group entity represents an application group of users. You can create,
-retrieve, update, delete, and query group entities. See User entity
-properties for a list of the system-defined properties for group
-entities. In addition, you can create group properties specific to your
-application.</p>
+retrieve, update, delete, and query group entities. See <a class="reference external" href="../rest-endpoints/api-doc.html#user">User entity
+properties</a> for a list of the
+system-defined properties for group entities. In addition, you can
+create group properties specific to your application.</p>
 <div class="section" id="request-syntax">
 <h3>Request Syntax<a class="headerlink" href="#request-syntax" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/your-org/your-app/groups&quot; &#39;{ request body }&#39;
@@ -333,8 +336,10 @@ forward slashes to denote hierarchical relationships.</p>
 <div class="section" id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p><strong>Note</strong>: Although not shown in the API examples below, you need to
-provide a valid access token with each API call. See Authenticating
-users and application clients for details.</p>
+provide a valid access token with each API call. See <a class="reference external" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating
+users and application
+clients</a>
+for details.</p>
 </div>
 <div class="section" id="request">
 <h3>Request<a class="headerlink" href="#request" title="Permalink to this headline">¶</a></h3>
@@ -409,7 +414,8 @@ create group properties specific to your application.</p>
 <p>org_id | uuid Organization UUID or organization name app_id | uuid
 Application UUID or application name groupPath | uuid Group UUID or
 group path, which must be unique. query_string A data store query. For
-more on queries, see Data queries.</p>
+more on queries, see <a class="reference external" href="../data-queries/querying-your-data.html">Data
+queries</a>.</p>
 <div class="section" id="id3">
 <h3>Request<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre># Get a group by the group path, &quot;employees/managers&quot;.
@@ -559,14 +565,14 @@ Entities</a>.</p>
 </div>
 <div class="section" id="adding-a-user-to-a-group">
 <h2>Adding a user to a group<a class="headerlink" href="#adding-a-user-to-a-group" title="Permalink to this headline">¶</a></h2>
-<p>See all application entities</p>
 <p>You can add users to groups from client code using cURL commands or one
 of the SDKs, as described here.</p>
 <p>When setting up your application on the server, you might find it easier
 and more convenient to create and populate groups with the admin portal.
 There, you can create groups, create roles, and define permission rules
 that govern user access to data and services in your application. For
-more information, see Security &amp; token authentication.</p>
+more information, see <a class="reference external" href="../security-and-auth/app-security.html">Security &amp; Token
+Authentication</a>.</p>
 <p>Use the POST method to add a user to a group. If the named group does
 not yet exist, an error message is returned.</p>
 <div class="section" id="id6">
@@ -610,8 +616,10 @@ not yet exist, an error message is returned.</p>
 <div class="section" id="id8">
 <h3>Example<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <p><strong>Note</strong>: Although not shown in the API examples below, you need to
-provide a valid access token with each API call. See Authenticating
-users and application clients for details.</p>
+provide a valid access token with each API call. See <a class="reference external" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating
+users and application
+clients</a>
+for details.</p>
 </div>
 <div class="section" id="id9">
 <h3>Request<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>

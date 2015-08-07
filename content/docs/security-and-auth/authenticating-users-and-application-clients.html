@@ -32,7 +32,7 @@
   
     <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
         <link rel="next" title="Authentication levels" href="user-authentication-types.html"/>
-        <link rel="prev" title="Using permissions" href="using-permissions.html"/> 
+        <link rel="prev" title="Using roles" href="using-roles.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -82,14 +82,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -117,6 +118,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-roles.html">Using roles</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Authenticating users &amp; app clients</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#authentication-levels">Authentication levels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#application-user-authentication-user-login">Application user authentication (user login)</a><ul>
@@ -171,9 +173,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -188,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -338,9 +341,10 @@ Credentials&#8217;.</p>
 
 Warning: You should never authenticate this way from a client-side app<p>such as a mobile app. A hacker could analyze your app and extract the
 credentials for malicious use even if those credentials are compiled and
-in binary format. See &#8220;safe mobile access&#8221; in <a class="reference external" href="authenticating-api-requests.html">Authenticating API
-requests</a> for additional
-considerations in keeping access to your app and its data secure.</p>
+in binary format. See <a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
+Practices</a> for
+additional considerations in keeping access to your app and its data
+secure.</p>
 </p></div><div class="section" id="id1">
 <h3>Request syntax<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/&lt;orgName&gt;/&lt;appName&gt;/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;client_credentials&quot;, &quot;client_id&quot;:&lt;application_clientID&gt;, &quot;client_secret&quot;:&quot;&lt;application_client_secret&gt;&quot;}&#39;
@@ -380,8 +384,8 @@ supplies the username and password of an admin user in the request.</p>
 Warning: Authenticating as an admin user grants full access to one or<p>more organizations and all of the applications contained in those
 organizations. Due to this, be cautious when implementing this type of
 authentication in client-side code. Instead, consider implementing admin
-user access in server-side code only. See &#8220;safe mobile access&#8221; in
-<a class="reference external" href="authenticating-api-requests.html">Authenticating API requests</a> for
+user access in server-side code only. See <a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
+Practices</a> for
 additional considerations in keeping access to your app and its data
 secure.</p>
 </p></div><div class="section" id="id4">
@@ -425,9 +429,10 @@ Administration&#8217; page of the API Services admin console under
 
 Warning: You should never authenticate this way from a client-side app<p>such as a mobile app. A hacker could analyze your app and extract the
 credentials for malicious use even if those credentials are compiled and
-in binary format. See &#8220;safe mobile access&#8221; in [Authenticating API
-requests](authenticating-api-requests.html for additional considerations
-in keeping access to your app and its data secure.</p>
+in binary format. See <a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
+Practices</a> for
+additional considerations in keeping access to your app and its data
+secure.</p>
 </p></div><div class="section" id="id7">
 <h3>Request syntax<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/management/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;client_credentials&quot;, &quot;client_id&quot;:&lt;org_clientID&gt;, &quot;client_secret&quot;:&lt;org_client_secret&gt;}&#39;
@@ -467,7 +472,7 @@ requests to the organization:</p>
         <a href="user-authentication-types.html" class="btn btn-neutral float-right" title="Authentication levels" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="using-permissions.html" class="btn btn-neutral" title="Using permissions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="using-roles.html" class="btn btn-neutral" title="Using roles" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

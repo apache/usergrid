@@ -82,14 +82,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -117,6 +118,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -145,9 +147,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -162,6 +164,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -232,7 +235,8 @@ access.</p>
 API, and how to manage access tokens, including revoking and changing
 token time to live.</p>
 <p>For information on generating access tokens/authenticating users and
-clients, see Authenticating users and application clients.</p>
+clients, see <a class="reference external" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>.</p>
 <div class="section" id="authenticating-with-access-tokens">
 <h2>Authenticating with access tokens<a class="headerlink" href="#authenticating-with-access-tokens" title="Permalink to this headline">¶</a></h2>
 <p>When you obtain an access token, you must provide it with every
@@ -258,7 +262,7 @@ token is the sandbox application. The Guest role has been given full
 permissions (/** for GET, POST, PUT, and DELETE) for this application.
 This eliminates the need for a token when making application level calls
 to the sandbox app. For further information on specifying permissions,
-see Managing access by defining permission rules.</p>
+see <a class="reference external" href="security-and-auth/using-permissions.html">Using Permissions</a>.</p>
 </p></div></div>
 <div class="section" id="authenticating-with-client-id-and-client-secret">
 <h2>Authenticating with client ID and client secret<a class="headerlink" href="#authenticating-with-client-id-and-client-secret" title="Permalink to this headline">¶</a></h2>
@@ -275,9 +279,10 @@ Started&#8217; section of the admin portal.</p>
 
 Warning: For server-side use only You should never authenticate this<p>way from a client-side app such as a mobile app. A hacker could analyze
 your app and extract the credentials for malicious use even if those
-credentials are compiled and in binary format. See Security best
-practices for additional considerations in keeping access to your app
-and its data secure.</p>
+credentials are compiled and in binary format. See <a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
+Practices</a> for
+additional considerations in keeping access to your app and its data
+secure.</p>
 </p></div><p>This can be a convenient way to authenticate API requests, since there
 is no need to generate and manage an access token, but please note that
 you should be very cautious when implementing this type of
