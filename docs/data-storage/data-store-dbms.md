@@ -20,10 +20,10 @@ If you have experience with relational databases and are unfamiliar with "NoSQL"
 
 <table class="usergrid-table">
 <tr>
-    <td></td>
-    <td>RDBMS</td>
-    <td>Cassandra</td>
-    <td>Usergrid</td>
+    <th></th>
+    <th>RDBMS</th>
+    <th>Cassandra</th>
+    <th>Usergrid</th>
 </tr>
 <tr>
     <td>Each tuple is modeled as</td>
