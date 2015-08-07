@@ -32,7 +32,7 @@
   
     <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
         <link rel="next" title="Using the API" href="using-the-api.html"/>
-        <link rel="prev" title="Creating an Usergrid Account" href="creating-account.html"/> 
+        <link rel="prev" title="Creating a new application" href="creating-a-new-application.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -82,14 +82,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Using a Sandbox Application</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#what-is-the-sandbox-application">What is the sandbox application?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#is-the-sandbox-secure">Is the sandbox secure?</a></li>
@@ -122,6 +123,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -146,9 +148,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -163,6 +165,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -225,11 +228,12 @@
 <h1>Using a Sandbox Application<a class="headerlink" href="#using-a-sandbox-application" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="what-is-the-sandbox-application">
 <h2>What is the sandbox application?<a class="headerlink" href="#what-is-the-sandbox-application" title="Permalink to this headline">¶</a></h2>
-<p>When you create a new Usergrid account (see Creating an Usergrid
-Account) to use services for developers, Usergrid creates a new
-application for you on its servers. With the new application, called
-&#8220;sandbox,&#8221; you can add your own example data and try out API calls that
-do things with the data. Be sure to see Using the API for suggestions.</p>
+<p>When you create a new Usergrid account (see <a class="reference external" href="creating-account.html">Creating an Usergrid
+Account</a>) to use services for developers,
+Usergrid creates a new application for you on its servers. With the new
+application, called &#8220;sandbox,&#8221; you can add your own example data and try
+out API calls that do things with the data. Be sure to see Using the API
+for suggestions.</p>
 </div>
 <div class="section" id="is-the-sandbox-secure">
 <h2>Is the sandbox secure?<a class="headerlink" href="#is-the-sandbox-secure" title="Permalink to this headline">¶</a></h2>
@@ -296,7 +300,7 @@ application whatever you like (including &#8220;sandbox&#8221;).</li>
         <a href="using-the-api.html" class="btn btn-neutral float-right" title="Using the API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="creating-account.html" class="btn btn-neutral" title="Creating an Usergrid Account" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="creating-a-new-application.html" class="btn btn-neutral" title="Creating a new application" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -8,6 +8,7 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Introduction
 
+   introduction/overview.md
    introduction/usergrid-features
    introduction/data-model
    introduction/async-vs-sync
@@ -18,8 +19,8 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Getting Started
 
-   getting-started/creating-a-new-application
    getting-started/creating-account
+   getting-started/creating-a-new-application
    getting-started/using-a-sandbox-app
    getting-started/using-the-api.md
      
@@ -63,6 +64,7 @@ Apache Usergrid Documentation
   
    security-and-auth/app-security
    security-and-auth/using-permissions
+   security-and-auth/using-roles
    security-and-auth/authenticating-users-and-application-clients
    security-and-auth/user-authentication-types
    security-and-auth/changing-token-time-live-ttl
@@ -98,9 +100,9 @@ Apache Usergrid Documentation
    :maxdepth: 2
    :caption: Assets & Files
   
-   asset-and-files/uploading-assets.md
-   asset-and-files/retrieving-assets.md
-   asset-and-files/folders.md
+   assets-and-files/uploading-assets.md
+   assets-and-files/retrieving-assets.md
+   assets-and-files/folders.md
    
 .. _counters-and-events:
 
@@ -121,7 +123,7 @@ Apache Usergrid Documentation
    orgs-and-apps/managing
    orgs-and-apps/organization
    orgs-and-apps/application
-   orgs-and-apps/adminuser
+   orgs-and-apps/admin-user
   
 .. _rest-endpoints:
 
@@ -138,7 +140,7 @@ Apache Usergrid Documentation
    :caption: Client SDKs
 
    sdks/tbd
-   
+      
 .. _installation:
 
 .. toctree::

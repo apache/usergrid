@@ -5,7 +5,7 @@ Usergrid supports four levels of authentication, but only one of them is used wh
 ## Configuring authentication levels
 Access permissions can only be configured for the 'application user' – this can be done both programmatically and in the admin portal. The application, organization and admin clients cannot be configured, and can only be accessed programmatically via the API.
 
-For more about creating and managing roles and permissions for application users, see Managing access by defining permission rules. For a look at how security features fit together, see App Security Overview.
+For more about creating and managing roles and permissions for application users, see [Using Permissions](security-and-auth/using-permissions.html) and [Using Roles](security-and-auth/using-roles.html). For a look at how security features fit together, see [App Security Overview](../security-and-auth/app-security.html).
 
 ## User authentication level
 
@@ -16,14 +16,14 @@ For more about creating and managing roles and permissions for application users
 </tr>
 <tr>
     <td>Application user</td>
-    <td>This is the standard authentication type you will use to implement user login for your app. The application user level allows access to your Usergrid application as governed by the permission rules you create and associated with users and user groups. For more on setting permissions see Managing access by defining permission rules. Each Application User is represented by a User entity in your Usergrid application. For more about the User entity, see User.</td>
+    <td>This is the standard authentication type you will use to implement user login for your app. The application user level allows access to your Usergrid application as governed by the permission rules you create and associated with users and user groups. For more on setting permissions see [Using Permissions](security-and-auth/using-permissions.html). Each Application User is represented by a User entity in your Usergrid application. For more about the User entity, see User.</td>
 </tr>
 </table>
 
 ## Admin authentication levels
 
 <div class="admonition warning"> <p class="first admonition-title">WARNING</p> <p class="last"> 
-Warning: Safe use of admin authentication levels. Never use client ID and client secret, or any hard-coded credentials to authenticate this way from a client-side app, such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. Even when authenticating with username and password, be cautious when using these authentication levels since they grant broad access to your Usergrid account. See "safe mobile access" in Authenticating API requests for additional considerations in keeping access to your app and its data secure.</p></div>
+Warning: Safe use of admin authentication levels. Never use client ID and client secret, or any hard-coded credentials to authenticate this way from a client-side app, such as a mobile app. A hacker could analyze your app and extract the credentials for malicious use even if those credentials are compiled and in binary format. Even when authenticating with username and password, be cautious when using these authentication levels since they grant broad access to your Usergrid account. See [Security Best Practices](../security-and-auth/securing-your-app.html) for additional considerations in keeping access to your app and its data secure.</p></div>
 
 <table class="usergrid-table">
 <tr>

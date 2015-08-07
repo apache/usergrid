@@ -17,6 +17,9 @@ import com.github.mustachejava.*
 import org.apache.commons.lang3.RandomStringUtils;
 
 
+/**
+ * Generates Usergrid API docs from Swagger in Markdown format.
+ */
 public class ApiDocGenerator {
     
     def parser = new SwaggerParser();
@@ -41,9 +44,11 @@ public class ApiDocGenerator {
     public ApiDocGenerator() {
         writer = new OutputStreamWriter(new FileOutputStream("rest-endpoints/api-docs.md"));
         operationTemplate = mf.compile(
-                new FileReader("${mustacheBase}/operation.mustache"), "operation");
+                new FileReader("${mustacheBase}/markdown/operation.mustache"), "operation");
         modelTemplate = mf.compile(
-                new FileReader("${mustacheBase}/model.mustache"), "model");
+                new FileReader("${mustacheBase}/markdown/model.mustache"), "model");
+        fileStartTemplate = mf.compile(
+                new FileReader("${mustacheBase}/markdown/file-start.mustache"), "file-start");
     }
     
     public static void main( String[] args ) {
@@ -162,7 +167,7 @@ public class ApiDocGenerator {
             if (parameter.in == "body" && parameter.schema != null) {
                 param.schemaRef = parameter.schema.ref;
                 param.schemaAnchor = parameter.schema.ref.toLowerCase();
-            } else if (parameter.in == "path") {
+            } else { // if (parameter.in == "path") {
                 param.type = parameter.type;
             }
             params.add(param);
@@ -207,15 +212,29 @@ public class ApiDocGenerator {
     }
     
     def generateFileStart() {
-        // no op
+        def scope = [:];
+        def tags = [];
+        allTags.each{ tag -> 
+            def atag = [:];
+            atag.name = tag;
+            atag.link = tag.toLowerCase();
+            tags.add(atag);
+        };
+        scope.tags = tags;
+        fileStartTemplate.execute(writer, scope);
+        writer.flush();
     }
     
     def generateMethodsSectionTitle() {
+        writer.println "";
         writer.println "## Methods";
+        writer.println "";
     }
     
     def generateMethodsTitle(String tag) {
-        writer.println "### ${tag} Methods";
+        writer.println "";
+        writer.println "### ${tag}";
+        writer.println "";
     }
     
     def generateModelsTitle() {
@@ -224,24 +243,28 @@ public class ApiDocGenerator {
     }
     
     def generateFileEnd() {
-        // no op
+        writer.println "";
+        writer.println "Generated from the Usergrid Swagger definition.";
+        writer.println ""; 
     }
 }
 
-
+/**
+ * Generates Usergrid API docs from Swagger in HTML format.
+ */
 class HtmlApiDocGenerator extends ApiDocGenerator {
     
     public HtmlApiDocGenerator() {
         writer = new OutputStreamWriter(
                 new FileOutputStream("rest-endpoints/api-docs.html"));
         operationTemplate = mf.compile(
-                new FileReader("${mustacheBase}/operation-html.mustache"), "operation");
+                new FileReader("${mustacheBase}/html/operation.mustache"), "operation");
         modelTemplate = mf.compile(
-                new FileReader("${mustacheBase}/model-html.mustache"), "operation");
+                new FileReader("${mustacheBase}/html/model.mustache"), "operation");
         fileStartTemplate = mf.compile(
-                new FileReader("${mustacheBase}/file-start-html.mustache"), "file-start");
+                new FileReader("${mustacheBase}/html/file-start.mustache"), "file-start");
         fileEndTemplate = mf.compile(
-                new FileReader("${mustacheBase}/file-end-html.mustache"), "file-end");
+                new FileReader("${mustacheBase}/html/file-end.mustache"), "file-end");
     }
 
     def generateFileStart() {
@@ -260,12 +283,12 @@ class HtmlApiDocGenerator extends ApiDocGenerator {
 
     def generateMethodsTitle(String tag) {
         writer.println "<a name='${tag}-method'></a>";
-        writer.println "<h2>${tag} Methods</h2>";
+        writer.println "<h2>${tag}</h2>";
     }
 
     def generateModelsTitle() {
         writer.println "<a name='models'></a>";
-        writer.println "<h2>Default Entity Models</h2>" +
+        writer.println "<br><h1>Default Entity Models</h1>" +
                 "<p>This section lists the properties for the following Usergrid Default Entities:</p>";
     }
 

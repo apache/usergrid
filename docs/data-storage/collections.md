@@ -4,7 +4,7 @@
 
 This article describes how to create collections in Advanced Usergrid. All entities are automatically associated with a corresponding collection based on the type property of the entity. You may create empty collections if you wish, but creating an entity of a new type will automatically create a corresponding collection for you. For example, creating a new custom "item" entity, creates an "items" collection.
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Creating a collection
 
@@ -51,7 +51,7 @@ This article describes how to retrieve all of the entities in a collection.
 
 <div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> By default, the Usergrid API returns 10 entities per request. For collections with more than 10 entities, use the returned 'cursor' property to retrieve the next 10 entities in the result set. You may also use the LIMIT parameter in a query string to increase the number of results returned. For more information on using cursors, see [Query Parameters](../data-queries/query-parameters.html).</p></div>
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Retrieving sets of entities from a collection
 
@@ -115,7 +115,7 @@ Response:
 
 This article describes how to perform batch updates on all entities in a collection. Batch updates require the use of a query string in the request, which can either specify all entities in the collection or a subset of entities for the update to be performed on. For more information on queries, see Querying your data.
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Batch updating entities in a collection
 
@@ -185,7 +185,7 @@ This article describes how to batch delete entities in a collection. Batch delet
 
 Currently, collections cannot be deleted; however, you can delete all of the entities from a collection.
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Batch deleting entities in a collection
 
