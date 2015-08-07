@@ -8,7 +8,7 @@ There are three client versions of Messagee:
 * [An Android client version](https://github.com/apigee/usergrid-sample-android-messagee)
 * [An HTML5 client](https://github.com/apigee/usergrid-sample-html5-messagee)
 
-The sections below describe how to create a new app, enter some test users, and run the app. You also learn how to use the Usergrid admin portal, a user interface that streamlines data and application management in the Usergrid system. The portal is also a reference application that shows how to incorporate Usergrid APIs with JavaScript. For a more detailed discussion of the portal's functionality, see Admin portal.
+The sections below describe how to create a new app, enter some test users, and run the app. You also learn how to use the Usergrid admin portal, a user interface that streamlines data and application management in the Usergrid system. The portal is also a reference application that shows how to incorporate Usergrid APIs with JavaScript. 
 
 ## Creating a user account in Usergrid
 

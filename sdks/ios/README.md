@@ -1,3 +1,5 @@
+# iOS SDK
+
 ##Version
 
 Current Version: **0.9.2**
@@ -5,7 +7,6 @@ Current Version: **0.9.2**
 Change log:
 
 <https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
-
 
 ##Overview
 This open source SDK simplifies writing iOS applications that connect to App Services (Usergrid). The repo is located here:

@@ -32,7 +32,7 @@
   
     <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
         <link rel="next" title="Usergrid Data model" href="data-model.html"/>
-        <link rel="prev" title="Apache Usergrid Documentation" href="../index.html"/> 
+        <link rel="prev" title="Documentation Overview" href="overview.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -82,6 +82,7 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Documentation Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Usergrid Features</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#data-storage-management">Data storage &amp; management</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#application-data">Application data</a></li>
@@ -102,7 +103,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#geolocation">Geolocation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#push-notifications">Push notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#push-notifications-coming-soon">Push notifications (Coming soon...)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="data-model.html">Usergrid Data model</a></li>
@@ -110,8 +111,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -139,6 +140,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -163,9 +165,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -180,6 +182,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -262,9 +265,10 @@ and immediately perform complex queries or full-text searches on any
 field. You can also create custom entities with custom properties,
 giving you the ability to store data and context in a way that makes
 sense for your app.</p>
-<p>To learn more about entities and collections, see Usergrid Data model.</p>
-<p>For a complete list of the default data entities available, see Default
-Data Entity Types.</p>
+<p>To learn more about entities and collections, see <a class="reference external" href="data-model.html">Usergrid Data
+model</a>.</p>
+<p>For a complete list of the default data entities available, see
+<a class="reference external" href="../rest-endpoint/api-docs.html#models">Models</a>.</p>
 </div>
 <div class="section" id="files-assets">
 <h3>Files &amp; assets<a class="headerlink" href="#files-assets" title="Permalink to this headline">¶</a></h3>
@@ -274,8 +278,8 @@ data store as the rest of your application data, eliminating the need to
 set up content delivery networks (CDNs) and easing implementation. We
 handle all the back-end details that keep your content quickly
 accessible.</p>
-<p>To learn more about files and asset storage, see Uploading files and
-assets .</p>
+<p>To learn more about files and asset storage, see <a class="reference external" href="../assets-and-files/uploading-assets.html">Uploading files and
+assets</a>.</p>
 </div>
 </div>
 <div class="section" id="flexible-data-querying">
@@ -285,7 +289,8 @@ SQL-style queries and full-text searches on data entities, as well as
 their properties. This lets you quickly retrieve specific data entities
 based on multiple criteria, then utilize that data to power social
 features, target push notifications, perform user analysis, and more.</p>
-<p>Learn more about querying app data, see Data query overview.</p>
+<p>Learn more about querying app data, see <a class="reference external" href="../data-queries/querying-your-data.html">Data query
+overview</a>.</p>
 </div>
 <div class="section" id="social">
 <h2>Social<a class="headerlink" href="#social" title="Permalink to this headline">¶</a></h2>
@@ -296,7 +301,8 @@ features, improve user experience, and contextualize data. For example,
 you might associate a user with their devices to capture valuable
 geolocation data, create relationships between users to build social
 graphs, or implement popular features such as activity streams.</p>
-<p>To learn more about entity relationships, see Entity connections.</p>
+<p>To learn more about entity relationships, see <a class="reference external" href="../entity-connections/connecting-entities.html">Entity
+connections</a>.</p>
 </div>
 <div class="section" id="activity-streams">
 <h3>Activity streams<a class="headerlink" href="#activity-streams" title="Permalink to this headline">¶</a></h3>
@@ -306,7 +312,8 @@ activities, and tweets. Usergrid simplifies management and routing of
 these data streams by providing an activity entity that is specifically
 designed to automatically create a relationship between activities and
 the user who created them.</p>
-<p>To learn more about activities and activity feeds, see Activity feeds.</p>
+<p>To learn more about activities and activity feeds, see <a class="reference external" href="../user-management/activity.html">Activity
+feeds</a>.</p>
 </div>
 </div>
 <div class="section" id="user-management">
@@ -318,7 +325,8 @@ necessary to handle secure registration and log in, including OAuth
 2.0-compliant client authentication. In addition, any number of default
 or custom data entities and properties can be associated with a user
 entity to create complete user profiles.</p>
-<p>To learn more about user management, see User.</p>
+<p>To learn more about user management, see <a class="reference external" href="../user-management/user-management.html">User
+Management</a>.</p>
 <p>To learn more about authentication, see Authenticating users and
 application clients.</p>
 </div>
@@ -331,8 +339,8 @@ create roles that represent user types or access levels, such as
 Administrator, then assign the necessary permissions to that role. With
 a single API call, you can then associate your roles with any user or
 group of users.</p>
-<p>To learn more about user roles and permissions, see Managing access by
-defining permission rules.</p>
+<p>To learn more about user roles and permissions, see <a class="reference external" href="../security-and-auth/securing-your-app.html">Using
+Permissions</a>.</p>
 </div>
 <div class="section" id="groups">
 <h3>Groups<a class="headerlink" href="#groups" title="Permalink to this headline">¶</a></h3>
@@ -342,7 +350,8 @@ location to more effectively deliver relevant content, target offers, or
 customize campaigns. You can also take advantage of the groups entity to
 enable group-based social networking activities, such as allowing your
 users to create private information feeds or circles of friends.</p>
-<p>To learn more about groups, see Working with group data.</p>
+<p>To learn more about groups, see <a class="reference external" href="../user-management/groups.html">Working with group
+data</a>.</p>
 </div>
 <div class="section" id="third-party-authentication">
 <h3>Third-party authentication<a class="headerlink" href="#third-party-authentication" title="Permalink to this headline">¶</a></h3>
@@ -352,7 +361,8 @@ through such popular services as Facebook, Twitter and other
 OAuth-enabled accounts. Providing third-party sign-in can improve user
 experience, while increasing adoption, giving you access to valuable
 information from social networks and services.</p>
-<p>To learn more about using third-party sign-in, see Facebook sign in.</p>
+<p>To learn more about using third-party sign-in, see <a class="reference external" href="../security-and-auth/facebook-sign.html">Facebook sign
+in</a>.</p>
 </div>
 </div>
 <div class="section" id="geolocation">
@@ -361,20 +371,22 @@ information from social networks and services.</p>
 users&#8217; GPS-enabled devices to more effectively target campaigns, push
 notifications, offers and more. Geolocation also gives you an important
 data point for contextualizing and analyzing trends and user behavior.</p>
-<p>To learn more about geolocation, see Geolocation.</p>
+<p>To learn more about geolocation, see
+<a class="reference external" href="../geolocation/geolocation.html">Geolocation</a>.</p>
 </div>
-<div class="section" id="push-notifications">
-<h2>Push notifications<a class="headerlink" href="#push-notifications" title="Permalink to this headline">¶</a></h2>
-<p>Push notifications are the most effective way to engage your users with
-relevant content, and thanks to Usergrid, implementing them can be done
-in minutes. Simply register your app and your user&#8217;s devices with a
-notification provider, such as Apple Push Notification Service or Google
-Cloud Messaging, then use the Usergrid notification entity to send
-millions of push notifications a month at no cost. When used in
-conjunction with queries of user and application data, push
-notifications become a powerful tool for leveraging user data, ensuring
-relevancy and driving engagement.</p>
-<p>To learn more about push notifications, see Push notifications overview.</p>
+<div class="section" id="push-notifications-coming-soon">
+<h2>Push notifications (Coming soon...)<a class="headerlink" href="#push-notifications-coming-soon" title="Permalink to this headline">¶</a></h2>
+<p><strong>(Coming Usergrid 2.0)</strong> Push notifications are the most effective way
+to engage your users with relevant content, and thanks to Usergrid,
+implementing them can be done in minutes. Simply register your app and
+your user&#8217;s devices with a notification provider, such as Apple Push
+Notification Service or Google Cloud Messaging, then use the Usergrid
+notification entity to send millions of push notifications a month at no
+cost. When used in conjunction with queries of user and application
+data, push notifications become a powerful tool for leveraging user
+data, ensuring relevancy and driving engagement.</p>
+<p>To learn more about push notifications, see <a class="reference external" href="../push-notifications/tbd.html">Push notifications
+overview</a>.</p>
 </div>
 </div>
 
@@ -388,7 +400,7 @@ relevancy and driving engagement.</p>
         <a href="data-model.html" class="btn btn-neutral float-right" title="Usergrid Data model" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral" title="Apache Usergrid Documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="overview.html" class="btn btn-neutral" title="Documentation Overview" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -1,5 +1,5 @@
 # Application
-You can create a new application in an organization through the Admin portal. The Admin portal creates the new application by issuing a post against the management endpoint (see the "Creating an organization application" section in Organization for details). If you need to create an application programmatically in your app, you can also use the API to do this. You can access application entities using your app name or UUID, prefixed with the organization name or UUID:
+You can create a new application in an organization through the Admin portal. The Admin portal creates the new application by issuing a post against the management endpoint (see the [Creating an Application](../orgs-and-apps/application.html#creating-an-application) section in Organization for details). If you need to create an application programmatically in your app, you can also use the API to do this. You can access application entities using your app name or UUID, prefixed with the organization name or UUID:
 
     https://api.usergrid.com/{org_name|uuid}/{app_name|uuid}
 

@@ -10,7 +10,7 @@ See the [Group Model section of the API Reference](../rest-endpoints/api-docs.ht
 
 ## Creating groups
 
-A group entity represents an application group of users. You can create, retrieve, update, delete, and query group entities. See User entity properties for a list of the system-defined  properties for group entities. In addition, you can create group properties specific to your application.
+A group entity represents an application group of users. You can create, retrieve, update, delete, and query group entities. See [User entity properties](../rest-endpoints/api-doc.html#user) for a list of the system-defined  properties for group entities. In addition, you can create group properties specific to your application.
 
 ### Request Syntax
 
@@ -39,7 +39,7 @@ The ``path`` property is required and must be unique, it may include forward sla
 
 ### Example
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Request
 
@@ -104,7 +104,7 @@ Parameter	Description
 org_id | uuid	  Organization UUID or organization name
 app_id | uuid	  Application UUID or application name
 groupPath | uuid  Group UUID or group path, which must be unique.
-query_string      A data store query. For more on queries, see Data queries.
+query_string      A data store query. For more on queries, see [Data queries](../data-queries/querying-your-data.html).
 
 ### Request
 
@@ -225,11 +225,9 @@ For more information and code samples, see [Deleting Data Entities](../data-stor
 
 ## Adding a user to a group
 
-See all application entities  
-
 You can add users to groups from client code using cURL commands or one of the SDKs, as described here.
 
-When setting up your application on the server, you might find it easier and more convenient to create and populate groups with the admin portal. There, you can create groups, create roles, and define permission rules that govern user access to data and services in your application. For more information, see Security & token authentication.
+When setting up your application on the server, you might find it easier and more convenient to create and populate groups with the admin portal. There, you can create groups, create roles, and define permission rules that govern user access to data and services in your application. For more information, see [Security & Token Authentication](../security-and-auth/app-security.html).
 
 Use the POST method to add a user to a group. If the named group does not yet exist, an error message is returned.
 
@@ -252,7 +250,7 @@ arg uuid | string username	UUID or username of user
 
 ### Example
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Request
 
