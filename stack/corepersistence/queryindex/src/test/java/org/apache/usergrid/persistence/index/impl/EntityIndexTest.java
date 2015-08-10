@@ -393,8 +393,6 @@ public class EntityIndexTest extends BaseIT {
 
         testQuery(scope, searchTypes, entityIndex, "name = 'Minerva Harrell' and age <= 40", 1 );
 
-        testQuery(scope, searchTypes, entityIndex, "name = 'Morgan* '", 1 );
-
         testQuery(scope, searchTypes, entityIndex, "name = 'Morgan*'", 1 );
 
 
