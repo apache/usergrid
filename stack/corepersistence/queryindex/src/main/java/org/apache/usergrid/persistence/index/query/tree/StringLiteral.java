@@ -53,7 +53,7 @@ public class StringLiteral extends Literal<String> {
     /** Parse the value and set the optional end value */
     private void parseValue( String value ) {
 
-        this.value = value.trim().toLowerCase();
+        this.value = value.toLowerCase();
 
         if ( "*".equals( value ) ) {
             this.value = null;

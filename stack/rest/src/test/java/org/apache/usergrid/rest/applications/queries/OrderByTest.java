@@ -124,6 +124,31 @@ public class OrderByTest extends QueryTestBase {
         }
     }
 
+
+    @Test
+    public void testValueWithSpaceAtEndStillQueryable() throws Exception {
+        String collectionName = "stuff";
+
+        Entity spaceAtTheEndOfString = new Entity();
+        spaceAtTheEndOfString.put( "name", "thing1" );
+        spaceAtTheEndOfString.put( "random", "fury " );
+        this.app().collection( collectionName ).post( spaceAtTheEndOfString );
+
+        //Add an extra entity to make sure this won't be returned in the below query.
+        Entity noSpaceButSimilarString = new Entity();
+        noSpaceButSimilarString.put( "name", "thing2" );
+        noSpaceButSimilarString.put( "random", "fury" );
+        this.app().collection( collectionName ).post( noSpaceButSimilarString );
+        refreshIndex();
+
+        Thread.sleep( 1000 );
+        QueryParameters params = new QueryParameters().setQuery( "select * where random = 'fury '" );
+        Collection activities = this.app().collection( collectionName ).get( params );
+        assertEquals( 1, activities.getResponse().getEntityCount() );
+        assertEquals( "fury ", activities.getResponse().getEntities().get( 0 ).get( "random" ) );
+    }
+
+
     /**
      * Test correct sort order for Boolean properties
      *
