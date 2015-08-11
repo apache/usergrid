@@ -138,6 +138,7 @@
 
     <bean id="simpleBatcher" class="org.apache.usergrid.count.SimpleBatcher">
         <property name="batchSubmitter" ref="batchSubmitter"/>
+        <property name="batchInterval" value="${usergrid.counter.batch.interval}"/>
         <property name="batchSize" value="${usergrid.counter.batch.size}"/>
     </bean>
 
