@@ -108,6 +108,14 @@ class Migrate:
                     self.reset_data_migration()
                     time.sleep(STATUS_INTERVAL_SECONDS)
                     self.is_data_migrated()
+                    self.start_appinfo_migration()
+                    self.logger.info('AppInfo Migration Started.')
+                    is_appinfo_migrated = False
+                    while not is_appinfo_migrated:
+                        time.sleep(STATUS_INTERVAL_SECONDS)
+                        is_appinfo_migrated = self.is_appinfo_migrated()
+                        if is_appinfo_migrated:
+                            break
                 else:
                     self.logger.error('Entity Data has already been migrated.  To re-run data migration provide the'
                                       ' force parameter: python migrate.py -u <user:pass> -f')
@@ -128,9 +136,9 @@ class Migrate:
             self.metrics['reindex_end'] = get_current_time()
 
             if not reindex_only:
-                self.start_data_migration()
+                self.start_fulldata_migration()
                 self.metrics['data_migration_start'] = get_current_time()
-                self.logger.info("Entity Data Migration Started")
+                self.logger.info("Full Data Migration Started")
                 is_migrated = False
                 while not is_migrated:
                     time.sleep(STATUS_INTERVAL_SECONDS)
@@ -164,9 +172,19 @@ class Migrate:
         url = self.endpoint + '/system/index/rebuild'
         return url
 
-    def start_data_migration(self):
+    def start_fulldata_migration(self):
         try:
             r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
+            response = r.json()
+            return response
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Failed to start migration, %s', e)
+            exit_on_error(str(e))
+
+    def start_appinfo_migration(self):
+        try:
+            migrateUrl = self.get_migration_url() + '/' + 'appinfo-migration'
+            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -193,13 +211,27 @@ class Migrate:
             appinfo_version = status['data']['appinfo-migration']
 
             if entity_version == TARGET_VERSION and appinfo_version == TARGET_VERSION:
-                self.logger.info('Data Migration status=[COMPLETE], collections-entity-data=[v%s], '
+                self.logger.info('Full Data Migration status=[COMPLETE], collections-entity-data=[v%s], '
                                  'appinfo-migration=[v%s]',
                                  entity_version,
                                  appinfo_version)
                 return True
             else:
-                self.logger.info('Data Migration status=[NOTSTARTED/INPROGRESS]')
+                self.logger.info('Full Data Migration status=[NOTSTARTED/INPROGRESS]')
+        return False
+
+    def is_appinfo_migrated(self):
+        status = self.check_data_migration_status()
+        if status is not None:
+            appinfo_version = status['data']['appinfo-migration']
+
+            if appinfo_version == TARGET_VERSION:
+                self.logger.info('AppInfo Migration status=[COMPLETE],'
+                                 'appinfo-migration=[v%s]',
+                                 appinfo_version)
+                return True
+            else:
+                self.logger.info('AppInfo Migration status=[NOTSTARTED/INPROGRESS]')
         return False
 
     def check_data_migration_status(self):
