@@ -93,7 +93,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
     }
-
+    @Override
+    public boolean pluginExists(final String name) {
+        return migrationPlugins.containsKey(name);
+    }
 
     @Override
     public void migrate(final String name) throws MigrationException {

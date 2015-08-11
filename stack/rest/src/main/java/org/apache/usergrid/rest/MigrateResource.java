@@ -118,9 +118,15 @@ public class MigrateResource extends AbstractContextResource {
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
+        if(!getDataMigrationManager().pluginExists(pluginName)){
+            throw new IllegalArgumentException("Plugin doesn't exits name:"+pluginName);
+        }
+
         ApiResponse response = createApiResponse();
         response.setAction( "Migrate Data: "+ pluginName );
         //TODO make this use the task scheduler
+
+
 
 
         final Thread migrate = new Thread() {
