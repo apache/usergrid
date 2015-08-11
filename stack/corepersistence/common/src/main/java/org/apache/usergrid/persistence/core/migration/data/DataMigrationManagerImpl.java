@@ -96,6 +96,21 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
     @Override
+    public void migrate(final String name) throws MigrationException {
+        /**
+         * Invoke each plugin to attempt a migration
+         */
+        final MigrationPlugin plugin = migrationPlugins.get( name );
+        if(plugin != null){
+            final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
+            plugin.run(observer);
+            migrationInfoCache.invalidateAll();
+        }else {
+            throw new IllegalArgumentException(name + " does not match a current plugin.");
+        }
+    }
+
+    @Override
     public void migrate() throws MigrationException {
 
         /**
