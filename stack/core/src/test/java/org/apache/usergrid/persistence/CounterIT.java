@@ -290,7 +290,7 @@ public class CounterIT extends AbstractCoreIT {
         // UUID groupId = UUID.randomUUID();
 
 
-        Event event = null;
+        Event event;
 
         for ( int i = 0; i < 100; i++ ) {
             event = new Event();
@@ -318,7 +318,7 @@ public class CounterIT extends AbstractCoreIT {
         final String name = counter.getName();
 
         assertEquals("visits", name);
-        assertEquals(count, 200);
+        assertEquals(200, count);
 
     }
 }
