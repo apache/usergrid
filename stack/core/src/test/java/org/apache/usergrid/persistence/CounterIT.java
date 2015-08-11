@@ -271,4 +271,54 @@ public class CounterIT extends AbstractCoreIT {
         assertEquals( 1,
             r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalCount );
     }
+
+
+
+
+    @Test
+    public void testTimedFlush() throws Exception {
+        LOG.info( "CounterIT.testCounters" );
+
+        EntityManager em = app.getEntityManager();
+
+
+        assertNotNull( em );
+
+
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        // UUID groupId = UUID.randomUUID();
+
+
+        Event event = null;
+
+        for ( int i = 0; i < 100; i++ ) {
+            event = new Event();
+            event.setTimestamp( ts + ( i * 60 * 1000 ) );
+            event.addCounter( "visits", 1 );
+            event.setUser( user1 );
+            em.create( event );
+
+            event = new Event();
+            event.setTimestamp( ts + ( i * 60 * 1000 ) );
+            event.addCounter( "visits", 1 );
+            event.setUser( user2 );
+            em.create( event );
+        }
+
+        //sleep to ensure the flush has executed
+        Thread.sleep( 30000 );
+
+        Results r = em.getAggregateCounters( null, null, null, "visits", CounterResolution.SIX_HOUR, ts, System.currentTimeMillis(), false );
+
+        final AggregateCounterSet counter = r.getCounters().get( 0 );
+
+        final long count = counter.getValues().get( 0 ).getValue();
+
+        final String name = counter.getName();
+
+        assertEquals("visits", name);
+        assertEquals(count, 200);
+
+    }
 }
