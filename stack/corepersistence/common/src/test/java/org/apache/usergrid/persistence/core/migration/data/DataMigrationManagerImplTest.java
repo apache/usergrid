@@ -106,6 +106,48 @@ public class DataMigrationManagerImplTest {
     }
 
     @Test
+    public void testPluginByName() throws MigrationException {
+
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin1.getName() ).thenReturn( "plugin1" );
+
+        MigrationPlugin plugin2 = mock( MigrationPlugin.class );
+        when( plugin2.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin2.getName() ).thenReturn( "plugin2" );
+
+        plugins.add( plugin1 );
+        plugins.add( plugin2 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+        final MigrationInfoCache migrationInfoCache = mock(MigrationInfoCache.class);
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization,migrationInfoCache );
+
+
+        Set<String> pluginNames = migrationManager.getPluginNames();
+
+        assertEquals(2, pluginNames.size());
+
+        assertTrue( pluginNames.contains( "plugin1" ) );
+
+        assertTrue(pluginNames.contains("plugin2"));
+
+        //now run them
+
+        migrationManager.migrate("plugin1");
+
+        verify( plugin1 ).run(any(ProgressObserver.class));
+
+    }
+
+    @Test
       public void test2PluginsPhaseOrder() throws MigrationException {
 
         final Set<MigrationPlugin> plugins = new HashSet<>();

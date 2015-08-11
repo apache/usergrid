@@ -35,7 +35,11 @@ public interface DataMigrationManager {
      * not exist
      */
     public void migrate() throws MigrationException;
-
+    /**
+     * Perform any migration necessary in the application.  Will only create keyspaces and column families if they do
+     * not exist
+     */
+    public void migrate(final String name) throws MigrationException;
     /**
      * Returns true if a migration is running.  False otherwise
      * @return
