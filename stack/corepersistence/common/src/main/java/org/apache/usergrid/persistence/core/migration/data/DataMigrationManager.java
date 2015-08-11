@@ -31,6 +31,12 @@ import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 public interface DataMigrationManager {
 
     /**
+     * check for plugin existence
+     * @param name
+     * @return
+     */
+    public boolean pluginExists(final String name) ;
+    /**
      * Perform any migration necessary in the application.  Will only create keyspaces and column families if they do
      * not exist
      */
