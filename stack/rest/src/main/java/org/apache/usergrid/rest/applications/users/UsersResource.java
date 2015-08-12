@@ -36,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
+import net.tanesha.recaptcha.ReCaptchaException;
 import org.apache.usergrid.rest.RootResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +86,7 @@ public class UsersResource extends ServiceResource {
 
         logger.info( "ServiceResource.addIdParameter" );
 
-        UUID itemId = UUID.fromString( entityId.getPath() );
+        UUID itemId = UUID.fromString(entityId.getPath());
 
         addParameter( getServiceParameters(), itemId );
 
@@ -116,12 +117,12 @@ public class UsersResource extends ServiceResource {
 
         addParameter( getServiceParameters(), itemName.getPath() );
 
-        addMatrixParams( getServiceParameters(), ui, itemName );
+        addMatrixParams(getServiceParameters(), ui, itemName);
         Identifier id = Identifier.from( itemName.getPath() );
         if ( id == null ) {
             throw new IllegalArgumentException( "Not a valid user identifier: " + itemName.getPath() );
         }
-        return getSubResource( UserResource.class ).init( id );
+        return getSubResource( UserResource.class ).init(id);
     }
 
 
@@ -129,7 +130,7 @@ public class UsersResource extends ServiceResource {
     @Path("resetpw")
     @Produces(MediaType.TEXT_HTML)
     public Viewable showPasswordResetForm( @Context UriInfo ui ) {
-        return handleViewable( "resetpw_email_form", this );
+        return handleViewable("resetpw_email_form", this);
     }
 
 
@@ -142,41 +143,38 @@ public class UsersResource extends ServiceResource {
                                              @FormParam("recaptcha_response_field") String uresponse ) {
 
         try {
-            ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-            reCaptcha.setPrivateKey( properties.getRecaptchaPrivate() );
+            if ( isBlank(email) ) {
+                errorMsg = "No email provided, try again...";
+                throw new Exception("No email provided");
+            }else if (useReCaptcha()){
+                ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+                reCaptcha.setPrivateKey( properties.getRecaptchaPrivate() );
 
-            ReCaptchaResponse reCaptchaResponse =
+                ReCaptchaResponse reCaptchaResponse =
                     reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
-            if ( isBlank( email ) ) {
-                errorMsg = "No email provided, try again...";
-                return handleViewable( "resetpw_email_form", this );
-            }
-
-            if ( !useReCaptcha() || reCaptchaResponse.isValid() ) {
-                user = management.getAppUserByIdentifier( getApplicationId(), Identifier.fromEmail( email ) );
-                if ( user != null ) {
-                    management.startAppUserPasswordResetFlow( getApplicationId(), user );
-                    return handleViewable( "resetpw_email_success", this );
-                }
-                else {
-                    errorMsg = "We don't recognize that email, try again...";
-                    return handleViewable( "resetpw_email_form", this );
+                if(!reCaptchaResponse.isValid()){
+                    errorMsg = "Incorrect Captcha, try again...";
+                    throw new Exception("reCAPTCHA error message: "+reCaptchaResponse.getErrorMessage());
                 }
             }
-            else {
-                errorMsg = "Incorrect Captcha, try again...";
-                return handleViewable( "resetpw_email_form", this );
+            user = management.getAppUserByIdentifier(getApplicationId(), Identifier.fromEmail(email));
+            if (user == null) {
+                errorMsg = "We don't recognize that email, try again...";
+                throw new Exception("Unrecognized email address "+email);
             }
+            logger.info(String.format("Starting AppUser Password Reset Flow for %s on %s", user.getUuid(), getApplicationId()));
+            management.startAppUserPasswordResetFlow( getApplicationId(), user );
+            return handleViewable("resetpw_email_success", this);
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "resetpw_email_form", e );
+            logger.error(String.format("Exception in password reset form. (%s) %s ", e.getClass().getCanonicalName(), e.getMessage()));
+            return handleViewable( "resetpw_email_form", this );
         }
     }
-
 
     public String getErrorMsg() {
         return errorMsg;

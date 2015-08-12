@@ -34,6 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import net.tanesha.recaptcha.ReCaptchaException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.rest.RootResource;
@@ -80,7 +81,7 @@ public class UsersResource extends AbstractContextResource {
     @Path(RootResource.USER_ID_PATH)
     public UserResource getUserById( @Context UriInfo ui, @PathParam( "userId" ) String userIdStr ) throws Exception {
 
-        return getUserResource(management.getAdminUserByUuid( UUID.fromString( userIdStr ) ), "user id", userIdStr);
+        return getUserResource(management.getAdminUserByUuid(UUID.fromString(userIdStr)), "user id", userIdStr);
     }
 
 
@@ -103,7 +104,7 @@ public class UsersResource extends AbstractContextResource {
         if (user == null) {
             throw new ManagementException("Could not find organization for " + type + " : " + value);
         }
-        return getSubResource(UserResource.class).init( user );
+        return getSubResource(UserResource.class).init(user);
     }
 
 
@@ -176,59 +177,47 @@ public class UsersResource extends AbstractContextResource {
 
 
     @POST
-    @Path( "resetpw" )
-    @Consumes( "application/x-www-form-urlencoded" )
-    @Produces( MediaType.TEXT_HTML )
-    public Viewable handlePasswordResetForm( @Context UriInfo ui, @FormParam( "email" ) String email,
-                                             @FormParam( "recaptcha_challenge_field" ) String challenge,
-                                             @FormParam( "recaptcha_response_field" ) String uresponse ) {
+    @Path("resetpw")
+    @Consumes("application/x-www-form-urlencoded")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable handlePasswordResetForm( @Context UriInfo ui, @FormParam("email") String email,
+                                             @FormParam("recaptcha_challenge_field") String challenge,
+                                             @FormParam("recaptcha_response_field") String uresponse ) {
 
         try {
-            if ( isBlank( email ) ) {
+            if ( isBlank(email) ) {
                 errorMsg = "No email provided, try again...";
-                return handleViewable( "resetpw_email_form", this );
-            }
-
-            //we don't require recaptcha - only use it if it is present in the props file
-            boolean reCaptchaPassed = false;
-            if ( useReCaptcha() ) {
-
+                throw new Exception("No email provided");
+            }else if (useReCaptcha()){
                 ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-                reCaptcha.setPrivateKey(properties.getRecaptchaPrivate());
+                reCaptcha.setPrivateKey( properties.getRecaptchaPrivate() );
 
                 ReCaptchaResponse reCaptchaResponse =
-                        reCaptcha.checkAnswer(httpServletRequest.getRemoteAddr(), challenge, uresponse);
+                    reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
-                if (reCaptchaResponse.isValid()) {
-                    reCaptchaPassed = true;
+                if(!reCaptchaResponse.isValid()){
+                    errorMsg = "Incorrect Captcha, try again...";
+                    throw new Exception("reCAPTCHA error message: "+reCaptchaResponse.getErrorMessage());
                 }
-            } else {
-                reCaptchaPassed = true;
             }
+            user = management.findAdminUser(email);
 
-            if (reCaptchaPassed) {
-                user = management.findAdminUser(email);
-                if (user != null) {
-                    management.startAdminUserPasswordResetFlow(user);
-                    return handleViewable("resetpw_email_success", this);
-                } else {
-                    errorMsg = "We don't recognize that email, try again...";
-                    return handleViewable("resetpw_email_form", this);
-                }
-            } else {
-                errorMsg = "Incorrect Captcha, try again...";
-                return handleViewable("resetpw_email_form", this);
+            if (user == null) {
+                errorMsg = "We don't recognize that email, try again...";
+                throw new Exception("Unrecognized email address");
             }
-            
+            logger.info("Starting Admin User Password Reset Flow for "+user.getUuid());
+            management.startAdminUserPasswordResetFlow(user);
+            return handleViewable("resetpw_email_success", this);
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            logger.error(String.format("Exception in password reset form. (%s) %s ", e.getClass().getCanonicalName(), e.getMessage()));
+            return handleViewable( "resetpw_email_form", this );
         }
     }
-
 
     public String getErrorMsg() {
         return errorMsg;
