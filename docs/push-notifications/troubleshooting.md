@@ -33,7 +33,7 @@ The sender ID is a number you send to GCM from app code when registering with GC
 
 * The API key used to create your notifier is the same as the API key in your Google API project.
 
-* The notifier name used in your app code is the same as for the notifier you created in the API BaaS.
+* The notifier name used in your app code is the same as for the notifier you created in the Usergrid.
 
 It can be possible to make a fix (such as by correcting the sender ID in your app code) and still see this error. If you're still seeing the error, consider create a new API project and notifier, then use their new values in your code:
 
@@ -79,7 +79,7 @@ The sender ID is a number you send to GCM from app code when registering with GC
 
 * The API key used to create your notifier is the same as the API key in your Google API project.
 
-* The notifier name used in your app code is the same as for the notifier you created in the API BaaS.
+* The notifier name used in your app code is the same as for the notifier you created in the Usergrid.
 
 It can be possible to make a fix (such as by correcting the sender ID in your app code) and still see this error. If you're still seeing the error, consider create a new API project and notifier, then use their new values in your code:
 

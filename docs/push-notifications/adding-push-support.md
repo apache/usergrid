@@ -108,7 +108,7 @@ You'll find samples in SDKs that are specific to three mobile platforms: iOS, An
 
 To download the sample app and view the tutorial, see Tutorial: Push notifications sample app.
 
-When you create notifiers to run the samples, creating them in the default "sandbox" app in your Apigee organization will make it easier to try out the feature. The sandbox app doesn't require authentication.
+When you create notifiers to run the samples, creating them in the default "sandbox" app in your Usergrid organization will make it easier to try out the feature. The sandbox app doesn't require authentication.
 
 ## Troubleshooting
 
