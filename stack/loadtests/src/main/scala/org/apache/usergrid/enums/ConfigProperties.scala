@@ -26,7 +26,7 @@ object ConfigProperties {
   val App = "app"
   val AdminUser = "adminUser"
   val AdminPassword = "adminPassword"
-  val BaseUrl = "baseurl"
+  val BaseUrl = "baseUrl"
   val AuthType = "authType"
   val TokenType = "tokenType"
   val SkipSetup = "skipSetup"
@@ -71,13 +71,18 @@ object ConfigProperties {
   val FailedUuidFilename = "failedUuidFilename"
   val SandboxCollection = "sandboxCollection"
   val PurgeUsers = "purgeUsers"
+  val RetryCount = "retryCount"
+  val LaterThanTimestamp = "laterThanTimestamp"
+  val EntityProgressCount = "entityProgressCount"
+  val InjectionList = "injectionList"
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
     NumDevices,Collection,RampTime,Throttle,RpsTarget,RpsRampTime,HoldDuration,PushNotifier,PushProvider,EntityPrefix,
     EntityType,EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
-    UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers)
+    UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
+    EntityProgressCount,InjectionList)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -136,6 +141,10 @@ object ConfigProperties {
         case FailedUuidFilename => "/tmp/dummy.csv"
         case SandboxCollection => false
         case PurgeUsers => 100
+        case RetryCount => 5
+        case LaterThanTimestamp => 0L
+        case EntityProgressCount => 10000L
+        case InjectionList => "rampUsers(10,60)"
       }
     } else {
       null

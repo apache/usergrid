@@ -19,8 +19,9 @@ package org.apache.usergrid.enums
 object EndConditionType {
   val MinutesElapsed = "minutesElapsed"
   val RequestCount = "requestCount"
+  val Unlimited = "unlimited"
 
-  val Values = Seq(MinutesElapsed,RequestCount)
+  val Values = Seq(MinutesElapsed,RequestCount,Unlimited)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
