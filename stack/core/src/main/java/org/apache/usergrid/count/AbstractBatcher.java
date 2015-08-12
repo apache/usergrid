@@ -21,11 +21,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.count.common.Count;
 import com.yammer.metrics.Metrics;
@@ -42,17 +48,31 @@ import com.yammer.metrics.core.TimerContext;
 public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
+    protected static final Logger logger = LoggerFactory.getLogger( AbstractBatcher.class );
+
     private volatile Batch batch;
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer( AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS );
     protected final Counter invocationCounter = Metrics.newCounter( AbstractBatcher.class, "batch_add_invocations" );
-    private final Counter existingCounterHit = Metrics.newCounter( AbstractBatcher.class, "counter_existed" );
     // TODO add batchCount, remove shouldSubmit, impl submit, change simpleBatcher to just be an extension
     protected int batchSize = 500;
+    protected int batchIntervalSeconds = 10;
     private final AtomicLong batchSubmissionCount = new AtomicLong();
-    private final AtomicBoolean lock = new AtomicBoolean( false );
 
+    /**
+     * Create our scheduler to fire our execution
+     */
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool( 1 );
+
+
+    /**
+     * Set the batch interval in seconds
+     * @param batchIntervalSeconds
+     */
+    public void setBatchInterval(int batchIntervalSeconds){
+       this.batchIntervalSeconds  = batchIntervalSeconds;
+    }
 
     public void setBatchSize( int batchSize ) {
         this.batchSize = batchSize;
@@ -88,16 +108,23 @@ public abstract class AbstractBatcher implements Batcher {
     }
 
 
-    Batch getBatch() {
+    private Batch getBatch() {
         Batch active = batch;
         if ( active == null ) {
             synchronized ( this ) {
                 active = batch;
                 if ( active == null ) {
                     batch = active = new Batch();
+
+                    //now schedule our task for execution since we're creating a batch
+                    scheduler.scheduleWithFixedDelay( new BatchFlusher(), this.batchIntervalSeconds,
+                        this.batchIntervalSeconds, TimeUnit.SECONDS );
+
                 }
             }
         }
+
+        //we want to flush, and we have no capacity left, perform a flush
         if ( batchSize > 1 && active.getCapacity() == 0 ) {
             synchronized ( this ) {
                 if ( active.getCapacity() == 0 ) {
@@ -105,7 +132,27 @@ public abstract class AbstractBatcher implements Batcher {
                 }
             }
         }
+
         return active;
+    }
+
+    private void flush(){
+        synchronized(this) {
+            getBatch().flush();
+        }
+    }
+
+
+    /**
+     * Runnable that will flush the batch every 30 seconds
+     */
+    private final class BatchFlusher implements Runnable {
+
+        @Override
+        public void run() {
+            //explicitly flush the batch
+            AbstractBatcher.this.flush();
+        }
     }
 
 
@@ -118,17 +165,17 @@ public abstract class AbstractBatcher implements Batcher {
         private BlockingQueue<Count> counts;
         private final AtomicInteger localCallCounter = new AtomicInteger();
 
-        private final AtomicBoolean lock = new AtomicBoolean( false );
-
 
         Batch() {
-            counts = new ArrayBlockingQueue<Count>( batchSize );
+            counts = new ArrayBlockingQueue<>( batchSize );
         }
 
 
         int getCapacity() {
             return counts.remainingCapacity();
         }
+
+
 
 
         void flush() {
@@ -146,7 +193,7 @@ public abstract class AbstractBatcher implements Batcher {
                 counts.offer( count, 500, TimeUnit.MILLISECONDS );
             }
             catch ( Exception ex ) {
-                ex.printStackTrace();
+                logger.error( "Unable to add count, dropping count {}", count, ex );
             }
         }
 
@@ -157,7 +204,7 @@ public abstract class AbstractBatcher implements Batcher {
                 f.get();
             }
             catch ( Exception ex ) {
-                ex.printStackTrace();
+                logger.error( "Unable to add count, dropping count {}", count, ex );
             }
             batchSubmissionCount.incrementAndGet();
             opCount.incrementAndGet();
@@ -165,12 +212,5 @@ public abstract class AbstractBatcher implements Batcher {
         }
 
 
-        /**
-         * The number of times the {@link #add(org.apache.usergrid.count.common.Count)} method has been invoked on this batch
-         * instance
-         */
-        public int getLocalCallCount() {
-            return localCallCounter.get();
-        }
     }
 }
