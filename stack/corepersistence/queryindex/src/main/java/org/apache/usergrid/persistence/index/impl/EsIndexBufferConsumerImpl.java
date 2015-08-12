@@ -177,7 +177,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                     batchOperation.doOperation( client, bulkRequestBuilder );
                 } ) )
                 //write them
-            .doOnNext( bulkRequestBuilder -> sendRequest( bulkRequestBuilder ) ).doOnError( t -> log.error( "Unable to process batches", t ) );
+            .doOnNext( bulkRequestBuilder -> sendRequest( bulkRequestBuilder ) );
 
 
         //now that we've processed them all, ack the futures after our last batch comes through
@@ -194,9 +194,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         //mark this as done
         return processedIndexOperations.doOnNext( processedIndexOp -> {
                 processedIndexOp.done();
-                roundtripTimer.update(System.currentTimeMillis() - processedIndexOp.getCreationTime());
-            }
-        ).doOnError(t -> log.error("Unable to ack futures", t));
+                roundtripTimer.update( System.currentTimeMillis() - processedIndexOp.getCreationTime() );
+            } );
     }
 
 
@@ -270,7 +269,11 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
          * Send the data through the buffer
          */
         public void send( final IndexOperationMessage indexOp ) {
-            subscriber.onNext( indexOp );
+            try {
+                subscriber.onNext( indexOp );
+            }catch(Exception e){
+                log.error( "Unable to process message for indexOp {}, error follows.", indexOp, e );
+            }
         }
 
 
