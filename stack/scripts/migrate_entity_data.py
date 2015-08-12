@@ -58,7 +58,7 @@ def parse_args():
                         required=True)
 
     parser.add_argument('-f', '--force',
-                        help='Force the entity data migration to run.  Used for delta data migrations.',
+                        help='Force a delta migration.',
                         action='store_true',
                         default=False)
 
@@ -84,8 +84,10 @@ class Migrate:
         self.endpoint = self.args['endpoint']
         self.metrics = {'reindex_start': '',
                         'reindex_end': '',
-                        'data_migration_start': '',
-                        'data_migration_end': ''}
+                        'appinfo_migration_start': '',
+                        'appinfo_migration_end': '',
+                        'full_data_migration_start': '',
+                        'full_data_migration_end': ''}
         self.logger = init_logging(self.__class__.__name__)
         self.admin_user = self.args['user']
         self.admin_pass = self.args['pass']
@@ -93,35 +95,35 @@ class Migrate:
 
     def run(self):
         self.logger.info('Initializing...')
-        reindex_only = False
 
         if not self.is_endpoint_available():
             exit_on_error('Endpoint is not available, aborting')
 
         if self.start_date is not None:
-            self.logger.info("Date Provided.  Only-Re-index will run from date=[%s]", self.start_date)
-            reindex_only = True
-        else:
-            if self.is_data_migrated():
-                if self.force_migration:
-                    self.logger.info('Force option provided.')
-                    self.reset_data_migration()
-                    time.sleep(STATUS_INTERVAL_SECONDS)
-                    self.is_data_migrated()
-                    self.start_appinfo_migration()
-                    self.logger.info('AppInfo Migration Started.')
-                    is_appinfo_migrated = False
-                    while not is_appinfo_migrated:
-                        time.sleep(STATUS_INTERVAL_SECONDS)
-                        is_appinfo_migrated = self.is_appinfo_migrated()
-                        if is_appinfo_migrated:
-                            break
-                else:
-                    self.logger.error('Entity Data has already been migrated.  To re-run data migration provide the'
-                                      ' force parameter: python migrate.py -u <user:pass> -f')
-                    exit_on_error('Entity Data has already been migrated')
+            self.logger.info("Date Provided.  Re-index will run from date=[%s]", self.start_date)
 
         try:
+
+            # Always run an app info migration first
+            if self.is_appinfo_migrated():
+                self.logger.info('AppInfo already migrated. Resetting version for re-migration.')
+                self.reset_appinfo_migration()
+                time.sleep(STATUS_INTERVAL_SECONDS)
+
+            self.start_appinfo_migration()
+            self.logger.info('AppInfo Migration Started.')
+            self.metrics['appinfo_migration_start'] = get_current_time()
+
+            is_appinfo_migrated = False
+            while not is_appinfo_migrated:
+                is_appinfo_migrated = self.is_appinfo_migrated()
+                time.sleep(STATUS_INTERVAL_SECONDS)
+                if is_appinfo_migrated:
+                    self.metrics['appinfo_migration_end'] = get_current_time()
+                    break
+            self.logger.info('AppInfo Migration Ended.')
+
+            # Perform system re-index (it will grab date from input if provided)
             job = self.start_reindex()
             self.metrics['reindex_start'] = get_current_time()
             self.logger.info('Started Re-index.  Job=[%s]', job)
@@ -135,9 +137,17 @@ class Migrate:
             self.logger.info("Finished Re-index. Job=[%s]", job)
             self.metrics['reindex_end'] = get_current_time()
 
-            if not reindex_only:
+            # Only when we do a delta (force migration) do we run the full data migration (includes entity data)
+            if self.force_migration:
+
+                self.logger.info('Force option provided. Performing full data migration...')
+                if self.is_data_migrated():
+                    self.reset_data_migration()
+                time.sleep(STATUS_INTERVAL_SECONDS)
+                self.is_data_migrated()
+
                 self.start_fulldata_migration()
-                self.metrics['data_migration_start'] = get_current_time()
+                self.metrics['full_data_migration_start'] = get_current_time()
                 self.logger.info("Full Data Migration Started")
                 is_migrated = False
                 while not is_migrated:
@@ -146,8 +156,8 @@ class Migrate:
                     if is_migrated:
                         break
 
-                self.metrics['data_migration_end'] = get_current_time()
-                self.logger.info("Entity Data Migration completed")
+                self.metrics['full_data_migration_end'] = get_current_time()
+                self.logger.info("Full Data Migration completed")
 
             self.log_metrics()
             self.logger.info("Finished...")
@@ -201,7 +211,19 @@ class Migrate:
                              'and appinfo-migration=[v%s]', version, version)
             return response
         except requests.exceptions.RequestException as e:
-            self.logger.error('Failed to start migration, %s', e)
+            self.logger.error('Failed to reset full data migration versions, %s', e)
+            exit_on_error(str(e))
+
+    def reset_appinfo_migration(self):
+        version = TARGET_VERSION - 1
+        body = json.dumps({'appinfo-migration': version})
+        try:
+            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.admin_user, self.admin_pass))
+            response = r.json()
+            self.logger.info('Resetting appinfo migration versions to appinfo-migration=[v%s]', version)
+            return response
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Failed to reset appinfo migration version, %s', e)
             exit_on_error(str(e))
 
     def is_data_migrated(self):
@@ -299,12 +321,16 @@ class Migrate:
         self.logger.info(
             'Re-index start=[%s], ' +
             'Re-index end =[%s], ' +
-            'Entity Migration start=[%s], ' +
-            'Entity Migration end=[%s] ',
+            'Full Data Migration start=[%s], ' +
+            'Full Data Migration end=[%s] ' +
+            'AppInfo Migration start=[%s], ' +
+            'AppInfo Migration end=[%s] ',
             self.metrics['reindex_start'],
             self.metrics['reindex_end'],
-            self.metrics['data_migration_start'],
-            self.metrics['data_migration_end']
+            self.metrics['full_data_migration_start'],
+            self.metrics['full_data_migration_end'],
+            self.metrics['appinfo_migration_start'],
+            self.metrics['appinfo_migration_end']
 
         )
 
