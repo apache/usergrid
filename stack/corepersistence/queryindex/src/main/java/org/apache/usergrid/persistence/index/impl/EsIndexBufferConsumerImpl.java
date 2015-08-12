@@ -272,7 +272,9 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             try {
                 subscriber.onNext( indexOp );
             }catch(Exception e){
+                //re-throws so the caller can determine failover
                 log.error( "Unable to process message for indexOp {}, error follows.", indexOp, e );
+                throw e;
             }
         }
 
