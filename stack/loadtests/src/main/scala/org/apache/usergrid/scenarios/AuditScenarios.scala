@@ -121,13 +121,13 @@ object AuditScenarios {
         if (count < 1) {
           Settings.addAuditUuid(uuid, collectionName, entityName, modified)
           Settings.incAuditNotFound()
-          println(s"NOT FOUND: $collectionName.$entityName $uuid")
+          println(s"NOT FOUND: $collectionName.$entityName ($uuid)")
         } else if (count > 1) {
           Settings.addAuditUuid(uuid, collectionName, entityName, modified)
           Settings.incAuditBadResponse()
-          println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName $uuid")
+          println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName ($uuid)")
         } else {
-          // println(s"FOUND: $collectionName.$entityName $uuid")
+          // println(s"FOUND: $collectionName.$entityName ($uuid)")
           Settings.incAuditSuccess()
         }
 

@@ -74,6 +74,7 @@ object ConfigProperties {
   val RetryCount = "retryCount"
   val LaterThanTimestamp = "laterThanTimestamp"
   val EntityProgressCount = "entityProgressCount"
+  val InjectionList = "injectionList"
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
@@ -81,7 +82,7 @@ object ConfigProperties {
     EntityType,EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
     UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
-    EntityProgressCount)
+    EntityProgressCount,InjectionList)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -143,6 +144,7 @@ object ConfigProperties {
         case RetryCount => 5
         case LaterThanTimestamp => 0L
         case EntityProgressCount => 10000L
+        case InjectionList => "rampUsers(10,60)"
       }
     } else {
       null

@@ -27,16 +27,9 @@ import org.apache.usergrid.settings.Settings
 import scala.collection.mutable
 
 /**
- * Configurable simulations.
- *
- * Configuration items:
- * skipSetup, createOrg, org, createApp, app, adminUser, adminPassword, baseUrl,
- * numEntities, entityType, entityPrefix, entitySeed, rampUsers, rampTime,
- * constantUsersPerSec, constantUsersDuration, collection, scenarioType
- *
- * getAllByCursor scenario: searchQuery, searchLimit
+ * Simulations with custom injection.
  */
-class ConfigurableSimulation extends Simulation {
+class CustomInjectionSimulation extends Simulation {
 
   def getScenario(scenarioType: String): ScenarioBuilder = {
     scenarioType match {
@@ -66,19 +59,29 @@ class ConfigurableSimulation extends Simulation {
 
   if (ScenarioType.isValid(Settings.scenarioType)) {
     val scenario: ScenarioBuilder = getScenario(Settings.scenarioType)
-    var stepCount:Int = 0
-    if (Settings.rampUsers > 0) stepCount += 1
-    if (Settings.constantUsersPerSec > 0) stepCount += 1
-    val injectStepList = new mutable.ArraySeq[InjectionStep](stepCount)
-    var currentStep = 0
-    if (Settings.rampUsers > 0) {
-      injectStepList(currentStep) = rampUsers(Settings.rampUsers) over Settings.rampTime
-      currentStep += 1
+
+    val injectionList:String = Settings.injectionList
+    val injectStepsArray:Array[String] = injectionList.split("\\s*;\\s*")
+    val injectStepList:mutable.ArraySeq[InjectionStep] = new mutable.ArraySeq[InjectionStep](injectStepsArray.length)
+    for (i <- injectStepsArray.indices) {
+      val injectionStep = injectStepsArray(i).trim
+      println(injectionStep)
+      val stepRegex = """(.+)\((.*)\)""".r
+      val stepRegex(stepType,stepArgsStr) = injectionStep
+      println(s"stepType:$stepType stepArgs:$stepArgsStr")
+      val stepArgs = stepArgsStr.split("\\s*,\\s*")
+      injectStepList(i) = stepType match {
+        case "rampUsers" => rampUsers(stepArgs(0).toInt) over stepArgs(1).toInt
+        case "constantUsersPerSec" => constantUsersPerSec(stepArgs(0).toDouble) during stepArgs(1).toInt
+        case "constantUsersPerSecRandomized" => constantUsersPerSec(stepArgs(0).toDouble) during stepArgs(1).toInt randomized
+        case "atOnceUsers" => atOnceUsers(stepArgs(0).toInt)
+        case "rampUsersPerSec" => rampUsersPerSec(stepArgs(0).toDouble) to stepArgs(1).toInt during stepArgs(2).toInt
+        case "rampUsersPerSecRandomized" => rampUsersPerSec(stepArgs(0).toDouble) to stepArgs(1).toInt during stepArgs(2).toInt randomized
+        case "heavisideUsers" => heavisideUsers(stepArgs(0).toInt) over stepArgs(1).toInt
+        case "nothingFor" => nothingFor(stepArgs(0).toInt)
+      }
     }
-    if (Settings.constantUsersPerSec > 0) {
-      injectStepList(currentStep) = constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
-      currentStep += 1
-    }
+
     setUp(
       scenario
         .inject(injectStepList)

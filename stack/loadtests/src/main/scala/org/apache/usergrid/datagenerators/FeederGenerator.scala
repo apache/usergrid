@@ -211,7 +211,7 @@ object FeederGenerator {
   * This feeder will serve data forever, but validEntity will be set to "no" when data has run out. Each user can
   * then exit in a controlled fashion.
   */
- def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String, seed: Int = 1): Feeder[String] =
+ def generateCustomEntityFeeder(numEntities: Int, entityType: String, prefix: String = "", seed: Int = 1): Feeder[String] =
  new Feeder[String] {
    var counter = new AtomicInteger(0)
 
@@ -221,8 +221,9 @@ object FeederGenerator {
    override def next(): Map[String, String] = {
      val i = counter.getAndIncrement()
      val seededVal = i + seed
-     val entityName = prefix.concat(seededVal.toString)
-     val entity = EntityDataGenerator.generateEntity(entityType, entityName)
+     val noPrefix = prefix == null || prefix == ""
+     val entityName = if (noPrefix) seededVal.toString else prefix.concat(seededVal.toString)
+     val entity = EntityDataGenerator.generateEntity(entityType, if (noPrefix) null else entityName)
      val entityUrl = Settings.baseCollectionUrl + "/" + entityName
      val validEntity = if (i >= numEntities) "no" else "yes"
 
@@ -282,7 +283,7 @@ object FeederGenerator {
   }
 
  def generateCustomEntityInfiniteFeeder(seed: Int = Settings.entitySeed, entityType: String = Settings.entityType, prefix: String = Settings.entityPrefix): Iterator[String] = {
-   Iterator.from(seed).map(i=>EntityDataGenerator.generateEntity(entityType, prefix.concat(i.toString)))
+   Iterator.from(seed).map(i=>EntityDataGenerator.generateEntity(entityType, if (prefix == null || prefix == "") null else prefix.concat(i.toString)))
  }
 
 }
