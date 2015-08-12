@@ -56,6 +56,22 @@ Apache Usergrid Documentation
    entity-connections/retrieving-entities
    entity-connections/disconnecting-entities
    
+.. _push-notifications:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Push Notifications
+   
+   push-notifications/overview
+   push-notifications/adding-push-support
+   push-notifications/getting-started
+   push-notifications/tutorial
+   push-notifications/registering
+   push-notifications/creating-notifiers
+   push-notifications/managing-users-and-devices
+   push-notifications/creating-and-managing-notifications
+   push-notifications/troubleshooting
+
 .. _security-and-authentication:
 
 .. toctree::

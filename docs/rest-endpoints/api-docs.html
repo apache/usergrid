@@ -1,0 +1,5273 @@
+<html>
+<head>
+    <title>Usergrid API Reference</title>
+    
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <link rel="stylesheet" href="api-docs.css">
+    
+</head>
+<body>
+
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+    
+    <h1>Usergrid API Reference</h1>
+    <p>Generated from Swagger.</p>
+<h2>Methods</h2><p>API methods are organized by the tags.</p>
+<p>Following the methods is a listing of all <a href='#models'>Default Entity Models.</p>
+<a name='Access-Tokens-method'></a>
+<h2>Access-Tokens</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /management/token 
+            <a data-toggle="collapse" data-target="#collapse-GBKFpoDUV6"
+                href="#collapse-GBKFpoDUV6" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-GBKFpoDUV6" class="panel-body collapse">
+
+        <p>Login with Admin-User or Organization credentials.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>login-credentials</b> (                    <a href="#logincredentials">LoginCredentials</a>) <br>
+                    Login credentials either username/password or id/secret. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: Object containing access_token.</li>
+                        <li>Schema: [<a href="#accesstokenreponse">AccessTokenReponse</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/token 
+            <a data-toggle="collapse" data-target="#collapse-jf7rRaHshu"
+                href="#collapse-jf7rRaHshu" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-jf7rRaHshu" class="panel-body collapse">
+
+        <p>Login with App-User or Application credentials.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>login-credentials</b> (                    <a href="#logincredentials">LoginCredentials</a>) <br>
+                    Login credentials either username/password or id/secret. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of new created Admin user&#39;s info.</li>
+                        <li>Schema: [<a href="#accesstokenreponse">AccessTokenReponse</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='Activities-method'></a>
+<h2>Activities</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/groups/{groupId}/feed 
+            <a data-toggle="collapse" data-target="#collapse-2kebCfBv6r"
+                href="#collapse-2kebCfBv6r" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-2kebCfBv6r" class="panel-body collapse">
+
+        <p>Get a group&#39;s feed through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>groupId</b> (string) <br>
+                    One of the group&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of group&#39;s activity.</li>
+                        <li>Schema: [<a href="#activityfeed">ActivityFeed</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/users/{userId}/activities 
+            <a data-toggle="collapse" data-target="#collapse-eu3aLpfo9e"
+                href="#collapse-eu3aLpfo9e" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-eu3aLpfo9e" class="panel-body collapse">
+
+        <p>Create an activity in the activities collection.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+                <li>
+                    <b>CreateActivity</b> (                    <a href="#createactivity">CreateActivity</a>) <br>
+                    One or more sets of activity properties. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of user&#39;s activity.</li>
+                        <li>Schema: [<a href="#activityfeed">ActivityFeed</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/users/{userId}/feed 
+            <a data-toggle="collapse" data-target="#collapse-av92cfV1L6"
+                href="#collapse-av92cfV1L6" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-av92cfV1L6" class="panel-body collapse">
+
+        <p>Retrieve a user&#39;s feed through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of user&#39;s activity feed.</li>
+                        <li>Schema: [<a href="#activityfeed">ActivityFeed</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='Admin-Users-method'></a>
+<h2>Admin-Users</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId}/users 
+            <a data-toggle="collapse" data-target="#collapse-INFXttZor5"
+                href="#collapse-INFXttZor5" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-INFXttZor5" class="panel-body collapse">
+
+        <p>Retrieve details about the admin users in an organization.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved Admin user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /management/orgs/{orgId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-Gx6IFaXlzW"
+                href="#collapse-Gx6IFaXlzW" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Gx6IFaXlzW" class="panel-body collapse">
+
+        <p>Remove an admin user from an organization through providing both Id of application and organization.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-2</b> (string) <br>
+                    One of the user&#39;s identification which includes username, email address or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted Admin user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /management/users 
+            <a data-toggle="collapse" data-target="#collapse-Nl6a4Lig7S"
+                href="#collapse-Nl6a4Lig7S" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Nl6a4Lig7S" class="panel-body collapse">
+
+        <p>Create a whole new admin user.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>adminuserproperty</b> (                    <a href="#createadminuser">CreateAdminUser</a>) <br>
+                    One or more sets of user properties of which username is mandatory and must be unique. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of new created Admin user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/users/resetpw 
+            <a data-toggle="collapse" data-target="#collapse-4VO7rcVd5A"
+                href="#collapse-4VO7rcVd5A" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-4VO7rcVd5A" class="panel-body collapse">
+
+        <p>Initiate the reset of an admin user&#39;s password.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /management/users/resetpw 
+            <a data-toggle="collapse" data-target="#collapse-LXqB2iYC97"
+                href="#collapse-LXqB2iYC97" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-LXqB2iYC97" class="panel-body collapse">
+
+        <p>Complete the password reset through getting the newpassword and the old one for identification.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>ResetPWMsg</b> (                    <a href="#resetpwmsg">ResetPWMsg</a>) <br>
+                    Parameters and value for the Captcha challenge, the admin user&#39;s response to the Captcha challenge, and the admin user&#39;s email address. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-Q5z4TRg0Yz"
+                href="#collapse-Q5z4TRg0Yz" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Q5z4TRg0Yz" class="panel-body collapse">
+
+        <p>Retrieve details about an admin user.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>userId</b> (string) <br>
+                    One of the user&#39;s identification which includes username, real name, email address or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of user&#39;s details</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading PUT">
+        <h2 class="panel-title PUT-heading">PUT /management/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-RsksaP1nUc"
+                href="#collapse-RsksaP1nUc" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-RsksaP1nUc" class="panel-body collapse">
+
+        <p>Update the info of an admin user.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>userId</b> (string) <br>
+                    One of the user&#39;s identification which includes username, real name, email address or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of user&#39;s details.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/users/{userId}/activate 
+            <a data-toggle="collapse" data-target="#collapse-kEAq8Yg9t1"
+                href="#collapse-kEAq8Yg9t1" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-kEAq8Yg9t1" class="panel-body collapse">
+
+        <p>Activate an admin user from a link provIded in an email notification.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>userId</b> (string) <br>
+                    One of the user&#39;s identification which includes username, real name, email address or UUID. (Specified in path).
+                </li>
+                <li>
+                    <b>token</b> (string) <br>
+                    Activation token&#39;s query statement. (Specified in query).
+                </li>
+                <li>
+                    <b>confirm_email</b> (boolean) <br>
+                    Query statement of whether send confimation email or not. (Specified in query).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading PUT">
+        <h2 class="panel-title PUT-heading">PUT /management/users/{userId}/password 
+            <a data-toggle="collapse" data-target="#collapse-W5RltyqKY4"
+                href="#collapse-W5RltyqKY4" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-W5RltyqKY4" class="panel-body collapse">
+
+        <p>Update an admin user&#39;s password through getting the newpassword and the old one for identification.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>userId</b> (string) <br>
+                    One of the user&#39;s identification which includes username, real name, email address or UUID. (Specified in path).
+                </li>
+                <li>
+                    <b>ResetPW</b> (                    <a href="#resetpw">ResetPW</a>) <br>
+                    The user&#39;s old and new password. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/users/{userId}/reactivate 
+            <a data-toggle="collapse" data-target="#collapse-2Nlh69dhXA"
+                href="#collapse-2Nlh69dhXA" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-2Nlh69dhXA" class="panel-body collapse">
+
+        <p>Reactivate an expired admin user.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>userId</b> (string) <br>
+                    One of the user&#39;s identification which includes username, real name, email address or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='App-Users-method'></a>
+<h2>App-Users</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/users 
+            <a data-toggle="collapse" data-target="#collapse-tTTdu5vrV0"
+                href="#collapse-tTTdu5vrV0" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-tTTdu5vrV0" class="panel-body collapse">
+
+        <p>Retrieve users though query statement.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>queryStatement</b> (string) <br>
+                    The query statement of the User. (Specified in query).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/users 
+            <a data-toggle="collapse" data-target="#collapse-nPALd14DPA"
+                href="#collapse-nPALd14DPA" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-nPALd14DPA" class="panel-body collapse">
+
+        <p>Create a user in the users collection through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>CreateUser</b> (                    <a href="#createuser">CreateUser</a>) <br>
+                    The properties of the user. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of created user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-XuAVNrdj2h"
+                href="#collapse-XuAVNrdj2h" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-XuAVNrdj2h" class="panel-body collapse">
+
+        <p>Retrieve a user through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-2</b> (string) <br>
+                    One of the user&#39;s identification which includes username, email address or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading PUT">
+        <h2 class="panel-title PUT-heading">PUT /{orgId}/{appId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-C4qK1lk92I"
+                href="#collapse-C4qK1lk92I" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-C4qK1lk92I" class="panel-body collapse">
+
+        <p>Update a user through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of updated user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /{orgId}/{appId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-0WSXcDOdUz"
+                href="#collapse-0WSXcDOdUz" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-0WSXcDOdUz" class="panel-body collapse">
+
+        <p>Remove a user through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/users/{user}/password 
+            <a data-toggle="collapse" data-target="#collapse-r2XF5BGN70"
+                href="#collapse-r2XF5BGN70" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-r2XF5BGN70" class="panel-body collapse">
+
+        <p>Set a user&#39;s password or reset the user&#39;s existing password.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>username</b> (string) <br>
+                    The username of the user. (Specified in path).
+                </li>
+                <li>
+                    <b>ResetPW</b> (                    <a href="#resetpw">ResetPW</a>) <br>
+                    The user&#39;s old and new password. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='Entities-Collections-method'></a>
+<h2>Entities-Collections</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/users/{userId}/{relation} 
+            <a data-toggle="collapse" data-target="#collapse-3lNveRpUqE"
+                href="#collapse-3lNveRpUqE" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-3lNveRpUqE" class="panel-body collapse">
+
+        <p>Retrieve a user&#39;s collections or connections through query statement.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+                <li>
+                    <b>relation</b> (string) <br>
+                    The relation between user and collections. (Specified in path).
+                </li>
+                <li>
+                    <b>queryStatement</b> (string) <br>
+                    The query statement of the user. (Specified in query).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of user&#39;s collections info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/{collectionId} 
+            <a data-toggle="collapse" data-target="#collapse-ogbhoDjg4H"
+                href="#collapse-ogbhoDjg4H" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-ogbhoDjg4H" class="panel-body collapse">
+
+        <p>Retrieve collection through query statement.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>collectionId</b> (string) <br>
+                    One of the collection&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>queryStatement</b> (string) <br>
+                    Any values specified in the query statement should be enclosed in single-quotes. (Specified in query).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved collection&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading PUT">
+        <h2 class="panel-title PUT-heading">PUT /{orgId}/{appId}/{collectionId} 
+            <a data-toggle="collapse" data-target="#collapse-6dJ6nCe32N"
+                href="#collapse-6dJ6nCe32N" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-6dJ6nCe32N" class="panel-body collapse">
+
+        <p>Update collection through query statement.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>collectionId</b> (string) <br>
+                    One of the collection&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>queryStatement</b> (string) <br>
+                    Any values specified in the query statement should be enclosed in single-quotes. (Specified in query).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of updated collection&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2} 
+            <a data-toggle="collapse" data-target="#collapse-CjwReqwJ3H"
+                href="#collapse-CjwReqwJ3H" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-CjwReqwJ3H" class="panel-body collapse">
+
+        <p>Add an entity to a collection through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>collectionId</b> (string) <br>
+                    One of the collection&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>entityId1</b> (string) <br>
+                    The Id of the 1st entity. (Specified in path).
+                </li>
+                <li>
+                    <b>relation</b> (string) <br>
+                    The relation between 1st entity and 2nd entity. (Specified in path).
+                </li>
+                <li>
+                    <b>entityId2</b> (string) <br>
+                    The Id of the 2nd entity. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of added entity&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2} 
+            <a data-toggle="collapse" data-target="#collapse-mafYwtUKyr"
+                href="#collapse-mafYwtUKyr" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-mafYwtUKyr" class="panel-body collapse">
+
+        <p>Remove an entity from a collection through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>collectionId</b> (string) <br>
+                    One of the collection&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>entityId1</b> (string) <br>
+                    The Id of the 1st entity. (Specified in path).
+                </li>
+                <li>
+                    <b>relation</b> (string) <br>
+                    The relation between 1st entity and 2nd entity. (Specified in path).
+                </li>
+                <li>
+                    <b>entityId2</b> (string) <br>
+                    The Id of the 2nd entity. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted entity&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/{collectionId}/{entityId} 
+            <a data-toggle="collapse" data-target="#collapse-Flwr684SUK"
+                href="#collapse-Flwr684SUK" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Flwr684SUK" class="panel-body collapse">
+
+        <p>Retrieve an entity through providing Id of application, organization, collection and entity.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>collectionId</b> (string) <br>
+                    One of the collection&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>entityId</b> (string) <br>
+                    One of the entity&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved entity&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading PUT">
+        <h2 class="panel-title PUT-heading">PUT /{orgId}/{appId}/{collectionId}/{entityId} 
+            <a data-toggle="collapse" data-target="#collapse-JxsN5odke0"
+                href="#collapse-JxsN5odke0" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-JxsN5odke0" class="panel-body collapse">
+
+        <p>One or more properties can be updated with a single request.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>collectionId</b> (string) <br>
+                    One of the collection&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>entityId</b> (string) <br>
+                    One of the entity&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>entityproperty</b> (                    <a href="#createentities">CreateEntities</a>) <br>
+                    The properties of the entity. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of updated entity&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId} 
+            <a data-toggle="collapse" data-target="#collapse-JBJI86ZdNr"
+                href="#collapse-JBJI86ZdNr" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-JBJI86ZdNr" class="panel-body collapse">
+
+        <p>Delete an entity from the collection.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>collectionId</b> (string) <br>
+                    One of the collection&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>entityId</b> (string) <br>
+                    One of the entity&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted entity&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/{entitytype} 
+            <a data-toggle="collapse" data-target="#collapse-aTXoq2rK1l"
+                href="#collapse-aTXoq2rK1l" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-aTXoq2rK1l" class="panel-body collapse">
+
+        <p>When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type. </p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>entitytype</b> (string) <br>
+                    The entity type to create. (Specified in path).
+                </li>
+                <li>
+                    <b>entityproperty</b> (                    <a href="#createentities">CreateEntities</a>) <br>
+                    The properties of the entity. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of created custom entity&#39;s info.</li>
+                        <li>Schema: [<a href="#entity">Entity</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='Events-method'></a>
+<h2>Events</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/events 
+            <a data-toggle="collapse" data-target="#collapse-Ye4oYQGILh"
+                href="#collapse-Ye4oYQGILh" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Ye4oYQGILh" class="panel-body collapse">
+
+        <p>Create an event through providing both Id of organization and application.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>CreateEvent</b> (                    <a href="#createevent">CreateEvent</a>) <br>
+                    The required property of the event. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of created event&#39;s info.</li>
+                        <li>Schema: [<a href="#event">Event</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='Groups-method'></a>
+<h2>Groups</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/groups 
+            <a data-toggle="collapse" data-target="#collapse-6zG2I9WKNb"
+                href="#collapse-6zG2I9WKNb" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-6zG2I9WKNb" class="panel-body collapse">
+
+        <p>Create a new group through providing both Id of organization and application.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>groupproperty</b> (                    <a href="#creategroup">CreateGroup</a>) <br>
+                    The property of the created group. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of created group&#39;s info.</li>
+                        <li>Schema: [<a href="#group">Group</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/groups/{groupId}/activities 
+            <a data-toggle="collapse" data-target="#collapse-Jc4I3aTW16"
+                href="#collapse-Jc4I3aTW16" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Jc4I3aTW16" class="panel-body collapse">
+
+        <p>Create an activity to a specific group. In this case the activity is created in the activities collection and is accessible at the /activities endpoint to users who have the permission to read that endpoint. In addition, a relationship is established between the activity and the group, and because of that, the activity will appear in the group’s feed. The group &#39;owns&#39; the activity. Also, the activity will be published in the feed of all users that are members of the group.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>groupId</b> (string) <br>
+                    One of the group&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>CreateActivity</b> (                    <a href="#createactivity">CreateActivity</a>) <br>
+                    One or more sets of activity properties. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of user&#39;s activity.</li>
+                        <li>Schema: [<a href="#activityfeed">ActivityFeed</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/groups/{groupId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-DSJUff0PNr"
+                href="#collapse-DSJUff0PNr" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-DSJUff0PNr" class="panel-body collapse">
+
+        <p>Add a user to a group through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>groupId</b> (string) <br>
+                    One of the group&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of added user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /{orgId}/{appId}/groups/{groupId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-51z524RgVx"
+                href="#collapse-51z524RgVx" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-51z524RgVx" class="panel-body collapse">
+
+        <p>Delete user from a group through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>groupId</b> (string) <br>
+                    One of the group&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{org_Id}/{app_Id}/groups/{groupId} 
+            <a data-toggle="collapse" data-target="#collapse-KlZpilr6UK"
+                href="#collapse-KlZpilr6UK" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-KlZpilr6UK" class="panel-body collapse">
+
+        <p>Get a group through through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>groupId</b> (string) <br>
+                    One of the group&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved group&#39;s info.</li>
+                        <li>Schema: [<a href="#group">Group</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading PUT">
+        <h2 class="panel-title PUT-heading">PUT /{org_Id}/{app_Id}/groups/{groupId} 
+            <a data-toggle="collapse" data-target="#collapse-BXLQOcewyG"
+                href="#collapse-BXLQOcewyG" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-BXLQOcewyG" class="panel-body collapse">
+
+        <p>Update a group through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>groupId</b> (string) <br>
+                    One of the group&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of updated group&#39;s info.</li>
+                        <li>Schema: [<a href="#group">Group</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='Organizations-Applications-method'></a>
+<h2>Organizations-Applications</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /management/orgs 
+            <a data-toggle="collapse" data-target="#collapse-wzwEPlWx3I"
+                href="#collapse-wzwEPlWx3I" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-wzwEPlWx3I" class="panel-body collapse">
+
+        <p>Create an organization through a form post.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>CreateOrg</b> (                    <a href="#createorg">CreateOrg</a>) <br>
+                    A set of organization properties supplied through a form. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of created Organization.</li>
+                        <li>Schema: [<a href="#organization">Organization</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId} 
+            <a data-toggle="collapse" data-target="#collapse-slpUppvXYt"
+                href="#collapse-slpUppvXYt" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-slpUppvXYt" class="panel-body collapse">
+
+        <p>Retrieve an organization given a specified UUID or username.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of created Organization.</li>
+                        <li>Schema: [<a href="#organization">Organization</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId}/activate 
+            <a data-toggle="collapse" data-target="#collapse-UQVPZkh37l"
+                href="#collapse-UQVPZkh37l" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-UQVPZkh37l" class="panel-body collapse">
+
+        <p>Activate an organization from a link provIded in an email notification.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>token</b> (string) <br>
+                    Activation token. (Specified in query).
+                </li>
+                <li>
+                    <b>confirm_email</b> (boolean) <br>
+                    Send confirmation email or not. (Specified in query).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId}/apps 
+            <a data-toggle="collapse" data-target="#collapse-8LGuCrnbKW"
+                href="#collapse-8LGuCrnbKW" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-8LGuCrnbKW" class="panel-body collapse">
+
+        <p>Retrieve the applications in an organization through providing both Id of application and organization.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved application data.</li>
+                        <li>Schema: [<a href="#appdata">AppData</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId}/apps/{appId}/credentials 
+            <a data-toggle="collapse" data-target="#collapse-dztEZmu1g1"
+                href="#collapse-dztEZmu1g1" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-dztEZmu1g1" class="panel-body collapse">
+
+        <p>Retrieve the client Id and client secret credentials for an application in an organization.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved credentials info.</li>
+                        <li>Schema: [<a href="#credential">Credential</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /management/orgs/{orgId}/apps/{appId}/credentials 
+            <a data-toggle="collapse" data-target="#collapse-XAQ9lJMHjV"
+                href="#collapse-XAQ9lJMHjV" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-XAQ9lJMHjV" class="panel-body collapse">
+
+        <p>Generate the client Id and client secret credentials for an application in an organization.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of generated credentials info.</li>
+                        <li>Schema: [<a href="#credential">Credential</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId}/credentials 
+            <a data-toggle="collapse" data-target="#collapse-FvRT5w6yPs"
+                href="#collapse-FvRT5w6yPs" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-FvRT5w6yPs" class="panel-body collapse">
+
+        <p>Retrieve the credentials for an organization client.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of Credential</li>
+                        <li>Schema: [<a href="#credential">Credential</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /management/orgs/{orgId}/credentials 
+            <a data-toggle="collapse" data-target="#collapse-Kyg8FZRwpG"
+                href="#collapse-Kyg8FZRwpG" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Kyg8FZRwpG" class="panel-body collapse">
+
+        <p>Generate whole new credentials for an organization client.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of Credential</li>
+                        <li>Schema: [<a href="#credential">Credential</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId}/feed 
+            <a data-toggle="collapse" data-target="#collapse-DbjlZueEYM"
+                href="#collapse-DbjlZueEYM" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-DbjlZueEYM" class="panel-body collapse">
+
+        <p>Retrieve an organization&#39;s activity feed.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of the organization&#39;s ActivityFeed.</li>
+                        <li>Schema: [<a href="#activityfeed">ActivityFeed</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/orgs/{orgId}/reactivate 
+            <a data-toggle="collapse" data-target="#collapse-AoDIMg5c5y"
+                href="#collapse-AoDIMg5c5y" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-AoDIMg5c5y" class="panel-body collapse">
+
+        <p>Reactivate an expired organization.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of complete messages.</li>
+                        <li>Schema: [<a href="#action">Action</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /management/users/{userId}/feed 
+            <a data-toggle="collapse" data-target="#collapse-o7DRWYIH05"
+                href="#collapse-o7DRWYIH05" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-o7DRWYIH05" class="panel-body collapse">
+
+        <p>Retrieve an admin user&#39;s activity feed.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>userId</b> (string) <br>
+                    One of the user&#39;s identification which includes username, real name, email address or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of user&#39;s activity</li>
+                        <li>Schema: [<a href="#activityfeed">ActivityFeed</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='Permissions-Roles-method'></a>
+<h2>Permissions-Roles</h2>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/roles 
+            <a data-toggle="collapse" data-target="#collapse-anJNpv2HsV"
+                href="#collapse-anJNpv2HsV" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-anJNpv2HsV" class="panel-body collapse">
+
+        <p>Retrieve the roles in an application through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved role&#39;s info.</li>
+                        <li>Schema: [<a href="#role">Role</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/roles 
+            <a data-toggle="collapse" data-target="#collapse-JguWt6LWgm"
+                href="#collapse-JguWt6LWgm" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-JguWt6LWgm" class="panel-body collapse">
+
+        <p>Create a new role through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>roleproperty</b> (                    <a href="#addrole">AddRole</a>) <br>
+                    The required properties of the role. (Specified in body).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of created role&#39;s info.</li>
+                        <li>Schema: [<a href="#role">Role</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/permissions 
+            <a data-toggle="collapse" data-target="#collapse-u15C3VN8j0"
+                href="#collapse-u15C3VN8j0" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-u15C3VN8j0" class="panel-body collapse">
+
+        <p>Remove permissions from a role. </p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>roleId</b> (string) <br>
+                    One of the role&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>grant_url_pattern</b> (string) <br>
+                    The query statement of the url pattern. (Specified in query).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted permission&#39;s info.</li>
+                        <li>Schema: [<a href="#permission">Permission</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading GET">
+        <h2 class="panel-title GET-heading">GET /{orgId}/{appId}/roles/{roleId}/users 
+            <a data-toggle="collapse" data-target="#collapse-905d3JE4MP"
+                href="#collapse-905d3JE4MP" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-905d3JE4MP" class="panel-body collapse">
+
+        <p>Retrieve the users in a role through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>roleId</b> (string) <br>
+                    One of the role&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of retrieved user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading POST">
+        <h2 class="panel-title POST-heading">POST /{orgId}/{appId}/roles/{roleId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-rA9cjAK53G"
+                href="#collapse-rA9cjAK53G" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-rA9cjAK53G" class="panel-body collapse">
+
+        <p>Add a user to a role through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>roleId</b> (string) <br>
+                    One of the role&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of added user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/users/{userId} 
+            <a data-toggle="collapse" data-target="#collapse-L4sqxJ1bhP"
+                href="#collapse-L4sqxJ1bhP" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-L4sqxJ1bhP" class="panel-body collapse">
+
+        <p>Remove a user from a role through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>roleId</b> (string) <br>
+                    One of the role&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>userId-3</b> (string) <br>
+                    One of the user&#39;s identification which includes username or UUID. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted user&#39;s info.</li>
+                        <li>Schema: [<a href="#user">User</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading DELETE">
+        <h2 class="panel-title DELETE-heading">DELETE /{orgId}/{appId}/roles/{rolename} 
+            <a data-toggle="collapse" data-target="#collapse-26GPDgKD46"
+                href="#collapse-26GPDgKD46" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-26GPDgKD46" class="panel-body collapse">
+
+        <p>Remove a role through providing all the identifications.</p>
+
+        <h3>Parameters</h3>
+
+        <ul>
+                <li>
+                    <b>orgId</b> (string) <br>
+                    One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>appId</b> (string) <br>
+                    One of the application&#39;s identification which includes name or uuid. (Specified in path).
+                </li>
+                <li>
+                    <b>rolename</b> (string) <br>
+                    The name of the role. (Specified in path).
+                </li>
+        </ul>
+
+        <h3>Responses</h3>
+
+        <ul>
+                <li>
+                    <b>200</b>
+                    <ul>
+                        <li>Description: An array of deleted role&#39;s info.</li>
+                        <li>Schema: [<a href="#role">Role</a>]</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>default</b>
+                    <ul>
+                        <li>Description: Unexpected error.</li>
+                        <li>Schema: [<a href="#error">Error</a>]</li>
+                    </ul>
+                </li>
+        </ul>     
+        
+    </div>
+    <!--<div class="panel-footer"></div>-->
+</div>
+<a name='models'></a>
+<br><h1>Default Entity Models</h1><p>This section lists the properties for the following Usergrid Default Entities:</p>
+
+<div>
+    <a name="AccessTokenResponse"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">AccessTokenResponse
+            <a data-toggle="collapse" data-target="#collapse-O0v6u3wvaE"
+               href="#collapse-O0v6u3wvaE" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-O0v6u3wvaE" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>access_token</td>
+                    <td>string</td>
+                    <td>Access-token that may be used on subsequent requests.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>expires_in</td>
+                    <td>number</td>
+                    <td>Time (in milliseconds) until access-token expires.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>user</td>
+                    <td>ref</td>
+                    <td>User object if login was done as a user.</td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Action"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Action
+            <a data-toggle="collapse" data-target="#collapse-IEQ08jvGV4"
+               href="#collapse-IEQ08jvGV4" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-IEQ08jvGV4" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>action</td>
+                    <td>string</td>
+                    <td>The requested action.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>string</td>
+                    <td>The status of the requested action.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>token</td>
+                    <td>string</td>
+                    <td>The token required for getting an AdminUser.</td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="ActivityFeed"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">ActivityFeed
+            <a data-toggle="collapse" data-target="#collapse-PTpQwg1DHX"
+               href="#collapse-PTpQwg1DHX" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-PTpQwg1DHX" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>entityproperty</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>category</td>
+                    <td>string</td>
+                    <td>The category of the activity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>metadataproperty</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>objectproperty</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>string</td>
+                    <td>The title of the activity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>verb</td>
+                    <td>string</td>
+                    <td>The verb of the activity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Actor"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Actor
+            <a data-toggle="collapse" data-target="#collapse-XSVcpEjnRE"
+               href="#collapse-XSVcpEjnRE" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-XSVcpEjnRE" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>displayname</td>
+                    <td>string</td>
+                    <td>The display of the name of the actor.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>objecttype</td>
+                    <td>string</td>
+                    <td>The type of the actor.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>objectuuId</td>
+                    <td>string</td>
+                    <td>The UUID of the actor.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>entitytype</td>
+                    <td>string</td>
+                    <td>The entitytype of the actor.</td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="AddPermission"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">AddPermission
+            <a data-toggle="collapse" data-target="#collapse-Fokc4vsotw"
+               href="#collapse-Fokc4vsotw" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Fokc4vsotw" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>operation</td>
+                    <td>string</td>
+                    <td>A comma-delimited set of HTTP methods (GET, PUT, POST, DELETE) that are allowed for the specified resource path.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>resource_path</td>
+                    <td>string</td>
+                    <td>The path to the resources to be accessed.</td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="AddRole"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">AddRole
+            <a data-toggle="collapse" data-target="#collapse-FtDOe8Cmuv"
+               href="#collapse-FtDOe8Cmuv" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-FtDOe8Cmuv" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>title</td>
+                    <td>string</td>
+                    <td>The title of the role.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>role name</td>
+                    <td>string</td>
+                    <td>The name of the role.</td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="AdminUserUpdate"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">AdminUserUpdate
+            <a data-toggle="collapse" data-target="#collapse-pVxxhXzi4D"
+               href="#collapse-pVxxhXzi4D" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-pVxxhXzi4D" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>city</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>state</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="AppData"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">AppData
+            <a data-toggle="collapse" data-target="#collapse-4Fg8BGjcfm"
+               href="#collapse-4Fg8BGjcfm" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-4Fg8BGjcfm" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>tester/sandbox</td>
+                    <td>string</td>
+                    <td>The UUID of tester/sandbox.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>tester/app1</td>
+                    <td>string</td>
+                    <td>The UUID of tester/app1.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>tester/app2</td>
+                    <td>string</td>
+                    <td>The UUID of tester/app2.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CancelMSG"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CancelMSG
+            <a data-toggle="collapse" data-target="#collapse-oweChuBiVh"
+               href="#collapse-oweChuBiVh" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-oweChuBiVh" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>canceled</td>
+                    <td>boolean</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Collections"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Collections
+            <a data-toggle="collapse" data-target="#collapse-UhEc5hJfCN"
+               href="#collapse-UhEc5hJfCN" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-UhEc5hJfCN" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>activities</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>feed</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>roles</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>users</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateActivity"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateActivity
+            <a data-toggle="collapse" data-target="#collapse-VP9gjLIHsH"
+               href="#collapse-VP9gjLIHsH" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-VP9gjLIHsH" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>displayName</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>username</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>image</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>verb</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>content</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateAdminUser"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateAdminUser
+            <a data-toggle="collapse" data-target="#collapse-9hSOuLygAz"
+               href="#collapse-9hSOuLygAz" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-9hSOuLygAz" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>username</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateApp"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateApp
+            <a data-toggle="collapse" data-target="#collapse-CO7Uo3joRS"
+               href="#collapse-CO7Uo3joRS" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-CO7Uo3joRS" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>token</td>
+                    <td>string</td>
+                    <td>The OAuth2 access token.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td>The name of the application.</td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateEntities"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateEntities
+            <a data-toggle="collapse" data-target="#collapse-A9TT2aLUGm"
+               href="#collapse-A9TT2aLUGm" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-A9TT2aLUGm" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateEntity"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateEntity
+            <a data-toggle="collapse" data-target="#collapse-V5fIh6KmEA"
+               href="#collapse-V5fIh6KmEA" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-V5fIh6KmEA" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>property</td>
+                    <td>string</td>
+                    <td>The property of the entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>value</td>
+                    <td>string</td>
+                    <td>The relevant value of the property.</td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateEvent"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateEvent
+            <a data-toggle="collapse" data-target="#collapse-5VYxO8y9mj"
+               href="#collapse-5VYxO8y9mj" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-5VYxO8y9mj" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>timestamp</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateGroup"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateGroup
+            <a data-toggle="collapse" data-target="#collapse-GPJDYUq1SY"
+               href="#collapse-GPJDYUq1SY" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-GPJDYUq1SY" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>title</td>
+                    <td>string</td>
+                    <td>The title of the group.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>path</td>
+                    <td>string</td>
+                    <td>The path of the group.</td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateNotification"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateNotification
+            <a data-toggle="collapse" data-target="#collapse-IDpNgbSfXv"
+               href="#collapse-IDpNgbSfXv" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-IDpNgbSfXv" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>notifier</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>message</td>
+                    <td>string</td>
+                    <td>The push notitfication message that will be delivered to the user.</td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateNotifications"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateNotifications
+            <a data-toggle="collapse" data-target="#collapse-QGDqYg2Zqj"
+               href="#collapse-QGDqYg2Zqj" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-QGDqYg2Zqj" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateOrg"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateOrg
+            <a data-toggle="collapse" data-target="#collapse-uJSjrWXqy2"
+               href="#collapse-uJSjrWXqy2" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-uJSjrWXqy2" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>organization</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>username</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="CreateUser"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">CreateUser
+            <a data-toggle="collapse" data-target="#collapse-Qp49346H8F"
+               href="#collapse-Qp49346H8F" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Qp49346H8F" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>username</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Credential"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Credential
+            <a data-toggle="collapse" data-target="#collapse-3L52eMwgwH"
+               href="#collapse-3L52eMwgwH" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-3L52eMwgwH" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>client_Id</td>
+                    <td>string</td>
+                    <td>The Id of the client.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>client_secret</td>
+                    <td>string</td>
+                    <td>The secret of the client.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Device"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Device
+            <a data-toggle="collapse" data-target="#collapse-HVXMOwWOyL"
+               href="#collapse-HVXMOwWOyL" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-HVXMOwWOyL" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>Unique entity Id.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>string</td>
+                    <td>Type of entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td>Notifier display name.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>metadata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Entity"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Entity
+            <a data-toggle="collapse" data-target="#collapse-D2S4qg8epB"
+               href="#collapse-D2S4qg8epB" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-D2S4qg8epB" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>The UUID of the entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>string</td>
+                    <td>The type of the entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>actorproperty</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>metadata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td>The name of the entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>message</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Error"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Error
+            <a data-toggle="collapse" data-target="#collapse-eNFHOaVPnz"
+               href="#collapse-eNFHOaVPnz" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-eNFHOaVPnz" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>code</td>
+                    <td>integer</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>message</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>fields</td>
+                    <td>object</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Event"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Event
+            <a data-toggle="collapse" data-target="#collapse-UjP2O8t2m5"
+               href="#collapse-UjP2O8t2m5" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-UjP2O8t2m5" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>applicationName</td>
+                    <td>string</td>
+                    <td>The application name of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>entity</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>url</td>
+                    <td>string</td>
+                    <td>The url of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>applicationId</td>
+                    <td>string</td>
+                    <td>The application UUID of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>parameters</td>
+                    <td>string</td>
+                    <td>The parameters of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>organization</td>
+                    <td>string</td>
+                    <td>The title of the organization.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Group"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Group
+            <a data-toggle="collapse" data-target="#collapse-3xAFZ0mLSJ"
+               href="#collapse-3xAFZ0mLSJ" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-3xAFZ0mLSJ" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>The UUID of the group.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>string</td>
+                    <td>The type of the group.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>created</td>
+                    <td>string</td>
+                    <td>The created Id for the group.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>modified</td>
+                    <td>string</td>
+                    <td>The modified Id for the group.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>path</td>
+                    <td>string</td>
+                    <td>The path of the group.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>metadata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>string</td>
+                    <td>The title of the group.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="ImageModel"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">ImageModel
+            <a data-toggle="collapse" data-target="#collapse-na7PRS4o1M"
+               href="#collapse-na7PRS4o1M" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-na7PRS4o1M" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>url</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>wIdth</td>
+                    <td>integer</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="LoginCredentials"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">LoginCredentials
+            <a data-toggle="collapse" data-target="#collapse-91hO1xOgim"
+               href="#collapse-91hO1xOgim" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-91hO1xOgim" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>grant_type</td>
+                    <td>string</td>
+                    <td>Grant-type must be &#39;password&#39; or &#39;client_credentials&#39;.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>username</td>
+                    <td>string</td>
+                    <td>Username of user attempting login, required only if grant_type is &#39;password&#39;.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>string</td>
+                    <td>Password of user attempting login, required only if grant_type is &#39;password&#39;.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>client_id</td>
+                    <td>string</td>
+                    <td>Client-ID portion of credentials, required only if grant_type is &#39;client_credentials&#39;.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>client_secret</td>
+                    <td>string</td>
+                    <td>Client-Secret portion of credentials, required only if grant_type is &#39;client_credentials&#39;.</td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Metadata"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Metadata
+            <a data-toggle="collapse" data-target="#collapse-Qig7Ef7juQ"
+               href="#collapse-Qig7Ef7juQ" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-Qig7Ef7juQ" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>cursor</td>
+                    <td>string</td>
+                    <td>The cursor of the metadata.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>path</td>
+                    <td>string</td>
+                    <td>The path of the metadata.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>sets</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>collections</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Notification"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Notification
+            <a data-toggle="collapse" data-target="#collapse-BvUtuImMYU"
+               href="#collapse-BvUtuImMYU" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-BvUtuImMYU" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>Unique entity Id.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>string</td>
+                    <td>Type of entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>payloads</td>
+                    <td>string</td>
+                    <td>The push notifications to be delivered.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>errorMessage</td>
+                    <td>string</td>
+                    <td>Error message returned by the notification service (APNs or GCM) if the notification fails entirely.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>scheduled</td>
+                    <td>boolean</td>
+                    <td>whether the notification is currently scheduled for delivery.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>state</td>
+                    <td>string</td>
+                    <td>The current delivery status of the notification &#39;FINISHED&#39;, &#39;SCHEDULED&#39; or &#39;CANCELED&#39;.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>metadata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Notifier"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Notifier
+            <a data-toggle="collapse" data-target="#collapse-TdFjVMEemr"
+               href="#collapse-TdFjVMEemr" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-TdFjVMEemr" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>Unique entity Id.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>string</td>
+                    <td>Type of entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td>Notifier display name.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>provider</td>
+                    <td>string</td>
+                    <td>Push notification provider &#39;apple&#39; or &#39;google&#39;.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>environment</td>
+                    <td>string</td>
+                    <td>The environment that corresponds to your app &#39;development&#39; or &#39;production&#39;.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>metadata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Object"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Object
+            <a data-toggle="collapse" data-target="#collapse-GJ0auIzuqK"
+               href="#collapse-GJ0auIzuqK" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-GJ0auIzuqK" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>displayname</td>
+                    <td>string</td>
+                    <td>The display of the name of the object.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>objecttype</td>
+                    <td>string</td>
+                    <td>The type of the object.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>objectuuId</td>
+                    <td>string</td>
+                    <td>The UUID of the object.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>entitytype</td>
+                    <td>string</td>
+                    <td>The entitytype of the object.</td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Organization"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Organization
+            <a data-toggle="collapse" data-target="#collapse-vdeWcDzOmW"
+               href="#collapse-vdeWcDzOmW" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-vdeWcDzOmW" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>applicationId</td>
+                    <td>string</td>
+                    <td>The application Id of the owner.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>username</td>
+                    <td>string</td>
+                    <td>The username of the owner.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td>The name of the owner.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>string</td>
+                    <td>The email of the owner.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>activated</td>
+                    <td>boolean</td>
+                    <td>Indicate whether the account is activated or not.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>disabled</td>
+                    <td>boolean</td>
+                    <td>Indicate whether the account is disabled or not.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>The UUID of the owner.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>adminUser</td>
+                    <td>boolean</td>
+                    <td>Indicate whether the use is a adminUser or not.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>displayEmail</td>
+                    <td>string</td>
+                    <td>The display of the email of the owner.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>htmldisplayEmail</td>
+                    <td>string</td>
+                    <td>The HTML display of the email of the owner.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>orgname</td>
+                    <td>string</td>
+                    <td>The name of the organization.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>orguuId</td>
+                    <td>string</td>
+                    <td>The UUID of the organization.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>applicationdata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Permission"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Permission
+            <a data-toggle="collapse" data-target="#collapse-VpXpOSE1GZ"
+               href="#collapse-VpXpOSE1GZ" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-VpXpOSE1GZ" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>applicationName</td>
+                    <td>string</td>
+                    <td>The name of the application of the permission.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>entity</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>url</td>
+                    <td>string</td>
+                    <td>The url of the permission.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>applicationId</td>
+                    <td>string</td>
+                    <td>The UUID of the application.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>parameters</td>
+                    <td>string</td>
+                    <td>The parameters of the permission.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>organization</td>
+                    <td>string</td>
+                    <td>The organization of the permission.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>permissiondata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Receipt"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Receipt
+            <a data-toggle="collapse" data-target="#collapse-1jZX30ZLsU"
+               href="#collapse-1jZX30ZLsU" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-1jZX30ZLsU" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>Unique entity Id.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>string</td>
+                    <td>Type of entity.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>payloads</td>
+                    <td>string</td>
+                    <td>The push notifications to be delivered.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>errorMessage</td>
+                    <td>string</td>
+                    <td>Error message returned by the notification service (APNs or GCM) if the notification fails entirely.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>errorCode</td>
+                    <td>string</td>
+                    <td>Error code returned by the notification service.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>sent</td>
+                    <td>number</td>
+                    <td>UTC timestamp in milliseconds for when the notification was sent.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>metadata</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="ResetPW"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">ResetPW
+            <a data-toggle="collapse" data-target="#collapse-AOZsF4wnwL"
+               href="#collapse-AOZsF4wnwL" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-AOZsF4wnwL" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>password</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>newpassword</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="ResetPWMsg"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">ResetPWMsg
+            <a data-toggle="collapse" data-target="#collapse-fyc4HqqZxf"
+               href="#collapse-fyc4HqqZxf" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-fyc4HqqZxf" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>recaptcha_response</td>
+                    <td>string</td>
+                    <td>Parameters and value for the Captcha challenge.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>recaptcha_challenge</td>
+                    <td>string</td>
+                    <td>The admin user&#39;s response to the Captcha challenge.</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Role"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Role
+            <a data-toggle="collapse" data-target="#collapse-S9aQBlTcA3"
+               href="#collapse-S9aQBlTcA3" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-S9aQBlTcA3" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>applicationName</td>
+                    <td>string</td>
+                    <td>The application name of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>entity</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>url</td>
+                    <td>string</td>
+                    <td>The url of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>applicationId</td>
+                    <td>string</td>
+                    <td>The application UUID of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>parameters</td>
+                    <td>string</td>
+                    <td>The parameters of the event.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>organization</td>
+                    <td>string</td>
+                    <td>The title of the organization.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>path</td>
+                    <td>string</td>
+                    <td>The path of the role.</td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="ScheduleNotification"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">ScheduleNotification
+            <a data-toggle="collapse" data-target="#collapse-2MifGru65i"
+               href="#collapse-2MifGru65i" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-2MifGru65i" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>timestamp</td>
+                    <td>string</td>
+                    <td>UTC timestamp in milliseconds of when schedule notifications.</td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="SetExpiration"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">SetExpiration
+            <a data-toggle="collapse" data-target="#collapse-jOQgcdosea"
+               href="#collapse-jOQgcdosea" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-jOQgcdosea" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>timestamp</td>
+                    <td>string</td>
+                    <td>UTC timestamp in milliseconds of when set expirations.</td>
+                    <td>true</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="Sets"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">Sets
+            <a data-toggle="collapse" data-target="#collapse-NC0foGRBJj"
+               href="#collapse-NC0foGRBJj" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-NC0foGRBJj" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>rolenames</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>permissions</td>
+                    <td>string</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+<div>
+    <a name="User"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">User
+            <a data-toggle="collapse" data-target="#collapse-gE1hBqMZrf"
+               href="#collapse-gE1hBqMZrf" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-gE1hBqMZrf" class="panel-body collapse">
+        
+        <h3>Properties</h3>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+                <tr>
+                    <td>applicationId</td>
+                    <td>string</td>
+                    <td>The application Id of a user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>username</td>
+                    <td>string</td>
+                    <td>The username of a user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td>The name of a user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>string</td>
+                    <td>The email of a user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>activated</td>
+                    <td>boolean</td>
+                    <td>Indicate whether the account is activated or not.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>disabled</td>
+                    <td>boolean</td>
+                    <td>Indicate whether the account is disabled or not.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>uuid</td>
+                    <td>string</td>
+                    <td>The UUID of a user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>adminUser</td>
+                    <td>boolean</td>
+                    <td>Indicate whether the use is a adminUser or not.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>displayEmail</td>
+                    <td>string</td>
+                    <td>The display of the email of a user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>htmldisplayEmail</td>
+                    <td>string</td>
+                    <td>The HTML display of the email of a user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>organization</td>
+                    <td>string</td>
+                    <td>The organization of the user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>picture</td>
+                    <td>string</td>
+                    <td>The uri of the user&#39;s picture.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>uri</td>
+                    <td>string</td>
+                    <td>The uri of the user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>path</td>
+                    <td>string</td>
+                    <td>The path of the user.</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>completeMsg</td>
+                    <td>ref</td>
+                    <td></td>
+                    <td>false</td>
+                </tr>
+        </table>
+
+    </div>
+    
+</div>
+
+    </div>
+    <div class="col-md-1"></div>
+</div>
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+</body>
+</html>
