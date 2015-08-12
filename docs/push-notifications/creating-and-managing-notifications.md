@@ -1,5 +1,5 @@
 # Creating and managing notifications
-This topic provides information on setting up and sending push notifications with the Apigee API backend as a service (BaaS). For high-level information, prerequisites, and tutorials, see [Push notifications overview](overview.html).
+This topic provides information on setting up and sending push notifications with the Usergrid API backend as a service (BaaS). For high-level information, prerequisites, and tutorials, see [Push notifications overview](overview.html).
 
 <div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> 
 Although not shown in many of the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.

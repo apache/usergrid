@@ -1,7 +1,7 @@
 # Creating notifiers
-When you request that a push notification be sent to your app on devices, an API BaaS notifier carries the request to the notification service (Google GCM or Apple APNs).
+When you request that a push notification be sent to your app on devices, an Usergrid notifier carries the request to the notification service (Google GCM or Apple APNs).
 
-A notifier is represented by an entity in your API BaaS application (see the [API Docs](../rest-endpoints/api-docs.html) for reference information). It carries the credentials that authorize your request. Once a notification service has verified that your notifier contains valid credentials, it will forward your push notification to your app on devices.
+A notifier is represented by an entity in your Usergrid application (see the [API Docs](../rest-endpoints/api-docs.html) for reference information). It carries the credentials that authorize your request. Once a notification service has verified that your notifier contains valid credentials, it will forward your push notification to your app on devices.
 
 You can create a notifier in two ways: using the admin portal and programmatically.
 
@@ -41,10 +41,10 @@ __Fields for Android__
 <td>Enter the API key that was generated when you registered your app with GCM. To retrieve your API key, go to the [Google API developer web site](https://code.google.com/apis/console/), then select __APIs & Auth > Credentials__.</td></tr>
 </table>
 
-6. Click __Create Notifier__. The API BaaS will create a notifier entity in the /notifiers collection. The notifier will also appear in the list of notifiers in the notifications console. 
+6. Click __Create Notifier__. The Usergrid will create a notifier entity in the /notifiers collection. The notifier will also appear in the list of notifiers in the notifications console. 
 
 ## Creating notifiers programmatically
-You can create an App BaaS notifier programmatically by sending requests to the API BaaS API.
+You can create an App BaaS notifier programmatically by sending requests to the Usergrid API.
 
 ### For Apple
 

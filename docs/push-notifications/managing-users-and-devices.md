@@ -1,7 +1,7 @@
 # Managing users and devices
-Before your app can receive notifications on a user's device, the app's code will need to register the device with both the API BaaS and the appropriate push notification service (Apple APNs or Google GCM).
+Before your app can receive notifications on a user's device, the app's code will need to register the device with both the Usergrid and the appropriate push notification service (Apple APNs or Google GCM).
 
-By registering with the API BaaS, your app adds the device on which it is installed to your data store. The device is represented as a Device entity. This makes it possible for you to target that device when sending notifications. (For more on the Device entity, see the [API Docs](../rest-endpoints/api-docs.html).) Any devices, users, and groups that have been registered in this way may be targeted with push notifications.
+By registering with the Usergrid, your app adds the device on which it is installed to your data store. The device is represented as a Device entity. This makes it possible for you to target that device when sending notifications. (For more on the Device entity, see the [API Docs](../rest-endpoints/api-docs.html).) Any devices, users, and groups that have been registered in this way may be targeted with push notifications.
 
 By registering with the notification service, you make the device known to the service. This way, the service can forward your notifications to the device.
 
@@ -10,16 +10,16 @@ For an overview of how to set up push notifications, including troubleshooting t
 </p></div>
 
 ## Registering devices
-The following samples illustrate how to register a device with a notification service and with the API BaaS. At a high level, your code will send a registration request to the notification service, then use information in the service's response to send a separate request to the API BaaS. The two requests correlate the notification service, API BaaS, and your mobile app.
+The following samples illustrate how to register a device with a notification service and with the Usergrid. At a high level, your code will send a registration request to the notification service, then use information in the service's response to send a separate request to the Usergrid. The two requests correlate the notification service, Usergrid, and your mobile app.
 
-You can also create device entities separately by using the /devices endpoint. For more information on using the ``/devices`` endpoint in the API BaaS, see the [API Docs](../rest-endpoints/api-docs.html).
+You can also create device entities separately by using the /devices endpoint. For more information on using the ``/devices`` endpoint in the Usergrid, see the [API Docs](../rest-endpoints/api-docs.html).
 
-Registering a device with a notification service is a standard coding activity for implementing push notifications. This is not specific to the API BaaS.
+Registering a device with a notification service is a standard coding activity for implementing push notifications. This is not specific to the Usergrid.
 
 
 ### Registering for iOS
 
-The following code illustrates how you can use the iOS SDK to register a device with both the Apigee server and with the APNs, the Apple push notification service. This example assumes that your code has already property initialized the SDK. For more information, see [Installing the Apigee SDK for iOS](../sdks/tbd.html).
+The following code illustrates how you can use the iOS SDK to register a device with both the Usergrid server and with the APNs, the Apple push notification service. This example assumes that your code has already property initialized the SDK. For more information, see [Installing the Apigee SDK for iOS](../sdks/tbd.html).
 
     // Register with Apple to receive notifications.
 
@@ -47,7 +47,7 @@ The following code illustrates how you can use the iOS SDK to register a device 
     // Use this method to register with Apigee.
     - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)newDeviceToken
     {
-        // Register device token with the API BaaS (will create the Device entity if it doesn't exist)
+        // Register device token with the Usergrid (will create the Device entity if it doesn't exist)
         // Sends the name of the notifier you created with Apigee, along with the token your code
         // received from Apple.
         ApigeeClientResponse *response = [dataClient setDevicePushToken: newDeviceToken
@@ -135,9 +135,9 @@ The following code illustrates how to register a client device with GCM, registe
             } else {
             
             // Use an instance of the Client class (SDK for Android) 
-            // to register this device with the API BaaS. Pass as arguments
+            // to register this device with the Usergrid. Pass as arguments
             // the device unique identifier, the unique name of the notifier you
-            // created in the API BaaS, the GCM API key, and a callback that will
+            // created in the Usergrid, the GCM API key, and a callback that will
             // receive an instance of a Device class representing the registered
             // device on the system.
             dataClient.registerDeviceForPushAsync(dataClient.getUniqueDeviceID(), notifierName, regId, null, 
@@ -197,7 +197,7 @@ The following code illustrates how you can use the JavaScript functions included
     var appleOptions = {
         alert:true, badge:true, sound:true
     };
-    // Register the device with the API BaaS, passing options for configuration 
+    // Register the device with the Usergrid, passing options for configuration 
     // along with a callback from which you can retrieve the device token
     // sent by Apigee.
     pushNotification.registerDevice(appleOptions, function(status) {
@@ -232,18 +232,18 @@ Information about installing the plugin is available in its Readme file. For mor
 
 
 ## Connecting devices to users
-You can associate user entities with device entities in the API BaaS. Doing so allows you to target your push notifications at users with specific characteristics. The following describes how to connect a user to a specific device in the API BaaS.
+You can associate user entities with device entities in the Usergrid. Doing so allows you to target your push notifications at users with specific characteristics. The following describes how to connect a user to a specific device in the Usergrid.
 
-For more information on creating a device in your API BaaS data store, see "Registering Devices" above.
+For more information on creating a device in your Usergrid data store, see "Registering Devices" above.
 
-For more information on creating a user in your API BaaS data store, see [User](../rest-endpoints/api-docs.html#user).
+For more information on creating a user in your Usergrid data store, see [User](../rest-endpoints/api-docs.html#user).
 
 The following code examples all use the same basic endpoint pattern for connecting devices with users:
 
     POST /users/{userUUID or name}/devices/{deviceUUID}
     
 ### Connecting with curl
-The following call connects user "joex" with device 7a0a1cba-9a18-3bee-8ae3-4f511f12a386 (the device UUID). After this connection, you can send a push notification to joex rather than the device. Further, if joex has specific properties set--such as {"favoritecolor": "blue"}--you can send a push notification to all users whose favorite color is blue (assuming they're connected to devices in the API BaaS).
+The following call connects user "joex" with device 7a0a1cba-9a18-3bee-8ae3-4f511f12a386 (the device UUID). After this connection, you can send a push notification to joex rather than the device. Further, if joex has specific properties set--such as {"favoritecolor": "blue"}--you can send a push notification to all users whose favorite color is blue (assuming they're connected to devices in the Usergrid).
 
     curl -X POST "https://api.usergrid.com/my-org/sandbox/users/joex/devices/7a0a1cba-9a18-3bee-8ae3-4f511f12a386"
 
@@ -253,7 +253,7 @@ The following sample code, taken from AppDelegate.m in the native iOS push sampl
 
     ApigeeClientResponse *response = [dataClient setDevicePushToken: newDeviceToken forNotifier: notifier];
 
-    // You could use this if you log in as an API BaaS user to associate the Device to your User
+    // You could use this if you log in as an Usergrid user to associate the Device to your User
     if (response.transactionState == kUGClientResponseSuccess) {
         response = [self connectEntities: @"users" connectorID: @"me" type: @"devices" connecteeID: deviceId];
     }

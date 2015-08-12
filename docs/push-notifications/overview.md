@@ -10,7 +10,7 @@
 <td>
 
 ## Reach your users with push
-With the new push notifications feature in the Apigee API BaaS, you can send announcements to your app's users.
+With the new push notifications feature in the Usergrid, you can send announcements to your app's users.
 
 * __Reach your app's users__ with messages they care about.
 * __Keep your app footprint low__ while communicating in a high-value way with your app's users. 
@@ -38,7 +38,7 @@ Depending on your supported app platforms, you'll need just a few things.
 ## Build push support
 
 #### [Setting up push notifications support](getting-started.html)
-Connect Apple or Google with Apigee and your app.
+Connect Apple or Google with Usergrid and your app.
 
 #### [Register your app](registering.html)
 Register with Apple or Google.

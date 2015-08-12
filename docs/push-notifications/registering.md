@@ -1,5 +1,5 @@
 # Registering with a notification service
-To send push notifications, you will need to first register your app with the push notification service (Apple APNs or Google GCM) that corresponds to your app's platform. Once you've registered, the service will provide you with a certificate or key that you will need when you create an API BaaS notifier. (See [Creating notifiers](creating-notifiers.html) for more information.)
+To send push notifications, you will need to first register your app with the push notification service (Apple APNs or Google GCM) that corresponds to your app's platform. Once you've registered, the service will provide you with a certificate or key that you will need when you create an Usergrid notifier. (See [Creating notifiers](creating-notifiers.html) for more information.)
 
 Push notification services are gateways controlled by platform services (such as Apple and Google). These gateways ensure that push notifications are delivered securely and originate from trusted apps.
 
@@ -14,7 +14,7 @@ Before you can send push notifications to your app on iOS devices, you'll need t
 
 * Generate an SSL signing certificate you can use to generate a .p12 certificate.
 * Create an Apple App ID through which you can associate push notifications support with your app.
-* Generate a .p12 certificate you can use to create an API BaaS notifier. The certificate will be sent to APNs with push notification requests.
+* Generate a .p12 certificate you can use to create an Usergrid notifier. The certificate will be sent to APNs with push notification requests.
 
 For more information see "How the pieces connect" in [Setting up push notification support](getting-started.html).
 

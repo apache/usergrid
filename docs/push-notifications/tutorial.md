@@ -1,5 +1,5 @@
 # Tutorial: Push notifications sample app
-In this tutorial, you'll use a sample app (iOS, Android, or PhoneGap) to send yourself a push notification with the API BaaS push notification API. You'll register with a push notification services (Apple APNs or Google GCM) to create the required security certificate or key, create the required API BaaS notifier to send a message, then modify, compile and run the sample app to see push notifications in action.
+In this tutorial, you'll use a sample app (iOS, Android, or PhoneGap) to send yourself a push notification with the Usergrid push notification API. You'll register with a push notification services (Apple APNs or Google GCM) to create the required security certificate or key, create the required Usergrid notifier to send a message, then modify, compile and run the sample app to see push notifications in action.
 
 <div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last"> 
 For an overview of how to set up push notifications, including troubleshooting tips, see [Adding push notifications support](adding-push-support.html).
@@ -22,7 +22,7 @@ To begin this tutorial, download the sample app for the platform of your choice.
 __A note to PhoneGap developers__: PhoneGap requires a plugin to enable push notifications. The plugin is included in the sample apps in the JavaScript SDK. For new PhoneGap applications, [download the PhoneGap push plugin](https://github.com/phonegap-build/PushPlugin).
 
 ## Step 2: Register with a notification service and generate a certificate/key
-To send push notifications you must register your app with the push notification service that corresponds to your app's platform. Once registered, the service will provide you with a certificate or key that you will provide when creating an API BaaS notifier.
+To send push notifications you must register your app with the push notification service that corresponds to your app's platform. Once registered, the service will provide you with a certificate or key that you will provide when creating an Usergrid notifier.
 
 For a full walkthrough of how to register an app with a notification service and generate the necessary certificate/key, see [Registering with a notification service](registration.html).
 
@@ -161,7 +161,7 @@ To configure and run the native Android push notification sample app, do the fol
 
 * __APP__: The app in your organization where you created the notifier. (For the sample, make sure it's "sandbox".)
 
-* __USER__ and __PASSWORD__: Optional. If you created your notifier in an app other than "sandbox" (which doesn't require authentication), enter the username and password of one of your API BaaS admin users.
+* __USER__ and __PASSWORD__: Optional. If you created your notifier in an app other than "sandbox" (which doesn't require authentication), enter the username and password of one of your Usergrid admin users.
 
 4. In AndroidManifest.xml, be sure the proper Android permissions are included, such as READ_PHONE_STATE and VIBRATE.
 
@@ -238,8 +238,8 @@ When using PhoneGap to develop push notification apps, you use a PhoneGap plugin
 
 * ``/receipts`` - To see the receipt generated from the successful push.
 
-## Step 6: Send additional push notifications using other API BaaS tools
-Send a push notification from the API BaaS Notifications console
+## Step 6: Send additional push notifications using other Usergrid tools
+Send a push notification from the Usergrid Notifications console
 On the Send Notification screen. Select your notifier, select All Devices, enter a message, select Now, and click to send it.
 
 .. image:: sendnotification.png
