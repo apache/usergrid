@@ -20,11 +20,8 @@
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.corepersistence.index.ReplicatedIndexLocationStrategy;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 
 /**
@@ -37,12 +34,20 @@ public class InitializeApplicationIndexEvent extends AsyncEvent {
     @JsonProperty
     protected IndexLocationStrategy indexLocationStrategy;
 
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public InitializeApplicationIndexEvent(){
+
+    }
+
     public InitializeApplicationIndexEvent(final IndexLocationStrategy indexLocationStrategy) {
         this.indexLocationStrategy = indexLocationStrategy;
 
     }
 
-
+    @JsonDeserialize(as=ReplicatedIndexLocationStrategy.class)
     public IndexLocationStrategy getIndexLocationStrategy() {
         return indexLocationStrategy;
     }

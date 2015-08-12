@@ -390,8 +390,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
         if (logger.isDebugEnabled())
             logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
 
-        ack( message );
-
         final EventBuilderImpl.EntityDeleteResults
             entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
 
