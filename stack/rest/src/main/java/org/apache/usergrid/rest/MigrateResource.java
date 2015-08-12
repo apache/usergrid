@@ -22,12 +22,7 @@ package org.apache.usergrid.rest;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -116,6 +111,48 @@ public class MigrateResource extends AbstractContextResource {
         return new JSONWithPadding( response, callback );
     }
 
+    @RequireSystemAccess
+    @PUT
+    @Path( "run/{pluginName}" )
+    public JSONWithPadding migrateData(@PathParam("pluginName") String pluginName ,  @Context UriInfo ui,
+                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+
+        if(!getDataMigrationManager().pluginExists(pluginName)){
+            throw new IllegalArgumentException("Plugin doesn't exits name:"+pluginName);
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "Migrate Data: "+ pluginName );
+        //TODO make this use the task scheduler
+
+
+
+
+        final Thread migrate = new Thread() {
+
+            @Override
+            public void run() {
+
+                logger.info( "Migrating Data for plugin: " + pluginName );
+
+                try {
+                    getDataMigrationManager().migrate(pluginName);
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to migrate data for plugin: " + pluginName, e );
+                }
+            }
+        };
+
+        migrate.setName( "Index migrate data formats: "+pluginName );
+        migrate.setDaemon( true );
+        migrate.start();
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
 
     @RequireSystemAccess
     @PUT
