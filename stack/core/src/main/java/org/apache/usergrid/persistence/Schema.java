@@ -1597,7 +1597,8 @@ public class Schema {
             }
         }
 
-        Map<String, Object> properties_map = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+        //Map<String, Object> properties_map = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+        Map<String, Object> properties_map = new TreeMap<String, Object>( );
         for ( Entry<String, ByteBuffer> column : columns.entrySet() ) {
             String propertyName = column.getKey();
             Object propertyValue = deserializeEntityProperty( entityType, propertyName, column.getValue() );
