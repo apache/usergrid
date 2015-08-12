@@ -23,33 +23,28 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
-import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import com.google.inject.Inject;
-
 import net.jcip.annotations.NotThreadSafe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 @NotThreadSafe
@@ -58,7 +53,7 @@ public class CounterIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
 
     @Rule
-    public ImmediateCounterRule counterRule = new ImmediateCounterRule( );
+    public ImmediateCounterRule counterRule = new ImmediateCounterRule();
 
     long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
 
@@ -68,8 +63,7 @@ public class CounterIT extends AbstractCoreIT {
     }
 
 
-
-    @Ignore("needs to have elasticsearch refreshes implemented")
+    @Ignore( "needs to have elasticsearch refreshes implemented" )
     @Test
     public void testIncrementAndDecrement() throws Exception {
 
@@ -115,7 +109,6 @@ public class CounterIT extends AbstractCoreIT {
         assertNotNull( em );
 
 
-
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
         // UUID groupId = UUID.randomUUID();
@@ -137,20 +130,19 @@ public class CounterIT extends AbstractCoreIT {
         }
 
         Results r = em.getAggregateCounters( null, null, null, "visits", CounterResolution.SIX_HOUR, ts,
-                System.currentTimeMillis(), false );
+            System.currentTimeMillis(), false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.SIX_HOUR, ts,
-                System.currentTimeMillis(), false );
+            System.currentTimeMillis(), false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.SIX_HOUR, ts,
-                System.currentTimeMillis(), true );
+            System.currentTimeMillis(), true );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
-        r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.ALL, ts,
-                System.currentTimeMillis(),
-                false );
+        r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.ALL, ts, System.currentTimeMillis(),
+            false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         for ( int i = 0; i < 10; i++ ) {
@@ -161,7 +153,7 @@ public class CounterIT extends AbstractCoreIT {
         }
 
         r = em.getAggregateCounters( null, null, null, "clicks", CounterResolution.HALF_HOUR, ts,
-                System.currentTimeMillis(), true );
+            System.currentTimeMillis(), true );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         Query query = new Query();
@@ -203,7 +195,8 @@ public class CounterIT extends AbstractCoreIT {
         final long originalCount;
         if ( or.getCounters().get( 0 ).getValues().isEmpty() ) {
             originalCount = 0;
-        } else {
+        }
+        else {
             originalCount = or.getCounters().get( 0 ).getValues().get( 0 ).getValue();
         }
 
@@ -211,7 +204,8 @@ public class CounterIT extends AbstractCoreIT {
         final long originalAdminLoginsCount;
         if ( counts.get( "admin.logins" ) == null ) {
             originalAdminLoginsCount = 0;
-        } else {
+        }
+        else {
             originalAdminLoginsCount = counts.get( "admin.logins" );
         }
 
@@ -224,16 +218,14 @@ public class CounterIT extends AbstractCoreIT {
         organizationEntity.setProperty( "name", orgName );
         organizationEntity = em.create( organizationEntity );
 
-        Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName  );
-        UUID applicationId =
-            appInfo.getUuid();
+        Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName );
+        UUID applicationId = appInfo.getUuid();
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", orgName + "/" + appName );
-        Entity applicationEntity = em.create(
-            applicationId, CpNamingUtils.APPLICATION_INFO, properties );
+        Entity applicationEntity = em.create( applicationId, CpNamingUtils.APPLICATION_INFO, properties );
 
-//Creating connections like below doesn't work.
+        //Creating connections like below doesn't work.
 
         em.createConnection( organizationEntity.toTypedEntity(), "owns", applicationEntity );
 
@@ -259,20 +251,16 @@ public class CounterIT extends AbstractCoreIT {
         // how to "count" a login to a specific application?
         // when org is provided, why is it returning 8? Is it 4 with one 'event'?
 
-        Results r = em.getAggregateCounters( null, null, null, "admin.logins",
-                CounterResolution.ALL, ts, System.currentTimeMillis(), false );
+        Results r = em.getAggregateCounters( null, null, null, "admin.logins", CounterResolution.ALL, ts,
+            System.currentTimeMillis(), false );
 
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1,
-            r.getCounters().get( 0 ).getValues().get( 0 ).getValue()  - originalAdminLoginsCount );
+        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalAdminLoginsCount );
 
         r = em.getAggregateCounters( query );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1,
-            r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalCount );
+        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalCount );
     }
-
-
 
 
     @Test
@@ -309,16 +297,33 @@ public class CounterIT extends AbstractCoreIT {
         //sleep to ensure the flush has executed
         Thread.sleep( 30000 );
 
-        Results r = em.getAggregateCounters( null, null, null, "visits", CounterResolution.SIX_HOUR, ts, System.currentTimeMillis(), false );
+
+        final long totalCount = returnCounts( em, "visits" );
+
+        assertEquals(200, totalCount);
+    }
+
+
+    private long returnCounts( final EntityManager em, final String counterName ) {
+        Results r = em.getAggregateCounters( null, null, null, counterName, CounterResolution.SIX_HOUR, ts,
+            System.currentTimeMillis(), false );
+
+
+
 
         final AggregateCounterSet counter = r.getCounters().get( 0 );
 
-        final long count = counter.getValues().get( 0 ).getValue();
+        assertEquals(counterName, counter.getName());
 
-        final String name = counter.getName();
+        long count = 0;
 
-        assertEquals("visits", name);
-        assertEquals(200, count);
+        for(final AggregateCounter value: counter.getValues()){
+            count += value.getValue();
+        }
+
+        return count;
+
+
 
     }
 }
