@@ -150,7 +150,8 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     public void setProperties( Map<String, Object> properties ) {
-        dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+        //dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+        dynamic_properties = new TreeMap<String, Object>( );
         addProperties( properties );
     }
 
