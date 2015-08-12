@@ -87,6 +87,7 @@ public class CounterIT extends AbstractCoreIT {
         userProperties.put( "username", "test-username" );
         userProperties.put( "email", "test-email" );
         User user = ( User ) em.create( uuid, "user", userProperties ).toTypedEntity();
+
         LOG.debug( "user={}", user );
 
 
@@ -94,6 +95,7 @@ public class CounterIT extends AbstractCoreIT {
         assertEquals( new Long( 1 ), counters.get( "application.collection.users" ) );
 
         em.delete( user );
+
         counters = em.getEntityCounters( applicationId );
         assertEquals( new Long( 0 ), counters.get( "application.collection.users" ) );
     }
@@ -301,16 +303,33 @@ public class CounterIT extends AbstractCoreIT {
         //sleep to ensure the flush has executed
         Thread.sleep( 30000 );
 
-        Results r = em.getAggregateCounters( null, null, null, "visits", CounterResolution.SIX_HOUR, ts, System.currentTimeMillis(), false );
+
+        final long totalCount = returnCounts( em, "visits" );
+
+        assertEquals(200, totalCount);
+    }
+
+
+    private long returnCounts( final EntityManager em, final String counterName ) {
+        Results r = em.getAggregateCounters( null, null, null, counterName, CounterResolution.SIX_HOUR, ts,
+            System.currentTimeMillis(), false );
+
+
+
 
         final AggregateCounterSet counter = r.getCounters().get( 0 );
 
-        final long count = counter.getValues().get( 0 ).getValue();
+        assertEquals(counterName, counter.getName());
 
-        final String name = counter.getName();
+        long count = 0;
 
-        assertEquals("visits", name);
-        assertEquals(count, 200);
+        for(final AggregateCounter value: counter.getValues()){
+            count += value.getValue();
+        }
+
+        return count;
+
+
 
     }
 }
