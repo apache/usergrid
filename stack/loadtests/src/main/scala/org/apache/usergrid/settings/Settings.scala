@@ -128,7 +128,6 @@ object Settings {
   val overallEntitySeed = initIntSetting(ConfigProperties.EntitySeed)
   val searchLimit:Int = initIntSetting(ConfigProperties.SearchLimit)
   val searchQuery = initStrSetting(ConfigProperties.SearchQuery)
-  println(s"searchQuery=${searchQuery}")
   val endConditionType = initStrSetting(ConfigProperties.EndConditionType)
   val endMinutes:Int = initIntSetting(ConfigProperties.EndMinutes)
   val endRequestCount:Int = initIntSetting(ConfigProperties.EndRequestCount)
@@ -146,6 +145,7 @@ object Settings {
   val laterThanTimestamp:Long = initLongSetting(ConfigProperties.LaterThanTimestamp)
   val entityProgressCount:Long = initLongSetting(ConfigProperties.EntityProgressCount)
   private val logEntityProgress: Boolean = entityProgressCount > 0L
+  val injectionList = initStrSetting(ConfigProperties.InjectionList)
 
   // Entity update
   val updateProperty = initStrSetting(ConfigProperties.UpdateProperty)
