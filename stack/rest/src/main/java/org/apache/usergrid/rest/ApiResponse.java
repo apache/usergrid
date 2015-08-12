@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +86,9 @@ public class ApiResponse {
     private ClientCredentialsInfo credentials;
 
     protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+
+    protected final Collection<String> IGNORE_QP = Arrays.asList("client_id", "client_secret", "password", "username", "access_token",
+                    "client_credentials", "fb_access_token", "fq_access_token", "ping_access_token", "token");
 
     @Autowired
     protected ServerEnvironmentProperties serverEnvironmentProperties;
@@ -556,6 +561,7 @@ public class ApiResponse {
     public void setParams( Map<String, List<String>> params ) {
         Map<String, List<String>> q = new LinkedHashMap<String, List<String>>();
         for ( String k : params.keySet() ) {
+            if (IGNORE_QP.contains(k.toLowerCase())) continue;
             List<String> v = params.get( k );
             if ( v != null ) {
                 q.put( k, new ArrayList<String>( v ) );
