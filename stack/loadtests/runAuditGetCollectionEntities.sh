@@ -13,62 +13,55 @@
 # limitations under the License.
 #
 
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/testConfig.sh"
+
+# from testConfig.sh
+#URL=
+#ADMIN_USER=
+#ADMIN_PASSWORD=
+#ORG=
+#APP=
+#AUTH_TYPE=
+#TOKEN_TYPE=
+#SEARCH_QUERY=
+#SEARCH_LIMIT=
+#LATER_THAN_TIMESTAMP=  #may be overridden on command line
+#ENTITY_PROGRESS_COUNT=
+
 die() { echo "$@" 1>&2 ; exit 1; }
 
-####
-#This is a script to simplify running gatling tests.  It will default several parameters, invoke the maven plugins
-#Then aggregate the results
-####
-[ "$#" -ge 4 ] || die "At least 4 arguments required, $# provided.  Example is $0 URL RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [LATER_THAN_TIMESTAMP(ms)]"
+RAMP_USERS="$1"
+RAMP_TIME="$2"
+AUDIT_UUID_FILENAME="$3"
+[ "$#" -ge 4 ] && LATER_THAN_TIMESTAMP="$4"
 
-URL="$1"
-RAMP_USERS="$2"
-RAMP_TIME="$3"
-AUDIT_UUID_FILENAME="$4"
+shift 3
 
-shift 4
+SCENARIO_TYPE=auditGetCollectionEntities
 
 #Compile everything
 mvn compile
 
-#Set the app id to be a date epoch for uniqueness
-#APP=$(date +%s)
-ADMIN_USER=superuser
-ADMIN_PASSWORD=test
-ORG=gatling
-APP=millionentities
-SCENARIO_TYPE=auditGetCollectionEntities
-SEARCH_LIMIT=1000
-#SEARCH_QUERY=order%20by%20name
-SEARCH_QUERY=
-
-AUTH_TYPE=token
-TOKEN_TYPE=management
-
 #Execute the test
 mvn gatling:execute \
--Dorg=${ORG} \
--Dapp=${APP} \
--Dbaseurl=${URL} \
+-DbaseUrl=${URL} \
 -DadminUser=${ADMIN_USER}  \
 -DadminPassword=${ADMIN_PASSWORD}  \
--DrampUsers=${RAMP_USERS}  \
--DrampTime=${RAMP_TIME}  \
--DscenarioType=${SCENARIO_TYPE} \
+-Dorg=${ORG} \
+-Dapp=${APP} \
 -DauthType=${AUTH_TYPE} \
 -DtokenType=${TOKEN_TYPE} \
--DauditUuidFilename=${AUDIT_UUID_FILENAME} \
--DsearchLimit=${SEARCH_LIMIT} \
 -DsearchQuery=${SEARCH_QUERY} \
+-DsearchLimit=${SEARCH_LIMIT} \
+-DlaterThanTimestamp=${LATER_THAN_TIMESTAMP} \
+-DentityProgressCount=${ENTITY_PROGRESS_COUNT} \
+-DscenarioType=${SCENARIO_TYPE} \
+-DrampUsers=${RAMP_USERS}  \
+-DrampTime=${RAMP_TIME}  \
+-DauditUuidFilename=${AUDIT_UUID_FILENAME} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.AuditSimulation
 
-
-
-#Now move all the reports
-#AGGREGATE_DIR="target/aggregate-$(date +%s)"
-
-#mkdir -p ${AGGREGATE_DIR}
-
-#copy to the format of target/aggregate(date)/(simnulationame)-simulation.log
-#find target -name "simulation.log" -exec cp {} ${AGGREGATE_DIR}/$(basename $(dirname {} ))-simulation.log  \;
 

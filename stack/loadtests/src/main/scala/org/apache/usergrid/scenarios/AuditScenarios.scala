@@ -34,12 +34,17 @@ object AuditScenarios {
   val SessionVarCursor: String = "cursor"
   val SessionVarUuid: String = "entityUuid"
   val SessionVarCollectionName: String = "collectionName"
-  val SessionVarCollectionUuids: String = "collectionUuids"
+  val SessionVarCollectionEntities: String = "collectionEntities"
 
   def collectionGetUrl(useCursor: Boolean): String = {
+    val searchQuery =
+      // later than timestamp replaces query
+      if (Settings.laterThanTimestamp > 0) s"modified%20gte%20${Settings.laterThanTimestamp}"
+      else if (Settings.searchQuery != "") s"${Settings.searchQuery}"
+      else ""
     val url = "/${" + SessionVarCollectionName + "}?" +
       (if (useCursor) "cursor=${" + SessionVarCursor + "}&" else "") +
-      (if (Settings.searchQuery != "") s"ql=${Settings.searchQuery}&" else "") +
+      (if (searchQuery != "") s"ql=$searchQuery&" else "") +
       (if (Settings.searchLimit > 0) s"limit=${Settings.searchLimit}&" else "")
 
     // remove trailing & or ?
@@ -51,8 +56,8 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(false))
       .headers(Headers.authToken)
-      .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids), maybeExtractCursor(SessionVarCursor)))
-      .foreach("${" + SessionVarCollectionUuids + "}", "singleResult") {
+      .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
+      .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
           val resultObj = session("singleResult").as[Map[String,Any]]
           val uuid = resultObj("uuid").asInstanceOf[String]
@@ -68,8 +73,8 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(true))
       .headers(Headers.authToken)
-      .check(status.is(200), extractCollectionUuids(SessionVarCollectionUuids), maybeExtractCursor(SessionVarCursor)))
-      .foreach("${" + SessionVarCollectionUuids + "}", "singleResult") {
+      .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
+      .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
           val resultObj = session("singleResult").as[Map[String,Any]]
           val uuid = resultObj("uuid").asInstanceOf[String]
@@ -91,9 +96,12 @@ object AuditScenarios {
           session
         }
         .doIf(session => session("validEntity").as[String] == "yes") {
-          exec(getCollectionsWithoutCursor)
-            .asLongAs(stringParamExists(SessionVarCursor)) {
+          tryMax(Settings.retryCount) {
+            exec(getCollectionsWithoutCursor)
+          }.asLongAs(stringParamExists(SessionVarCursor)) {
+            tryMax(Settings.retryCount) {
               exec(getCollectionsWithCursor)
+            }
           }
         }
     }
@@ -102,30 +110,29 @@ object AuditScenarios {
     http("GET collection entity")
       .get("/${collectionName}?ql=uuid=${uuid}")
       .headers(Headers.authToken)
-      .check(status.is(200), jsonPath("$.count").saveAs("count")))
-        .exec(session => {
-          val count = session("count").as[String].toInt
-          val uuid = session("uuid").as[String]
-          val entityName = session("name").as[String]
-          val modified = session("modified").as[Long]
-          val collectionName = session(SessionVarCollectionName).as[String]
+      .check(status.is(200),jsonPath("$.count").optional.saveAs("count"),extractAuditEntities(SessionVarCollectionEntities)))
+      .exec(session => {
+        val count = session("count").as[String].toInt
+        val uuid = session("uuid").as[String]
+        val entityName = session("name").as[String]
+        val modified = session("modified").as[String].toLong
+        val collectionName = session(SessionVarCollectionName).as[String]
 
-          // save items not found
-          if (count < 1) {
-            Settings.addAuditUuid(uuid, collectionName, entityName, modified)
-            Settings.incAuditNotFound()
-            println(s"NOT FOUND: $collectionName.$entityName $uuid")
-          } else if (count > 1) {
-            Settings.addAuditUuid(uuid, collectionName, entityName, modified)
-            Settings.incAuditBadResponse()
-            println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName $uuid")
-          } else {
-            // println(s"FOUND: $collectionName.$entityName $uuid")
-            Settings.incAuditSuccess()
-          }
+        if (count < 1) {
+          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
+          Settings.incAuditNotFound()
+          println(s"NOT FOUND: $collectionName.$entityName ($uuid)")
+        } else if (count > 1) {
+          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
+          Settings.incAuditBadResponse()
+          println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName ($uuid)")
+        } else {
+          // println(s"FOUND: $collectionName.$entityName ($uuid)")
+          Settings.incAuditSuccess()
+        }
 
-          session
-        })
+        session
+      })
 
   val verifyCollections = scenario("Verify collections")
     .exec(injectTokenIntoSession())
@@ -133,7 +140,9 @@ object AuditScenarios {
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
     feed(FeederGenerator.collectionCsvFeeder)
       .doIf(session => session("validEntity").as[String] == "yes") {
-        exec(getCollectionEntity)
+        tryMax(Settings.retryCount) {
+          exec(getCollectionEntity)
+        }
       }
     }
 

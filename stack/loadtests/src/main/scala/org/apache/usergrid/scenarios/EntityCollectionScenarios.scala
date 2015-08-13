@@ -121,18 +121,22 @@ object EntityCollectionScenarios {
     .exec(injectAuthType())
     .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
     asLongAs(_ => Settings.continueMinutesTest) {
-      doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
-        exec(getRandomEntityAnonymous)
-      } {
-        exec(getRandomEntityWithToken)
+      tryMax(Settings.retryCount) {
+        doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+          exec(getRandomEntityAnonymous)
+        } {
+          exec(getRandomEntityWithToken)
+        }
       }
     }
   } {
     repeat(_ => Settings.endRequestCount.toInt) {
-      doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
-        exec(getRandomEntityAnonymous)
-      } {
-        exec(getRandomEntityWithToken)
+      tryMax(Settings.retryCount) {
+        doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+          exec(getRandomEntityAnonymous)
+        } {
+          exec(getRandomEntityWithToken)
+        }
       }
     }
   }
@@ -159,30 +163,34 @@ object EntityCollectionScenarios {
     .exec(injectAuthType())
     .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
       asLongAs(_ => Settings.continueMinutesTest) {
-        feed(uuidFeeder())
-          /*.exec{
+          feed(uuidFeeder())
+            /*.exec{
             session => println(s"UUID: ${session("uuid").as[String]}")
             session
-          }*/
-          .doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
-            exec(getRandomEntityByUuidAnonymous)
-          } {
-            exec(getRandomEntityByUuidWithToken)
+            }*/
+            .tryMax(Settings.retryCount) {
+            doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+              exec(getRandomEntityByUuidAnonymous)
+            } {
+              exec(getRandomEntityByUuidWithToken)
+            }
           }
       }
     } {
       repeat(_ => Settings.endRequestCount.toInt) {
-        feed(uuidFeeder())
-          /*.exec {
+          feed(uuidFeeder())
+            /*.exec {
             session => println(s"UUID: ${session("uuid").as[String]}")
             session
-          }*/
-          .doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
-            exec(getRandomEntityByUuidAnonymous)
-          } {
-            exec(getRandomEntityByUuidWithToken)
-          }
-      }
+            }*/
+            .tryMax(Settings.retryCount) {
+              doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
+                exec(getRandomEntityByUuidAnonymous)
+              } {
+                exec(getRandomEntityByUuidWithToken)
+              }
+            }
+        }
     }
 
   /*
@@ -213,7 +221,7 @@ object EntityCollectionScenarios {
           session
         }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
-          tryMax(5) {
+          tryMax(Settings.retryCount) {
             exec(loadEntity)
           }
         }
@@ -240,7 +248,9 @@ object EntityCollectionScenarios {
         session
       }*/
       .doIf(session => session("validEntity").as[String] == "yes") {
-        exec(deleteEntity)
+        tryMax(Settings.retryCount) {
+          exec(deleteEntity)
+        }
       }
   }
 
@@ -309,7 +319,7 @@ object EntityCollectionScenarios {
           session
         }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
-          tryMax(5) {
+          tryMax(Settings.retryCount) {
             doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
               exec(getEntityByNameSequentialAnonymous)
             } {

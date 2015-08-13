@@ -62,8 +62,8 @@ public class AmazonNotificationUtils {
                 deadletterArn );
 
         final Map<String, String> queueAttributes = new HashMap<>( 2 );
-        deadLetterAttributes.put( "MessageRetentionPeriod", fig.getRetentionPeriod() );
-        deadLetterAttributes.put( "RedrivePolicy", redrivePolicy );
+        queueAttributes.put( "MessageRetentionPeriod", fig.getRetentionPeriod() );
+        queueAttributes.put( "RedrivePolicy", redrivePolicy );
 
         CreateQueueRequest createQueueRequest = new CreateQueueRequest().
                                                                             withQueueName( queueName )
