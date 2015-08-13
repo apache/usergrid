@@ -13,6 +13,22 @@
 # limitations under the License.
 #
 
+#
+# Injection list:
+# type(arg1,arg2,...);type(arg1,...)
+#
+# types:
+# rampUsers(int numUsers, int overSeconds)
+# constantUsersPerSec(double numUsersPerSec, int duringSeconds)
+# constantUsersPerSecRandomized(double numUsersPerSec, int duringSeconds)
+# atOnceUsers(int numUsers)
+# rampUsersPerSec(double numUsersPerSec, int totalUsers, int duringSeconds)
+# rampUsersPerSecRandomized(double numUsersPerSec, int totalUsers, int duringSeconds)
+# heavisideUsers(int numUsers, int overSeconds)
+# nothingFor(int seconds)
+#
+# Example: rampUsers(30,120);nothingFor(120);atOnceUsers(20)
+
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/testConfig.sh"
@@ -36,18 +52,28 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #END_CONDITION_TYPE=
 #END_MINUTES=
 #END_REQUEST_COUNT=
-#CONSTANT_USERS_PER_SEC=
-#CONSTANT_USERS_DURATION=
+#INJECTION_LIST=
 
-die() { echo "$@" 1>&2 ; exit 1; }
+helpMsg() {
+    echo "At least 2 arguments required, $# provided.  Example is $0 INJECTION_LIST UUID_FILENAME" 1>&2
+    echo "Injection types:" 1>&2
+    echo "  rampUsers(int numUsers, int overSeconds)" 1>&2
+    echo "  constantUsersPerSec(double numUsersPerSec, int duringSeconds)" 1>&2
+    echo "  constantUsersPerSecRandomized(double numUsersPerSec, int duringSeconds)" 1>&2
+    echo "  atOnceUsers(int numUsers)" 1>&2
+    echo "  rampUsersPerSec(double numUsersPerSec, int totalUsers, int duringSeconds)" 1>&2
+    echo "  rampUsersPerSecRandomized(double numUsersPerSec, int totalUsers, int duringSeconds)" 1>&2
+    echo "  heavisideUsers(int numUsers, int overSeconds)" 1>&2
+    echo "  nothingFor(int seconds)" 1>&2
+    exit 1
+}
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) UUID_FILENAME"
+[ "$#" -ge 2 ] || helpMsg
 
-RAMP_USERS="$1"
-RAMP_TIME="$2"
-UUID_FILENAME="$3"
+INJECTION_LIST="$1"
+UUID_FILENAME="$2"
 
-shift 3
+shift 2
 
 SCENARIO_TYPE=uuidRandomInfinite
 
@@ -74,11 +100,8 @@ mvn gatling:execute \
 -DendConditionType=${END_CONDITION_TYPE} \
 -DendMinutes=${END_MINUTES} \
 -DendRequestCount=${END_REQUEST_COUNT} \
--DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
--DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
 -DscenarioType=${SCENARIO_TYPE} \
--DrampUsers=${RAMP_USERS}  \
--DrampTime=${RAMP_TIME}  \
 -DuuidFilename=${UUID_FILENAME} \
--Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
+-DinjectionList=${INJECTION_LIST} \
+-Dgatling.simulationClass=org.apache.usergrid.simulations.CustomInjectionSimulation
 
