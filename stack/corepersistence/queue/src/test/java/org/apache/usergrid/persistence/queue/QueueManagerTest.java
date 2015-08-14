@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 
 import com.google.inject.Inject;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -112,15 +113,20 @@ public class QueueManagerTest {
 
         List<Map<String,String>> bodies = new ArrayList<>();
         bodies.add(values);
+        long initialDepth = qm.getQueueDepth();
         qm.sendMessages(bodies);
         long depth = qm.getQueueDepth();
         assertTrue(depth>0);
-        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,values.getClass()).toList().toBlocking().last();
-        assertTrue(messageList.size() >= 1);
+        List<QueueMessage> messageList = qm.getMessages(10,5000,5000,values.getClass()).toList().toBlocking().last();
+        assertTrue(messageList.size() <= 500);
         for(QueueMessage message : messageList){
             assertTrue(message.getBody().equals(values));
         }
-        qm.commitMessages(messageList);
+        if(messageList.size()>0) {
+            qm.commitMessages(messageList);
+        }
+        depth = qm.getQueueDepth();
+        assertEquals(initialDepth, depth);
     }
 
 
