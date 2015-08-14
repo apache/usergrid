@@ -39,6 +39,12 @@ public interface QueueManager {
     Observable<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
 
     /**
+     * get the queue depth
+     * @return
+     */
+    long getQueueDepth();
+
+    /**
      * Commit the transaction
      * @param queueMessage
      */

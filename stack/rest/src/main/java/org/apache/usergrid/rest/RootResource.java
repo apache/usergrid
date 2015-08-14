@@ -37,8 +37,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.queue.Queue;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +108,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     @Autowired
     private UsergridSystemMonitor usergridSystemMonitor;
+
+    @Autowired
+    private Injector injector;
 
 
     public RootResource() {
@@ -181,6 +191,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         ApiResponse response = createApiResponse();
 
+        QueueManagerFactory queueManagerFactory = injector.getInstance(QueueManagerFactory.class);
+        QueueScope queueScope = new QueueScopeImpl("es_queue", QueueScope.RegionImplementation.ALLREGIONS);
+        QueueManager queue = queueManagerFactory.getQueueManager(queueScope);
+
         if ( !ignoreError ) {
 
             if ( !emf.getEntityStoreHealth().equals( Health.GREEN )) {
@@ -205,8 +219,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
         node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() );
 
         // Core Persistence Query Index module status for Management App Index
-        EntityManager em = emf.getEntityManager(emf.getManagementAppId());
         node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
+        node.put( "queueDepth", queue.getQueueDepth() );
+
 
         dumpMetrics(node);
         response.setProperty( "status", node );

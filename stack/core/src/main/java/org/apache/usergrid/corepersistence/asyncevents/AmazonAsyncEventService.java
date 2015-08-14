@@ -80,7 +80,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     // SQS maximum receive messages is 10
     private static final int MAX_TAKE = 10;
-    private static final String QUEUE_NAME = "es_queue";
+    public static final String QUEUE_NAME = "es_queue";
 
     private final QueueManager queue;
     private final QueueScope queueScope;
