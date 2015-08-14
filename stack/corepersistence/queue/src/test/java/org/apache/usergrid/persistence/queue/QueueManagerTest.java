@@ -105,5 +105,23 @@ public class QueueManagerTest {
 
     }
 
+    @Test
+    public void queueSize() throws IOException,ClassNotFoundException{
+        HashMap<String,String> values = new HashMap<>();
+        values.put("test", "Test");
+
+        List<Map<String,String>> bodies = new ArrayList<>();
+        bodies.add(values);
+        qm.sendMessages(bodies);
+        long depth = qm.getQueueDepth();
+        assertTrue(depth>0);
+        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,values.getClass()).toList().toBlocking().last();
+        assertTrue(messageList.size() >= 1);
+        for(QueueMessage message : messageList){
+            assertTrue(message.getBody().equals(values));
+        }
+        qm.commitMessages(messageList);
+    }
+
 
 }
