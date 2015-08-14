@@ -373,6 +373,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
         offer( new EntityDeleteEvent( new EntityIdScope( applicationScope, entityId ) ) );
     }
 
+    @Override
+    public long getQueueDepth() {
+        return queue.getQueueDepth();
+    }
+
     public void handleEntityDelete(final QueueMessage message) {
 
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEntityDelete");

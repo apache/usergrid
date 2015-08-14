@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import com.google.inject.Injector;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.index.query.Identifier;
@@ -191,9 +192,8 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         ApiResponse response = createApiResponse();
 
-        QueueManagerFactory queueManagerFactory = injector.getInstance(QueueManagerFactory.class);
-        QueueScope queueScope = new QueueScopeImpl("es_queue", QueueScope.RegionImplementation.ALLREGIONS);
-        QueueManager queue = queueManagerFactory.getQueueManager(queueScope);
+        AsyncEventService eventService = injector.getInstance(AsyncEventService.class);
+
 
         if ( !ignoreError ) {
 
@@ -210,7 +210,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put( "started", started );
         node.put( "uptime", System.currentTimeMillis() - started );
-        node.put( "version", usergridSystemMonitor.getBuildNumber() );
+        node.put( "version", usergridSystemMonitor.getBuildNumber());
 
         // Hector status, for backwards compatibility
         node.put("cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive());
@@ -220,7 +220,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         // Core Persistence Query Index module status for Management App Index
         node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
-        node.put( "queueDepth", queue.getQueueDepth() );
+        node.put( "queueDepth", eventService.getQueueDepth() );
 
 
         dumpMetrics(node);
