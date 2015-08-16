@@ -1,14 +1,16 @@
 
+<a name="op-{{opId}}"/>
+
 <div class="panel panel-default">
     
     <div class="panel-heading {{method}}">
         <h2 class="panel-title {{method}}-heading">{{method}} {{url}} 
-            <a data-toggle="collapse" data-target="#collapse-{{opid}}"
-                href="#collapse-{{opid}}" class="collapsed collapse-button"> </a>
+            <a data-toggle="collapse" data-target="#op-{{opId}}"
+                href="#op-{{opId}}" class="collapsed collapse-button"> </a>
         </h2>
     </div>
     
-    <div id="collapse-{{opid}}" class="panel-body collapse">
+    <div id="op-{{opId}}" class="panel-body collapse">
 
         <p>{{description}}</p>
 
@@ -17,8 +19,7 @@
         <ul>
             {{#parameters}}
                 <li>
-                    <b>{{name}}</b> ({{#type}}{{type}}{{/type}}{{#schemaRef}}
-                    <a href="#{{schemaAnchor}}">{{schemaRef}}</a>{{/schemaRef}}) <br>
+                    <b>{{name}}</b> ({{#type}}{{type}}{{/type}}{{#schemaRef}}<a href="#{{schemaAnchor}}">{{schemaRef}}</a>{{/schemaRef}})<br>
                     {{description}} (Specified in {{in}}).
                 </li>
             {{/parameters}}
