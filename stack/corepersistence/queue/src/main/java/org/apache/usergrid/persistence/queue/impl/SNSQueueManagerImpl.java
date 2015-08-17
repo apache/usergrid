@@ -381,6 +381,20 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
     @Override
+    public long getQueueDepth() {
+        String key = "ApproximateNumberOfMessages";
+        try {
+            GetQueueAttributesResult result = sqs.getQueueAttributes(getReadQueue().getUrl(), Collections.singletonList(key));
+            String depthString = result.getAttributes().get(key);
+            return depthString != null ? Long.parseLong(depthString) : 0;
+        }catch (Exception e){
+            logger.error("Exception getting queue depth",e);
+            return -1;
+
+        }
+    }
+
+    @Override
     public void sendMessages(final List bodies) throws IOException {
 
         if (snsAsync == null) {

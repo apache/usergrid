@@ -47,6 +47,11 @@ public class DefaultQueueManager implements QueueManager {
     }
 
     @Override
+    public long getQueueDepth() {
+        return queue.size();
+    }
+
+    @Override
     public void commitMessage(QueueMessage queueMessage) {
     }
 

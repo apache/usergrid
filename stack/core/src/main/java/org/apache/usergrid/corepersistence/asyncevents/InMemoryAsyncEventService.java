@@ -79,13 +79,13 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
     @Override
     public void queueNewEdge( final ApplicationScope applicationScope, final Entity entity, final Edge newEdge ) {
-        run( eventBuilder.buildNewEdge( applicationScope, entity, newEdge ) );
+        run( eventBuilder.buildNewEdge(applicationScope, entity, newEdge) );
     }
 
 
     @Override
     public void queueDeleteEdge( final ApplicationScope applicationScope, final Edge edge ) {
-        run( eventBuilder.buildDeleteEdge( applicationScope, edge ) );
+        run( eventBuilder.buildDeleteEdge(applicationScope, edge) );
     }
 
 
@@ -103,7 +103,7 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     public void index( final ApplicationScope applicationScope, final Id id, final long updatedSince ) {
         final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, id, updatedSince );
 
-        run(eventBuilder.buildEntityIndex( entityIndexOperation ));
+        run(eventBuilder.buildEntityIndex(entityIndexOperation));
     }
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
@@ -125,4 +125,10 @@ public class InMemoryAsyncEventService implements AsyncEventService {
             observable.toBlocking().lastOrDefault(null);
         }
     }
+
+    @Override
+    public long getQueueDepth() {
+        return 0;
+    }
+
 }

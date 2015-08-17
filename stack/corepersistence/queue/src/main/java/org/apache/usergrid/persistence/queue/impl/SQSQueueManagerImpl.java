@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+import com.amazonaws.services.sqs.model.*;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.queue.util.AmazonNotificationUtils;
 import org.slf4j.Logger;
@@ -36,22 +37,6 @@ import org.apache.usergrid.persistence.queue.QueueScope;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.BatchResultErrorEntry;
-import com.amazonaws.services.sqs.model.CreateQueueRequest;
-import com.amazonaws.services.sqs.model.CreateQueueResult;
-import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
-import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
-import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
-import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.amazonaws.services.sqs.model.GetQueueUrlResult;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.MessageAttributeValue;
-import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
-import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Preconditions;
@@ -147,7 +132,6 @@ public class SQSQueueManagerImpl implements QueueManager {
             //pretty print, disabling for speed
 //            mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
-
             sqs = createClient();
 
         } catch (Exception e) {
@@ -218,6 +202,19 @@ public class SQSQueueManagerImpl implements QueueManager {
         return rx.Observable.from(queueMessages);
     }
 
+    @Override
+    public long getQueueDepth() {
+        String key = "ApproximateNumberOfMessages";
+        try {
+            GetQueueAttributesResult result = sqs.getQueueAttributes(new GetQueueAttributesRequest().withAttributeNames(key));
+            String depthString = result.getAttributes().get(key);
+            return depthString != null ? Long.parseLong(depthString) : 0;
+        }catch (Exception e){
+            logger.error("Exception getting queue depth",e);
+            return -1;
+
+        }
+    }
     @Override
     public void sendMessages(final List bodies) throws IOException {
 
