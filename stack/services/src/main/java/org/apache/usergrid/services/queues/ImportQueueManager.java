@@ -40,6 +40,11 @@ public class ImportQueueManager implements QueueManager {
         return Observable.empty();
     }
 
+    @Override
+    public long getQueueDepth() {
+        return 0;
+    }
+
 
     @Override
     public void commitMessage( final QueueMessage queueMessage ) {
