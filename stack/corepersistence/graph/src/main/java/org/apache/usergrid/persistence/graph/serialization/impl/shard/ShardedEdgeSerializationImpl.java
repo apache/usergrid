@@ -18,7 +18,7 @@
  *  * under the License.
  *
  */
-package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Collection;
@@ -51,6 +51,8 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.RowKey;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.RowKeyType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeSearcher;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardsColumnIterator;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators.DescendingTimestampComparator;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators.OrderedComparator;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators

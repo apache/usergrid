@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.core.astyanax;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.netflix.astyanax.model.ColumnFamily;
 
@@ -81,6 +82,7 @@ public class MultiTennantColumnFamilyDefinition {
     public static final String COMPACTION_STRATEGY_OPTIONS = "compaction_strategy_options";
     public static final String COMPACTION_SSTABLE_SIZE = "sstable_size_in_mb";
     public static final String BLOOM_FILTER_FP = "sstable_size_in_mb";
+    public static final String GC_GRACE = "gc_grace";
 
 
 
@@ -89,22 +91,25 @@ public class MultiTennantColumnFamilyDefinition {
     private final String keyValidationType;
     private final String columnValidationType;
     private final CacheOption cacheOption;
+    private final Optional<Integer> gcGrace;
 
 
     public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String keyValidationType,
-                                               final String columnComparatorType, final String columnValidationType, final CacheOption cacheOption ) {
+                                               final String columnComparatorType, final String columnValidationType, final CacheOption cacheOption, final Optional<Integer> gcGrace ) {
 
         Preconditions.checkNotNull( columnFamily, "columnFamily is required" );
         Preconditions.checkNotNull( columnComparatorType, "columnComparatorType is required" );
         Preconditions.checkNotNull( keyValidationType, "keyValidationType is required" );
         Preconditions.checkNotNull( columnValidationType, "columnValueValidationType is required" );
         Preconditions.checkNotNull( cacheOption, "cacheOption is required" );
+        Preconditions.checkNotNull( gcGrace , "gcGrace is required" );
 
         this.columnFamily = columnFamily;
         this.columnComparatorType = columnComparatorType;
         this.keyValidationType = keyValidationType;
         this.columnValidationType = columnValidationType;
         this.cacheOption = cacheOption;
+        this.gcGrace = gcGrace;
     }
 
 
@@ -127,6 +132,11 @@ public class MultiTennantColumnFamilyDefinition {
         compactionOptions.put( COMPACTION_SSTABLE_SIZE, "512" );
 
         options.put( COMPACTION_STRATEGY_OPTIONS, compactionOptions  );
+
+        //set our GC grace if supplied
+        if(gcGrace.isPresent()){
+            options.put( GC_GRACE, gcGrace.get() );
+        }
 
         return options;
     }

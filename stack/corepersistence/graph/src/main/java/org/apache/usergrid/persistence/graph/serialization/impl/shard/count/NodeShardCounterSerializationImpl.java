@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.EdgeShardRowKeySerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -138,7 +139,8 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
         return Collections.singleton(
                 new MultiTennantColumnFamilyDefinition( EDGE_SHARD_COUNTS, BytesType.class.getSimpleName(),
                         ColumnTypes.BOOLEAN, CounterColumnType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.ALL ) );
+                        MultiTennantColumnFamilyDefinition.CacheOption.ALL, Optional
+                                                        .absent() ) );
     }
 
 

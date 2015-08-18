@@ -86,6 +86,7 @@ limitations under the License.
         <module>common</module>
         <module>map</module>
         <module>queue</module>
+        <module>locks</module>
     </modules>
 
     <build>

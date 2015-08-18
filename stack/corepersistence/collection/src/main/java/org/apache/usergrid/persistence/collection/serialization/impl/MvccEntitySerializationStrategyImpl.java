@@ -336,7 +336,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         MultiTennantColumnFamilyDefinition cf =
                 new MultiTennantColumnFamilyDefinition( columnFamily, BytesType.class.getSimpleName(),
                         ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                        BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                        BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional.absent() );
 
 
         return Collections.singleton( cf );

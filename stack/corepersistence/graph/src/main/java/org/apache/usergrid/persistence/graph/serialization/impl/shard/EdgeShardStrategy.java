@@ -33,7 +33,8 @@ public interface EdgeShardStrategy {
      * @param scope The application's scope]
      * @param timestamp The timestamp on the edge
      */
-    public ShardEntryGroup getWriteShards( final ApplicationScope scope, final long timestamp, final DirectedEdgeMeta directedEdgeMeta );
+    ShardEntryGroup getWriteShards( final ApplicationScope scope, final long timestamp,
+                                    final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
@@ -42,7 +43,8 @@ public interface EdgeShardStrategy {
      * @param scope The application scope
      * @param maxTimestamp The max timestamp to use
      */
-    public Iterator<ShardEntryGroup> getReadShards(final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta );
+    Iterator<ShardEntryGroup> getReadShards( final ApplicationScope scope, final long maxTimestamp,
+                                             final DirectedEdgeMeta directedEdgeMeta );
 
     /**
      * Increment our count meta data by the passed value.  Can be a positive or a negative number.
@@ -52,7 +54,7 @@ public interface EdgeShardStrategy {
      * @param directedEdgeMeta The edge meta data to use
      * @return
      */
-    public void increment(final ApplicationScope scope, Shard shard, long count, final DirectedEdgeMeta directedEdgeMeta );
+    void increment( final ApplicationScope scope, Shard shard, long count, final DirectedEdgeMeta directedEdgeMeta );
 
 
 

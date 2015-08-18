@@ -20,19 +20,18 @@
 package org.apache.usergrid.persistence.index;
 
 
-import com.google.common.base.Optional;
-import org.apache.usergrid.persistence.core.CPManager;
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Id;
-import rx.Observable;
 
-import java.util.UUID;
+import rx.Observable;
 
 
 /**
  * Provides management operations for single index
  */
-public interface EntityIndex extends CPManager {
+public interface EntityIndex {
 
 
     public static final int MAX_LIMIT = 1000;

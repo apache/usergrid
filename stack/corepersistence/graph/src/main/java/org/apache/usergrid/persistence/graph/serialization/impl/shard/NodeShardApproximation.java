@@ -37,8 +37,8 @@ public interface NodeShardApproximation {
      * @param count The count to increment
      * @param directedEdgeMeta The directed edge meta data to use
      */
-    public void increment( final ApplicationScope scope, final Shard shard,
-                           final long count, final DirectedEdgeMeta directedEdgeMeta );
+    void increment( final ApplicationScope scope, final Shard shard, final long count,
+                    final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
@@ -47,20 +47,20 @@ public interface NodeShardApproximation {
      * @param scope The scope
      * @param directedEdgeMeta The directed edge meta data to use
      */
-    public long getCount( final ApplicationScope scope, final Shard shard,  final DirectedEdgeMeta directedEdgeMeta );
+    long getCount( final ApplicationScope scope, final Shard shard, final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
      * Flush the current counters in the Approximation.  Will return immediately after the flush. You can then use flushPending
      * to check the state.
      */
-    public void beginFlush();
+    void beginFlush();
 
     /**
      * Return true if there is data to be flushed
      * @return
      */
-    public boolean flushPending();
+    boolean flushPending();
 
 
 }

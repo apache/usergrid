@@ -74,7 +74,6 @@ import rx.Observable;
 import rx.functions.Action1;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -89,18 +88,14 @@ public class GraphManagerShardConsistencyIT {
     private static final Meter writeMeter = registry.meter( "writeThroughput" );
 
     private static final Slf4jReporter reporter =
-            Slf4jReporter.forRegistry( registry ).outputTo( log ).convertRatesTo( TimeUnit.SECONDS )
-                         .convertDurationsTo( TimeUnit.MILLISECONDS ).build();
+        Slf4jReporter.forRegistry( registry ).outputTo( log ).convertRatesTo( TimeUnit.SECONDS )
+                     .convertDurationsTo( TimeUnit.MILLISECONDS ).build();
 
 
     protected ApplicationScope scope;
 
 
     protected Object originalShardSize;
-
-    protected Object originalShardTimeout;
-
-    protected Object originalShardDelta;
 
 
     @Before
@@ -109,22 +104,8 @@ public class GraphManagerShardConsistencyIT {
 
         originalShardSize = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_SIZE );
 
-        originalShardTimeout = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_CACHE_TIMEOUT );
-
-        originalShardDelta = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_MIN_DELTA );
-
 
         ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 500 );
-
-
-        final long cacheTimeout = 2000;
-        //set our cache timeout to the above value
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_CACHE_TIMEOUT, cacheTimeout );
-
-
-        final long minDelta = ( long ) ( cacheTimeout * 2.5 );
-
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_MIN_DELTA, minDelta );
 
 
         //get the system property of the UUID to use.  If one is not set, use the defualt
@@ -146,7 +127,7 @@ public class GraphManagerShardConsistencyIT {
 
     @Test
     public void writeThousandsSingleSource()
-            throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
+        throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
         final Id sourceId = IdGenerator.createId( "source" );
         final String edgeType = "test";
@@ -166,17 +147,18 @@ public class GraphManagerShardConsistencyIT {
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
                 return manager.loadEdgesFromSource(
-                        new SimpleSearchByEdgeType( sourceId, edgeType, Long.MAX_VALUE,
-                                SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
+                    new SimpleSearchByEdgeType( sourceId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                        Optional.<Edge>absent() ) );
             }
         };
 
 
+                final int numInjectors = 4;
 //        final int numInjectors = 2;
-        final int numInjectors = 1;
+        //        final int numInjectors = 1;
 
         /**
-         * create 3 injectors.  This way all the caches are independent of one another.  This is the same as
+         * create multiple injectors.  This way all the caches are independent of one another.  This is the same as
          * multiple nodes
          */
         final List<Injector> injectors = createInjectors( numInjectors );
@@ -187,56 +169,46 @@ public class GraphManagerShardConsistencyIT {
         final long shardSize = graphFig.getShardSize();
 
 
-        //we don't want to starve the cass runtime since it will be on the same box. Only take 50% of processing
-        // power for writes
-        final int numProcessors = Runtime.getRuntime().availableProcessors() / 2;
+        final int numWorkersPerInjector = 1;
 
-        final int numWorkersPerInjector = numProcessors / numInjectors;
 
+        final long expectedShardCount = 4;
 
         /**
-         * Do 4x shard size so we should have approximately 4 shards
+         * Do 4x expected shard size so we have 4 shards
          */
-        final long numberOfEdges = shardSize * 4;
+        final long numberOfEdges = shardSize * expectedShardCount;
 
 
-        final long workerWriteLimit = numberOfEdges / numWorkersPerInjector;
+        final long workerWriteLimit = numberOfEdges / numWorkersPerInjector / numInjectors;
 
 
-
-        final long expectedShardCount = numberOfEdges/shardSize;
-
-
-        final ListeningExecutorService
-                executor = MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( numWorkersPerInjector ) );
+        final ListeningExecutorService executor =
+            MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( numWorkersPerInjector ) );
 
 
         final AtomicLong writeCounter = new AtomicLong();
 
 
-        //min stop time the min delta + 1 cache cycle timeout
-        final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout();
-
-
         log.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
-                numInjectors );
+            numInjectors );
 
 
         final List<Future<Boolean>> futures = new ArrayList<>();
 
 
-
+        //create multiple instances of injectors.  This simulates multiple nodes, so that we can ensure we're not
+        //sharing state in our guice DI
         for ( Injector injector : injectors ) {
             final GraphManagerFactory gmf = injector.getInstance( GraphManagerFactory.class );
 
 
             for ( int i = 0; i < numWorkersPerInjector; i++ ) {
-                Future<Boolean> future = executor
-                        .submit( new Worker( gmf, generator, workerWriteLimit, minExecutionTime, writeCounter ) );
+                Future<Boolean> future =
+                    executor.submit( new Worker( gmf, generator, workerWriteLimit, writeCounter ) );
 
                 futures.add( future );
             }
-
         }
 
         /**
@@ -262,62 +234,66 @@ public class GraphManagerShardConsistencyIT {
         /**
          * Start reading continuously while we migrate data to ensure our view is always correct
          */
-        final ListenableFuture<Long> future = executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
 
-        final List<Throwable> failures = new ArrayList<>(  );
-
+        final List<Throwable> failures = new ArrayList<>();
 
 
+        for ( Injector injector : injectors ) {
+            final GraphManagerFactory readGmf = injector.getInstance( GraphManagerFactory.class );
 
-        //add the future
-        Futures.addCallback( future, new FutureCallback<Long>() {
 
-            @Override
-            public void onSuccess( @Nullable final Long result ) {
-                log.info( "Successfully ran the read, re-running" );
-                executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+            for ( int i = 0; i < numWorkersPerInjector; i++ ) {
+                final ListenableFuture<Long> future =
+                    executor.submit( new ReadWorker( readGmf, generator, writeCount, readMeter ) );
+
+                //add the future
+                Futures.addCallback( future, new FutureCallback<Long>() {
+
+                    @Override
+                    public void onSuccess( @Nullable final Long result ) {
+                        log.info( "Successfully ran the read, re-running" );
+                        executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+                    }
+
+
+                    @Override
+                    public void onFailure( final Throwable t ) {
+                        failures.add( t );
+                        log.error( "Failed test!", t );
+                    }
+                } );
             }
-
-
-            @Override
-            public void onFailure( final Throwable t ) {
-                failures.add( t );
-                log.error( "Failed test!", t );
-            }
-        } );
-
+        }
 
 
         int compactedCount;
 
 
-
+        //        Thread.sleep( 1888*60*60*10 );
 
 
         //now start our readers
 
         while ( true ) {
 
-            if(!failures.isEmpty()){
+            if ( !failures.isEmpty() ) {
 
-                StringBuilder builder = new StringBuilder(  );
+                StringBuilder builder = new StringBuilder();
 
-                builder.append("Read runner failed!\n");
+                builder.append( "Read runner failed!\n" );
 
-                for(Throwable t: failures){
+                for ( Throwable t : failures ) {
                     builder.append( "Exception is: " );
-                    ByteArrayOutputStream output = new ByteArrayOutputStream(  );
+                    ByteArrayOutputStream output = new ByteArrayOutputStream();
 
                     t.printStackTrace( new PrintWriter( output ) );
 
-                    builder.append( output.toString( "UTF-8" ));
+                    builder.append( output.toString( "UTF-8" ) );
                     builder.append( "\n\n" );
-
                 }
 
 
-
-                fail(builder.toString());
+                fail( builder.toString() );
             }
 
             //reset our count.  Ultimately we'll have 4 groups once our compaction completes
@@ -334,6 +310,8 @@ public class GraphManagerShardConsistencyIT {
 
                 log.info( "Compaction pending status for group {} is {}", group, group.isCompactionPending() );
 
+                //we don't count compaction pending groups, we need to ensure they're completed compacting before
+                // testing
                 if ( !group.isCompactionPending() ) {
                     compactedCount++;
                 }
@@ -342,27 +320,25 @@ public class GraphManagerShardConsistencyIT {
 
             //we're done
             if ( compactedCount >= expectedShardCount ) {
-                log.info( "All compactions complete, sleeping" );
+                log.info( "All compactions complete.  Compacted shards are {}.  Expected at least expectedShardCount" );
 
-//                final Object mutex = new Object();
-//
-//                synchronized ( mutex ){
-//
-//                    mutex.wait();
-//                }
+                assertEquals( "Compacted should match expected", expectedShardCount, compactedCount );
+
+                //                final Object mutex = new Object();
+                //
+                //                synchronized ( mutex ){
+                //
+                //                    mutex.wait();
+                //                }
 
                 break;
-
             }
 
 
             Thread.sleep( 2000 );
-
         }
 
         executor.shutdownNow();
-
-
     }
 
 
@@ -392,23 +368,18 @@ public class GraphManagerShardConsistencyIT {
     }
 
 
-
-
-
     private class Worker implements Callable<Boolean> {
         private final GraphManagerFactory factory;
         private final EdgeGenerator generator;
         private final long writeLimit;
-        private final long minExecutionTime;
         private final AtomicLong writeCounter;
 
 
         private Worker( final GraphManagerFactory factory, final EdgeGenerator generator, final long writeLimit,
-                        final long minExecutionTime, final AtomicLong writeCounter ) {
+                        final AtomicLong writeCounter ) {
             this.factory = factory;
             this.generator = generator;
             this.writeLimit = writeLimit;
-            this.minExecutionTime = minExecutionTime;
             this.writeCounter = writeCounter;
         }
 
@@ -418,10 +389,9 @@ public class GraphManagerShardConsistencyIT {
             GraphManager manager = factory.createEdgeManager( scope );
 
 
-            final long startTime = System.currentTimeMillis();
+            long i;
 
-
-            for ( long i = 0; i < writeLimit || System.currentTimeMillis() - startTime < minExecutionTime; i++ ) {
+            for ( i = 0; i < writeLimit; i++ ) {
 
                 Edge edge = generator.newEdge();
 
@@ -436,11 +406,12 @@ public class GraphManagerShardConsistencyIT {
                 writeCounter.incrementAndGet();
 
 
-
                 if ( i % 1000 == 0 ) {
                     log.info( "   Wrote: " + i );
                 }
             }
+
+            log.info( "Completed writing {} edges on worker", i );
 
 
             return true;
@@ -454,8 +425,9 @@ public class GraphManagerShardConsistencyIT {
         private final long writeCount;
         private final Meter readMeter;
 
+
         private ReadWorker( final GraphManagerFactory factory, final EdgeGenerator generator, final long writeCount,
-                            final Meter readMeter) {
+                            final Meter readMeter ) {
             this.factory = factory;
             this.generator = generator;
             this.writeCount = writeCount;
@@ -467,17 +439,14 @@ public class GraphManagerShardConsistencyIT {
         public Long call() throws Exception {
 
 
-
-
             GraphManager gm = factory.createEdgeManager( scope );
 
 
+            while ( true ) {
 
-            while(true) {
-
-//                final long[] count = {0};
-//                final long[] duplicate = {0};
-//                final HashSet<Edge >  seen = new HashSet<>((int)writeCount);
+                //                final long[] count = {0};
+                //                final long[] duplicate = {0};
+                //                final HashSet<Edge >  seen = new HashSet<>((int)writeCount);
 
 
                 //do a read to eventually trigger our group compaction. Take 2 pages of columns
@@ -501,14 +470,18 @@ public class GraphManagerShardConsistencyIT {
                                                                 //                         */
                                                                 //                        if ( last != null && last
                                                                 // .equals(edge) ) {
-                                                                //                            fail( String.format( "Expected edges to be in order, however last was %s and current is %s",
+                                                                //                            fail( String.format(
+                                                                // "Expected edges to be in order, however last was
+                                                                // %s and current is %s",
                                                                 //                                    last, edge ) );
                                                                 //                        }
                                                                 //
                                                                 //                        last = edge;
                                                                 //
                                                                 //                        if( seen.contains( edge ) ){
-                                                                //                            fail( String.format("Returned an edge that was already seen! Edge was %s, last edge was %s", edge, last) );
+                                                                //                            fail( String.format
+                                                                // ("Returned an edge that was already seen! Edge was
+                                                                // %s, last edge was %s", edge, last) );
                                                                 //                            duplicate[0]++;
                                                                 //                        }
                                                                 //
@@ -520,19 +493,19 @@ public class GraphManagerShardConsistencyIT {
                                                         .countLong().toBlocking().last();
 
 
-//                if(returnedEdgeCount != count[0]-duplicate[0]){
-//                    log.warn( "Missing entries from the initial put" );
-//                }
+                //                if(returnedEdgeCount != count[0]-duplicate[0]){
+                //                    log.warn( "Missing entries from the initial put" );
+                //                }
 
                 log.info( "Completed reading {} edges", returnedEdgeCount );
 
-                if(writeCount != returnedEdgeCount){
-                    log.warn( "Unexpected edge count returned!!!  Expected {} but was {}", writeCount, returnedEdgeCount );
+                if ( writeCount != returnedEdgeCount ) {
+                    log.warn( "Unexpected edge count returned!!!  Expected {} but was {}", writeCount,
+                        returnedEdgeCount );
                 }
 
                 assertEquals( "Expected to read same edge count", writeCount, returnedEdgeCount );
             }
-
         }
     }
 
@@ -542,12 +515,12 @@ public class GraphManagerShardConsistencyIT {
         /**
          * Create a new edge to persiste
          */
-        public Edge newEdge();
+        Edge newEdge();
 
         /**
          * Perform the search returning an observable edge
          */
-        public Observable<Edge> doSearch( final GraphManager manager );
+        Observable<Edge> doSearch( final GraphManager manager );
     }
 }
 

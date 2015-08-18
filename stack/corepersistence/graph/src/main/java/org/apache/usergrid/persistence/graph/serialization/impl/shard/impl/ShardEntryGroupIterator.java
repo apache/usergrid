@@ -26,7 +26,6 @@ public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
 
     private final ShardGroupCompaction shardGroupCompaction;
     private final PushbackIterator<Shard> sourceIterator;
-    private final long minDelta;
     private final ApplicationScope scope;
     private final DirectedEdgeMeta directedEdgeMeta;
 
@@ -39,9 +38,8 @@ public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
      *
      * @param shardIterator The iterator of all shards.  Order is expected to be by the  shard index from Long.MAX to
      * Long.MIN
-     * @param minDelta The minimum delta we allow to consider shards the same group
      */
-    public ShardEntryGroupIterator( final Iterator<Shard> shardIterator, final long minDelta,
+    public ShardEntryGroupIterator( final Iterator<Shard> shardIterator,
                                     final ShardGroupCompaction shardGroupCompaction, final ApplicationScope scope,
                                     final DirectedEdgeMeta directedEdgeMeta ) {
 
@@ -51,7 +49,6 @@ public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
         this.directedEdgeMeta = directedEdgeMeta;
         this.sourceIterator = new PushbackIterator( shardIterator );
         this.shardGroupCompaction = shardGroupCompaction;
-        this.minDelta = minDelta;
     }
 
 
@@ -98,7 +95,7 @@ public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
         while ( sourceIterator.hasNext() ) {
 
             if ( next == null ) {
-                next = new ShardEntryGroup( minDelta );
+                next = new ShardEntryGroup( );
             }
 
             final Shard shard = sourceIterator.next();

@@ -42,24 +42,6 @@ public interface GraphFig extends GuicyFig {
      */
     String SHARD_SIZE = "usergrid.graph.shard.size";
 
-
-    /**
-     * Number of shards we can cache.
-     */
-    String SHARD_CACHE_SIZE = "usergrid.graph.shard.cache.size";
-
-
-    /**
-     * Get the cache timeout.  The local cache will exist for this amount of time max (in millis).
-     */
-    String SHARD_CACHE_TIMEOUT = "usergrid.graph.shard.cache.timeout";
-
-    /**
-     * Number of worker threads to refresh the cache
-     */
-    String SHARD_CACHE_REFRESH_WORKERS = "usergrid.graph.shard.refresh.worker.count";
-
-
     /**
      * The size of the worker count for shard auditing
      */
@@ -72,17 +54,13 @@ public interface GraphFig extends GuicyFig {
     String SHARD_AUDIT_WORKERS = "usergrid.graph.shard.audit.worker.count";
 
 
+    String SHARD_WRITE_CONSISTENCY = "usergrid.graph.shard.write.consistency";
+
+    String SHARD_READ_CONSISTENCY = "usergrid.graph.shard.read.consistency";
+
+    String LOCK_TTL = "usergrid.graph.shard.lock.ttl";
+
     String SHARD_REPAIR_CHANCE = "usergrid.graph.shard.repair.chance";
-
-
-    /**
-     * The minimum amount of time than can occur (in millis) between shard allocation and compaction.  Must be at least 2x the cache
-     * timeout. Set to 2.5x the cache timeout to be safe
-     *
-     * Note that you should also pad this for node clock drift.  A good value for this would be 2x the shard cache
-     * timeout + 30 seconds, assuming you have NTP and allow a max drift of 30 seconds
-     */
-    String SHARD_MIN_DELTA = "usergrid.graph.shard.min.delta";
 
 
     String COUNTER_WRITE_FLUSH_COUNT = "usergrid.graph.shard.counter.beginFlush.count";
@@ -92,67 +70,67 @@ public interface GraphFig extends GuicyFig {
     String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
 
-
-
-    @Default("1000")
-    @Key(SCAN_PAGE_SIZE)
+    @Default( "1000" )
+    @Key( SCAN_PAGE_SIZE )
     int getScanPageSize();
 
 
-    @Default("5")
-    @Key(REPAIR_CONCURRENT_SIZE)
+    @Default( "5" )
+    @Key( REPAIR_CONCURRENT_SIZE )
     int getRepairConcurrentSize();
 
 
-    @Default( ".10" )
+    /**
+     * A 1% repair chance.  On average we'll check to repair on 1 out of every 100 reads
+     */
+    @Default( ".01" )
     @Key( SHARD_REPAIR_CHANCE )
     double getShardRepairChance();
-
 
     @Default( "500000" )
     @Key( SHARD_SIZE )
     long getShardSize();
 
-
-    @Default("30000")
-    @Key(SHARD_CACHE_TIMEOUT)
-    long getShardCacheTimeout();
-
-    @Default("60000")
-    @Key(SHARD_MIN_DELTA)
-    long getShardMinDelta();
-
-
-    @Default("250000")
-    @Key(SHARD_CACHE_SIZE)
-    long getShardCacheSize();
-
-
-    @Default("2")
-    @Key(SHARD_CACHE_REFRESH_WORKERS)
-    int getShardCacheRefreshWorkerCount();
-
-
-    @Default( "10" )
+    @Default( "1" )
+    //    @Default( "10" )
     @Key( SHARD_AUDIT_WORKERS )
     int getShardAuditWorkerCount();
 
-    @Default( "1000" )
+    @Default( "1" )
     @Key( SHARD_AUDIT_QUEUE_SIZE )
     int getShardAuditWorkerQueueSize();
 
 
-    @Default("10000")
-    @Key(COUNTER_WRITE_FLUSH_COUNT)
+    @Default( "10000" )
+    @Key( COUNTER_WRITE_FLUSH_COUNT )
     long getCounterFlushCount();
 
 
-    @Default("30000")
-    @Key(COUNTER_WRITE_FLUSH_INTERVAL)
+    @Default( "30000" )
+    @Key( COUNTER_WRITE_FLUSH_INTERVAL )
     long getCounterFlushInterval();
 
-    @Default("1000")
-    @Key(COUNTER_WRITE_FLUSH_QUEUE_SIZE)
+    @Default( "1000" )
+    @Key( COUNTER_WRITE_FLUSH_QUEUE_SIZE )
     int getCounterFlushQueueSize();
+
+    @Default( "CL_EACH_QUORUM" )
+    @Key( SHARD_WRITE_CONSISTENCY )
+    String getShardWriteConsistency();
+
+    /**
+     * Get the consistency level for doing reads
+     */
+    @Default( "CL_LOCAL_QUORUM" )
+    @Key( SHARD_READ_CONSISTENCY )
+    String getShardReadConsistency();
+
+    /**
+     * Get the lock TTL in millis.  Our default is 30 seconds minute, much longer than we should need
+     * @return
+     */
+    @Default( "30000" )
+    @Key( LOCK_TTL )
+    long getLockTTLMillis();
 }
 

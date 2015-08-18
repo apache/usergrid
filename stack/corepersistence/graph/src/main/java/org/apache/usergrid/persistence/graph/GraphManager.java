@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
@@ -50,7 +49,7 @@ import rx.Observable;
  * @author tnine
  * @see Edge
  */
-public interface GraphManager extends CPManager {
+public interface GraphManager {
 
 
     /**

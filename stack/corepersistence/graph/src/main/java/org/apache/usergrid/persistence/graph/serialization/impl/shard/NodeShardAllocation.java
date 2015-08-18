@@ -42,7 +42,8 @@ public interface NodeShardAllocation {
      * @param directedEdgeMeta The directed edge metadata to use
      * @return A list of all shards <= the current shard.  This will always return 0l if no shards are allocated
      */
-    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope, Optional<Shard> maxShardId, final DirectedEdgeMeta directedEdgeMeta );
+    Iterator<ShardEntryGroup> getShardsLocal( final ApplicationScope scope, Optional<Shard> maxShardId,
+                                              final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
@@ -53,13 +54,8 @@ public interface NodeShardAllocation {
      * @param directedEdgeMeta The directed edge metadata to use
      * @return True if a new shard was allocated
      */
-    public boolean auditShard(final ApplicationScope scope, final ShardEntryGroup shardEntryGroup, final DirectedEdgeMeta directedEdgeMeta);
-
-    /**
-     * Get the minimum time that a created shard should be considered "new", and be used for both new writes and reads
-     * @return
-     */
-    public long getMinTime();
+    boolean auditShard( final ApplicationScope scope, final ShardEntryGroup shardEntryGroup,
+                        final DirectedEdgeMeta directedEdgeMeta );
 
 
 }

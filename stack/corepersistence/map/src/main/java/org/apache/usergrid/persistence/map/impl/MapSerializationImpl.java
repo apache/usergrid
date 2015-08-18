@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
@@ -349,14 +350,14 @@ public class MapSerializationImpl implements MapSerialization {
                        BytesType.class.getSimpleName(),
                        BytesType.class.getSimpleName(),
                        BytesType.class.getSimpleName(),
-                       MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                       MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional.absent() );
 
         final MultiTennantColumnFamilyDefinition mapKeys =
                 new MultiTennantColumnFamilyDefinition( MAP_KEYS,
                         BytesType.class.getSimpleName(),
                         UTF8Type.class.getSimpleName(),
                         BytesType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional.absent() );
 
         return Arrays.asList( mapEntries, mapKeys );
     }

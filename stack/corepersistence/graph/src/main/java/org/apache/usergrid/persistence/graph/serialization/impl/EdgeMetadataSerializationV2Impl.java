@@ -477,7 +477,8 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
         return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(),
                 UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                .absent() );
     }
 
 

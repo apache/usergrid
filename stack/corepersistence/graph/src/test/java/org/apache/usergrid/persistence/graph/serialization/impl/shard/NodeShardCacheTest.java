@@ -87,13 +87,13 @@ public class NodeShardCacheTest {
         final long newTime = 10000l;
 
 
-        NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig );
+        NodeShardCache cache = new NodeShardCacheImpl( allocation );
 
 
         final Optional max = Optional.absent();
 
 
-        final ShardEntryGroup group = new ShardEntryGroup( newTime );
+        final ShardEntryGroup group = new ShardEntryGroup( );
         group.addShard( new Shard( 0, 0, true ) );
 
 
@@ -102,7 +102,7 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation.getShards( same( scope ), same( max ), same( directedEdgeMeta ) ) )
+        when( allocation.getShardsLocal( same( scope ), same( max ), same( directedEdgeMeta ) ) )
 
                 //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
                 .thenAnswer( new Answer<Iterator<ShardEntryGroup>>() {
@@ -163,7 +163,7 @@ public class NodeShardCacheTest {
          * Set our min mid and max
          */
 
-        NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig );
+        NodeShardCache cache = new NodeShardCacheImpl( allocation );
 
 
         final Shard minShard = new Shard( 0, 0, true );
@@ -174,14 +174,14 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning all shards
          */
-        final ShardEntryGroup minShardGroup = new ShardEntryGroup( 10000 );
+        final ShardEntryGroup minShardGroup = new ShardEntryGroup( );
         minShardGroup.addShard( minShard );
 
-        final ShardEntryGroup midShardGroup = new ShardEntryGroup( 10000 );
+        final ShardEntryGroup midShardGroup = new ShardEntryGroup( );
         midShardGroup.addShard( midShard );
 
 
-        final ShardEntryGroup maxShardGroup = new ShardEntryGroup( 10000 );
+        final ShardEntryGroup maxShardGroup = new ShardEntryGroup( );
         maxShardGroup.addShard( maxShard );
 
 
@@ -191,7 +191,7 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation.getShards( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
+        when( allocation.getShardsLocal( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
 
                 //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
                 .thenAnswer( new Answer<Iterator<ShardEntryGroup>>() {
@@ -302,8 +302,6 @@ public class NodeShardCacheTest {
 
     private GraphFig getFigMock() {
         final GraphFig graphFig = mock( GraphFig.class );
-        when( graphFig.getShardCacheSize() ).thenReturn( 1000l );
-        when( graphFig.getShardCacheTimeout() ).thenReturn( 30000l );
 
         return graphFig;
     }

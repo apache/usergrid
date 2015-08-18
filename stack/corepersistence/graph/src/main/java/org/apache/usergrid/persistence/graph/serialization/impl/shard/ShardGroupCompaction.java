@@ -42,12 +42,11 @@ public interface ShardGroupCompaction {
      *
      * @return A ListenableFuture with the result.  Note that some
      */
-    public ListenableFuture<AuditResult> evaluateShardGroup( final ApplicationScope scope,
-                                                             final DirectedEdgeMeta edgeMeta,
-                                                             final ShardEntryGroup group );
+    ListenableFuture<AuditResult> evaluateShardGroup( final ApplicationScope scope, final DirectedEdgeMeta edgeMeta,
+                                                      final ShardEntryGroup group );
 
 
-    public enum AuditResult {
+    enum AuditResult {
         /**
          * We didn't check this shard
          */

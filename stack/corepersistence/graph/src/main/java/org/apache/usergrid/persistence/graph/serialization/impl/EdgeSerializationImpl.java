@@ -28,6 +28,7 @@ import javax.inject.Inject;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -50,6 +51,8 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 
+import rx.Observable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
@@ -67,6 +70,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
     protected final EdgeColumnFamilies edgeColumnFamilies;
     protected final ShardedEdgeSerialization shardedEdgeSerialization;
     protected final TimeService timeService;
+    protected final RxTaskScheduler rxTaskScheduler;
 
 
     @Inject
@@ -74,7 +78,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
                                   final GraphFig graphFig, final EdgeShardStrategy edgeShardStrategy,
                                   final EdgeColumnFamilies edgeColumnFamilies,
                                   final ShardedEdgeSerialization shardedEdgeSerialization,
-                                  final TimeService timeService ) {
+                                  final TimeService timeService, final RxTaskScheduler rxTaskScheduler ) {
 
 
         checkNotNull( keyspace, "keyspace required" );
@@ -83,6 +87,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         checkNotNull( edgeColumnFamilies, "edgeColumnFamilies required" );
         checkNotNull( shardedEdgeSerialization, "shardedEdgeSerialization required" );
         checkNotNull( timeService, "timeService required" );
+        checkNotNull( rxTaskScheduler, "rxTaskScheduler is required" );
 
 
         this.keyspace = keyspace;
@@ -92,48 +97,59 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
         this.timeService = timeService;
+        this.rxTaskScheduler = rxTaskScheduler;
     }
 
 
     @Override
     public MutationBatch writeEdge( final ApplicationScope scope, final MarkedEdge markedEdge, final UUID timestamp ) {
-
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateEdge( markedEdge );
         ValidationUtils.verifyTimeUuid( timestamp, "timestamp" );
 
-        final long now = timeService.getCurrentTime();
         final Id sourceNode = markedEdge.getSourceNode();
         final Id targetNode = markedEdge.getTargetNode();
         final String edgeType = markedEdge.getType();
         final long edgeTimestamp = markedEdge.getTimestamp();
 
+
+
         /**
-         * Source write
+         * Since our lookups happen synchronously and don't hit a cache, do all 5 operations in parallel.
          */
-        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceNode, edgeType );
 
-        final Collection<Shard> sourceWriteShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, sourceEdgeMeta ).getWriteShards( now );
+        final Observable<MutationBatch> source = Observable.just( 0 ).map( discard -> {
+            /**
+             * Source write
+             */
+            final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceNode, edgeType );
 
-        final MutationBatch batch = shardedEdgeSerialization
+            final Collection<Shard> sourceWriteShards =
+                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, sourceEdgeMeta )
+                                 .getWriteShards( edgeTimestamp );
+
+            return shardedEdgeSerialization
                 .writeEdgeFromSource( edgeColumnFamilies, scope, markedEdge, sourceWriteShards, sourceEdgeMeta,
-                        timestamp );
+                    timestamp );
+        } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
 
 
-        /**
-         * Source with target  type write
-         */
-        final DirectedEdgeMeta sourceTargetTypeEdgeMeta =
+        final  Observable<MutationBatch> sourceTarget = Observable.just( 0 ).map( discard -> {
+
+            /**
+             * Source with target  type write
+             */
+            final DirectedEdgeMeta sourceTargetTypeEdgeMeta =
                 DirectedEdgeMeta.fromSourceNodeTargetType( sourceNode, edgeType, targetNode.getType() );
 
-        final Collection<Shard> sourceTargetTypeWriteShards =
+            final Collection<Shard> sourceTargetTypeWriteShards =
                 edgeShardStrategy.getWriteShards( scope, edgeTimestamp, sourceTargetTypeEdgeMeta )
-                                 .getWriteShards( now );
+                                 .getWriteShards( edgeTimestamp );
 
-        batch.mergeShallow( shardedEdgeSerialization
+            return shardedEdgeSerialization
                 .writeEdgeFromSourceWithTargetType( edgeColumnFamilies, scope, markedEdge, sourceTargetTypeWriteShards,
-                        sourceTargetTypeEdgeMeta, timestamp ) );
+                    sourceTargetTypeEdgeMeta, timestamp );
+        } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
 
 
         /**
@@ -141,47 +157,72 @@ public class EdgeSerializationImpl implements EdgeSerialization {
          *
          */
 
-        final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNode( targetNode, edgeType );
+        final  Observable<MutationBatch> target = Observable.just( 0 ).map( discard -> {
 
-        final Collection<Shard> targetWriteShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, targetEdgeMeta ).getWriteShards( now );
+            final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNode( targetNode, edgeType );
 
-        batch.mergeShallow( shardedEdgeSerialization
+            final Collection<Shard> targetWriteShards =
+                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, targetEdgeMeta )
+                                 .getWriteShards( edgeTimestamp );
+
+            return shardedEdgeSerialization
                 .writeEdgeToTarget( edgeColumnFamilies, scope, markedEdge, targetWriteShards, targetEdgeMeta,
-                        timestamp ) );
+                    timestamp );
+        } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
 
 
         /**
          * Target with source type write
          */
 
-        final DirectedEdgeMeta targetSourceTypeEdgeMeta =
+
+        final  Observable<MutationBatch> targetSource = Observable.just( 0 ).map( discard -> {
+
+            final DirectedEdgeMeta targetSourceTypeEdgeMeta =
                 DirectedEdgeMeta.fromTargetNodeSourceType( targetNode, edgeType, sourceNode.getType() );
 
-        final Collection<Shard> targetSourceTypeWriteShards =
+            final Collection<Shard> targetSourceTypeWriteShards =
                 edgeShardStrategy.getWriteShards( scope, edgeTimestamp, targetSourceTypeEdgeMeta )
-                                 .getWriteShards( now );
+                                 .getWriteShards( edgeTimestamp );
 
-        batch.mergeShallow( shardedEdgeSerialization
+            return shardedEdgeSerialization
                 .writeEdgeToTargetWithSourceType( edgeColumnFamilies, scope, markedEdge, targetSourceTypeWriteShards,
-                        targetSourceTypeEdgeMeta, timestamp ) );
+                    targetSourceTypeEdgeMeta, timestamp );
+        } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
 
 
         /**
          * Version write
          */
 
-        final DirectedEdgeMeta edgeVersionsMeta = DirectedEdgeMeta.fromEdge( sourceNode, targetNode, edgeType );
+        final  Observable<MutationBatch> edgeVersions = Observable.just( 0 ).map( discard -> {
 
-        final Collection<Shard> edgeVersionsShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, edgeVersionsMeta ).getWriteShards( now );
+            final DirectedEdgeMeta edgeVersionsMeta = DirectedEdgeMeta.fromEdge( sourceNode, targetNode, edgeType );
 
-        batch.mergeShallow( shardedEdgeSerialization
-                .writeEdgeVersions( edgeColumnFamilies, scope, markedEdge, edgeVersionsShards,
-                        edgeVersionsMeta, timestamp ) );
+            final Collection<Shard> edgeVersionsShards =
+                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, edgeVersionsMeta )
+                                 .getWriteShards( edgeTimestamp );
+
+            return shardedEdgeSerialization
+                .writeEdgeVersions( edgeColumnFamilies, scope, markedEdge, edgeVersionsShards, edgeVersionsMeta,
+                    timestamp );
+        } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
 
 
-        return batch;
+
+
+
+
+        //wait for all of them to execute, then merge them together
+        return Observable.zip(  source, sourceTarget, target, targetSource, edgeVersions , ( sourceBatch, sourceTargetBatch, targetBatch, targetSourceBatch, edgeVersionsBatch ) -> {
+
+            sourceBatch.mergeShallow( sourceTargetBatch );
+            sourceBatch.mergeShallow( targetBatch );
+            sourceBatch.mergeShallow( targetSourceBatch );
+            sourceBatch.mergeShallow( edgeVersionsBatch );
+
+            return sourceBatch;
+        }).toBlocking().last();
     }
 
 
@@ -191,7 +232,6 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         GraphValidation.validateEdge( markedEdge );
         ValidationUtils.verifyTimeUuid( timestamp, "timestamp" );
 
-        final long now = timeService.getCurrentTime();
         final Id sourceNode = markedEdge.getSourceNode();
         final Id targetNode = markedEdge.getTargetNode();
         final String edgeType = markedEdge.getType();
@@ -203,26 +243,26 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceNode, edgeType );
 
         final Collection<Shard> sourceWriteShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, sourceEdgeMeta ).getWriteShards( now );
+            edgeShardStrategy.getWriteShards( scope, edgeTimestamp, sourceEdgeMeta ).getWriteShards( edgeTimestamp );
 
         final MutationBatch batch = shardedEdgeSerialization
-                .deleteEdgeFromSource( edgeColumnFamilies, scope, markedEdge, sourceWriteShards, sourceEdgeMeta,
-                        timestamp );
+            .deleteEdgeFromSource( edgeColumnFamilies, scope, markedEdge, sourceWriteShards, sourceEdgeMeta,
+                timestamp );
 
 
         /**
          * Source with target  type write
          */
         final DirectedEdgeMeta sourceTargetTypeEdgeMeta =
-                DirectedEdgeMeta.fromSourceNodeTargetType( sourceNode, edgeType, targetNode.getType() );
+            DirectedEdgeMeta.fromSourceNodeTargetType( sourceNode, edgeType, targetNode.getType() );
 
         final Collection<Shard> sourceTargetTypeWriteShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, sourceTargetTypeEdgeMeta )
-                                 .getWriteShards( now );
+            edgeShardStrategy.getWriteShards( scope, edgeTimestamp, sourceTargetTypeEdgeMeta )
+                             .getWriteShards( edgeTimestamp );
 
         batch.mergeShallow( shardedEdgeSerialization
-                .deleteEdgeFromSourceWithTargetType( edgeColumnFamilies, scope, markedEdge, sourceTargetTypeWriteShards,
-                        sourceTargetTypeEdgeMeta, timestamp ) );
+            .deleteEdgeFromSourceWithTargetType( edgeColumnFamilies, scope, markedEdge, sourceTargetTypeWriteShards,
+                sourceTargetTypeEdgeMeta, timestamp ) );
 
 
         /**
@@ -233,11 +273,11 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNode( targetNode, edgeType );
 
         final Collection<Shard> targetWriteShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, targetEdgeMeta ).getWriteShards( now );
+            edgeShardStrategy.getWriteShards( scope, edgeTimestamp, targetEdgeMeta ).getWriteShards( edgeTimestamp );
 
         batch.mergeShallow( shardedEdgeSerialization
-                .deleteEdgeToTarget( edgeColumnFamilies, scope, markedEdge, targetWriteShards, targetEdgeMeta,
-                        timestamp ) );
+            .deleteEdgeToTarget( edgeColumnFamilies, scope, markedEdge, targetWriteShards, targetEdgeMeta,
+                timestamp ) );
 
 
         /**
@@ -245,15 +285,15 @@ public class EdgeSerializationImpl implements EdgeSerialization {
          */
 
         final DirectedEdgeMeta targetSourceTypeEdgeMeta =
-                DirectedEdgeMeta.fromTargetNodeSourceType( targetNode, edgeType, sourceNode.getType() );
+            DirectedEdgeMeta.fromTargetNodeSourceType( targetNode, edgeType, sourceNode.getType() );
 
         final Collection<Shard> targetSourceTypeWriteShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, targetSourceTypeEdgeMeta )
-                                 .getWriteShards( now );
+            edgeShardStrategy.getWriteShards( scope, edgeTimestamp, targetSourceTypeEdgeMeta )
+                             .getWriteShards( edgeTimestamp );
 
         batch.mergeShallow( shardedEdgeSerialization
-                .deleteEdgeToTargetWithSourceType( edgeColumnFamilies, scope, markedEdge, targetSourceTypeWriteShards,
-                        targetSourceTypeEdgeMeta, timestamp ) );
+            .deleteEdgeToTargetWithSourceType( edgeColumnFamilies, scope, markedEdge, targetSourceTypeWriteShards,
+                targetSourceTypeEdgeMeta, timestamp ) );
 
 
         /**
@@ -263,11 +303,11 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final DirectedEdgeMeta edgeVersionsMeta = DirectedEdgeMeta.fromEdge( sourceNode, targetNode, edgeType );
 
         final Collection<Shard> edgeVersionsShards =
-                edgeShardStrategy.getWriteShards( scope, edgeTimestamp, edgeVersionsMeta ).getWriteShards( now );
+            edgeShardStrategy.getWriteShards( scope, edgeTimestamp, edgeVersionsMeta ).getWriteShards( edgeTimestamp );
 
         batch.mergeShallow( shardedEdgeSerialization
-                .deleteEdgeVersions( edgeColumnFamilies, scope, markedEdge, edgeVersionsShards,
-                        edgeVersionsMeta, timestamp ) );
+            .deleteEdgeVersions( edgeColumnFamilies, scope, markedEdge, edgeVersionsShards, edgeVersionsMeta,
+                timestamp ) );
 
 
         return batch;
@@ -288,7 +328,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
 
 
         final Iterator<ShardEntryGroup> readShards =
-                edgeShardStrategy.getReadShards( scope, maxTimestamp, versionMetaData );
+            edgeShardStrategy.getReadShards( scope, maxTimestamp, versionMetaData );
 
 
         //now create a result iterator with our iterator of read shards
@@ -317,7 +357,8 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceId, type );
 
 
-        final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
+        final Iterator<ShardEntryGroup> readShards =
+            edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
         return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
             @Override
@@ -340,17 +381,19 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final String targetType = edgeType.getIdType();
         final long maxTimestamp = edgeType.getMaxTimestamp();
 
-        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( sourceId, type, targetType );
+        final DirectedEdgeMeta directedEdgeMeta =
+            DirectedEdgeMeta.fromSourceNodeTargetType( sourceId, type, targetType );
 
 
-        final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
+        final Iterator<ShardEntryGroup> readShards =
+            edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
 
         return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization
-                        .getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, edgeType, readShards );
+                    .getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, edgeType, readShards );
             }
         };
     }
@@ -370,7 +413,8 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNode( targetId, type );
 
 
-        final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
+        final Iterator<ShardEntryGroup> readShards =
+            edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
         return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
             @Override
@@ -394,17 +438,19 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final long maxTimestamp = edgeType.getMaxTimestamp();
 
 
-        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( targetId, type, sourceType );
+        final DirectedEdgeMeta directedEdgeMeta =
+            DirectedEdgeMeta.fromTargetNodeSourceType( targetId, type, sourceType );
 
 
-        final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
+        final Iterator<ShardEntryGroup> readShards =
+            edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
 
         return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization
-                        .getEdgesToTargetBySourceType( edgeColumnFamilies, scope, edgeType, readShards );
+                    .getEdgesToTargetBySourceType( edgeColumnFamilies, scope, edgeType, readShards );
             }
         };
     }

@@ -34,27 +34,27 @@ public interface EdgeColumnFamilies extends Migration{
     /**
      * Get the name of the column family for getting source nodes
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getSourceNodeCfName();
+    MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getSourceNodeCfName();
 
     /**
      * Get the name of the column family for getting target nodes
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getTargetNodeCfName();
+    MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getTargetNodeCfName();
 
 
     /**
      * Get the name of the column family for getting source nodes  with a target type
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getSourceNodeTargetTypeCfName();
+    MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getSourceNodeTargetTypeCfName();
 
     /**
      * Get the name of the column family for getting target nodes with a source type
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getTargetNodeSourceTypeCfName();
+    MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getTargetNodeSourceTypeCfName();
 
     /**
      * Get the Graph edge versions cf
      * @return
      */
-    public MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getGraphEdgeVersions();
+    MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getGraphEdgeVersions();
 }

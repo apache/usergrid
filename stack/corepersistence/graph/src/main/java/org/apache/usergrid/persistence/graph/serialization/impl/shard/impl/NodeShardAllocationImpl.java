@@ -32,7 +32,6 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
@@ -46,6 +45,8 @@ import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -58,9 +59,11 @@ import com.netflix.astyanax.util.TimeUUIDUtils;
 public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
 
     private static final Shard MIN_SHARD = new Shard( 0, 0, true );
+
+    private static final NoOpCompaction NO_OP_COMPACTION = new NoOpCompaction();
 
     private final EdgeShardSerialization edgeShardSerialization;
     private final EdgeColumnFamilies edgeColumnFamilies;
@@ -76,7 +79,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
                                     final EdgeColumnFamilies edgeColumnFamilies,
                                     final ShardedEdgeSerialization shardedEdgeSerialization,
                                     final NodeShardApproximation nodeShardApproximation, final TimeService timeService,
-                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction ) {
+                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
@@ -88,8 +91,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope, final Optional<Shard> maxShardId,
-                                                final DirectedEdgeMeta directedEdgeMeta ) {
+    public Iterator<ShardEntryGroup> getShardsLocal( final ApplicationScope scope, final Optional<Shard> maxShardId,
+                                                     final DirectedEdgeMeta directedEdgeMeta ) {
 
         ValidationUtils.validateApplicationScope( scope );
         Preconditions.checkNotNull( maxShardId, "maxShardId cannot be null" );
@@ -103,7 +106,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         }
 
         else {
-            existingShards = edgeShardSerialization.getShardMetaData( scope, maxShardId, directedEdgeMeta );
+            existingShards = edgeShardSerialization.getShardMetaDataLocal( scope, maxShardId, directedEdgeMeta );
         }
 
         if ( existingShards == null || !existingShards.hasNext() ) {
@@ -120,26 +123,49 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             existingShards = Collections.singleton( MIN_SHARD ).iterator();
         }
 
-        return new ShardEntryGroupIterator( existingShards, graphFig.getShardMinDelta(), shardGroupCompaction, scope,
-                directedEdgeMeta );
+        return new ShardEntryGroupIterator( existingShards, shardGroupCompaction, scope, directedEdgeMeta );
     }
 
 
     @Override
-    public boolean auditShard( final ApplicationScope scope, final ShardEntryGroup shardEntryGroup,
+    public boolean auditShard( final ApplicationScope scope, final ShardEntryGroup lastLoadedShardEntryGroup,
                                final DirectedEdgeMeta directedEdgeMeta ) {
 
         ValidationUtils.validateApplicationScope( scope );
-        GraphValidation.validateShardEntryGroup( shardEntryGroup );
+        GraphValidation.validateShardEntryGroup( lastLoadedShardEntryGroup );
         GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
-        Preconditions.checkNotNull( shardEntryGroup, "shardEntryGroup cannot be null" );
+        Preconditions.checkNotNull( lastLoadedShardEntryGroup, "lastLoadedShardEntryGroup cannot be null" );
 
+        //we have to read our state from cassandra first to ensure we have an up to date view from other regions
+
+
+        /**
+         * We need to re-read our state.
+         * Read our shard entry groups to ensure we have a current state
+         */
+        final Iterator<ShardEntryGroup> shardEntryGroupIterator =
+            getCurrentStateIterator( scope, lastLoadedShardEntryGroup, directedEdgeMeta );
+
+
+        if ( !shardEntryGroupIterator.hasNext() ) {
+            logger.warn( "Could not read our shard entries.  Our state is unknown, short circuiting" );
+            return false;
+        }
+
+        final ShardEntryGroup shardEntryGroup = shardEntryGroupIterator.next();
+
+        //someone has already allocated, it's a different group.  Move on, nothing to see here
+        if ( !shardEntryGroup.equals( lastLoadedShardEntryGroup ) ) {
+            logger.info( "Stale shard group on audit or group {} found, ignoring", lastLoadedShardEntryGroup );
+            return false;
+        }
 
         /**
          * Nothing to do, it's been created very recently, we don't create a new one
          */
         if ( shardEntryGroup.isCompactionPending() ) {
+            logger.info( "Shard group {} is compacting, skipping", lastLoadedShardEntryGroup );
             return false;
         }
 
@@ -149,42 +175,38 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         }
 
 
-        /**
-         * Check the min shard in our system
-         */
-        final Shard shard = shardEntryGroup.getMinShard();
-
-
-        if ( shard.getCreatedTime() >= getMinTime() ) {
-            return false;
-        }
+        final Shard minShard = lastLoadedShardEntryGroup.getMinShard();
 
 
         /**
          * Check out if we have a count for our shard allocation
          */
 
-        final long count = nodeShardApproximation.getCount( scope, shard, directedEdgeMeta );
+        final long count = nodeShardApproximation.getCount( scope, minShard, directedEdgeMeta );
 
         final long shardSize = graphFig.getShardSize();
 
 
         if ( count < shardSize ) {
+            logger.debug( "Our count is less than our shard size, not allocating a new shard" );
             return false;
         }
 
-        if(LOG.isDebugEnabled()){
-            LOG.debug("Count of {} has exceeded shard config of {} will begin compacting", count, shardSize);
-        }
+
+        logger.debug( "Count of {} has exceeded shard config of {} will begin compacting", count, shardSize );
+
 
         /**
-         * We want to allocate a new shard as close to the max value as possible.  This way if we're filling up a shard rapidly, we split it near the head of the values.
-         * Further checks to this group will result in more splits, similar to creating a tree type structure and splitting each node.
+         * We want to allocate a new shard as close to the max value as possible.  This way if we're filling up a
+         * shard rapidly, we split it near the head of the values.
          *
-         * This means that the lower shard can be re-split later if it is still too large.  We do the division to truncate
-         * to a split point < what our current max is that would be approximately be our pivot ultimately if we split from the
-         * lower bound and moved forward.  Doing this will stop the current shard from expanding and avoid a point where we cannot
-         * ultimately compact to the correct shard size.
+         * Further checks to this group will result in more splits, similar to creating a tree type structure and
+         * splitting each node.
+         *
+         * This means that the lower shard can be re-split later if it is still too large.  We do the division to
+         * truncate to a split point < what our current max is that would be approximately be our pivot ultimately
+         * if we split from the lower bound and moved forward.  Doing this will stop the current shard from expanding
+         * and avoid a point where we cannot ultimately compact to the correct shard size due to excessive tombstones.
          */
 
 
@@ -193,13 +215,14 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          */
 
         final Iterator<MarkedEdge> edges = directedEdgeMeta
-                .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), 0,
-                        SearchByEdgeType.Order.ASCENDING );
+            .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), 0,
+                SearchByEdgeType.Order.ASCENDING );
 
 
         if ( !edges.hasNext() ) {
-            LOG.warn( "Tried to allocate a new shard for edge meta data {}, "
-                    + "but no max value could be found in that row", directedEdgeMeta );
+            logger.warn(
+                "Tried to allocate a new shard for edge meta data {}, " + "but no max value could be found in that row",
+                directedEdgeMeta );
             return false;
         }
 
@@ -213,23 +236,26 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * element will suffice.
          */
 
+        long i = 1;
 
-        for(long i = 1;  edges.hasNext(); i++){
+        for (; edges.hasNext(); i++ ) {
             //we hit a pivot shard, set it since it could be the last one we encounter
-            if(i% shardSize == 0){
+            if ( i % shardSize == 0 ) {
                 marked = edges.next();
             }
-            else{
+            else {
                 edges.next();
             }
         }
+
+        logger.debug( "Iterated {} edges to find the last marked edge", i );
 
 
         /**
          * Sanity check in case our counters become severely out of sync with our edge state in cassandra.
          */
-        if(marked == null){
-            LOG.warn( "Incorrect shard count for shard group {}", shardEntryGroup );
+        if ( marked == null ) {
+            logger.warn( "Incorrect shard count for shard group {}, ignoring", shardEntryGroup );
             return false;
         }
 
@@ -237,7 +263,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final Shard newShard = new Shard( marked.getTimestamp(), createTimestamp, false );
 
-        LOG.info( "Allocating new shard {} for edge meta {}", newShard, directedEdgeMeta );
+        logger.info( "Allocating new shard {} for edge meta {} into group {}", newShard, directedEdgeMeta,
+            shardEntryGroup );
 
         final MutationBatch batch = this.edgeShardSerialization.writeShardMeta( scope, newShard, directedEdgeMeta );
 
@@ -253,24 +280,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     }
 
 
-    @Override
-    public long getMinTime() {
-
-        final long minimumAllowed = 2 * graphFig.getShardCacheTimeout();
-
-        final long minDelta = graphFig.getShardMinDelta();
-
-
-        if ( minDelta < minimumAllowed ) {
-            throw new GraphRuntimeException( String.format(
-                    "You must configure the property %s to be >= 2 x %s.  Otherwise you risk losing data",
-                    GraphFig.SHARD_MIN_DELTA, GraphFig.SHARD_CACHE_TIMEOUT ) );
-        }
-
-        return timeService.getCurrentTime() - minDelta;
-    }
-
-
     /**
      * Return true if the node has been created within our timeout.  If this is the case, we dont' need to check
      * cassandra, we know it won't exist
@@ -279,9 +288,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         //TODO: TN this is broken....
-        //The timeout is in milliseconds.  Time for a time uuid is 1/10000 of a milli, so we need to get the units correct
-        final long timeoutDelta = graphFig.getShardCacheTimeout() ;
-
+        //The timeout is in milliseconds.  Time for a time uuid is 1/10000 of a milli, so we need to get the units
+        // correct
         final long timeNow = timeService.getCurrentTime();
 
         boolean isNew = true;
@@ -289,18 +297,67 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         for ( DirectedEdgeMeta.NodeMeta node : directedEdgeMeta.getNodes() ) {
 
             //short circuit
-            if(!isNew || node.getId().getUuid().version() > 2){
+            if ( !isNew || node.getId().getUuid().version() > 2 ) {
                 return false;
             }
 
-            final long uuidTime =   TimeUUIDUtils.getTimeFromUUID( node.getId().getUuid());
+            final long uuidTime = TimeUUIDUtils.getTimeFromUUID( node.getId().getUuid() );
 
-            final long newExpirationTimeout = uuidTime + timeoutDelta;
+            //take our uuid time and add 10 seconds, if the uuid is within 10 seconds of system time, we can consider
+            // it "new"
+            final long newExpirationTimeout = uuidTime + 1000;
 
             //our expiration is after our current time, treat it as new
-            isNew = isNew && newExpirationTimeout >  timeNow;
+            isNew = isNew && newExpirationTimeout > timeNow;
         }
 
         return isNew;
     }
+
+
+    /**
+     * Re-reads our shard groups using our to ensure we get a consistent view of all shards
+     */
+    private Iterator<ShardEntryGroup> getCurrentStateIterator( final ApplicationScope scope,
+                                                               final ShardEntryGroup shardEntryGroup,
+                                                               final DirectedEdgeMeta directedEdgeMeta ) {
+
+        final Shard start = shardEntryGroup.getMaxShard();
+
+        //sanity check
+        if ( start == null ) {
+            logger.warn( "Could not audit shard group {}.  Returning.", shardEntryGroup );
+            return Collections.<ShardEntryGroup>emptyList().iterator();
+        }
+
+        logger.debug( "Loading current shard state for shards starting at {}", start );
+
+        final Iterator<Shard> shards = this.edgeShardSerialization
+            .getShardMetaDataLocal( scope, Optional.fromNullable( start ), directedEdgeMeta );
+
+        if ( !shards.hasNext() ) {
+            return Collections.<ShardEntryGroup>emptyList().iterator();
+        }
+
+        return new ShardEntryGroupIterator( shards, NO_OP_COMPACTION, scope, directedEdgeMeta );
+    }
+
+
+    /**
+     * Class that just ignores compaction events, since we're already evaluating the events.  A bit of a hack
+     * that shows we need some refactoring
+     */
+    private final static class NoOpCompaction implements ShardGroupCompaction {
+
+        @Override
+        public ListenableFuture<AuditResult> evaluateShardGroup( final ApplicationScope scope,
+                                                                 final DirectedEdgeMeta edgeMeta,
+                                                                 final ShardEntryGroup group ) {
+
+            //deliberately a no op
+            return Futures.immediateFuture( AuditResult.NOT_CHECKED );
+        }
+    }
+
+
 }

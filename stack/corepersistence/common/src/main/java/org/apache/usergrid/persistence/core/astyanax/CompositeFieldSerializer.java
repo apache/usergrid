@@ -34,12 +34,12 @@ public interface CompositeFieldSerializer<K> {
     /**
      * Add this to the composite
      */
-    public void toComposite( CompositeBuilder builder, K value );
+    void toComposite( CompositeBuilder builder, K value );
 
 
     /**
      * Create an instance from the composite
      */
-    public K fromComposite( CompositeParser composite );
+    K fromComposite( CompositeParser composite );
 
 }

@@ -17,7 +17,7 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder;
+package org.apache.usergrid.persistence.index.elasticsearchquerybuilder;
 
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
