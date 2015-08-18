@@ -1,7 +1,7 @@
 
 
 <div>
-    <a name="{{name}}"/>
+    <a name="{{name_lc}}"/>
 </div>
 
 <div class="panel panel-default">
@@ -30,7 +30,7 @@
                 <tr>
                     <td>{{name}}</td>
                     <td>
-                        {{#ref}}<a href="#{{ref}}">{{ref}}</a>{{/ref}}
+                        {{#ref}}<a href="#{{ref_lc}}">{{ref}}</a>{{/ref}}
                         {{^ref}}{{type}}{{/ref}}
                     </td>
                     <td>{{description}}</td>
@@ -55,7 +55,7 @@
             <table width="80%" class="table table-striped">
                 {{#modelRefs}}
                     <tr>
-                        <td><p><a href="#{{.}}">{{.}}</a></p></td>
+                        <td><p><a href="#{{refName_lc}}">{{refName}}</a></p></td>
                     </tr>
                 {{/modelRefs}}
             </table>

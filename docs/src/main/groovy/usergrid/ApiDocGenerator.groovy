@@ -200,7 +200,10 @@ public class ApiDocGenerator {
                     list = [];
                     modelsBySchema[ propertyEntity.value.ref ] = list;
                 }
-                list.add(name);
+                def modelNames = [:];
+                modelNames.refName = name;
+                modelNames.refName_lc = name.toLowerCase();
+                list.add(modelNames);
             }
         };
     }
@@ -243,6 +246,7 @@ public class ApiDocGenerator {
         op.getParameters().each { parameter -> 
             def param = [:];
             param.name = parameter.name;
+            param.name_lc = parameter.name.toLowerCase();
             param.required = parameter.required;
             param.description = parameter.description;
             param.in = parameter.in;
@@ -250,11 +254,8 @@ public class ApiDocGenerator {
             // assume that body parameters have a schema that is a reference
             if (parameter.in == "body") {
                 
-                if ( parameter.schema == null ) {
-                    def a = 5;
-                }
                 param.schemaRef = parameter.schema.ref;
-                param.schemaAnchor = parameter.schema.ref;
+                param.schemaAnchor = parameter.schema.ref.toLowerCase();
 
                 // keep track of paths that use each schema definition
                 def list = urlOpsBySchema[parameter.schema.ref];
@@ -264,9 +265,7 @@ public class ApiDocGenerator {
                 }
                 list.add(urlOp);
 
-            } else if ( parameter instanceof RefParameter ) {
-                param.type = "booger";
-            } else {
+            } else if ( !(parameter instanceof RefParameter) ) {
                 param.type = parameter.type;
             }
             params.add(param);
@@ -309,10 +308,12 @@ public class ApiDocGenerator {
             prop.position = property.value.position;
             if ( property.value instanceof RefProperty ) {
                 prop.ref = property.value.ref;
+                prop.ref_lc = property.value.ref.toLowerCase();
             }
             props.add(prop);   
         };
         scope.name = name;
+        scope.name_lc = name.toLowerCase();
         scope.description = model.description;
         scope.properties = props;
        
