@@ -68,4 +68,10 @@ public interface MvccEntity extends EntityVersion{
      * Get the status of the entity
      */
     Status getStatus();
+
+    /**
+     * entity byte size
+     * @return
+     */
+    long getSize();
 }

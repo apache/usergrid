@@ -112,7 +112,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         Optional<EntityMap> map =  EntityMap.fromEntity(entity.getEntity());
         return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE,
-                entitySerializer.toByteBuffer( new EntityWrapper(entityId,entity.getVersion(), entity.getStatus(), map.isPresent() ? map.get() : null ) ) ) );
+                entitySerializer.toByteBuffer( new EntityWrapper(entityId,entity.getVersion(), entity.getStatus(), map.isPresent() ? map.get() : null, 0 ) ) ) );
     }
 
 
@@ -268,7 +268,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         return doWrite(applicationScope, entityId, version, colMutation ->
                 colMutation.putColumn(COL_VALUE,
-                    entitySerializer.toByteBuffer(new EntityWrapper(entityId, version, MvccEntity.Status.DELETED, null))
+                    entitySerializer.toByteBuffer(new EntityWrapper(entityId, version, MvccEntity.Status.DELETED, null, 0))
                 )
         );
     }
@@ -355,10 +355,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 //return an empty entity, we can never load this one, and we don't want it to bring the system
                 //to a grinding halt
                 //TODO fix this
-                return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent() );
+                return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent(),0 );
             }
             Optional<Entity> entity = deSerialized.getOptionalEntity() ;
-            return new MvccEntityImpl( id, deSerialized.getVersion(), deSerialized.getStatus(), entity );
+            return new MvccEntityImpl( id, deSerialized.getVersion(), deSerialized.getStatus(), entity, deSerialized.getSize());
         }
     }
 
@@ -453,6 +453,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 byte[] arr = byteBuffer.array();
                 bytesOutHistorgram.update( arr == null ? 0 : arr.length);
                 entityWrapper = MAPPER.readValue(arr, EntityWrapper.class);
+                entityWrapper.size = arr.length;
                 time.stop();
             }
             catch ( Exception e ) {
@@ -464,7 +465,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
             // it's been deleted, remove it
             if ( entityWrapper.getEntityMap() == null) {
-                return new EntityWrapper( entityWrapper.getId(), entityWrapper.getVersion(),MvccEntity.Status.DELETED,null );
+                return new EntityWrapper( entityWrapper.getId(), entityWrapper.getVersion(),MvccEntity.Status.DELETED,null,0 );
             }
 
             entityWrapper.setStatus(MvccEntity.Status.COMPLETE);
@@ -482,15 +483,17 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         private MvccEntity.Status status;
         private UUID version;
         private EntityMap entityMap;
+        private long size;
 
 
         public EntityWrapper( ) {
         }
-        public EntityWrapper( final Id id , final UUID version, final MvccEntity.Status status, final EntityMap entity ) {
+        public EntityWrapper( final Id id , final UUID version, final MvccEntity.Status status, final EntityMap entity, final long size ) {
             this.setStatus(status);
             this.version=  version;
             this.entityMap = entity;
             this.id = id;
+            this.size = size;
         }
 
         /**
@@ -525,7 +528,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         @JsonIgnore
         public Optional<Entity> getOptionalEntity() {
-            Optional<Entity> entityReturn = Optional.fromNullable(Entity.fromMap(getEntityMap()));
+            Entity entity = Entity.fromMap(getEntityMap());
+            entity.setSize(getSize());
+            Optional<Entity> entityReturn = Optional.fromNullable(entity);
             //Inject the id into it.
             if (entityReturn.isPresent()) {
                 EntityUtils.setId(entityReturn.get(), getId());
@@ -533,6 +538,11 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             }
             ;
             return entityReturn;
+        }
+
+        @JsonIgnore
+        public long getSize() {
+            return size;
         }
     }
 

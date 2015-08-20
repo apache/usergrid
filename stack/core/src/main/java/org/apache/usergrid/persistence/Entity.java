@@ -102,4 +102,7 @@ public interface Entity extends EntityRef, Comparable<Entity> {
 
     @JsonAnyGetter
     public abstract Map<String, Object> getDynamicProperties();
+
+    long getSize();
+    void setSize(long size);
 }
