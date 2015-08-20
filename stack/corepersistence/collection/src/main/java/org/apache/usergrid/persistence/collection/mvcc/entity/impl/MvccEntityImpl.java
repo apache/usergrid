@@ -38,24 +38,34 @@ public class MvccEntityImpl implements MvccEntity {
     private final UUID version;
     private final Optional<Entity> entity;
     private final Status status;
+    private final long size;
 
 
     public MvccEntityImpl( final Id entityId, final UUID version, final Status status, final Entity entity ) {
-        this( entityId, version, status, Optional.of( entity ) );
+        this( entityId, version, status, entity, 0 );
     }
 
-
+    public MvccEntityImpl( final Id entityId, final UUID version, final Status status, final Entity entity, final long size ) {
+        this( entityId, version, status, Optional.of( entity ), size);
+    }
     public MvccEntityImpl(
-            final Id entityId, final UUID version, final Status status, final Optional<Entity> entity ) {
+        final Id entityId, final UUID version, final Status status, final Optional<Entity> entity ) {
+        this( entityId, version, status,   entity , 0);
+    }
+
+        public MvccEntityImpl(
+            final Id entityId, final UUID version, final Status status, final Optional<Entity> entity, final long size ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
         Preconditions.checkNotNull( status, "status  is required" );
         Preconditions.checkNotNull( entity, "entity  is required" );
+        Preconditions.checkNotNull( size, "size  is required" );
 
         this.entityId = entityId;
         this.version = version;
         this.entity = entity;
         this.status = status;
+        this.size = size;
     }
 
 
@@ -82,6 +92,11 @@ public class MvccEntityImpl implements MvccEntity {
         return status;
     }
 
+    @Override
+    public long getSize() {
+        return size;
+    }
+
 
     @Override
     public boolean equals( final Object o ) {
@@ -101,6 +116,10 @@ public class MvccEntityImpl implements MvccEntity {
             return false;
         }
         if ( !version.equals( that.version ) ) {
+            return false;
+        }
+
+        if( size != that.size){
             return false;
         }
 
