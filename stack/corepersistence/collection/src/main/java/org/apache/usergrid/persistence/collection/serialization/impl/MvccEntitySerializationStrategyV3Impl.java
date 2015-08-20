@@ -355,7 +355,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 //return an empty entity, we can never load this one, and we don't want it to bring the system
                 //to a grinding halt
                 //TODO fix this
-                return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent(),0 );
+                return new MvccEntityImpl( id, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, Optional.<Entity>absent() );
             }
             Optional<Entity> entity = deSerialized.getOptionalEntity() ;
             return new MvccEntityImpl( id, deSerialized.getVersion(), deSerialized.getStatus(), entity, deSerialized.getSize());
@@ -529,7 +529,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         @JsonIgnore
         public Optional<Entity> getOptionalEntity() {
             Entity entity = Entity.fromMap(getEntityMap());
-            entity.setSize(getSize());
+            if(entity!=null){
+                entity.setSize(getSize());
+            }
             Optional<Entity> entityReturn = Optional.fromNullable(entity);
             //Inject the id into it.
             if (entityReturn.isPresent()) {
