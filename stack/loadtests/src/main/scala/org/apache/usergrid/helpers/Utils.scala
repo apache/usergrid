@@ -18,6 +18,7 @@ package org.apache.usergrid.helpers
 
 import scala.util.Random
 import scala.util.parsing.json.JSONObject
+import org.apache.usergrid.settings.Settings
 
  /**
  *
@@ -87,7 +88,7 @@ object Utils {
    def randomEntityNameUrl(prefix: String, numEntities: Int, seed: Int, baseUrl: String): String = {
      val randomVal = generateRandomInt(seed, seed+numEntities-1)
 
-     s"$baseUrl/$prefix$randomVal"
+     if (Settings.getViaQuery) s"$baseUrl?ql=name='$prefix$randomVal'" else s"$baseUrl/$prefix$randomVal"
    }
 
   def createRandomPushNotifierName:String = {

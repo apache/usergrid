@@ -75,6 +75,12 @@ object ConfigProperties {
   val LaterThanTimestamp = "laterThanTimestamp"
   val EntityProgressCount = "entityProgressCount"
   val InjectionList = "injectionList"
+  val PrintFailedRequests = "printFailedRequests"
+  val GetViaQuery = "getViaQuery"
+  val MultiPropertyPrefix = "multiPropertyPrefix"
+  val MultiPropertyCount = "multiPropertyCount"
+  val MultiPropertySizeInK = "multiPropertySizeInK"
+  val EntityNumberProperty = "entityNumberProperty"
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
@@ -82,7 +88,8 @@ object ConfigProperties {
     EntityType,EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
     UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
-    EntityProgressCount,InjectionList)
+    EntityProgressCount,InjectionList,PrintFailedRequests,GetViaQuery,MultiPropertyPrefix,MultiPropertyCount,
+    MultiPropertySizeInK,EntityNumberProperty)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -145,6 +152,12 @@ object ConfigProperties {
         case LaterThanTimestamp => 0L
         case EntityProgressCount => 10000L
         case InjectionList => "rampUsers(10,60)"
+        case PrintFailedRequests => true
+        case GetViaQuery => false
+        case MultiPropertyPrefix => "prop"
+        case MultiPropertyCount => 1
+        case MultiPropertySizeInK => 1
+        case EntityNumberProperty => ""
       }
     } else {
       null

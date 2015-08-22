@@ -82,7 +82,7 @@ class ConfigurableSimulation extends Simulation {
     setUp(
       scenario
         .inject(injectStepList)
-          .protocols(Settings.httpConf.acceptHeader("application/json"))
+          .protocols(Settings.httpAppConf.connection("keep-alive").acceptHeader("application/json"))
     )
   } else {
     println(s"scenarioType ${Settings.scenarioType} not found.")
