@@ -46,6 +46,6 @@ class PostUsersSimulation extends Simulation {
         rampUsers(Settings.rampUsers) over Settings.rampTime,
         constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration
 
-      )).protocols(Settings.httpConf.acceptHeader("application/json"))
+      )).protocols(Settings.httpAppConf.acceptHeader("application/json"))
 
 }

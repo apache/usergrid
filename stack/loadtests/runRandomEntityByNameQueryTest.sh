@@ -21,8 +21,6 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #URL=
 #ADMIN_USER=
 #ADMIN_PASSWORD=
-#ENTITY_WORKER_NUM=  #may be overridden on command line
-#ENTITY_WORKER_COUNT=  #may be overridden on command line
 #ORG=
 #APP=
 #AUTH_TYPE=
@@ -37,23 +35,25 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #ENTITY_PREFIX=
 #ENTITY_SEED=  #may be overridden on command line
 #RETRY_COUNT=
+#END_CONDITION_TYPE=
+#END_MINUTES=
+#END_REQUEST_COUNT=
 #CONSTANT_USERS_PER_SEC=
 #CONSTANT_USERS_DURATION=
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [NUM_ENTITIES [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]"
+[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [NUM_ENTITIES [ENTITY_SEED]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
 [ "$#" -ge 3 ] && NUM_ENTITIES="$3"
 [ "$#" -ge 4 ] && ENTITY_SEED="$4"
-[ "$#" -ge 5 ] && ENTITY_WORKER_NUM="$5"
-[ "$#" -ge 6 ] && ENTITY_WORKER_COUNT="$6"
 
 shift $#
 
-SCENARIO_TYPE=deleteEntities
+SCENARIO_TYPE=nameRandomInfinite
+GET_VIA_QUERY=true
 
 #Compile everything
 mvn compile
@@ -63,8 +63,6 @@ mvn gatling:execute \
 -DbaseUrl=${URL} \
 -DadminUser=${ADMIN_USER}  \
 -DadminPassword=${ADMIN_PASSWORD}  \
--DentityWorkerNum=${ENTITY_WORKER_NUM} \
--DentityWorkerCount=${ENTITY_WORKER_COUNT} \
 -Dorg=${ORG} \
 -Dapp=${APP} \
 -DauthType=${AUTH_TYPE} \
@@ -78,12 +76,16 @@ mvn gatling:execute \
 -Dcollection=${COLLECTION} \
 -DentityPrefix=${ENTITY_PREFIX} \
 -DentitySeed=${ENTITY_SEED} \
--DretryCount=${RETRY_COUNT}  \
+-DretryCount=${RETRY_COUNT} \
+-DendConditionType=${END_CONDITION_TYPE} \
+-DendMinutes=${END_MINUTES} \
+-DendRequestCount=${END_REQUEST_COUNT} \
 -DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
 -DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
 -DscenarioType=${SCENARIO_TYPE} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
+-DgetViaQuery=${GET_VIA_QUERY} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 

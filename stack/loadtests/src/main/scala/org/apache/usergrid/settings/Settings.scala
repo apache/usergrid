@@ -21,11 +21,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.bind.DatatypeConverter
 import io.gatling.http.Predef._
+import io.gatling.core.Predef._
 import io.gatling.http.config.HttpProtocolBuilder
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums._
 import org.apache.usergrid.helpers.Utils
-
 import scala.collection.mutable
 
 object Settings {
@@ -71,14 +71,44 @@ object Settings {
   // load configuration settings via property or default
   val org = initStrSetting(ConfigProperties.Org)
   val app = initStrSetting(ConfigProperties.App)
+  val allApps: Boolean = app == "*"
   val adminUser = initStrSetting(ConfigProperties.AdminUser)
   val adminPassword = initStrSetting(ConfigProperties.AdminPassword)
 
   private val cfgBaseUrl = initStrSetting(ConfigProperties.BaseUrl)
   val baseUrl = if (cfgBaseUrl.takeRight(1) == "/") cfgBaseUrl.dropRight(1) else cfgBaseUrl
-  val baseAppUrl:String = baseUrl + "/" + org + "/" + app
+  def orgUrl(org: String): String = {
+    baseUrl + "/" + org
+  }
+  def appUrl(app: String): String = {
+    orgUrl(org) + "/" + app
+  }
+  val managementUrl = baseUrl + "/management/organizations" + org
+  val baseOrgUrl = orgUrl(org)
+  val baseAppUrl = appUrl(app)
 
-  val httpConf: HttpProtocolBuilder = http.baseURL(baseAppUrl)
+  private def httpConf(baseUrl: String): HttpProtocolBuilder = {
+    http
+      .baseURL(baseUrl)
+      .connection("keep-alive")
+      .extraInfoExtractor {
+        i =>
+          if (Settings.printFailedRequests && i.status == io.gatling.core.result.message.KO) {
+            println(s"==============")
+            println(s"Request: ${i.request.getMethod} ${i.request.getUrl}")
+            println(s"body:")
+            println(s"  ${i.request.getStringData}")
+            println(s"==============")
+            println(s"Response: ${i.response.statusCode.getOrElse(-1)}")
+            println(s"body:")
+            println(s"  ${i.response.body.string}")
+            println(s"==============")
+          }
+          Nil
+      }
+  }
+  val httpOrgConf: HttpProtocolBuilder = httpConf(baseOrgUrl)
+  val httpAppConf: HttpProtocolBuilder = httpConf(baseAppUrl)
   val authType = initStrSetting(ConfigProperties.AuthType)
   val tokenType = initStrSetting(ConfigProperties.TokenType)
 
@@ -146,6 +176,12 @@ object Settings {
   val entityProgressCount:Long = initLongSetting(ConfigProperties.EntityProgressCount)
   private val logEntityProgress: Boolean = entityProgressCount > 0L
   val injectionList = initStrSetting(ConfigProperties.InjectionList)
+  val printFailedRequests:Boolean = initBoolSetting(ConfigProperties.PrintFailedRequests)
+  val getViaQuery:Boolean = initBoolSetting(ConfigProperties.GetViaQuery)
+  val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
+  val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
+  val multiPropertySizeInK:Int = initIntSetting(ConfigProperties.MultiPropertySizeInK)
+  val entityNumberProperty = initStrSetting(ConfigProperties.EntityNumberProperty)
 
   // Entity update
   val updateProperty = initStrSetting(ConfigProperties.UpdateProperty)

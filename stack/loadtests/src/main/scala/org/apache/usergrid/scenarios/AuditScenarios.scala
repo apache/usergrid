@@ -60,9 +60,9 @@ object AuditScenarios {
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
           val resultObj = session("singleResult").as[Map[String,Any]]
-          val uuid = resultObj("uuid").asInstanceOf[String]
-          val entityName = resultObj("name").asInstanceOf[String]
-          val modified = resultObj("modified").asInstanceOf[Long]
+          val uuid = resultObj.getOrElse("uuid", "").asInstanceOf[String]
+          val entityName = resultObj.getOrElse("name", "").asInstanceOf[String]
+          val modified = resultObj.getOrElse("modified", "-1").asInstanceOf[Long]
           val collectionName = session(SessionVarCollectionName).as[String]
           Settings.addAuditUuid(uuid, collectionName, entityName, modified)
           session
@@ -77,9 +77,9 @@ object AuditScenarios {
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
           val resultObj = session("singleResult").as[Map[String,Any]]
-          val uuid = resultObj("uuid").asInstanceOf[String]
-          val entityName = resultObj("name").asInstanceOf[String]
-          val modified = resultObj("modified").asInstanceOf[Long]
+          val uuid = resultObj.getOrElse("uuid","").asInstanceOf[String]
+          val entityName = resultObj.getOrElse("name","").asInstanceOf[String]
+          val modified = resultObj.getOrElse("modified","-1").asInstanceOf[Long]
           val collectionName = session(SessionVarCollectionName).as[String]
           Settings.addAuditUuid(uuid, collectionName, entityName, modified)
           session
@@ -104,7 +104,14 @@ object AuditScenarios {
             }
           }
         }
+    }.exec { session =>
+      // displays the content of the session in the console (debugging only)
+      println(session)
+
+      // return the original session
+      session
     }
+
 
   val getCollectionEntity = exec(
     http("GET collection entity")

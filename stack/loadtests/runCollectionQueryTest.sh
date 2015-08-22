@@ -83,5 +83,6 @@ mvn gatling:execute -Dorg=usergrid \
 -DscenarioType=${SCENARIO_TYPE} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
+-DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 

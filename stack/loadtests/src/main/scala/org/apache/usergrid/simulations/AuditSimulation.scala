@@ -18,6 +18,7 @@ package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
+import io.gatling.http.config.HttpProtocolBuilder
 import org.apache.usergrid.enums.ScenarioType
 import org.apache.usergrid.helpers.Setup
 import org.apache.usergrid.scenarios.{AuditScenarios, EntityCollectionScenarios}
@@ -42,11 +43,14 @@ class AuditSimulation extends Simulation {
 
   if (ScenarioType.isValid(Settings.scenarioType)) {
     val scenario: ScenarioBuilder = getScenario(Settings.scenarioType)
+    val httpConf: HttpProtocolBuilder = Settings.httpOrgConf
+      .acceptHeader("application/json")
+
     setUp(
       scenario
         .inject(
           rampUsers(Settings.rampUsers) over Settings.rampTime
-        ).protocols(Settings.httpConf.acceptHeader("application/json"))
+        ).protocols(httpConf)
     )
   } else {
     println(s"Audit scenario type ${Settings.scenarioType} not found.")
