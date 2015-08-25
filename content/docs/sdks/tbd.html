@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Authentication levels &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>COMING SOON... &mdash; Apache Usergrid 1.0 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
-        <link rel="next" title="Changing token expiration (time-to-live)" href="changing-token-time-live-ttl.html"/>
-        <link rel="prev" title="Authenticating users &amp; app clients" href="authenticating-users-and-application-clients.html"/> 
+        <link rel="next" title="Usegrid 1: Deploying to Tomcat" href="../installation/ug1-deploy-to-tomcat.html"/>
+        <link rel="prev" title="Methods" href="../rest-endpoints/api-docs.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -115,22 +115,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="app-security.html">Security &amp; token authentication</a></li>
-<li class="toctree-l1"><a class="reference internal" href="using-permissions.html">Using permissions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="using-roles.html">Using roles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Authentication levels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#configuring-authentication-levels">Configuring authentication levels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#user-authentication-level">User authentication level</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#admin-authentication-levels">Admin authentication levels</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="authenticating-api-requests.html">Authenticating API requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="facebook-sign.html">Facebook sign in</a></li>
-<li class="toctree-l1"><a class="reference internal" href="securing-your-app.html">Security best practices</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
 </ul>
 <p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
 <ul>
@@ -174,8 +169,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Client SDKs</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">COMING SOON...</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Installing the Stack</span></p>
 <ul>
@@ -211,11 +206,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>Authentication levels</li>
+    <li>COMING SOON...</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/security-and-auth/user-authentication-types.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/sdks/tbd.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -225,116 +220,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="authentication-levels">
-<h1>Authentication levels<a class="headerlink" href="#authentication-levels" title="Permalink to this headline">¶</a></h1>
-<p>Usergrid supports four levels of authentication, but only one of them is
-used when checking a registered user&#8217;s permissions. The other three
-levels are useful for authenticating other application or web clients
-that require higher-level access to your Usergrid application or
-organization. Because the scope of access that the other authentication
-levels provide is so broad (and as a result, so powerful), it&#8217;s a bad
-practice to use them from a mobile app. Instead, they&#8217;re better suited
-to other client apps, such as web applications.</p>
-<div class="section" id="configuring-authentication-levels">
-<h2>Configuring authentication levels<a class="headerlink" href="#configuring-authentication-levels" title="Permalink to this headline">¶</a></h2>
-<p>Access permissions can only be configured for the &#8216;application user&#8217; –
-this can be done both programmatically and in the admin portal. The
-application, organization and admin clients cannot be configured, and
-can only be accessed programmatically via the API.</p>
-<p>For more about creating and managing roles and permissions for
-application users, see <a class="reference external" href="security-and-auth/using-permissions.html">Using
-Permissions</a> and <a class="reference external" href="security-and-auth/using-roles.html">Using
-Roles</a>. For a look at how
-security features fit together, see <a class="reference external" href="../security-and-auth/app-security.html">App Security
-Overview</a>.</p>
-</div>
-<div class="section" id="user-authentication-level">
-<h2>User authentication level<a class="headerlink" href="#user-authentication-level" title="Permalink to this headline">¶</a></h2>
-<table class="usergrid-table">
-<tr>
-    <th><p>Authentication Level</p>
-</th>
-    <th><p>Description</p>
-</th>
-</tr>
-<tr>
-    <td><p>Application user</p>
-</td>
-    <td><p>This is the standard authentication type you will use to implement user
-login for your app. The application user level allows access to your
-Usergrid application as governed by the permission rules you create and
-associated with users and user groups. For more on setting permissions
-see <a class="reference external" href="security-and-auth/using-permissions.html">Using Permissions</a>.
-Each Application User is represented by a User entity in your Usergrid
-application. For more about the User entity, see User.</p>
-</td>
-</tr>
-</table></div>
-<div class="section" id="admin-authentication-levels">
-<h2>Admin authentication levels<a class="headerlink" href="#admin-authentication-levels" title="Permalink to this headline">¶</a></h2>
-<div class="admonition warning"> <p class="first admonition-title"><p>WARNING</p>
-  </p> <p class="last">
-
-
-Warning: Safe use of admin authentication levels. Never use client ID<p>and client secret, or any hard-coded credentials to authenticate this
-way from a client-side app, such as a mobile app. A hacker could analyze
-your app and extract the credentials for malicious use even if those
-credentials are compiled and in binary format. Even when authenticating
-with username and password, be cautious when using these authentication
-levels since they grant broad access to your Usergrid account. See
-<a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
-Practices</a> for
-additional considerations in keeping access to your app and its data
-secure.</p>
-</p></div>
-
-<table class="usergrid-table">
-<tr>
-    <th><p>Authentication Level</p>
-</th>
-    <th><p>Description</p>
-</th>
-</tr>
-<tr>
-   <td><p>Application client</p>
-</td>
-   <td><p>Grants full access to perform any operation on an Usergrid application
-(but not other applications within the same organization).</p>
-<p><p>Authentication at this level is useful in a server-side application (not
-a mobile app) that needs access to resources through the Usergrid API.
-For example, imagine you created a website that lists every hiking trail
-in the Rocky Mountains. You would want anyone to be able to view the
-content, but would not want them to access the Usergrid API and all your
-data directly. Instead, you would authenticate as an application client
-in your server-side code to access the data via the API in order to
-serve it to your website&#8217;s visitors.</p>
-</p></td>
-</tr>
-<tr>
-   <td><p>Organization client</p>
-</td>
-   <td><p>Grants full access to perform any operation on an Usergrid organization.</p>
-<p><p>This authentication level provides the greatest amount of access to an
-individual organization, allowing a client to perform any operation on
-an Usergrid organization and any applications in that organization. This
-level of access should be used sparingly and carefully.</p>
-</p></td>
-</tr>
-<tr>
-   <td><p>Admin user</p>
-</td>
-   <td><p>Allows full access to perform any operation on all organization accounts
-of which the admin user is a member.</p>
-<p><p>This authentication level is useful from applications that provide
-organization-wide administration features. For example, the Usergrid
-admin portal uses this level of access because it requires full access
-to the administration features.</p>
-</p><p>Unless you have a specific need for administrative features, such as to
-run test scripts that require access to management functionality, you
-should not use the admin user authentication level.</p>
-</td>
-</tr>
-</table></div>
+  <div class="section" id="coming-soon">
+<h1>COMING SOON...<a class="headerlink" href="#coming-soon" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -344,10 +231,10 @@ should not use the admin user authentication level.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="changing-token-time-live-ttl.html" class="btn btn-neutral float-right" title="Changing token expiration (time-to-live)" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../installation/ug1-deploy-to-tomcat.html" class="btn btn-neutral float-right" title="Usegrid 1: Deploying to Tomcat" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="authenticating-users-and-application-clients.html" class="btn btn-neutral" title="Authenticating users &amp; app clients" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../rest-endpoints/api-docs.html" class="btn btn-neutral" title="Methods" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
