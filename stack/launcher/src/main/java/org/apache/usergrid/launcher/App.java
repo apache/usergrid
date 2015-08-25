@@ -42,7 +42,7 @@ public class App {
 
     // TODO: host portal on Apache infrastructure, or build portal into launcher
     private static final String GH_PORTAL_URL = 
-        "http://usergrid.incubator.apache.org/v101-portal-demo";
+        "http://usergrid.apache.org/v101-portal-demo";
 
     public static boolean MAC_OS_X = 
         ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac os x" ) );

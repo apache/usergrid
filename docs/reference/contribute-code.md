@@ -7,7 +7,7 @@ by external contributors, and by those who are committers on the project.
 You can read this policy here [Usergrid Contribution Workflow](https://cwiki.apache.org/confluence/display/usergrid/Usergrid+Contribution+Workflow).
 
 Basically, we use GitHub as our code review system. So you should fork the 
-apache/incubator-usergrid repo and submit PRs back to the project. Here 
+apache/usergrid repo and submit PRs back to the project. Here 
 are are step-by-step guide for both both external contributors and committers:
 
 * [External Contributors Guide](https://cwiki.apache.org/confluence/display/usergrid/Usergrid+External+Contributors+Guide)
