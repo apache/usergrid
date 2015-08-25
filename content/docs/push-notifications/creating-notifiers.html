@@ -1,0 +1,425 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Creating notifiers &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Managing users and devices" href="managing-users-and-devices.html"/>
+        <link rel="prev" title="Registering with a notification service" href="registering.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Creating notifiers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-notifiers-with-the-admin-portal">Creating notifiers with the admin portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-notifiers-programmatically">Creating notifiers programmatically</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#for-apple">For Apple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#for-google">For Google</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#notifier-endpoints">Notifier endpoints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Creating notifiers</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/push-notifications/creating-notifiers.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="creating-notifiers">
+<h1>Creating notifiers<a class="headerlink" href="#creating-notifiers" title="Permalink to this headline">¶</a></h1>
+<p>When you request that a push notification be sent to your app on
+devices, an Usergrid notifier carries the request to the notification
+service (Google GCM or Apple APNs).</p>
+<p>A notifier is represented by an entity in your Usergrid application (see
+the <a class="reference external" href="../rest-endpoints/api-docs.html">API Docs</a> for reference
+information). It carries the credentials that authorize your request.
+Once a notification service has verified that your notifier contains
+valid credentials, it will forward your push notification to your app on
+devices.</p>
+<p>You can create a notifier in two ways: using the admin portal and
+programmatically.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+For an overview of how to set up push notifications, including<p>troubleshooting tips, see <a class="reference external" href="adding-push-support.html">Adding push notifications
+support</a>.</p>
+</p></div><div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>To create a notifier, you must first register your app with the
+appropriate notification service, as described in <a class="reference external" href="registration.html">Registering with a
+notification service</a>.</p>
+</div>
+<div class="section" id="creating-notifiers-with-the-admin-portal">
+<h2>Creating notifiers with the admin portal<a class="headerlink" href="#creating-notifiers-with-the-admin-portal" title="Permalink to this headline">¶</a></h2>
+<p>To create a notifier with the admin portal, do the following:</p>
+<ol class="arabic simple">
+<li>Log in to the admin portal.</li>
+<li>In the left nav, select <strong>Push &gt; Configuration</strong>.</li>
+<li>Click the <strong>Apple</strong> or <strong>Android</strong> tab.</li>
+<li>If you have not already done so, retrieve your .p12 certificate (iOS
+apps) or API key (Android apps) by following the steps in the
+<a class="reference external" href="registration.html">Registering with a notification service</a>.</li>
+<li>In the admin portal&#8217;s Configuration page, enter values for the
+platform on which your mobile app will be installed.</li>
+</ol>
+<p>The fields are different depending on whether you are on the Apple or
+Android tab:</p>
+<p><strong>Fields for Apple</strong></p>
+<table class="usergrid-table">
+<tr><td><p>Name this notifier</p>
+</td> <td><p>Enter a unique name that can be used to identify this notifiers.</p>
+</td></tr>
+<tr><td><p>Certificate</p>
+</td>    <td><p>Click <strong>Choose File</strong> to select the .p12 certificate you generated and
+saved to your desktop earlier in this tutorial.</p>
+</td></tr>
+<tr><td><p>Environment</p>
+</td>    <td><p>Select the environment appropriate to your app. You may select
+development or production. Note that for the environment you select, you
+should have a separate .p12 certificate &#8211; different certificates for
+development and production.</p>
+</td></tr>
+<tr><td><p>Certificate Password</p>
+</td>
+<td><p>Enter a certificate password if one was specified when you created your
+.p12 certificate.</p>
+</td></tr>
+</table><p><strong>Fields for Android</strong></p>
+<table class="usergrid-table">
+<tr><td><p>Name this notifier</p>
+</td> <td><p>Enter a unique name that can be used to identify this notifiers.</p>
+</td></tr>
+<tr><td><p>API Key</p>
+</td>
+<td><p>Enter the API key that was generated when you registered your app with
+GCM. To retrieve your API key, go to the <a class="reference external" href="https://code.google.com/apis/console/">Google API developer web
+site</a>, then select <strong>APIs &amp;
+Auth &gt; Credentials</strong>.</p>
+</td></tr>
+</table><ol class="arabic simple" start="6">
+<li>Click <strong>Create Notifier</strong>. The Usergrid will create a notifier entity
+in the /notifiers collection. The notifier will also appear in the
+list of notifiers in the notifications console.</li>
+</ol>
+</div>
+<div class="section" id="creating-notifiers-programmatically">
+<h2>Creating notifiers programmatically<a class="headerlink" href="#creating-notifiers-programmatically" title="Permalink to this headline">¶</a></h2>
+<p>You can create an App BaaS notifier programmatically by sending requests
+to the Usergrid API.</p>
+<div class="section" id="for-apple">
+<h3>For Apple<a class="headerlink" href="#for-apple" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST -i -H &quot;Accept: application/json&quot; -H &quot;Accept-Encoding: gzip, deflate&quot; -H &quot;Authorization: Bearer YWMtFeeWEMyNEeKtbNX3o4PU0QAAAT8vzK3xz3utVZat0CosiYm75C2qpiGT79c&quot; -F &quot;name=applenotifier&quot; -F &quot;provider=apple&quot; -F &quot;environment=development&quot; -F &quot;p12Certificate=@/Users/me/dev/pushtest_dev.p12&quot; &#39;https://api.usergrid.com/my-org/my-app/notifiers&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="for-google">
+<h3>For Google<a class="headerlink" href="#for-google" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/my-org/my-app/notifiers&quot; -d &#39;{&quot;name&quot;:&quot;androiddev&quot;, &quot;provider&quot;:&quot;google&quot;, &quot;apiKey&quot;:&quot;AIzaSyCkXOtBQ7A9GoJsSLqZlod_YjEfxxxxxxx&quot;}&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="notifier-endpoints">
+<h2>Notifier endpoints<a class="headerlink" href="#notifier-endpoints" title="Permalink to this headline">¶</a></h2>
+<p>The following are the available notifier endpoints. For details on
+notifier properties, see the <a class="reference external" href="../rest-endpoints/api-docs.html">API
+Docs</a>.</p>
+<p>Base URL: <code class="docutils literal"><span class="pre">https://api.usergrid.com/my-org/my-app/</span></code></p>
+<p>Working with one or more notifiers:</p>
+<div class="highlight-python"><div class="highlight"><pre>/notifiers
+</pre></div>
+</div>
+<p>Working with notifiers associated with specific devices:</p>
+<div class="highlight-python"><div class="highlight"><pre>/devices/{device-id}/notifier
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="managing-users-and-devices.html" class="btn btn-neutral float-right" title="Managing users and devices" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="registering.html" class="btn btn-neutral" title="Registering with a notification service" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -36,7 +36,7 @@ Location-aware apps require the ability to return content and results based on t
 	
 The returned results are sorted from nearest to furthest. Entities with the same location are returned in the order they were created.
 
-The location parameter can be appended to any standard API Services query. For more information on how to query your API Services data, see Querying your data.
+The location parameter can be appended to any standard API Services query. For more information on how to query your API Services data, see [Querying your Data](../data-queries/querying-your-data.html).
 
 For example, here is how you would find all the devices within 8,046 meters (~10 miles) of the center of San Francisco:
 

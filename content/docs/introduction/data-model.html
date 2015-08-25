@@ -82,6 +82,7 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Usergrid Data model</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#organizations">Organizations</a></li>
@@ -97,8 +98,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -122,10 +123,23 @@
 <li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -150,9 +164,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -167,11 +181,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Client SDKs</span></p>
 <ul>
@@ -251,8 +267,8 @@ wish. This allows you to utilize the backend in a way that corresponds
 to your development process. For example, you might create separate
 applications for development and production instances of your app. By
 default, all organization have a sandbox application (see Using a
-Sandbox Application for important information regarding the default
-sandbox application).</p>
+<a class="reference external" href="../getting-started/using-a-sandbox-app.html">Sandbox Application</a>
+for important information regarding the default sandbox application).</p>
 <p>Each application provides the infrastructure for storing, retrieving,
 updating and deleting the entities and collections associated with a
 specific app instance.</p>
@@ -294,20 +310,20 @@ user perspective.</p>
 <div class="section" id="default-entities">
 <h2>Default entities<a class="headerlink" href="#default-entities" title="Permalink to this headline">¶</a></h2>
 <p>The following entity types are predefined in Usergrid. For more details,
-see Default Data Entity Types.</p>
+see the <a class="reference external" href="../rest-endpoints/api-docs.html">API Reference</a></p>
 <ul class="simple">
-<li>user</li>
-<li>group</li>
-<li>role</li>
-<li>application</li>
-<li>activity</li>
-<li>device</li>
-<li>asset</li>
-<li>folder</li>
-<li>event</li>
-<li>notifier</li>
-<li>notification</li>
-<li>receipt</li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#user">user</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#group">group</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#role">role</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#application">application</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#activity">activity</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#device">device</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#asset">asset</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#folder">folder</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#event">event</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#notifier">notifier</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#notification">notification</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#recept">receipt</a></li>
 </ul>
 </div>
 <div class="section" id="properties">
