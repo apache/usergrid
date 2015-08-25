@@ -31,7 +31,7 @@ Or install it yourself as:
 
 #### It's great stuff! Check it out, here:
 
-  Docs: <https://usergrid.incubator.apache.org/docs/>  
+  Docs: <https://usergrid.apache.org/docs/>  
   Open source: <https://github.com/usergrid/usergrid/>
 
 ### Getting started with the Usergrid_ironhorse SDK is super simple!

@@ -20,7 +20,7 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
     <description>A Java client for usergrid</description>
-    <url>http://usergrid.incubator.apache.org</url>
+    <url>http://usergrid.apache.org</url>
 	
     <licenses>
         <license>

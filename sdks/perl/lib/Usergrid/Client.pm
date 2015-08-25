@@ -80,7 +80,7 @@ front-end developers, it aims to simplify the development process by enabling
 them to rapidly build and operate mobile and web applications without requiring
 backend expertise.
 
-Source: L<https://usergrid.incubator.apache.org/docs/>
+Source: L<https://usergrid.apache.org/docs/>
 
 For more information, visit L<http://www.usergrid.org>
 
