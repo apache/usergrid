@@ -69,6 +69,37 @@ public class CpEntityMapUtilsTest {
         assertUserWithBlocks( cpEntity );
     }
 
+    @Test
+    public void testNestedArrayToMap() {
+
+        /*** This tests example property input of
+
+             {
+                "nestedarray" : [ [ "fred" ] ]
+             }
+
+         ****/
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+            put( "nestedarray",
+                new ArrayList<ArrayList<String>>() {{
+                    add(0, new ArrayList<String>() {{
+                        add(0, "fred");
+                        }});
+                }}
+            );
+            put( "block", new ArrayList<Object>() {{
+                add( new LinkedHashMap<String, Object>() {{ put("name", "fred"); }});
+                add( new LinkedHashMap<String, Object>() {{ put("name", "gertrude"); }});
+                add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
+            }});
+        }};
+
+        Entity cpEntity = CpEntityMapUtils.fromMap( properties, "user", true );
+        assertUserWithBlocks( cpEntity );
+    }
+
+
 
     @Test
     public void testSerialization() throws JsonProcessingException, IOException {
@@ -87,6 +118,54 @@ public class CpEntityMapUtilsTest {
             put( "location", new LinkedHashMap<String, Object>() {{
                 put("latitude", 37.776753 );
                 put("longitude", -122.407846 );
+            }});
+        }};
+
+        org.apache.usergrid.persistence.model.entity.Entity entity =
+            new org.apache.usergrid.persistence.model.entity.Entity(
+                new SimpleId( "user" ) );
+        entity = CpEntityMapUtils.fromMap( entity, properties, null, true );
+
+        assertUserWithBlocks( entity );
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
+
+        String entityString = mapper.writeValueAsString( entity );
+        //log.debug("Serialized to JSON: " + entityString );
+
+        TypeReference<Entity> tr = new TypeReference<Entity>() {};
+        entity = mapper.readValue( entityString, tr );
+        //log.debug("Round-tripped entity: " + CpEntityMapUtils.toMap(entity) );
+
+        assertUserWithBlocks( entity );
+    }
+
+
+    @Test
+    public void testNestedArraySerialization() throws JsonProcessingException, IOException {
+
+        /*** This tests example property input of
+
+         {
+         "nestedarray" : [ [ "fred" ] ]
+         }
+
+         ****/
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+            put( "nestedarray",
+                new ArrayList<ArrayList<String>>() {{
+                    add(0, new ArrayList<String>() {{
+                        add(0, "fred");
+                    }});
+                }}
+            );
+            put( "block", new ArrayList<Object>() {{
+                add( new LinkedHashMap<String, Object>() {{ put("name", "fred"); }});
+                add( new LinkedHashMap<String, Object>() {{ put("name", "gertrude"); }});
+                add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
             }});
         }};
 
