@@ -150,7 +150,7 @@ public class ApiDocGenerator {
         urlOp.url = url;
         urlOp.method = method;
         urlOp.operation = operation;
-        urlOp.opId = RandomStringUtils.randomAlphanumeric(10);
+        urlOp.opId = RandomStringUtils.randomAlphanumeric(10).toLowerCase();
         urlOps.add(urlOp);
 
         operation.getResponses().each { responseEntry ->
@@ -227,7 +227,7 @@ public class ApiDocGenerator {
             // if parameter has a schema, assume that it is a reference
             if ( responseEntry.value.schema != null) {
                 response.schema = responseEntry.value.schema.ref;
-                response.schemaAnchor = responseEntry.value.schema.ref;
+                response.schemaAnchor = responseEntry.value.schema.ref.toLowerCase();
                
                 // keep track of paths that use each schema definition
                 if ( response.status.equals("200") ) {
@@ -327,7 +327,7 @@ public class ApiDocGenerator {
         allTags.each{ tag -> 
             def atag = [:];
             atag.name = tag;
-            atag.link = tag;
+            atag.link = tag.toLowerCase();
             tags.add(atag);
         };
         scope.tags = tags;
