@@ -145,7 +145,15 @@ public class MapToEntityConverter{
             return newList;
 
         } else if ( sample instanceof List ) {
-            return processListForField( list ); // recursion
+            List<Object> newList = new ArrayList<Object>();
+            for (Object o : list) {
+                if (o instanceof List) {
+                    newList.add(processListForField((List) o));
+                } else {
+                    newList.add(o);
+                }
+            }
+            return newList;
 
         } else {
             return list;
