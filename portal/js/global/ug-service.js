@@ -259,26 +259,31 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
     },
     createCollectionWithEntity: function(collectionName, entityData) {
       try{
-        entityData=JSON.parse(entityData)
-        entityData.type=collectionName;
+        entityData=JSON.parse(entityData);
       }catch(e){
         $rootScope.$broadcast('alert', 'error', 'JSON is not valid');
         return;
       }
+      var options = {
+        method: 'POST',
+        endpoint: collectionName,
+        body: entityData
+      }
       var self = this;
-      self.client().createEntity(entityData, function(err, entity) {
+      self.client().request(options, function(err, entity) {
         if (err) {
           console.error(err);
           return $rootScope.$broadcast('alert', 'error',
-            'error creating collection');
+              'error creating collection');
         }
         self.getTopCollections(function(err, collections) {
           if (err) {
             $rootScope.$broadcast('alert', 'error',
-              'error creating collection');
+                'error creating collection');
           } else {
+            $rootScope.$broadcast('alert', 'success', 'Collection created successfully.');
             $rootScope.$broadcast('collection-created',
-              collections);
+                collections);
           }
         });
       });
