@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Managing users and devices &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Creating and managing notifications" href="creating-and-managing-notifications.html"/>
+        <link rel="prev" title="Creating notifiers" href="creating-notifiers.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Managing users and devices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#registering-devices">Registering devices</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#registering-for-ios">Registering for iOS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#registering-for-android">Registering for Android</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#registering-for-html5-phonegap">Registering for HTML5/PhoneGap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#connecting-devices-to-users">Connecting devices to users</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#connecting-with-curl">Connecting with curl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connecting-with-ios">Connecting with iOS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connecting-with-android">Connecting with Android</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connecting-with-html5-javascript">Connecting with HTML5/JavaScript</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Managing users and devices</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/push-notifications/managing-users-and-devices.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="managing-users-and-devices">
+<h1>Managing users and devices<a class="headerlink" href="#managing-users-and-devices" title="Permalink to this headline">¶</a></h1>
+<p>Before your app can receive notifications on a user&#8217;s device, the app&#8217;s
+code will need to register the device with both the Usergrid and the
+appropriate push notification service (Apple APNs or Google GCM).</p>
+<p>By registering with the Usergrid, your app adds the device on which it
+is installed to your data store. The device is represented as a Device
+entity. This makes it possible for you to target that device when
+sending notifications. (For more on the Device entity, see the <a class="reference external" href="../rest-endpoints/api-docs.html">API
+Docs</a>.) Any devices, users, and
+groups that have been registered in this way may be targeted with push
+notifications.</p>
+<p>By registering with the notification service, you make the device known
+to the service. This way, the service can forward your notifications to
+the device.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+For an overview of how to set up push notifications, including<p>troubleshooting tips, see <a class="reference external" href="adding-push-support.html">Adding push notifications
+support</a>.</p>
+</p></div><div class="section" id="registering-devices">
+<h2>Registering devices<a class="headerlink" href="#registering-devices" title="Permalink to this headline">¶</a></h2>
+<p>The following samples illustrate how to register a device with a
+notification service and with the Usergrid. At a high level, your code
+will send a registration request to the notification service, then use
+information in the service&#8217;s response to send a separate request to the
+Usergrid. The two requests correlate the notification service, Usergrid,
+and your mobile app.</p>
+<p>You can also create device entities separately by using the /devices
+endpoint. For more information on using the <code class="docutils literal"><span class="pre">/devices</span></code> endpoint in the
+Usergrid, see the <a class="reference external" href="../rest-endpoints/api-docs.html">API Docs</a>.</p>
+<p>Registering a device with a notification service is a standard coding
+activity for implementing push notifications. This is not specific to
+the Usergrid.</p>
+<div class="section" id="registering-for-ios">
+<h3>Registering for iOS<a class="headerlink" href="#registering-for-ios" title="Permalink to this headline">¶</a></h3>
+<p>The following code illustrates how you can use the iOS SDK to register a
+device with both the Usergrid server and with the APNs, the Apple push
+notification service. This example assumes that your code has already
+property initialized the SDK. For more information, see <a class="reference external" href="../sdks/tbd.html">Installing the
+Apigee SDK for iOS</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>// Register with Apple to receive notifications.
+
+// Invoked when the application moves from an inactive to active state. Use this
+// method to register with Apple for notifications.
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+    // Find out what notification types the user has enabled.
+    UIRemoteNotificationType enabledTypes =
+        [application enabledRemoteNotificationTypes];
+
+    // If the user has enabled alert or sound notifications, then
+    // register for those notification types from Apple.
+    if (enabledTypes &amp; (UIRemoteNotificationTypeAlert|UIRemoteNotificationTypeSound)) {
+
+        // Register for push notifications with Apple
+        NSLog(@&quot;registering for remote notifications&quot;);
+        [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert |
+         UIRemoteNotificationTypeSound];
+    }
+}
+
+// Invoked as a callback from calling registerForRemoteNotificationTypes.
+// newDeviceToken is a token received from registering with Apple APNs.
+// Use this method to register with Apigee.
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)newDeviceToken
+{
+    // Register device token with the Usergrid (will create the Device entity if it doesn&#39;t exist)
+    // Sends the name of the notifier you created with Apigee, along with the token your code
+    // received from Apple.
+    ApigeeClientResponse *response = [dataClient setDevicePushToken: newDeviceToken
+                                                        forNotifier: notifier];
+
+    if ( ! [response completedSuccessfully]) {
+        [self alert: response.rawResponse title: @&quot;Error&quot;];
+    }
+}
+
+// Invoked as a callback from calling registerForRemoteNotificationTypes if registration
+// failed.
+- (void)application:(UIApplication*)application didFailToRegisterForRemoteNotificationsWithError:(NSError*)error
+{
+    [self alert: error.localizedDescription title: @&quot;Error&quot;];
+}
+</pre></div>
+</div>
+<p>Initialize the Apigee client and check for notifications that might have
+been sent while the app was off.</p>
+<div class="highlight-python"><div class="highlight"><pre>// Invoked as a callback after the application launches.
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    // Connect and login
+    ApigeeClient *apigeeClient =
+        [[ApigeeClient alloc] initWithOrganizationId:orgName
+                                       applicationId:appName
+                                             baseURL:baseURL];
+    dataClient = [apigeeClient dataClient];
+    [dataClient setLogging:true]; //comment out to remove debug output from the console window
+
+    // Find out if there&#39;s a notification waiting to be handled after the
+    // app launches.
+    if (launchOptions != nil) {
+        NSDictionary* userInfo =
+            [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+
+        // If there&#39;s notification data waiting, send it to be processed.
+        if (userInfo) {
+            [self handlePushNotification:userInfo
+                          forApplication:application];
+        }
+    }
+
+    // It&#39;s not necessary to explicitly login if the Guest role allows access.
+    // But this is how you can do it.
+//    [apigeeClient logInUser: userName password: password];
+
+    NSLog(@&quot;done launching&quot;);
+    return YES;
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="registering-for-android">
+<h3>Registering for Android<a class="headerlink" href="#registering-for-android" title="Permalink to this headline">¶</a></h3>
+<p>The following code illustrates how to register a client device with GCM,
+register the device with Apigee, and associate the device with the user.
+Methods used in this code are defined in the Apigee Android SDK. For
+more information on downloading and installing the SDK, see Installing
+the Apigee SDK for Android.</p>
+<div class="highlight-python"><div class="highlight"><pre>import android.content.Context;
+import com.google.android.gcm.GCMRegistrar;
+import com.apigee.sdk.ApigeeClient;
+import com.apigee.sdk.data.client.entities.Device;
+
+/**
+ * Registers this device with GCM, Google&#39;s messaging
+ * service.
+ *
+ * @param context An Android context with information specific to this
+ * application&#39;s context on the device.
+ */
+static void registerPush(Context context) {
+
+    //Get an instance of the Apigee DataClient class from the ApigeeClient object
+    dataClient = getClient().getDataClient();
+
+    // Get the registration ID (GCM API key) for this application.
+    final String regId = GCMRegistrar.getRegistrationId(context);
+
+    // If this device isn&#39;t already registered with GCM, register it
+    // using the the application context and an ID for the Google account
+    // authorized to send messages to this application. This is the
+    // Google Client ID from Google API Console.
+    if (&quot;&quot;.equals(regId)) {
+      GCMRegistrar.register(context, gcmSenderId);
+    } else {
+        if (GCMRegistrar.isRegisteredOnServer(context)) {
+            Log.i(TAG, &quot;Already registered with GCM&quot;);
+        } else {
+
+        // Use an instance of the Client class (SDK for Android)
+        // to register this device with the Usergrid. Pass as arguments
+        // the device unique identifier, the unique name of the notifier you
+        // created in the Usergrid, the GCM API key, and a callback that will
+        // receive an instance of a Device class representing the registered
+        // device on the system.
+        dataClient.registerDeviceForPushAsync(dataClient.getUniqueDeviceID(), notifierName, regId, null,
+            new DeviceRegistrationCallback() {
+                @Override
+                public void onResponse(Device device) {
+                    AppServices.device = device;
+
+                    // Associate the logged in user with this device.
+                    if (dataClient.getLoggedInUser() != null) {
+                        dataClient.connectEntitiesAsync(&quot;users&quot;,
+                            dataClient.getLoggedInUser().getUuid().toString(),
+                            &quot;devices&quot;, device.getUuid().toString(),
+                            new ApiResponseCallback() {
+                                @Override
+                                public void onResponse(ApiResponse apiResponse) {
+                                  Log.i(TAG, &quot;connect response: &quot; + apiResponse);
+                                }
+
+                                @Override
+                                public void onException(Exception e) {
+                                  displayMessage(context, &quot;Connect Exception: &quot; + e);
+                                  Log.i(TAG, &quot;connect exception: &quot; + e);
+                                }
+                        });
+                    }
+                }
+
+            });
+        }
+    }
+}
+
+/**
+ * Create an instance of the SDK ApigeeClient class, setting
+ * values from your Apigee registration.
+ */
+static synchronized ApigeeClient getClient() {
+    if (client == null) {
+        client = new ApigeeClient();
+        client.setApiUrl(&quot;https://api.usergrid.com&quot;);
+        client.setOrganizationId(&quot;your-org&quot;);
+        client.setApplicationId(&quot;your-app&quot;);
+    }
+    return client;
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="registering-for-html5-phonegap">
+<h3>Registering for HTML5/PhoneGap<a class="headerlink" href="#registering-for-html5-phonegap" title="Permalink to this headline">¶</a></h3>
+<p>The following code illustrates how you can use the JavaScript functions
+included with the PhoneGap plugin to register a device with both the
+Apigee server and with the APNs, the Apple push notification service.</p>
+<div class="highlight-python"><div class="highlight"><pre>// Declare a variable for calling push notification APIs.
+var pushNotification = window.plugins.pushNotification;
+// Collect configuration options to specify that this device accepts
+// an alert message, an application badge, and a sound.
+var appleOptions = {
+    alert:true, badge:true, sound:true
+};
+// Register the device with the Usergrid, passing options for configuration
+// along with a callback from which you can retrieve the device token
+// sent by Apigee.
+pushNotification.registerDevice(appleOptions, function(status) {
+    console.log(status);
+    // If a token was received, bundle options to pass when registering the device
+    // with the push notification service. The provider value must be &quot;apigee&quot; to
+    // support push notification through Apigee. orgName and appName should be
+    // values corresponding to those used in your Apigee account.
+    // notifier is the unique name you associated with the Apigee notifier you created.
+    // token is the device token this code received from Apigee after registering the
+    // device.
+    if(status.deviceToken) {
+        var options = {
+            &quot;provider&quot;:&quot;apigee&quot;,
+            &quot;orgName&quot;:&quot;YOUR APIGEE.COM USERNAME&quot;,
+            &quot;appName&quot;:&quot;sandbox&quot;,
+            &quot;notifier&quot;:&quot;YOUR NOTIFIER&quot;,
+            &quot;token&quot;:status.deviceToken
+        };
+
+        // Use the device token and other options to register this device with the
+        // push notification provider.
+        pushNotification.registerWithPushProvider(options, function(status){
+            console.log(status);
+        });
+    }
+});
+</pre></div>
+</div>
+<p>The functions used in this code are defined in the PhoneGap plugin.
+JavaScript functions invoke underlying Objective-C or Java code
+(depending on platform). You&#8217;ll find that code in these files, included
+in the Apigee PhoneGap push notification plug-in.</p>
+<p>Information about installing the plugin is available in its Readme file.
+For more complete examples, see <a class="reference external" href="tutorial.html">Tutorial: Push notifications sample
+app</a>.</p>
+</div>
+</div>
+<div class="section" id="connecting-devices-to-users">
+<h2>Connecting devices to users<a class="headerlink" href="#connecting-devices-to-users" title="Permalink to this headline">¶</a></h2>
+<p>You can associate user entities with device entities in the Usergrid.
+Doing so allows you to target your push notifications at users with
+specific characteristics. The following describes how to connect a user
+to a specific device in the Usergrid.</p>
+<p>For more information on creating a device in your Usergrid data store,
+see &#8220;Registering Devices&#8221; above.</p>
+<p>For more information on creating a user in your Usergrid data store, see
+<a class="reference external" href="../rest-endpoints/api-docs.html#user">User</a>.</p>
+<p>The following code examples all use the same basic endpoint pattern for
+connecting devices with users:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">POST</span> <span class="o">/</span><span class="n">users</span><span class="o">/</span><span class="p">{</span><span class="n">userUUID</span> <span class="ow">or</span> <span class="n">name</span><span class="p">}</span><span class="o">/</span><span class="n">devices</span><span class="o">/</span><span class="p">{</span><span class="n">deviceUUID</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="connecting-with-curl">
+<h3>Connecting with curl<a class="headerlink" href="#connecting-with-curl" title="Permalink to this headline">¶</a></h3>
+<p>The following call connects user &#8220;joex&#8221; with device
+7a0a1cba-9a18-3bee-8ae3-4f511f12a386 (the device UUID). After this
+connection, you can send a push notification to joex rather than the
+device. Further, if joex has specific properties set&#8211;such as
+{&#8220;favoritecolor&#8221;: &#8220;blue&#8221;}&#8211;you can send a push notification to all users
+whose favorite color is blue (assuming they&#8217;re connected to devices in
+the Usergrid).</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/my-org/sandbox/users/joex/devices/7a0a1cba-9a18-3bee-8ae3-4f511f12a386&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="connecting-with-ios">
+<h3>Connecting with iOS<a class="headerlink" href="#connecting-with-ios" title="Permalink to this headline">¶</a></h3>
+<p>The following sample code, taken from AppDelegate.m in the native iOS
+push sample, uses the connectEntities method from the iOS SDK to connect
+a device to a user.</p>
+<div class="highlight-python"><div class="highlight"><pre>ApigeeClientResponse *response = [dataClient setDevicePushToken: newDeviceToken forNotifier: notifier];
+
+// You could use this if you log in as an Usergrid user to associate the Device to your User
+if (response.transactionState == kUGClientResponseSuccess) {
+    response = [self connectEntities: @&quot;users&quot; connectorID: @&quot;me&quot; type: @&quot;devices&quot; connecteeID: deviceId];
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="connecting-with-android">
+<h3>Connecting with Android<a class="headerlink" href="#connecting-with-android" title="Permalink to this headline">¶</a></h3>
+<p>The following sample code, taken from
+<a class="reference external" href="https://github.com/apigee/appservices-android-push-example/blob/master/src/com/ganyo/pushtest/AppServices.java">AppServices.java</a>
+in the native Android push sample, uses the connectEntitiesAsync method
+from the Android SDK to connect a device to an authenticated user.</p>
+<div class="highlight-python"><div class="highlight"><pre>// connect Device to current User - if there is one
+if (dataClient.getLoggedInUser() != null) {
+  dataClient.connectEntitiesAsync(&quot;users&quot;, dataClient.getLoggedInUser().getUuid().toString(),
+                                   &quot;devices&quot;, device.getUuid().toString(),
+                                   new ApiResponseCallback() {...
+</pre></div>
+</div>
+</div>
+<div class="section" id="connecting-with-html5-javascript">
+<h3>Connecting with HTML5/JavaScript<a class="headerlink" href="#connecting-with-html5-javascript" title="Permalink to this headline">¶</a></h3>
+<p>The following code illlustrates how to associate the currently logged in
+user with their device.</p>
+<div class="highlight-python"><div class="highlight"><pre>// You&#39;ll need a client from the JavaScript SDK.
+var client = new Apigee.Client({
+    // Initialize client.
+});
+
+// Get information about the current user so you can use
+// it to connect them with their device.
+client.getLoggedInUser(function(err, data, user) {
+    if(err) {
+        // Could not get the logged in user.
+    } else {
+        if (client.isLoggedIn()) {
+            // Using a PushNotification function to get the device ID as
+            // it is known to the Apigee system.
+            pushNotification.getApigeeDeviceId(function(results) {
+                if (results.deviceId) {
+                    // Use the JavaScript SDK connect function to register
+                    // a connection between the current user and their device.
+                    user.connect(&#39;devices&#39;, results.deviceId, function (err, data) {
+                        if (err) {
+                            // Could not make the connection.
+                        } else {
+                            // Call succeeded, so pull the connections back down.
+                            user.getConnections(&#39;devices&#39;, function (err, data) {
+                            if (err) {
+                                // Couldn&#39;t get the connections.
+                            } else {
+                                // Connection exists.
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+</pre></div>
+</div>
+<p>You can also connect users with groups so that you can send push
+notifications to groups of users (and their associated devices), see
+<a class="reference external" href="../user-management/group.html">Working with group data</a>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="creating-and-managing-notifications.html" class="btn btn-neutral float-right" title="Creating and managing notifications" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="creating-notifiers.html" class="btn btn-neutral" title="Creating notifiers" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

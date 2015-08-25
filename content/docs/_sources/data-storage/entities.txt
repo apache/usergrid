@@ -5,7 +5,7 @@ This article describes how to create custom data entities and entity properties.
 
 The methods cited in this article should be used to create custom data entities. If you are using one of the Usergrid SDKs, use one of the entity type-specific SDK methods to create default data entities.
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Creating a custom entity
 When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type. For example, creating a custom entity of type 'item' will automatically create a collection named 'items' in which all future 'item' entities will be saved.
@@ -144,7 +144,7 @@ Any valid JSON object can be stored in an entity, regardless of the level of com
 ### Updating sub-properties
 
 An array of sub-properties is treated as a single object. This means that sub-properties cannot be updated atomically. All sub-properties of a given property must be updated as a set.
-For more on updating an existing sub-property, see Updating Data Entities.
+For more on updating an existing sub-property, see [Updating Data Entities](../data-storage/entities.html#updating-data-entities).
 
 Example Request/Response
 
@@ -193,7 +193,7 @@ Example Request/Response
 ## Retrieving Data Entities
 This article describes how to retrieve entities from your account.
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 With the exception of the user entity, all data entities can be retrieved by using their UUID or a 'name' property. The user entity can be retrieved by UUID or the 'username' property. The value for the 'name' or 'username' property must be unique.
 
@@ -333,7 +333,7 @@ Response:
 
 This article describes how to update entities in your account.
 
-__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__: Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Updating an entity
 One or more properties can be updated with a single PUT request. For information on updating sub-properties, see Updating sub-properties below.
@@ -454,7 +454,7 @@ Response:
 
 This article describes how to delete data entities.
 
-__Note__:Although not shown in the API examples below, you need to provide a valid access token with each API call. See Authenticating users and application clients for details.
+__Note__:Although not shown in the API examples below, you need to provide a valid access token with each API call. See [Authenticating users and application clients](../security-and-auth/authenticating-users-and-application-clients.html) for details.
 
 ### Deleting an entity
 
