@@ -19,10 +19,10 @@
 set -e
 set -o nounset
 
-usergrid_git_url='https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git'
-usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=incubator-usergrid.git'
-usergrid_svn_dist_url='https://dist.apache.org/repos/dist/release/incubator/usergrid'
-usergrid_svn_dev_dist_url='https://dist.apache.org/repos/dist/dev/incubator/usergrid'
+usergrid_git_url='https://git-wip-us.apache.org/repos/asf/usergrid.git'
+usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=usergrid.git'
+usergrid_svn_dist_url='https://dist.apache.org/repos/dist/release/usergrid'
+usergrid_svn_dev_dist_url='https://dist.apache.org/repos/dist/dev/usergrid'
 
 function print_help_and_exit {
 cat <<EOF
@@ -137,7 +137,7 @@ git tag -s "${current_version}" -m "usergrid-${current_version} release." $curre
   #git push origin --tags
 #fi
 
-dist_name="apache-usergrid-${current_version}-incubating"
+dist_name="apache-usergrid-${current_version}"
 
 dist_dir=${base_dir}/dist
 release_dir=${dist_dir}/${current_version}
@@ -185,13 +185,13 @@ current_commit_id=`git rev-parse HEAD`
 cd ${base_dir}
 
 echo "Done creating the release. The following draft email has been created"
-echo "to send to the dev@usergrid.incubator.apache.org mailing list."
+echo "to send to the dev@usergrid.apache.org mailing list."
 echo
 
 # Create the email template for the release to be sent to the mailing lists.
 MESSAGE=$(cat <<__EOF__
-To: dev@usergrid.incubator.apache.org
-Subject: [RESULT][VOTE] Release Apache Usergrid ${current_version} (incubating) RC#{rc_tag_version}
+To: dev@usergrid.apache.org
+Subject: [RESULT][VOTE] Release Apache Usergrid ${current_version} RC#{rc_tag_version}
 as the official Apache Usegrid ${current_version} release has passed.
 
 
