@@ -16,9 +16,9 @@ For more information:
 
 ## Download
 
-Use GitHub to clone the [apache/incubator-usergrid](https://github.com/apache/incubator-usergrid) repo.
+Use GitHub to clone the [apache/usergrid](https://github.com/apache/usergrid) repo.
 
-Or you can start by [downloading our latest code](https://github.com/apache/incubator-usergrid/archive/master.zip) and extract it.
+Or you can start by [downloading our latest code](https://github.com/apache/usergrid/archive/master.zip) and extract it.
 
 ## Building
 
@@ -89,7 +89,7 @@ You should not be prompted for login because you already logged into for the Dat
 
 Build the Usergrid Console
 ---
-The Usergrid Console is an admin interface written in JavaScript that connects to your running Usergrid instance. For evaluation purposes, you can run it within Tomcat. Build it by following the steps [here](https://github.com/apache/incubator-usergrid/blob/master/portal/README.md). Once built, copy the directory _portal/build/usergrid-portal_ to _tomcat/webapps_.
+The Usergrid Console is an admin interface written in JavaScript that connects to your running Usergrid instance. For evaluation purposes, you can run it within Tomcat. Build it by following the steps [here](https://github.com/apache/usergrid/blob/master/portal/README.md). Once built, copy the directory _portal/build/usergrid-portal_ to _tomcat/webapps_.
 
 
 Login to the Usergrid Console & get started
