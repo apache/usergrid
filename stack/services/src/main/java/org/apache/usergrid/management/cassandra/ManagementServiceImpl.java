@@ -20,9 +20,12 @@ package org.apache.usergrid.management.cassandra;
 import com.google.common.base.Optional;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.inject.Injector;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
+import org.apache.usergrid.corepersistence.service.AggregationService;
+import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.locking.Lock;
@@ -31,6 +34,7 @@ import org.apache.usergrid.management.*;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -137,6 +141,9 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Autowired
     protected MailUtils mailUtils;
+
+    @Autowired
+    protected Injector injector;
 
     protected EncryptionService encryptionService;
 
@@ -1707,6 +1714,22 @@ public class ManagementServiceImpl implements ManagementService {
 
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
+    }
+
+    @Override
+    public long getApplicationSize(final UUID applicationId) {
+        AggregationServiceFactory aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
+        AggregationService aggregationService = aggregationServiceFactory.getAggregationService();
+        ApplicationScope applicationScope =CpNamingUtils.getApplicationScope(applicationId);
+        return aggregationService.sumAllCollections(applicationScope);
+    }
+
+    @Override
+    public long getCollectionSize(final UUID applicationId, final String collectionName) {
+        AggregationServiceFactory aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
+        AggregationService aggregationService = aggregationServiceFactory.getAggregationService();
+        ApplicationScope applicationScope =CpNamingUtils.getApplicationScope(applicationId);
+        return aggregationService.sum(applicationScope,CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(),collectionName));
     }
 
 
