@@ -50,10 +50,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -175,7 +172,9 @@ public class ApplicationResource extends AbstractContextResource {
         long size = management.getApplicationSize(this.applicationId);
         Map<String,Object> map = new HashMap<>();
         Map<String,Object> innerMap = new HashMap<>();
-        innerMap.put("application",size);
+        Map<String,Object> sumMap = new HashMap<>();
+        sumMap.put("sum",size);
+        innerMap.put("application",sumMap);
         map.put("aggregation",innerMap);
         response.setMetadata(map);
         return new JSONWithPadding( response, callback );
@@ -194,7 +193,9 @@ public class ApplicationResource extends AbstractContextResource {
         long size = management.getCollectionSize(this.applicationId ,collection_name);
         Map<String,Object> map = new HashMap<>();
         Map<String,Object> innerMap = new HashMap<>();
-        innerMap.put(collection_name,size);
+        Map<String,Object> sumMap = new HashMap<>();
+        sumMap.put("sum",size);
+        innerMap.put(collection_name,sumMap);
         map.put("aggregation",innerMap);
         response.setMetadata(map);
         return new JSONWithPadding( response, callback );
