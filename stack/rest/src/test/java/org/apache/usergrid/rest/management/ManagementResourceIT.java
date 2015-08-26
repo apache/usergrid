@@ -89,7 +89,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         data.clear();
         data.put( "oldpassword", "foo" );
         data.put( "newpassword", "test" );
-        management.users().user("test"+uuid).password().post(Entity.class,data);
+        management.users().user("test"+uuid).password().post(Entity.class, data);
     }
 
 
@@ -111,7 +111,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         Organization organization = new Organization(orgName,username,email,name,password,payload);
 
         Organization node = management().orgs().post(  organization );
-        management.token().get(clientSetup.getUsername(),clientSetup.getPassword());
+        management.token().get(clientSetup.getUsername(), clientSetup.getPassword());
 
         // check that the test admin cannot access the new org info
 
@@ -125,8 +125,8 @@ public class ManagementResourceIT extends AbstractRestIT {
             status = uie.getResponse().getClientResponseStatus();
         }
 
-        assertNotNull( status );
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertNotNull(status);
+        assertEquals(Status.UNAUTHORIZED, status);
 
         // this admin should have access to test org
         status = null;
@@ -137,7 +137,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             status = uie.getResponse().getClientResponseStatus();
         }
 
-        assertNull( status );
+        assertNull(status);
 
         //test getting the organization by org
 
@@ -149,7 +149,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             status = uie.getResponse().getClientResponseStatus();
         }
 
-        assertNull( status );
+        assertNull(status);
     }
 
 
@@ -238,10 +238,10 @@ public class ManagementResourceIT extends AbstractRestIT {
         //post follow
         Entity entity = this.app()
             .collection( "users" )
-            .entity( user )
-            .collection( "following" )
-            .collection( "users" )
-            .entity( followUser )
+            .entity(user)
+            .collection("following")
+            .collection("users")
+            .entity(followUser)
             .post();
     }
 
@@ -256,8 +256,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         activityPayload.put("actor", actorMap);
         Entity entity = this.app()
             .collection( "users" )
-            .entity( user )
-            .collection( "activities" )
+            .entity(user)
+            .collection("activities")
             .post( new Entity( activityPayload ) );
     }
 
@@ -306,6 +306,26 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertEquals( "Roles", roles.get("title").toString() );
         assertEquals(4, roles.size());
+
+    }
+
+    @Test
+    public void checkSizes() throws Exception {
+        final String appname = clientSetup.getAppName();
+        this.app().collection("testCollection").post(new Entity().chainPut("name","test"));
+        refreshIndex();
+        Entity size = management().orgs().org( clientSetup.getOrganizationName() ).app().addToPath(appname).addToPath("size").get();
+        Entity rolesSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("size/roles").get();
+        assertTrue(size != null);
+        assertTrue(rolesSize != null);
+        int sum =  (int)((LinkedHashMap)((LinkedHashMap)size.metadata().get("aggregation")).get("application")).get("sum");
+        int sumRoles = (int)((LinkedHashMap)((LinkedHashMap)rolesSize.metadata().get("aggregation")).get("roles")).get("sum");
+
+        assertTrue(size != null);
+        assertTrue(rolesSize != null);
+
+        assertNotEquals(sum,sumRoles);
+        assertTrue(sum>sumRoles);
     }
 
     @Test
