@@ -18,8 +18,8 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
-import org.apache.usergrid.helpers.Utils
-import org.apache.usergrid.settings.{Headers, Settings}
+import org.apache.usergrid.helpers.{Headers, Utils}
+import org.apache.usergrid.settings.Settings
 
 object GeoScenarios {
 

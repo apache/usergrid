@@ -19,7 +19,7 @@ package org.apache.usergrid.scenarios
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import io.gatling.http.request.StringBody
-import org.apache.usergrid.settings.Headers
+import org.apache.usergrid.helpers.Headers
 import org.apache.usergrid.settings.Settings
 
 
