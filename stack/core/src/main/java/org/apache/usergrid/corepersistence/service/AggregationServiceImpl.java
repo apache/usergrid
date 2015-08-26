@@ -72,10 +72,12 @@ public class AggregationServiceImpl implements AggregationService {
         final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexLocationStrategy);
         GraphManager graphManager = graphManagerFactory.createEdgeManager(applicationScope);
-        Long sum = ObservableTimer.time( MathObservable.sumLong(graphManager.getEdgeTypesFromSource(new SimpleSearchEdgeType(applicationScope.getApplication(), CpNamingUtils.EDGE_COLL_PREFIX, Optional.<String>absent()))
-                .map(type -> CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), type))
-                .map(edge -> entityIndex.getEntitySize(edge))
-        ), sumTimer).toBlocking().last();
+        Long sum = ObservableTimer.time(
+            MathObservable.sumLong(
+                graphManager.getEdgeTypesFromSource(new SimpleSearchEdgeType(applicationScope.getApplication(), CpNamingUtils.EDGE_COLL_PREFIX, Optional.<String>absent()))
+                    .map(type -> CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), type))
+                    .map(edge -> entityIndex.getEntitySize(edge))
+            ), sumTimer).toBlocking().last();
 
         return sum.longValue();
     }
