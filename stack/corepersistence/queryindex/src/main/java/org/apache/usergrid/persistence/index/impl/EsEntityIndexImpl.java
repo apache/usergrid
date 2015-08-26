@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -119,6 +120,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private final long queryTimeout;
     private final IndexBufferConsumer indexBatchBufferProducer;
     private final FailureMonitorImpl failureMonitor;
+    private final Timer aggregationTimer;
 
     private IndexCache aliasCache;
     private Timer mappingTimer;
@@ -153,8 +155,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         this.addTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.add");
         this.updateAliasTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.update_alias");
         this.mappingTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.create_mapping");
-        this.refreshIndexMeter = metricsFactory.getMeter( EsEntityIndexImpl.class, "index.refresh_index" );
-        this.searchTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "search" );
+        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class, "index.refresh_index");
+        this.searchTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "search");
+        this.aggregationTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "aggregations" );
 
     }
 
@@ -759,6 +762,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         SumBuilder sumBuilder = new SumBuilder(key);
         sumBuilder.field("entitySize");
         builder.addAggregation(sumBuilder);
+
         Observable<Number> o = Observable.from(builder.execute())
             .map(response -> {
                 Sum aggregation = (Sum) response.getAggregations().get(key);
@@ -768,7 +772,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                     return aggregation.getValue();
                 }
             });
-        Number val =  o.toBlocking().first();
+        Number val =   ObservableTimer.time(o,aggregationTimer).toBlocking().lastOrDefault(-1);
         return val.longValue();
     }
 
