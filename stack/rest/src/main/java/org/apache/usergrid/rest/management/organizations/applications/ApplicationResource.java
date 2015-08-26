@@ -50,10 +50,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -134,13 +131,13 @@ public class ApplicationResource extends AbstractContextResource {
         throws Exception {
 
         ApiResponse response = createApiResponse();
-        response.setAction( "get application client credentials" );
+        response.setAction("get application client credentials");
 
         ClientCredentialsInfo credentials =
                 new ClientCredentialsInfo( management.getClientIdForApplication( applicationId ),
                         management.getClientSecretForApplication( applicationId ) );
 
-        response.setCredentials( credentials );
+        response.setCredentials(credentials);
         return new JSONWithPadding( response, callback );
     }
 
@@ -157,12 +154,52 @@ public class ApplicationResource extends AbstractContextResource {
 
         ClientCredentialsInfo credentials =
                 new ClientCredentialsInfo( management.getClientIdForApplication( applicationId ),
-                        management.newClientSecretForApplication( applicationId ) );
+                        management.newClientSecretForApplication(applicationId) );
 
         response.setCredentials( credentials );
         return new JSONWithPadding( response, callback );
     }
 
+    @RequireOrganizationAccess
+    @GET
+    @Path("size")
+    public JSONWithPadding getApplicationSize(
+        @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "get application size for all entities" );
+        long size = management.getApplicationSize(this.applicationId);
+        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> innerMap = new HashMap<>();
+        Map<String,Object> sumMap = new HashMap<>();
+        sumMap.put("sum",size);
+        innerMap.put("application",sumMap);
+        map.put("aggregation",innerMap);
+        response.setMetadata(map);
+        return new JSONWithPadding( response, callback );
+    }
+
+    @RequireOrganizationAccess
+    @GET
+    @Path("size/{collection_name}")
+    public JSONWithPadding getCollectionSize(
+        @Context UriInfo ui,
+        @PathParam( "collection_name" ) String collection_name,
+        @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+        ApiResponse response = createApiResponse();
+        response.setAction("get collection size for all entities");
+        long size = management.getCollectionSize(this.applicationId ,collection_name);
+        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> innerMap = new HashMap<>();
+        Map<String,Object> sumMap = new HashMap<>();
+        sumMap.put("sum",size);
+        innerMap.put(collection_name,sumMap);
+        map.put("aggregation",innerMap);
+        response.setMetadata(map);
+        return new JSONWithPadding( response, callback );
+    }
 
     @POST
     @Path("sia-provider")

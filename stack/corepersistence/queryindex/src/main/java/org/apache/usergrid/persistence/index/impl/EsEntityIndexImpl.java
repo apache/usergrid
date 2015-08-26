@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -62,6 +63,10 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,6 +120,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private final long queryTimeout;
     private final IndexBufferConsumer indexBatchBufferProducer;
     private final FailureMonitorImpl failureMonitor;
+    private final Timer aggregationTimer;
 
     private IndexCache aliasCache;
     private Timer mappingTimer;
@@ -149,8 +155,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         this.addTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.add");
         this.updateAliasTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.update_alias");
         this.mappingTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "index.create_mapping");
-        this.refreshIndexMeter = metricsFactory.getMeter( EsEntityIndexImpl.class, "index.refresh_index" );
-        this.searchTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "search" );
+        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class, "index.refresh_index");
+        this.searchTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "search");
+        this.aggregationTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "aggregations" );
 
     }
 
@@ -424,7 +431,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
          and query Es directly for matches
 
          */
-        IndexValidationUtils.validateSearchEdge( edge );
+        IndexValidationUtils.validateSearchEdge(edge);
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
 
         SearchResponse searchResponse;
@@ -505,12 +512,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
 
-        FilterBuilder entityIdFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
-            IndexingUtils.entityId( entityId ) );
+        FilterBuilder entityIdFilter = FilterBuilders.termFilter(IndexingUtils.ENTITY_ID_FIELDNAME,
+            IndexingUtils.entityId(entityId));
 
-        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte( markedVersion );
+        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte(markedVersion);
 
-        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter,entityVersionFilter  );
+        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter, entityVersionFilter);
 
         srb.setPostFilter(andFilter);
 
@@ -570,7 +577,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
      * Completely delete an index.
      */
     public Observable deleteApplication() {
-        String idString = applicationId( applicationScope.getApplication() );
+        String idString = applicationId(applicationScope.getApplication());
         final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
         final String[] indexes = getIndexes();
         //Added For Graphite Metrics
@@ -731,6 +738,34 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         // this is bad, red alert!
         return Health.RED;
+    }
+
+
+    @Override
+    public long getEntitySize(final SearchEdge edge){
+        //"term":{"edgeName":"zzzcollzzz|roles"}
+        SearchRequestBuilder builder = searchRequestBuilderStrategyV2.getBuilder();
+        builder.setQuery(new TermQueryBuilder("edgeSearch",IndexingUtils.createContextName(applicationScope,edge)));
+        return  getEntitySizeAggregation(builder);
+    }
+
+    private long getEntitySizeAggregation( final SearchRequestBuilder builder ) {
+        final String key = "entitySize";
+        SumBuilder sumBuilder = new SumBuilder(key);
+        sumBuilder.field("entitySize");
+        builder.addAggregation(sumBuilder);
+
+        Observable<Number> o = Observable.from(builder.execute())
+            .map(response -> {
+                Sum aggregation = (Sum) response.getAggregations().get(key);
+                if(aggregation == null){
+                    return -1;
+                }else{
+                    return aggregation.getValue();
+                }
+            });
+        Number val =   ObservableTimer.time(o,aggregationTimer).toBlocking().lastOrDefault(-1);
+        return val.longValue();
     }
 
     @Override

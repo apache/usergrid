@@ -2615,7 +2615,8 @@ public class CpEntityManager implements EntityManager {
                 } );
             }
 
-             cpEntity = ecm .write( cpEntity ).toBlocking().last();
+             cpEntity = ecm.write( cpEntity ).toBlocking().last();
+            entity.setSize(cpEntity.getSize());
 
             if(logger.isDebugEnabled()) {
                 logger.debug( "Wrote {}:{} version {}", new Object[] {
@@ -2647,7 +2648,7 @@ public class CpEntityManager implements EntityManager {
 
             String collectionName = Schema.defaultCollectionName( eType );
             CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
-            cpr.addToCollection( collectionName, entity);
+            cpr.addToCollection( collectionName, entity );
 
             // Invoke counters
             incrementEntityCollection( collectionName, timestamp );

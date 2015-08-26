@@ -110,7 +110,7 @@ public class CpNamingUtils {
      * To be used only for searching DO NOT use for creation. Use the createCollectionEdge instead.
      */
     public static String getEdgeTypeFromCollectionName( String collectionName ) {
-        return ( EDGE_COLL_PREFIX + "|" + collectionName ).toLowerCase();
+        return ((collectionName.startsWith(EDGE_COLL_PREFIX) ? collectionName  : EDGE_COLL_PREFIX + "|" + collectionName) ).toLowerCase();
     }
 
     /**
