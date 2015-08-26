@@ -18,8 +18,9 @@ package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import org.apache.usergrid.helpers.Headers
 
-import org.apache.usergrid.settings.{Headers, Settings}
+import org.apache.usergrid.settings.Settings
 
 
 /**

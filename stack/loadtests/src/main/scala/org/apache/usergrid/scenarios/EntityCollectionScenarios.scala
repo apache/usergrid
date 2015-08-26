@@ -22,8 +22,8 @@ import io.gatling.http.Predef._
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums.{EndConditionType, AuthType}
 import org.apache.usergrid.helpers.Extractors._
-import org.apache.usergrid.helpers.Utils
-import org.apache.usergrid.settings.{Headers, Settings}
+import org.apache.usergrid.helpers.{Headers, Utils}
+import org.apache.usergrid.settings.Settings
 
 /**
  * Provides CRUD methods for custom entities

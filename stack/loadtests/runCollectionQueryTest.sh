@@ -57,7 +57,7 @@ SCENARIO_TYPE=getAllByCursor
 mvn compile
 
 #Execute the test
-mvn gatling:execute -Dorg=usergrid \
+mvn gatling:execute \
 -DbaseUrl=${URL} \
 -DadminUser=${ADMIN_USER}  \
 -DadminPassword=${ADMIN_PASSWORD}  \

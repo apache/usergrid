@@ -45,8 +45,6 @@ object ConfigProperties {
   val Collection = "collection"
   val RampTime = "rampTime"
   val Throttle = "throttle"
-  val RpsTarget = "rpsTarget"
-  val RpsRampTime = "rpsRampTime"
   val HoldDuration = "holdDuration"
   val PushNotifier = "pushNotifier"
   val PushProvider = "pushProvider"
@@ -84,7 +82,7 @@ object ConfigProperties {
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
-    NumDevices,Collection,RampTime,Throttle,RpsTarget,RpsRampTime,HoldDuration,PushNotifier,PushProvider,EntityPrefix,
+    NumDevices,Collection,RampTime,Throttle,HoldDuration,PushNotifier,PushProvider,EntityPrefix,
     EntityType,EntitySeed,SearchLimit,SearchQuery,EndConditionType,EndMinutes,EndRequestCount,OrgCreationUsername,
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
     UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
@@ -122,8 +120,6 @@ object ConfigProperties {
         case Collection => "customentities"
         case RampTime => 0
         case Throttle => 50
-        case RpsTarget => 50
-        case RpsRampTime => 10
         case HoldDuration => 300
         case PushNotifier => "loadNotifier"
         case PushProvider => "noop"
@@ -143,9 +139,9 @@ object ConfigProperties {
         case UpdateValue => new Date().toString
         case EntityWorkerCount => 0
         case EntityWorkerNum => 0
-        case UuidFilename => "dummyUuid.csv"
-        case AuditUuidFilename => "dummyAuditUuid.csv"
-        case FailedUuidFilename => "/tmp/dummy.csv"
+        case UuidFilename => "/tmp/dummyUuid.csv"
+        case AuditUuidFilename => "/tmp/dummyAuditUuid.csv"
+        case FailedUuidFilename => "/tmp/dummyFailedUuid.csv"
         case SandboxCollection => false
         case PurgeUsers => 100
         case RetryCount => 5

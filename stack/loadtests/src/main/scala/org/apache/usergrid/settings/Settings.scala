@@ -138,8 +138,6 @@ object Settings {
 
   val rampTime:Int = initIntSetting(ConfigProperties.RampTime) // in seconds
   val throttle:Int = initIntSetting(ConfigProperties.Throttle) // in seconds
-  val rpsTarget:Int = initIntSetting(ConfigProperties.RpsTarget) // requests per second target
-  val rpsRampTime:Int = initIntSetting(ConfigProperties.RpsRampTime) // in seconds
   val holdDuration:Int = initIntSetting(ConfigProperties.HoldDuration) // in seconds
 
   // Geolocation settings
