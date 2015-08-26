@@ -49,7 +49,7 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
         this.coreIndexFig = coreIndexFig;
         this.applicationScope = CpNamingUtils.getApplicationScope( CpNamingUtils.getManagementApplicationId().getUuid());
         //remove usergrid
-        this.indexName = clusterFig.getClusterName() + "_" + cassandraFig .getApplicationKeyspace().toLowerCase() + "_" + coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
+        this.indexName = clusterFig.getClusterName().toLowerCase() + "_" + coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
         this.alias = new ManagementIndexAlias(indexFig,indexName);
     }
     @Override
