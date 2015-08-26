@@ -74,4 +74,6 @@ public interface MvccEntity extends EntityVersion{
      * @return
      */
     long getSize();
+
+    void setSize(long size);
 }

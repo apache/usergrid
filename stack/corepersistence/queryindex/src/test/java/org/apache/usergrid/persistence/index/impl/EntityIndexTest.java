@@ -1214,48 +1214,6 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( 0, noMatchesContainsOrResults.size() );
     }
 
-    @Test
-    public void testSize(){
-        final String type = UUID.randomUUID().toString();
-
-        Id ownerId = new SimpleId( type );
-
-
-        final Entity first = new Entity( "search" );
-
-        first.setField( new StringField( "string", "I ate a sammich" ) );
-        first.setSize(100);
-
-        EntityUtils.setVersion( first, UUIDGenerator.newTimeUUID() );
-
-
-        final Entity second = new Entity( "search" );
-        second.setSize(100);
-
-        second.setField( new StringField( "string", "I drank a beer" ) );
-
-
-        EntityUtils.setVersion( second, UUIDGenerator.newTimeUUID() );
-
-
-        EntityIndexBatch batch = entityIndex.createBatch();
-
-
-        //get ordering, so 2 is before 1 when both match
-        IndexEdge indexScope1 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 10 );
-        batch.index( indexScope1, first );
-
-
-        IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
-        batch.index( indexScope2, second);
-
-
-        batch.execute().toBlocking().last();
-        entityIndex.refreshAsync().toBlocking().first();
-        long size = entityIndex.getEntitySize();
-        assertTrue( size >= 200 );
-
-    }
 
     @Test
     public void testSizeByEdge(){
@@ -1295,7 +1253,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.execute().toBlocking().last();
         entityIndex.refreshAsync().toBlocking().first();
-        long size = entityIndex.getEntitySize(type);
+        long size = entityIndex.getEntitySize(new SearchEdgeImpl(ownerId,type, SearchEdge.NodeType.SOURCE));
         assertTrue( size == 100 );
 
     }

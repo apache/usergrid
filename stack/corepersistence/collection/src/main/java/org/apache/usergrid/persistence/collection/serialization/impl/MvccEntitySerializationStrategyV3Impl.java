@@ -111,8 +111,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final UUID version = entity.getVersion();
 
         Optional<EntityMap> map =  EntityMap.fromEntity(entity.getEntity());
-        return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE,
-                entitySerializer.toByteBuffer( new EntityWrapper(entityId,entity.getVersion(), entity.getStatus(), map.isPresent() ? map.get() : null, 0 ) ) ) );
+        ByteBuffer byteBuffer = entitySerializer.toByteBuffer(
+            new EntityWrapper(entityId,entity.getVersion(), entity.getStatus(), map.isPresent() ? map.get() : null, 0 )
+        );
+
+        entity.setSize(byteBuffer.array().length);
+
+        return doWrite( applicationScope, entityId, version, colMutation -> colMutation.putColumn( COL_VALUE, byteBuffer ) );
     }
 
 

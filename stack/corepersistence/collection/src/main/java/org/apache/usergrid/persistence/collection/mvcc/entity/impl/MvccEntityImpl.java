@@ -93,6 +93,13 @@ public class MvccEntityImpl implements MvccEntity {
         return size;
     }
 
+    @Override
+    public void setSize(long size) {
+        this.size = size;
+        if(this.entity.isPresent()){
+            this.entity.get().setSize(size);
+        }
+    }
 
     @Override
     public boolean equals( final Object o ) {

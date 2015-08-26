@@ -43,11 +43,11 @@ public class SimpleSearchEdgeType implements SearchEdgeType {
      * @param prefix The optional prefix
      * @param last The optional last
      */
-    public SimpleSearchEdgeType( final Id node, final String prefix, final String last ) {
+    public SimpleSearchEdgeType( final Id node, final String prefix, final Optional<String> last ) {
         ValidationUtils.verifyIdentity( node );
         this.node = node;
         this.prefix =  Optional.fromNullable( prefix );
-        this.last = Optional.fromNullable( last );
+        this.last = last == null ? Optional.<String>absent() : last;
     }
 
 

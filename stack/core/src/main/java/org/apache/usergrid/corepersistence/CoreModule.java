@@ -16,7 +16,9 @@
 package org.apache.usergrid.corepersistence;
 
 
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.apache.usergrid.corepersistence.index.*;
+import org.apache.usergrid.corepersistence.service.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
@@ -34,10 +36,6 @@ import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
-import org.apache.usergrid.corepersistence.service.CollectionService;
-import org.apache.usergrid.corepersistence.service.CollectionServiceImpl;
-import org.apache.usergrid.corepersistence.service.ConnectionService;
-import org.apache.usergrid.corepersistence.service.ConnectionServiceImpl;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
@@ -130,7 +128,7 @@ public class CoreModule  extends AbstractModule {
          *****/
 
 
-        bind( IndexService.class ).to( IndexServiceImpl.class );
+        bind( IndexService.class ).to(IndexServiceImpl.class);
 
         //bind the event handlers
         bind( EventBuilder.class).to( EventBuilderImpl.class );
@@ -140,9 +138,13 @@ public class CoreModule  extends AbstractModule {
         bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
 
 
-        bind( ReIndexService.class).to( ReIndexServiceImpl.class );
+        bind( ReIndexService.class).to(ReIndexServiceImpl.class);
 
-        bind( IndexLocationStrategyFactory.class ).to( IndexLocationStrategyFactoryImpl.class );
+        install(new FactoryModuleBuilder()
+            .implement(AggregationService.class, AggregationServiceImpl.class)
+            .build(AggregationServiceFactory.class));
+
+        bind(IndexLocationStrategyFactory.class).to( IndexLocationStrategyFactoryImpl.class );
 
         install(new GuicyFigModule(IndexProcessorFig.class));
 
