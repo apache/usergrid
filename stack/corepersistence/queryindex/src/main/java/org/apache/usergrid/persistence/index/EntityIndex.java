@@ -68,18 +68,13 @@ public interface EntityIndex extends CPManager {
      */
     Health getIndexHealth();
 
-    /**
-     * get total entity size
-     * @return
-     */
-    long getEntitySize();
 
     /**
      * get total entity size by an edge ->   "term":{"edgeName":"zzzcollzzz|roles"}
      * @param edge
      * @return
      */
-    long getEntitySize(final String edge);
+    long getEntitySize(final SearchEdge edge);
 
     /**
      * Initialize the index if necessary.  This is an idempotent operation and should not create an index

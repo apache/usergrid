@@ -740,24 +740,16 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return Health.RED;
     }
 
-    @Override
-    public long getEntitySize(){
-
-
-        SearchRequestBuilder builder = searchRequestBuilderStrategyV2.getBuilder();
-        return  getEntitySizeAggregation(builder);
-    }
-
 
     @Override
-    public long getEntitySize(final String edge){
+    public long getEntitySize(final SearchEdge edge){
         //"term":{"edgeName":"zzzcollzzz|roles"}
         SearchRequestBuilder builder = searchRequestBuilderStrategyV2.getBuilder();
-        builder.setQuery(new TermQueryBuilder("edgeName",edge));
+        builder.setQuery(new TermQueryBuilder("edgeSearch",IndexingUtils.createContextName(applicationScope,edge)));
         return  getEntitySizeAggregation(builder);
     }
 
-    private long getEntitySizeAggregation(  SearchRequestBuilder builder) {
+    private long getEntitySizeAggregation( final SearchRequestBuilder builder ) {
         final String key = "entitySize";
         SumBuilder sumBuilder = new SumBuilder(key);
         sumBuilder.field("entitySize");

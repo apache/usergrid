@@ -202,7 +202,7 @@ public class EdgeTestUtils {
      * @return
      */
     public static SearchEdgeType createSearchEdge( final Id sourceId, final String last ) {
-        return new SimpleSearchEdgeType( sourceId, null, last );
+        return new SimpleSearchEdgeType( sourceId, null, Optional.fromNullable(last) );
     }
 
 
