@@ -62,6 +62,10 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -424,7 +428,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
          and query Es directly for matches
 
          */
-        IndexValidationUtils.validateSearchEdge( edge );
+        IndexValidationUtils.validateSearchEdge(edge);
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
 
         SearchResponse searchResponse;
@@ -505,12 +509,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
 
-        FilterBuilder entityIdFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_ID_FIELDNAME,
-            IndexingUtils.entityId( entityId ) );
+        FilterBuilder entityIdFilter = FilterBuilders.termFilter(IndexingUtils.ENTITY_ID_FIELDNAME,
+            IndexingUtils.entityId(entityId));
 
-        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte( markedVersion );
+        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte(markedVersion);
 
-        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter,entityVersionFilter  );
+        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter, entityVersionFilter);
 
         srb.setPostFilter(andFilter);
 
@@ -570,7 +574,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
      * Completely delete an index.
      */
     public Observable deleteApplication() {
-        String idString = applicationId( applicationScope.getApplication() );
+        String idString = applicationId(applicationScope.getApplication());
         final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
         final String[] indexes = getIndexes();
         //Added For Graphite Metrics
@@ -731,6 +735,41 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         // this is bad, red alert!
         return Health.RED;
+    }
+
+    @Override
+    public long getEntitySize(){
+
+
+        SearchRequestBuilder builder = searchRequestBuilderStrategyV2.getBuilder();
+        return  getEntitySizeAggregation(builder);
+    }
+
+
+    @Override
+    public long getEntitySize(final String edge){
+        //"term":{"edgeName":"zzzcollzzz|roles"}
+        SearchRequestBuilder builder = searchRequestBuilderStrategyV2.getBuilder();
+        builder.setQuery(new TermQueryBuilder("edgeName",edge));
+        return  getEntitySizeAggregation(builder);
+    }
+
+    private long getEntitySizeAggregation(  SearchRequestBuilder builder) {
+        final String key = "entitySize";
+        SumBuilder sumBuilder = new SumBuilder(key);
+        sumBuilder.field("entitySize");
+        builder.addAggregation(sumBuilder);
+        Observable<Number> o = Observable.from(builder.execute())
+            .map(response -> {
+                Sum aggregation = (Sum) response.getAggregations().get(key);
+                if(aggregation == null){
+                    return -1;
+                }else{
+                    return aggregation.getValue();
+                }
+            });
+        Number val =  o.toBlocking().first();
+        return val.longValue();
     }
 
     @Override
