@@ -1,4 +1,4 @@
-# Admin user$
+# Admin user
 An admin user has full access to perform any operation on all organization accounts of which the admin user is a member. Using the API Services BaaS API, you can create, update, or retrieve an admin user. You can also set or reset an admin user's password, activite or reactivate an admin user, and get an admin user's activity feed.
 
 In addition, you can add,  retrieve, or remove an admin user from an organization. For information on these organization-related operations, see [Organization](organization.html).

@@ -4,10 +4,10 @@ The Usergrid data store is backed by Cassandra, an open source distributed DBMS.
 
 <!-- workaround a Sphinx bug -->
 <div class="admonition note"> <p class="first admonition-title">Note</p> <p class="last">
-Usergrid is not a relational database. Optimizing for performance on a non-relational database like Cassandra differs a bit from relational databases. For more information, see Optimizing access to your Usergrid data store.</p> </div>
+Usergrid is not a relational database. Optimizing for performance on a non-relational database like Cassandra differs a bit from relational databases. For more information, see [Optimizing access to your Usergrid data store](../data-storage/optimizing-access.html).</p> </div>
 
 
-Cassandra is specifically designed to support applications that need flexibility and high scalability, particularly web and mobile applications. Usergrid client applications write and read data formatted as JavaScript Object Notation (JSON). (Usergrid provides SDKs through which client apps can do much of this work in their native language. For more information, see Usergrid SDKs.)
+Cassandra is specifically designed to support applications that need flexibility and high scalability, particularly web and mobile applications. Usergrid client applications write and read data formatted as JavaScript Object Notation (JSON). (Usergrid provides SDKs through which client apps can do much of this work in their native language. For more information, see [Usergrid SDKs](../sdks/tbd.html).)
 
 With Cassandra as the underlying DBMS, apps benefit from:
 
@@ -20,10 +20,10 @@ If you have experience with relational databases and are unfamiliar with "NoSQL"
 
 <table class="usergrid-table">
 <tr>
-    <td></td>
-    <td>RDBMS</td>
-    <td>Cassandra</td>
-    <td>Usergrid</td>
+    <th></th>
+    <th>RDBMS</th>
+    <th>Cassandra</th>
+    <th>Usergrid</th>
 </tr>
 <tr>
     <td>Each tuple is modeled as</td>

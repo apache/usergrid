@@ -51,7 +51,7 @@ This SDK is open source, and we welcome any contributions!
 ##Comments / Questions
 Please feel free to send comments or questions to the various
 community communication channels
-<http://usergrid.incubator.apache.org/community/>
+<http://usergrid.apache.org/community/>
 
 ##Overview
 This open source SDK simplifies writing PHP applications that connect to App Services. The repo is located here:
@@ -62,7 +62,7 @@ You can download the release artfacts via the Apache Mirroring newtwork.
 
 A wealth of Usergrid documentation can be found on the site
 
-<http://usergrid.incubator.apache.org/docs/>
+<http://usergrid.apache.org/docs/>
 
 
 ##About the samples
@@ -367,7 +367,7 @@ We welcome your enhancements!
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
 ##More information
-For more information on Usergrid, visit <http://usergrid.incubator.apache.org>.
+For more information on Usergrid, visit <http://usergrid.apache.org>.
 
 ## Copyright
 Licensed to the Apache Software Foundation (ASF) under one or more

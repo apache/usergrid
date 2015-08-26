@@ -9,7 +9,7 @@ __NOTE__: Beware that Usergrid 2 is UNRELEASED SOFTWARE
 * [Tomcat 7+](https://tomcat.apache.org/download-70.cgi)
 * [Cassandra 1.2.1*](http://cassandra.apache.org/download/)
 * [ElasticSearch 1.4+](https://www.elastic.co/downloads/elasticsearch) 
-* [Usergrid 2.0](https://github.com/apache/incubator-usergrid/tree/two-dot-o)
+* [Usergrid 2.0](https://github.com/apache/usergrid/tree/two-dot-o)
 
 ##Running
 
@@ -50,7 +50,7 @@ The stack is now ready to be queried against, but to get the most out of it you'
 [nodejs 0.10+](https://nodejs.org/download/) 
 
 1. Make sure you've installed node.js above. Any version above .10 or .10 should work fine.
-2. Navigate to ```incubator-usergrid/portal```.
+2. Navigate to ```usergrid/portal```.
 3. Open config.js and make sure the override URL is pointing to your local tomcat.
 4. Now in the portal folder run the following command ```./build.sh dev``` 
 5. The portal should automatically open ready for use!

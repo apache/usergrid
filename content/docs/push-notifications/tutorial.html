@@ -1,0 +1,666 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial: Push notifications sample app &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Registering with a notification service" href="registering.html"/>
+        <link rel="prev" title="Getting started with push notifications" href="getting-started.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial: Push notifications sample app</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#before-you-begin">Before you begin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-1-download-a-sample-app">Step 1: Download a sample app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2-register-with-a-notification-service-and-generate-a-certificate-key">Step 2: Register with a notification service and generate a certificate/key</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-3-create-a-notifier">Step 3: Create a notifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-4-configure-and-run-the-sample-app">Step 4: Configure and run the sample app</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ios-dev-setup">iOS Dev Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#phonegap-ios-dev-setup">PhoneGap iOS Dev Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#about-ios-provisioning-profiles">About iOS provisioning profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#android-dev-setup">Android Dev Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#phonegap-android-dev-setup">PhoneGap Android Dev Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#more-about-phonegap">More about PhoneGap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#step-5-review-the-data-entities-created-by-the-sample-app">Step 5: Review the data entities created by the sample app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-6-send-additional-push-notifications-using-other-usergrid-tools">Step 6: Send additional push notifications using other Usergrid tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#send-a-push-notification-directly-via-the-push-notifications-api">Send a push notification directly via the push notifications API</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Tutorial: Push notifications sample app</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/push-notifications/tutorial.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial-push-notifications-sample-app">
+<h1>Tutorial: Push notifications sample app<a class="headerlink" href="#tutorial-push-notifications-sample-app" title="Permalink to this headline">¶</a></h1>
+<p>In this tutorial, you&#8217;ll use a sample app (iOS, Android, or PhoneGap) to
+send yourself a push notification with the Usergrid push notification
+API. You&#8217;ll register with a push notification services (Apple APNs or
+Google GCM) to create the required security certificate or key, create
+the required Usergrid notifier to send a message, then modify, compile
+and run the sample app to see push notifications in action.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+For an overview of how to set up push notifications, including<p>troubleshooting tips, see <a class="reference external" href="adding-push-support.html">Adding push notifications
+support</a>.</p>
+</p></div><div class="section" id="before-you-begin">
+<h2>Before you begin<a class="headerlink" href="#before-you-begin" title="Permalink to this headline">¶</a></h2>
+<p>Before you can add support for push notifications, be sure that you&#8217;re
+set up for the requirements described in Adding push notifications
+support.</p>
+</div>
+<div class="section" id="step-1-download-a-sample-app">
+<h2>Step 1: Download a sample app<a class="headerlink" href="#step-1-download-a-sample-app" title="Permalink to this headline">¶</a></h2>
+<p>Sample push notification apps are included in the /samples directory of
+the following platform SDKs and plugins:</p>
+<ul class="simple">
+<li>Native iOS <a class="reference external" href="http://www.apigee.com/docs/content/ios-sdk-redirect">Download the
+SDK</a></li>
+<li>Native Android <a class="reference external" href="http://www.apigee.com/docs/content/android-sdk-redirect">Download the
+SDK</a></li>
+<li>PhoneGap iOS &amp; Android (HTML5) [Download the
+SDK](<a class="reference external" href="http://www.apigee.com/docs/content/javascript-sdk-redirect">http://www.apigee.com/docs/content/javascript-sdk-redirect</a></li>
+</ul>
+<p>To begin this tutorial, download the sample app for the platform of your
+choice.</p>
+<p><strong>A note to PhoneGap developers</strong>: PhoneGap requires a plugin to enable
+push notifications. The plugin is included in the sample apps in the
+JavaScript SDK. For new PhoneGap applications, <a class="reference external" href="https://github.com/phonegap-build/PushPlugin">download the PhoneGap
+push plugin</a>.</p>
+</div>
+<div class="section" id="step-2-register-with-a-notification-service-and-generate-a-certificate-key">
+<h2>Step 2: Register with a notification service and generate a certificate/key<a class="headerlink" href="#step-2-register-with-a-notification-service-and-generate-a-certificate-key" title="Permalink to this headline">¶</a></h2>
+<p>To send push notifications you must register your app with the push
+notification service that corresponds to your app&#8217;s platform. Once
+registered, the service will provide you with a certificate or key that
+you will provide when creating an Usergrid notifier.</p>
+<p>For a full walkthrough of how to register an app with a notification
+service and generate the necessary certificate/key, see <a class="reference external" href="registration.html">Registering
+with a notification service</a>.</p>
+</div>
+<div class="section" id="step-3-create-a-notifier">
+<h2>Step 3: Create a notifier<a class="headerlink" href="#step-3-create-a-notifier" title="Permalink to this headline">¶</a></h2>
+<p>Notifiers are entities that carry your push notifications to a
+notification service. Once a notification service has verified that your
+notifier contains valid credentials, it will deliver your push
+notification to the devices of your app&#8217;s users.</p>
+<p>For information on how to use the admin portal to create a notifier, see
+<a class="reference external" href="creating-notifiers.html">Creating notifiers</a>.</p>
+</div>
+<div class="section" id="step-4-configure-and-run-the-sample-app">
+<h2>Step 4: Configure and run the sample app<a class="headerlink" href="#step-4-configure-and-run-the-sample-app" title="Permalink to this headline">¶</a></h2>
+<p>In this step, you&#8217;ll open your sample app of choice in your IDE and
+configure it. The Android sample app can be run with an emulator,
+included in the Android Developer Tools. The iOS sample app must be run
+on an actual iOS device.</p>
+<p>The following sections provide platform-specific guidance for setting up
+and running the samples. However, this content assumes that you
+understand your development environment well enough to configure and
+work with projects.</p>
+<div class="section" id="ios-dev-setup">
+<h3>iOS Dev Setup<a class="headerlink" href="#ios-dev-setup" title="Permalink to this headline">¶</a></h3>
+<p>To configure and run the Native iOS push notification sample app, do the
+following:</p>
+<ol class="arabic simple">
+<li>Open the iOS sample app with XCode by opening its .xcodeproj file.</li>
+<li>Make the following changes to <strong>/Push Test/AppDelegate.m</strong>:</li>
+</ol>
+<ul class="simple">
+<li><strong>orgName</strong>: Your Apigee organization.</li>
+<li><strong>appName</strong>: The app in your organization where you created the
+notifier. (For the sample, make sure it&#8217;s &#8220;sandbox&#8221;.)</li>
+<li><strong>notifier</strong>: Name of the notifier you created. (For the sample, make
+sure it&#8217;s &#8220;appledev&#8221;.).</li>
+</ul>
+<ol class="arabic simple" start="3">
+<li>Plug your iOS device into your development machine.</li>
+<li>In Xcode, select <strong>Window &gt; Organizer</strong> to open the Xcode Organizer.</li>
+<li>Under <strong>Devices</strong>, select the device you plugged in, then click
+<strong>Add to Member Center</strong>. You may be prompted to log in with the
+Apple ID associated with your Apple Developer account.</li>
+<li>If prompted, select a Development Team to use for provisioning. This
+will be a team you&#8217;ve registered at the Apple developer portal.</li>
+<li>Log in to the <a class="reference external" href="https://developer.apple.com/">Apple Developer
+portal</a> and create a provisioning
+profile that includes the App ID you chose when you registered the
+sample app with Apple APNs. For more information on how to create a
+provisioning profile, see &#8220;About provisioning profiles&#8221; below.</li>
+<li>Download the profile and add it into Xcode Organizer, in the
+Provisioning Profiles group under your plugged-in device.</li>
+<li>Close the Organizer.</li>
+<li>In Xcode, select the Project Navigator, then select the project root
+folder.</li>
+<li>In the <strong>General</strong> tab, in the <strong>Bundle Identifer</strong> box, enter the
+App ID associated with your provisioning profile.</li>
+<li>In the <strong>Build Settings</strong> tab, under <strong>Deployment</strong>, for the <strong>iOS
+Deployment Target</strong> select the iOS version on your connected device.
+The version is displayed in the Xcode Organizer.</li>
+<li>In the <strong>Build Settings</strong> tab, under <strong>Code Signing</strong>, under <strong>Code
+Signing Identity &gt; Debug</strong>, select the Apple signing certificate
+corresponding to your developer identity.</li>
+</ol>
+<img alt="../_images/iospushsettings.png" src="../_images/iospushsettings.png" />
+<ol class="arabic simple" start="14">
+<li>Click <strong>Run</strong> to launch the sample on your iOS device.</li>
+<li>When the &#8220;codesign wants to sign using key in your keychain.&#8221; dialog
+is displayed, click <strong>Allow</strong>.</li>
+<li>The project is now built, and the app is installed on your device.
+The first time you run the push sample app, your device will ask
+permission to allow push notifications. Tap <strong>OK</strong>.</li>
+</ol>
+<img alt="../_images/iospushauth.png" src="../_images/iospushauth.png" />
+<ol class="arabic simple" start="17">
+<li>In the app, tap the <strong>push to this device</strong> button to send yourself
+a push notification. If you have configured your notification to go
+to multiple devices, tap the <strong>push to all devices</strong> button to send
+the push notification to all devices.</li>
+</ol>
+<img alt="../_images/iospushfinal.png" src="../_images/iospushfinal.png" />
+</div>
+<div class="section" id="phonegap-ios-dev-setup">
+<h3>PhoneGap iOS Dev Setup<a class="headerlink" href="#phonegap-ios-dev-setup" title="Permalink to this headline">¶</a></h3>
+<p>To configure and run the PhoneGap iOS push notification sample app, do
+the following:</p>
+<ol class="arabic simple">
+<li>Open the iOS PhoneGap sample app with Xcode by opening its .xcodeproj
+file.</li>
+<li>Make the following changes in <strong>/www/js/index.js</strong>:</li>
+</ol>
+<ul class="simple">
+<li><strong>orgName</strong>: Your Apigee organization.</li>
+<li><strong>appName</strong>: The app in your organization where you created the
+notifier. (For the sample, make sure it&#8217;s &#8220;sandbox&#8221;.)</li>
+<li><strong>notifier</strong>: Name of the notifier you created.</li>
+</ul>
+<ol class="arabic simple" start="3">
+<li>Plug your iOS device into your development machine.</li>
+<li>In Xcode, select <strong>Window &gt; Organizer</strong> to open the Xcode Organizer.</li>
+<li>Under <strong>Devices</strong>, select the device you plugged in, then click
+<strong>Add to Member Center</strong>. You may be prompted to log in with the
+Apple ID associated with your Apple Developer account.</li>
+<li>If prompted, select a Development Team to use for provisioning. This
+will be a team you&#8217;ve registered at the Apple developer portal.</li>
+<li>Log in to the <a class="reference external" href="https://developer.apple.com/">Apple Developer
+portal</a> and create a provisioning
+profile that includes the App ID you chose when you registered the
+sample app with Apple APNs. For more information on how to create a
+provisioning profile, see &#8220;About provisioning profiles&#8221; below.</li>
+<li>Download the profile and add it into Xcode Organizer, in the
+Provisioning Profiles group under your plugged-in device.</li>
+<li>Close the Organizer.</li>
+<li>In Xcode, select the Project Navigator, then select the project root
+folder.</li>
+<li>In the <strong>General</strong> tab, in the <strong>Bundle Identifer</strong> box, enter the
+App ID associated with your provisioning profile.</li>
+<li>In the <strong>Build Settings</strong> tab, under <strong>Deployment</strong>, for the <strong>iOS
+Deployment Target</strong> select the iOS version on your connected device.
+The version is displayed in the Xcode Organizer.</li>
+<li>In the <strong>Build Settings</strong> tab, under <strong>Code Signing</strong>, under <strong>Code
+Signing Identity &gt; Debug</strong>, select the Apple signing certificate
+corresponding to your developer identity.</li>
+</ol>
+<img alt="../_images/iospgsettings.png" src="../_images/iospgsettings.png" />
+<ol class="arabic simple" start="14">
+<li>At the top of the IDE, ensure that the name for your plugged in
+device is displayed next to the target name, then click the Run
+button to launch the sample on your iOS device.</li>
+<li>If the &#8220;codesign wants to sign using key in your keychain&#8221; dialog is
+displayed, click <strong>Allow</strong>.</li>
+<li>The project is now built, and the app is installed on your device.
+The first time you run the push sample app, your device will ask
+permission to allow push notifications. Tap OK.</li>
+<li>In the app, tap the <strong>Send a push with Phonegap!</strong> button to send
+yourself a push notification.</li>
+</ol>
+<img alt="../_images/iospgapp.png" src="../_images/iospgapp.png" />
+</div>
+<div class="section" id="about-ios-provisioning-profiles">
+<h3>About iOS provisioning profiles<a class="headerlink" href="#about-ios-provisioning-profiles" title="Permalink to this headline">¶</a></h3>
+<p>For iOS app testing, you need a provisioning profile that&#8217;s associated
+with an Apple ID. You set up the provisioning profile in the Apple
+developer portal, download the profile, and import it into Xcode.</p>
+<p>To set up a provisioning profile, you need to create an &#8220;iOS App
+Development&#8221; certificate in the Apple developer portal. For example, in
+the Apple APNs setup earlier in this tutorial, you created a certificate
+in the Apple developer portal to be used for push notifications.
+However, you won&#8217;t be able to create a provisioning portal with just
+that certificate. You also need to create an &#8220;iOS App Development&#8221;
+certificate (the configuration settings don&#8217;t matter), as shown in the
+following image.</p>
+<img alt="../_images/iospgcert.png" src="../_images/iospgcert.png" />
+<p>After you create an iOS App Development certificate, you can create a
+provisioning profile that includes your App ID/certificate for push
+notifications.</p>
+</div>
+<div class="section" id="android-dev-setup">
+<h3>Android Dev Setup<a class="headerlink" href="#android-dev-setup" title="Permalink to this headline">¶</a></h3>
+<p>To configure and run the native Android push notification sample app, do
+the following:</p>
+<ol class="arabic simple">
+<li>Make sure you have the latest Android SDK installed in your IDE, and
+that Android APIs have been installed via the Android SDK Manager.</li>
+<li>Import the native Android sample app project into your IDE</li>
+<li>Modify the following in <strong>/src/com.ganyo.pushtest/Settings.java</strong>:</li>
+</ol>
+<ul class="simple">
+<li><strong>GCM_SENDER_ID</strong>: Your Google Cloud Messaging (GCM) project
+number, as described in the Tutorial: Push notifications sample app.</li>
+<li><strong>NOTIFIER</strong>: Name of your notifier. (For the sample, make sure it&#8217;s
+the name of the notifier you created.)</li>
+<li><strong>ORG</strong>: Your Apigee organization.</li>
+<li><strong>APP</strong>: The app in your organization where you created the notifier.
+(For the sample, make sure it&#8217;s &#8220;sandbox&#8221;.)</li>
+<li><strong>USER</strong> and <strong>PASSWORD</strong>: Optional. If you created your notifier in
+an app other than &#8220;sandbox&#8221; (which doesn&#8217;t require authentication),
+enter the username and password of one of your Usergrid admin users.</li>
+</ul>
+<ol class="arabic simple" start="4">
+<li>In AndroidManifest.xml, be sure the proper Android permissions are
+included, such as READ_PHONE_STATE and VIBRATE.</li>
+<li>In your project properties, go to <strong>Java Build Path &gt; Libraries</strong> and
+add all the JAR files from the project&#8217;s /libs directory.</li>
+<li>In the <strong>Order and Export</strong> tab, move the JARs to the top of the list
+and select all the check boxes. Make sure the order and selections
+match the following image:</li>
+</ol>
+<img alt="../_images/assettings.png" src="../_images/assettings.png" />
+<ol class="arabic simple" start="7">
+<li>If you&#8217;re using an emulator, configure the emulator to use the Google
+APIs Level 16 target.</li>
+</ol>
+<img alt="../_images/asemu.png" src="../_images/asemu.png" />
+<ol class="arabic simple" start="8">
+<li>Run the project as an Android Application. The IDE should compile the
+project and install the app on your device.</li>
+<li>Press the button on the app to send yourself a push notification.</li>
+</ol>
+<img alt="../_images/asapp.png" src="../_images/asapp.png" />
+</div>
+<div class="section" id="phonegap-android-dev-setup">
+<h3>PhoneGap Android Dev Setup<a class="headerlink" href="#phonegap-android-dev-setup" title="Permalink to this headline">¶</a></h3>
+<p>To configure and run the PhoneGap Android push notification sample app,
+do the following:</p>
+<ol class="arabic simple">
+<li>Make sure you have the latest Android SDK installed in your IDE, and
+that Android APIs have been installed via the Android SDK Manager.</li>
+<li>Import the PhoneGap Android sample app project into your IDE.</li>
+<li>Modify the following in <strong>/assets/www/js/index.js</strong>:</li>
+</ol>
+<ul class="simple">
+<li><strong>orgName</strong>: Your apigee organization.</li>
+<li><strong>appName</strong>: The app in your organization where you created the
+notifier. (For the sample, make sure it&#8217;s &#8220;sandbox&#8221;.)</li>
+<li><strong>notifier</strong>: Name of your notifier.</li>
+<li><strong>senderID</strong>: Your API project number (the project must support
+Google Cloud Messaging for Android (GCM)), as described in the
+<a class="reference external" href="registration.html">Registering with a notification service</a>.</li>
+</ul>
+<ol class="arabic simple" start="4">
+<li>In <strong>AndroidManifest.xml</strong>, be sure the proper Android permissions
+are included. This includes READ_PHONE_STATE and VIBRATE.</li>
+<li>In your project properties, go to <strong>Java Build Path &gt; Libraries</strong> and
+add all the JAR files from the project&#8217;s /libs directory.</li>
+<li>In the <strong>Order and Export</strong> tab, move the JARs to the top of the list
+and select all the check boxes. Make sure the order and selections
+match the following image:</li>
+</ol>
+<img alt="../_images/pgasettings.png" src="../_images/pgasettings.png" />
+<ol class="arabic simple" start="7">
+<li>If you&#8217;re using an emulator, configure the emulator to use the Google
+APIs Level 16 target or above. Also, be sure to see the Android
+requirements in <a class="reference external" href="adding-push-supprt.html">Adding push notifications
+support</a> for steps on setting up the
+emulator to support push notifications.</li>
+</ol>
+<img alt="../_images/pgaspath.png" src="../_images/pgaspath.png" />
+<ol class="arabic simple" start="8">
+<li>Run the project as an Android Application. The IDE should compile the
+project and install the app on your device.</li>
+<li>Press the button on the app to send yourself a push notification.</li>
+</ol>
+<img alt="../_images/pgaapp.png" src="../_images/pgaapp.png" />
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+For troubleshooting tips, see [Adding push notifications<p>support](adding-push-supprt.html.</p>
+</p></div></div>
+<div class="section" id="more-about-phonegap">
+<h3>More about PhoneGap<a class="headerlink" href="#more-about-phonegap" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="http://phonegap.com/">PhoneGap</a> iOS push notification sample was
+created using standard web technologies such as HTML5, JavaScript, and
+CSS. You build the app with those technologies, and PhoneGap provides
+project templates for iOS, Android, and other platforms. For example,
+atop platform-specific PhoneGap code, core app code between the iOS and
+Android samples is essentially the same.</p>
+<p>When using PhoneGap to develop push notification apps, you use a
+PhoneGap plugin designed to support push notifications. That plugin is
+included in the Apigee samples. For more about the plugin, see the
+<a class="reference external" href="https://github.com/phonegap-build/PushPlugin/blob/master/README.md">plugin&#8217;s GitHub
+project</a>.</p>
+</div>
+</div>
+<div class="section" id="step-5-review-the-data-entities-created-by-the-sample-app">
+<h2>Step 5: Review the data entities created by the sample app<a class="headerlink" href="#step-5-review-the-data-entities-created-by-the-sample-app" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Log in to the admin portal, and select Data in the left navigation
+pane.</li>
+<li>Select any of the following collections to view the entities that
+were created in them by the push notification sample app:</li>
+</ol>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">/devices</span></code> - To see the device that was added.</li>
+<li><code class="docutils literal"><span class="pre">/notifications</span></code> - To see the notification that was sent.</li>
+<li><code class="docutils literal"><span class="pre">/receipts</span></code> - To see the receipt generated from the successful
+push.</li>
+</ul>
+</div>
+<div class="section" id="step-6-send-additional-push-notifications-using-other-usergrid-tools">
+<h2>Step 6: Send additional push notifications using other Usergrid tools<a class="headerlink" href="#step-6-send-additional-push-notifications-using-other-usergrid-tools" title="Permalink to this headline">¶</a></h2>
+<p>Send a push notification from the Usergrid Notifications console On the
+Send Notification screen. Select your notifier, select All Devices,
+enter a message, select Now, and click to send it.</p>
+<img alt="../_images/sendnotification.png" src="../_images/sendnotification.png" />
+<div class="section" id="send-a-push-notification-directly-via-the-push-notifications-api">
+<h3>Send a push notification directly via the push notifications API<a class="headerlink" href="#send-a-push-notification-directly-via-the-push-notifications-api" title="Permalink to this headline">¶</a></h3>
+<p>Use the following curl command in a terminal window, replacing your-org,
+your-app and notifier-name.</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/your-org/your-app/devices/*/notifications&quot; -d &#39;{&quot;payloads&quot;:{&quot;notifier-name&quot;:&quot;I just sent another notification! Yea, me!&quot;}}&#39;
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="registering.html" class="btn btn-neutral float-right" title="Registering with a notification service" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting-started.html" class="btn btn-neutral" title="Getting started with push notifications" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

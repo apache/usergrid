@@ -9,7 +9,7 @@
 
 ### Download2
 
-Start by [downloading our latest code](https://github.com/apache/incubator-usergrid/archive/master.zip) and extract it.
+Start by [downloading our latest code](https://github.com/apache/usergrid/archive/master.zip) and extract it.
 
 #### Building 3
 
