@@ -8,7 +8,7 @@ There are three client versions of Messagee:
 * [An Android client version](https://github.com/apigee/usergrid-sample-android-messagee)
 * [An HTML5 client](https://github.com/apigee/usergrid-sample-html5-messagee)
 
-The sections below describe how to create a new app, enter some test users, and run the app. You also learn how to use the Usergrid admin portal, a user interface that streamlines data and application management in the Usergrid system. The portal is also a reference application that shows how to incorporate Usergrid APIs with JavaScript. For a more detailed discussion of the portal's functionality, see Admin portal.
+The sections below describe how to create a new app, enter some test users, and run the app. You also learn how to use the Usergrid admin portal, a user interface that streamlines data and application management in the Usergrid system. The portal is also a reference application that shows how to incorporate Usergrid APIs with JavaScript. 
 
 ## Creating a user account in Usergrid
 
@@ -122,16 +122,16 @@ Because test-user-1 follows test-user-2, you should see the message sent by test
 
 ## iOS SDK
 
-If you want to write iOS applications that connect to Usergrid, [download the Usergrid iOS SDK](https://github.com/apache/incubator-usergrid/tree/master/sdks/ios).
+If you want to write iOS applications that connect to Usergrid, [download the Usergrid iOS SDK](https://github.com/apache/usergrid/tree/master/sdks/ios).
 
 __Note__: The Messagee iOS application uses RestKit, a popular REST framework for iOS, to communicate with Usergrid. Because Usergrid use a REST API, you can use any REST framework to talk with the service. However, the official Usergrid iOS SDK provides a more convenient communication mechanism that you should use unless you're already using RestKit or some other framework in your project.
 
 ## Android client and SDK
 Messagee is available as a sample Android app that acts as a Usergrid client. The source for the Android version is packaged with the Usergrid Android SDK in the /samples/messagee directory.
 
-[Download the Usergrid Android SDK](https://github.com/apache/incubator-usergrid/tree/master/sdks/android)
+[Download the Usergrid Android SDK](https://github.com/apache/usergrid/tree/master/sdks/android)
 
 ## Javascript/HTML5 client and SDK
 Messagee is also available as a sample HTML5 app that behaves in much the same way as the two previous examples. The source for the HTML5 version is packaged with the Usergrid Javascript/HTML5 SDK in the /samples/messagee directory.
 
-[Download the Usergrid Javascript/HTML5 SDK](https://github.com/apache/incubator-usergrid/tree/master/sdks/html5-javascript)
+[Download the Usergrid Javascript/HTML5 SDK](https://github.com/apache/usergrid/tree/master/sdks/html5-javascript)

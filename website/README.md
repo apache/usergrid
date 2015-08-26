@@ -7,7 +7,7 @@ Source files for the website are in ``${usergrid-project-dir}/website/content``
 Generated files for the website are in ``${usergrid-project-dir}/content``
 
 The website is updated by a "sync" tool that monitors the __asf-site__ branch of our Git repo, so after to make changes you must push your updated source and generated files to that branch. 
-The content will be published to the [Usegrid website](http://usergrid.incubator.apache.org), after a 5-20 minute delay. 
+The content will be published to the [Usegrid website](http://usergrid.apache.org), after a 5-20 minute delay. 
 
 ## Prerequsites
 

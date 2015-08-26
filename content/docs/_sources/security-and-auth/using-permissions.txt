@@ -33,7 +33,7 @@ Complex paths can be defined using [Apache Ant pattern syntax](http://ant.apache
 </table>
 
 ## Assigning permissions
-Permissions can only be assigned to user, group or role entities. Assigning permissions to roles can be particularly useful, as it allows you to create sets of permissions that represent complex access definitions, which can then be assigned to user and group entities. For more on roles, see Using roles.
+Permissions can only be assigned to user, group or role entities. Assigning permissions to roles can be particularly useful, as it allows you to create sets of permissions that represent complex access definitions, which can then be assigned to user and group entities. For more on roles, see [Using Roles](security-and-auth/using-roles.html).
        
 ### Request syntax
 
@@ -47,7 +47,7 @@ org	        Organization UUID or organization name
 app	        Application UUID or application name
 collection	The collection of the entity that the permissions are to be assigned to. 
 entity	    The UUID of the entity to assign the permissions to. For users, username and for groups, name are also accepted.
-permissions	The permissions to assign to the entity. See Permissions syntax for format.
+permissions	The permissions to assign to the entity. See [Permissions syntax](security-and-auth/using-permissions.html#permissions-syntax) for format.
 
 For collections, Valid values are users and groups.
 
