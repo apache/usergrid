@@ -66,6 +66,6 @@ public class IndexUtilsTest {
             LOG.info( e.getKey() + " = " + e.getValue() );
         }
 
-        assertEquals( 7, l.size() );
+        assertEquals( 8, l.size() );
     }
 }

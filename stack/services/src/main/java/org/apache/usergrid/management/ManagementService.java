@@ -332,4 +332,8 @@ public interface ManagementService {
     public void deleteApplication(UUID applicationId) throws Exception;
 
     public ApplicationInfo restoreApplication(UUID applicationId) throws Exception;
+
+    long getApplicationSize(final UUID applicationId);
+
+    long getCollectionSize(final UUID applicationId, final String collectionName);
 }
