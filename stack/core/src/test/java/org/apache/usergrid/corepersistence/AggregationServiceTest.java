@@ -46,7 +46,7 @@ public class AggregationServiceTest extends AbstractCoreIT {
         Map<String,Object> props = new HashMap<>();
          props.put("test", 1234);
         props.put("name", "myname");
-        Entity entity1 = this.app.getEntityManager().create("test",props);
+        Entity entity1 = this.app.getEntityManager().create("test", props);
         Entity entity2 = this.app.getEntityManager().create("test2", props);
         this.app.refreshIndex();
         Thread.sleep(500);
@@ -54,13 +54,22 @@ public class AggregationServiceTest extends AbstractCoreIT {
         long sum = aggregationService.sumAllCollections(applicationScope);
 
         Assert.assertTrue( sum >= 0 );
-        Assert.assertEquals(sum,entity1.getSize() + entity2.getSize());
+        Assert.assertTrue(sum > (entity1.getSize() + entity2.getSize()));
 
-        long sum1 = aggregationService.sum(applicationScope,CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(),"test"));
-        Assert.assertEquals(sum1,entity1.getSize());
+        long sum1 = aggregationService.sum(applicationScope,CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(),"tests"));
+        Assert.assertEquals(sum1, entity1.getSize());
 
-        long sum2 = aggregationService.sum(applicationScope,CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(),"test2"));
-        Assert.assertEquals(sum2,entity2.getSize());
+        long sum2 = aggregationService.sum(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "test2s"));
+        Assert.assertEquals(sum2, entity2.getSize());
+
+        props = new HashMap<>();
+        props.put("test", 1234);
+        props.put("name", "myname2");
+        Entity entity3 = this.app.getEntityManager().create("test", props);
+
+        this.app.refreshIndex();
+        long sum3 = aggregationService.sum(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "tests"));
+        Assert.assertEquals(sum3, entity1.getSize()+entity3.getSize());
 
     }
 }
