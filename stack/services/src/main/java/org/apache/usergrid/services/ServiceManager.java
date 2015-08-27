@@ -342,13 +342,13 @@ public class ServiceManager {
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters ) throws Exception {
-        return newRequest( action, false, parameters, null );
+        return newRequest( action, false, parameters, null, true, true );
     }
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters, ServicePayload payload )
             throws Exception {
-        return newRequest( action, false, parameters, payload );
+        return newRequest( action, false, parameters, payload, true, true );
     }
 
 
@@ -366,7 +366,8 @@ public class ServiceManager {
 
 
     public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
-                                      ServicePayload payload ) throws Exception {
+                                      ServicePayload payload, boolean returnsInboundConnections,
+                                      boolean returnsOutboundConnections ) throws Exception {
 
         if ( em != null ) {
             if ( action != null ) {
@@ -396,9 +397,14 @@ public class ServiceManager {
         }
 
         String serviceName = pluralize( ServiceParameter.dequeueParameter( parameters ).getName() );
-        return new ServiceRequest( this, action, serviceName, parameters, payload, returnsTree );
+        return new ServiceRequest( this, action, serviceName, parameters, payload, returnsTree,
+            returnsInboundConnections, returnsOutboundConnections );
     }
 
+    public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
+                                      ServicePayload payload ) throws Exception {
+        return newRequest( action, returnsTree, parameters, payload, true, true );
+    }
 
     public void notifyExecutionEventListeners( ServiceAction action, ServiceRequest request, ServiceResults results,
                                                ServicePayload payload ) {
