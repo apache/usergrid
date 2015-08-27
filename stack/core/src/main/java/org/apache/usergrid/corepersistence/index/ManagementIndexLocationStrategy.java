@@ -23,12 +23,9 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.utils.StringUtils;
 
 /**
  * Strategy for getting the management index name
@@ -48,8 +45,10 @@ class ManagementIndexLocationStrategy implements IndexLocationStrategy {
         this.indexFig = indexFig;
         this.coreIndexFig = coreIndexFig;
         this.applicationScope = CpNamingUtils.getApplicationScope( CpNamingUtils.getManagementApplicationId().getUuid());
-        //remove usergrid
-        this.indexName = clusterFig.getClusterName().toLowerCase() + "_" + coreIndexFig.getManagementAppIndexName().toLowerCase();  ////use lowercase value
+        //use lowercase values
+        this.indexName = clusterFig.getClusterName().toLowerCase() + "_" +
+                         cassandraFig.getApplicationKeyspace().toLowerCase() + "_" +
+                         coreIndexFig.getManagementAppIndexName().toLowerCase();
         this.alias = new ManagementIndexAlias(indexFig,indexName);
     }
     @Override
