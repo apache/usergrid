@@ -110,7 +110,6 @@ usergrid.write.cl=${writeConsistencyLevel}
 
 
 elasticsearch.cluster_name=${clusterName}
-elasticsearch.index_prefix=${stackName}
 elasticsearch.hosts=${esnodes}
 elasticsearch.port=9300
 elasticsearch.number_shards=${esShards}
@@ -190,7 +189,6 @@ usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
 
 usergrid.metrics.graphite.host=${graphite}
 
-usergrid.queue.prefix=${stackName}
 usergrid.queue.region=${ec2Region}
 
 # Enable scheduler for import/export jobs
