@@ -39,10 +39,6 @@ public interface QueueFig extends GuicyFig {
     public String getRegionList();
 
 
-    @Key( "usergrid.queue.prefix" )
-    @Default("usergrid")
-    public String getPrefix();
-
     /**
      * Set the amount of time (in minutes) to retain messages in a queue.
      * 1209600 = 14 days (maximum retention period)
