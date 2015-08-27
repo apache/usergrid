@@ -25,7 +25,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.utils.StringUtils;
 
 /**
  * Strategy for getting the application index name.

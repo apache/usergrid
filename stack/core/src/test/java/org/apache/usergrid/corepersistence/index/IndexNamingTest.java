@@ -20,7 +20,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 import com.google.inject.Inject;
-import junit.framework.Assert;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -74,11 +73,13 @@ public class IndexNamingTest {
     private ApplicationScope managementApplicationScope;
     private ApplicationIndexLocationStrategy applicationLocationStrategy;
     private ManagementIndexLocationStrategy managementLocationStrategy;
+    private String keyspaceName;
     private String clusterName;
 
     @Before
     public void setup(){
-        clusterName = clusterFig.getClusterName();
+        keyspaceName = cassandraFig.getApplicationKeyspace().toLowerCase();
+        clusterName = clusterFig.getClusterName().toLowerCase();
         this.applicationScope = CpNamingUtils.getApplicationScope(UUID.randomUUID());
         this.managementApplicationScope = CpNamingUtils.getApplicationScope(CpNamingUtils.getManagementApplicationId().getUuid());
         this.managementLocationStrategy = new ManagementIndexLocationStrategy(clusterFig,cassandraFig,indexFig, indexProcessorFig);
@@ -91,10 +92,10 @@ public class IndexNamingTest {
         //check that factory works
         assertEquals(indexLocationStrategy.getIndexRootName(),managementLocationStrategy.getIndexRootName());
         //check that root name is as expected
-        assertEquals(indexLocationStrategy.getIndexRootName(),clusterName + "_" + indexProcessorFig.getManagementAppIndexName());
+        assertEquals(indexLocationStrategy.getIndexRootName(),clusterName + "_" + keyspaceName + "_" + indexProcessorFig.getManagementAppIndexName());
         //check bucket name is as expected
         assertEquals(indexLocationStrategy.getIndexRootName(), indexLocationStrategy.getIndexInitialName());
-        assertEquals(indexLocationStrategy.getIndexInitialName(),clusterName + "_" +indexProcessorFig.getManagementAppIndexName());
+        assertEquals(indexLocationStrategy.getIndexInitialName(),clusterName + "_" + keyspaceName + "_" +indexProcessorFig.getManagementAppIndexName());
 
     }
 
@@ -105,11 +106,11 @@ public class IndexNamingTest {
         String managementAppIndexName = indexProcessorFig.getManagementAppIndexName();
         assertEquals(
             indexLocationStrategy.getAlias().getReadAlias(),
-            clusterName + "_" + managementAppIndexName + "_read_" + indexFig.getAliasPostfix()
+            clusterName + "_" + keyspaceName + "_" + managementAppIndexName + "_read_" + indexFig.getAliasPostfix()
         );
         assertEquals(
             indexLocationStrategy.getAlias().getWriteAlias(),
-            clusterName + "_" + managementAppIndexName + "_write_" + indexFig.getAliasPostfix()
+            clusterName + "_" + keyspaceName + "_" + managementAppIndexName + "_write_" + indexFig.getAliasPostfix()
         );
     }
 
