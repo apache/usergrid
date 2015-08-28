@@ -31,7 +31,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Classy class class.
@@ -47,15 +46,18 @@ public class EsIndexMappingMigrationPluginTest extends BaseIT {
     @Inject
     EsProvider provider;
     @Test
-    public void runMigration(){
+    public void runMigration() {
         MigrationInfoSerialization serialization = Mockito.mock(MigrationInfoSerialization.class);
         Mockito.when(serialization.getVersion(Mockito.any())).thenReturn(0);
         EsIndexMappingMigrationPlugin plugin = new EsIndexMappingMigrationPlugin(serialization,provider);
         TestProgressObserver progressObserver = new TestProgressObserver();
         plugin.run(progressObserver);
-        assertFalse( "Progress observer should not have failed", progressObserver.isFailed() );
-        assertTrue("Progress observer should have update messages", progressObserver.getUpdates().size() > 0);
 
+        // check for failures
+        assertFalse("Progress observer should not have failed", progressObserver.isFailed());
+
+        // after completed, updates could have size 0 or more (0 if no indices present). testing observer's 'updates'
+        // size doesn't help.  TODO update test to ensure an index is present before running
 
     }
 
