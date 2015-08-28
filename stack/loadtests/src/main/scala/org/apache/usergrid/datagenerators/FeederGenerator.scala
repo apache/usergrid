@@ -199,7 +199,7 @@ object FeederGenerator {
    //val entityFeeder = Iterator.from(1).take(numEntities).map(i=>Map("entity" -> EntityDataGenerator.generateNamedCustomEntityJSONString(prefix.concat(i.toString()))))
    var entityArray: ArrayBuffer[String] = new ArrayBuffer[String]
    for (i <- seed to numEntities+seed-1) {
-     var entity = EntityDataGenerator.generateEntity(entityType, prefix.concat(i.toString))
+     var entity = EntityDataGenerator.generateEntity(entityType, prefix.concat(i.toString), i)
      entityArray += entity
    }
 
@@ -223,7 +223,7 @@ object FeederGenerator {
      val seededVal = i + seed
      val noPrefix = prefix == null || prefix == ""
      val entityName = if (noPrefix) seededVal.toString else prefix.concat(seededVal.toString)
-     val entity = EntityDataGenerator.generateEntity(entityType, if (noPrefix) null else entityName)
+     val entity = EntityDataGenerator.generateEntity(entityType, if (noPrefix) null else entityName, seededVal)
      val entityUrl = Settings.baseCollectionUrl + "/" + entityName
      val validEntity = if (i >= numEntities) "no" else "yes"
 
@@ -234,7 +234,7 @@ object FeederGenerator {
  }
 
   def collectionNameFeeder: Feeder[String] = new Feeder[String] {
-    val list: List[String] = Setup.getCollectionsList
+    val list: List[String] = if (Settings.allApps) Setup.getApplicationCollectionsList else Setup.getCollectionsList()
     var counter = new AtomicInteger(0)
 
     override def hasNext: Boolean = true
@@ -283,7 +283,7 @@ object FeederGenerator {
   }
 
  def generateCustomEntityInfiniteFeeder(seed: Int = Settings.entitySeed, entityType: String = Settings.entityType, prefix: String = Settings.entityPrefix): Iterator[String] = {
-   Iterator.from(seed).map(i=>EntityDataGenerator.generateEntity(entityType, if (prefix == null || prefix == "") null else prefix.concat(i.toString)))
+   Iterator.from(seed).map(i=>EntityDataGenerator.generateEntity(entityType, if (prefix == null || prefix == "") null else prefix.concat(i.toString), i))
  }
 
 }

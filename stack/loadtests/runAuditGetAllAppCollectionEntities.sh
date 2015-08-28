@@ -22,7 +22,6 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #ADMIN_USER=
 #ADMIN_PASSWORD=
 #ORG=
-#APP=
 #AUTH_TYPE=
 #TOKEN_TYPE=
 #SEARCH_QUERY=
@@ -41,6 +40,7 @@ AUDIT_UUID_FILENAME="$3"
 shift 3
 
 SCENARIO_TYPE=auditGetCollectionEntities
+APP="*"
 
 #Compile everything
 mvn compile

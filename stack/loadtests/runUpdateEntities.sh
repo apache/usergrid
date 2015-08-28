@@ -86,5 +86,6 @@ mvn gatling:execute \
 -DupdateProperty=${UPDATE_PROPERTY} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
+-DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
@@ -29,31 +29,42 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #TOKEN_TYPE=
 #CREATE_ORG=
 #CREATE_APP=
-#LOAD_ENTITIES=
 #SANDBOX_COLLECTION=
 #NUM_ENTITIES=  #may be overridden on command line
 #SKIP_SETUP=
 #COLLECTION=
-#ENTITY_PREFIX=
 #ENTITY_SEED=  #may be overridden on command line
 #RETRY_COUNT=
+#ENTITY_PROGRESS_COUNT=
 #CONSTANT_USERS_PER_SEC=
 #CONSTANT_USERS_DURATION=
 
+
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [NUM_ENTITIES [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]"
+[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [UUID_FILENAME [NUM_ENTITIES [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
-[ "$#" -ge 3 ] && NUM_ENTITIES="$3"
-[ "$#" -ge 4 ] && ENTITY_SEED="$4"
-[ "$#" -ge 5 ] && ENTITY_WORKER_NUM="$5"
-[ "$#" -ge 6 ] && ENTITY_WORKER_COUNT="$6"
+[ "$#" -ge 3 ] && UUID_FILENAME="$3"
+[ "$#" -ge 4 ] && NUM_ENTITIES="$4"
+[ "$#" -ge 5 ] && ENTITY_SEED="$5"
+[ "$#" -ge 6 ] && ENTITY_WORKER_NUM="$6"
+[ "$#" -ge 7 ] && ENTITY_WORKER_COUNT="$7"
 
 shift $#
 
-SCENARIO_TYPE=deleteEntities
+SCENARIO_TYPE=loadEntities
+ENTITY_TYPE=largeMultiField
+ENTITY_PREFIX=multi
+
+MULTI_PROPERTY_PREFIX=prop
+MULTI_PROPERTY_COUNT=10
+MULTI_PROPERTY_SIZE_IN_K=1
+ENTITY_NUMBER_PROPERTY=entityNum
+
+# don't load entities as part of setup (loading entities is the point of the test)
+LOAD_ENTITIES=false
 
 #Compile everything
 mvn compile
@@ -71,19 +82,26 @@ mvn gatling:execute \
 -DtokenType=${TOKEN_TYPE} \
 -DcreateOrg=${CREATE_ORG} \
 -DcreateApp=${CREATE_APP} \
--DloadEntities=${LOAD_ENTITIES} \
 -DsandboxCollection=${SANDBOX_COLLECTION} \
 -DnumEntities=${NUM_ENTITIES} \
 -DskipSetup=${SKIP_SETUP} \
 -Dcollection=${COLLECTION} \
--DentityPrefix=${ENTITY_PREFIX} \
 -DentitySeed=${ENTITY_SEED} \
--DretryCount=${RETRY_COUNT}  \
+-DretryCount=${RETRY_COUNT} \
+-DentityProgressCount=${ENTITY_PROGRESS_COUNT} \
 -DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
 -DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
 -DscenarioType=${SCENARIO_TYPE} \
+-DentityType=${ENTITY_TYPE} \
+-DentityPrefix=${ENTITY_PREFIX} \
+-DloadEntities=${LOAD_ENTITIES} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
+-DuuidFilename=${UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
+-DmultiPropertyPrefix=${MULTI_PROPERTY_PREFIX} \
+-DmultiPropertyCount=${MULTI_PROPERTY_COUNT} \
+-DmultiPropertySizeInK=${MULTI_PROPERTY_SIZE_IN_K} \
+-DentityNumberProperty=${ENTITY_NUMBER_PROPERTY} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 

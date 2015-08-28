@@ -59,5 +59,6 @@ mvn gatling:execute \
 -DrampTime=${RAMP_TIME}  \
 -DauditUuidFilename=${AUDIT_UUID_FILENAME} \
 -DfailedUuidFilename=${FAILED_UUID_FILENAME} \
+-DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.AuditSimulation
 
