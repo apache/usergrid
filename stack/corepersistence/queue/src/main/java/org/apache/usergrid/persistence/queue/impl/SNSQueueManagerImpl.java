@@ -161,7 +161,7 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error(String.format("Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn), e);
         }
 
-        if (fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALLREGIONS) {
+        if (fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALL) {
 
             String multiRegion = fig.getRegionList();
 

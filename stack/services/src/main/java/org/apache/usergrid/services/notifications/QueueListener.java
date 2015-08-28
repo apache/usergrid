@@ -21,8 +21,6 @@ import com.codahale.metrics.Timer;
 import com.google.common.cache.*;
 import com.google.inject.Injector;
 
-import org.apache.usergrid.corepersistence.CpSetup;
-
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
@@ -36,7 +34,7 @@ import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerIm
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-import javax.annotation.PostConstruct;
+
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -146,7 +144,7 @@ public class QueueListener  {
         com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "execute.dequeue");
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         LOG.info("getting from queue {} ", queueName);
-        QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCALREGION );
+        QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
         QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
         final AtomicLong runCount = new AtomicLong(0);
