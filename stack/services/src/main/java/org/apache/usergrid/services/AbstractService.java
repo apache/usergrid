@@ -384,22 +384,26 @@ public abstract class AbstractService implements Service {
                 metadata.putAll(defaultEntityMetadata);
             }
 
-            Set<Object> connections = getConnectedTypesSet(entity);
-            if (connections != null) {
-                Map<String, Object> m = new LinkedHashMap<String, Object>();
-                for (Object n : connections) {
-                    m.put(n.toString(), path + "/" + n);
+            if (request.isReturnsOutboundConnections()) {
+                Set<Object> connections = getConnectedTypesSet(entity);
+                if (connections != null) {
+                    Map<String, Object> m = new LinkedHashMap<String, Object>();
+                    for (Object n : connections) {
+                        m.put(n.toString(), path + "/" + n);
+                    }
+                    metadata.put("connections", m);
                 }
-                metadata.put("connections", m);
             }
 
-            Set<Object> connecting = getConnectingTypesSet(entity);
-            if (connecting != null) {
-                Map<String, Object> m = new LinkedHashMap<String, Object>();
-                for (Object n : connecting) {
-                    m.put(n.toString(), path + "/connecting/" + n);
+            if (request.isReturnsInboundConnections()) {
+                Set<Object> connecting = getConnectingTypesSet(entity);
+                if (connecting != null) {
+                    Map<String, Object> m = new LinkedHashMap<String, Object>();
+                    for (Object n : connecting) {
+                        m.put(n.toString(), path + "/connecting/" + n);
+                    }
+                    metadata.put("connecting", m);
                 }
-                metadata.put("connecting", m);
             }
 
             Set<String> collections = getCollectionSet(entity);
