@@ -18,6 +18,7 @@ package org.apache.usergrid.datagenerators
 
 import org.apache.usergrid.enums.EntityType
 import org.apache.usergrid.helpers.Utils
+import org.apache.usergrid.settings.Settings
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.json.JSONObject
@@ -107,6 +108,21 @@ object EntityDataGenerator {
        new JSONObject(Map("sortField" -> Utils.generateRandomInt(1,10000000))).toString()
    }
 
+  val pirate1KString = "Yarrrrrrrrrrrrrrrr! Blimey! Avast ye scurvy dog! Dead men tell no tales. Hang him from the yardarm! Heave ho! Run a shot across the bow. Yo-ho-ho and a bottle of rum. Heave ho ye scallywag, or ye shall walk the plank! Weigh anchor and hoist the mizzen! Thar she blows! Shiver me timbers! Splice the mainbrace! Keelhaul the hornswaggler! Raise the Jolly Roger! Feed him to the fish! You fight like a dairy farmer. How appropriate, you fight like a cow. Batten down the hatches! Blow the man down! Swab the deck! Ahoy, matey! I'll crush ye barnacles! Fetch me grog! Gangway! Arrr, he's gone to Davy Jones's Locker. He be three sheets to the wind. Yo-ho me hearties! Prepare to be boarded! All your pieces of eight, else ye meet me cat o'nine tails! Bring 'er alongside! The rougher the seas, the smoother we sail! It's more fun to be a pirate than to join the navy. The beatings will continue until morale improves! Fifteen men on the dead man's chest! I be the captain of this ship -- swab the decks! "
+
+  def generateLargeMultiFieldEntity(name: String = null, entityNum: Int = 0): String = {
+
+    val objectMap:scala.collection.mutable.HashMap[String,Any] = scala.collection.mutable.HashMap.empty[String,Any]
+    if (name != null) objectMap += ("name" -> name)
+    if (Settings.entityNumberProperty != null && Settings.entityNumberProperty != "") objectMap += (Settings.entityNumberProperty -> entityNum)
+    val fieldValue = pirate1KString * Settings.multiPropertySizeInK
+    for (i <- 1 to Settings.multiPropertyCount) {
+      objectMap += (s"${Settings.multiPropertyPrefix}$i" -> fieldValue)
+    }
+
+    new JSONObject(objectMap.toMap).toString()
+  }
+
    def generateBasicEntity(name: String = null): String = {
 
      val nameKey = if (name != null) "name" else "noname"
@@ -134,12 +150,13 @@ object EntityDataGenerator {
      new JSONObject(entity).toString()
    }
 
-   def generateEntity(entityType: String = EntityType.Basic, entityName: String = null): String = {
+   def generateEntity(entityType: String = EntityType.Basic, entityName: String = null, entityNum: Int = 0): String = {
 
      entityType match {
        case EntityType.Trivial => generateTrivialEntity(entityName)
        case EntityType.TrivialSortable => generateTrivialSortableEntity(entityName)
        case EntityType.Basic => generateBasicEntity(entityName)
+       case EntityType.LargeMultiField => generateLargeMultiFieldEntity(entityName, entityNum)
      }
    }
 

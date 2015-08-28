@@ -48,15 +48,16 @@
 
 	<properties>
 		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.6</maven.compiler.target>
-		<scala.version>2.10.4</scala.version>
+		<maven.compiler.target>1.7</maven.compiler.target>
+		<scala.version>2.11.7</scala.version>
 		<encoding>UTF-8</encoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<gatling.version>2.0.3</gatling.version>
-	<gatling.plugin.version>2.0.0</gatling.plugin.version>
-		<gatling-highcharts.version>2.0.3</gatling-highcharts.version>
+		<gatling.version>2.1.7</gatling.version>
+        <gatling.plugin.version>2.1.7</gatling.plugin.version>
+		<gatling-highcharts.version>2.1.7</gatling-highcharts.version>
 
-		<scala-maven-plugin.version>3.1.6</scala-maven-plugin.version>
+		<scala-maven-plugin.version>3.2.2</scala-maven-plugin.version>
 	</properties>
 
 	<dependencyManagement>

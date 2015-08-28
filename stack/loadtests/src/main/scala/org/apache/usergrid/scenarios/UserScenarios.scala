@@ -21,9 +21,9 @@ import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import io.gatling.http.request.StringBody
 import org.apache.usergrid.datagenerators.FeederGenerator
-import org.apache.usergrid.settings.{Headers, Settings}
+import org.apache.usergrid.settings.Settings
 import org.apache.usergrid.helpers.Extractors._
-import org.apache.usergrid.helpers.Utils
+import org.apache.usergrid.helpers.{Headers, Utils}
 
 
 object UserScenarios {

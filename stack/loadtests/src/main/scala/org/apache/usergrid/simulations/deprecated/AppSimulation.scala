@@ -36,6 +36,6 @@ class AppSimulation extends Simulation {
   setUp(
     NotificationScenarios.createScenario
       .inject(constantUsersPerSec(Settings.constantUsersPerSec) during (Settings.constantUsersDuration))
-      .protocols(Settings.httpConf.acceptHeader("application/json"))
+      .protocols(Settings.httpAppConf.acceptHeader("application/json"))
   ).throttle(reachRps(Settings.throttle) in (Settings.rampTime seconds), holdFor(Settings.holdDuration))
 }

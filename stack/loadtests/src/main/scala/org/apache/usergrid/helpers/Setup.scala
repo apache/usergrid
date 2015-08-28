@@ -111,15 +111,18 @@ object Setup {
     statusCode
   }
 
-  def getCollectionsList: List[String] = {
+  def getCollectionsList(org:String = Settings.org, app:String = Settings.app): List[String] = {
+    val url = s"${Settings.baseUrl}/$org/$app"
+    println(s"url: $url")
     val appInfoGet = client
-      .prepareGet(s"${Settings.baseAppUrl}")
+      .prepareGet(url)
       .setHeader("Cache-Control", "no-cache")
       .setHeader("Accept", "application/json; charset=UTF-8")
       .setHeader("Authorization", s"Bearer $getManagementToken")
       .build()
 
     val getResponse = client.executeRequest(appInfoGet).get()
+    println(s"responseBody\n: ${getResponse.getResponseBody}\n")
     val topLevel: Map[String, Any] = JSON.parseFull(getResponse.getResponseBody).get.asInstanceOf[Map[String,Any]]
     val entities: List[Map[String, Any]] = topLevel("entities").asInstanceOf[List[Map[String,Any]]]
     //println(s"entities: $entities")
@@ -130,10 +133,38 @@ object Setup {
     val collections: Map[String, Any] = metadata("collections").asInstanceOf[Map[String, Any]]
     //println(s"collections: $collections")
 
-    val collectionsList: List[String] = (collections map { case (key, value) => key }).toList
-    //println(collectionsList)
+    val collectionsList: List[String] = (collections map { case (key, value) => s"$app/$key" }).toList
+    println(s"collectionsList: $collectionsList")
 
     collectionsList
+  }
+
+  def getApplicationCollectionsList: List[String] = {
+    val orgInfoGet = client
+      .prepareGet(s"${Settings.baseUrl}/management/organizations/${Settings.org}/applications")
+      .setHeader("Cache-Control", "no-cache")
+      .setHeader("Accept", "application/json; charset=UTF-8")
+      .setHeader("Authorization", s"Bearer $getManagementToken")
+      .build()
+
+    val getResponse = client.executeRequest(orgInfoGet).get()
+    val topLevel: Map[String,Any] = JSON.parseFull(getResponse.getResponseBody).get.asInstanceOf[Map[String,Any]]
+    val data: Map[String,Any] = topLevel("data").asInstanceOf[Map[String,Any]]
+    val applicationsList: List[String] = (data map { case (key,value) => key }).toList
+    //println(applicationsList)
+
+    val collectionApplicationsListBuffer: scala.collection.mutable.ListBuffer[String] = scala.collection.mutable.ListBuffer[String]()
+    // for each app, get the list of collections
+    for (orgPlusApp <- applicationsList) {
+      println(s"getting $orgPlusApp")
+      val orgAppArray = orgPlusApp.split("/")
+      val org = orgAppArray(0)
+      val app = orgAppArray(1)
+      collectionApplicationsListBuffer.appendAll(getCollectionsList(org,app))
+    }
+
+    println(s"appCollections: ${collectionApplicationsListBuffer.toList}")
+    collectionApplicationsListBuffer.toList
   }
 
   def sandboxCollection(): Integer = {

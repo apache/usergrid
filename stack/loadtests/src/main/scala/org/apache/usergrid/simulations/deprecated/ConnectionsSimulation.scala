@@ -45,7 +45,7 @@ class ConnectionsSimulation extends Simulation{
     ConnectionScenarios.createScenario
       .inject(constantUsersPerSec(Settings.constantUsersPerSec) during Settings.constantUsersDuration) // wait for 15 seconds so create org can finish, need to figure out coordination
       .throttle(reachRps(Settings.throttle) in Settings.rampTime.seconds)
-      .protocols( Settings.httpConf.acceptHeader("application/json"))
+      .protocols( Settings.httpAppConf.acceptHeader("application/json"))
   )
 
 }
