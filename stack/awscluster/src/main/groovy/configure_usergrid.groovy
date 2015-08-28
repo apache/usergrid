@@ -100,6 +100,9 @@ cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
 cassandra.keyspace.replication=${cassEc2Region}:${replFactor}
 
+# This property is required to be set and cannot be left to the default.
+usergrid.cluster_name=usergrid
+
 cassandra.timeout=5000
 cassandra.connections=${tomcatThreads}
 hystrix.threadpool.graph_user.coreSize=${hystrixThreads}

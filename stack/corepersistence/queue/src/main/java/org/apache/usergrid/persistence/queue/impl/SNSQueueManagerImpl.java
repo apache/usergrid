@@ -36,6 +36,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.Queue;
@@ -54,6 +55,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueScope scope;
     private final QueueFig fig;
     private final ClusterFig clusterFig;
+    private final CassandraFig cassandraFig;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
     private final AmazonSNSAsyncClient snsAsync;
@@ -105,10 +107,11 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Inject
-    public SNSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig, ClusterFig clusterFig) {
+    public SNSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig, ClusterFig clusterFig, CassandraFig cassandraFig) {
         this.scope = scope;
         this.fig = fig;
         this.clusterFig = clusterFig;
+        this.cassandraFig = cassandraFig;
 
         try {
             sqs = createSQSClient(getRegion());
@@ -158,7 +161,7 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error(String.format("Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn), e);
         }
 
-        if (fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALLREGIONS) {
+        if (fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALL) {
 
             String multiRegion = fig.getRegionList();
 
@@ -299,8 +302,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     private String getName() {
-        String name = clusterFig.getClusterName() + "_" + scope.getName() + "_" + scope.getRegionImplementation();
-
+        String name = clusterFig.getClusterName() + "_" + cassandraFig.getApplicationKeyspace() + "_" + scope.getName() + "_" + scope.getRegionImplementation();
+        name = name.toLowerCase(); //user lower case values
         Preconditions.checkArgument(name.length() <= 80, "Your name must be < than 80 characters");
 
         return name;
