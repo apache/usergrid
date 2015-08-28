@@ -80,7 +80,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     // SQS maximum receive messages is 10
     private static final int MAX_TAKE = 10;
-    public static final String QUEUE_NAME = "es_queue";
+    public static final String QUEUE_NAME = "es"; //keep this short as AWS limits queue name size to 80 chars
 
     private final QueueManager queue;
     private final QueueScope queueScope;
@@ -122,7 +122,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         this.eventBuilder = eventBuilder;
         this.rxTaskScheduler = rxTaskScheduler;
 
-        this.queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALLREGIONS);
+        this.queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALL);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
         this.indexProcessorFig = indexProcessorFig;
 
