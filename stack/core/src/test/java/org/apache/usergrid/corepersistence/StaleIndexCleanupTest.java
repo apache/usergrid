@@ -363,28 +363,29 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         // query Core Persistence directly for total number of result candidates
         crs = queryCollectionCp("things", "thing", "select *");
-        Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
+        Assert.assertEquals("Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
 
         // turn ON post processing stuff that cleans up stale entities
-        System.setProperty( EVENTS_DISABLED, "false" );
+        System.setProperty(EVENTS_DISABLED, "false");
 
         // delete all entities
         for ( Entity thing : things ) {
             em.delete( thing );
         }
 
+        Thread.sleep(250); // delete happens asynchronously, wait for some time
 
-        //put this into the top of the queue, once it's acked we've been flushed
+        //refresh the app index
         app.refreshIndex();
 
-        // wait for indexes to be cleared for the deleted entities
-        count = 0;
-
+        Thread.sleep(250); // refresh happens asynchronously, wait for some time
+        
 
         //we can't use our candidate result sets here.  The repair won't happen since we now have orphaned documents in our index
         //us the EM so the repair process happens
 
         Results results = null;
+        count = 0;
         do {
             //trigger the repair
             results = queryCollectionEm("things", "select *");
