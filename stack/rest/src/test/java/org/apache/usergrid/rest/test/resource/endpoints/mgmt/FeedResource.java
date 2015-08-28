@@ -41,8 +41,9 @@ public class FeedResource extends NamedResource {
     }
 
     public ApiResponse get() {
-        return getResource( true ).type( MediaType.APPLICATION_JSON_TYPE )
-            .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
+        return getTarget( true ).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .get( ApiResponse.class);
 
 
     }

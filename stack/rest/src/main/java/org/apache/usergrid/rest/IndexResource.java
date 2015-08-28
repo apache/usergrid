@@ -21,8 +21,8 @@
 package org.apache.usergrid.rest;
 
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
-import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
@@ -68,7 +68,7 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @POST
     @Path( "rebuild" )
-    public JSONWithPadding rebuildIndexesPost( @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public ApiResponse rebuildIndexesPost( @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
 
@@ -82,7 +82,13 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @GET
     @Path( "rebuild/{jobId}" )
-    public JSONWithPadding rebuildIndexesGet(@PathParam( "jobId" ) String jobId, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildIndexesGet(
+        @PathParam( "jobId" ) String jobId,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+
+
         throws Exception {
         logger.info("Getting status for index jobs");
 
@@ -101,13 +107,15 @@ public class IndexResource extends AbstractContextResource {
         response.setProperty( "numberQueued", status.getNumberProcessed() );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @RequireSystemAccess
     @PUT
     @Path( "rebuild" )
-    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildIndexesPut( final Map<String, Object> payload,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
@@ -122,7 +130,9 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @POST
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexesPut( @PathParam( "applicationId" ) String applicationIdStr,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildIndexesPut( @PathParam( "applicationId" ) String applicationIdStr,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                               @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
 
@@ -143,7 +153,9 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildIndexesPut( final Map<String, Object> payload,
                                               @PathParam( "applicationId" ) String applicationIdStr,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                               @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
@@ -163,7 +175,9 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @POST
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexesPost( @PathParam( "applicationId" ) final String applicationIdStr,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildIndexesPost( @PathParam( "applicationId" ) final String applicationIdStr,
                                                @PathParam( "collectionName" ) final String collectionName,
                                                @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
                                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -184,7 +198,9 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexesPut( final Map<String, Object> payload,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildIndexesPut( final Map<String, Object> payload,
                                               @PathParam( "applicationId" ) final String applicationIdStr,
                                               @PathParam( "collectionName" ) final String collectionName,
                                               @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
@@ -205,7 +221,9 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @POST
     @Path( "rebuild/management" )
-    public JSONWithPadding rebuildInternalIndexesPost(
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildInternalIndexesPost(
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
 
 
@@ -221,7 +239,9 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "rebuild/management" )
-    public JSONWithPadding rebuildInternalIndexesPut( final Map<String, Object> payload,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse rebuildInternalIndexesPut( final Map<String, Object> payload,
                                                       @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                       String callback ) throws Exception {
 
@@ -238,7 +258,9 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @POST
     @Path(RootResource.APPLICATION_ID_PATH)
-    public JSONWithPadding addIndex( @Context UriInfo ui,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse addIndex( @Context UriInfo ui,
                                      @PathParam( "applicationId" ) final String applicationIdStr,
                                      Map<String, Object> config,
                                      @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -268,7 +290,7 @@ public class IndexResource extends AbstractContextResource {
             (int) config.get("replicas"), (String) config.get("writeConsistency"));
         response.setAction( "Add index to alias" );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -283,7 +305,7 @@ public class IndexResource extends AbstractContextResource {
     }
 
 
-    private JSONWithPadding executeResumeAndCreateResponse( final Map<String, Object> payload,
+    private ApiResponse executeResumeAndCreateResponse( final Map<String, Object> payload,
                                                             final ReIndexRequestBuilder request,
                                                             final String callback ) {
 
@@ -309,7 +331,7 @@ public class IndexResource extends AbstractContextResource {
     /**
      * Execute the request and return the response.
      */
-    private JSONWithPadding executeAndCreateResponse( final ReIndexRequestBuilder request, final String callback ) {
+    private ApiResponse executeAndCreateResponse( final ReIndexRequestBuilder request, final String callback ) {
 
 
         final ReIndexService.ReIndexStatus status = getReIndexService().rebuildIndex( request );
@@ -323,6 +345,6 @@ public class IndexResource extends AbstractContextResource {
         response.setProperty( "numberQueued", status.getNumberProcessed() );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 }

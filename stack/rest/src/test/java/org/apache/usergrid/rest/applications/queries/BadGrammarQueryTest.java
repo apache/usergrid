@@ -17,12 +17,11 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.model.Collection;
-import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.junit.Test;
 
+import javax.ws.rs.client.ResponseProcessingException;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
@@ -55,7 +54,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -81,7 +80,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -107,7 +106,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -133,7 +132,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -159,7 +158,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -185,7 +184,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }

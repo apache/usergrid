@@ -17,9 +17,6 @@
 
 package org.apache.usergrid.rest.management;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
 import org.apache.usergrid.management.MockImapClient;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -34,6 +31,9 @@ import org.jvnet.mock_javamail.Mailbox;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,7 +83,7 @@ public class AdminUsersIT extends AbstractRestIT {
         try {
             management.token().post(false, Token.class, new Token( username, password ),null);
             fail( "We shouldn't be able to get a token using the old password" );
-        }catch(UniformInterfaceException uie) {
+        }catch(ResponseProcessingException uie) {
             errorParse( 400,"invalid_grant",uie );
         }
     }
@@ -120,8 +120,8 @@ public class AdminUsersIT extends AbstractRestIT {
             management.users().user( username ).password().post( Entity.class ,passwordPayload );
             fail("We shouldn't be able to change the password with the same payload");
         }
-        catch ( UniformInterfaceException uie ) {
-            errorParse( ClientResponse.Status.BAD_REQUEST.getStatusCode(),"auth_invalid_username_or_password",uie );
+        catch ( ResponseProcessingException uie ) {
+            errorParse( Response.Status.BAD_REQUEST.getStatusCode(),"auth_invalid_username_or_password",uie );
         }
 
     }
@@ -153,7 +153,7 @@ public class AdminUsersIT extends AbstractRestIT {
         try {
             management.token().post( false,Token.class, new Token( username, password) ,null);
             fail( "We shouldn't be able to get a token using the old password" );
-        }catch(UniformInterfaceException uie) {
+        }catch(ResponseProcessingException uie) {
             errorParse( 400,"invalid_grant",uie );
         }
     }
@@ -236,7 +236,7 @@ public class AdminUsersIT extends AbstractRestIT {
                 management().token().get( queryParameters );
                 fail( "Admin user should not be able to log in." );
             }
-            catch ( UniformInterfaceException uie ) {
+            catch ( ResponseProcessingException uie ) {
                 assertEquals( "Admin user should have failed with 403", 403, uie.getResponse().getStatus() );
             }
 
@@ -417,11 +417,12 @@ public class AdminUsersIT extends AbstractRestIT {
         String token = getTokenFromMessage( confirmation );
 
         Form formData = new Form();
-        formData.add( "token", token );
-        formData.add( "password1", "sesame" );
-        formData.add( "password2", "sesame" );
+        formData.param( "token", token );
+        formData.param( "password1", "sesame" );
+        formData.param( "password2", "sesame" );
 
-        String html = management().users().user( clientSetup.getUsername() ).resetpw().post( formData );
+        String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
+            .post( javax.ws.rs.client.Entity.form(formData), String.class );
 
         assertTrue( html.contains( "password set" ) );
 
@@ -493,7 +494,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
             fail( "should fail with conflict" );
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ResponseProcessingException e ) {
             assertEquals( 409, e.getResponse().getStatus() );
         }
 
@@ -512,7 +513,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
             fail( "should fail with conflict" );
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ResponseProcessingException e ) {
             assertEquals( 409, e.getResponse().getStatus() );
         }
     }
@@ -628,7 +629,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
             fail( "Should have thrown unique exception on org name" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ResponseProcessingException uie ) {
             assertEquals(500,uie.getResponse().getStatus());
         }
     }

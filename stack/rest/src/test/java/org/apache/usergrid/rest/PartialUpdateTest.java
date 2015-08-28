@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.utils.MapUtils;
@@ -25,6 +24,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.ResponseProcessingException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -77,8 +77,8 @@ public class PartialUpdateTest extends AbstractRestIT {
             try {
                 // PUT the updates to the user and ensure they were saved
                 userNode = this.app().collection("users").entity(userNode).put(updateProps);
-            } catch (UniformInterfaceException uie) {
-                fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+            } catch (ResponseProcessingException uie) {
+                fail("Update failed due to: " + uie.getResponse().readEntity(String.class));
             }
 
             refreshIndex();
@@ -118,8 +118,8 @@ public class PartialUpdateTest extends AbstractRestIT {
         try { //  PUT /users/fred   put /users/uuid
             userNode = this.app().collection("users").entity(props.get("username").toString()).put(updateProps);
 
-        } catch (UniformInterfaceException uie) {
-            fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+        } catch (ResponseProcessingException uie) {
+            fail("Update failed due to: " + uie.getResponse().readEntity(String.class));
         }
         refreshIndex();
 

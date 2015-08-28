@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.Collection;
@@ -26,6 +25,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.ResponseProcessingException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -71,7 +71,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
             this.app().collection("users").entity(scott).collection("likes").collection("peeps").entity(peep).get();
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             // Should return a 404 Not Found
             assertEquals(404, uie.getResponse().getStatus());
         }
@@ -162,7 +162,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
             //attempt to retrieve thing1
             thing2 = this.app().collection("things").entity(thing2).get();
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             // Should return a 404 Not Found
             assertEquals(404, uie.getResponse().getStatus());
         }
@@ -198,7 +198,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
             //attempt to retrieve thing1
             thing1 = this.app().collection("things").entity(thing1).get();
             fail("This should throw an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ResponseProcessingException uie) {
             // Should return a 404 Not Found
             assertEquals(404, uie.getResponse().getStatus());
         }

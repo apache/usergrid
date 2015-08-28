@@ -27,9 +27,9 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
+import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
@@ -62,14 +62,14 @@ public class AccessTokenIT extends AbstractRestIT {
         // wait for the token to expire
         Thread.sleep(ttl - (System.currentTimeMillis() - startTime) + 1000);
 
-        ClientResponse.Status responseStatus = null;
+        Response.Status responseStatus = null;
         try {
             management().users().user( clientSetup.getUsername() ).get( ApiResponse.class);
-        } catch (UniformInterfaceException uie) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        } catch (ResponseProcessingException uie) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals(ClientResponse.Status.UNAUTHORIZED, responseStatus);
+        assertEquals(Response.Status.UNAUTHORIZED, responseStatus);
     }
 
 
@@ -168,9 +168,9 @@ public class AccessTokenIT extends AbstractRestIT {
     public void meTokenPostForm() throws IOException {
 
         Form form = new Form();
-        form.add("grant_type", "password");
-        form.add("username", clientSetup.getUsername());
-        form.add("password", clientSetup.getPassword());
+        form.param( "grant_type", "password" );
+        form.param( "username", clientSetup.getUsername() );
+        form.param( "password", clientSetup.getPassword() );
 
         Token adminToken = management().me().post( Token.class,form );
 
@@ -198,8 +198,8 @@ public class AccessTokenIT extends AbstractRestIT {
 
         try {
             management().token().post( Token.class,payload );
-        } catch (UniformInterfaceException uie) {
-            assertEquals(ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus());
+        } catch (ResponseProcessingException uie) {
+            assertEquals(Response.Status.BAD_REQUEST, uie.getResponse().getStatus());
         }
 
     }
@@ -218,8 +218,8 @@ public class AccessTokenIT extends AbstractRestIT {
 
         try {
             management().token().post( Token.class, payload );
-        } catch (UniformInterfaceException uie) {
-            assertEquals(ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus());
+        } catch (ResponseProcessingException uie) {
+            assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus());
         }
 
     }
@@ -246,8 +246,8 @@ public class AccessTokenIT extends AbstractRestIT {
             management().users().user( clientSetup.getUsername() ).get();
             fail( "Token1 should have been revoked" );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus());
+        catch ( ResponseProcessingException uie ) {
+            assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
 
 
@@ -257,8 +257,8 @@ public class AccessTokenIT extends AbstractRestIT {
             management().users().user( clientSetup.getUsername() ).get();
             fail( "Token2 should have been revoked" );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus());
+        catch ( ResponseProcessingException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
     }
 
@@ -287,8 +287,8 @@ public class AccessTokenIT extends AbstractRestIT {
             management().users().user( clientSetup.getUsername() ).get();
             fail( "Token1 should have been revoked" );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus());
+        catch ( ResponseProcessingException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
 
 
@@ -297,7 +297,7 @@ public class AccessTokenIT extends AbstractRestIT {
             management().token().setToken( token2 );
             management().users().user( clientSetup.getUsername() ).get();
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ResponseProcessingException uie ) {
             fail( "Token2 shouldn't have been revoked" );
 
         }

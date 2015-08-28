@@ -29,9 +29,9 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.RestClient;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
+import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -123,7 +123,7 @@ public class OrganizationsIT extends AbstractRestIT {
             clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
             fail("Should not have been able to create duplicate organization");
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ResponseProcessingException ex ) {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage, ex );
         }
 
@@ -135,7 +135,7 @@ public class OrganizationsIT extends AbstractRestIT {
             tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created user" );
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ResponseProcessingException ex ) {
             errorParse( 400,invalidGrantErrorMessage, ex );
 
         }
@@ -179,7 +179,7 @@ public class OrganizationsIT extends AbstractRestIT {
             clientSetup.getRestClient().management().orgs().post( orgDuplicatePayload );
             fail( "Should not have created organization" );
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ResponseProcessingException ex ) {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage,ex);
         }
 
@@ -190,7 +190,7 @@ public class OrganizationsIT extends AbstractRestIT {
             tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created organization" );
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ResponseProcessingException ex ) {
             errorParse( 400,invalidGrantErrorMessage,ex );
         }
 
@@ -222,7 +222,7 @@ public class OrganizationsIT extends AbstractRestIT {
         try{
             Organization organizationReturned = clientSetup.getRestClient().management().orgs().post(queryParameters);
             fail();
-        }catch (UniformInterfaceException e){
+        }catch (ResponseProcessingException e){
             assertEquals("ensure bad request",e.getResponse().getStatus(), 400);
         }
 
@@ -254,12 +254,12 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //create the form to hold the organization
         Form form = new Form();
-        form.add( "organization", organization.getOrganization() );
-        form.add("username", organization.getUsername());
-        form.add( "grant_type", "password" );
-        form.add( "email", organization.getEmail() );
-        form.add( "name", organization.getName() );
-        form.add("password", organization.getPassword());
+        form.param( "organization", organization.getOrganization() );
+        form.param( "username", organization.getUsername() );
+        form.param( "grant_type", "password" );
+        form.param( "email", organization.getEmail() );
+        form.param( "name", organization.getName() );
+        form.param( "password", organization.getPassword() );
 
         //Post the organization and verify it worked.
         Organization organizationReturned = clientSetup.getRestClient().management().orgs().post( form );
@@ -295,8 +295,8 @@ public class OrganizationsIT extends AbstractRestIT {
             //Delete default organization
             clientSetup.getRestClient().management().orgs().org( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
-        }catch(UniformInterfaceException uie){
-            assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
+        }catch(ResponseProcessingException uie){
+            assertEquals( Response.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
         }
     }
 

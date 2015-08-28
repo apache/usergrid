@@ -17,19 +17,16 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
-import com.sun.jersey.multipart.FormDataMultiPart;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
-
-import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.services.assets.data.AssetUtils;
-
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +37,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import net.jcip.annotations.NotThreadSafe;
 
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;

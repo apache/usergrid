@@ -17,30 +17,28 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.usergrid.rest.RootResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -70,7 +68,9 @@ public class ApplicationsResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getOrganizationApplications(
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getOrganizationApplications(
         @Context UriInfo ui,
         @QueryParam( "deleted" ) @DefaultValue( "false" ) Boolean deleted, // only return deleted apps if true
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
@@ -81,14 +81,16 @@ public class ApplicationsResource extends AbstractContextResource {
         BiMap<UUID, String> applications = management.getApplicationsForOrganization( organization.getUuid() );
         response.setData( applications.inverse() );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @POST
     @Consumes( MediaType.APPLICATION_JSON )
-    public JSONWithPadding newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                           @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                           String callback ) throws Exception {
         String applicationName = ( String ) json.get( "name" );
@@ -99,7 +101,9 @@ public class ApplicationsResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
-    public JSONWithPadding newApplicationForOrganizationFromForm( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse newApplicationForOrganizationFromForm( @Context UriInfo ui, Map<String, Object> json,
                                                                   @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                                   String callback,
                                                                   @FormParam( "name" ) String applicationName )
@@ -119,7 +123,7 @@ public class ApplicationsResource extends AbstractContextResource {
         applications.put( applicationInfo.getName(), applicationInfo.getId() );
         response.setData( applications );
         response.setResults( management.getApplicationMetadata( applicationInfo.getId() ) );
-        return new JSONWithPadding( response, callback );
+        return response;
 
     }
 

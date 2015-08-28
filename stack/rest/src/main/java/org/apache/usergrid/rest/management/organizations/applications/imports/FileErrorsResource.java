@@ -20,23 +20,7 @@
 package org.apache.usergrid.rest.management.organizations.applications.imports;
 
 
-import java.util.Collections;
-import java.util.UUID;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriInfo;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.Entity;
@@ -46,8 +30,17 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriInfo;
+import java.util.Collections;
+import java.util.UUID;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.applications.imports.FileErrorsResource")
@@ -82,7 +75,9 @@ public class FileErrorsResource extends AbstractContextResource {
 
 
     @GET
-    public JSONWithPadding getFileIncludes( @Context UriInfo ui, @QueryParam( "ql" ) String query, @QueryParam( "cursor" ) String cursor )
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getFileIncludes( @Context UriInfo ui, @QueryParam( "ql" ) String query, @QueryParam( "cursor" ) String cursor )
           throws Exception {
 
 
@@ -103,13 +98,15 @@ public class FileErrorsResource extends AbstractContextResource {
 
           response.withResults( importResults );
 
-          return new JSONWithPadding( response );
+          return response;
 
       }
 
     @GET
     @Path( RootResource.ENTITY_ID_PATH )
-    public JSONWithPadding getFileIncludeById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getFileIncludeById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 
         final UUID failedEntity = UUID.fromString( entityId.getPath() );
@@ -131,7 +128,7 @@ public class FileErrorsResource extends AbstractContextResource {
 
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
 
-        return new JSONWithPadding( response );
+        return response;
 
     }
 
