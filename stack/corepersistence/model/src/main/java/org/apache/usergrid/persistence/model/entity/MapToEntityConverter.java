@@ -26,7 +26,6 @@ import org.apache.usergrid.persistence.model.collection.SchemaManager;
 import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.Location;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -178,9 +177,6 @@ public class MapToEntityConverter{
 
     /**
      * for location we need to parse two formats potentially and convert to a typed field
-     * @param value
-     * @param fieldName
-     * @param entity
      */
     private void processLocationField(Map<String, Object> value, String fieldName, Entity entity) {
         // get the object to inspect
