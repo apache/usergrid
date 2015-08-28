@@ -17,22 +17,21 @@
 package org.apache.usergrid.security.providers;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 
 /**
@@ -122,18 +121,17 @@ public class PingIdentityProvider extends AbstractProvider {
 
 
     @Override
-    Map<String, Object> userFromResource( String externalToken ) {
+    Map<String, Object> userFromResource(String externalToken) {
 
 
-      MultivaluedMap<String, String> formData =  getMultivaluedMapImpl();
-      formData.add("grant_type", "urn:pingidentity.com:oauth2:grant_type:validate_bearer");
-      formData.add("client_id", clientId);
-      formData.add("client_secret", clientSecret);
-      formData.add("token", externalToken);
+        MultivaluedMap<String, String> formData = getMultivaluedMapImpl();
+        formData.add( "grant_type", "urn:pingidentity.com:oauth2:grant_type:validate_bearer" );
+        formData.add( "client_id", clientId );
+        formData.add( "client_secret", clientSecret );
+        formData.add( "token", externalToken );
 
-      JsonNode node = client.resource( apiUrl )
-          .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-          .post( JsonNode.class, formData );
+        JsonNode node = client.target( apiUrl ).request()
+            .post( Entity.entity( formData, MediaType.APPLICATION_FORM_URLENCODED_TYPE ), JsonNode.class );
 
         String rawEmail = node.get( "access_token" ).get( "subject" ).asText();
 

@@ -17,18 +17,15 @@
 package org.apache.usergrid.rest.security.shiro.filters;
 
 
-import java.security.Principal;
-import java.util.Map;
-
-import javax.ws.rs.core.SecurityContext;
-
+import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import org.apache.shiro.codec.Base64;
-
-import com.sun.jersey.spi.container.ContainerRequest;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.SecurityContext;
+import java.security.Principal;
+import java.util.Map;
 
 
 @Component
@@ -43,15 +40,14 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request ) {
+    public void filter( ContainerRequestContext request ) {
         Map<String, String> auth_types = getAuthTypes( request );
         if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) ) {
-            return request;
+            return;
         }
-
         String[] values = Base64.decodeToString( auth_types.get( AUTH_BASIC_TYPE ) ).split( ":" );
         if ( values.length < 2 ) {
-            return request;
+            return;
         }
         String name = values[0].toLowerCase();
         String password = values[1];
@@ -64,12 +60,8 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
                 && sysadmin_login_allowed ) {
             request.setSecurityContext( new SysAdminRoleAuthenticator() );
             logger.info( "System administrator access allowed" );
-            return request;
         }
-
-        return request;
     }
-
 
     private static class SysAdminRoleAuthenticator implements SecurityContext {
 

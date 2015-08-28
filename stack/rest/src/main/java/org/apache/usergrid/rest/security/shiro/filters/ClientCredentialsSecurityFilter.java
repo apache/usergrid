@@ -17,18 +17,16 @@
 package org.apache.usergrid.rest.security.shiro.filters;
 
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-
+import org.apache.shiro.subject.Subject;
+import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 
-import org.apache.shiro.subject.Subject;
-
-import com.sun.jersey.spi.container.ContainerRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.rest.exceptions.AuthErrorInfo.OAUTH2_INVALID_CLIENT;
@@ -50,7 +48,7 @@ public class ClientCredentialsSecurityFilter extends SecurityFilter {
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request ) {
+    public void filter( ContainerRequestContext request ) {
         String clientId = httpServletRequest.getParameter( "client_id" );
         String clientSecret = httpServletRequest.getParameter( "client_secret" );
 
@@ -65,6 +63,5 @@ public class ClientCredentialsSecurityFilter extends SecurityFilter {
                 throw mappableSecurityException( OAUTH2_INVALID_CLIENT );
             }
         }
-        return request;
     }
 }

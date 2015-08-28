@@ -29,7 +29,6 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Test;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
@@ -37,6 +36,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import org.junit.Ignore;
 
+import javax.ws.rs.client.ResponseProcessingException;
 
 
 public class DevicesResourceIT extends AbstractRestIT {
@@ -68,7 +68,7 @@ public class DevicesResourceIT extends AbstractRestIT {
             entity = devicesResource.entity(uuid).get();
             fail( "should get 404 error" );
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ResponseProcessingException e ) {
             assertEquals( 404, e.getResponse().getStatus() );
         }
         refreshIndex();

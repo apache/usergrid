@@ -17,15 +17,15 @@
 package org.apache.usergrid.rest.test.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.usergrid.rest.test.resource.endpoints.*;
 import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 
@@ -38,9 +38,9 @@ public class RestClient implements UrlResource {
     private final String serverUrl;
     private ClientContext context;
 
-    public WebResource resource;
-    ClientConfig config = new DefaultClientConfig();
-    Client client = Client.create( config );
+    public WebTarget resource;
+    ClientConfig config = new ClientConfig();
+    Client client = ClientBuilder.newClient( config );
 
     /**
      *
@@ -49,7 +49,7 @@ public class RestClient implements UrlResource {
     public RestClient( final String serverUrl ) {
         this.serverUrl = serverUrl;
         this.context = new ClientContext();
-        resource = client.resource( serverUrl );
+        resource = client.target( serverUrl );
         resource.path( serverUrl );
     }
 
@@ -59,12 +59,12 @@ public class RestClient implements UrlResource {
      */
     @Override
     public String getPath() {
-        return resource.getURI().toString();
+        return resource.getUri().toString();
     }
 
     @Override
-    public WebResource getResource() {
-        return client.resource( serverUrl );
+    public WebTarget getTarget(){
+        return client.target( serverUrl );
     }
 
     public ClientContext getContext() {
@@ -98,11 +98,12 @@ public class RestClient implements UrlResource {
     }
     public void refreshIndex(String orgname, String appName, String appid) {
         //TODO: add error checking and logging
-        this.getResource().path( "/refreshindex" )
+        this.getTarget().path( "/refreshindex" )
                 .queryParam( "org_name", orgname )
                 .queryParam( "app_name",appName )
                 .queryParam("app_id", appid)
-            .accept( MediaType.APPLICATION_JSON ).post();
+            .request()
+            .accept( MediaType.APPLICATION_JSON ).post( javax.ws.rs.client.Entity.json(null) );
     }
 
     public NamedResource pathResource(String path){
@@ -110,13 +111,11 @@ public class RestClient implements UrlResource {
     }
 
     public void superuserSetup() {
-        //TODO: change this when we upgrade to new version of jersey
-        HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
-        client.addFilter( httpBasicAuthFilter );
-
-        this.getResource().path( "system/superuser/setup" )
-            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        client.removeFilter( httpBasicAuthFilter );
+        this.getTarget().path( "system/superuser/setup" ).request()
+            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "superuser")
+            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "superpassword" )
+            .accept( MediaType.APPLICATION_JSON )
+            .get( JsonNode.class );
     }
 
     //todo:fix this method for the client.

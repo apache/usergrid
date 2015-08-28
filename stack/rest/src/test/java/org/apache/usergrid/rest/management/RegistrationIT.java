@@ -17,8 +17,6 @@
 package org.apache.usergrid.rest.management;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
@@ -32,6 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.Map;
@@ -102,12 +102,14 @@ public class RegistrationIT extends AbstractRestIT {
 
             String t = this.getAdminToken().getAccessToken();
             Form form = new Form();
-            form.add("foo", "bar");
+            form.param( "foo", "bar" );
             try {
-                this.org().getResource(false).path("/users/test-admin-null@mockserver.com")
-                    .queryParam("access_token", t).accept(MediaType.APPLICATION_JSON)
-                    .type(MediaType.APPLICATION_FORM_URLENCODED).put(String.class, form);
-            } catch (UniformInterfaceException e) {
+                this.org().getTarget(false).path("/users/test-admin-null@mockserver.com")
+                    .queryParam("access_token", t)
+                    .request()
+                    .accept(MediaType.APPLICATION_JSON)
+                    .put( javax.ws.rs.client.Entity.form(form) );
+            } catch (ResponseProcessingException e) {
                 assertEquals("Should receive a 404 Not Found", 404, e.getResponse().getStatus());
             }
         } finally {
@@ -179,13 +181,9 @@ public class RegistrationIT extends AbstractRestIT {
 
             //reset token
             String token = getTokenFromMessage(msgs[0]);
-            this
-                .management()
-                .orgs()
-                .org( this.clientSetup.getOrganizationName() )
-                .users()
-                .getResource( false )
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).users().getTarget( false )
                 .queryParam( "access_token", token )
+                .request()
                 .get( String.class );
 
             //There is nothing in this test that should indicate why an admin access wouldn't be allowed.
@@ -218,10 +216,10 @@ public class RegistrationIT extends AbstractRestIT {
 
             //A form is REQUIRED to post a user to a management application
             Form userForm = new Form();
-            userForm.add( "username", adminUserEmail );
-            userForm.add( "name", adminUserEmail );
-            userForm.add( "email", adminUserEmail );
-            userForm.add( "password", "password1" );
+            userForm.param( "username", adminUserEmail );
+            userForm.param( "name", adminUserEmail );
+            userForm.param( "email", adminUserEmail );
+            userForm.param( "password", "password1" );
 
             //Disgusting data manipulation to parse the form response.
             Map adminUserPostResponse = (management().users().post( User.class, userForm ));

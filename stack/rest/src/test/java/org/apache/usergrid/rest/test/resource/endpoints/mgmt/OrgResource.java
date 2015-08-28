@@ -17,8 +17,6 @@
 
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
-import javax.ws.rs.core.MediaType;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
@@ -26,15 +24,14 @@ import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Organization;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
-import org.apache.usergrid.rest.test.resource.model.User;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
-
-import com.sun.jersey.api.client.WebResource;
-
-import com.sun.jersey.api.representation.Form;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -62,9 +59,9 @@ public class OrgResource  extends NamedResource {
 
         // Seems like an apiresponse can't handle what gets returned from the from urlended media type
 
-        ApiResponse response = getResource().type( MediaType.APPLICATION_FORM_URLENCODED )
+        ApiResponse response = getTarget().request()
             .accept(MediaType.APPLICATION_JSON)
-            .post(ApiResponse.class, form);
+            .post( Entity.form( form ), ApiResponse.class);
 
         Organization organization = new Organization(response);
         organization.setOwner( response );
@@ -77,12 +74,12 @@ public class OrgResource  extends NamedResource {
     public Organization post(QueryParameters parameters){
 
         // Seems like an ApiResponse can't handle what gets returned from the from URL encoded media type
-        WebResource resource = addParametersToResource( getResource(), parameters);
+        WebTarget resource = addParametersToResource( getTarget(), parameters);
 
         // use string type so we can log actual response from server
-        String responseString = resource.type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON)
-            .post(String.class);
+        String responseString = resource.request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( Entity.json( null ), String.class );
 
         logger.debug("Response from post: " + responseString);
 
@@ -103,9 +100,9 @@ public class OrgResource  extends NamedResource {
     public Organization post(Organization organization){
 
         // use string type so we can log actual response from server
-        String responseString = getResource(false).type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(MediaType.APPLICATION_JSON)
-            .post(String.class, organization);
+        String responseString = getTarget(false).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( Entity.json(organization), String.class );
 
         logger.debug("Response from post: " + responseString);
 
@@ -123,8 +120,9 @@ public class OrgResource  extends NamedResource {
         return org;
     }
     public Organization post(Organization organization, Token token){
-        ApiResponse response = getResource(true,token).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                                            .post( ApiResponse.class,organization );
+        ApiResponse response = getTarget(true,token).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( Entity.json(organization), ApiResponse.class );
 
         Organization org = new Organization(response);
         org.setOwner( response );
@@ -135,9 +133,9 @@ public class OrgResource  extends NamedResource {
     public Organization put(Organization organization){
 
         // use string type so we can log actual response from server
-        String responseString = getResource().type( MediaType.APPLICATION_JSON_TYPE )
+        String responseString = getTarget().request()
             .accept(MediaType.APPLICATION_JSON)
-            .put(String.class, organization);
+            .post( Entity.json( organization ), String.class );
 
         logger.debug("Response from put: " + responseString);
 

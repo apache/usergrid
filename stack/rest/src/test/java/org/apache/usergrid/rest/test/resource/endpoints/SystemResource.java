@@ -18,11 +18,10 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -50,8 +49,10 @@ public class SystemResource extends NamedResource {
 
     public ApiResponse put(){
         ApiResponse
-            response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                                        .put(ApiResponse.class);
+            response = getTarget(true)
+                .request()
+                .accept(MediaType.APPLICATION_JSON)
+                .put( javax.ws.rs.client.Entity.json(null), ApiResponse.class);
         return response;
     }
 }

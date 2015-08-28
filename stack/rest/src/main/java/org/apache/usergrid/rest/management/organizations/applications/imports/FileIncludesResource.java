@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -46,8 +47,6 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
-
-import com.sun.jersey.api.json.JSONWithPadding;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.applications.imports.FileIncludesResource")
@@ -80,7 +79,9 @@ public class FileIncludesResource extends AbstractContextResource {
 
 
     @GET
-    public JSONWithPadding getFileIncludes( @Context UriInfo ui, @QueryParam( "ql" ) String query, @QueryParam( "cursor" ) String cursor )
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getFileIncludes( @Context UriInfo ui, @QueryParam( "ql" ) String query, @QueryParam( "cursor" ) String cursor )
           throws Exception {
 
 
@@ -100,13 +101,15 @@ public class FileIncludesResource extends AbstractContextResource {
 
           response.withResults( importResults );
 
-          return new JSONWithPadding( response );
+        return response;
 
       }
 
     @GET
     @Path( RootResource.ENTITY_ID_PATH )
-    public JSONWithPadding getFileIncludeById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getFileIncludeById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 
         final UUID fileIncludeId = UUID.fromString( entityId.getPath() );
@@ -126,7 +129,7 @@ public class FileIncludesResource extends AbstractContextResource {
 
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
 
-        return new JSONWithPadding( response );
+        return response;
 
     }
 

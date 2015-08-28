@@ -17,17 +17,18 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.representation.Form;
-import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -64,14 +65,14 @@ public class NamedResource implements UrlResource {
     }
 
     @Override
-    public WebResource getResource() {
-        return getResource(false);
+    public WebTarget getTarget() {
+        return getTarget( false );
     }
-    public WebResource getResource(boolean useToken) {
-        return getResource(useToken,null);
+    public WebTarget getTarget(boolean useToken) {
+        return getTarget( useToken, null );
     }
-    public WebResource getResource(boolean useToken,Token token) {
-        WebResource resource = parent.getResource().path( getPath() );
+    public WebTarget getTarget(boolean useToken,Token token) {
+        WebTarget resource = parent.getTarget().path( getPath() );
         token = token !=null ? token : this.context.getToken();
         //error checking
         if (token == null) {
@@ -80,7 +81,7 @@ public class NamedResource implements UrlResource {
         return  useToken    ? resource.queryParam("access_token",token.getAccessToken()) :  resource;
     }
 
-    protected WebResource addParametersToResource(WebResource resource, final QueryParameters parameters){
+    protected WebTarget addParametersToResource(WebTarget resource, final QueryParameters parameters){
 
         if(parameters == null){
             return resource;
@@ -178,11 +179,8 @@ public class NamedResource implements UrlResource {
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
-     * @param type
-     * @param <T>
-     * @return
+     * For edge cases like Organizations and Tokens
      */
-    //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type) {
         return post(true,type,null,null,false);
 
@@ -191,26 +189,18 @@ public class NamedResource implements UrlResource {
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
-     * @param type
-     * @param requestEntity
-     * @param <T>
-     * @return
+     * For edge cases like Organizations and Tokens.
      */
-    //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Entity requestEntity) {
-        return post(true,type,requestEntity,null,false);
+        return post( true, type, requestEntity, null, false);
 
     }
 
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
-     * @param type
-     * @param requestEntity
-     * @param <T>
-     * @return
+     * For edge cases like Organizations and Tokens
      */
-    //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Map requestEntity) {
         return post(true,type,requestEntity,null,false);
 
@@ -223,59 +213,46 @@ public class NamedResource implements UrlResource {
 
     /**
      * Used to test POST using form payloads.
-     * @param type
-     * @param requestEntity
-     * @param <T>
-     * @return
      */
-    public <T> T post(Class<T> type, Form requestEntity) {
+    public <T> T post(Class<T> type, Form form) {
         GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource()
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-            .entity(requestEntity, MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-            .post(gt.getRawClass());
-
+        return getTarget().request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( javax.ws.rs.client.Entity.entity( form, MediaType.APPLICATION_FORM_URLENCODED_TYPE ), gt );
     }
 
 
-    //Used for empty posts
+    // Used for empty posts
     public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters) {
-        WebResource resource = getResource(useToken);
-        resource = addParametersToResource(resource, queryParameters);
-        WebResource.Builder builder = resource
-            .type(MediaType.APPLICATION_JSON_TYPE)
+        WebTarget resource = getTarget( useToken );
+        resource = addParametersToResource( resource, queryParameters );
+
+        Invocation.Builder builder = resource.request()
             .accept( MediaType.APPLICATION_JSON );
 
-        if(entity!=null){
-            builder.entity(entity);
-        }
+        // it's OK for the entity to be null
         GenericType<T> gt = new GenericType<>((Class) type);
-        return builder
-            .post(gt.getRawClass());
-
+        return builder.post( javax.ws.rs.client.Entity.json( entity ), gt );
     }
 
-    //Used for empty posts
-    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters, boolean useBasicAuthentication ) {
-        WebResource resource = getResource(useToken);
+    // Used for empty posts
+    public <T> T post( boolean useToken, Class<T> type, Map entity,
+                       final QueryParameters queryParameters, boolean useBasicAuthentication ) {
+
+        WebTarget resource = getTarget( useToken );
         resource = addParametersToResource(resource, queryParameters);
-        WebResource.Builder builder = resource
-            .type(MediaType.APPLICATION_JSON_TYPE)
+        Invocation.Builder builder = resource.request()
             .accept( MediaType.APPLICATION_JSON );
 
-        if(entity!=null){
-            builder.entity(entity);
+
+        if ( useBasicAuthentication ) {
+            builder = builder.property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "superuser")
+                             .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "superpassword");
         }
 
-        if(useBasicAuthentication){
-            //added httpBasicauth filter to all setup calls because they all do verification this way.
-            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
-            resource.addFilter( httpBasicAuthFilter );
-        }
-
+        // it's OK for the entity to be null
         GenericType<T> gt = new GenericType<>((Class) type);
-        return builder.post( gt.getRawClass() );
+        return builder.post( javax.ws.rs.client.Entity.json( entity ), gt );
 
     }
 
@@ -297,14 +274,14 @@ public class NamedResource implements UrlResource {
     }
 
     public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken) {
-        WebResource resource = getResource(useToken);
+        WebTarget resource = getTarget( useToken );
         if(queryParameters!=null) {
             resource = addParametersToResource(resource, queryParameters);
         }
         GenericType<T> gt = new GenericType<>((Class) type);
-        return resource.type(MediaType.APPLICATION_JSON_TYPE)
+        return resource.request()
             .accept( MediaType.APPLICATION_JSON )
-            .get( gt.getRawClass() );
+            .get( gt );
 
     }
 
@@ -313,8 +290,9 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse post( boolean useToken, FormDataMultiPart multiPartForm ) {
-        WebResource resource = getResource( useToken );
-        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).post( ApiResponse.class, multiPartForm );
+        WebTarget resource = getTarget( useToken );
+        return resource.request().post(
+            javax.ws.rs.client.Entity.entity( multiPartForm, multiPartForm.getMediaType() ), ApiResponse.class );
     }
 
     public ApiResponse post( FormDataMultiPart multiPartForm ) {
@@ -322,8 +300,9 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse put( boolean useToken, byte[] data, MediaType type ) {
-        WebResource resource = getResource(useToken);
-        return resource.type( type ).put( ApiResponse.class, data );
+        WebTarget resource = getTarget(useToken );
+        return resource.request().put(
+            javax.ws.rs.client.Entity.entity(data, type), ApiResponse.class );
     }
 
     public ApiResponse put( byte[] data, MediaType type ) {
@@ -331,8 +310,9 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse put( boolean useToken, FormDataMultiPart multiPartForm ) {
-        WebResource resource = getResource(useToken);
-        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).put( ApiResponse.class, multiPartForm );
+        WebTarget resource = getTarget(useToken );
+        return resource.request().put(
+            javax.ws.rs.client.Entity.entity(multiPartForm, multiPartForm.getMediaType()), ApiResponse.class );
     }
 
     public ApiResponse put( FormDataMultiPart multiPartForm ) {
@@ -340,8 +320,8 @@ public class NamedResource implements UrlResource {
     }
 
     public InputStream getAssetAsStream( boolean useToken ) {
-        WebResource resource = getResource(useToken);
-        return resource.accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        WebTarget resource = getTarget(useToken );
+        return resource.request().accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
     }
 
     public InputStream getAssetAsStream() {
@@ -353,6 +333,6 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse delete( boolean useToken ) {
-        return getResource(useToken).delete( ApiResponse.class );
+        return getTarget(useToken).request().delete( ApiResponse.class );
     }
 }

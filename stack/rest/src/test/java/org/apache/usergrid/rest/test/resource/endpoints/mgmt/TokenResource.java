@@ -17,13 +17,13 @@
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
 
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 
@@ -49,10 +49,9 @@ public class TokenResource extends NamedResource {
      * @return
      */
     public Token get(QueryParameters params) {
-        WebResource resource = getResource(false);
+        WebTarget resource = getTarget( false );
         resource = addParametersToResource(resource, params);
-        Token token = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                              .get(Token.class);
+        Token token = resource.request().accept(MediaType.APPLICATION_JSON).get(Token.class);
 
         this.context.setToken(token);
         return token;

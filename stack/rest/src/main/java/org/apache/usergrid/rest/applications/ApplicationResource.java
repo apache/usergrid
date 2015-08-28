@@ -38,6 +38,9 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import org.apache.usergrid.rest.ApiResponse;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -72,9 +75,6 @@ import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
@@ -354,7 +354,9 @@ public class ApplicationResource extends ServiceResource {
     @GET
     @Path("credentials")
     @RequireApplicationAccess
-    public JSONWithPadding getKeys( @Context UriInfo ui,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getKeys( @Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -368,17 +370,16 @@ public class ApplicationResource extends ServiceResource {
                 new ClientCredentialsInfo( management.getClientIdForApplication( services.getApplicationId() ),
                         management.getClientSecretForApplication( services.getApplicationId() ) );
 
-        return new JSONWithPadding(
-                createApiResponse().withCredentials( kp ).withAction( "get application keys" ).withSuccess(),
-                callback );
+        return   createApiResponse().withCredentials( kp ).withAction( "get application keys" ).withSuccess();
     }
 
 
     @POST
     @Path("credentials")
     @RequireApplicationAccess
-    @Produces(MediaType.APPLICATION_JSON)
-    public JSONWithPadding generateKeys( @Context UriInfo ui,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse generateKeys( @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         logger.debug( "AuthResource.keys" );
@@ -391,9 +392,7 @@ public class ApplicationResource extends ServiceResource {
             management.getClientIdForApplication( services.getApplicationId() ),
             management.newClientSecretForApplication( services.getApplicationId() ) );
 
-        return new JSONWithPadding(
-                createApiResponse().withCredentials( kp ).withAction( "generate application keys" ).withSuccess(),
-                callback );
+        return createApiResponse().withCredentials( kp ).withAction( "generate application keys" ).withSuccess();
     }
 
 
@@ -498,7 +497,7 @@ public class ApplicationResource extends ServiceResource {
     @Override
     @DELETE
     @RequireOrganizationAccess
-    public JSONWithPadding executeDelete( @Context final UriInfo ui, @DefaultValue( "callback" ) final String callback,
+    public ApiResponse executeDelete( @Context final UriInfo ui, @DefaultValue( "callback" ) final String callback,
                                           final String confirmAppDelete ) throws Exception {
         throw new UnsupportedOperationException( "Delete must be done from the management endpoint" );
     }
@@ -599,7 +598,9 @@ public class ApplicationResource extends ServiceResource {
 
     @GET
     @Path("apm/apigeeMobileConfig")
-    public JSONWithPadding getAPMConfig( @Context UriInfo ui,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public Object getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         EntityManager em = emf.getEntityManager( applicationId );
@@ -610,6 +611,6 @@ public class ApplicationResource extends ServiceResource {
             value = management.registerAppWithAPM( management.getOrganizationForApplication( applicationId ),
                     management.getApplicationInfo( applicationId ) );
         }
-        return new JSONWithPadding( value, callback );
+        return value;
     }
 }

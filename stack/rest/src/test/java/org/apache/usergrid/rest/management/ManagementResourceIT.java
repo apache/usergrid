@@ -18,9 +18,6 @@ package org.apache.usergrid.rest.management;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -33,7 +30,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
@@ -115,26 +115,26 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // check that the test admin cannot access the new org info
 
-        Status status = null;
+        Response.Status status = null;
         String returnVal = "";
 
         try {
             returnVal = this.management().orgs().org( orgName ).get(String.class);
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
         assertNotNull( status );
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
 
         // this admin should have access to test org
         status = null;
         try {
             this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
         assertNull( status );
@@ -145,8 +145,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
         assertNull( status );
@@ -332,15 +332,15 @@ public class ManagementResourceIT extends AbstractRestIT {
         // wait for the token to expire
         Thread.sleep(  (System.currentTimeMillis() - startTime) + ttl );
 
-        Status responseStatus = null;
+        Response.Status responseStatus = null;
         try {
             userdata = management.users().user(clientSetup.getEmail()).get();
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.UNAUTHORIZED, responseStatus );
+        assertEquals( Response.Status.UNAUTHORIZED, responseStatus );
     }
 
 
@@ -423,19 +423,21 @@ public class ManagementResourceIT extends AbstractRestIT {
     public void meTokenPostForm() {
 
         Form form = new Form();
-        form.add( "grant_type", "password" );
-        form.add( "username", clientSetup.getUsername() );
-        form.add( "password", clientSetup.getPassword() );
+        form.param( "grant_type", "password" );
+        form.param( "username", clientSetup.getUsername() );
+        form.param( "password", clientSetup.getPassword() );
 
         JsonNode node = management.me().post( JsonNode.class, form );
-        logger.info("node:", node);
+        logger.info( "node:", node);
 
         String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
 
-        node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        node = target().path( "/management/me" )
+            .queryParam( "access_token", token ).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .get( JsonNode.class );
         logger.info("node:", node );
 
     }
@@ -449,15 +451,15 @@ public class ManagementResourceIT extends AbstractRestIT {
             .map( "password", clientSetup.getPassword() )
             .map( "ttl", "derp" );
 
-        Status responseStatus = null;
+        Response.Status responseStatus = null;
         try {
            management.token().post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus());
         }
 
-        assertEquals( Status.BAD_REQUEST, responseStatus );
+        assertEquals( Response.Status.BAD_REQUEST, responseStatus );
     }
 
 
@@ -469,16 +471,16 @@ public class ManagementResourceIT extends AbstractRestIT {
             .map( "password", clientSetup.getPassword() )
             .map( "ttl", Long.MAX_VALUE + "" );
 
-        Status responseStatus = null;
+        Response.Status responseStatus = null;
 
         try {
             management.token().post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.BAD_REQUEST, responseStatus );
+        assertEquals( Response.Status.BAD_REQUEST, responseStatus );
     }
 
 
@@ -500,16 +502,16 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // the tokens shouldn't work
 
-        Status status = null;
+        Response.Status status = null;
 
         try {
             response = management.users().user(clientSetup.getUsername()).get();
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
 
         Token token3 = management.token().get(clientSetup.getUsername(), clientSetup.getPassword());
 
@@ -528,11 +530,11 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             management.users().user(clientSetup.getUsername()).get();
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ResponseProcessingException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
 
     }
 
@@ -587,10 +589,10 @@ public class ManagementResourceIT extends AbstractRestIT {
 
                 fail( "Validation should have failed" );
 
-            } catch (UniformInterfaceException actual) {
+            } catch (ResponseProcessingException actual) {
                 assertEquals( 404, actual.getResponse().getStatus() );
-                String errorMsg = actual.getResponse().getEntity(
-                    JsonNode.class ).get( "error_description" ).toString();
+                String errorMsg = actual.getResponse().readEntity( JsonNode.class )
+                    .get( "error_description" ).toString();
                 logger.error( "ERROR: " + errorMsg );
                 assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
             }
@@ -638,15 +640,15 @@ public class ManagementResourceIT extends AbstractRestIT {
                 ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
                 fail( "Login as Admin User must fail when validate external tokens is enabled" );
 
-            } catch (UniformInterfaceException actual) {
+            } catch (ResponseProcessingException actual) {
                 assertEquals( 400, actual.getResponse().getStatus() );
-                String errorMsg = actual.getResponse()
-                    .getEntity( JsonNode.class ).get( "error_description" ).toString();
+                String errorMsg = actual.getResponse().readEntity( JsonNode.class )
+                    .get( "error_description" ).toString();
                 logger.error( "ERROR: " + errorMsg );
                 assertTrue( errorMsg.contains( "Admin Users must login via" ) );
 
             } catch (Exception e) {
-                fail( "We expected a UniformInterfaceException" );
+                fail( "We expected a ResponseProcessingException" );
             }
 
             // login as superuser must succeed

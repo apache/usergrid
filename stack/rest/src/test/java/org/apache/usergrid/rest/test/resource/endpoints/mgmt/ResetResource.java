@@ -17,13 +17,12 @@
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
-import com.sun.jersey.api.representation.Form;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -36,7 +35,8 @@ public class ResetResource extends NamedResource {
     }
 
     public String post(Form formPayload) {
-        return getResource().type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-            .accept( MediaType.TEXT_HTML ).post( String.class, formPayload);
+        return getTarget().request()
+            .accept( MediaType.TEXT_HTML )
+            .post( javax.ws.rs.client.Entity.form(formPayload), String.class);
     }
 }

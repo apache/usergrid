@@ -28,8 +28,8 @@ import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -106,7 +106,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         int status = 0;
         try {
             node = this.app().collection("users").entity(USER).collection("roles").entity(ROLE).get();
-        }catch (UniformInterfaceException e){
+        }catch (ResponseProcessingException e){
             status = e.getResponse().getStatus();
         }
 
@@ -158,7 +158,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         try {
             this.app().collection("users").entity(user).collection("groups").entity( groupPath ).collection( "users" ).entity( user ).get();
             fail("Should not have been able to retrieve the user as it was deleted");
-        }catch (UniformInterfaceException e){
+        }catch (ResponseProcessingException e){
             status=e.getResponse().getStatus();
             assertEquals( 404,status );
         }
@@ -198,7 +198,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         //Call a get on a existing entity with no access token and check if we get a 401
         try {
             this.app().collection( "roles" ).entity( "guest" ).get( false );
-        }catch(UniformInterfaceException uie){
+        }catch(ResponseProcessingException uie){
             assertEquals( 401,uie.getResponse().getStatus() );
         }
 
@@ -209,13 +209,13 @@ public class PermissionsResourceIT extends AbstractRestIT {
         //Call a get on a non existing entity that doesn't need permissions and check it we get a 404.
         try {
             this.app().collection( "roles" ).entity( "banana" ).get( false );
-        }catch(UniformInterfaceException uie){
+        }catch(ResponseProcessingException uie){
             assertEquals( 404,uie.getResponse().getStatus() );
         }
 
         try {
             this.app().collection( "roles" ).entity( UUIDUtils.newTimeUUID() ).get( false );
-        }catch(UniformInterfaceException uie){
+        }catch(ResponseProcessingException uie){
             assertEquals( 404,uie.getResponse().getStatus() );
         }
     }
@@ -302,11 +302,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("noca").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ResponseProcessingException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         status = 0;
 
@@ -315,11 +315,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("4peaks").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ResponseProcessingException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         refreshIndex();
 
@@ -355,11 +355,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("cowboyciao").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ResponseProcessingException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         refreshIndex();
 
@@ -369,11 +369,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("currycorner").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ResponseProcessingException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
     }
 
 
@@ -472,10 +472,10 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("books").post(book);
 
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ResponseProcessingException uie ) {
             status = uie.getResponse().getStatus();
         }
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         //Gets all books that user1 reviewed\
         this.app().collection("users").entity("me").connection("reviewed").collection("books").get();

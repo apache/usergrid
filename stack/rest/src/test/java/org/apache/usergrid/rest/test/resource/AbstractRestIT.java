@@ -19,14 +19,6 @@ package org.apache.usergrid.rest.test.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.test.framework.AppDescriptor;
-import com.sun.jersey.test.framework.JerseyTest;
-import com.sun.jersey.test.framework.WebAppDescriptor;
-import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.rest.test.resource.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
@@ -35,8 +27,12 @@ import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Rule;
 
+import javax.ws.rs.client.ResponseProcessingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
@@ -53,26 +49,24 @@ import static org.junit.Assert.assertEquals;
 //@RunWith( Arquillian.class )
 public class AbstractRestIT extends JerseyTest {
 
-    private static ClientConfig clientConfig = new DefaultClientConfig();
+    private static ClientConfig clientConfig = new ClientConfig();
 
     public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
 
     @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
 
-    protected static final AppDescriptor descriptor;
-
-    public AbstractRestIT() {
-        super( descriptor );
-    }
+//    protected static final Application descriptor;
+//
+//    public AbstractRestIT() {
+//        super( descriptor );
+//    }
 
 
     protected ObjectMapper mapper = new ObjectMapper();
 
     static {
-        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-        descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" )
-                .clientConfig( clientConfig ).build();
+        clientConfig.register( new JacksonFeature() );
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
     }
 
@@ -107,7 +101,6 @@ public class AbstractRestIT extends JerseyTest {
         }
     }
 
-    @Override
     protected URI getBaseURI() {
         try {
             return new URI("http://localhost:" + tomcatRuntime.getPort());
@@ -116,10 +109,10 @@ public class AbstractRestIT extends JerseyTest {
         }
     }
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() {
-        return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
-    }
+//    @Override
+//    protected TestContainerFactory getTestContainerFactory() {
+//        return new ExternalTestContainerFactory();
+//    }
 
     ///myorg/
     protected OrganizationResource org(){
@@ -158,15 +151,15 @@ public class AbstractRestIT extends JerseyTest {
 
 
     /**
-     * Takes in the expectedStatus message and the expectedErrorMessage then compares it to the UniformInterfaceException
+     * Takes in the expectedStatus message and the expectedErrorMessage then compares it to the ResponseProcessingException
      * to make sure that we got what we expected.
      * @param expectedStatus
      * @param expectedErrorMessage
      * @param uie
      */
-    public void errorParse(int expectedStatus, String expectedErrorMessage, UniformInterfaceException uie){
+    public void errorParse(int expectedStatus, String expectedErrorMessage, ResponseProcessingException uie){
         assertEquals(expectedStatus,uie.getResponse().getStatus());
-        JsonNode errorJson = uie.getResponse().getEntity( JsonNode.class );
+        JsonNode errorJson = uie.getResponse().readEntity( JsonNode.class );
         assertEquals( expectedErrorMessage, errorJson.get( "error" ).asText() );
 
     }

@@ -17,19 +17,15 @@
 package org.apache.usergrid.rest.applications.collection.groups;
 
 
-import java.io.IOException;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
-
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.ResponseProcessingException;
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
@@ -153,9 +149,9 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.createGroup(groupName, groupSpacePath);
             fail("Should not be able to create a group with a space in the path");
-        } catch (UniformInterfaceException e) {
+        } catch (ResponseProcessingException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "illegal_argument", node.get( "error" ).textValue() );
         }
 
@@ -196,9 +192,9 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("groups").uniqueID(groupName).get();
             fail("Entity still exists");
-        } catch (UniformInterfaceException e) {
+        } catch (ResponseProcessingException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "entity_not_found", node.get( "error" ).textValue() );
         }
 
@@ -302,9 +298,9 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("role").entity(role).get();
             fail("Entity still exists");
-        } catch (UniformInterfaceException e) {
+        } catch (ResponseProcessingException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "entity_not_found", node.get( "error" ).textValue() );
         }
 
@@ -371,9 +367,9 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("cats").uniqueID(catName).put(fluffy);
             fail("permissions should not allow this");
-        } catch (UniformInterfaceException e) {
+        } catch (ResponseProcessingException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ) );
             assertEquals( "unauthorized", node.get( "error" ).textValue() );
         }
 
@@ -381,9 +377,9 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("cats").uniqueID(catName).delete();
             fail("permissions should not allow this");
-        } catch (UniformInterfaceException e) {
+        } catch (ResponseProcessingException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "unauthorized", node.get( "error" ).textValue() );
         }
 

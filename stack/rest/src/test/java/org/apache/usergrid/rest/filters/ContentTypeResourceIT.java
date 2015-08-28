@@ -16,10 +16,6 @@
  */
 package org.apache.usergrid.rest.filters;
 
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.representation.Form;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -28,15 +24,17 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Organization;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.model.User;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-import org.junit.Ignore;
+import org.glassfish.jersey.client.ClientResponse;
 import org.junit.Test;
 
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -48,8 +46,6 @@ import java.util.Map;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 
 
 /**
@@ -80,7 +76,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken());
         post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
@@ -118,7 +115,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         post.setEntity( new StringEntity( json ) );
         post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
@@ -142,11 +140,11 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
 
         Form payload = new Form();
-        payload.add( "organization", "formContentOrg" + UUIDUtils.newTimeUUID() );
-        payload.add( "username", "formContentOrg" + UUIDUtils.newTimeUUID() );
-        payload.add( "name", "Test User" + UUIDUtils.newTimeUUID() );
-        payload.add( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" );
-        payload.add( "password", "foobar" );
+        payload.param( "organization", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.param( "username", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.param( "name", "Test User" + UUIDUtils.newTimeUUID() );
+        payload.param( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" );
+        payload.param( "password", "foobar" );
 
         //checks that the organization was created using a form encoded content type, this is checked else where so
         //this test should be depreciated eventually.
@@ -209,7 +207,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         post.setEntity( new StringEntity( json ) );
         post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
@@ -219,11 +218,12 @@ public class ContentTypeResourceIT extends AbstractRestIT {
         HttpResponse rsp = client.execute( host, post );
 
 
-        WebResource.Builder builder = app().collection("games").getResource(true)
-            .queryParam("access_token", this.getAdminToken().getAccessToken())
-            .type(MediaType.APPLICATION_JSON_TYPE);
+        Invocation.Builder builder = app().collection( "games" ).getTarget()
+            .queryParam( "access_token", this.getAdminToken().getAccessToken() )
+            .request();
 
-        ClientResponse clientResponse = builder.post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar2")));
+        ClientResponse clientResponse = builder.post(
+            javax.ws.rs.client.Entity.json( hashMap( "name", "bar2" ) ), ClientResponse.class );
 
         assertEquals(200, clientResponse.getStatus());
 
@@ -234,7 +234,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
         assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
 
         //do the get with no content type, it should get set to application/json
-        HttpPost get = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost get = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         get.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
         clientResponse = builder.get(ClientResponse.class);

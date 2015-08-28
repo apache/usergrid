@@ -21,8 +21,6 @@ import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Module;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.ServiceITSetup;
@@ -51,6 +49,8 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.core.Response;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -211,7 +211,7 @@ public class ImportResourceIT extends AbstractRestIT {
             this.management().orgs().org( org ).app().addToPath(app)
                 .addToPath("imports").addToPath(entity.getUuid().toString()).get();
             fail("Should not be able to read import job with unauthorized token");
-        } catch (UniformInterfaceException ex) {
+        } catch (ResponseProcessingException ex) {
             errorParse(401, "unauthorized", ex);
         }
 
@@ -223,16 +223,16 @@ public class ImportResourceIT extends AbstractRestIT {
     public void importPostApplicationNullPointerProperties() throws Exception {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
+        Response.Status responseStatus = Response.Status.OK;
 
         Entity payload = new Entity();
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (UniformInterfaceException uie) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        } catch (ResponseProcessingException uie) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
+        assertEquals(Response.Status.BAD_REQUEST, responseStatus);
     }
 
     @Ignore
@@ -240,7 +240,7 @@ public class ImportResourceIT extends AbstractRestIT {
     public void importPostApplicationNullPointerStorageInfo() throws Exception {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
+        Response.Status responseStatus = Response.Status.OK;
 
         Entity payload = payloadBuilder();
         Entity properties = (Entity) payload.get("properties");
@@ -249,10 +249,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (UniformInterfaceException uie) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        } catch (ResponseProcessingException uie) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
+        assertEquals(Response.Status.BAD_REQUEST, responseStatus);
     }
 
 
@@ -261,7 +261,7 @@ public class ImportResourceIT extends AbstractRestIT {
     public void importPostApplicationNullPointerStorageProvider() throws Exception {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
+        Response.Status responseStatus = Response.Status.OK;
 
         Entity payload = payloadBuilder();
         Entity properties = (Entity) payload.get("properties");
@@ -271,10 +271,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (UniformInterfaceException uie) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        } catch (ResponseProcessingException uie) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
+        assertEquals(Response.Status.BAD_REQUEST, responseStatus);
     }
 
 
@@ -283,7 +283,7 @@ public class ImportResourceIT extends AbstractRestIT {
     public void importPostApplicationNullPointerStorageVerification() throws Exception {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
+        Response.Status responseStatus = Response.Status.OK;
 
         Entity payload = payloadBuilder();
 
@@ -294,10 +294,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (UniformInterfaceException uie) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        } catch (ResponseProcessingException uie) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
+        assertEquals(Response.Status.BAD_REQUEST, responseStatus);
 
         payload = payloadBuilder();
         properties = (Entity) payload.get("properties");
@@ -307,10 +307,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (UniformInterfaceException uie) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        } catch (ResponseProcessingException uie) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
+        assertEquals(Response.Status.BAD_REQUEST, responseStatus);
 
         payload = payloadBuilder();
         properties = (Entity) payload.get("properties");
@@ -320,10 +320,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (UniformInterfaceException uie) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        } catch (ResponseProcessingException uie) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
+        assertEquals(Response.Status.BAD_REQUEST, responseStatus);
     }
 
 //    @Test

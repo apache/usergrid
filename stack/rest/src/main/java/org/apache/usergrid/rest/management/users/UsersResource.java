@@ -17,14 +17,12 @@
 package org.apache.usergrid.rest.management.users;
 
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
-
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
@@ -32,6 +30,7 @@ import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -105,7 +104,9 @@ public class UsersResource extends AbstractContextResource {
 
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
-    public JSONWithPadding createUser( @Context UriInfo ui, @FormParam( "username" ) String username,
+    @JSONP
+    @Produces( {MediaType.APPLICATION_JSON, "application/javascript" })
+    public ApiResponse createUser( @Context UriInfo ui, @FormParam( "username" ) String username,
                                        @FormParam( "name" ) String name, @FormParam( "email" ) String email,
                                        @FormParam( "password" ) String password,
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -135,7 +136,7 @@ public class UsersResource extends AbstractContextResource {
             throw mappableSecurityException( AuthErrorInfo.BAD_CREDENTIALS_SYNTAX_ERROR );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 	/*

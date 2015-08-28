@@ -20,31 +20,8 @@
 package org.apache.usergrid.rest.management.organizations.applications.imports;
 
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.commons.lang.NullArgumentException;
-
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.importer.ImportService;
@@ -56,8 +33,20 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriInfo;
+import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource" )
@@ -93,7 +82,9 @@ public class ImportsResource extends AbstractContextResource {
     @POST
     @RequireOrganizationAccess
     @Consumes( MediaType.APPLICATION_JSON )
-    public JSONWithPadding executePost( @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse executePost( @Context UriInfo ui, String body,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
@@ -142,12 +133,14 @@ public class ImportsResource extends AbstractContextResource {
 
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @GET
-    public JSONWithPadding getImports( @Context UriInfo ui, @QueryParam( "ql" ) String query,  @QueryParam( "cursor" ) String cursor ) throws Exception {
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getImports( @Context UriInfo ui, @QueryParam( "ql" ) String query,  @QueryParam( "cursor" ) String cursor ) throws Exception {
 
         final Results importResults = importService.getImports( application.getId(), query, cursor );
 
@@ -161,13 +154,15 @@ public class ImportsResource extends AbstractContextResource {
         response.setParams( ui.getQueryParameters() );
         response.withResults( importResults );
 
-        return new JSONWithPadding( response );
+        return response;
     }
 
 
     @GET
     @Path( RootResource.ENTITY_ID_PATH )
-    public JSONWithPadding getImportById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse getImportById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 
         final UUID importId = UUID.fromString( entityId.getPath() );
@@ -186,7 +181,7 @@ public class ImportsResource extends AbstractContextResource {
         response.setParams( ui.getQueryParameters() );
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
 
-        return new JSONWithPadding( response );
+        return response;
     }
 
 

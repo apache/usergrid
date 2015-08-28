@@ -17,40 +17,9 @@
 package org.apache.usergrid.rest.applications;
 
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
@@ -61,12 +30,7 @@ import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServiceManager;
-import org.apache.usergrid.services.ServiceParameter;
-import org.apache.usergrid.services.ServicePayload;
-import org.apache.usergrid.services.ServiceRequest;
-import org.apache.usergrid.services.ServiceResults;
+import org.apache.usergrid.services.*;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
 import org.apache.usergrid.services.assets.data.BinaryStore;
@@ -74,16 +38,22 @@ import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
 import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.JsonUtils;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.multipart.BodyPart;
-import com.sun.jersey.multipart.BodyPartEntity;
-import com.sun.jersey.multipart.FormDataBodyPart;
-import com.sun.jersey.multipart.FormDataMultiPart;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.io.InputStream;
+import java.util.*;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 
 
@@ -306,9 +276,10 @@ public class ServiceResource extends AbstractContextResource {
 
 
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, "application/javascript"})
     @RequireApplicationAccess
-    public JSONWithPadding executeGet( @Context UriInfo ui,
+    @JSONP
+    public ApiResponse executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -322,7 +293,7 @@ public class ServiceResource extends AbstractContextResource {
 
         executeServiceRequest( ui, response, ServiceAction.GET, null );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -358,7 +329,7 @@ public class ServiceResource extends AbstractContextResource {
      * Necessary to work around inexplicable problems with EntityHolder.
      * See above.
      */
-    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json,
+    public ApiResponse executePostWithObject( @Context UriInfo ui, Object json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         logger.debug( "ServiceResource.executePostWithMap" );
@@ -374,7 +345,7 @@ public class ServiceResource extends AbstractContextResource {
 
         executeServiceRequest( ui, response, ServiceAction.POST, payload );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -382,7 +353,7 @@ public class ServiceResource extends AbstractContextResource {
      * Necessary to work around inexplicable problems with EntityHolder.
      * See above.
      */
-    public JSONWithPadding executePutWithMap( @Context UriInfo ui, Map<String, Object> json,
+    public ApiResponse executePutWithMap( @Context UriInfo ui, Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -396,14 +367,16 @@ public class ServiceResource extends AbstractContextResource {
 
         executeServiceRequest( ui, response, ServiceAction.PUT, payload );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @POST
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost( @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         logger.debug( "ServiceResource.executePost: body = " + body );
@@ -426,7 +399,7 @@ public class ServiceResource extends AbstractContextResource {
 
         executeServiceRequest( ui, response, ServiceAction.POST, payload );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -434,7 +407,9 @@ public class ServiceResource extends AbstractContextResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -449,7 +424,9 @@ public class ServiceResource extends AbstractContextResource {
 
     @DELETE
     @RequireApplicationAccess
-    public JSONWithPadding executeDelete(
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse executeDelete(
         @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,
         @QueryParam("app_delete_confirm") String confirmAppDelete )
@@ -482,7 +459,7 @@ public class ServiceResource extends AbstractContextResource {
             }
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     //    TODO Temporarily removed until we test further
@@ -566,7 +543,9 @@ public class ServiceResource extends AbstractContextResource {
     @POST
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public JSONWithPadding executeMultiPartPost( @Context UriInfo ui,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse executeMultiPartPost( @Context UriInfo ui,
                                                  @QueryParam("callback") @DefaultValue("callback") String callback,
                                                  FormDataMultiPart multiPart ) throws Exception {
 
@@ -578,7 +557,9 @@ public class ServiceResource extends AbstractContextResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public JSONWithPadding executeMultiPartPut( @Context UriInfo ui,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    public ApiResponse executeMultiPartPut( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback,
                                                 FormDataMultiPart multiPart ) throws Exception {
 
@@ -587,7 +568,9 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    private JSONWithPadding executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
+    @JSONP
+    @Produces({"application/json", "application/javascript"})
+    private ApiResponse executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
                                               ServiceAction serviceAction ) throws Exception {
 
         //needed for testing
@@ -627,7 +610,7 @@ public class ServiceResource extends AbstractContextResource {
 
         // process file part
         if ( fileBodyPart != null ) {
-            InputStream fileInput = ( ( BodyPartEntity ) fileBodyPart.getEntity() ).getInputStream();
+            InputStream fileInput = ( (BodyPartEntity) fileBodyPart.getEntity() ).getInputStream();
             if ( fileInput != null ) {
                 Entity entity = serviceResults.getEntity();
                 EntityManager em = emf.getEntityManager( getApplicationId() );
@@ -647,7 +630,7 @@ public class ServiceResource extends AbstractContextResource {
             }
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 

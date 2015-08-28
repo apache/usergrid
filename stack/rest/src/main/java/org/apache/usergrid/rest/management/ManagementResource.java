@@ -21,13 +21,6 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Injector;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.api.view.Viewable;
-import com.sun.jersey.client.apache.ApacheHttpClient;
-import com.sun.jersey.client.apache.ApacheHttpClientHandler;
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
@@ -37,6 +30,9 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationCreator;
@@ -54,6 +50,14 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,10 +65,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.*;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Iterator;
@@ -707,8 +710,8 @@ public class ManagementResource extends AbstractContextResource {
         Client client = getJerseyClient();
         final JsonNode accessInfoNode;
         try {
-            accessInfoNode = client.resource( me )
-                    .type( MediaType.APPLICATION_JSON_TYPE)
+            accessInfoNode = client.target( me ).request()
+                    .accept( MediaType.APPLICATION_JSON_TYPE )
                     .get(JsonNode.class);
 
             tokensValidatedCounter.inc();
@@ -738,12 +741,8 @@ public class ManagementResource extends AbstractContextResource {
                     poolSize = Integer.parseInt( poolSizeStr );
                 }
 
-                MultiThreadedHttpConnectionManager cm = new MultiThreadedHttpConnectionManager();
-                HttpConnectionManagerParams cmParams = cm.getParams();
-                cmParams.setMaxTotalConnections( poolSize );
-                HttpClient httpClient = new HttpClient( cm );
-
-                // create Jersey Client using that HTTPClient and with configured timeouts
+                PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
+                connectionManager.setMaxTotal(poolSize);
 
                 int timeout = 20000; // ms
                 final String timeoutStr = properties.getProperty( CENTRAL_CONNECTION_TIMEOUT );
@@ -757,14 +756,14 @@ public class ManagementResource extends AbstractContextResource {
                     readTimeout = Integer.parseInt( readTimeoutStr );
                 }
 
-                ClientConfig clientConfig = new DefaultClientConfig();
-                clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-                clientConfig.getProperties().put( ClientConfig.PROPERTY_CONNECT_TIMEOUT, timeout ); // ms
-                clientConfig.getProperties().put( ClientConfig.PROPERTY_READ_TIMEOUT, readTimeout ); // ms
+                ClientConfig clientConfig = new ClientConfig();
+                clientConfig.register( new JacksonFeature() );
+                clientConfig.property( ApacheClientProperties.CONNECTION_MANAGER, connectionManager );
+                clientConfig.connectorProvider( new ApacheConnectorProvider() );
 
-                ApacheHttpClientHandler handler = new ApacheHttpClientHandler( httpClient, clientConfig );
-                jerseyClient = new ApacheHttpClient( handler );
-
+                jerseyClient = ClientBuilder.newClient( clientConfig );
+                jerseyClient.property( ClientProperties.CONNECT_TIMEOUT, timeout);
+                jerseyClient.property( ClientProperties.READ_TIMEOUT, readTimeout );
             }
         }
 
