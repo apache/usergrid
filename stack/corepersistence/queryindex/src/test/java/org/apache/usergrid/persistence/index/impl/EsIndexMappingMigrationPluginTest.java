@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -29,6 +28,7 @@ import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.migration.EsIndexMappingMigrationPlugin;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -48,6 +48,8 @@ public class EsIndexMappingMigrationPluginTest extends BaseIT {
     EsProvider provider;
     @Test
     public void runMigration(){
+        MigrationInfoSerialization serialization = Mockito.mock(MigrationInfoSerialization.class);
+        Mockito.when(serialization.getVersion(Mockito.any())).thenReturn(0);
         EsIndexMappingMigrationPlugin plugin = new EsIndexMappingMigrationPlugin(serialization,provider);
         TestProgressObserver progressObserver = new TestProgressObserver();
         plugin.run(progressObserver);
