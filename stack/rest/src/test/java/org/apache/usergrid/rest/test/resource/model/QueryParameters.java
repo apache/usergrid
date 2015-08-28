@@ -35,6 +35,7 @@ public class QueryParameters {
     private String cursor;
     private UUID start;
     private Integer limit;
+    private String connections;
     private Map<String,String> formPostData = new HashMap<String,String>(  );
 
     public QueryParameters() {
@@ -73,6 +74,13 @@ public class QueryParameters {
 
     public QueryParameters setLimit(int limit) {
         this.limit = new Integer(limit);
+        return this;
+    }
+
+    public String getConnections() { return connections; }
+
+    public QueryParameters setConnections(String connections) {
+        this.connections = connections;
         return this;
     }
 
