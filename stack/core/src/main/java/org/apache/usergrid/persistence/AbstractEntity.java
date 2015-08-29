@@ -59,7 +59,8 @@ public abstract class AbstractEntity implements Entity {
 
     protected Long modified;
 
-    protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+    //protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+    protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( );
 
     protected Map<String, Set<Object>> dynamic_sets = new TreeMap<String, Set<Object>>( String.CASE_INSENSITIVE_ORDER );
     protected long size;
@@ -174,7 +175,8 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     public void setProperties( Map<String, Object> properties ) {
-        dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+        //dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+        dynamic_properties = new TreeMap<String, Object>( );
         addProperties( properties );
     }
 

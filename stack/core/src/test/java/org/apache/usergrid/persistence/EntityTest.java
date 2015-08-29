@@ -45,9 +45,9 @@ public class EntityTest {
 
         Schema mapper = Schema.getDefaultSchema();
 
-        assertEquals( "group", mapper.getEntityType( Group.class ) );
+        assertEquals("group", mapper.getEntityType(Group.class));
 
-        assertEquals( User.class, mapper.getEntityClass( "user" ) );
+        assertEquals( User.class, mapper.getEntityClass("user") );
 
         Entity entity = EntityFactory.newEntity( null, "user" );
         assertEquals( User.class, entity.getClass() );
@@ -56,7 +56,7 @@ public class EntityTest {
         user.setUsername( "testuser" );
         assertEquals( user.getUsername(), user.getProperty( "username" ) );
 
-        user.setProperty( "username", "blahblah" );
+        user.setProperty("username", "blahblah");
         assertEquals( "blahblah", user.getUsername() );
 
         entity = EntityFactory.newEntity( null, "foobar" );
@@ -64,12 +64,16 @@ public class EntityTest {
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( Schema.PROPERTY_UUID, new UUID( 1, 2 ) );
-        properties.put( "foo", "bar" );
-        entity.setProperties( properties );
 
-        assertEquals( new UUID( 1, 2 ), entity.getUuid() );
-        assertEquals( new UUID( 1, 2 ), entity.getProperty( Schema.PROPERTY_UUID ) );
-        assertEquals( "bar", entity.getProperty( "foo" ) );
+        //test case sensitivity
+        properties.put( "foo", "bar1" );
+        properties.put( "FOO", "bar2");
+
+        entity.setProperties(properties);
+        assertEquals(new UUID(1, 2), entity.getUuid());
+        assertEquals(new UUID(1, 2), entity.getProperty(Schema.PROPERTY_UUID) );
+        assertEquals("bar1", entity.getProperty( "foo" ) );
+        assertEquals("bar2", entity.getProperty( "FOO" ) );
     }
 
 
