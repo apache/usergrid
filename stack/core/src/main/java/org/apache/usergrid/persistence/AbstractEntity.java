@@ -98,11 +98,14 @@ public abstract class AbstractEntity implements Entity {
     }
 
     @Override
-    public void setSize(final long size){this.size = size;}
+    public void setSize(final long size){this.setMetadata("size",size);}
 
-
+    @JsonIgnore
     @Override
-    public long getSize(){return size;}
+    public long getSize() {
+        Object size = this.getMetadata("size");
+        return size != null && size instanceof Long ? (Long) size : 0;
+    }
 
     @Override
     @EntityProperty(indexed = true, required = true, mutable = false)

@@ -2615,7 +2615,7 @@ public class CpEntityManager implements EntityManager {
                 } );
             }
 
-             cpEntity = ecm.write( cpEntity ).toBlocking().last();
+            cpEntity = ecm.write( cpEntity ).toBlocking().last();
             entity.setSize(cpEntity.getSize());
 
             if(logger.isDebugEnabled()) {
