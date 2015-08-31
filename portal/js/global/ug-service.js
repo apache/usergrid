@@ -144,7 +144,7 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
           $rootScope.applications = applications;
           $rootScope.currentOrg = ug.get('orgName');
           $rootScope.currentApp = ug.get('appName');
-          $rootScope.currentUser = user._data;
+          $rootScope.currentUser = data;
           $rootScope.currentUser.profileImg = utility.get_gravatar(
             $rootScope.currentUser.email);
         }
