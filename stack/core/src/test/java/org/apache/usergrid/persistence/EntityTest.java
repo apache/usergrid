@@ -81,7 +81,7 @@ public class EntityTest {
         User user = new User();
         // user.setId(UUIDUtils.newTimeUUID());
         user.setProperty( "foo", "bar" );
-        assertEquals( "{\"type\":\"user\",\"size\":0,\"foo\":\"bar\"}", JsonUtils.mapToJsonString( user ) );
+        assertEquals( "{\"type\":\"user\",\"foo\":\"bar\"}", JsonUtils.mapToJsonString( user ) );
 
         String json = "{\"username\":\"edanuff\", \"bar\" : \"baz\" }";
         Map<String, Object> p = ( Map<String, Object> ) JsonUtils.parse( json );
