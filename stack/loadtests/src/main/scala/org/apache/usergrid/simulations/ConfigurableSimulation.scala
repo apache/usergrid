@@ -47,6 +47,7 @@ class ConfigurableSimulation extends Simulation {
       case ScenarioType.NameRandomInfinite => EntityCollectionScenarios.getRandomEntitiesByName
       case ScenarioType.UuidRandomInfinite => EntityCollectionScenarios.getRandomEntitiesByUuid
       case ScenarioType.GetByNameSequential => EntityCollectionScenarios.getEntitiesByNameSequential
+      case ScenarioType.DoNothing => EntityCollectionScenarios.doNothing
       case _ => null
     }
   }

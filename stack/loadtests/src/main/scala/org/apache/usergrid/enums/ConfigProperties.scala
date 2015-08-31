@@ -79,6 +79,7 @@ object ConfigProperties {
   val MultiPropertyCount = "multiPropertyCount"
   val MultiPropertySizeInK = "multiPropertySizeInK"
   val EntityNumberProperty = "entityNumberProperty"
+  val QueryParams = "queryParams"
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
@@ -87,7 +88,7 @@ object ConfigProperties {
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
     UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
     EntityProgressCount,InjectionList,PrintFailedRequests,GetViaQuery,MultiPropertyPrefix,MultiPropertyCount,
-    MultiPropertySizeInK,EntityNumberProperty)
+    MultiPropertySizeInK,EntityNumberProperty,QueryParams)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -139,8 +140,8 @@ object ConfigProperties {
         case UpdateValue => new Date().toString
         case EntityWorkerCount => 0
         case EntityWorkerNum => 0
-        case UuidFilename => "/tmp/dummyUuid.csv"
-        case AuditUuidFilename => "/tmp/dummyAuditUuid.csv"
+        case UuidFilename => "dummyUuid.csv"
+        case AuditUuidFilename => "dummyAuditUuid.csv"
         case FailedUuidFilename => "/tmp/dummyFailedUuid.csv"
         case SandboxCollection => false
         case PurgeUsers => 100
@@ -154,6 +155,7 @@ object ConfigProperties {
         case MultiPropertyCount => 1
         case MultiPropertySizeInK => 1
         case EntityNumberProperty => ""
+        case QueryParams => ""
       }
     } else {
       null
