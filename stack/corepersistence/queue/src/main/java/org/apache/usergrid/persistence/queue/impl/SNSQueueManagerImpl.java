@@ -424,6 +424,8 @@ public class SNSQueueManagerImpl implements QueueManager {
                 logger.error("Unable to convert queue object to a string message body", e);
             }
 
+        }).doOnError(e ->{
+            logger.error("Error while publishing SNS message: ", e);
         }).subscribeOn(rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
 
     }
