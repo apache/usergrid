@@ -266,7 +266,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             assertTrue( "thing name should start with \"thing\"", property.toString().startsWith( "thing" ) );
 
             Map<String, Object> properties = en.getProperties();
-            assertEquals( "number of properties wrong", 5, properties.size() );
+            assertEquals( "number of properties wrong", 6, properties.size() );
         }
 
         i = 0;

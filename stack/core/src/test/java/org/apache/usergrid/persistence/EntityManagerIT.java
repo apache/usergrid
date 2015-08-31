@@ -159,7 +159,7 @@ public class EntityManagerIT extends AbstractCoreIT {
             assertTrue( "thing name should start with \"thing\"", property.toString().startsWith( "thing" ) );
 
             Map<String, Object> properties = en.getProperties();
-            assertEquals( "number of properties wrong", 5, properties.size() );
+            assertEquals( "number of properties wrong", 6, properties.size() );
         }
 
         i = 0;
@@ -241,7 +241,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Map<String, Object> props = em.getProperties( entity );
         assertNotNull( "properties should not be null", props );
-        assertEquals( "wrong number of properties", 8, props.size() );
+        assertEquals( "wrong number of properties", 9, props.size() );
 
         assertEquals( "wrong value for property alpha", ( long ) 1, props.get( "alpha" ) );
         assertEquals( "wrong value for property beta", ( long ) 2, props.get( "beta" ) );
@@ -255,7 +255,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         props = em.getProperties( entity );
         assertNotNull( "properties should not be null", props );
-        assertEquals( "wrong number of properties", 7, props.size() );
+        assertEquals( "wrong number of properties", 8, props.size() );
     }
 
 
@@ -370,7 +370,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Map<String, Object> props = em.getProperties( entity );
         assertNotNull( "properties should not be null", props );
-        assertEquals( "wrong number of properties", 6, props.size() );
+        assertEquals( "wrong number of properties", 7, props.size() );
 
         json = ( Map<String, Object> ) props.get( "json" );
         assertEquals( "wrong size for property alpha", 3, json.size() );
