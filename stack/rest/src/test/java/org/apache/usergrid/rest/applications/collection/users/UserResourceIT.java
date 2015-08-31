@@ -1070,7 +1070,7 @@ public class UserResourceIT extends AbstractRestIT {
 
             assertNotNull("List must exist", response.getResponse().getEntities());
             assertTrue("Must be some list items", response.getResponse().getEntities().size() > 0);
-            assertTrue("Should have 4 items - [metadata, size, type, uuid]", response.getResponse().getEntities().get(0).keySet().size() == 4);
+            assertTrue("Should have 4 items - [metadata, type, uuid]", response.getResponse().getEntities().get(0).keySet().size() == 3);
 
         }
     }
