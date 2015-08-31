@@ -17,6 +17,8 @@
 package org.apache.usergrid.settings
 
 import java.io.{PrintWriter, FileOutputStream}
+import java.net.URLDecoder
+import java.util
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.bind.DatatypeConverter
@@ -176,6 +178,9 @@ object Settings {
   val injectionList = initStrSetting(ConfigProperties.InjectionList)
   val printFailedRequests:Boolean = initBoolSetting(ConfigProperties.PrintFailedRequests)
   val getViaQuery:Boolean = initBoolSetting(ConfigProperties.GetViaQuery)
+  private val queryParamConfig = initStrSetting(ConfigProperties.QueryParams)
+  val queryParamMap: Map[String,String] = mapFromQueryParamConfigString(queryParamConfig)
+
   val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
   val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
   val multiPropertySizeInK:Int = initIntSetting(ConfigProperties.MultiPropertySizeInK)
@@ -476,6 +481,23 @@ object Settings {
     println()
     println("-----------------------------------------------------------------------------")
     println()
+  }
+
+  def mapFromQueryParamConfigString(queryParamConfigString: String): Map[String,String] = {
+    val params = mutable.Map[String,String]()
+    val paramStrings:Array[String] = queryParamConfigString split "&"
+    for (i <- paramStrings.indices) {
+      val param = paramStrings(i)
+      val pair = param split "="
+      val key = URLDecoder.decode(pair(0), "UTF-8")
+      val value = pair.length match  {
+        case l if l > 1 => URLDecoder.decode(pair(1), "UTF-8")
+        case _ => ""
+      }
+      params(key) = value
+      println(s"QueryParam $key = $value")
+    }
+    params.toMap
   }
 
   printSettingsSummary(false)

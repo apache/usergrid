@@ -1,5 +1,5 @@
 #Gatling Load Tests
-The Usergrid loadtests directory (/stack/loadtests) contains a framework for performance testing [Apache Usergrid](http://usergrid.apache.org/). These tests currently use version 2.1.7 of [Gatling](http://gatling.io), an open-source load-testing tool.
+The Usergrid loadtests directory (/stack/loadtests) contains a framework for performance testing [Apache Usergrid](http://usergrid.apache.org/). These tests currently use version 2.1.7 of [Gatling](http://gatling.io), an open-source load-testing tool. This version of Gatling, as well as the tests, use Java 7.
 
 The test code is written in [Scala](http://www.scala-lang.org/), which is Gatling's test language.
 
@@ -55,7 +55,7 @@ Retrieves random entities via UUID from a CSV file.
 Updates entities in order via name (prefix + entity number).
 
 ##Gatling configuration items
-Understanding how configuration items work together can best be accomplished by reading the Usergrid Gatling test scripts. Some configuration items are dependent on others, and some are ignored by specific tests. Configuration items and their defaults can be found in the ConfigProperties.scala enumeration in the enums directory. The spelling of each item below is used in maven calls via -D{configName}={value} (for example, -Dorg=gatlingtest).
+Understanding how configuration items work together can best be accomplished by reading the Usergrid Gatling test scripts. Some configuration items are dependent on others, and some are ignored by specific tests. Configuration items and their defaults can be found in the ConfigProperties.scala enumeration in the enums directory. The spelling of each item below is used in Maven calls via -D{configName}={value} (for example, -Dorg=gatlingtest).
 
 Defaults listed are those that are specified by the Usergrid Gatling code, not necessarily defaults in the test scripts. Defaults are **bold**.
 
@@ -170,11 +170,11 @@ Feel free to skip this section -- it contains information to help you understand
 
 * /stack/loadtests/src/main/scala/org/apache/usergrid/simulations - Contains [Gatling simulations](http://gatling.io/docs/2.1.7/general/simulation_structure.html) for running the tests
 	* AuditSimulation.scala - Tests for a) finding all entities in an organization and writing the names and UUIDs to a CSV file, and b) validating the existence of the entities in the CSV file; audit tests can be used to test that a copy/migration of an organization is complete
-	* ConfigurableSimulation.scala - contains many different types of tests that can be configured via Gatling test shell script or maven Gatling call
-	* CustomInjectionSimulation.scala - tests that allow full configuration of [Gatling user injection] via Gatling test shell script or maven Gatling call
+	* ConfigurableSimulation.scala - contains many different types of tests that can be configured via Gatling test shell script or Maven Gatling call
+	* CustomInjectionSimulation.scala - tests that allow full configuration of [Gatling user injection] via Gatling test shell script or Maven Gatling call
 
 ##Running tests using Maven
-Gatling uses [Apache Maven](https://maven.apache.org/) to handle dependencies and run the tests. The test scripts run gatling via maven, and have good examples of the maven calls.
+Gatling uses [Apache Maven](https://maven.apache.org/) to handle dependencies and run the tests. The test scripts run Gatling via Maven, and have good examples of the Maven calls.
 
 ###Example Maven (run from loadtests directory)
 
