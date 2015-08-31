@@ -98,7 +98,11 @@ public class NamedResource implements UrlResource {
         }
 
         if ( parameters.getLimit() != null ) {
-             resource = resource.queryParam("limit", parameters.getLimit().toString());
+            resource = resource.queryParam("limit", parameters.getLimit().toString());
+        }
+
+        if ( parameters.getConnections() != null ) {
+            resource = resource.queryParam("connections", parameters.getConnections());
         }
         //We can also post the params as queries
         if ( parameters.getFormPostData().size() > 0){
