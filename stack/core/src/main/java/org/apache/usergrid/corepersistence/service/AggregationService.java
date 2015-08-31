@@ -22,6 +22,8 @@ package org.apache.usergrid.corepersistence.service;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.SearchEdge;
 
+import java.util.Map;
+
 /**
  * Service to retrieve aggregations by application scope.
  */
@@ -35,6 +37,13 @@ public interface AggregationService {
      * @return
      */
     long sumAllCollections(ApplicationScope applicationScope);
+    /**
+     * get entity size for app
+     *
+     * @param applicationScope
+     * @return
+     */
+    Map<String,Long> sumEachCollection(ApplicationScope applicationScope);
 
     /**
      * get total entity size for an edge
@@ -44,4 +53,12 @@ public interface AggregationService {
      * @return
      */
     long sum(final ApplicationScope applicationScope, final SearchEdge edge);
+
+    /**
+     * get sum by collection name
+     * @param applicationScope
+     * @param collectionName
+     * @return
+     */
+    long getCollectionSum(final ApplicationScope applicationScope, final String collectionName);
 }

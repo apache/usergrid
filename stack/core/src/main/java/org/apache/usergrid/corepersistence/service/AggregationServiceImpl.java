@@ -39,7 +39,7 @@ import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
 import org.apache.usergrid.utils.IndexUtils;
 import rx.observables.MathObservable;
 
-import java.util.Observable;
+import java.util.*;
 
 /**
  * Aggregation Service get counts for an application
@@ -83,9 +83,35 @@ public class AggregationServiceImpl implements AggregationService {
     }
 
     @Override
+    public Map<String, Long> sumEachCollection(ApplicationScope applicationScope) {
+        final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
+        EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexLocationStrategy);
+        GraphManager graphManager = graphManagerFactory.createEdgeManager(applicationScope);
+        Map<String,Long> sumMap = ObservableTimer.time(
+                graphManager.getEdgeTypesFromSource(new SimpleSearchEdgeType(applicationScope.getApplication(), CpNamingUtils.EDGE_COLL_PREFIX, Optional.<String>absent()))
+                    .collect(() -> new HashMap<String,Long>(), ((map, type) ->
+                        {
+                            SearchEdge edge = CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), type);
+                            final String collectionName = CpNamingUtils.getCollectionNameFromEdgeName(type);
+                            long sumType =  entityIndex.getEntitySize(edge);
+                            map.put(collectionName,sumType);
+                        })
+                    )
+            , sumTimer).toBlocking().last();
+        return sumMap;
+
+    }
+
+    @Override
     public long sum(ApplicationScope applicationScope, SearchEdge edge) {
         final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexLocationStrategy);
         return entityIndex.getEntitySize(edge);
     }
+
+    @Override
+    public long getCollectionSum(final ApplicationScope applicationScope, final String collectionName) {
+        return sum(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), collectionName));
+    }
+
 }
