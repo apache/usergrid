@@ -2638,8 +2638,7 @@ public class CpEntityManager implements EntityManager {
 
         // reflect changes in the legacy Entity
         entity.setUuid( cpEntity.getId().getUuid() );
-        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
-        entity.addProperties( entityMap );
+        entity.setProperties( cpEntity );
 
         // add to and index in collection of the application
         if ( !is_application ) {
