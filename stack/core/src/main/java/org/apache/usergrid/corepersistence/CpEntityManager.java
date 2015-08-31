@@ -469,9 +469,7 @@ public class CpEntityManager implements EntityManager {
         Class clazz = Schema.getDefaultSchema().getEntityClass( entityRef.getType() );
 
         Entity entity = EntityFactory.newEntity( entityRef.getUuid(), entityRef.getType(), clazz );
-        entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
-
-
+        entity.setProperties(  cpEntity  );
         return entity;
     }
 
@@ -526,7 +524,7 @@ public class CpEntityManager implements EntityManager {
         }
 
         A entity = EntityFactory.newEntity( entityId, type, entityClass );
-        entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
+        entity.setProperties(  cpEntity  );
 
         return entity;
     }

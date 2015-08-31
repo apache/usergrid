@@ -27,7 +27,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.persistence.model.entity.EntityToMapConverter;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -165,7 +167,7 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     public final Object getProperty( String propertyName ) {
-        return Schema.getDefaultSchema().getEntityProperty( this, propertyName );
+        return Schema.getDefaultSchema().getEntityProperty(this, propertyName);
     }
 
 
@@ -178,7 +180,13 @@ public abstract class AbstractEntity implements Entity {
     @Override
     public void setProperties( Map<String, Object> properties ) {
         dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
-        addProperties( properties );
+        addProperties(properties);
+    }
+
+    @Override
+    public void setProperties(org.apache.usergrid.persistence.model.entity.Entity cpEntity){
+        setProperties( CpEntityMapUtils.toMap(cpEntity) );
+        this.setSize(cpEntity.getSize());
     }
 
 

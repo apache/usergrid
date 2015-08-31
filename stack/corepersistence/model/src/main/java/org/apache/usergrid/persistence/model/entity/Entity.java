@@ -59,8 +59,7 @@ public class Entity extends EntityObject {
     @JsonProperty
     private UUID version;
 
-    @JsonIgnore
-    private long size;
+
 
 
     /**
@@ -158,10 +157,5 @@ public class Entity extends EntityObject {
         return getVersion() != null;
     }
 
-    public long getSize() {
-        return this.size;
-    }
-    public void setSize(long size) {
-        this.size = size;
-    }
+
 }
