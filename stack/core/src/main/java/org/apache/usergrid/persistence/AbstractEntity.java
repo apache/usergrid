@@ -27,7 +27,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.persistence.model.entity.EntityToMapConverter;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -98,11 +100,14 @@ public abstract class AbstractEntity implements Entity {
     }
 
     @Override
-    public void setSize(final long size){this.size = size;}
+    public void setSize(final long size){this.setMetadata("size",size);}
 
-
+    @JsonIgnore
     @Override
-    public long getSize(){return size;}
+    public long getSize() {
+        Object size = this.getMetadata("size");
+        return size != null && size instanceof Long ? (Long) size : 0;
+    }
 
     @Override
     @EntityProperty(indexed = true, required = true, mutable = false)
@@ -162,7 +167,7 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     public final Object getProperty( String propertyName ) {
-        return Schema.getDefaultSchema().getEntityProperty( this, propertyName );
+        return Schema.getDefaultSchema().getEntityProperty(this, propertyName);
     }
 
 
@@ -175,7 +180,13 @@ public abstract class AbstractEntity implements Entity {
     @Override
     public void setProperties( Map<String, Object> properties ) {
         dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
-        addProperties( properties );
+        addProperties(properties);
+    }
+
+    @Override
+    public void setProperties(org.apache.usergrid.persistence.model.entity.Entity cpEntity){
+        setProperties( CpEntityMapUtils.toMap(cpEntity) );
+        this.setSize(cpEntity.getSize());
     }
 
 

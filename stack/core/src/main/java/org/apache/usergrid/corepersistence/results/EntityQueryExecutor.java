@@ -78,8 +78,7 @@ public abstract class EntityQueryExecutor extends ObservableQueryExecutor<Entity
         org.apache.usergrid.persistence.Entity entity =
             EntityFactory.newEntity( entityId.getUuid(), entityId.getType() );
 
-        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
-        entity.addProperties( entityMap );
+        entity.setProperties( cpEntity );
 
         return entity;
     }

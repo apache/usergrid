@@ -89,6 +89,11 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
     $scope.loading = false;
     $scope.login = {};
 
+    // get the first app from logged in user and set this prop in the app for any initial app specific requests
+    var firstOrg = Object.keys($rootScope.currentUser.organizations)[0];
+    var firstApp = Object.keys($rootScope.currentUser.organizations[firstOrg].applications)[0];
+    ug.setClientProperty('appName', firstApp.split("/")[1]);
+
     //if on login page, send to org overview page.  if on a different page, let them stay there
     if ($rootScope.currentPath === '/login' || $rootScope.currentPath === '/login/loading' || typeof $rootScope.currentPath === 'undefined') {
       $location.path('/org-overview');

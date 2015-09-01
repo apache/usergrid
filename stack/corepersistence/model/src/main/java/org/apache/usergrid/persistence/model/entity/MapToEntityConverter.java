@@ -43,7 +43,9 @@ public class MapToEntityConverter{
     public Entity fromMap(final Entity entity,final  Map<String, Object> map,final  SchemaManager schemaManager, final String entityType, boolean topLevel) {
 
         for ( String fieldName : map.keySet() ) {
-
+            if(fieldName.equals("size")){
+                continue;
+            }
             Object value = map.get( fieldName );
             boolean unique = schemaManager == null ? topLevel :  topLevel && schemaManager.isPropertyUnique(entityType, fieldName);
 
@@ -63,6 +65,7 @@ public class MapToEntityConverter{
                 entity.setField( new FloatField( fieldName, (Float)value, unique ));
 
             } else if ( value instanceof Long ) {
+
                 entity.setField( new LongField( fieldName, (Long)value, unique ));
 
             } else if ( value instanceof List) {

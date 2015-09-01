@@ -71,5 +71,9 @@ public class AggregationServiceTest extends AbstractCoreIT {
         long sum3 = aggregationService.sum(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "tests"));
         Assert.assertEquals(sum3, entity1.getSize()+entity3.getSize());
 
+        Map<String,Long> sumEach = aggregationService.sumEachCollection(applicationScope);
+        Assert.assertTrue(sumEach.containsKey("tests") && sumEach.containsKey("test2s"));
+        Assert.assertEquals(sum3, (long)sumEach.get("tests"));
+
     }
 }
