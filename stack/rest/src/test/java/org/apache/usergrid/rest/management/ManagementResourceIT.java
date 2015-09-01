@@ -314,18 +314,22 @@ public class ManagementResourceIT extends AbstractRestIT {
         final String appname = clientSetup.getAppName();
         this.app().collection("testCollection").post(new Entity().chainPut("name","test"));
         refreshIndex();
-        Entity size = management().orgs().org( clientSetup.getOrganizationName() ).app().addToPath(appname).addToPath("size").get();
-        Entity rolesSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("size/roles").get();
+        Entity size = management().orgs().org( clientSetup.getOrganizationName() ).app().addToPath(appname).addToPath("_size").get();
+        Entity rolesSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("roles/_size").get();
+        Entity collectionsSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("collections/_size").get();
+
         assertTrue(size != null);
         assertTrue(rolesSize != null);
-        int sum =  (int)((LinkedHashMap)((LinkedHashMap)size.metadata().get("aggregation")).get("application")).get("sum");
-        int sumRoles = (int)((LinkedHashMap)((LinkedHashMap)rolesSize.metadata().get("aggregation")).get("roles")).get("sum");
+        int sum =  (int)((LinkedHashMap)((LinkedHashMap)size.metadata().get("aggregation")).get("size")).get("application");
+        int sumRoles = (int)((LinkedHashMap)((LinkedHashMap)rolesSize.metadata().get("aggregation")).get("size")).get("roles");
+        int sumRoles2 = (int)((LinkedHashMap)((LinkedHashMap)collectionsSize.metadata().get("aggregation")).get("size")).get("roles");
 
         assertTrue(size != null);
         assertTrue(rolesSize != null);
 
-        assertNotEquals(sum,sumRoles);
-        assertTrue(sum>sumRoles);
+        assertNotEquals(sum, sumRoles);
+        assertTrue(sum > sumRoles);
+        assertTrue(sumRoles == sumRoles2);
     }
 
     @Test

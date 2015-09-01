@@ -51,15 +51,15 @@ public class AggregationServiceTest extends AbstractCoreIT {
         this.app.refreshIndex();
         Thread.sleep(500);
 
-        long sum = aggregationService.sumAllCollections(applicationScope);
+        long sum = aggregationService.getApplicationSize(applicationScope);
 
         Assert.assertTrue( sum >= 0 );
         Assert.assertTrue(sum > (entity1.getSize() + entity2.getSize()));
 
-        long sum1 = aggregationService.sum(applicationScope,CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(),"tests"));
+        long sum1 = aggregationService.getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "tests"));
         Assert.assertEquals(sum1, entity1.getSize());
 
-        long sum2 = aggregationService.sum(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "test2s"));
+        long sum2 = aggregationService.getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "test2s"));
         Assert.assertEquals(sum2, entity2.getSize());
 
         props = new HashMap<>();
@@ -68,12 +68,12 @@ public class AggregationServiceTest extends AbstractCoreIT {
         Entity entity3 = this.app.getEntityManager().create("test", props);
 
         this.app.refreshIndex();
-        long sum3 = aggregationService.sum(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "tests"));
-        Assert.assertEquals(sum3, entity1.getSize()+entity3.getSize());
+        long sum3 = aggregationService.getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "tests"));
+        Assert.assertEquals(sum3, entity1.getSize() + entity3.getSize());
 
-        Map<String,Long> sumEach = aggregationService.sumEachCollection(applicationScope);
+        Map<String,Long> sumEach = aggregationService.getEachCollectionSize(applicationScope);
         Assert.assertTrue(sumEach.containsKey("tests") && sumEach.containsKey("test2s"));
-        Assert.assertEquals(sum3, (long)sumEach.get("tests"));
+        Assert.assertEquals(sum3, (long) sumEach.get("tests"));
 
     }
 }

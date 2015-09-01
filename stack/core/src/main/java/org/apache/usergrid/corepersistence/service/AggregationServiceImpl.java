@@ -22,7 +22,6 @@ package org.apache.usergrid.corepersistence.service;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -35,8 +34,6 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
-import org.apache.usergrid.utils.IndexUtils;
 import rx.observables.MathObservable;
 
 import java.util.*;
@@ -68,7 +65,7 @@ public class AggregationServiceImpl implements AggregationService {
 
 
     @Override
-    public long sumAllCollections(ApplicationScope applicationScope) {
+    public long getApplicationSize(ApplicationScope applicationScope) {
         final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexLocationStrategy);
         GraphManager graphManager = graphManagerFactory.createEdgeManager(applicationScope);
@@ -83,7 +80,7 @@ public class AggregationServiceImpl implements AggregationService {
     }
 
     @Override
-    public Map<String, Long> sumEachCollection(ApplicationScope applicationScope) {
+    public Map<String, Long> getEachCollectionSize(ApplicationScope applicationScope) {
         final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexLocationStrategy);
         GraphManager graphManager = graphManagerFactory.createEdgeManager(applicationScope);
@@ -103,15 +100,15 @@ public class AggregationServiceImpl implements AggregationService {
     }
 
     @Override
-    public long sum(ApplicationScope applicationScope, SearchEdge edge) {
+    public long getSize(ApplicationScope applicationScope, SearchEdge edge) {
         final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexLocationStrategy);
         return entityIndex.getEntitySize(edge);
     }
 
     @Override
-    public long getCollectionSum(final ApplicationScope applicationScope, final String collectionName) {
-        return sum(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), collectionName));
+    public long getCollectionSize(final ApplicationScope applicationScope, final String collectionName) {
+        return getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), collectionName));
     }
 
 }
