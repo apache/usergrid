@@ -33,7 +33,10 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TaskExecutorFactory {
 
-
+    public enum RejectionAction {
+        ABORT,
+        CALLERRUNS
+    }
     /**
      * Create a task executor
      * @param schedulerName
@@ -42,18 +45,27 @@ public class TaskExecutorFactory {
      * @return
      */
     public static ThreadPoolExecutor createTaskExecutor( final String schedulerName, final int maxThreadCount,
-                                                         final int maxQueueSize ) {
+                                                         final int maxQueueSize, RejectionAction rejectionAction ) {
 
 
         final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>( maxQueueSize );
 
 
-        final MaxSizeThreadPool threadPool = new MaxSizeThreadPool( queue, schedulerName, maxThreadCount );
+        if(rejectionAction.equals(RejectionAction.ABORT)){
 
+            return new MaxSizeThreadPool( queue, schedulerName, maxThreadCount );
 
-        return threadPool;
+        }
+        else if(rejectionAction.equals(RejectionAction.CALLERRUNS)){
+
+            return new MaxSizeThreadPoolCallerRuns( queue, schedulerName, maxThreadCount );
+
+        }else{
+            //default to the thread pool with ABORT policy
+            return new MaxSizeThreadPool( queue, schedulerName, maxThreadCount );
+        }
+
     }
-
 
     /**
      * Create a thread pool that will reject work if our audit tasks become overwhelmed
@@ -62,6 +74,17 @@ public class TaskExecutorFactory {
 
         public MaxSizeThreadPool( final BlockingQueue<Runnable> queue, final String poolName, final int maxPoolSize ) {
             super( maxPoolSize, maxPoolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( poolName ) );
+        }
+    }
+
+    /**
+     * Create a thread pool that will implement CallerRunsPolicy if our tasks become overwhelmed
+     */
+    private static final class MaxSizeThreadPoolCallerRuns extends ThreadPoolExecutor {
+
+        public MaxSizeThreadPoolCallerRuns( final BlockingQueue<Runnable> queue, final String poolName, final int maxPoolSize ) {
+            super( maxPoolSize, maxPoolSize, 30, TimeUnit.SECONDS, queue,
+                new CountingThreadFactory( poolName ), new ThreadPoolExecutor.CallerRunsPolicy() );
         }
     }
 
