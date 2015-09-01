@@ -3,7 +3,6 @@ Apache Usergrid
 
 __WARNING__: This is the __two-dot-o__ branch and work is underway here on a new persistence system for Usergrid. We refer to the new persistence system as Core Persistence and you can find its modules in the stack/corepersistence directory. 
 
-
 Overview
 --------
 
