@@ -180,6 +180,7 @@ object Settings {
   val getViaQuery:Boolean = initBoolSetting(ConfigProperties.GetViaQuery)
   private val queryParamConfig = initStrSetting(ConfigProperties.QueryParams)
   val queryParamMap: Map[String,String] = mapFromQueryParamConfigString(queryParamConfig)
+  val csvFeedPattern = initStrSetting(ConfigProperties.CsvFeedPattern)
 
   val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
   val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
@@ -454,6 +455,7 @@ object Settings {
     } else {
       println(s"SearchLimit:$searchLimit  SearchQuery:$searchQuery")
     }
+    if (queryParamConfig != "") println(s"Extra query params: $queryParamConfig")
     println()
     println(s"Overall: NumEntities:$totalNumEntities  Seed:$overallEntitySeed  Workers:$entityWorkerCount")
     println(s"Worker:  NumEntities:$numEntities  Seed:$entitySeed  WorkerNum:$entityWorkerNum")
@@ -462,7 +464,10 @@ object Settings {
     println(s"Constant: UsersPerSec:$constantUsersPerSec  Time:$constantUsersDuration")
     println(s"EndCondition:$endConditionStr")
     println()
-    if (feedUuids) println(s"Feed CSV: $feedUuidFilename")
+    if (feedUuids) {
+      println(s"Feed CSV: $feedUuidFilename")
+      println(s"Feed pattern: $csvFeedPattern")
+    }
     if (feedAuditUuids) println(s"Audit Feed CSV: $feedAuditUuidFilename")
     if (captureUuids) println(s"Capture CSV:$captureUuidFilename")
     if (captureAuditUuids) {

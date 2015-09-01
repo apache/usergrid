@@ -30,6 +30,9 @@ Deletes entities in order via name (prefix + entity number).
 ###runGetEntitiesByNameSequential.sh
 Retrieves entities one by one via name (prefix + entity number).
 
+###runGetEntitiesByUuidTest.sh
+Retrieves entities via UUID from a CSV file. Control the CSV feed pattern (circular=sequential, random) using the csvFeedPattern configuration
+
 ###runLoadEntities.sh
 Creates entities in order via name (prefix + entity number).
 
@@ -42,14 +45,14 @@ Creates entities in order without names.
 ###runLoadSortableEntities.sh
 Creates sortable entities in order via name (prefix + entity number).
 
+###runOrgAppSetup.sh
+Runs the organization and app setup without doing a test.
+
 ###runRandomEntityByNameQueryTest.sh
 Retrieves random entities via name (prefix + entity number) using queries.
 
 ###runRandomEntityByNameTest.sh
 Retrieves random entities via name (prefix + entity number).
-
-###runRandomEntityByUuidTest.sh
-Retrieves random entities via UUID from a CSV file.
 
 ###runUpdateEntities.sh
 Updates entities in order via name (prefix + entity number).
@@ -74,7 +77,7 @@ Defaults listed are those that are specified by the Usergrid Gatling code, not n
 * createOrg (**false**) - create the organization specified by the org configuration item (will continue if the org already exists)
 * createApp (**false**) - create the application specified by the app configuration item (will continue if the app already exists)
 * loadEntities (**false**) - load entities as part of setup, instead of as part of the test
-* scenarioType (**"nameRandomInfinite"**, "uuidRandomInfinite", "getByNameSequential", "getAllByCursor", "loadEntities", "updateEntities", "deleteEntities", "auditGetCollectionEntities", "auditVerifyCollectionEntities") - type of scenario to run, more details in test scripts section below
+* scenarioType (**"nameRandomInfinite"**, "uuidInfinite", "getByNameSequential", "getAllByCursor", "loadEntities", "updateEntities", "deleteEntities", "auditGetCollectionEntities", "auditVerifyCollectionEntities") - type of scenario to run, more details in test scripts section
 * rampUsers (**0**) - number of users to inject during the ramp up time
 * rampTime (**0**) - duration in seconds of the ramp up time
 * constantUsersPerSec (**0**) - number of users per second to inject during the constant injection time (decimal ok)
@@ -110,6 +113,8 @@ Defaults listed are those that are specified by the Usergrid Gatling code, not n
 * injectionList (**"rampUsers(10,60)"**) - custom injection pattern for CustomInjectionSimulation (discussed below)
 * printFailedRequests (**true**) - prints the request and response on the console for failed requests (those that fail more than *retryCount* times)
 * getViaQuery (**false**) - retrieve entities via query instead of via name or uuid
+* queryParams (**""**) - additional query parameters (currently used for get by entity or by name)
+* csvFeedPattern (**"random"**) - pattern to use when feeding from a CSV ("random" is random, "circular" goes through CSV sequentially and restarts from beginning when it reaches the end)
 
 The following settings are currently not used (were used by deprecated tests, but may be valid in the future):
 
