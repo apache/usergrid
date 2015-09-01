@@ -147,6 +147,7 @@ object EntityCollectionScenarios {
   val getRandomEntityByUuidAnonymous = exec(
     http("GET entity by UUID (anonymous)")
       .get("/" + Settings.collection + "/${uuid}")
+      .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authAnonymous)
       .check(status.is(200))
   )
@@ -154,6 +155,7 @@ object EntityCollectionScenarios {
   val getRandomEntityByUuidWithToken = exec(
     http("GET entity by UUID (token)")
       .get("/" + Settings.collection + "/${uuid}")
+      .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authToken)
       .check(status.is(200))
   )
@@ -287,6 +289,7 @@ object EntityCollectionScenarios {
     doIf("${validEntity}", "yes") {
       exec(http("GET entity by name sequential (anonymous)")
         .get("/" + Settings.collection + "/${entityName}")
+        .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authAnonymous)
         .check(status.is(200), extractCreateUuid(SessionVarUuid)))
         .exec(session => {
@@ -300,6 +303,7 @@ object EntityCollectionScenarios {
     doIf("${validEntity}", "yes") {
       exec(http("GET entity by name sequential (anonymous)")
         .get("/" + Settings.collection + "/${entityName}")
+        .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authToken)
         .check(status.is(200), extractCreateUuid(SessionVarUuid)))
         .exec(session => {
@@ -328,5 +332,7 @@ object EntityCollectionScenarios {
           }
         }
     }
+
+  val doNothing = scenario("Do Nothing").exec(http("Get Page").get("http://google.com"))
 
 }
