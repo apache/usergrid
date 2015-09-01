@@ -336,4 +336,6 @@ public interface ManagementService {
     long getApplicationSize(final UUID applicationId);
 
     long getCollectionSize(final UUID applicationId, final String collectionName);
+
+    Map<String,Long> getEachCollectionSize(final UUID applicationId);
 }
