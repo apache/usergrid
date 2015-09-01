@@ -80,6 +80,7 @@ object ConfigProperties {
   val MultiPropertySizeInK = "multiPropertySizeInK"
   val EntityNumberProperty = "entityNumberProperty"
   val QueryParams = "queryParams"
+  val CsvFeedPattern = "csvFeedPattern"
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
@@ -88,7 +89,7 @@ object ConfigProperties {
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
     UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
     EntityProgressCount,InjectionList,PrintFailedRequests,GetViaQuery,MultiPropertyPrefix,MultiPropertyCount,
-    MultiPropertySizeInK,EntityNumberProperty,QueryParams)
+    MultiPropertySizeInK,EntityNumberProperty,QueryParams,CsvFeedPattern)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -156,6 +157,7 @@ object ConfigProperties {
         case MultiPropertySizeInK => 1
         case EntityNumberProperty => ""
         case QueryParams => ""
+        case CsvFeedPattern => org.apache.usergrid.enums.CsvFeedPatternType.Random
       }
     } else {
       null
