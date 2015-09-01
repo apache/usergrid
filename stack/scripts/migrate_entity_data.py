@@ -53,6 +53,7 @@ import json
 # Version expected in status response post-migration for entity and app-info data
 TARGET_VERSION = 2
 TARGET_MIGRATION_SYSTEM_VERSION = 1
+TARGET_INDEX_MAPPING_VERSION = 1
 
 # Set an interval (in seconds) for checking if re-index and/or migration has finished
 STATUS_INTERVAL_SECONDS = 2
@@ -61,6 +62,7 @@ STATUS_INTERVAL_SECONDS = 2
 PLUGIN_MIGRATION_SYSTEM = 'migration-system'
 PLUGIN_APPINFO = 'appinfo-migration'
 PLUGIN_ENTITYDATA = 'collections-entity-data'
+PLUGIN_INDEX_MAPPING = 'index_mapping_migration'
 
 
 
@@ -132,7 +134,7 @@ class Migrate:
             migration_system_updated = self.is_migration_system_updated()
 
             if not migration_system_updated:
-                self.logger.info('Migration system needs to updated.  Updating migration system..')
+                self.logger.info('Migration system needs to be updated.  Updating migration system..')
                 self.start_migration_system_update()
                 while not migration_system_updated:
                     time.sleep(STATUS_INTERVAL_SECONDS)
@@ -163,6 +165,18 @@ class Migrate:
             else:
                 self.logger.info('Full Data Migration previously ran... skipping AppInfo migration.')
 
+            # We need to check and roll index mapping version to 1 if not already there
+            index_mapping_updated = self.is_index_mapping_updated()
+
+            if not index_mapping_updated:
+                self.logger.info('Index Mapping needs to be updated.  Updating index mapping..')
+                self.start_index_mapping_migration()
+                while not index_mapping_updated:
+                    time.sleep(STATUS_INTERVAL_SECONDS)
+                    index_mapping_updated = self.is_index_mapping_updated()
+                    if index_mapping_updated:
+                        break
+            
             # Perform system re-index (it will grab date from input if provided)
             job = self.start_reindex()
             self.metrics['reindex_start'] = get_current_time()
@@ -234,6 +248,16 @@ class Migrate:
     def start_migration_system_update(self):
         try:
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_MIGRATION_SYSTEM
+            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
+            response = r.json()
+            return response
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Failed to start migration, %s', e)
+            exit_on_error(str(e))
+
+    def start_index_mapping_migration(self):
+        try:
+            migrateUrl = self.get_migration_url() + '/' + PLUGIN_INDEX_MAPPING
             r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
             response = r.json()
             return response
@@ -321,6 +345,22 @@ class Migrate:
                 return True
             else:
                 self.logger.info('Migration System OLD, %s=[%s]',
+                                 PLUGIN_MIGRATION_SYSTEM,
+                                 migration_system_version)
+        return False
+
+    def is_index_mapping_updated(self):
+        status = self.check_data_migration_status()
+        if status is not None:
+            migration_system_version = status['data'][PLUGIN_INDEX_MAPPING]
+
+            if migration_system_version == TARGET_INDEX_MAPPING_VERSION:
+                self.logger.info('Index Mapping CURRENT, %s=[%s]',
+                                 PLUGIN_MIGRATION_SYSTEM,
+                                 migration_system_version)
+                return True
+            else:
+                self.logger.info('Index Mapping OLD, %s=[%s]',
                                  PLUGIN_MIGRATION_SYSTEM,
                                  migration_system_version)
         return False
