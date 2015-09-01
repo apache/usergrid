@@ -39,14 +39,18 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #CONSTANT_USERS_PER_SEC=
 #CONSTANT_USERS_DURATION=
 
+#CSV_FEED_PATTERN=circular
+CSV_FEED_PATTERN=random
+
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) UUID_FILENAME [QUERY_PARAMS]"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) UUID_FILENAME [[CSV_FEED_PATTERN] QUERY_PARAMS]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
 UUID_FILENAME="$3"
-[ "$#" -ge 4 ] && QUERY_PARAMS="$4"
+[ "$#" -ge 4 ] && CSV_FEED_PATTERN="$4"
+[ "$#" -ge 5 ] && QUERY_PARAMS="$5"
 
 shift $#
 
@@ -83,5 +87,6 @@ mvn gatling:execute \
 -DuuidFilename=${UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -DqueryParams=${QUERY_PARAMS} \
+-DcsvFeedPattern=${CSV_FEED_PATTERN} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 

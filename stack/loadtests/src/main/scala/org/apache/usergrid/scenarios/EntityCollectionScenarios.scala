@@ -20,7 +20,7 @@ import io.gatling.core.Predef._
 import io.gatling.core.feeder.RecordSeqFeederBuilder
 import io.gatling.http.Predef._
 import org.apache.usergrid.datagenerators.FeederGenerator
-import org.apache.usergrid.enums.{EndConditionType, AuthType}
+import org.apache.usergrid.enums.{CsvFeedPatternType, EndConditionType, AuthType}
 import org.apache.usergrid.helpers.Extractors._
 import org.apache.usergrid.helpers.{Headers, Utils}
 import org.apache.usergrid.settings.Settings
@@ -58,8 +58,11 @@ object EntityCollectionScenarios {
   }
 
   def uuidFeeder(): RecordSeqFeederBuilder[String] = {
-
-    csv(Settings.feedUuidFilename).random
+    if (Settings.csvFeedPattern == CsvFeedPatternType.Circular) {
+      csv(Settings.feedUuidFilename).circular
+    } else {
+      csv(Settings.feedUuidFilename).random
+    }
   }
 
   /*
@@ -160,7 +163,7 @@ object EntityCollectionScenarios {
       .check(status.is(200))
   )
 
-  val getRandomEntitiesByUuid = scenario("Get entities by uuid randomly")
+  val getRandomEntitiesByUuid = scenario("Get entities by uuid")
     .exec(injectTokenIntoSession())
     .exec(injectAuthType())
     .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
