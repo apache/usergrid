@@ -162,7 +162,7 @@ public class ApplicationResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    @Path("size")
+    @Path("_size")
     public JSONWithPadding getApplicationSize(
         @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
@@ -173,16 +173,16 @@ public class ApplicationResource extends AbstractContextResource {
         Map<String,Object> map = new HashMap<>();
         Map<String,Object> innerMap = new HashMap<>();
         Map<String,Object> sumMap = new HashMap<>();
-        sumMap.put("sum",size);
-        innerMap.put("application",sumMap);
-        map.put("aggregation",innerMap);
+        innerMap.put("application",size);
+        sumMap.put("size",innerMap);
+        map.put("aggregation", sumMap);
         response.setMetadata(map);
         return new JSONWithPadding( response, callback );
     }
 
     @RequireOrganizationAccess
     @GET
-    @Path("size/{collection_name}")
+    @Path("{collection_name}/_size")
     public JSONWithPadding getCollectionSize(
         @Context UriInfo ui,
         @PathParam( "collection_name" ) String collection_name,
@@ -190,13 +190,31 @@ public class ApplicationResource extends AbstractContextResource {
         throws Exception {
         ApiResponse response = createApiResponse();
         response.setAction("get collection size for all entities");
-        long size = management.getCollectionSize(this.applicationId ,collection_name);
+        long size = management.getCollectionSize(this.applicationId, collection_name);
         Map<String,Object> map = new HashMap<>();
-        Map<String,Object> innerMap = new HashMap<>();
         Map<String,Object> sumMap = new HashMap<>();
-        sumMap.put("sum",size);
-        innerMap.put(collection_name,sumMap);
-        map.put("aggregation",innerMap);
+        Map<String,Object> innerMap = new HashMap<>();
+        innerMap.put(collection_name,size);
+        sumMap.put("size",innerMap);
+        map.put("aggregation",sumMap);
+        response.setMetadata(map);
+        return new JSONWithPadding( response, callback );
+    }
+
+    @RequireOrganizationAccess
+    @GET
+    @Path("collections/_size")
+    public JSONWithPadding getEachCollectionSize(
+        @Context UriInfo ui,
+        @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+        ApiResponse response = createApiResponse();
+        response.setAction("get collection size for all entities");
+        Map<String,Long> sizes = management.getEachCollectionSize(this.applicationId);
+        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> sumMap = new HashMap<>();
+        sumMap.put("size",sizes);
+        map.put("aggregation",sumMap);
         response.setMetadata(map);
         return new JSONWithPadding( response, callback );
     }

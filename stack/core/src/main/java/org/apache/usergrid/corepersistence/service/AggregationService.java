@@ -36,14 +36,14 @@ public interface AggregationService {
      * @param applicationScope
      * @return
      */
-    long sumAllCollections(ApplicationScope applicationScope);
+    long getApplicationSize(ApplicationScope applicationScope);
     /**
      * get entity size for app
      *
      * @param applicationScope
      * @return
      */
-    Map<String,Long> sumEachCollection(ApplicationScope applicationScope);
+    Map<String,Long> getEachCollectionSize(ApplicationScope applicationScope);
 
     /**
      * get total entity size for an edge
@@ -52,13 +52,13 @@ public interface AggregationService {
      * @param edge
      * @return
      */
-    long sum(final ApplicationScope applicationScope, final SearchEdge edge);
+    long getSize(final ApplicationScope applicationScope, final SearchEdge edge);
 
     /**
-     * get sum by collection name
+     * get getSize by collection name
      * @param applicationScope
      * @param collectionName
      * @return
      */
-    long getCollectionSum(final ApplicationScope applicationScope, final String collectionName);
+    long getCollectionSize(final ApplicationScope applicationScope, final String collectionName);
 }
