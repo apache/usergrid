@@ -176,7 +176,7 @@ class Migrate:
                     index_mapping_updated = self.is_index_mapping_updated()
                     if index_mapping_updated:
                         break
-            
+
             # Perform system re-index (it will grab date from input if provided)
             job = self.start_reindex()
             self.metrics['reindex_start'] = get_current_time()
@@ -352,17 +352,17 @@ class Migrate:
     def is_index_mapping_updated(self):
         status = self.check_data_migration_status()
         if status is not None:
-            migration_system_version = status['data'][PLUGIN_INDEX_MAPPING]
+            index_mapping_version = status['data'][PLUGIN_INDEX_MAPPING]
 
-            if migration_system_version == TARGET_INDEX_MAPPING_VERSION:
+            if index_mapping_version == TARGET_INDEX_MAPPING_VERSION:
                 self.logger.info('Index Mapping CURRENT, %s=[%s]',
-                                 PLUGIN_MIGRATION_SYSTEM,
-                                 migration_system_version)
+                                 PLUGIN_INDEX_MAPPING,
+                                 index_mapping_version)
                 return True
             else:
                 self.logger.info('Index Mapping OLD, %s=[%s]',
-                                 PLUGIN_MIGRATION_SYSTEM,
-                                 migration_system_version)
+                                 PLUGIN_INDEX_MAPPING,
+                                 index_mapping_version)
         return False
 
     def check_data_migration_status(self):
