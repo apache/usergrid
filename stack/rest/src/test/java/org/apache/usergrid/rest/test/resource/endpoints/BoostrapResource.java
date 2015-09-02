@@ -14,30 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 
 /**
- * Contains methods pertaining to system/database/*
+ * Functions as the endpoint for all resources that hit /system/ * /setup
  */
-public class DatabaseResource extends NamedResource {
+public class BoostrapResource extends NamedResource {
 
-    public DatabaseResource( final ClientContext context, final UrlResource parent ) {
-        super( "database", context, parent );
+    public BoostrapResource( final ClientContext context, final UrlResource parent ) {
+        super("bootstrap",context,parent);
     }
 
-    public SetupResource setup(){
-        return new SetupResource (context, this);
-    }
+    public Entity put(QueryParameters queryParameters){
 
-    public BoostrapResource bootstrap(){
-          return new BoostrapResource (context, this);
-      }
+        WebResource resource = getResource();
+        resource = addParametersToResource( resource, queryParameters );
+
+        //added httpBasicauth filter to all setup calls because they all do verification this way.
+        HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+        resource.addFilter( httpBasicAuthFilter );
+
+        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                                .put( Entity.class );
+    }
 }

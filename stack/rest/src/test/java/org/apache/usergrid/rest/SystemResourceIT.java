@@ -22,10 +22,6 @@ import org.junit.Test;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource.model.Token;
-
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -38,19 +34,33 @@ public class SystemResourceIT extends AbstractRestIT {
     @Test
     public void testSystemDatabaseAlreadyRun() {
         QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
 
-        Entity result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
-
-        assertNotNull(result);
-        assertNotNull( "ok" ,(String)result.get( "status" ) );
-
-        result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
+        Entity result = clientSetup.getRestClient().system().database().setup().put( queryParameters );
 
         assertNotNull( result );
-        assertNotNull( "ok" ,(String)result.get( "status" ) );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
 
+        result = clientSetup.getRestClient().system().database().setup().put( queryParameters );
 
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
     }
 
+
+    @Test
+    public void testBoostrapAlreadyRun() {
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
+
+        Entity result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
+
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
+
+        result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
+
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
+    }
 }

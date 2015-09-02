@@ -50,7 +50,7 @@ public class CoreSchemaManager implements SchemaManager {
     @Override
     public void create() {
         try {
-            setup.init();
+            setup.initSubsystems();
         }
         catch ( Exception ex ) {
             LOG.error( "Could not setup usergrid core schema", ex );

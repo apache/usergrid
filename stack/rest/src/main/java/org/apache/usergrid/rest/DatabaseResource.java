@@ -18,7 +18,7 @@ package org.apache.usergrid.rest;
 
 
 import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -36,41 +36,37 @@ import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 
-@Path( "/system" )
 @Component
 @Scope( "singleton" )
 @Produces( {
     MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
     "application/ecmascript", "text/jscript"
 } )
-public class SystemResource extends AbstractContextResource {
+public class DatabaseResource extends AbstractContextResource {
 
-    private static final Logger logger = LoggerFactory.getLogger( SystemResource.class );
+    private static final Logger logger = LoggerFactory.getLogger( DatabaseResource.class );
 
 
-    public SystemResource() {
-        logger.info( "SystemResource initialized" );
+    public DatabaseResource() {
+        logger.info( "DatabaseResource initialized" );
     }
 
 
     @RequireSystemAccess
-    @GET
-    @Path( "superuser/setup" )
-    public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    @PUT
+    @Path( "setup" )
+    public JSONWithPadding runDatabaseSetup( @Context UriInfo ui,
+                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
         ApiResponse response = createApiResponse();
-        response.setAction( "superuser setup" );
+        response.setAction( "cassandra setup" );
 
-        logger.info( "Setting up Superuser" );
+        logger.info( "Setting up Cassandra" );
 
-        try {
-            management.provisionSuperuser();
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to complete superuser setup", e );
-        }
+
+        emf.setup();
+
 
         response.setSuccess();
 
@@ -78,18 +74,25 @@ public class SystemResource extends AbstractContextResource {
     }
 
 
-    @Path( "migrate" )
-    public MigrateResource migrate() {
-        return getSubResource( MigrateResource.class );
-    }
+    @RequireSystemAccess
+    @PUT
+    @Path( "bootstrap" )
+    public JSONWithPadding runSystemSetup( @Context UriInfo ui,
+                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "cassandra setup" );
+
+        logger.info( "Setting up Cassandra" );
 
 
-    @Path( "index" )
-    public IndexResource index() { return getSubResource( IndexResource.class ); }
+        emf.boostrap();
+        management.setup();
 
+        response.setSuccess();
 
-    @Path( "database" )
-    public DatabaseResource database() {
-        return getSubResource( DatabaseResource.class );
+        return new JSONWithPadding( response, callback );
     }
 }
+

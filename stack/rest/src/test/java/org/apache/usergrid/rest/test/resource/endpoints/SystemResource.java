@@ -34,24 +34,10 @@ public class SystemResource extends NamedResource {
         super( "system",context, parent );
     }
 
-    //Dirty hack for path resource in new branch of two-dot-o
-    public SystemResource(final String name,final ClientContext context, final UrlResource parent ) {
-        super( name,context, parent );
-    }
-
 
     public DatabaseResource database() {
         return new DatabaseResource(context, this);
     }
 
-    public SystemResource addToPath( String pathPart ) {
-        return new SystemResource( pathPart, context, this );
-    }
 
-    public ApiResponse put(){
-        ApiResponse
-            response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                                        .put(ApiResponse.class);
-        return response;
-    }
 }
