@@ -90,13 +90,12 @@ public class CpSetup implements Setup {
 
 
     @Override
-    public void init() throws Exception {
+    public void initSubsystems() throws Exception {
         //a no op, creating the injector creates the connections
         //init our index if required
         this.emf.initializeManagementIndex();
         setupStaticKeyspace();
         setupSystemKeyspace();
-        createDefaultApplications();
 
     }
 
