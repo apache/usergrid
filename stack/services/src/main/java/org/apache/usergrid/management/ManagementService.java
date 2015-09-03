@@ -35,6 +35,7 @@ import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.apache.usergrid.services.ServiceResults;
 
 import com.google.common.collect.BiMap;
+import rx.Observable;
 
 
 public interface ManagementService {
@@ -338,4 +339,11 @@ public interface ManagementService {
     long getCollectionSize(final UUID applicationId, final String collectionName);
 
     Map<String,Long> getEachCollectionSize(final UUID applicationId);
+
+    /**
+     * will delete all entities
+     * @param applicationId
+     * @return
+     */
+    Observable<Integer> deleteAllEntities(UUID applicationId);
 }

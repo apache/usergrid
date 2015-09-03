@@ -167,6 +167,8 @@ public class CoreModule  extends AbstractModule {
 
         bind( ConnectionService.class).to( ConnectionServiceImpl.class);
 
+        bind( ApplicationService.class ).to( ApplicationServiceImpl.class );
+
     }
 
 }
