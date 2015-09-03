@@ -22,6 +22,7 @@ import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -40,7 +41,9 @@ public class RestClient implements UrlResource {
 
     public WebTarget resource;
     ClientConfig config = new ClientConfig();
-    Client client = ClientBuilder.newClient( config );
+
+    Client client = ClientBuilder.newClient( config )
+        .register(MultiPartFeature.class);
 
     /**
      *
@@ -111,9 +114,11 @@ public class RestClient implements UrlResource {
     }
 
     public void superuserSetup() {
-        this.getTarget().path( "system/superuser/setup" ).request()
-            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "superuser")
-            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "superpassword" )
+
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+            .credentials( "superuser", "superpassword" ).build();
+
+        getTarget().path( "system/superuser/setup" ).register( feature ).request()
             .accept( MediaType.APPLICATION_JSON )
             .get( JsonNode.class );
     }

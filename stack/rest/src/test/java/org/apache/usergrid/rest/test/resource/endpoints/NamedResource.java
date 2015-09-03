@@ -22,8 +22,10 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import static org.glassfish.jersey.client.authentication.HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME;
+import static org.glassfish.jersey.client.authentication.HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
@@ -46,18 +48,16 @@ public class NamedResource implements UrlResource {
 
     protected final String name;
     protected final ClientContext context;
-    /* Stores the path of the parent that called it.
-    i.e If we had a ApplicationResource ( an instance of a namedResource ) this would contain the OrganizationResource.
-     */
-    protected final UrlResource parent;
 
+    /** Stores the path of the parent that called it. i.e If we had a ApplicationResource
+       (an instance of a namedResource) this would contain the OrganizationResource. */
+    protected final UrlResource parent;
 
     public NamedResource( final String name, final ClientContext context, final UrlResource parent ) {
         this.name = name;
         this.context = context;
         this.parent = parent;
     }
-
 
     @Override
     public String getPath() {
@@ -68,17 +68,19 @@ public class NamedResource implements UrlResource {
     public WebTarget getTarget() {
         return getTarget( false );
     }
+
     public WebTarget getTarget(boolean useToken) {
         return getTarget( useToken, null );
     }
-    public WebTarget getTarget(boolean useToken,Token token) {
+
+    public WebTarget getTarget(boolean useToken, Token token) {
         WebTarget resource = parent.getTarget().path( getPath() );
         token = token !=null ? token : this.context.getToken();
         //error checking
         if (token == null) {
             return resource;
         }
-        return  useToken    ? resource.queryParam("access_token",token.getAccessToken()) :  resource;
+        return useToken ? resource.queryParam("access_token", token.getAccessToken()) :  resource;
     }
 
     protected WebTarget addParametersToResource(WebTarget resource, final QueryParameters parameters){
@@ -246,8 +248,10 @@ public class NamedResource implements UrlResource {
 
 
         if ( useBasicAuthentication ) {
-            builder = builder.property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "superuser")
-                             .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "superpassword");
+            String uname = (String)entity.get("username");
+            String pword = (String)entity.get("password");
+            builder = builder.property( HTTP_AUTHENTICATION_BASIC_USERNAME, uname )
+                             .property( HTTP_AUTHENTICATION_BASIC_PASSWORD, pword );
         }
 
         // it's OK for the entity to be null
@@ -258,7 +262,7 @@ public class NamedResource implements UrlResource {
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {
-        return get(type,null,true);
+        return get(type, null, true);
 
     }
 
@@ -273,9 +277,9 @@ public class NamedResource implements UrlResource {
         return get( type, queryParameters, true );
     }
 
-    public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken) {
+    public <T> T get(Class<T> type, QueryParameters queryParameters, boolean useToken) {
         WebTarget resource = getTarget( useToken );
-        if(queryParameters!=null) {
+        if (queryParameters != null) {
             resource = addParametersToResource(resource, queryParameters);
         }
         GenericType<T> gt = new GenericType<>((Class) type);
@@ -289,13 +293,13 @@ public class NamedResource implements UrlResource {
         return "";
     }
 
-    public ApiResponse post( boolean useToken, FormDataMultiPart multiPartForm ) {
+    public ApiResponse post( boolean useToken, MultiPart multiPartForm ) {
         WebTarget resource = getTarget( useToken );
         return resource.request().post(
             javax.ws.rs.client.Entity.entity( multiPartForm, multiPartForm.getMediaType() ), ApiResponse.class );
     }
 
-    public ApiResponse post( FormDataMultiPart multiPartForm ) {
+    public ApiResponse post( MultiPart multiPartForm ) {
         return post( true, multiPartForm );
     }
 

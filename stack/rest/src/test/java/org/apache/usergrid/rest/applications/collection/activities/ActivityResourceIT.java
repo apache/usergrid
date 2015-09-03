@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.utils.UUIDUtils;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -88,7 +88,7 @@ public class ActivityResourceIT extends AbstractRestIT {
         // don't populate the user, it will use the currently authenticated user.
         try {
             groupActivityResource.post(activity);
-        }catch (ResponseProcessingException e)
+        }catch (ClientErrorException e)
         {
             throw e;
         }

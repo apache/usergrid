@@ -22,18 +22,20 @@ import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.ext.Provider;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.rest.exceptions.AuthErrorInfo.OAUTH2_INVALID_CLIENT;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 
 
-@Component
+@Provider
+@PreMatching
 public class ClientCredentialsSecurityFilter extends SecurityFilter {
 
     private static final Logger logger = LoggerFactory.getLogger( ClientCredentialsSecurityFilter.class );
@@ -49,6 +51,8 @@ public class ClientCredentialsSecurityFilter extends SecurityFilter {
 
     @Override
     public void filter( ContainerRequestContext request ) {
+        logger.debug("Filtering: " + request.getUriInfo().getBaseUri());
+
         String clientId = httpServletRequest.getParameter( "client_id" );
         String clientSecret = httpServletRequest.getParameter( "client_secret" );
 

@@ -17,9 +17,13 @@
 package org.apache.usergrid.rest.security.shiro.filters;
 
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.security.tokens.TokenService;
+import org.apache.usergrid.services.ServiceManagerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -27,22 +31,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.ws.spi.http.HttpContext;
-
-import org.glassfish.jersey.server.ContainerRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.security.tokens.TokenService;
-import org.apache.usergrid.services.ServiceManagerFactory;
-
-import org.apache.commons.lang.StringUtils;
-
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
-
 
 public abstract class SecurityFilter implements ContainerRequestFilter {
 

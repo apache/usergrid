@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -77,7 +77,7 @@ public class PartialUpdateTest extends AbstractRestIT {
             try {
                 // PUT the updates to the user and ensure they were saved
                 userNode = this.app().collection("users").entity(userNode).put(updateProps);
-            } catch (ResponseProcessingException uie) {
+            } catch (ClientErrorException uie) {
                 fail("Update failed due to: " + uie.getResponse().readEntity(String.class));
             }
 
@@ -118,7 +118,7 @@ public class PartialUpdateTest extends AbstractRestIT {
         try { //  PUT /users/fred   put /users/uuid
             userNode = this.app().collection("users").entity(props.get("username").toString()).put(updateProps);
 
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             fail("Update failed due to: " + uie.getResponse().readEntity(String.class));
         }
         refreshIndex();

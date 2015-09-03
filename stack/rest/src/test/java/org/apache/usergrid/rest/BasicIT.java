@@ -25,7 +25,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.client.ResponseProcessingException;
+
+import javax.ws.rs.ClientErrorException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -74,9 +75,9 @@ public class BasicIT extends AbstractRestIT {
             try {
                 clientSetup.getRestClient().pathResource( getOrgAppPath( "users/JOE" ) ).get( ApiResponse.class );
                 fail("A get on a nonexistant object should fail");
-            } catch ( ResponseProcessingException e ) {
+            } catch ( ClientErrorException e ) {
                 assertEquals( "Guests should not be able to get a 404", 404,
-                    e.getResponse().getStatusInfo().getStatusCode());
+                    e.getResponse().getStatusInfo().getStatusCode() );
             }
     }
 }

@@ -32,11 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.*;
 import javax.ws.rs.core.Context;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -49,6 +47,8 @@ import java.util.concurrent.TimeUnit;
 
 
 // TODO: Metering for Jersey 2
+@Resource
+@PreMatching
 @Component
 public class MeteringFilter implements ContainerRequestFilter, ContainerResponseFilter {
 

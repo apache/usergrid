@@ -30,6 +30,7 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.BadRequestException;
 import java.io.IOException;
 
 
@@ -95,7 +96,7 @@ public class ClientSetup implements TestRule {
         try {
             restClient.superuserSetup();
             superuserToken = restClient.management().token().get(superuserName, superuserPassword);
-        } catch ( Exception e ) {
+        } catch ( BadRequestException e ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Error creating superuser, may already exist", e );
             } else {

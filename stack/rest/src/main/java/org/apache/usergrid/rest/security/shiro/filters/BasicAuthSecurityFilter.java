@@ -20,15 +20,17 @@ package org.apache.usergrid.rest.security.shiro.filters;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.ext.Provider;
 import java.security.Principal;
 import java.util.Map;
 
 
-@Component
+@Provider
+@PreMatching
 public class BasicAuthSecurityFilter extends SecurityFilter {
 
     private static final Logger logger = LoggerFactory.getLogger( BasicAuthSecurityFilter.class );
@@ -41,6 +43,8 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
 
     @Override
     public void filter( ContainerRequestContext request ) {
+        logger.info("Filtering: " + request.getUriInfo().getBaseUri());
+
         Map<String, String> auth_types = getAuthTypes( request );
         if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) ) {
             return;
@@ -59,7 +63,7 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
         if ( name.equals( sysadmin_login_name ) && password.equals( sysadmin_login_password )
                 && sysadmin_login_allowed ) {
             request.setSecurityContext( new SysAdminRoleAuthenticator() );
-            logger.info( "System administrator access allowed" );
+            logger.debug( "System administrator access allowed" );
         }
     }
 

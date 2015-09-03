@@ -28,7 +28,10 @@ import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -100,11 +103,14 @@ public class OrgResource  extends NamedResource {
     public Organization post(Organization organization){
 
         // use string type so we can log actual response from server
-        String responseString = getTarget(false).request()
-            .accept( MediaType.APPLICATION_JSON )
-            .post( Entity.json(organization), String.class );
-
-        logger.debug("Response from post: " + responseString);
+        String responseString = null;
+        try {
+            responseString = getTarget( false ).request()
+                .accept( MediaType.APPLICATION_JSON )
+                .post( Entity.json( organization ), String.class );
+        } catch ( ClientErrorException e ) {
+            logger.info("Response from post: " + e.getMessage() + ": " + e.getResponse().readEntity( String.class ));
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         ApiResponse response;
@@ -120,9 +126,9 @@ public class OrgResource  extends NamedResource {
         return org;
     }
     public Organization post(Organization organization, Token token){
-        ApiResponse response = getTarget(true,token).request()
+        ApiResponse response = getTarget( true, token ).request()
             .accept( MediaType.APPLICATION_JSON )
-            .post( Entity.json(organization), ApiResponse.class );
+            .post( Entity.json( organization ), ApiResponse.class );
 
         Organization org = new Organization(response);
         org.setOwner( response );
@@ -134,7 +140,7 @@ public class OrgResource  extends NamedResource {
 
         // use string type so we can log actual response from server
         String responseString = getTarget().request()
-            .accept(MediaType.APPLICATION_JSON)
+            .accept( MediaType.APPLICATION_JSON )
             .post( Entity.json( organization ), String.class );
 
         logger.debug("Response from put: " + responseString);

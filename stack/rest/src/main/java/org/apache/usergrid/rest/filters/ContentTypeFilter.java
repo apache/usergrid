@@ -59,7 +59,7 @@ public class ContentTypeFilter implements Filter {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
      */
     @Override
@@ -70,7 +70,7 @@ public class ContentTypeFilter implements Filter {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest,
      * javax.servlet.ServletResponse, javax.servlet.FilterChain)
      */
@@ -98,7 +98,7 @@ public class ContentTypeFilter implements Filter {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.servlet.Filter#destroy()
      */
     @Override
@@ -153,12 +153,10 @@ public class ContentTypeFilter implements Filter {
             // nothing to read, check if it's a put or a post. If so set the
             // content type to json to create an empty json request
             if ( initial == -1 ) {
-                if ( ( HttpMethod.POST.equals( method ) || HttpMethod.PUT.equals( method ) ) && !MediaType
-                        .APPLICATION_FORM_URLENCODED.equals( getContentType() ) ) {
-
-                    logger.debug(
-                            "Setting content type to application/json for POST or PUT with no content at path '{}'",
-                            path );
+                if ( ( HttpMethod.POST.equals( method ) || HttpMethod.PUT.equals( method ) )
+                    && !MediaType.APPLICATION_FORM_URLENCODED.equals( getContentType() ) ) {
+                    logger.debug("Setting content type to application/json " +
+                            "for POST or PUT with no content at path '{}'", path );
 
                     setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
                     setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON );
@@ -170,9 +168,11 @@ public class ContentTypeFilter implements Filter {
             char firstChar = ( char ) initial;
 
             // its json, make it so
-            if ( firstChar == '{' || firstChar == '[' ) {
-                logger.debug( "Setting content type to application/json for POST or PUT with json content at path '{}'",
-                        path );
+            if ( firstChar == '{' || firstChar == '['
+                && !MediaType.APPLICATION_JSON.equals( getContentType() )) {
+
+                logger.debug( "Setting content type to application/json " +
+                        "for POST or PUT with json content at path '{}'", path );
 
                 setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
                 setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON );
@@ -193,7 +193,7 @@ public class ContentTypeFilter implements Filter {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * javax.servlet.http.HttpServletRequestWrapper#getHeader(java.lang.
          * String)
@@ -212,7 +212,7 @@ public class ContentTypeFilter implements Filter {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * javax.servlet.http.HttpServletRequestWrapper#getHeaders(java.lang
          * .String)
@@ -238,7 +238,7 @@ public class ContentTypeFilter implements Filter {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see javax.servlet.http.HttpServletRequestWrapper#getHeaderNames()
          */
         @Override
@@ -257,7 +257,7 @@ public class ContentTypeFilter implements Filter {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see javax.servlet.ServletRequestWrapper#getInputStream()
          */
         @Override
@@ -268,7 +268,7 @@ public class ContentTypeFilter implements Filter {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see javax.servlet.ServletRequestWrapper#getReader()
          */
         @Override

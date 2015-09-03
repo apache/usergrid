@@ -87,10 +87,10 @@ public class IndexResourceIT extends AbstractRestIT {
                 .get( "jobId" ).toString() )
             .getTarget();
 
-        result = res.request()
-            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "superuser")
-            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "superpassword" )
-            .get(ApiResponse.class);
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+            .credentials( "superuser", "superpassword" ).build();
+
+        result = res.register( feature ).request().get( ApiResponse.class );
 
         assertNotNull( result );
         assertEquals(status,result.getProperties().get("jobId").toString());
@@ -116,9 +116,10 @@ public class IndexResourceIT extends AbstractRestIT {
 
             WebTarget resource = this.clientSetup.getRestClient().pathResource("/system/index/" + appId).getTarget();
 
-            node = resource.request()
-                .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "superuser")
-                .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "superpassword" )
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+                .credentials( "superuser", "superpassword" ).build();
+
+            node = resource.register( feature ).request()
                 .accept( MediaType.APPLICATION_JSON )
                 .get( org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
 

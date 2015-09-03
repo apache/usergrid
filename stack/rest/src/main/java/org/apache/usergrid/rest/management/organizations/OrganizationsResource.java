@@ -24,6 +24,7 @@ import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
@@ -41,6 +42,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isPermittedAccessToOrganization;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -62,7 +66,13 @@ public class OrganizationsResource extends AbstractContextResource {
     public OrganizationsResource() {
     }
 
+    // TODO: better solution to this Jersey 2 introduced problem:
+    // Problem is that when Jersey scans the resources classes and methods to add our
+    // secured resource filter, it only recognizes methods with an HTTP method annotation
+    // but when I add the @GET annotation to the methods below, Jersey fails to resolve
+    // the resource methods when they are called.
 
+    //@GET
     @Path(RootResource.ORGANIZATION_ID_PATH)
     @RequireOrganizationAccess
     public OrganizationResource getOrganizationById( @Context UriInfo ui,
@@ -72,10 +82,18 @@ public class OrganizationsResource extends AbstractContextResource {
         if ( organization == null ) {
             throw new ManagementException( "Could not find organization for ID: " + organizationIdStr );
         }
+
+//        // TODO: get rid of this and make annotations work (see above)
+//        if ( !isPermittedAccessToOrganization( Identifier.from(organization) ) ) {
+//            logger.debug("No organization access authorized");
+//            throw mappableSecurityException( "unauthorized", "No organization access authorized" );
+//        }
+
         return getSubResource( OrganizationResource.class ).init( organization );
     }
 
 
+    //@GET
     @Path( "{organizationName}" )
     @RequireOrganizationAccess
     public OrganizationResource getOrganizationByName( @Context UriInfo ui,
@@ -85,6 +103,13 @@ public class OrganizationsResource extends AbstractContextResource {
         if ( organization == null ) {
             throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
+
+//        // TODO: get rid of this and make annotations work (see above)
+//        if ( !isPermittedAccessToOrganization( Identifier.from(organization) ) ) {
+//            logger.debug("No organization access authorized");
+//            throw mappableSecurityException( "unauthorized", "No organization access authorized" );
+//        }
+
         return getSubResource( OrganizationResource.class ).init(organization);
     }
 

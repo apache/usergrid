@@ -21,15 +21,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
 import java.io.IOException;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 
+@Resource
+@PreMatching
 @Component
 public class JSONPCallbackFilter implements ContainerRequestFilter {
 

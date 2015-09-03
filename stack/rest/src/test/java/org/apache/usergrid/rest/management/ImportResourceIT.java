@@ -49,7 +49,7 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.util.ArrayList;
@@ -211,7 +211,7 @@ public class ImportResourceIT extends AbstractRestIT {
             this.management().orgs().org( org ).app().addToPath(app)
                 .addToPath("imports").addToPath(entity.getUuid().toString()).get();
             fail("Should not be able to read import job with unauthorized token");
-        } catch (ResponseProcessingException ex) {
+        } catch (ClientErrorException ex) {
             errorParse(401, "unauthorized", ex);
         }
 
@@ -229,7 +229,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
         assertEquals(Response.Status.BAD_REQUEST, responseStatus);
@@ -249,7 +249,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
         assertEquals(Response.Status.BAD_REQUEST, responseStatus);
@@ -271,7 +271,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
         assertEquals(Response.Status.BAD_REQUEST, responseStatus);
@@ -294,7 +294,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
         assertEquals(Response.Status.BAD_REQUEST, responseStatus);
@@ -307,7 +307,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
         assertEquals(Response.Status.BAD_REQUEST, responseStatus);
@@ -320,7 +320,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         try {
             this.management().orgs().org( org ).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
         assertEquals(Response.Status.BAD_REQUEST, responseStatus);

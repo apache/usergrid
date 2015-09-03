@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.utils.MapUtils;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -152,7 +152,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         int status = 0;
         try {
             data = devices.entity("device2").get();
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );
@@ -176,7 +176,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         status = 0;
         try{
         data = devices.entity("device1").get();
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );
@@ -283,7 +283,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         int status = 200;
         try {
             likeRestaurants.entity("arrogantbutcher").get();
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals(status, 404);
@@ -291,7 +291,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         status = 200;
         try {
             likeRestaurants.entity( arrogantButcherId ).get();
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals(status, 404);
@@ -320,7 +320,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
          status = 200;
         try {
             data = likeRestaurants.entity( "4peaks" ).get();
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );
@@ -331,7 +331,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         try {
             likeRestaurants.entity( peaksId ).get();
 
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );

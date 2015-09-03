@@ -21,7 +21,7 @@ import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.junit.Test;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
@@ -54,7 +54,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -80,7 +80,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -106,7 +106,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -132,7 +132,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -158,7 +158,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }
@@ -184,7 +184,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
             QueryParameters params = new QueryParameters().setQuery(query);
             this.app().collection(collectionName).get(params);
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }

@@ -24,7 +24,7 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -149,7 +149,7 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.createGroup(groupName, groupSpacePath);
             fail("Should not be able to create a group with a space in the path");
-        } catch (ResponseProcessingException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "illegal_argument", node.get( "error" ).textValue() );
@@ -192,7 +192,7 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("groups").uniqueID(groupName).get();
             fail("Entity still exists");
-        } catch (ResponseProcessingException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "entity_not_found", node.get( "error" ).textValue() );
@@ -298,7 +298,7 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("role").entity(role).get();
             fail("Entity still exists");
-        } catch (ResponseProcessingException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "entity_not_found", node.get( "error" ).textValue() );
@@ -367,7 +367,7 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("cats").uniqueID(catName).put(fluffy);
             fail("permissions should not allow this");
-        } catch (ResponseProcessingException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ) );
             assertEquals( "unauthorized", node.get( "error" ).textValue() );
@@ -377,7 +377,7 @@ public class GroupResourceIT extends AbstractRestIT {
         try {
             this.app().collection("cats").uniqueID(catName).delete();
             fail("permissions should not allow this");
-        } catch (ResponseProcessingException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "unauthorized", node.get( "error" ).textValue() );

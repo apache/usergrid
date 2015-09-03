@@ -17,8 +17,6 @@
 package org.apache.usergrid.security.providers;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
@@ -32,8 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -94,7 +90,7 @@ public class FoursquareProvider extends AbstractProvider {
             .queryParam( "v", "20120623" )
             .request()
                 .accept( MediaType.APPLICATION_JSON )
-                .get(Map.class);
+                .get( Map.class );
 
         Map<String, Object> fq_user = ( Map<String, Object> ) ( ( Map<?, ?> ) body.get( "response" ) ).get( "user" );
 

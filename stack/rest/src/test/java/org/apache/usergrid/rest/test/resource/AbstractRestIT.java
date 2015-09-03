@@ -29,10 +29,16 @@ import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainer;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Rule;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
@@ -56,12 +62,13 @@ public class AbstractRestIT extends JerseyTest {
     @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
 
-//    protected static final Application descriptor;
-//
-//    public AbstractRestIT() {
-//        super( descriptor );
-//    }
+    protected static final Application descriptor = new Application();
 
+
+    @Override
+    protected Application configure() {
+        return descriptor;
+    }
 
     protected ObjectMapper mapper = new ObjectMapper();
 
@@ -109,10 +116,31 @@ public class AbstractRestIT extends JerseyTest {
         }
     }
 
-//    @Override
-//    protected TestContainerFactory getTestContainerFactory() {
-//        return new ExternalTestContainerFactory();
-//    }
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        final URI baseURI = getBaseURI();
+        return (uri, deploymentContext) -> new TestContainer() {
+            @Override
+            public ClientConfig getClientConfig() {
+                return clientConfig;
+            }
+
+            @Override
+            public URI getBaseUri() {
+                return baseURI;
+            }
+
+            @Override
+            public void start() {
+                // noop
+            }
+
+            @Override
+            public void stop() {
+                // noop
+            }
+        };
+    }
 
     ///myorg/
     protected OrganizationResource org(){
@@ -151,13 +179,13 @@ public class AbstractRestIT extends JerseyTest {
 
 
     /**
-     * Takes in the expectedStatus message and the expectedErrorMessage then compares it to the ResponseProcessingException
+     * Takes in the expectedStatus message and the expectedErrorMessage then compares it to the ClientErrorException
      * to make sure that we got what we expected.
      * @param expectedStatus
      * @param expectedErrorMessage
      * @param uie
      */
-    public void errorParse(int expectedStatus, String expectedErrorMessage, ResponseProcessingException uie){
+    public void errorParse(int expectedStatus, String expectedErrorMessage, ClientErrorException uie){
         assertEquals(expectedStatus,uie.getResponse().getStatus());
         JsonNode errorJson = uie.getResponse().readEntity( JsonNode.class );
         assertEquals( expectedErrorMessage, errorJson.get( "error" ).asText() );
@@ -165,16 +193,16 @@ public class AbstractRestIT extends JerseyTest {
     }
 
 
-    protected Token getAdminToken(String username, String password){
-        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
-                new Token(username, password),null,false
-        );
+    protected Token getAdminToken(String username, String password) {
+        Token token = new Token(username, password);
+        return this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, token, null, false );
     }
 
-    protected Token getAdminToken(){
-        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
-                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null,false
-        );
+    protected Token getAdminToken() {
+        Token token = new Token(this.clientSetup.getUsername(), this.clientSetup.getPassword());
+        return this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, token, null, false);
     }
     public Map<String, Object> getRemoteTestProperties() {
         return clientSetup.getRestClient().testPropertiesResource().get().getProperties();

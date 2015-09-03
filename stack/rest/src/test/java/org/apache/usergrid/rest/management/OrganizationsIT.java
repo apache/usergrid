@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.RestClient;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 
@@ -123,7 +123,7 @@ public class OrganizationsIT extends AbstractRestIT {
             clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
             fail("Should not have been able to create duplicate organization");
         }
-        catch ( ResponseProcessingException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage, ex );
         }
 
@@ -135,7 +135,7 @@ public class OrganizationsIT extends AbstractRestIT {
             tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created user" );
         }
-        catch ( ResponseProcessingException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,invalidGrantErrorMessage, ex );
 
         }
@@ -179,7 +179,7 @@ public class OrganizationsIT extends AbstractRestIT {
             clientSetup.getRestClient().management().orgs().post( orgDuplicatePayload );
             fail( "Should not have created organization" );
         }
-        catch ( ResponseProcessingException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage,ex);
         }
 
@@ -190,7 +190,7 @@ public class OrganizationsIT extends AbstractRestIT {
             tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created organization" );
         }
-        catch ( ResponseProcessingException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,invalidGrantErrorMessage,ex );
         }
 
@@ -222,7 +222,7 @@ public class OrganizationsIT extends AbstractRestIT {
         try{
             Organization organizationReturned = clientSetup.getRestClient().management().orgs().post(queryParameters);
             fail();
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             assertEquals("ensure bad request",e.getResponse().getStatus(), 400);
         }
 
@@ -295,7 +295,7 @@ public class OrganizationsIT extends AbstractRestIT {
             //Delete default organization
             clientSetup.getRestClient().management().orgs().org( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
-        }catch(ResponseProcessingException uie){
+        }catch(ClientErrorException uie){
             assertEquals( Response.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
         }
     }

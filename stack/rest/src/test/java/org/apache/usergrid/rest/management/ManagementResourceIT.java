@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -99,11 +99,12 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void crossOrgsNotViewable() throws Exception {
 
-        String username = "test" + UUIDUtils.newTimeUUID();
-        String name = "someguy2";
-        String email = "someguy" + "@usergrid.com";
+        String differentiator = UUIDUtils.newTimeUUID().toString();
+        String username = "test" + differentiator;
+        String name = "someguy2" + differentiator;
+        String email = "someguy" + differentiator + "@usergrid.com";
         String password = "password";
-        String orgName = "someneworg" + UUIDUtils.newTimeUUID();
+        String orgName = "someneworg" + differentiator;
 
         Entity payload =
                 new Entity().chainPut("company", "Apigee" );
@@ -121,7 +122,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             returnVal = this.management().orgs().org( orgName ).get(String.class);
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -133,7 +134,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -145,7 +146,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -336,7 +337,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             userdata = management.users().user(clientSetup.getEmail()).get();
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -455,7 +456,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
            management.token().post( JsonNode.class, payload );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus());
         }
 
@@ -476,7 +477,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             management.token().post( JsonNode.class, payload );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -507,7 +508,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             response = management.users().user(clientSetup.getUsername()).get();
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -530,7 +531,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             management.users().user(clientSetup.getUsername()).get();
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -589,7 +590,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
                 fail( "Validation should have failed" );
 
-            } catch (ResponseProcessingException actual) {
+            } catch (ClientErrorException actual) {
                 assertEquals( 404, actual.getResponse().getStatus() );
                 String errorMsg = actual.getResponse().readEntity( JsonNode.class )
                     .get( "error_description" ).toString();
@@ -640,7 +641,7 @@ public class ManagementResourceIT extends AbstractRestIT {
                 ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
                 fail( "Login as Admin User must fail when validate external tokens is enabled" );
 
-            } catch (ResponseProcessingException actual) {
+            } catch (ClientErrorException actual) {
                 assertEquals( 400, actual.getResponse().getStatus() );
                 String errorMsg = actual.getResponse().readEntity( JsonNode.class )
                     .get( "error_description" ).toString();
@@ -648,7 +649,7 @@ public class ManagementResourceIT extends AbstractRestIT {
                 assertTrue( errorMsg.contains( "Admin Users must login via" ) );
 
             } catch (Exception e) {
-                fail( "We expected a ResponseProcessingException" );
+                fail( "We expected a ClientErrorException" );
             }
 
             // login as superuser must succeed

@@ -25,13 +25,8 @@ import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.exception.NotImplementedException;
@@ -54,8 +49,6 @@ import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.spi.Connector;
-import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -67,7 +60,10 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Iterator;
@@ -650,7 +646,8 @@ public class ManagementResource extends AbstractContextResource {
                     } else {
 
                         // already created user, so just create an org
-                        final OrganizationInfo organization = management.createOrganization( orgName, userInfo, true );
+                        final OrganizationInfo organization =
+                            management.createOrganization( orgName, userInfo, true );
 
                         applicationCreator.createSampleFor( organization );
 
@@ -674,7 +671,8 @@ public class ManagementResource extends AbstractContextResource {
             throw e;
         }
 
-        final Response response = Response.status( SC_OK ).type( jsonMediaType( callback ) ).entity( accessInfo ).build();
+        final Response response = Response.status( SC_OK )
+            .type( jsonMediaType( callback ) ).entity( accessInfo ).build();
 
         timerContext.stop();
 
@@ -695,7 +693,7 @@ public class ManagementResource extends AbstractContextResource {
         Counter tokensRejectedCounter = getMetricsFactory().getCounter(
             ManagementResource.class, SSO_TOKENS_REJECTED );
         Counter tokensValidatedCounter = getMetricsFactory().getCounter(
-                ManagementResource.class, SSO_TOKENS_VALIDATED );
+            ManagementResource.class, SSO_TOKENS_VALIDATED );
 
         // create URL of central Usergrid's /management/me endpoint
 
@@ -762,7 +760,7 @@ public class ManagementResource extends AbstractContextResource {
                 clientConfig.connectorProvider( new ApacheConnectorProvider() );
 
                 jerseyClient = ClientBuilder.newClient( clientConfig );
-                jerseyClient.property( ClientProperties.CONNECT_TIMEOUT, timeout);
+                jerseyClient.property( ClientProperties.CONNECT_TIMEOUT, timeout );
                 jerseyClient.property( ClientProperties.READ_TIMEOUT, readTimeout );
             }
         }

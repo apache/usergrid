@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -71,7 +71,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
             this.app().collection("users").entity(scott).collection("likes").collection("peeps").entity(peep).get();
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             // Should return a 404 Not Found
             assertEquals(404, uie.getResponse().getStatus());
         }
@@ -162,7 +162,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
             //attempt to retrieve thing1
             thing2 = this.app().collection("things").entity(thing2).get();
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             // Should return a 404 Not Found
             assertEquals(404, uie.getResponse().getStatus());
         }
@@ -198,7 +198,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
             //attempt to retrieve thing1
             thing1 = this.app().collection("things").entity(thing1).get();
             fail("This should throw an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             // Should return a 404 Not Found
             assertEquals(404, uie.getResponse().getStatus());
         }
