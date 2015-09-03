@@ -85,15 +85,13 @@ public class ApplicationServiceImpl  implements ApplicationService{
         Observable<Id> countObservable = allEntityIdsObservable.getEntities(appObservable)
             //.map(entity -> eventBuilder.buildEntityDelete(applicationScope, entity.getId()).getEntitiesCompacted())
             .map(entityIdScope -> ((EntityIdScope) entityIdScope).getId())
-            .skip(1)
+            .skip(1)//skip application entity
             .map(id -> {
-                    return entityCollectionManager.mark((Id) id)
-                        .mergeWith(graphManager.markNode((Id) id, createGraphOperationTimestamp()))
-                        .map(id2 -> id).toBlocking().last();
-                }
-            ).doOnNext(id -> deleteAsync(mapManager ,applicationScope, (Id) id));
-
-
+                entityCollectionManager.mark((Id) id)
+                    .mergeWith(graphManager.markNode((Id) id, createGraphOperationTimestamp())).toBlocking().last();
+                return id;
+            })
+            .doOnNext(id -> deleteAsync(mapManager, applicationScope, (Id) id));
         return countObservable;
     }
 
