@@ -19,8 +19,20 @@
  */
 package org.apache.usergrid.persistence;
 
+import com.google.common.base.Optional;
+import com.google.inject.Injector;
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.corepersistence.service.AggregationService;
+import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,14 +41,16 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * testy test
  */
 public class ApplicationServiceIT extends AbstractCoreIT {
-    private static final Logger LOG = LoggerFactory.getLogger(ApplicationServiceIT.class);
 
+    private static final Logger LOG = LoggerFactory.getLogger( ApplicationServiceIT.class );
 
     public ApplicationServiceIT() {
         super();
@@ -46,16 +60,36 @@ public class ApplicationServiceIT extends AbstractCoreIT {
     public void testDeletes() throws Exception{
         EntityManager entityManager = this.app.getEntityManager();
         Map<String,Object> map = new HashMap<>();
-        Entity entity = entityManager.create("tests", map);
+        for(int i =0;i<10;i++) {
+            map.put("somekey", UUID.randomUUID());
+           Entity entity = entityManager.create("tests", map);
+        }
         this.app.refreshIndex();
         Thread.sleep(500);
+        ApplicationScope appScope  = CpNamingUtils.getApplicationScope(entityManager.getApplicationId());
         Observable<Id> ids =
-            this.app.getApplicationService().deleteAllEntities(CpNamingUtils.getApplicationScope(entityManager.getApplicationId()));
-        ids.toBlocking().last();
+            this.app.getApplicationService().deleteAllEntities(appScope);
+        int count = ids.count().toBlocking().last();
+        Assert.assertEquals(count, 13);
         this.app.refreshIndex();
-        Thread.sleep(500);
-        entity = entityManager.get(entity);
-        Assert.assertNull(entity);
+        Thread.sleep(5000);
+        Injector injector = SpringResource.getInstance().getBean(Injector.class);
+        GraphManagerFactory factory = injector.getInstance(GraphManagerFactory.class);
+        GraphManager graphManager = factory.createEdgeManager(appScope);
+        SimpleSearchByEdgeType simpleSearchByEdgeType = new SimpleSearchByEdgeType(
+            appScope.getApplication(),
+            CpNamingUtils.getEdgeTypeFromCollectionName("tests")
+            , Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+            Optional.<Edge>absent() );
+
+        Iterator<Edge> results = graphManager.loadEdgesFromSource(simpleSearchByEdgeType).toBlocking().getIterator();
+        if(results.hasNext()){
+            Assert.fail();
+           
+        }else{
+
+            //success
+        }
     }
 
 }
