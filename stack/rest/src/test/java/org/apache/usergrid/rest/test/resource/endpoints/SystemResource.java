@@ -20,9 +20,14 @@ package org.apache.usergrid.rest.test.resource.endpoints;
 
 import javax.ws.rs.core.MediaType;
 
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+
+import java.util.UUID;
 
 
 /**
@@ -40,4 +45,24 @@ public class SystemResource extends NamedResource {
     }
 
 
+    public ApplicationsResource applications(String appid) {
+        return new ApplicationsResource(appid,context,this);
+    }
+    public class ApplicationsResource extends NamedResource {
+        public ApplicationsResource(final String appid, final ClientContext context, final UrlResource parent ) {
+            super( "applications/"+appid,context, parent );
+        }
+        public ApiResponse delete(QueryParameters queryParameters){
+
+            WebResource resource = getResource();
+            resource = addParametersToResource( resource, queryParameters );
+
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+            resource.addFilter(httpBasicAuthFilter);
+
+            return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .delete(ApiResponse.class);
+        }
+    }
 }
