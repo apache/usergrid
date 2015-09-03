@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.usergrid.java.client.exception.ClientException;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -100,25 +101,27 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testCreateDuplicateOrgName() throws Exception {
 
-        //Create organization
+        // Create organization
         Organization organization = createOrgPayload( "testCreateDuplicateOrgName", null );
-
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
         this.refreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
-        //Ensure that the token from the newly created organization works.
+        // Ensure that the token from the newly created organization works.
         Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
+        Token tokenReturned = clientSetup.getRestClient().management().token()
+            .post( false, Token.class, tokenPayload, null );
         this.management().token().setToken(tokenReturned);
         assertNotNull( tokenReturned );
 
-        //Try to create a organization with the same name as an organization that already exists, ensure that it fails
-        Organization orgTestDuplicatePayload =
-                new Organization( organization.getOrganization(), organization.getUsername() + "test",
-                        organization.getEmail() + "test", organization.getName() + "test",
-                        organization.getPassword(), null );
+        // Try to create a organization with the same name as an organization that already exists, ensure that it fails
+        Organization orgTestDuplicatePayload = new Organization(
+            organization.getOrganization(),
+            organization.getUsername() + "test",
+            organization.getEmail() + "test",
+            organization.getName() + "test",
+            organization.getPassword(), null );
         try {
             clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
             fail("Should not have been able to create duplicate organization");
@@ -164,7 +167,8 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //get token from organization that was created to verify it exists.
         Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
+        Token tokenReturned = clientSetup.getRestClient().management().token()
+            .post( Token.class, tokenPayload );
 
         assertNotNull( tokenReturned );
 
@@ -184,7 +188,9 @@ public class OrganizationsIT extends AbstractRestIT {
         }
 
         //try to get the token from the organization that failed to be created to verify it was not made.
-        tokenPayload = new Token( "password", organization.getUsername()+"test", organization.getPassword()+"test" );
+        tokenPayload = new Token( "password",
+            organization.getUsername()+"test",
+            organization.getPassword()+"test" );
         Token tokenError = null;
         try {
             tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
