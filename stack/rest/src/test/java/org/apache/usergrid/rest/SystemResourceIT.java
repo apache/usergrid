@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
 import java.util.LinkedHashMap;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -60,7 +61,7 @@ public class SystemResourceIT extends AbstractRestIT {
 
         assertNotNull( result );
         assertNotNull( "ok",result.getStatus() );
-        assertTrue((int)((LinkedHashMap)result.getData()).get("count")==4);
+        assertEquals(((LinkedHashMap) result.getData()).get("count"), 3);
     }
 
 
