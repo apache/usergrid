@@ -79,39 +79,6 @@ public class SystemResource extends AbstractContextResource {
         return new JSONWithPadding( response, callback );
     }
 
-    @RequireSystemAccess
-    @DELETE
-    @Path( "applications/{applicationId}" )
-    public JSONWithPadding clearApplication( @Context UriInfo ui,
-                                               @PathParam("applicationId") UUID applicationId,
-                                               @QueryParam( "confirmApplicationId" ) UUID confirmApplicationId,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-        throws Exception {
-
-        if(confirmApplicationId == null || !confirmApplicationId.equals(applicationId)){
-            throw new IllegalArgumentException("please make confirmApplicationId equal to applicationId");
-        }
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "clear application" );
-
-        logger.info( "clearing up application" );
-        AtomicInteger itemsDeleted = new AtomicInteger(0);
-        try {
-             management.deleteAllEntities(applicationId)
-             .count()
-             .doOnNext(count -> itemsDeleted.set(count))
-             .toBlocking().lastOrDefault(0);
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to delete all items, deleted: " + itemsDeleted.get(), e );
-        }
-        Map<String,Object> data = new HashMap<>();
-        data.put("count",itemsDeleted.get());
-        response.setData(data);
-        response.setSuccess();
-        return new JSONWithPadding( response, callback );
-    }
 
 
     @Path( "migrate" )
@@ -127,5 +94,10 @@ public class SystemResource extends AbstractContextResource {
     @Path( "database" )
     public DatabaseResource database() {
         return getSubResource( DatabaseResource.class );
+    }
+
+    @Path( "applications" )
+    public ApplicationsResource applications() {
+        return getSubResource( ApplicationsResource.class );
     }
 }
