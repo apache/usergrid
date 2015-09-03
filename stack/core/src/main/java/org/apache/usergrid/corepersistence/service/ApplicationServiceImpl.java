@@ -19,10 +19,14 @@
  */
 package org.apache.usergrid.corepersistence.service;
 
+import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
@@ -33,12 +37,15 @@ import rx.Observable;
 public class ApplicationServiceImpl  implements ApplicationService{
 
     private final AllEntityIdsObservable allEntityIdsObservable;
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final AsyncEventService asyncEventService;
     private final EventBuilder eventBuilder;
 
-    public ApplicationServiceImpl(AllEntityIdsObservable allEntityIdsObservable, AsyncEventService asyncEventService, EventBuilder eventBuilder){
+    @Inject
+    public ApplicationServiceImpl(AllEntityIdsObservable allEntityIdsObservable, EntityCollectionManagerFactory entityCollectionManagerFactory, AsyncEventService asyncEventService, EventBuilder eventBuilder){
 
         this.allEntityIdsObservable = allEntityIdsObservable;
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.asyncEventService = asyncEventService;
         this.eventBuilder = eventBuilder;
     }
@@ -50,12 +57,16 @@ public class ApplicationServiceImpl  implements ApplicationService{
 
         //EventBuilder eventBuilder = injector.getInstance(EventBuilder.class);
         Observable appObservable  = Observable.just(applicationScope);
+        EntityCollectionManager entityCollectionManager = entityCollectionManagerFactory.createCollectionManager(applicationScope);
 
 
         Observable<Id> countObservable = allEntityIdsObservable.getEntities(appObservable)
             //.map(entity -> eventBuilder.buildEntityDelete(applicationScope, entity.getId()).getEntitiesCompacted())
-            .doOnNext(entity -> asyncEventService.queueEntityDelete(applicationScope, entity.getId()))
-            .map(entityIdScope -> entityIdScope.getId());
+            .map(entityIdScope -> ((EntityIdScope) entityIdScope).getId())
+            .doOnNext(id ->
+                    entityCollectionManager.mark((Id) id)
+                        .doOnNext(id2 -> asyncEventService.queueEntityDelete(applicationScope, (Id) id2))
+            );
         return countObservable;
     }
 }
