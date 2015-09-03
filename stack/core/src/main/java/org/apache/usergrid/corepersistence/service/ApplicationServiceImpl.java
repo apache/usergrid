@@ -24,6 +24,7 @@ import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
 /**
@@ -42,7 +43,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.eventBuilder = eventBuilder;
     }
     @Override
-    public Observable<Integer> deleteAllEntities(ApplicationScope applicationScope) {
+    public Observable<Id> deleteAllEntities(ApplicationScope applicationScope) {
         if(applicationScope.getApplication().getUuid().equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)){
             throw new IllegalArgumentException("Can't delete from management app");
         }
@@ -51,10 +52,10 @@ public class ApplicationServiceImpl  implements ApplicationService{
         Observable appObservable  = Observable.just(applicationScope);
 
 
-        Observable<Integer> countObservable = allEntityIdsObservable.getEntities(appObservable)
+        Observable<Id> countObservable = allEntityIdsObservable.getEntities(appObservable)
             //.map(entity -> eventBuilder.buildEntityDelete(applicationScope, entity.getId()).getEntitiesCompacted())
             .doOnNext(entity -> asyncEventService.queueEntityDelete(applicationScope, entity.getId()))
-            .count();
+            .map(entityIdScope -> entityIdScope.getId());
         return countObservable;
     }
 }

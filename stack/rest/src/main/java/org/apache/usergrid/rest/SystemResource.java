@@ -99,6 +99,7 @@ public class SystemResource extends AbstractContextResource {
         AtomicInteger itemsDeleted = new AtomicInteger(0);
         try {
              management.deleteAllEntities(applicationId)
+             .count()
              .doOnNext(count -> itemsDeleted.set(count))
              .toBlocking().lastOrDefault(0);
         }

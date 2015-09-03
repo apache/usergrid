@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.apache.usergrid.services.ServiceResults;
@@ -345,5 +346,5 @@ public interface ManagementService {
      * @param applicationId
      * @return
      */
-    Observable<Integer> deleteAllEntities(UUID applicationId);
+    Observable<Id> deleteAllEntities(UUID applicationId);
 }

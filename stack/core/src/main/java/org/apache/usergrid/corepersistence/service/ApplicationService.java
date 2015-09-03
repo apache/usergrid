@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.service;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
 /**
@@ -27,5 +28,5 @@ import rx.Observable;
  */
 public interface ApplicationService {
 
-    Observable<Integer> deleteAllEntities(ApplicationScope applicationScope);
+    Observable<Id> deleteAllEntities(ApplicationScope applicationScope);
 }

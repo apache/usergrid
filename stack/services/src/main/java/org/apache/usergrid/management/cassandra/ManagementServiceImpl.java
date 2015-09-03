@@ -48,6 +48,7 @@ import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsExcept
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.EncryptionService;
@@ -3067,7 +3068,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public Observable<Integer> deleteAllEntities(UUID applicationId){
+    public Observable<Id> deleteAllEntities(UUID applicationId){
         if(applicationId.equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)){
             throw new IllegalArgumentException("Can't delete from management app");
         }
