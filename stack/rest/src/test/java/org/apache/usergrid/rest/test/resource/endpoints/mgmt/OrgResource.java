@@ -18,6 +18,7 @@
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.java.client.exception.ClientException;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
@@ -35,6 +36,7 @@ import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -102,36 +104,26 @@ public class OrgResource  extends NamedResource {
 
     public Organization post(Organization organization){
 
-        // use string type so we can log actual response from server
-        String responseString = null;
-        try {
-            responseString = getTarget( false ).request()
-                .accept( MediaType.APPLICATION_JSON )
-                .post( Entity.json( organization ), String.class );
-        } catch ( ClientErrorException e ) {
-            logger.info("Response from post: " + e.getMessage() + ": " + e.getResponse().readEntity( String.class ));
-        }
-
-        ObjectMapper mapper = new ObjectMapper();
-        ApiResponse response;
-        try {
-            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Error parsing response", e);
-        }
-
-        Organization org = new Organization(response);
-        org.setOwner( response );
-
-        return org;
-    }
-    public Organization post(Organization organization, Token token){
-        ApiResponse response = getTarget( true, token ).request()
+        ApiResponse apiResponse = getTarget( false ).request()
             .accept( MediaType.APPLICATION_JSON )
             .post( Entity.json( organization ), ApiResponse.class );
 
-        Organization org = new Organization(response);
-        org.setOwner( response );
+
+        Organization org = new Organization(apiResponse);
+        org.setOwner( apiResponse );
+
+        return org;
+    }
+
+    public Organization post(Organization organization, Token token) {
+
+        ApiResponse apiResponse = getTarget( true, token ).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( Entity.json( organization ), ApiResponse.class );
+
+
+        Organization org = new Organization(apiResponse);
+        org.setOwner( apiResponse );
 
         return org;
     }
