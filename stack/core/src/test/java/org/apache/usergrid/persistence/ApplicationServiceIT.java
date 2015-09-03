@@ -84,10 +84,14 @@ public class ApplicationServiceIT extends AbstractCoreIT {
 
         Iterator<Edge> results = graphManager.loadEdgesFromSource(simpleSearchByEdgeType).toBlocking().getIterator();
         if(results.hasNext()){
-            Assert.fail();
-           
-        }else{
+            Assert.fail("should be empty");
 
+        }else{
+            Results searchCollection = entityManager.searchCollection(entityManager.getApplication(), "tests", Query.all());
+            Assert.assertEquals(searchCollection.size(),0);
+            AggregationServiceFactory aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
+            long size = aggregationServiceFactory.getAggregationService().getCollectionSize(appScope,"tests");
+            Assert.assertEquals(size,0);
             //success
         }
     }
