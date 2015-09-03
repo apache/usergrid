@@ -18,14 +18,19 @@ package org.apache.usergrid.management.cassandra;
 
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Injector;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.service.AggregationService;
 import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.locking.Lock;
@@ -34,6 +39,7 @@ import org.apache.usergrid.management.*;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
@@ -63,6 +69,8 @@ import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import rx.*;
+import rx.Observable;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -1749,7 +1757,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
 
         Results r = em.getSourceEntities(
             new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
@@ -1771,7 +1779,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         final BiMap<UUID, String> applications = HashBiMap.create();
-        final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
 
         // query for application_info entities
         final Results results = em.getTargetEntities(
@@ -1829,7 +1837,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
         em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), ORG_APP_RELATIONSHIP, appInfo );
 
         return applicationId;
@@ -1869,7 +1877,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationId) );
+        Entity entity = em.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationId));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -1966,19 +1974,19 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getClientSecretForOrganization( UUID organizationId ) throws Exception {
-        return getSecret( smf.getManagementAppId(), AuthPrincipalType.ORGANIZATION, organizationId );
+        return getSecret(smf.getManagementAppId(), AuthPrincipalType.ORGANIZATION, organizationId);
     }
 
 
     @Override
     public String getClientIdForApplication( UUID applicationId ) {
-        return ClientCredentialsInfo.getClientIdForTypeAndUuid( AuthPrincipalType.APPLICATION, applicationId );
+        return ClientCredentialsInfo.getClientIdForTypeAndUuid(AuthPrincipalType.APPLICATION, applicationId);
     }
 
 
     @Override
     public String getClientSecretForApplication( UUID applicationId ) throws Exception {
-        return getSecret( smf.getManagementAppId(), AuthPrincipalType.APPLICATION, applicationId );
+        return getSecret(smf.getManagementAppId(), AuthPrincipalType.APPLICATION, applicationId);
     }
 
 
@@ -2135,7 +2143,7 @@ public class ManagementServiceImpl implements ManagementService {
         em.update( user );
 
         // revoke all access tokens for the app
-        revokeAccessTokensForAppUser( applicationId, userId );
+        revokeAccessTokensForAppUser(applicationId, userId);
 
         return user;
     }
@@ -2181,7 +2189,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "disabled", true );
 
-        revokeAccessTokensForAdminUser( userId );
+        revokeAccessTokensForAdminUser(userId);
     }
 
 
@@ -2360,7 +2368,7 @@ public class ManagementServiceImpl implements ManagementService {
             confirmAdminUser( user.getUuid() );
             if ( newAdminUsersNeedSysAdminApproval() ) {
                 sendAdminUserConfirmedAwaitingActivationEmail( user );
-                sendSysAdminRequestAdminActivationEmail( user );
+                sendSysAdminRequestAdminActivationEmail(user);
                 return ActivationState.CONFIRMED_AWAITING_ACTIVATION;
             }
             else {
@@ -2381,7 +2389,7 @@ public class ManagementServiceImpl implements ManagementService {
             activateAdminUser( principal.getUuid() );
             UserInfo user = getAdminUserByUuid( principal.getUuid() );
             sendAdminUserActivatedEmail( user );
-            sendSysAdminNewAdminActivatedNotificationEmail( user );
+            sendSysAdminNewAdminActivatedNotificationEmail(user);
             return ActivationState.ACTIVATED;
         }
         return ActivationState.UNKNOWN;
@@ -2389,7 +2397,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendAdminUserConfirmationEmail( UserInfo user ) throws Exception {
-        String token = getConfirmationTokenForAdminUser( user.getUuid(), 0 );
+        String token = getConfirmationTokenForAdminUser(user.getUuid(), 0);
         String confirmation_url =
                 String.format( properties.getProperty( PROPERTIES_ADMIN_CONFIRMATION_URL ), user.getUuid().toString() )
                         + "?token=" + token;
@@ -2400,16 +2408,16 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendSysAdminRequestAdminActivationEmail( UserInfo user ) throws Exception {
-        String token = getActivationTokenForAdminUser( user.getUuid(), 0 );
+        String token = getActivationTokenForAdminUser(user.getUuid(), 0);
         //TODO: admin specific email
         String activation_url =
                 String.format( properties.getProperty( PROPERTIES_ADMIN_ACTIVATION_URL ), user.getUuid().toString() )
                         + "?token=" + token;
-        sendHtmlMail( properties, getAdminSystemEmail(),
-                properties.getProperty( PROPERTIES_MAILER_EMAIL ),
-                "Request For Admin User Account Activation " + user.getEmail(), appendEmailFooter(
-                emailMsg( hashMap( "user_email", user.getEmail() ).map( "activation_url", activation_url ),
-                        PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION ) ) );
+        sendHtmlMail(properties, getAdminSystemEmail(),
+            properties.getProperty(PROPERTIES_MAILER_EMAIL),
+            "Request For Admin User Account Activation " + user.getEmail(), appendEmailFooter(
+                emailMsg(hashMap("user_email", user.getEmail()).map("activation_url", activation_url),
+                    PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION)));
     }
 
 
@@ -2445,14 +2453,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void sendAdminUserEmail( UserInfo user, String subject, String html ) throws Exception {
-        sendHtmlMail( properties, user.getDisplayEmailAddress(), properties.getProperty( PROPERTIES_MAILER_EMAIL ),
-                subject, appendEmailFooter( html ) );
+        sendHtmlMail(properties, user.getDisplayEmailAddress(), properties.getProperty(PROPERTIES_MAILER_EMAIL),
+            subject, appendEmailFooter(html));
     }
 
 
     @Override
     public void activateOrganization( OrganizationInfo organization ) throws Exception {
-        activateOrganization( organization, true );
+        activateOrganization(organization, true);
     }
 
 
@@ -2554,7 +2562,7 @@ public class ManagementServiceImpl implements ManagementService {
             throw new TokenException( "Could not match token : " + token );
         }
 
-        tokens.revokeToken( token );
+        tokens.revokeToken(token);
     }
 
 
@@ -2577,14 +2585,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public User getAppUserByIdentifier( UUID applicationId, Identifier identifier ) throws Exception {
-        EntityManager em = emf.getEntityManager( applicationId );
+        EntityManager em = emf.getEntityManager(applicationId);
         return em.get( em.getUserByIdentifier( identifier ), User.class );
     }
 
 
     @Override
     public void startAppUserPasswordResetFlow( UUID applicationId, User user ) throws Exception {
-        String token = getPasswordResetTokenForAppUser( applicationId, user.getUuid() );
+        String token = getPasswordResetTokenForAppUser(applicationId, user.getUuid());
         String reset_url =
                 buildUserAppUrl( applicationId, properties.getProperty( PROPERTIES_USER_RESETPW_URL ), user, token );
         Map<String, String> pageContext = hashMap( "reset_url", reset_url )
@@ -2603,7 +2611,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public boolean newAppUsersNeedAdminApproval( UUID applicationId ) throws Exception {
-        EntityManager em = emf.getEntityManager( applicationId );
+        EntityManager em = emf.getEntityManager(applicationId);
         Boolean registration_requires_admin_approval = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_ADMIN_APPROVAL );
@@ -2681,7 +2689,7 @@ public class ManagementServiceImpl implements ManagementService {
             EntityManager em = emf.getEntityManager( applicationId );
             User user = em.get( userId, User.class );
             sendAppUserActivatedEmail( applicationId, user );
-            sendAdminNewAppUserActivatedNotificationEmail( applicationId, user );
+            sendAdminNewAppUserActivatedNotificationEmail(applicationId, user);
             return ActivationState.ACTIVATED;
         }
         return ActivationState.UNKNOWN;
@@ -2689,7 +2697,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendAppUserConfirmationEmail( UUID applicationId, User user ) throws Exception {
-        String token = getConfirmationTokenForAppUser( applicationId, user.getUuid() );
+        String token = getConfirmationTokenForAppUser(applicationId, user.getUuid());
         String confirmation_url =
                 buildUserAppUrl( applicationId, properties.getProperty( PROPERTIES_USER_CONFIRMATION_URL ), user,
                         token );
@@ -2705,17 +2713,17 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     protected String buildUserAppUrl(UUID applicationId, String url, User user, String token) throws Exception {
-        ApplicationInfo ai = getApplicationInfo( applicationId );
-        OrganizationInfo oi = getOrganizationForApplication( applicationId );
+        ApplicationInfo ai = getApplicationInfo(applicationId);
+        OrganizationInfo oi = getOrganizationForApplication(applicationId);
         return String.format( url, oi.getName(), StringUtils.stringOrSubstringAfterFirst( ai.getName(), '/' ),
                 user.getUuid().toString() ) + "?token=" + token;
     }
 
 
     public void sendAdminRequestAppUserActivationEmail( UUID applicationId, User user ) throws Exception {
-        String token = getActivationTokenForAppUser( applicationId, user.getUuid() );
+        String token = getActivationTokenForAppUser(applicationId, user.getUuid());
         String activation_url =
-                buildUserAppUrl( applicationId, properties.getProperty( PROPERTIES_USER_ACTIVATION_URL ), user, token );
+                buildUserAppUrl(applicationId, properties.getProperty(PROPERTIES_USER_ACTIVATION_URL), user, token);
     /*
      * String activation_url = String.format(
      * properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
@@ -2752,7 +2760,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public void activateAppUser( UUID applicationId, UUID userId ) throws Exception {
         EntityManager em = emf.getEntityManager( applicationId );
-        em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "activated", true );
+        em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId), "activated", true);
     }
 
 
@@ -2769,10 +2777,10 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( applicationId );
-        User user = em.get( userId, User.class );
+        User user = em.get(userId, User.class);
 
-        writeUserPassword( applicationId, user,
-                encryptionService.defaultEncryptedCredentials( newPassword, user.getUuid(), applicationId ) );
+        writeUserPassword(applicationId, user,
+            encryptionService.defaultEncryptedCredentials(newPassword, user.getUuid(), applicationId));
     }
 
 
@@ -2786,19 +2794,19 @@ public class ManagementServiceImpl implements ManagementService {
             throw new IllegalArgumentException( "oldpassword and newpassword are both required" );
         }
         // TODO load the user, send the hashType down to maybeSaltPassword
-        User user = emf.getEntityManager( applicationId ).get( userId, User.class );
+        User user = emf.getEntityManager( applicationId ).get(userId, User.class);
         if ( !verify( applicationId, user.getUuid(), oldPassword ) ) {
             throw new IncorrectPasswordException( "Old password does not match" );
         }
 
-        setAppUserPassword( applicationId, userId, newPassword );
+        setAppUserPassword(applicationId, userId, newPassword);
     }
 
 
     @Override
     public User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception {
 
-        User user = findUserEntity( applicationId, name );
+        User user = findUserEntity(applicationId, name);
         if ( user == null ) {
             return null;
         }
@@ -2861,16 +2869,16 @@ public class ManagementServiceImpl implements ManagementService {
         }
         String pin = getCredentialsSecret( readUserPin( applicationId, userId, user.getType() ) );
 
-        sendHtmlMail( properties, user.getDisplayEmailAddress(), properties.getProperty( PROPERTIES_MAILER_EMAIL ),
-                "Your app pin",
-                appendEmailFooter( emailMsg( hashMap( USER_PIN, pin ), PROPERTIES_EMAIL_USER_PIN_REQUEST ) ) );
+        sendHtmlMail(properties, user.getDisplayEmailAddress(), properties.getProperty(PROPERTIES_MAILER_EMAIL),
+            "Your app pin",
+            appendEmailFooter(emailMsg(hashMap(USER_PIN, pin), PROPERTIES_EMAIL_USER_PIN_REQUEST)));
     }
 
 
     @Override
     public User verifyAppUserPinCredentials( UUID applicationId, String name, String pin ) throws Exception {
 
-        User user = findUserEntity( applicationId, name );
+        User user = findUserEntity(applicationId, name);
         if ( user == null ) {
             return null;
         }
@@ -2883,7 +2891,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void countAdminUserAction( UserInfo user, String action ) throws Exception {
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
         em.incrementAggregateCounters( user.getUuid(), null, null, "admin_logins", 1 );
     }
 
@@ -2907,7 +2915,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         org.setProperties( props );
 
-        em.update( org );
+        em.update(org);
     }
 
 
@@ -2991,7 +2999,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( appId );
         Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
         return ( Set<CredentialsInfo> ) em
-                .getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY );
+                .getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY);
     }
 
 
@@ -3056,6 +3064,16 @@ public class ManagementServiceImpl implements ManagementService {
     public Object registerAppWithAPM( OrganizationInfo orgInfo, ApplicationInfo appInfo ) throws Exception {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public Observable<Integer> deleteAllEntities(UUID applicationId){
+        if(applicationId.equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)){
+            throw new IllegalArgumentException("Can't delete from management app");
+        }
+
+        ApplicationService service = injector.getInstance(ApplicationService.class);
+        return service.deleteAllEntities(CpNamingUtils.getApplicationScope(applicationId));
     }
 
     private String getProperty(String key) {
