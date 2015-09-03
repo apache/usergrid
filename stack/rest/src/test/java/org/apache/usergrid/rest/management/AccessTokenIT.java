@@ -27,7 +27,7 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 
@@ -65,7 +65,7 @@ public class AccessTokenIT extends AbstractRestIT {
         Response.Status responseStatus = null;
         try {
             management().users().user( clientSetup.getUsername() ).get( ApiResponse.class);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
@@ -198,8 +198,8 @@ public class AccessTokenIT extends AbstractRestIT {
 
         try {
             management().token().post( Token.class,payload );
-        } catch (ResponseProcessingException uie) {
-            assertEquals(Response.Status.BAD_REQUEST, uie.getResponse().getStatus());
+        } catch (ClientErrorException uie) {
+            assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus());
         }
 
     }
@@ -218,7 +218,7 @@ public class AccessTokenIT extends AbstractRestIT {
 
         try {
             management().token().post( Token.class, payload );
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus());
         }
 
@@ -246,7 +246,7 @@ public class AccessTokenIT extends AbstractRestIT {
             management().users().user( clientSetup.getUsername() ).get();
             fail( "Token1 should have been revoked" );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
 
@@ -257,7 +257,7 @@ public class AccessTokenIT extends AbstractRestIT {
             management().users().user( clientSetup.getUsername() ).get();
             fail( "Token2 should have been revoked" );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
     }
@@ -287,7 +287,7 @@ public class AccessTokenIT extends AbstractRestIT {
             management().users().user( clientSetup.getUsername() ).get();
             fail( "Token1 should have been revoked" );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
 
@@ -297,7 +297,7 @@ public class AccessTokenIT extends AbstractRestIT {
             management().token().setToken( token2 );
             management().users().user( clientSetup.getUsername() ).get();
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             fail( "Token2 shouldn't have been revoked" );
 
         }

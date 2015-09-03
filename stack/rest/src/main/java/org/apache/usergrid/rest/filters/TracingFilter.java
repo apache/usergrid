@@ -26,11 +26,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.*;
 import javax.ws.rs.core.Context;
 
 
@@ -39,6 +37,8 @@ import javax.ws.rs.core.Context;
  *
  * @author zznate
  */
+@Resource
+@PreMatching
 @Component
 public class TracingFilter implements ContainerRequestFilter, ContainerResponseFilter {
 

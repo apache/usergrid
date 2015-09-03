@@ -204,6 +204,12 @@
           <version>2.21</version>
       </dependency>
 
+      <dependency>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-json-jackson</artifactId>
+          <version>2.21</version>
+      </dependency>
+
     <!--<dependency>-->
       <!--<groupId>com.sun.jersey</groupId>-->
       <!--<artifactId>jersey-core</artifactId>-->

@@ -28,7 +28,7 @@ import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
@@ -106,7 +106,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         int status = 0;
         try {
             node = this.app().collection("users").entity(USER).collection("roles").entity(ROLE).get();
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
 
@@ -158,7 +158,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         try {
             this.app().collection("users").entity(user).collection("groups").entity( groupPath ).collection( "users" ).entity( user ).get();
             fail("Should not have been able to retrieve the user as it was deleted");
-        }catch (ResponseProcessingException e){
+        }catch (ClientErrorException e){
             status=e.getResponse().getStatus();
             assertEquals( 404,status );
         }
@@ -198,7 +198,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         //Call a get on a existing entity with no access token and check if we get a 401
         try {
             this.app().collection( "roles" ).entity( "guest" ).get( false );
-        }catch(ResponseProcessingException uie){
+        }catch(ClientErrorException uie){
             assertEquals( 401,uie.getResponse().getStatus() );
         }
 
@@ -209,13 +209,13 @@ public class PermissionsResourceIT extends AbstractRestIT {
         //Call a get on a non existing entity that doesn't need permissions and check it we get a 404.
         try {
             this.app().collection( "roles" ).entity( "banana" ).get( false );
-        }catch(ResponseProcessingException uie){
+        }catch(ClientErrorException uie){
             assertEquals( 404,uie.getResponse().getStatus() );
         }
 
         try {
             this.app().collection( "roles" ).entity( UUIDUtils.newTimeUUID() ).get( false );
-        }catch(ResponseProcessingException uie){
+        }catch(ClientErrorException uie){
             assertEquals( 404,uie.getResponse().getStatus() );
         }
     }
@@ -302,7 +302,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("noca").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
@@ -315,7 +315,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("4peaks").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
@@ -355,7 +355,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("cowboyciao").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
@@ -369,7 +369,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("currycorner").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
@@ -472,7 +472,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("books").post(book);
 
         }
-        catch ( ResponseProcessingException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
         assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );

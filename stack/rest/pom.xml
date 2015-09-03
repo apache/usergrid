@@ -39,26 +39,28 @@
     <!-- profile that arquillian uses when it builds/starts tomcat -->
     <profiles>
 
-        <!--<profile>-->
-            <!--<id>arquillian-tomcat</id>-->
-            <!--<activation>-->
-                <!--<activeByDefault>true</activeByDefault>-->
-            <!--</activation>-->
-            <!--<dependencies>-->
-                <!--<dependency>-->
-                    <!--<groupId>org.jboss.arquillian.container</groupId>-->
-                    <!--<artifactId>arquillian-tomcat-remote-7</artifactId>-->
-                    <!--<version>1.0.0.CR7</version>-->
-                    <!--<scope>test</scope>-->
-                <!--</dependency>-->
-                <!--<dependency>-->
-                    <!--<groupId>org.eu.ingwar.tools</groupId>-->
-                    <!--<artifactId>arquillian-suite-extension</artifactId>-->
-                    <!--<version>1.1.1</version>-->
-                    <!--<scope>test</scope>-->
-                <!--</dependency>-->
-            <!--</dependencies>-->
-        <!--</profile>-->
+        <!--
+        <profile>
+            <id>arquillian-tomcat</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.jboss.arquillian.container</groupId>
+                    <artifactId>arquillian-tomcat-remote-7</artifactId>
+                    <version>1.0.0.CR7</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.eu.ingwar.tools</groupId>
+                    <artifactId>arquillian-suite-extension</artifactId>
+                    <version>1.1.1</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        -->
 
     </profiles>
 
@@ -103,7 +105,7 @@
                     <threadCount>${usergrid.rest.threads}</threadCount>
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <reuseForks>true</reuseForks>
-                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}
                     </argLine>
                     <includes>
                         <include>**/*IT.java</include>
@@ -128,6 +130,7 @@
                 <version>2.6</version>
             </plugin>
 
+            <!-- TODO: do we need this?
             <plugin>
                 <groupId>org.jasig.mojo.jspc</groupId>
                 <artifactId>jspc-maven-plugin</artifactId>
@@ -144,14 +147,7 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jasig.mojo.jspc</groupId>
-                        <artifactId>jspc-compiler-tomcat6</artifactId>
-                        <version>2.0.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
+            </plugin> -->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -213,11 +209,11 @@
             </exclusions>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>org.apache.usergrid</groupId>-->
-            <!--<artifactId>usergrid-mongo-emulator</artifactId>-->
-            <!--<version>${project.version}</version>-->
-        <!--</dependency>-->
+        <!-- <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-mongo-emulator</artifactId>
+            <version>${project.version}</version>
+        </dependency> -->
 
         <!-- Apache Dependencies -->
 
@@ -226,7 +222,7 @@
             <artifactId>commons-collections</artifactId>
         </dependency>
 
-        <!-- SUN, Javax Package, and Other Com Dependencies -->
+        <!-- Java EE and Jersey dependencies -->
 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -241,12 +237,10 @@
 
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <!-- if your container implements Servlet API older than 3.0, use "jersey-container-servlet-core"  -->
             <artifactId>jersey-container-servlet</artifactId>
             <version>2.21</version>
         </dependency>
 
-        <!-- Required only when you are using JAX-RS Client -->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
@@ -259,7 +253,6 @@
             <version>2.21</version>
         </dependency>
 
-        <!-- support for JSP and Viewable -->
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-mvc-jsp</artifactId>
@@ -269,7 +262,7 @@
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
-            <version>2.7</version>
+            <version>2.21</version>
         </dependency>
 
         <dependency>
@@ -278,42 +271,24 @@
             <version>2.21</version>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey.contribs</groupId>-->
-            <!--<artifactId>jersey-multipart</artifactId>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-spring3</artifactId>
+            <version>2.21</version>
+        </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey</groupId>-->
-            <!--<artifactId>jersey-json</artifactId>-->
-        <!--</dependency>-->
+        <!-- Jackson, Spring, and other dependencies -->
 
         <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
             <artifactId>jackson-jaxrs-json-provider</artifactId>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey</groupId>-->
-            <!--<artifactId>jersey-client</artifactId>-->
-        <!--</dependency>-->
-
         <dependency>
             <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
             <artifactId>recaptcha4j</artifactId>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey</groupId>-->
-            <!--<artifactId>jersey-server</artifactId>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey.contribs</groupId>-->
-            <!--<artifactId>jersey-spring</artifactId>-->
-        <!--</dependency>-->
-
-        <!-- Codehaus, Spring, and Other Org Dependencies -->
 
         <dependency>
             <groupId>org.springframework</groupId>
@@ -415,24 +390,17 @@
             <scope>test</scope>
         </dependency>
 
-        <!--  use the in-memory test setup.  Just depend on the maven jetty plugin to launch jetty -->
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-inmemory</artifactId>
+            <artifactId>jersey-test-framework-provider-external</artifactId>
             <version>2.21</version>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
-            <!--<artifactId>jersey-test-framework-external</artifactId>-->
-            <!--<scope>test</scope>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
-            <!--<artifactId>jersey-test-framework-core</artifactId>-->
-            <!--<scope>test</scope>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework</groupId>
+            <artifactId>jersey-test-framework-core</artifactId>
+            <version>2.21</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>

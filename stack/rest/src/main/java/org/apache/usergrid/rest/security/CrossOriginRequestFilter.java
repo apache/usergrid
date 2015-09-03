@@ -21,12 +21,14 @@ import org.apache.usergrid.rest.utils.CORSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Resource;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import java.io.IOException;
 
 
+@Resource
 public class CrossOriginRequestFilter implements ContainerResponseFilter {
     public static final Logger logger = LoggerFactory.getLogger( CrossOriginRequestFilter.class );
 

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
@@ -588,7 +588,7 @@ public class UserResourceIT extends AbstractRestIT {
             userRoles = this.app().collection("roles").entity(roleId1).connection("users")
                 .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
             assertNull(userRoles);
-        } catch (ResponseProcessingException e) {
+        } catch (ClientErrorException e) {
             assertEquals( Response.Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
         }
 
@@ -817,7 +817,7 @@ public class UserResourceIT extends AbstractRestIT {
         int responseStatus = 0;
         try {
             usersResource.entity("edanuff").connection("password").post(data);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = uie.getResponse().getStatus();
         }
 
@@ -869,7 +869,7 @@ public class UserResourceIT extends AbstractRestIT {
             role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
             assertNull(role);
-        } catch (ResponseProcessingException e) {
+        } catch (ClientErrorException e) {
             assertEquals(e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode());
         }
     }
@@ -907,7 +907,7 @@ public class UserResourceIT extends AbstractRestIT {
 
             usersResource.entity("edanuff").get();
             assertFalse(true);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
@@ -919,7 +919,7 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token2);
 
             usersResource.entity("edanuff").get();
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
@@ -955,7 +955,7 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token3);
             usersResource.entity("edanuff").get();
 
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
@@ -969,7 +969,7 @@ public class UserResourceIT extends AbstractRestIT {
 
 
             status = Response.Status.OK.getStatusCode();
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
@@ -1002,7 +1002,7 @@ public class UserResourceIT extends AbstractRestIT {
             userResource.entity("test_1").connection("token").get(
                 new QueryParameters().addParam("access_token", "blah"), false);
             assertTrue(false);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
             log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
@@ -1013,7 +1013,7 @@ public class UserResourceIT extends AbstractRestIT {
             userResource.entity("test_2").connection("token").get(
                 new QueryParameters().addParam("access_token", token.getAccessToken()), false);
             assertTrue(false);
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
             log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
@@ -1041,7 +1041,7 @@ public class UserResourceIT extends AbstractRestIT {
         try {
             this.app().token().post(new Token("test_1", "test123"));
             fail("request for deactivated user should fail");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
             JsonNode body = mapper.readTree(uie.getResponse().readEntity(String.class));
             assertEquals("user not activated", body.findPath("error_description").textValue());

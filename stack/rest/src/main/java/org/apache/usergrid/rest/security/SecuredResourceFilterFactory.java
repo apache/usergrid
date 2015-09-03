@@ -34,8 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.DynamicFeature;
@@ -54,14 +55,12 @@ import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecu
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.*;
 
 
-@Component
+@Resource
 public class SecuredResourceFilterFactory implements DynamicFeature {
 
     private static final Logger logger = LoggerFactory.getLogger( SecuredResourceFilterFactory.class );
 
-    private
-    @Context
-    UriInfo uriInfo;
+    private @Context UriInfo uriInfo;
 
     EntityManagerFactory emf;
     ServiceManagerFactory smf;
@@ -71,6 +70,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     ManagementService management;
 
 
+    @Inject
     public SecuredResourceFilterFactory() {
         logger.info( "SecuredResourceFilterFactory is installed" );
     }
@@ -115,6 +115,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     public void configure(ResourceInfo resourceInfo, FeatureContext featureContext) {
         Method am = resourceInfo.getResourceMethod();
 
+        logger.debug( "configure {} method {}",
+            resourceInfo.getResourceClass().getSimpleName(), resourceInfo.getResourceMethod().getName() );
+
         if ( am.isAnnotationPresent( RequireApplicationAccess.class ) ) {
             featureContext.register( ApplicationFilter.class );
         }
@@ -130,8 +133,12 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
     }
 
-    public abstract class AbstractFilter implements ContainerRequestFilter {
-        public AbstractFilter() {
+    public static abstract class AbstractFilter implements ContainerRequestFilter {
+
+        private UriInfo uriInfo;
+
+        public AbstractFilter( UriInfo uriInfo ) {
+            this.uriInfo = uriInfo;
         }
 
         @Override
@@ -209,12 +216,13 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         }
     }
 
+    @Resource
+    public static class OrganizationFilter extends AbstractFilter {
 
-    private class OrganizationFilter extends AbstractFilter {
-
-        protected OrganizationFilter() {
+        @Inject
+        public OrganizationFilter( UriInfo uriInfo ) {
+            super(uriInfo);
         }
-
 
         @Override
         public void authorize( ContainerRequestContext request ) {
@@ -230,11 +238,31 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     }
 
 
-    private class ApplicationFilter extends AbstractFilter {
+    @Resource
+    public static class ApplicationFilter extends AbstractFilter {
 
-        protected ApplicationFilter() {
+        EntityManagerFactory emf;
+        ManagementService management;
+
+        @Autowired
+        public void setEntityManagerFactory( EntityManagerFactory emf ) {
+            this.emf = emf;
         }
 
+
+        public EntityManagerFactory getEntityManagerFactory() {
+            return emf;
+        }
+
+        @Autowired
+        public void setManagementService( ManagementService management ) {
+            this.management = management;
+        }
+
+        @Inject
+        public ApplicationFilter( UriInfo uriInfo ) {
+            super(uriInfo);
+        }
 
         @Override
         public void authorize( ContainerRequestContext request ) {
@@ -248,7 +276,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 catch ( Exception e ) {
                     e.printStackTrace();
                 }
-                EntityManager em = emf.getEntityManager( application.getId() );
+                EntityManager em = getEntityManagerFactory().getEntityManager( application.getId() );
                 Map<String, String> roles = null;
                 try {
                     roles = em.getRoles();
@@ -271,8 +299,12 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     }
 
 
-    public class SystemFilter extends AbstractFilter {
-        public SystemFilter() {
+    @Resource
+    public static class SystemFilter extends AbstractFilter {
+
+        @Inject
+        public SystemFilter( UriInfo uriInfo ) {
+            super(uriInfo);
         }
 
 
@@ -298,10 +330,13 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     }
 
 
-    public class AdminUserFilter extends AbstractFilter {
-        public AdminUserFilter() {
-        }
+    @Resource
+    public static class AdminUserFilter extends AbstractFilter {
 
+        @Inject
+        public AdminUserFilter( UriInfo uriInfo ) {
+            super(uriInfo);
+        }
 
         @Override
         public void authorize( ContainerRequestContext request ) {

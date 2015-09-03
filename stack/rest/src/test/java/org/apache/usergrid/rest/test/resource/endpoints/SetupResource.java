@@ -39,10 +39,10 @@ public class SetupResource extends NamedResource {
         WebTarget resource = getTarget();
         resource = addParametersToResource( resource, queryParameters );
 
-        return resource.request()
-            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "superuser")
-            .property( HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "superpassword" )
-            .accept( MediaType.APPLICATION_JSON )
-            .get( Entity.class );
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+            .credentials( "superuser", "superpassword" ).build();
+
+        return resource.register( feature ).request()
+            .accept( MediaType.APPLICATION_JSON ).get( Entity.class );
     }
 }

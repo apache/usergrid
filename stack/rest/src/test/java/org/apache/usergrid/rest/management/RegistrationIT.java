@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -109,7 +109,7 @@ public class RegistrationIT extends AbstractRestIT {
                     .request()
                     .accept(MediaType.APPLICATION_JSON)
                     .put( javax.ws.rs.client.Entity.form(form) );
-            } catch (ResponseProcessingException e) {
+            } catch (ClientErrorException e) {
                 assertEquals("Should receive a 404 Not Found", 404, e.getResponse().getStatus());
             }
         } finally {

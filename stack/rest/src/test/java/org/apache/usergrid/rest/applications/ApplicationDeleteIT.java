@@ -30,8 +30,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,20 +73,13 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // delete the app
 
-        try {
-            clientSetup.getRestClient() .management().orgs()
-                .org(orgName).apps().app(appToDeleteId.toString()).getTarget()
-                .queryParam("access_token", orgAdminToken.getAccessToken())
-                .request()
-                .delete();
+        final Response response = clientSetup.getRestClient().management().orgs()
+            .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
+            .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .request()
+            .delete();
 
-            fail("Delete must fail without app_delete_confirm parameter");
-
-        } catch (  ResponseProcessingException expected  ) {
-            Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
-            JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ));
-            Assert.assertEquals("Cannot delete application without app_delete_confirm parameter", node.get("error_description").textValue());
-        }
+        Assert.assertEquals("Error must be 400", 400, response.getStatus() );
 
         clientSetup.getRestClient().management().orgs()
             .org(orgName).apps().app(appToDeleteId.toString() ).getTarget()
@@ -105,7 +99,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
             fail("Must not be able to get deleted app");
 
-        } catch ( ResponseProcessingException expected ) {
+        } catch ( ClientErrorException expected ) {
             Assert.assertEquals("Error must be 404", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ));
             Assert.assertEquals("entity_not_found", node.get("error").textValue());
@@ -119,7 +113,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
             fail( "Must not be able to get deleted app" );
         }
-        catch ( ResponseProcessingException expected ) {
+        catch ( ClientErrorException expected ) {
             Assert.assertEquals( "Error must be 404", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ) );
             Assert.assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
@@ -137,7 +131,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
             fail("Must not be able to get deleted app's collection");
 
-        } catch ( ResponseProcessingException expected ) {
+        } catch ( ClientErrorException expected ) {
             Assert.assertEquals("Error must be 400", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ));
             Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
@@ -155,7 +149,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
             fail("Must not be able to get deleted app entity");
 
-        } catch ( ResponseProcessingException expected ) {
+        } catch ( ClientErrorException expected ) {
             // TODO: why not a 404?
             Assert.assertEquals("Error must be 400", 404, expected.getResponse().getStatus() );
             JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ));
@@ -178,20 +172,13 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // test that we cannot delete the application a second time
 
-        try {
-            clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( appToDeleteId.toString() )
-                .getTarget().queryParam( "access_token", orgAdminToken.getAccessToken() )
-                .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
-                .request()
-                .delete();
-
-            fail("Can't delete a non existent app twice");
-        }
-        catch ( ResponseProcessingException expected ) {
-            Assert.assertEquals( "Error must be 404", 404, expected.getResponse().getStatus() );
-            JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ) );
-            Assert.assertEquals( "entity_not_found", node.get( "error" ).textValue() );
-        }
+        final Response response1 = clientSetup.getRestClient().management()
+            .orgs().org( orgName ).apps().app( appToDeleteId.toString() )
+            .getTarget().queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
+            .request()
+            .delete();
+        Assert.assertEquals( "Error must be 404", 404, response1.getStatus() );
 
         // test that we can create a new application with the same name
 
@@ -203,7 +190,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         Assert.assertEquals("Must be able to create app with same name as deleted app",
             (orgName + "/" + appToDeleteName).toLowerCase(),
-            appCreateAgainResponse.getEntities().get(0).get("name"));
+            appCreateAgainResponse.getEntities().get(0).get( "name" ));
     }
 
 
@@ -245,13 +232,13 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // restore the app
 
-        logger.debug("\n\nRestoring app\n");
+        logger.debug( "\n\nRestoring app\n" );
 
         clientSetup.getRestClient().management().orgs()
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
-            .put( javax.ws.rs.client.Entity.json( null ));
+            .put( javax.ws.rs.client.Entity.entity( "", MediaType.APPLICATION_JSON )); // must send body
 
         refreshIndex();
 
@@ -274,9 +261,9 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // test that we can get an app entity
 
-        logger.debug("\n\nGetting entities from app\n");
+        logger.debug( "\n\nGetting entities from app\n" );
 
-        UUID entityId = entities.get(0).getUuid();
+        UUID entityId = entities.get( 0 ).getUuid();
         ApiResponse entityResponse = clientSetup.getRestClient()
             .org( orgName ).app( appToDeleteName ).collection( "things" ).entity( entityId ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
@@ -290,7 +277,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).app( appToDeleteName ).collection( "things" ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
-            .get(ApiResponse.class);
+            .get( ApiResponse.class );
         Assert.assertEquals( entities.size(), collectionReponse.getEntityCount() );
     }
 
@@ -326,19 +313,13 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // attempt to restore original app, should get 409
 
-        try {
+        final Response response = clientSetup.getRestClient().management().orgs()
+            .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
+            .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .request()
+            .put( javax.ws.rs.client.Entity.entity( "", MediaType.TEXT_PLAIN ) );// must send body with put
 
-            clientSetup.getRestClient() .management().orgs()
-                .org(orgName).apps().app(appToDeleteId.toString()).getTarget()
-                .queryParam("access_token", orgAdminToken.getAccessToken())
-                .request()
-                .put( javax.ws.rs.client.Entity.json(null) );
-
-            fail("Must fail to restore app with same name as existing app");
-
-        } catch ( ResponseProcessingException e ) {
-            Assert.assertEquals(409, e.getResponse().getStatus());
-        }
+        Assert.assertEquals( 409, response.getStatus() );
     }
 
 
@@ -361,7 +342,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // delete the app
 
-        clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
+        clientSetup.getRestClient().management()
+            .orgs().org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
@@ -373,19 +355,14 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // attempt to delete new app, it should fail
 
-        try {
+        final Response response = clientSetup.getRestClient().management()
+            .orgs().org( orgName ).apps().app( newAppId.toString() ).getTarget()
+            .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
+            .request()
+            .delete();
 
-            clientSetup.getRestClient().management().orgs().org( orgName ).apps().app( newAppId.toString() ).getTarget()
-                .queryParam( "access_token", orgAdminToken.getAccessToken() )
-                .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
-                .request()
-                .delete();
-
-            fail("Must fail to delete app with same name as deleted app");
-
-        } catch ( ResponseProcessingException e ) {
-            Assert.assertEquals( 409, e.getResponse().getStatus() );
-        }
+        Assert.assertEquals( 409, response.getStatus() );
     }
 
 

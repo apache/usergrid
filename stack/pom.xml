@@ -114,7 +114,7 @@
       <shiro-version>1.2.4</shiro-version>
       <slf4j-version>1.6.1</slf4j-version>
       <snakeyaml-version>1.9</snakeyaml-version>
-      <tomcat-version>7.0.59</tomcat-version>
+      <tomcat-version>7.0.64</tomcat-version>
       <antlr.version>3.4</antlr.version>
       <tika.version>1.4</tika.version>
       <mockito.version>1.10.8</mockito.version>

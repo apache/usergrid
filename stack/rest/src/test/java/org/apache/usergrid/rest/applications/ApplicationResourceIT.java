@@ -32,8 +32,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -228,6 +229,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * (for backwards compatibility)
      */
     @Test
+    @Ignore("this form of backwards compatibility no longer needed")
     public void jsonForAcceptsTextHtml() throws Exception {
 
         //Create the organization resource
@@ -414,7 +416,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .post( javax.ws.rs.client.Entity.entity(entity, MediaType.APPLICATION_JSON_TYPE ), ApiResponse.class);
             fail("This should cause an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             assertEquals(
                 String.valueOf( Response.Status.BAD_REQUEST.getStatusCode()),
                 String.valueOf(uie.getResponse().getStatus()));
@@ -480,7 +482,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
             this.app().collection("users").entity(entity).get(
                 new QueryParameters().addParam("access_token", token), false);
             fail("The expired token should cause an exception");
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
 
@@ -519,8 +521,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
                 .get( ApiResponse.class );
             fail("The invalid TTL should cause an exception");
 
-        } catch (ResponseProcessingException uie) {
-            //TODO should this be handled and returned as a Status.BAD_REQUEST?
+        } catch (InternalServerErrorException uie) {
+            // TODO should this be handled and returned as a Status.BAD_REQUEST?
             //Status.INTERNAL_SERVER_ERROR is thrown because Jersey throws a NumberFormatException
             assertEquals( Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), uie.getResponse().getStatus());
         }
@@ -655,7 +657,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
                 .request()
                 .accept( MediaType.TEXT_HTML )
                 .post( javax.ws.rs.client.Entity.form( payload ), String.class );
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             assertEquals(String.valueOf( Response.Status.TEMPORARY_REDIRECT.getStatusCode()), uie.getResponse().getStatus());
         }
 
@@ -780,6 +782,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Ensure that the Apigee Mobile Analytics config returns valid JSON
      */
     @Test
+    @Ignore
     public void validateApigeeApmConfigAPP() throws IOException {
         String orgName = clientSetup.getOrganizationName().toLowerCase();
         String appName = clientSetup.getAppName().toLowerCase();
@@ -795,7 +798,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
             //if things are kosher then JSON should have value for instaOpsApplicationId
             assertTrue("it's valid json for APM", node.has("instaOpsApplicationId"));
-        } catch (ResponseProcessingException uie) {
+        } catch (ClientErrorException uie) {
             //Validate that APM config exists
             assertNotEquals("APM Config API exists", Response.Status.NOT_FOUND,
                 uie.getResponse().getStatus()); //i.e It should not be "Not Found"
