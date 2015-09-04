@@ -70,7 +70,7 @@ public class ApplicationServiceIT extends AbstractCoreIT {
         Observable<Id> ids =
             this.app.getApplicationService().deleteAllEntities(appScope);
         int count = ids.count().toBlocking().last();
-        Assert.assertEquals(count, 13);
+        Assert.assertEquals(count, 10);
         this.app.refreshIndex();
         Thread.sleep(5000);
         Injector injector = SpringResource.getInstance().getBean(Injector.class);

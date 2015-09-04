@@ -61,7 +61,7 @@ public class SystemResourceIT extends AbstractRestIT {
 
         assertNotNull( result );
         assertNotNull( "ok",result.getStatus() );
-        assertEquals(((LinkedHashMap) result.getData()).get("count"), 3);
+        assertEquals(((LinkedHashMap) result.getData()).get("count"), 0);
     }
 
 
