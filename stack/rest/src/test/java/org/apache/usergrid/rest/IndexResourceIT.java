@@ -62,12 +62,13 @@ public class IndexResourceIT extends AbstractRestIT {
         assertNotNull( collectionResponse );
 
         //try reindex endpoint with ALl mixed case characters
-        Token superUserToken = clientSetup.getRestClient().management().token().get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
+        Token superUserToken = clientSetup.getRestClient().management().token()
+            .get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
 
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "access_token",superUserToken.getAccessToken());
         ApiResponse result = clientSetup.getRestClient()
-            .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/StOrElaTloNs" )
+            .pathResource( "system/index/rebuild/" + clientSetup.getAppUuid() + "/StOrElaTloNs" )
             .post( false, ApiResponse.class, null, queryParameters, true );
 
         assertNotNull(result);

@@ -203,11 +203,13 @@ public class CollectionEndpoint extends NamedResource {
      * DELETE /users
      * </pre>
      */
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete( final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters ){
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete(
+        final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters ){
         return delete(parameters, true);
     }
 
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete(final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters, final boolean useToken) {
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete(
+        final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters, final boolean useToken) {
 
         String acceptHeader = MediaType.APPLICATION_JSON;
 
@@ -230,7 +232,8 @@ public class CollectionEndpoint extends NamedResource {
      * POST /users {"color","red"}
      * </pre>
      */
-    public org.apache.usergrid.rest.test.resource.model.Entity post(org.apache.usergrid.rest.test.resource.model.Entity payload){
+    public org.apache.usergrid.rest.test.resource.model.Entity post(
+        org.apache.usergrid.rest.test.resource.model.Entity payload){
 
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
@@ -248,7 +251,8 @@ public class CollectionEndpoint extends NamedResource {
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue( new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -275,7 +279,8 @@ public class CollectionEndpoint extends NamedResource {
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue( new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -283,7 +288,8 @@ public class CollectionEndpoint extends NamedResource {
         return new org.apache.usergrid.rest.test.resource.model.Entity(response);
     }
 
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse post(List<org.apache.usergrid.rest.test.resource.model.Entity> entityList) {
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse post(
+        List<org.apache.usergrid.rest.test.resource.model.Entity> entityList) {
 
         String acceptHeader = MediaType.APPLICATION_JSON;
 
@@ -302,8 +308,8 @@ public class CollectionEndpoint extends NamedResource {
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue(
-                new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -351,8 +357,8 @@ public class CollectionEndpoint extends NamedResource {
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue(
-                new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -360,7 +366,8 @@ public class CollectionEndpoint extends NamedResource {
         return response;
     }
 
-    public CollectionEndpoint matrix(org.apache.usergrid.rest.test.resource.model.QueryParameters parameters) {
+    public CollectionEndpoint matrix(
+        org.apache.usergrid.rest.test.resource.model.QueryParameters parameters) {
         this.matrix = getMatrixValue(parameters);
         return this;
     }

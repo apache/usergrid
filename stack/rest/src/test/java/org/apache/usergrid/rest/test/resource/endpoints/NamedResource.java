@@ -24,6 +24,8 @@ import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import static org.glassfish.jersey.client.authentication.HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME;
 import static org.glassfish.jersey.client.authentication.HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD;
+
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 
@@ -243,21 +245,20 @@ public class NamedResource implements UrlResource {
 
         WebTarget resource = getTarget( useToken );
         resource = addParametersToResource(resource, queryParameters);
-        Invocation.Builder builder = resource.request()
-            .accept( MediaType.APPLICATION_JSON );
 
+        GenericType<T> gt = new GenericType<>((Class) type);
 
         if ( useBasicAuthentication ) {
-            String uname = (String)entity.get("username");
-            String pword = (String)entity.get("password");
-            builder = builder.property( HTTP_AUTHENTICATION_BASIC_USERNAME, uname )
-                             .property( HTTP_AUTHENTICATION_BASIC_PASSWORD, pword );
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+                .credentials( "superuser", "superpassword" ).build();
+            return resource.register( feature ).request()
+                .accept( MediaType.APPLICATION_JSON )
+                .post( javax.ws.rs.client.Entity.json( entity ), gt );
         }
 
-        // it's OK for the entity to be null
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return builder.post( javax.ws.rs.client.Entity.json( entity ), gt );
-
+        return resource.request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( javax.ws.rs.client.Entity.json( entity ), gt );
     }
 
     //For edge cases like Organizations and Tokens without any payload
