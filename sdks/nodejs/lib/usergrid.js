@@ -2050,7 +2050,7 @@ Usergrid.Client.prototype.delete = function(opts, callback) {
   *  @return {boolean} returns true if there is a next page of data, false otherwise
   */
   Usergrid.Collection.prototype.hasNextPage = function () {
-    return (this._next);
+    return !!this._next;
   }
 
   /*
