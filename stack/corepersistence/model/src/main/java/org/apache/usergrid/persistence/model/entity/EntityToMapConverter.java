@@ -85,7 +85,10 @@ public class EntityToMapConverter {
                     o = objectMapper.readValue( serilizedObj, bf.getClassinfo() );
                 }
                 catch ( IOException e ) {
-                    throw new RuntimeException( "Can't deserialize object ", e );
+                    throw new RuntimeException( "Can't deserialize object from field:"
+                        + field.getName()+ " classinfo: " + bf.getClassinfo()
+                        + " byteArray of length:" + serilizedObj.length
+                        , e );
                 }
                 entityMap.put( bf.getName(), o );
             }else if (field instanceof SerializedObjectField) {

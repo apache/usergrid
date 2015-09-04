@@ -20,6 +20,8 @@
 package org.apache.usergrid.rest;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,19 +63,24 @@ public class ApplicationsResource extends AbstractContextResource {
     @Path( "{applicationId}" )
     public JSONWithPadding clearApplication( @Context UriInfo ui,
                                              @PathParam("applicationId") UUID applicationId,
-                                             @QueryParam( "confirmApplicationId" ) UUID confirmApplicationId,
+                                             @QueryParam( "confirmApplicationName" ) String confirmApplicationName,
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
-        if(confirmApplicationId == null || !confirmApplicationId.equals(applicationId)){
-            throw new IllegalArgumentException("please make confirmApplicationId equal to applicationId");
+        if(confirmApplicationName == null){
+            throw new IllegalArgumentException("please make add a QueryString for confirmApplicationName");
         }
 
-        ApiResponse response = createApiResponse();
+        final EntityManager em =  emf.getEntityManager(applicationId);
+        final String name =  em.getApplication().getApplicationName();
+        if(!name.toLowerCase().equals(confirmApplicationName.toLowerCase())){
+            throw new IllegalArgumentException("confirmApplicationName: " + confirmApplicationName + " does not equal " + name);
+        }
+        final ApiResponse response = createApiResponse();
         response.setAction( "clear application" );
 
         logger.info( "clearing up application" );
-        AtomicInteger itemsDeleted = new AtomicInteger(0);
+        final AtomicInteger itemsDeleted = new AtomicInteger(0);
         try {
             management.deleteAllEntities(applicationId)
                 .count()
