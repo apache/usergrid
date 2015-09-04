@@ -26,6 +26,7 @@ import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
@@ -37,6 +38,7 @@ import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.utils.InflectionUtils;
 import rx.Observable;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createGraphOperationTimestamp;
@@ -85,7 +87,11 @@ public class ApplicationServiceImpl  implements ApplicationService{
         Observable<Id> countObservable = allEntityIdsObservable.getEntities(appObservable)
             //.map(entity -> eventBuilder.buildEntityDelete(applicationScope, entity.getId()).getEntitiesCompacted())
             .map(entityIdScope -> ((EntityIdScope) entityIdScope).getId())
-            .skip(1)//skip application entity
+            .filter(id -> {
+                final String type = InflectionUtils.pluralize(((Id) id).getType());
+                return ! (type.equals(Schema.COLLECTION_USERS) || type.equals(Schema.COLLECTION_GROUPS)
+                    || type.equals(InflectionUtils.pluralize( Schema.TYPE_APPLICATION)) || type.equals(Schema.COLLECTION_ROLES));
+            })//skip application entity
             .map(id -> {
                 entityCollectionManager.mark((Id) id)
                     .mergeWith(graphManager.markNode((Id) id, createGraphOperationTimestamp())).toBlocking().last();
