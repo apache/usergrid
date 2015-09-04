@@ -96,7 +96,9 @@ public class CpEntityMapUtilsTest {
         }};
 
         Entity cpEntity = CpEntityMapUtils.fromMap( properties, "user", true );
-        assertUserWithBlocks( cpEntity );
+        assertUserWithBlocks(cpEntity);
+        Map<String,Object> map = CpEntityMapUtils.toMap(cpEntity);
+        cpEntity = CpEntityMapUtils.fromMap(map,"user", true);
     }
 
 
