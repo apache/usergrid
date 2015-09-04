@@ -53,7 +53,7 @@
         <url-pattern>/management.json</url-pattern>
     </filter-mapping>
 
-    <!--  filter for setting default accept and Content-Type as application/json when undefined by client
+    <!--  filter for setting default accept and Content-Type as application/json when undefined by client -->
     <filter>
         <filter-name>contentTypeFilter</filter-name>
         <filter-class>org.apache.usergrid.rest.filters.ContentTypeFilter</filter-class>
@@ -62,7 +62,6 @@
         <filter-name>contentTypeFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-    -->
 
     <filter>
         <filter-name>shiroFilter</filter-name>
