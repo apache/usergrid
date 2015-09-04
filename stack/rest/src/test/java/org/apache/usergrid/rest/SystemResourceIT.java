@@ -53,6 +53,11 @@ public class SystemResourceIT extends AbstractRestIT {
 
     @Test
     public void testDeleteAllApplicationEntities() {
+        int count = 10;
+        for(int i =0; i<count;i++) {
+            this.app().collection("tests").post(new Entity().chainPut("testval", "test"));
+        }
+        this.refreshIndex();
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
         queryParameters.addParam("confirmApplicationId", this.clientSetup.getAppUuid());
@@ -61,7 +66,7 @@ public class SystemResourceIT extends AbstractRestIT {
 
         assertNotNull( result );
         assertNotNull( "ok",result.getStatus() );
-        assertEquals(((LinkedHashMap) result.getData()).get("count"), 0);
+        assertEquals(((LinkedHashMap) result.getData()).get("count"), count);
     }
 
 
