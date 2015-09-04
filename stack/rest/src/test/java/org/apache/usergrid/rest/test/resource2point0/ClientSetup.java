@@ -122,7 +122,9 @@ public class ClientSetup implements TestRule {
 
         application = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
        // application = restClient.management().orgs().organization(organization.getName()).app().get();
-        appUuid = (String)((LinkedHashMap)application.getDynamicProperties().get( "data" )).get( orgName+"/"+appName );
+        LinkedHashMap map = (LinkedHashMap)application.getDynamicProperties().get( "data" );
+        appUuid = (String)map.get(map.keySet().iterator().next() );
+
 
         refreshIndex();
 

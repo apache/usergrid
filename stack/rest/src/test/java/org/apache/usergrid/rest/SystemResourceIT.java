@@ -17,15 +17,16 @@
 package org.apache.usergrid.rest;
 
 
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Test;
 
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+import java.util.LinkedHashMap;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
@@ -56,5 +57,24 @@ public class SystemResourceIT extends AbstractRestIT {
 
 
     }
+
+    @Test
+    public void testDeleteAllApplicationEntities() {
+        int count = 10;
+        for(int i =0; i<count;i++) {
+            this.app().collection("tests").post(new Entity().chainPut("testval", "test"));
+        }
+        this.refreshIndex();
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam("access_token", clientSetup.getSuperuserToken().getAccessToken());
+        queryParameters.addParam("confirmApplicationId", this.clientSetup.getAppUuid());
+
+        org.apache.usergrid.rest.test.resource2point0.model.ApiResponse result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
+
+        assertNotNull( result );
+        assertNotNull( "ok",result.getStatus() );
+        assertEquals(((LinkedHashMap) result.getData()).get("count"), count);
+    }
+
 
 }

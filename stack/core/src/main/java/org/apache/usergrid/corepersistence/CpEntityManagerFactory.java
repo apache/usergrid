@@ -30,13 +30,8 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.AbstractEntity;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityFactory;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.*;
+
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -63,6 +58,7 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.slf4j.Logger;
@@ -71,6 +67,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
 
 /**
@@ -80,6 +78,7 @@ import rx.Observable;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
+    private final AllEntitiesInSystemObservable allEntitiesObservable;
 
     private ApplicationContext applicationContext;
 
@@ -118,6 +117,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
         this.orgApplicationCache = new OrgApplicationCacheImpl( this );
+        this.allEntitiesObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
     }
 
 
@@ -336,6 +336,55 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
         ei.deleteIndex();
         em.refreshIndex();
+    }
+
+    @Override
+    public Observable<Id> deleteAllEntitiesfromApplication(UUID applicationId) {
+
+        final ApplicationScope applicationScope = CpNamingUtils.getApplicationScope(applicationId);
+        if (applicationScope.getApplication().getUuid().equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)) {
+            throw new IllegalArgumentException("Can't delete from management app");
+        }
+
+        //EventBuilder eventBuilder = injector.getInstance(EventBuilder.class);
+        Observable appObservable = Observable.just(applicationScope);
+
+        Observable<Id> countObservable = AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache, 100)
+            .filter(new Func1<AllEntitiesInSystemObservable.ApplicationEntityGroup, Boolean>() {
+                @Override
+                public Boolean call(AllEntitiesInSystemObservable.ApplicationEntityGroup applicationEntityGroup) {
+                    return applicationEntityGroup.applicationScope.equals(applicationScope);
+                }
+            })//skip application entity
+            .flatMap(new Func1<AllEntitiesInSystemObservable.ApplicationEntityGroup, Observable<? extends Id>>() {
+                @Override
+                public Observable<? extends Id> call(AllEntitiesInSystemObservable.ApplicationEntityGroup applicationEntityGroup) {
+                    final EntityManager em = getEntityManager(applicationEntityGroup.applicationScope.getApplication().getUuid());
+                    return Observable.from(applicationEntityGroup.entityIds)
+                        .filter(new Func1<Id, Boolean>() {
+                            @Override
+                            public Boolean call(Id id) {
+
+                                final String type = InflectionUtils.pluralize(id.getType());
+                                return !(type.equals(Schema.COLLECTION_USERS) || type.equals(Schema.COLLECTION_GROUPS)
+                                    || type.equals(InflectionUtils.pluralize(Schema.TYPE_APPLICATION)) || type.equals(Schema.COLLECTION_ROLES));
+                            }
+                        })
+                        .doOnNext(new Action1<Id>() {
+                            @Override
+                            public void call(Id id) {
+                                try {
+                                    em.delete(new SimpleEntityRef(id.getType(), id.getUuid()));
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        });
+                }
+            });
+
+        return countObservable;
+
     }
 
 

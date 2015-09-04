@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.springframework.context.ApplicationContext;
+import rx.Observable;
 
 
 /**
@@ -168,6 +170,8 @@ public interface EntityManagerFactory {
     public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas, final String writeConsistency);
 
     public Health getEntityStoreHealth();
+
+    Observable<Id> deleteAllEntitiesfromApplication(UUID applicationId) throws Exception;
 
     void restoreApplication(UUID applicationId) throws Exception;
 

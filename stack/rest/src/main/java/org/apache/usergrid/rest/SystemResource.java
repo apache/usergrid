@@ -17,17 +17,13 @@
 package org.apache.usergrid.rest;
 
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -49,6 +45,7 @@ import com.clearspring.analytics.util.Preconditions;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.jersey.api.json.JSONWithPadding;
+import rx.functions.Action1;
 
 
 @Path( "/system" )
@@ -100,9 +97,9 @@ public class SystemResource extends AbstractContextResource {
             throws Exception {
 
         ApiResponse response = createApiResponse();
-        response.setAction( "superuser setup" );
+        response.setAction("superuser setup");
 
-        logger.info( "Setting up Superuser" );
+        logger.info("Setting up Superuser");
 
         try {
             management.provisionSuperuser();
@@ -113,6 +110,45 @@ public class SystemResource extends AbstractContextResource {
 
         response.setSuccess();
 
+        return new JSONWithPadding( response, callback );
+    }
+
+    @RequireSystemAccess
+    @DELETE
+    @Path( "applications/{applicationId}" )
+    public JSONWithPadding clearApplication( @Context UriInfo ui,
+                                             @PathParam("applicationId") UUID applicationId,
+                                             @QueryParam( "confirmApplicationId" ) UUID confirmApplicationId,
+                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+
+        if(confirmApplicationId == null || !confirmApplicationId.equals(applicationId)){
+            throw new IllegalArgumentException("please make confirmApplicationId equal to applicationId");
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "clear application" );
+
+        logger.info( "clearing up application" );
+        final AtomicInteger itemsDeleted = new AtomicInteger(0);
+        try {
+            this.emf.deleteAllEntitiesfromApplication(applicationId)
+                .count()
+                .doOnNext(new Action1<Integer>() {
+                    @Override
+                    public void call(Integer count) {
+                        itemsDeleted.set(count);
+                    }
+                })
+                .toBlocking().lastOrDefault(0);
+        }
+        catch ( Exception e ) {
+            logger.error( "Unable to delete all items, deleted: " + itemsDeleted.get(), e );
+        }
+        Map<String,Object> data = new HashMap<>();
+        data.put("count", itemsDeleted.get());
+        response.setData(data);
+        response.setSuccess();
         return new JSONWithPadding( response, callback );
     }
 

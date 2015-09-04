@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.apache.usergrid.exception.NotImplementedException;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -67,6 +69,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_C
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 import org.apache.usergrid.persistence.core.util.Health;
+import rx.Observable;
 
 
 /**
@@ -470,6 +473,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public Health getEntityStoreHealth() {
         throw new UnsupportedOperationException("Not supported in v1.");
+    }
+
+    @Override
+    public Observable<Id> deleteAllEntitiesfromApplication(UUID applicationId) throws Exception {
+        throw new NotImplementedException("not here!");
     }
 
     @Override
