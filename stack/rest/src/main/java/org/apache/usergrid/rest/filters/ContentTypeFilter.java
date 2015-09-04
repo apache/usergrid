@@ -133,26 +133,24 @@ public class ContentTypeFilter implements Filter {
          */
         private void adapt() throws IOException {
 
-            //check if the accept header was set
-            @SuppressWarnings( "rawtypes" ) Enumeration contentType = origRequest.getHeaders( HttpHeaders.ACCEPT );
+            String path = origRequest.getRequestURI();
+            String method = origRequest.getMethod();
+            logger.debug( "Content path is '{}'", path );
 
-            if ( !contentType.hasMoreElements() ) {
+
+            // first ensure that an Accept header is set
+
+            @SuppressWarnings( "rawtypes" ) Enumeration acceptHeaders = origRequest.getHeaders( HttpHeaders.ACCEPT );
+            if ( !acceptHeaders.hasMoreElements() ) {
                 setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
             }
 
-
-            String path = origRequest.getRequestURI();
-
-            logger.debug( "Content path is '{}'", path );
+            // next, ensure that one and only one content-type is set
 
             int initial = inputStream.read();
-
-            String method = origRequest.getMethod();
-
-
-            // nothing to read, check if it's a put or a post. If so set the
-            // content type to json to create an empty json request
             if ( initial == -1 ) {
+
+                // request has no body, set type to application/json
                 if ( ( HttpMethod.POST.equals( method ) || HttpMethod.PUT.equals( method ) )
                     && !MediaType.APPLICATION_FORM_URLENCODED.equals( getContentType() ) ) {
                     logger.debug("Setting content type to application/json " +
@@ -166,14 +164,12 @@ public class ContentTypeFilter implements Filter {
             }
 
             char firstChar = ( char ) initial;
+            if ( ( firstChar == '{' || firstChar == '[' )
+                 && !MediaType.APPLICATION_JSON.equals( getContentType() )) {
 
-            // its json, make it so
-            if ( firstChar == '{' || firstChar == '['
-                && !MediaType.APPLICATION_JSON.equals( getContentType() )) {
-
+                // request appears to be JSON so set type to application/json
                 logger.debug( "Setting content type to application/json " +
                         "for POST or PUT with json content at path '{}'", path );
-
                 setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
                 setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON );
             }
@@ -182,12 +178,8 @@ public class ContentTypeFilter implements Filter {
         }
 
 
-        /**
-         * @throws IOException
-         *
-         */
         public void setHeader( String name, String value ) {
-            newHeaders.put( name, value );
+            newHeaders.put( name.toLowerCase(), value );
         }
 
 
@@ -219,20 +211,16 @@ public class ContentTypeFilter implements Filter {
          */
         @Override
         public Enumeration getHeaders( String name ) {
-            Set<String> headers = new LinkedHashSet<String>();
 
+            Set<String> headers = new LinkedHashSet<String>();
             String overridden = newHeaders.get( name );
 
             if ( overridden != null ) {
                 headers.add( overridden );
-            }
-            else {
-                for ( Enumeration e = super.getHeaders( name ); e.hasMoreElements(); ) {
-                    headers.add( e.nextElement().toString() );
-                }
+                return Collections.enumeration( headers );
             }
 
-            return Collections.enumeration( headers );
+            return super.getHeaders( name );
         }
 
 
