@@ -238,43 +238,43 @@
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.connectors</groupId>
             <artifactId>jersey-apache-connector</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-mvc-jsp</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-spring3</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <!-- Jackson, Spring, and other dependencies -->
@@ -361,6 +361,14 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-services</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
@@ -393,27 +401,19 @@
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-external</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.test-framework</groupId>
             <artifactId>jersey-test-framework-core</artifactId>
-            <version>2.21</version>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-services</artifactId>
-            <version>2.1.0-SNAPSHOT</version>
-            <scope>test</scope>
-            <classifier>tests</classifier>
         </dependency>
 
     </dependencies>
