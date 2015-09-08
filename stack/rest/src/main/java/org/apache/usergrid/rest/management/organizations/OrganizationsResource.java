@@ -66,13 +66,6 @@ public class OrganizationsResource extends AbstractContextResource {
     public OrganizationsResource() {
     }
 
-    // TODO: better solution to this Jersey 2 introduced problem:
-    // Problem is that when Jersey scans the resources classes and methods to add our
-    // secured resource filter, it only recognizes methods with an HTTP method annotation
-    // but when I add the @GET annotation to the methods below, Jersey fails to resolve
-    // the resource methods when they are called.
-
-    //@GET
     @Path(RootResource.ORGANIZATION_ID_PATH)
     @RequireOrganizationAccess
     public OrganizationResource getOrganizationById( @Context UriInfo ui,
@@ -83,17 +76,11 @@ public class OrganizationsResource extends AbstractContextResource {
             throw new ManagementException( "Could not find organization for ID: " + organizationIdStr );
         }
 
-//        // TODO: get rid of this and make annotations work (see above)
-//        if ( !isPermittedAccessToOrganization( Identifier.from(organization) ) ) {
-//            logger.debug("No organization access authorized");
-//            throw mappableSecurityException( "unauthorized", "No organization access authorized" );
-//        }
+
 
         return getSubResource( OrganizationResource.class ).init( organization );
     }
 
-
-    //@GET
     @Path( "{organizationName}" )
     @RequireOrganizationAccess
     public OrganizationResource getOrganizationByName( @Context UriInfo ui,
@@ -104,11 +91,7 @@ public class OrganizationsResource extends AbstractContextResource {
             throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
 
-//        // TODO: get rid of this and make annotations work (see above)
-//        if ( !isPermittedAccessToOrganization( Identifier.from(organization) ) ) {
-//            logger.debug("No organization access authorized");
-//            throw mappableSecurityException( "unauthorized", "No organization access authorized" );
-//        }
+
 
         return getSubResource( OrganizationResource.class ).init(organization);
     }
