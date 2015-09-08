@@ -57,7 +57,7 @@ public class NotifierResource extends ServiceResource {
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     @Override
     public ApiResponse executeMultiPartPut(@Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,

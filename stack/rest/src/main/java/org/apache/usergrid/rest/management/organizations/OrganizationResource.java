@@ -108,7 +108,7 @@ public class OrganizationResource extends AbstractContextResource {
     @GET
     @JSONP
     @RequireOrganizationAccess
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getOrganizationDetails( @Context UriInfo ui,
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -170,7 +170,7 @@ public class OrganizationResource extends AbstractContextResource {
     @GET
     @Path("reactivate")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse reactivate( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -190,7 +190,7 @@ public class OrganizationResource extends AbstractContextResource {
     @GET
     @Path("feed")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getFeed( @Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -210,7 +210,7 @@ public class OrganizationResource extends AbstractContextResource {
     @GET
     @Path("credentials")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getCredentials( @Context UriInfo ui,
                                            @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -231,7 +231,7 @@ public class OrganizationResource extends AbstractContextResource {
     @POST
     @Path("credentials")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse generateCredentials( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -257,7 +257,7 @@ public class OrganizationResource extends AbstractContextResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @PUT
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePut( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {

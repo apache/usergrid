@@ -96,7 +96,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @GET
     @Path("applications")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getAllApplications(
         @Context UriInfo ui,
         @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
@@ -130,7 +130,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @GET
     @Path("apps")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getAllApplications2( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
             throws URISyntaxException {
@@ -165,7 +165,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @GET
     @Path("status")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getStatus(
             @QueryParam("ignore_error") @DefaultValue("true") Boolean ignoreError,
             @QueryParam("callback") @DefaultValue("callback") String callback ) {
@@ -212,7 +212,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @GET
     @Path("lb-status")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Response getLbStatus() {
         ResponseBuilder response;
         if ( usergridSystemMonitor.getIsCassandraAlive() ) {

@@ -66,7 +66,7 @@ public class MigrateResource extends AbstractContextResource {
     @PUT
     @Path( "run" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse migrateData( @Context UriInfo ui,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
@@ -114,7 +114,7 @@ public class MigrateResource extends AbstractContextResource {
     @PUT
     @Path( "run/{pluginName}" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse migrateData(@PathParam("pluginName") String pluginName ,  @Context UriInfo ui,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
@@ -159,7 +159,7 @@ public class MigrateResource extends AbstractContextResource {
     @PUT
     @Path( "set" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setMigrationVersion(
         @Context UriInfo ui, Map<String, Object> json,
         @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
@@ -208,7 +208,7 @@ public class MigrateResource extends AbstractContextResource {
     @GET
     @Path( "status" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse migrateStatus(
         @Context UriInfo ui,
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -241,7 +241,7 @@ public class MigrateResource extends AbstractContextResource {
     @GET
     @Path( "count" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse migrateCount(
         @Context UriInfo ui,
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )

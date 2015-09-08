@@ -375,7 +375,7 @@ public class ServiceResource extends AbstractContextResource {
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
@@ -408,7 +408,7 @@ public class ServiceResource extends AbstractContextResource {
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -425,7 +425,7 @@ public class ServiceResource extends AbstractContextResource {
     @DELETE
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeDelete(
         @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,
@@ -544,7 +544,7 @@ public class ServiceResource extends AbstractContextResource {
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeMultiPartPost( @Context UriInfo ui,
                                                  @QueryParam("callback") @DefaultValue("callback") String callback,
                                                  FormDataMultiPart multiPart ) throws Exception {
@@ -558,7 +558,7 @@ public class ServiceResource extends AbstractContextResource {
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeMultiPartPut( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback,
                                                 FormDataMultiPart multiPart ) throws Exception {
@@ -569,7 +569,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     private ApiResponse executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
                                               ServiceAction serviceAction ) throws Exception {
 

@@ -83,7 +83,7 @@ public class IndexResource extends AbstractContextResource {
     @GET
     @Path( "rebuild/{jobId}" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({ MediaType.APPLICATION_JSON, "application/javascript" })
     public ApiResponse rebuildIndexesGet(
         @PathParam( "jobId" ) String jobId,
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -114,7 +114,7 @@ public class IndexResource extends AbstractContextResource {
     @PUT
     @Path( "rebuild" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse rebuildIndexesPut( final Map<String, Object> payload,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
@@ -131,7 +131,7 @@ public class IndexResource extends AbstractContextResource {
     @POST
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse rebuildIndexesPut( @PathParam( "applicationId" ) String applicationIdStr,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                               @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
@@ -154,7 +154,7 @@ public class IndexResource extends AbstractContextResource {
     @PUT
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse rebuildIndexesPut( final Map<String, Object> payload,
                                               @PathParam( "applicationId" ) String applicationIdStr,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
@@ -176,7 +176,7 @@ public class IndexResource extends AbstractContextResource {
     @POST
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse rebuildIndexesPost( @PathParam( "applicationId" ) final String applicationIdStr,
                                                @PathParam( "collectionName" ) final String collectionName,
                                                @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
@@ -199,7 +199,7 @@ public class IndexResource extends AbstractContextResource {
     @PUT
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse rebuildIndexesPut( final Map<String, Object> payload,
                                               @PathParam( "applicationId" ) final String applicationIdStr,
                                               @PathParam( "collectionName" ) final String collectionName,
@@ -222,7 +222,7 @@ public class IndexResource extends AbstractContextResource {
     @POST
     @Path( "rebuild/management" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse rebuildInternalIndexesPost(
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
 
@@ -240,7 +240,7 @@ public class IndexResource extends AbstractContextResource {
     @PUT
     @Path( "rebuild/management" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse rebuildInternalIndexesPut( final Map<String, Object> payload,
                                                       @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                       String callback ) throws Exception {
@@ -259,7 +259,7 @@ public class IndexResource extends AbstractContextResource {
     @POST
     @Path(RootResource.APPLICATION_ID_PATH)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse addIndex( @Context UriInfo ui,
                                      @PathParam( "applicationId" ) final String applicationIdStr,
                                      Map<String, Object> config,

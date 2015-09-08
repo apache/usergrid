@@ -100,7 +100,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @POST
     @Consumes( MediaType.APPLICATION_JSON )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newOrganization( @Context UriInfo ui, Map<String, Object> json,
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
@@ -127,7 +127,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newOrganizationFromForm( @Context UriInfo ui,
                                                     @FormParam( "organization" ) String organizationNameForm,
                                                     @QueryParam( "organization" ) String organizationNameQuery,
@@ -156,7 +156,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
     /** Create a new organization */
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     private ApiResponse newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {

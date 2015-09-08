@@ -355,7 +355,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("credentials")
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getKeys( @Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -378,7 +378,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("credentials")
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse generateKeys( @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
@@ -599,7 +599,7 @@ public class ApplicationResource extends ServiceResource {
     @GET
     @Path("apm/apigeeMobileConfig")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Object getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {

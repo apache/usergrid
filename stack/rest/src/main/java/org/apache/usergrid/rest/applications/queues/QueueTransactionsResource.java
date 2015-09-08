@@ -65,7 +65,7 @@ public class QueueTransactionsResource extends AbstractContextResource {
     @Path("{id}")
     @PUT
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Results updateTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
                                               @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -81,7 +81,7 @@ public class QueueTransactionsResource extends AbstractContextResource {
     @Path("{id}")
     @DELETE
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Results removeTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
                                               @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {

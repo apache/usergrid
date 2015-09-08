@@ -72,7 +72,7 @@ public class UsersResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getOrganizationUsers( @Context UriInfo ui,
                                                  @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -90,7 +90,7 @@ public class UsersResource extends AbstractContextResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newUserForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -109,7 +109,7 @@ public class UsersResource extends AbstractContextResource {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newUserForOrganizationFromForm( @Context UriInfo ui, @FormParam("username") String username,
                                                            @FormParam("name") String name,
                                                            @FormParam("email") String email,
@@ -176,7 +176,7 @@ public class UsersResource extends AbstractContextResource {
     @PUT
     @Path(RootResource.USER_ID_PATH)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse addUserToOrganization( @Context UriInfo ui, @PathParam("userId") String userIdStr,
                                                   @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -203,7 +203,7 @@ public class UsersResource extends AbstractContextResource {
     @PUT
     @Path(RootResource.EMAIL_PATH)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse addUserToOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                          @QueryParam("callback") @DefaultValue("callback")
                                                          String callback ) throws Exception {
@@ -230,7 +230,7 @@ public class UsersResource extends AbstractContextResource {
     @PUT
     @Path("{username}")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse addUserToOrganizationByUsername( @Context UriInfo ui, @PathParam("username") String username,
                                                             @QueryParam("callback") @DefaultValue("callback")
                                                             String callback ) throws Exception {
@@ -291,7 +291,7 @@ public class UsersResource extends AbstractContextResource {
     @DELETE
     @Path("{username}")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse removeUserFromOrganizationByUsername( @Context UriInfo ui,
                                                                  @PathParam("username") String username,
                                                                  @QueryParam("callback") @DefaultValue("callback")
@@ -327,7 +327,7 @@ public class UsersResource extends AbstractContextResource {
     @DELETE
     @Path(RootResource.EMAIL_PATH)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse removeUserFromOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                               @QueryParam("callback") @DefaultValue("callback")
                                                               String callback ) throws Exception {

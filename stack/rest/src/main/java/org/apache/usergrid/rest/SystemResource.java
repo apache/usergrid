@@ -51,7 +51,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "database/setup" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getSetup( @Context UriInfo ui,
                                      @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -77,7 +77,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "superuser/setup" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getSetupSuperuser( @Context UriInfo ui,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {

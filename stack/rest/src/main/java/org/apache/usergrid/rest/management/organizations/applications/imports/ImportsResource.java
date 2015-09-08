@@ -83,7 +83,7 @@ public class ImportsResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @Consumes( MediaType.APPLICATION_JSON )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePost( @Context UriInfo ui, String body,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
@@ -139,7 +139,7 @@ public class ImportsResource extends AbstractContextResource {
 
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getImports( @Context UriInfo ui, @QueryParam( "ql" ) String query,  @QueryParam( "cursor" ) String cursor ) throws Exception {
 
         final Results importResults = importService.getImports( application.getId(), query, cursor );
@@ -161,7 +161,7 @@ public class ImportsResource extends AbstractContextResource {
     @GET
     @Path( RootResource.ENTITY_ID_PATH )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getImportById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 
