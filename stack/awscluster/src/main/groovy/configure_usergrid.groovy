@@ -100,6 +100,9 @@ cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
 cassandra.keyspace.replication=${cassEc2Region}:${replFactor}
 
+# This property is required to be set and cannot be left to the default.
+usergrid.cluster_name=usergrid
+
 cassandra.timeout=5000
 cassandra.connections=${tomcatThreads}
 hystrix.threadpool.graph_user.coreSize=${hystrixThreads}
@@ -110,7 +113,6 @@ usergrid.write.cl=${writeConsistencyLevel}
 
 
 elasticsearch.cluster_name=${clusterName}
-elasticsearch.index_prefix=${stackName}
 elasticsearch.hosts=${esnodes}
 elasticsearch.port=9300
 elasticsearch.number_shards=${esShards}
@@ -190,7 +192,6 @@ usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
 
 usergrid.metrics.graphite.host=${graphite}
 
-usergrid.queue.prefix=${stackName}
 usergrid.queue.region=${ec2Region}
 
 # Enable scheduler for import/export jobs

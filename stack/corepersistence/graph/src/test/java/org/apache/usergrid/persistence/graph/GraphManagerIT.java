@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.graph;
 import java.util.Iterator;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.base.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -835,7 +836,7 @@ public class GraphManagerIT {
         //now load the next page
 
         //tests that even if a prefix is specified, the last takes precedence
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null, "test" );
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null, Optional.fromNullable("test") );
 
         edges = gm.getEdgeTypesFromSource( edgeTypes );
 
@@ -913,7 +914,7 @@ public class GraphManagerIT {
 
         //now load the next page
 
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(), null, "test" );
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(), null,  Optional.fromNullable("test") );
 
         edges = gm.getEdgeTypesToTarget( edgeTypes );
 

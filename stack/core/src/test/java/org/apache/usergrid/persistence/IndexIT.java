@@ -305,21 +305,21 @@ public class IndexIT extends AbstractCoreIT {
         Results r = em.searchCollection( em.getApplicationRef(), "names", query );
         assertTrue(r.getEntities() != null && r.getEntities().size() > 0);
         Entity first =  r.getEntities().get(0);
-        assertTrue(first.getDynamicProperties().size() == 1);
+        assertTrue(first.getDynamicProperties().size() == 2);
 
         //should return valid values
         query = Query.fromQL("select uuid where status = 'pickled'");
         r = em.searchCollection( em.getApplicationRef(), "names", query );
         assertTrue(r.getEntities() != null && r.getEntities().size() > 0);
         first =  r.getEntities().get(0);
-        assertTrue(first.getDynamicProperties().size() == 0);
+        assertTrue(first.getDynamicProperties().size() == 1);
 
         //should return valid values
         query = Query.fromQL("select uuid:myid where status = 'pickled'");
         r = em.searchCollection( em.getApplicationRef(), "names", query );
         assertTrue(r.getEntities() != null && r.getEntities().size() > 0);
         first =  r.getEntities().get(0);
-        assertTrue(first.getDynamicProperties().size() == 0);
+        assertTrue(first.getDynamicProperties().size() == 1);
 
     }
     @Test

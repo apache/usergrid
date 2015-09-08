@@ -20,10 +20,10 @@ import io.gatling.core.Predef._
 import io.gatling.core.feeder.RecordSeqFeederBuilder
 import io.gatling.http.Predef._
 import org.apache.usergrid.datagenerators.FeederGenerator
-import org.apache.usergrid.enums.{EndConditionType, AuthType}
+import org.apache.usergrid.enums.{CsvFeedPatternType, EndConditionType, AuthType}
 import org.apache.usergrid.helpers.Extractors._
-import org.apache.usergrid.helpers.Utils
-import org.apache.usergrid.settings.{Headers, Settings}
+import org.apache.usergrid.helpers.{Headers, Utils}
+import org.apache.usergrid.settings.Settings
 
 /**
  * Provides CRUD methods for custom entities
@@ -58,8 +58,11 @@ object EntityCollectionScenarios {
   }
 
   def uuidFeeder(): RecordSeqFeederBuilder[String] = {
-
-    csv(Settings.feedUuidFilename).random
+    if (Settings.csvFeedPattern == CsvFeedPatternType.Circular) {
+      csv(Settings.feedUuidFilename).circular
+    } else {
+      csv(Settings.feedUuidFilename).random
+    }
   }
 
   /*
@@ -147,6 +150,7 @@ object EntityCollectionScenarios {
   val getRandomEntityByUuidAnonymous = exec(
     http("GET entity by UUID (anonymous)")
       .get("/" + Settings.collection + "/${uuid}")
+      .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authAnonymous)
       .check(status.is(200))
   )
@@ -154,11 +158,12 @@ object EntityCollectionScenarios {
   val getRandomEntityByUuidWithToken = exec(
     http("GET entity by UUID (token)")
       .get("/" + Settings.collection + "/${uuid}")
+      .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authToken)
       .check(status.is(200))
   )
 
-  val getRandomEntitiesByUuid = scenario("Get entities by uuid randomly")
+  val getRandomEntitiesByUuid = scenario("Get entities by uuid")
     .exec(injectTokenIntoSession())
     .exec(injectAuthType())
     .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
@@ -287,6 +292,7 @@ object EntityCollectionScenarios {
     doIf("${validEntity}", "yes") {
       exec(http("GET entity by name sequential (anonymous)")
         .get("/" + Settings.collection + "/${entityName}")
+        .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authAnonymous)
         .check(status.is(200), extractCreateUuid(SessionVarUuid)))
         .exec(session => {
@@ -300,6 +306,7 @@ object EntityCollectionScenarios {
     doIf("${validEntity}", "yes") {
       exec(http("GET entity by name sequential (anonymous)")
         .get("/" + Settings.collection + "/${entityName}")
+        .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authToken)
         .check(status.is(200), extractCreateUuid(SessionVarUuid)))
         .exec(session => {
@@ -328,5 +335,7 @@ object EntityCollectionScenarios {
           }
         }
     }
+
+  val doNothing = scenario("Do Nothing").exec(http("Get Page").get("http://google.com"))
 
 }

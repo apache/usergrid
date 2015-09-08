@@ -424,7 +424,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                                 + " write was truncated.", id, version, e );
                 //return an empty entity, we can never load this one, and we don't want it to bring the system
                 //to a grinding halt
-                return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent() );
+                return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent(),0 );
             }
 
             //Inject the id into it.
@@ -432,7 +432,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 EntityUtils.setId( deSerialized.entity.get(), id );
             }
 
-            return new MvccEntityImpl( id, version, deSerialized.status, deSerialized.entity );
+            return new MvccEntityImpl( id, version, deSerialized.status, deSerialized.entity, 0 );
         }
     }
 

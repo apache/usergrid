@@ -103,5 +103,6 @@ mvn gatling:execute \
 -DscenarioType=${SCENARIO_TYPE} \
 -DuuidFilename=${UUID_FILENAME} \
 -DinjectionList=${INJECTION_LIST} \
+-DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.CustomInjectionSimulation
 

@@ -20,6 +20,7 @@ package org.apache.usergrid;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.junit.rules.TestRule;
 
 import org.apache.usergrid.persistence.Entity;
@@ -158,4 +159,10 @@ public interface Application extends TestRule {
      * @return
      */
     public EntityManager getEntityManager();
+
+    /**
+     * get application service
+     * @return
+     */
+    ApplicationService getApplicationService();
 }

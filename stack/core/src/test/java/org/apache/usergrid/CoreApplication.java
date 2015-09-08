@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -244,4 +245,7 @@ public class CoreApplication implements Application, TestRule {
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @Override
+    public ApplicationService getApplicationService(){ return setup.getApplicationService();}
 }

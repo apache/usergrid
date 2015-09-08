@@ -236,13 +236,35 @@ public class ServiceResource extends AbstractContextResource {
         logger.debug( "ServiceResource.executeServiceRequest" );
 
         boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        // connection info can be blocked only for GETs
+        if (action == ServiceAction.GET) {
+           if ("none".equalsIgnoreCase(connectionQueryParm)) {
+               returnInboundConnections = false;
+               returnOutboundConnections = false;
+           } else if ("in".equalsIgnoreCase(connectionQueryParm)) {
+               returnOutboundConnections = false;
+           } else if ("out".equalsIgnoreCase(connectionQueryParm)) {
+               returnInboundConnections = false;
+           } else if (! "all".equalsIgnoreCase(connectionQueryParm)) {
+               // unrecognized variable
+               if (connectionQueryParm != null)
+                   logger.error( String.format( "Invalid connection query parameter=%s, ignoring.", connectionQueryParm));
+           }
+        }
+
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
             collectionGet = (getServiceParameters().size() == 1 && InflectionUtils
                     .isPlural(getServiceParameters().get(0)));
         }
         addQueryParams( getServiceParameters(), ui );
-        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload );
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
         response.setServiceRequest( r );
         ServiceResults results = r.execute();
         if ( results != null ) {

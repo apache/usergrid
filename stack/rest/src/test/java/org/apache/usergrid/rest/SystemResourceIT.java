@@ -22,6 +22,9 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.junit.Test;
 
+import java.util.LinkedHashMap;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
@@ -33,19 +36,51 @@ public class SystemResourceIT extends AbstractRestIT {
     @Test
     public void testSystemDatabaseAlreadyRun() {
         QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
 
-        Entity result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
-
-        assertNotNull(result);
-        assertNotNull( "ok" ,(String)result.get( "status" ) );
-
-        result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
+        Entity result = clientSetup.getRestClient().system().database().setup().put( queryParameters );
 
         assertNotNull( result );
-        assertNotNull( "ok" ,(String)result.get( "status" ) );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
 
+        result = clientSetup.getRestClient().system().database().setup().put( queryParameters );
 
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
     }
 
+    @Test
+    public void testDeleteAllApplicationEntities() {
+        int count = 10;
+        for(int i =0; i<count;i++) {
+            this.app().collection("tests").post(new Entity().chainPut("testval", "test"));
+        }
+        this.refreshIndex();
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
+        queryParameters.addParam("confirmApplicationName", this.clientSetup.getAppName());
+
+        org.apache.usergrid.rest.test.resource.model.ApiResponse result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
+
+        assertNotNull( result );
+        assertNotNull( "ok",result.getStatus() );
+        assertEquals(((LinkedHashMap) result.getData()).get("count"), count);
+    }
+
+
+    @Test
+    public void testBoostrapAlreadyRun() {
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
+
+        Entity result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
+
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
+
+        result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
+
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
+    }
 }

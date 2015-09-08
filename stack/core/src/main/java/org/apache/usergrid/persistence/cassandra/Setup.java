@@ -25,34 +25,34 @@ import java.util.UUID;
 public interface Setup {
 
     /**
-     * Initialize all configuration for the system setup.  DO NOT actually create any keyspaces.
+     * Initialize all configuration for the system setup. Creates keyspaces, and elasticsearch indexes
      * @throws Exception
      */
-    void init() throws Exception;
+    void initSubsystems() throws Exception;
 
     /**
      * Setup the management keyspaces
      * @throws Exception
      */
-    public void setupSystemKeyspace() throws Exception;
+    void setupSystemKeyspace() throws Exception;
 
     /**
      * Setup the application keyspaces
      * @throws Exception
      */
-    public void setupStaticKeyspace() throws Exception;
+    void setupStaticKeyspace() throws Exception;
 
     /**
      * Returns true if both keyspaces exist
      * @return
      */
-    public boolean keyspacesExist();
+    boolean keyspacesExist();
 
     /**
      * Bootstrap the root application to allow the system to function.
      * @throws Exception
      */
-    public void createDefaultApplications() throws Exception;
+    void createDefaultApplications() throws Exception;
 
-    public void setupApplicationKeyspace(UUID applicationId, String appName) throws Exception;
+    void setupApplicationKeyspace( UUID applicationId, String appName ) throws Exception;
 }

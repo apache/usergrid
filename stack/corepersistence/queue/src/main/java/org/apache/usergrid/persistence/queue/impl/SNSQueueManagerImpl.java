@@ -36,16 +36,20 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.Queue;
 import org.apache.usergrid.persistence.queue.util.AmazonNotificationUtils;
+import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 public class SNSQueueManagerImpl implements QueueManager {
 
@@ -54,6 +58,8 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueScope scope;
     private final QueueFig fig;
     private final ClusterFig clusterFig;
+    private final CassandraFig cassandraFig;
+    private final QueueFig queueFig;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
     private final AmazonSNSAsyncClient snsAsync;
@@ -64,51 +70,54 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     private final LoadingCache<String, String> writeTopicArnMap = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build(new CacheLoader<String, String>() {
-                @Override
-                public String load(String queueName)
-                        throws Exception {
+        .maximumSize(1000)
+        .build(new CacheLoader<String, String>() {
+            @Override
+            public String load(String queueName)
+                throws Exception {
 
-                    return setupTopics(queueName);
-                }
-            });
+                return setupTopics(queueName);
+            }
+        });
 
     private final LoadingCache<String, Queue> readQueueUrlMap = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build(new CacheLoader<String, Queue>() {
-                @Override
-                public Queue load(String queueName) throws Exception {
+        .maximumSize(1000)
+        .build(new CacheLoader<String, Queue>() {
+            @Override
+            public Queue load(String queueName) throws Exception {
 
-                    Queue queue = null;
+                Queue queue = null;
 
-                    try {
-                        GetQueueUrlResult result = sqs.getQueueUrl(queueName);
-                        queue = new Queue(result.getQueueUrl());
-                    } catch (QueueDoesNotExistException queueDoesNotExistException) {
-                        logger.error("Queue {} does not exist, will create", queueName);
-                    } catch (Exception e) {
-                        logger.error("failed to get queue from service", e);
-                        throw e;
-                    }
-
-                    if (queue == null) {
-                        String url = AmazonNotificationUtils.createQueue(sqs, queueName, fig);
-                        queue = new Queue(url);
-                    }
-
-                    setupTopics(queueName);
-
-                    return queue;
+                try {
+                    GetQueueUrlResult result = sqs.getQueueUrl(queueName);
+                    queue = new Queue(result.getQueueUrl());
+                } catch (QueueDoesNotExistException queueDoesNotExistException) {
+                    logger.error("Queue {} does not exist, will create", queueName);
+                } catch (Exception e) {
+                    logger.error("failed to get queue from service", e);
+                    throw e;
                 }
-            });
+
+                if (queue == null) {
+                    String url = AmazonNotificationUtils.createQueue(sqs, queueName, fig);
+                    queue = new Queue(url);
+                }
+
+                setupTopics(queueName);
+
+                return queue;
+            }
+        });
 
 
     @Inject
-    public SNSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig, ClusterFig clusterFig) {
+    public SNSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig, ClusterFig clusterFig,
+                               CassandraFig cassandraFig, QueueFig queueFig) {
         this.scope = scope;
         this.fig = fig;
         this.clusterFig = clusterFig;
+        this.cassandraFig = cassandraFig;
+        this.queueFig = queueFig;
 
         try {
             sqs = createSQSClient(getRegion());
@@ -121,7 +130,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
     private String setupTopics(final String queueName)
-            throws Exception {
+        throws Exception {
 
         logger.info("Setting up setupTopics SNS/SQS...");
 
@@ -158,7 +167,7 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error(String.format("Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn), e);
         }
 
-        if (fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALLREGIONS) {
+        if (fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALL) {
 
             String multiRegion = fig.getRegionList();
 
@@ -243,10 +252,10 @@ public class SNSQueueManagerImpl implements QueueManager {
 
                     } catch (Exception e) {
                         logger.error(String.format("ERROR Subscribing Queue ARN/Region=[%s / %s] and Topic ARN/Region=[%s / %s]",
-                                queueARN,
-                                strSqsRegion,
-                                topicARN,
-                                strSnsRegion), e);
+                            queueARN,
+                            strSqsRegion,
+                            topicARN,
+                            strSnsRegion), e);
 
 
                     }
@@ -270,13 +279,13 @@ public class SNSQueueManagerImpl implements QueueManager {
     private AmazonSNSAsyncClient createAsyncSNSClient(final Region region) {
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
 
-        /**
-         * The Async client will use default client configurations (default max conn: 50)
-         * http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/ClientConfiguration.html
-         * http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/constant-values.html#com.amazonaws.ClientConfiguration.DEFAULT_MAX_CONNECTIONS
-         */
 
-        final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient(ugProvider.getCredentials());
+        // create our own executor which has a bounded queue w/ caller runs policy for rejected tasks
+        final Executor executor = TaskExecutorFactory
+            .createTaskExecutor("amazon-async-io", queueFig.getAsyncMaxThreads(), queueFig.getAsyncQueueSize(),
+                TaskExecutorFactory.RejectionAction.CALLERRUNS);
+
+        final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient(ugProvider.getCredentials(), (ExecutorService) executor);
 
         sns.setRegion(region);
 
@@ -299,8 +308,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     private String getName() {
-        String name = clusterFig.getClusterName() + "_" + scope.getName() + "_" + scope.getRegionImplementation();
-
+        String name = clusterFig.getClusterName() + "_" + cassandraFig.getApplicationKeyspace() + "_" + scope.getName() + "_" + scope.getRegionImplementation();
+        name = name.toLowerCase(); //user lower case values
         Preconditions.checkArgument(name.length() <= 80, "Your name must be < than 80 characters");
 
         return name;
@@ -425,17 +434,18 @@ public class SNSQueueManagerImpl implements QueueManager {
         PublishRequest publishRequest = new PublishRequest(topicArn, stringBody);
 
         snsAsync.publishAsync(publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
-                @Override
-                public void onError(Exception e) {
-                    logger.error("Error publishing message... {}", e);
-                }
+            @Override
+            public void onError(Exception e) {
+                logger.error("Error publishing message... {}", e);
+            }
 
-                @Override
-                public void onSuccess(PublishRequest request, PublishResult result) {
-                    if (logger.isDebugEnabled()) logger.debug("Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(), request.getTopicArn());
+            @Override
+            public void onSuccess(PublishRequest request, PublishResult result) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(), request.getTopicArn());
 
-                }
-            });
+            }
+        });
 
     }
 
@@ -447,8 +457,8 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.debug("Commit message {} to queue {}", queueMessage.getMessageId(), url);
 
         sqs.deleteMessage(new DeleteMessageRequest()
-                .withQueueUrl(url)
-                .withReceiptHandle(queueMessage.getHandle()));
+            .withQueueUrl(url)
+            .withReceiptHandle(queueMessage.getHandle()));
     }
 
 
@@ -482,7 +492,7 @@ public class SNSQueueManagerImpl implements QueueManager {
      */
 
     private Object fromString(final String s, final Class klass)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
 
         Object o = mapper.readValue(s, klass);
         return o;

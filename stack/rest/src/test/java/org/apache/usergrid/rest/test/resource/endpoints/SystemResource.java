@@ -19,8 +19,11 @@ package org.apache.usergrid.rest.test.resource.endpoints;
 
 
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 
@@ -33,18 +36,33 @@ public class SystemResource extends NamedResource {
         super( "system",context, parent );
     }
 
-    //Dirty hack for path resource in new branch of two-dot-o
-    public SystemResource(final String name,final ClientContext context, final UrlResource parent ) {
-        super( name,context, parent );
-    }
-
 
     public DatabaseResource database() {
         return new DatabaseResource(context, this);
     }
 
-    public SystemResource addToPath( String pathPart ) {
-        return new SystemResource( pathPart, context, this );
+
+    public ApplicationsResource applications(String appid) {
+        return new ApplicationsResource(appid,context,this);
+    }
+
+    public class ApplicationsResource extends NamedResource {
+
+        public ApplicationsResource(final String appid, final ClientContext context, final UrlResource parent) {
+            super( "applications/" + appid, context, parent );
+        }
+
+        public ApiResponse delete(QueryParameters queryParameters) {
+
+            WebTarget resource = getTarget();
+            resource = addParametersToResource( resource, queryParameters );
+
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+                .credentials( "superuser", "superpassword" ).build();
+
+            return resource.register( feature ).request().delete( ApiResponse.class );
+
+        }
     }
 
     public ApiResponse put(){

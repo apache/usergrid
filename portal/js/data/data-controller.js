@@ -162,7 +162,6 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       }else{
         ug.createCollectionWithEntity($scope.newCollection.name, $scope.newCollection.entity);
         ug.getTopCollections();
-        $rootScope.$broadcast('alert', 'success', 'Collection created successfully.');
         $scope.hideModal(modalId)
       }
     };

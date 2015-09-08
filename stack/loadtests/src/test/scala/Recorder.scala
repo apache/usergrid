@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import io.gatling.recorder.GatlingRecorder
 import io.gatling.recorder.config.RecorderPropertiesBuilder
-import io.gatling.recorder.controller.RecorderController
 
 object Recorder extends App {
 
 	val props = new RecorderPropertiesBuilder
 	props.simulationOutputFolder(IDEPathHelper.recorderOutputDirectory.toString)
-	props.simulationPackage("org.apache.usergrid")
-	props.requestBodiesFolder(IDEPathHelper.requestBodiesDirectory.toString)
+	props.simulationPackage("${package}")
+	props.bodiesFolder(IDEPathHelper.bodiesDirectory.toString)
 
-	RecorderController(props.build, Some(IDEPathHelper.recorderConfigFile))
+	GatlingRecorder.fromMap(props.build, Some(IDEPathHelper.recorderConfigFile))
 }

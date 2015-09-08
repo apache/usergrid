@@ -106,7 +106,7 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
 
         //create the mvcc entity for the next stage
         final MvccEntityImpl nextStage = new MvccEntityImpl(
-            entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+            entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent(), 0 );
 
 
         return new CollectionIoEvent<MvccEntity>( applicationScope, nextStage );

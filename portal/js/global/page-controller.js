@@ -322,7 +322,6 @@ AppServices.Controllers.controller('PageCtrl',
       $rootScope.$emit('loginSuccesful', user, organizations, applications);
       $rootScope.$broadcast('checkAuthentication-success');
       $scope.applyScope(function() {
-        $scope.deferredLogin.resolve();
         $location.path('/org-overview');
       })
     });

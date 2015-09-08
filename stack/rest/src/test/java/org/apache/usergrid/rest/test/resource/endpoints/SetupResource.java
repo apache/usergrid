@@ -34,7 +34,7 @@ public class SetupResource extends NamedResource {
         super("setup",context,parent);
     }
 
-    public Entity get(QueryParameters queryParameters){
+    public Entity put(QueryParameters queryParameters){
 
         WebTarget resource = getTarget();
         resource = addParametersToResource( resource, queryParameters );

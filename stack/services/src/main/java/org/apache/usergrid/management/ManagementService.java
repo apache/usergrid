@@ -30,11 +30,13 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.apache.usergrid.services.ServiceResults;
 
 import com.google.common.collect.BiMap;
+import rx.Observable;
 
 
 public interface ManagementService {
@@ -332,4 +334,17 @@ public interface ManagementService {
     public void deleteApplication(UUID applicationId) throws Exception;
 
     public ApplicationInfo restoreApplication(UUID applicationId) throws Exception;
+
+    long getApplicationSize(final UUID applicationId);
+
+    long getCollectionSize(final UUID applicationId, final String collectionName);
+
+    Map<String,Long> getEachCollectionSize(final UUID applicationId);
+
+    /**
+     * will delete all entities
+     * @param applicationId
+     * @return
+     */
+    Observable<Id> deleteAllEntities(UUID applicationId);
 }
