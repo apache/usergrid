@@ -51,7 +51,7 @@ class PostCustomEntitySimulation extends Simulation {
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
   val feeder = FeederGenerator.generateCustomEntityInfinite(0)
-  val httpConf = Settings.httpConf
+  val httpConf = Settings.httpAppConf
 
   val scnToRun = scenario("POST custom entities")
     .feed(feeder)

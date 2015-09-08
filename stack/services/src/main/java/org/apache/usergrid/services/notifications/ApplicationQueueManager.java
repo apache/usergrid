@@ -36,7 +36,7 @@ public interface ApplicationQueueManager {
 
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
-    public static final  String DEFAULT_QUEUE_NAME = "push_v1";
+    public static final  String DEFAULT_QUEUE_NAME = "push"; //keep this short as AWS limits queue name size to 80 chars
 
     /**
      * send notification to queue

@@ -96,7 +96,9 @@ public class CommonModule extends AbstractModule {
          */
 
         install(new GuicyFigModule(RxSchedulerFig.class));
+
         install(new GuicyFigModule(ClusterFig.class));
+        bind(SettingsValidationCluster.class).asEagerSingleton(); //validate props from ClusterFig on startup
 
         bind(RxTaskScheduler.class).to(RxTaskSchedulerImpl.class);
     }

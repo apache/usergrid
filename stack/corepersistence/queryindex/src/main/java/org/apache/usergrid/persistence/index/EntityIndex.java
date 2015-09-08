@@ -39,34 +39,42 @@ public interface EntityIndex extends CPManager {
 
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
-     * @param indexSuffix index name
+     *
+     * @param indexSuffix      index name
      * @param shards
      * @param replicas
      * @param writeConsistency
      */
-     void addIndex(
-         final String indexSuffix,
-         final int shards,
-         final int replicas,
-         final String writeConsistency
-     );
+    void addIndex(
+        final String indexSuffix,
+        final int shards,
+        final int replicas,
+        final String writeConsistency
+    );
 
     /**
      * Refresh the index.
      */
-     Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync();
+    Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync();
 
 
     /**
      * Check health of cluster.
      */
-     Health getClusterHealth();
+    Health getClusterHealth();
 
     /**
      * Check health of this specific index.
      */
-     Health getIndexHealth();
+    Health getIndexHealth();
 
+
+    /**
+     * get total entity size by an edge ->   "term":{"edgeName":"zzzcollzzz|roles"}
+     * @param edge
+     * @return
+     */
+    long getEntitySize(final SearchEdge edge);
 
     /**
      * Initialize the index if necessary.  This is an idempotent operation and should not create an index
@@ -82,48 +90,54 @@ public interface EntityIndex extends CPManager {
 
     /**
      * Search on every document in the specified search edge.  Also search by the types if specified
-     * @param searchEdge The edge to search on
+     *
+     * @param searchEdge  The edge to search on
      * @param searchTypes The search types to search
-     * @param query The query to execute
-     * @param limit The limit of values to return
-     * @param offset The offset to query on
+     * @param query       The query to execute
+     * @param limit       The limit of values to return
+     * @param offset      The offset to query on
      * @return
      */
-    CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                             final int limit, final int offset );
+    CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                            final int limit, final int offset);
 
 
     /**
      * Same as search, just iterates all documents that match the index edge exactly.
-     * @param edge The edge to search on
+     *
+     * @param edge     The edge to search on
      * @param entityId The entity that the searchEdge is connected to.
      * @return
      */
-    CandidateResults getAllEdgeDocuments( final IndexEdge edge, final Id entityId );
+    CandidateResults getAllEdgeDocuments(final IndexEdge edge, final Id entityId);
 
     /**
      * Returns all entity documents that match the entityId and come before the marked version
-     * @param entityId The entityId to match when searching
+     *
+     * @param entityId      The entityId to match when searching
      * @param markedVersion The version that has been marked for deletion. All version before this one must be deleted.
      * @return
      */
-    CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion );
+    CandidateResults getAllEntityVersionsBeforeMarkedVersion(final Id entityId, final UUID markedVersion);
 
     /**
      * delete all application records
+     *
      * @return
      */
     Observable deleteApplication();
 
     /**
      * Get the indexes for an alias
+     *
      * @param aliasType name of alias
      * @return list of index names
      */
-    String[] getIndexes( final AliasType aliasType );
+    String[] getIndexes(final AliasType aliasType);
 
     /**
      * get all unique indexes
+     *
      * @return
      */
     String[] getIndexes();

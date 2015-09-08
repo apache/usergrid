@@ -50,7 +50,7 @@ class PutCustomEntitySimulation extends Simulation {
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
   val feeder = FeederGenerator.generateCustomEntityPutInfinite(0)
-  val httpConf = Settings.httpConf
+  val httpConf = Settings.httpAppConf
 
   val scnToRun = scenario("PUT custom entities")
     .feed(feeder)

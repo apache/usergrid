@@ -17,15 +17,17 @@
 package org.apache.usergrid.settings
 
 import java.io.{PrintWriter, FileOutputStream}
+import java.net.URLDecoder
+import java.util
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.bind.DatatypeConverter
 import io.gatling.http.Predef._
+import io.gatling.core.Predef._
 import io.gatling.http.config.HttpProtocolBuilder
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums._
 import org.apache.usergrid.helpers.Utils
-
 import scala.collection.mutable
 
 object Settings {
@@ -71,14 +73,44 @@ object Settings {
   // load configuration settings via property or default
   val org = initStrSetting(ConfigProperties.Org)
   val app = initStrSetting(ConfigProperties.App)
+  val allApps: Boolean = app == "*"
   val adminUser = initStrSetting(ConfigProperties.AdminUser)
   val adminPassword = initStrSetting(ConfigProperties.AdminPassword)
 
   private val cfgBaseUrl = initStrSetting(ConfigProperties.BaseUrl)
   val baseUrl = if (cfgBaseUrl.takeRight(1) == "/") cfgBaseUrl.dropRight(1) else cfgBaseUrl
-  val baseAppUrl:String = baseUrl + "/" + org + "/" + app
+  def orgUrl(org: String): String = {
+    baseUrl + "/" + org
+  }
+  def appUrl(app: String): String = {
+    orgUrl(org) + "/" + app
+  }
+  val managementUrl = baseUrl + "/management/organizations" + org
+  val baseOrgUrl = orgUrl(org)
+  val baseAppUrl = appUrl(app)
 
-  val httpConf: HttpProtocolBuilder = http.baseURL(baseAppUrl)
+  private def httpConf(baseUrl: String): HttpProtocolBuilder = {
+    http
+      .baseURL(baseUrl)
+      .connection("keep-alive")
+      .extraInfoExtractor {
+        i =>
+          if (Settings.printFailedRequests && i.status == io.gatling.core.result.message.KO) {
+            println(s"==============")
+            println(s"Request: ${i.request.getMethod} ${i.request.getUrl}")
+            println(s"body:")
+            println(s"  ${i.request.getStringData}")
+            println(s"==============")
+            println(s"Response: ${i.response.statusCode.getOrElse(-1)}")
+            println(s"body:")
+            println(s"  ${i.response.body.string}")
+            println(s"==============")
+          }
+          Nil
+      }
+  }
+  val httpOrgConf: HttpProtocolBuilder = httpConf(baseOrgUrl)
+  val httpAppConf: HttpProtocolBuilder = httpConf(baseAppUrl)
   val authType = initStrSetting(ConfigProperties.AuthType)
   val tokenType = initStrSetting(ConfigProperties.TokenType)
 
@@ -108,8 +140,6 @@ object Settings {
 
   val rampTime:Int = initIntSetting(ConfigProperties.RampTime) // in seconds
   val throttle:Int = initIntSetting(ConfigProperties.Throttle) // in seconds
-  val rpsTarget:Int = initIntSetting(ConfigProperties.RpsTarget) // requests per second target
-  val rpsRampTime:Int = initIntSetting(ConfigProperties.RpsRampTime) // in seconds
   val holdDuration:Int = initIntSetting(ConfigProperties.HoldDuration) // in seconds
 
   // Geolocation settings
@@ -146,6 +176,16 @@ object Settings {
   val entityProgressCount:Long = initLongSetting(ConfigProperties.EntityProgressCount)
   private val logEntityProgress: Boolean = entityProgressCount > 0L
   val injectionList = initStrSetting(ConfigProperties.InjectionList)
+  val printFailedRequests:Boolean = initBoolSetting(ConfigProperties.PrintFailedRequests)
+  val getViaQuery:Boolean = initBoolSetting(ConfigProperties.GetViaQuery)
+  private val queryParamConfig = initStrSetting(ConfigProperties.QueryParams)
+  val queryParamMap: Map[String,String] = mapFromQueryParamConfigString(queryParamConfig)
+  val csvFeedPattern = initStrSetting(ConfigProperties.CsvFeedPattern)
+
+  val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
+  val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
+  val multiPropertySizeInK:Int = initIntSetting(ConfigProperties.MultiPropertySizeInK)
+  val entityNumberProperty = initStrSetting(ConfigProperties.EntityNumberProperty)
 
   // Entity update
   val updateProperty = initStrSetting(ConfigProperties.UpdateProperty)
@@ -415,6 +455,7 @@ object Settings {
     } else {
       println(s"SearchLimit:$searchLimit  SearchQuery:$searchQuery")
     }
+    if (queryParamConfig != "") println(s"Extra query params: $queryParamConfig")
     println()
     println(s"Overall: NumEntities:$totalNumEntities  Seed:$overallEntitySeed  Workers:$entityWorkerCount")
     println(s"Worker:  NumEntities:$numEntities  Seed:$entitySeed  WorkerNum:$entityWorkerNum")
@@ -423,7 +464,10 @@ object Settings {
     println(s"Constant: UsersPerSec:$constantUsersPerSec  Time:$constantUsersDuration")
     println(s"EndCondition:$endConditionStr")
     println()
-    if (feedUuids) println(s"Feed CSV: $feedUuidFilename")
+    if (feedUuids) {
+      println(s"Feed CSV: $feedUuidFilename")
+      println(s"Feed pattern: $csvFeedPattern")
+    }
     if (feedAuditUuids) println(s"Audit Feed CSV: $feedAuditUuidFilename")
     if (captureUuids) println(s"Capture CSV:$captureUuidFilename")
     if (captureAuditUuids) {
@@ -442,6 +486,23 @@ object Settings {
     println()
     println("-----------------------------------------------------------------------------")
     println()
+  }
+
+  def mapFromQueryParamConfigString(queryParamConfigString: String): Map[String,String] = {
+    val params = mutable.Map[String,String]()
+    val paramStrings:Array[String] = queryParamConfigString split "&"
+    for (i <- paramStrings.indices) {
+      val param = paramStrings(i)
+      val pair = param split "="
+      val key = URLDecoder.decode(pair(0), "UTF-8")
+      val value = pair.length match  {
+        case l if l > 1 => URLDecoder.decode(pair(1), "UTF-8")
+        case _ => ""
+      }
+      params(key) = value
+      println(s"QueryParam $key = $value")
+    }
+    params.toMap
   }
 
   printSettingsSummary(false)

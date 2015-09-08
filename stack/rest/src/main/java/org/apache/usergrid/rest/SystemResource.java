@@ -34,8 +34,8 @@ import javax.ws.rs.core.UriInfo;
 @Component
 @Scope( "singleton" )
 @Produces( {
-        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript"
+    MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+    "application/ecmascript", "text/jscript"
 } )
 public class SystemResource extends AbstractContextResource {
 
@@ -49,38 +49,13 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
-    @Path( "database/setup" )
-    @JSONP
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public ApiResponse getSetup( @Context UriInfo ui,
-                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
 
-        ApiResponse response = createApiResponse();
-        response.setAction( "cassandra setup" );
-
-        logger.info( "Setting up Cassandra" );
-
-
-        emf.setup();
-
-
-        management.setup();
-
-        response.setSuccess();
-
-        return response;
-    }
-
-
-    @RequireSystemAccess
-    @GET
     @Path( "superuser/setup" )
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getSetupSuperuser( @Context UriInfo ui,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
+           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "superuser setup" );
@@ -99,11 +74,25 @@ public class SystemResource extends AbstractContextResource {
         return response;
     }
 
+
+
     @Path( "migrate" )
-    public MigrateResource migrate(){
+    public MigrateResource migrate() {
         return getSubResource( MigrateResource.class );
     }
 
+
     @Path( "index" )
-    public IndexResource index() { return getSubResource(IndexResource.class); }
+    public IndexResource index() { return getSubResource( IndexResource.class ); }
+
+
+    @Path( "database" )
+    public DatabaseResource database() {
+        return getSubResource( DatabaseResource.class );
+    }
+
+    @Path( "applications" )
+    public ApplicationsResource applications() {
+        return getSubResource( ApplicationsResource.class );
+    }
 }

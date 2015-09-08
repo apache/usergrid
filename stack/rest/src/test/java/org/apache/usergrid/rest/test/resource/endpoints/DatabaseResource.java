@@ -36,4 +36,8 @@ public class DatabaseResource extends NamedResource {
     public SetupResource setup(){
         return new SetupResource (context, this);
     }
+
+    public BoostrapResource bootstrap(){
+          return new BoostrapResource (context, this);
+      }
 }

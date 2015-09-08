@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import scala.tools.nsc.io.File
-import scala.tools.nsc.io.Path.string2path
+import java.nio.file.Path
+
+import io.gatling.core.util.PathHelper._
 
 object IDEPathHelper {
 
-	val gatlingConfUrl = getClass.getClassLoader.getResource("gatling.conf").getPath
-	val projectRootDir = File(gatlingConfUrl).parents(2)
+	val gatlingConfUrl: Path = getClass.getClassLoader.getResource("gatling.conf").toURI
+	val projectRootDir = gatlingConfUrl.ancestor(3)
 
 	val mavenSourcesDirectory = projectRootDir / "src" / "test" / "scala"
 	val mavenResourcesDirectory = projectRootDir / "src" / "test" / "resources"
@@ -28,10 +29,10 @@ object IDEPathHelper {
 	val mavenBinariesDirectory = mavenTargetDirectory / "test-classes"
 
 	val dataDirectory = mavenResourcesDirectory / "data"
-	val requestBodiesDirectory = mavenResourcesDirectory / "request-bodies"
+	val bodiesDirectory = mavenResourcesDirectory / "bodies"
 
 	val recorderOutputDirectory = mavenSourcesDirectory
 	val resultsDirectory = mavenTargetDirectory / "results"
 
-	val recorderConfigFile = (mavenResourcesDirectory / "recorder.conf").toFile
+	val recorderConfigFile = mavenResourcesDirectory / "recorder.conf"
 }

@@ -22,8 +22,6 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
-import static org.glassfish.jersey.client.authentication.HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME;
-import static org.glassfish.jersey.client.authentication.HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD;
 
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -103,7 +101,11 @@ public class NamedResource implements UrlResource {
         }
 
         if ( parameters.getLimit() != null ) {
-             resource = resource.queryParam("limit", parameters.getLimit().toString());
+            resource = resource.queryParam("limit", parameters.getLimit().toString());
+        }
+
+        if ( parameters.getConnections() != null ) {
+            resource = resource.queryParam("connections", parameters.getConnections());
         }
         //We can also post the params as queries
         if ( parameters.getFormPostData().size() > 0){
@@ -170,7 +172,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public ApiResponse post(Map map) {
-        return post( true, ApiResponse.class, map, null, false );
+        return post(true, ApiResponse.class, map, null, false);
 
     }
 
@@ -287,7 +289,6 @@ public class NamedResource implements UrlResource {
         return resource.request()
             .accept( MediaType.APPLICATION_JSON )
             .get( gt );
-
     }
 
     public String getMatrix() {
@@ -305,13 +306,13 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse put( boolean useToken, byte[] data, MediaType type ) {
-        WebTarget resource = getTarget(useToken );
+        WebTarget resource = getTarget( useToken );
         return resource.request().put(
             javax.ws.rs.client.Entity.entity(data, type), ApiResponse.class );
     }
 
     public ApiResponse put( byte[] data, MediaType type ) {
-        return put( true, data, type );
+        return put(true, data, type);
     }
 
     public ApiResponse put( boolean useToken, FormDataMultiPart multiPartForm ) {
@@ -321,7 +322,7 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse put( FormDataMultiPart multiPartForm ) {
-        return put( true, multiPartForm );
+        return put(true, multiPartForm);
     }
 
     public InputStream getAssetAsStream( boolean useToken ) {
@@ -330,7 +331,7 @@ public class NamedResource implements UrlResource {
     }
 
     public InputStream getAssetAsStream() {
-        return getAssetAsStream( true );
+        return getAssetAsStream(true);
     }
 
     public ApiResponse delete( ) {
@@ -339,5 +340,13 @@ public class NamedResource implements UrlResource {
 
     public ApiResponse delete( boolean useToken ) {
         return getTarget(useToken).request().delete( ApiResponse.class );
+    }
+
+    public ApiResponse delete( boolean useToken, QueryParameters queryParameters ) {
+        WebTarget resource = getTarget(useToken);
+        if(queryParameters!=null) {
+            resource = addParametersToResource(resource, queryParameters);
+        }
+        return resource.request().delete( ApiResponse.class );
     }
 }

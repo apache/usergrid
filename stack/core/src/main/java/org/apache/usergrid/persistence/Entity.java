@@ -68,7 +68,9 @@ public interface Entity extends EntityRef, Comparable<Entity> {
     @JsonIgnore
     public Map<String, Object> getProperties();
 
-    public void setProperties( Map<String, Object> properties );
+    void setProperties( Map<String, Object> properties );
+
+    void setProperties(org.apache.usergrid.persistence.model.entity.Entity cpEntity);
 
     public void addProperties( Map<String, Object> properties );
 
@@ -102,4 +104,9 @@ public interface Entity extends EntityRef, Comparable<Entity> {
 
     @JsonAnyGetter
     public abstract Map<String, Object> getDynamicProperties();
+
+    @JsonIgnore
+    long getSize();
+    void setSize(long size);
+
 }
