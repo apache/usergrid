@@ -132,6 +132,7 @@ public class ManagementServiceImpl implements ManagementService {
     public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
     private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
+    private static final String ORGANIZATION_CONFIG_DICTIONARY = "orgConfig";
     public static final String REGISTRATION_REQUIRES_ADMIN_APPROVAL = "registration_requires_admin_approval";
     public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
     public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
@@ -3091,6 +3092,89 @@ public class ManagementServiceImpl implements ManagementService {
             return false;
         else
             return Boolean.parseBoolean(obj);
+    }
+
+
+    @Override
+    public OrganizationConfig getOrganizationConfigByName( String organizationName ) throws Exception {
+
+        if ( organizationName == null ) {
+            return null;
+        }
+
+        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+        EntityRef ref = em.getAlias( Group.ENTITY_TYPE, organizationName );
+        if ( ref == null ) {
+            return null;
+        }
+        return getOrganizationConfigByUuid( ref.getUuid() );
+    }
+
+
+    @Override
+    public OrganizationConfig getOrganizationConfigByUuid( UUID id ) throws Exception {
+
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        Entity entity = em.get( new SimpleEntityRef( Group.ENTITY_TYPE, id ) );
+        if ( entity == null ) {
+            return null;
+        }
+        Map properties = em.getDictionaryAsMap( entity, ORGANIZATION_CONFIG_DICTIONARY );
+        OrganizationConfig orgConfig = new OrganizationConfig( entity.getProperties() );
+        orgConfig.setProperties( properties );
+        return orgConfig;
+    }
+
+
+    @Override
+    public Map<String, Object> getOrganizationConfigData( OrganizationConfig organizationConfig ) throws Exception {
+
+        Map<String, Object> jsonOrganizationConfig = new HashMap<>();
+        jsonOrganizationConfig.putAll( JsonUtils.toJsonMap( organizationConfig.getProperties() ) );
+
+        return jsonOrganizationConfig;
+    }
+
+
+    @Override
+    public OrganizationConfig getOrganizationConfigForApplication( UUID applicationInfoId ) throws Exception {
+
+        if ( applicationInfoId == null ) {
+            return null;
+        }
+
+        final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+
+        Results r = em.getSourceEntities(
+                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
+                ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
+
+        Entity entity = r.getEntity();
+
+        if ( entity != null ) {
+            Map properties = em.getDictionaryAsMap(entity, ORGANIZATION_CONFIG_DICTIONARY);
+            return new OrganizationConfig(entity.getUuid(), entity.getName(), properties);
+        }
+
+        return null;
+    }
+
+
+    @Override
+    public void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception {
+        Map<String, Object> properties = organizationConfig.getProperties();
+        if ( properties != null ) {
+            EntityRef organizationEntity = new SimpleEntityRef( Group.ENTITY_TYPE, organizationConfig.getUuid() );
+            EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+            for ( Map.Entry<String, Object> entry : properties.entrySet() ) {
+                if ( "".equals( entry.getValue() ) ) {
+                    em.removeFromDictionary( organizationEntity, ORGANIZATION_CONFIG_DICTIONARY, entry.getKey() );
+                } else {
+                    em.addToDictionary( organizationEntity, ORGANIZATION_CONFIG_DICTIONARY, entry.getKey(),
+                            entry.getValue() );
+                }
+            }
+        }
     }
 
 }
