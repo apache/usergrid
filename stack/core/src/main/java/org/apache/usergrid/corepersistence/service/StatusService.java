@@ -29,12 +29,12 @@ import java.util.UUID;
  * serializing job status or any kind
  */
 public interface StatusService  {
-    public Observable<UUID> setStatus(final UUID jobStatusId, final Status status, final Map<String,Object> data );
+    Observable<UUID> setStatus(final UUID applicationdId, final UUID jobStatusId, final Status status, final Map<String,Object> data );
 
-    public  Observable<JobStatus> getStatus(final UUID jobId);
+    Observable<JobStatus> getStatus(final UUID applicationdId, final UUID jobId);
 
     enum Status{
-        STARTED, INPROGRESS, COMPLETE, UNKNOWN;
+        STARTED, FAILED, INPROGRESS, COMPLETE, UNKNOWN;
     }
 
     class JobStatus{
