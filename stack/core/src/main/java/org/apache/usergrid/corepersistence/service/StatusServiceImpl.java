@@ -19,14 +19,34 @@
  */
 package org.apache.usergrid.corepersistence.service;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
 import rx.Observable;
 
-/**
- * Encapsulation of application operations.
- */
-public interface ApplicationService {
+import java.util.Map;
+import java.util.UUID;
 
-    Observable<Id> deleteAllEntities(final ApplicationScope applicationScope, final int limit);
+/**
+ * Implementation for serializing job status or any kind
+ */
+public class StatusServiceImpl implements StatusService {
+
+    private final MapManagerFactory mapManagerFactory;
+
+    @Inject
+    public StatusServiceImpl(final MapManagerFactory mapManagerFactory){
+        this.mapManagerFactory = mapManagerFactory;
+    }
+
+    @Override
+    public Observable<UUID> setStatus( UUID jobStatusId, Status status, Map<String, Object> data) {
+//        mapManager.putUuid(jobStatusId+"ke",);
+        return null;
+    }
+
+    @Override
+    public Observable<JobStatus> getStatus(UUID jobId) {
+        return null;
+    }
 }

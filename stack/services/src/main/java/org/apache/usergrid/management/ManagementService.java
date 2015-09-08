@@ -346,5 +346,5 @@ public interface ManagementService {
      * @param applicationId
      * @return
      */
-    Observable<Id> deleteAllEntities(UUID applicationId);
+    Observable<Id> deleteAllEntities(final UUID applicationId,final int limit);
 }

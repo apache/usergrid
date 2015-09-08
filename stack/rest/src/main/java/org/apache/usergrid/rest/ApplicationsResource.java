@@ -64,6 +64,7 @@ public class ApplicationsResource extends AbstractContextResource {
     public JSONWithPadding clearApplication( @Context UriInfo ui,
                                              @PathParam("applicationId") UUID applicationId,
                                              @QueryParam( "confirmApplicationName" ) String confirmApplicationName,
+                                             @QueryParam( "limit" ) int limit,
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
@@ -82,7 +83,7 @@ public class ApplicationsResource extends AbstractContextResource {
         logger.info( "clearing up application" );
         final AtomicInteger itemsDeleted = new AtomicInteger(0);
         try {
-            management.deleteAllEntities(applicationId)
+            management.deleteAllEntities(applicationId, limit)
                 .count()
                 .doOnNext(count -> itemsDeleted.set(count))
                 .toBlocking().lastOrDefault(0);

@@ -73,7 +73,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.graphManagerFactory = graphManagerFactory;
     }
     @Override
-    public Observable<Id> deleteAllEntities(ApplicationScope applicationScope) {
+    public Observable<Id> deleteAllEntities(final ApplicationScope applicationScope, final int limit) {
         if (applicationScope.getApplication().getUuid().equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)) {
             throw new IllegalArgumentException("Can't delete from management app");
         }
@@ -85,18 +85,23 @@ public class ApplicationServiceImpl  implements ApplicationService{
         MapManager mapManager = getMapManagerForTypes(applicationScope);
 
         Observable<Id> countObservable = allEntityIdsObservable.getEntities(appObservable)
-            //.map(entity -> eventBuilder.buildEntityDelete(applicationScope, entity.getId()).getEntitiesCompacted())
             .map(entityIdScope -> ((EntityIdScope) entityIdScope).getId())
             .filter(id -> {
                 final String type = InflectionUtils.pluralize(((Id) id).getType());
                 return ! (type.equals(Schema.COLLECTION_USERS) || type.equals(Schema.COLLECTION_GROUPS)
                     || type.equals(InflectionUtils.pluralize( Schema.TYPE_APPLICATION)) || type.equals(Schema.COLLECTION_ROLES));
-            })//skip application entity
-            .map(id -> {
-                entityCollectionManager.mark((Id) id)
-                    .mergeWith(graphManager.markNode((Id) id, createGraphOperationTimestamp())).toBlocking().last();
-                return id;
-            })
+            })//skip application entity and users and groups and roles
+            ;
+
+        if(limit>0){
+            countObservable = countObservable.limit(limit);
+        }
+
+        countObservable = countObservable.map(id -> {
+            entityCollectionManager.mark((Id) id)
+                .mergeWith(graphManager.markNode((Id) id, createGraphOperationTimestamp())).toBlocking().last();
+            return id;
+        })
             .doOnNext(id -> deleteAsync(mapManager, applicationScope, (Id) id));
         return countObservable;
     }

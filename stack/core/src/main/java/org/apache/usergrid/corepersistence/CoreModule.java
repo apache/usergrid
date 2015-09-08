@@ -169,6 +169,7 @@ public class CoreModule  extends AbstractModule {
 
         bind( ApplicationService.class ).to( ApplicationServiceImpl.class );
 
+        bind( StatusService.class ).to( StatusServiceImpl.class );
     }
 
 }
