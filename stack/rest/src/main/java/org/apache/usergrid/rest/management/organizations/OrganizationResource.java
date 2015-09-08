@@ -107,6 +107,7 @@ public class OrganizationResource extends AbstractContextResource {
 
     @GET
     @JSONP
+    @RequireOrganizationAccess
     @Produces({"application/json", "application/javascript"})
     public ApiResponse getOrganizationDetails( @Context UriInfo ui,
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
