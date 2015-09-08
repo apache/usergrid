@@ -63,7 +63,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @RequireAdminUserAccess
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getUserOrganizations( @Context UriInfo ui,
                                                  @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -81,7 +81,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @RequireAdminUserAccess
     @POST
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newOrganizationForUser( @Context UriInfo ui, Map<String, Object> json,
                                                    @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                    String callback ) throws Exception {
@@ -103,7 +103,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newOrganizationForUserFromForm( @Context UriInfo ui, Map<String, Object> json,
                                                            @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                            String callback,
@@ -130,7 +130,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @PUT
     @Path( "{organizationName}" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse addUserToOrganizationByOrganizationName( @Context UriInfo ui,
                                                                     @PathParam( "organizationName" )
                                                                     String organizationName, @QueryParam( "callback" )
@@ -151,7 +151,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @PUT
     @Path(RootResource.ORGANIZATION_ID_PATH)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse addUserToOrganizationByOrganizationId( @Context UriInfo ui, @PathParam( "organizationId" )
     String organizationIdStr, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
 
@@ -169,7 +169,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @DELETE
     @Path( RootResource.ORGANIZATION_ID_PATH )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse removeUserFromOrganizationByOrganizationId( @Context UriInfo ui,
                                                                        @PathParam( "organizationId" )
                                                                        String organizationIdStr,
@@ -191,7 +191,7 @@ public class OrganizationsResource extends AbstractContextResource {
     @DELETE
     @Path( "{organizationName}" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse removeUserFromOrganizationByOrganizationName( @Context UriInfo ui,
                                                                          @PathParam( "organizationName" )
                                                                          String organizationName,

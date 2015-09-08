@@ -55,7 +55,7 @@ public class EventsResource extends ServiceResource {
 
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueResults executeQueueGet(
         @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 

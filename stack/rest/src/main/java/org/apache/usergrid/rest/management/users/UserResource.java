@@ -92,7 +92,7 @@ public class UserResource extends AbstractContextResource {
 
     @PUT
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setUserInfo( @Context UriInfo ui, Map<String, Object> json,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -122,7 +122,7 @@ public class UserResource extends AbstractContextResource {
     @PUT
     @Path( "password" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -151,7 +151,7 @@ public class UserResource extends AbstractContextResource {
     @POST
     @Path( "password" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setUserPasswordPost( @Context UriInfo ui, Map<String, Object> json,
                                                 @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -163,7 +163,7 @@ public class UserResource extends AbstractContextResource {
     @GET
     @Path( "feed" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getFeed( @Context UriInfo ui,
                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -182,7 +182,7 @@ public class UserResource extends AbstractContextResource {
     @RequireAdminUserAccess
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getUserData( @Context UriInfo ui, @QueryParam( "ttl" ) long ttl,
                                         @QueryParam( "shallow" ) boolean shallow,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -387,7 +387,7 @@ public class UserResource extends AbstractContextResource {
     @GET
     @Path( "reactivate" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse reactivate( @Context UriInfo ui,
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -414,7 +414,7 @@ public class UserResource extends AbstractContextResource {
     @POST
     @Path( "revoketokens" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -435,7 +435,7 @@ public class UserResource extends AbstractContextResource {
     @PUT
     @Path( "revoketokens" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokensPut( @Context UriInfo ui,
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -446,7 +446,7 @@ public class UserResource extends AbstractContextResource {
     @POST
     @Path( "revoketoken" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                             @QueryParam( "token" ) String token ) throws Exception {
@@ -468,7 +468,7 @@ public class UserResource extends AbstractContextResource {
     @PUT
     @Path( "revoketoken" )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokenPut( @Context UriInfo ui,
                                            @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                            @QueryParam( "token" ) String token ) throws Exception {

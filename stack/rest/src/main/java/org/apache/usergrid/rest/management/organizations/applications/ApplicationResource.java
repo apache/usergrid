@@ -107,7 +107,7 @@ public class ApplicationResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getApplication(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
@@ -126,7 +126,7 @@ public class ApplicationResource extends AbstractContextResource {
     @GET
     @Path("credentials")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getCredentials(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
@@ -147,7 +147,7 @@ public class ApplicationResource extends AbstractContextResource {
     @POST
     @Path("credentials")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse generateCredentials( @Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
@@ -169,7 +169,7 @@ public class ApplicationResource extends AbstractContextResource {
     @Consumes(APPLICATION_JSON)
     @RequireOrganizationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse configureProvider(
             @Context UriInfo ui,
             @QueryParam("provider_key") String siaProvider,
@@ -396,7 +396,7 @@ public class ApplicationResource extends AbstractContextResource {
     @PUT
     @RequireOrganizationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePut(  @Context UriInfo ui, String body,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
@@ -418,7 +418,7 @@ public class ApplicationResource extends AbstractContextResource {
     @DELETE
     @RequireOrganizationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeDelete(  @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,
         @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {

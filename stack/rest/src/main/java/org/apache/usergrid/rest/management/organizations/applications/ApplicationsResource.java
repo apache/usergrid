@@ -69,7 +69,7 @@ public class ApplicationsResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getOrganizationApplications(
         @Context UriInfo ui,
         @QueryParam( "deleted" ) @DefaultValue( "false" ) Boolean deleted, // only return deleted apps if true
@@ -89,7 +89,7 @@ public class ApplicationsResource extends AbstractContextResource {
     @POST
     @Consumes( MediaType.APPLICATION_JSON )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                           @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                           String callback ) throws Exception {
@@ -102,7 +102,7 @@ public class ApplicationsResource extends AbstractContextResource {
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse newApplicationForOrganizationFromForm( @Context UriInfo ui, Map<String, Object> json,
                                                                   @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                                   String callback,

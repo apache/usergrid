@@ -91,7 +91,7 @@ public class QueueResource extends AbstractContextResource {
     @Path("properties")
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Queue getProperties( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -106,7 +106,7 @@ public class QueueResource extends AbstractContextResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Queue putProperties( @Context UriInfo ui, Map<String, Object> json,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -119,7 +119,7 @@ public class QueueResource extends AbstractContextResource {
 
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Object executeGet( @Context UriInfo ui, @QueryParam("start") String firstQueuePath,
                                        @QueryParam("limit") @DefaultValue("10") int limit,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
@@ -143,7 +143,7 @@ public class QueueResource extends AbstractContextResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueResults executePost( @Context UriInfo ui, Object body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -165,7 +165,7 @@ public class QueueResource extends AbstractContextResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Map<String, Object> executePut( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -180,7 +180,7 @@ public class QueueResource extends AbstractContextResource {
 
     @DELETE
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Queue executeDelete(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
         throw new NotImplementedException( "Queue delete is not implemented yet" );

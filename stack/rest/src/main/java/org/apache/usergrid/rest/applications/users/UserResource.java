@@ -84,7 +84,7 @@ public class UserResource extends ServiceResource {
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -104,7 +104,7 @@ public class UserResource extends ServiceResource {
     @PUT
     @Path("password")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -150,7 +150,7 @@ public class UserResource extends ServiceResource {
     @POST
     @Path("password")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setUserPasswordPost( @Context UriInfo ui, Map<String, Object> json,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -161,7 +161,7 @@ public class UserResource extends ServiceResource {
     @POST
     @Path("deactivate")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse deactivate( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
@@ -179,7 +179,7 @@ public class UserResource extends ServiceResource {
     @GET
     @Path("sendpin")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse sendPin( @Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -203,7 +203,7 @@ public class UserResource extends ServiceResource {
     @POST
     @Path("sendpin")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse postSendPin( @Context UriInfo ui,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -215,7 +215,7 @@ public class UserResource extends ServiceResource {
     @Path("setpin")
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setPin( @Context UriInfo ui, @QueryParam("pin") String pin,
                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -241,7 +241,7 @@ public class UserResource extends ServiceResource {
     @Consumes("application/x-www-form-urlencoded")
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse postPin( @Context UriInfo ui, @FormParam("pin") String pin,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -267,7 +267,7 @@ public class UserResource extends ServiceResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse jsonPin( @Context UriInfo ui, JsonNode json,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -457,7 +457,7 @@ public class UserResource extends ServiceResource {
     @GET
     @Path("reactivate")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse reactivate( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -476,7 +476,7 @@ public class UserResource extends ServiceResource {
     @POST
     @Path("revoketokens")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -495,7 +495,7 @@ public class UserResource extends ServiceResource {
     @PUT
     @Path("revoketokens")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokensPut( @Context UriInfo ui,
                                             @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -506,7 +506,7 @@ public class UserResource extends ServiceResource {
     @POST
     @Path("revoketoken")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam("callback") @DefaultValue("callback") String callback,
                                             @QueryParam("token") String token ) throws Exception {
@@ -525,7 +525,7 @@ public class UserResource extends ServiceResource {
     @PUT
     @Path("revoketoken")
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse revokeTokenPut( @Context UriInfo ui,
                                            @QueryParam("callback") @DefaultValue("callback") String callback,
                                            @QueryParam("token") String token ) throws Exception {

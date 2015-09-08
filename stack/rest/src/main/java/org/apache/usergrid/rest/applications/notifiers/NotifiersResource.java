@@ -104,7 +104,7 @@ public class NotifiersResource extends ServiceResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Override
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeMultiPartPost(
             @Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback,

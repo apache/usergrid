@@ -40,7 +40,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 // TODO: text to JSON swapping for Jersey 2
 
 /**
- * A writer that will redirect requests for "text/html" to "application/json" if the value
+ * A writer that will redirect requests for "text/html" to MediaType.APPLICATION_JSON if the value
  * returned by the resource is an instance of JSONWithPadding
  *
  * @author tnine

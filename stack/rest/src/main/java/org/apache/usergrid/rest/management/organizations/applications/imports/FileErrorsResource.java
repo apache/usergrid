@@ -76,7 +76,7 @@ public class FileErrorsResource extends AbstractContextResource {
 
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getFileIncludes( @Context UriInfo ui, @QueryParam( "ql" ) String query, @QueryParam( "cursor" ) String cursor )
           throws Exception {
 
@@ -105,7 +105,7 @@ public class FileErrorsResource extends AbstractContextResource {
     @GET
     @Path( RootResource.ENTITY_ID_PATH )
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getFileIncludeById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 

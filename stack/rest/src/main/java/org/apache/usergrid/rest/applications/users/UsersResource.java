@@ -180,7 +180,7 @@ public class UsersResource extends ServiceResource {
     @Override
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -204,7 +204,7 @@ public class UsersResource extends ServiceResource {
     @Override
     @RequireApplicationAccess
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePost( @Context UriInfo ui, String body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {

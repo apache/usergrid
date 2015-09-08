@@ -83,7 +83,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
 
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueSet executeGet( @Context UriInfo ui, @QueryParam("start") String firstSubscriptionQueuePath,
                                        @QueryParam("limit") @DefaultValue("10") int limit,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
@@ -100,7 +100,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueSet executePost( @Context UriInfo ui, Map<String, Object> body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -114,7 +114,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueSet executePut( @Context UriInfo ui, Map<String, Object> body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -140,7 +140,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
 
     @DELETE
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueSet executeDelete( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {

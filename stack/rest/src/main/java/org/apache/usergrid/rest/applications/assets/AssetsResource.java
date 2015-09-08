@@ -82,7 +82,7 @@ public class AssetsResource extends ServiceResource {
     @RequireApplicationAccess
     @GET
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -96,7 +96,7 @@ public class AssetsResource extends ServiceResource {
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
-    @Produces({"application/json", "application/javascript"})
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
