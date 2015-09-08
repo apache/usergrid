@@ -341,6 +341,16 @@ public interface ManagementService {
 
     Map<String,Long> getEachCollectionSize(final UUID applicationId);
 
+    public OrganizationConfig getOrganizationConfigByName( String organizationName ) throws Exception;
+
+    public OrganizationConfig getOrganizationConfigByUuid( UUID id ) throws Exception;
+
+    public Map<String, Object> getOrganizationConfigData( OrganizationConfig organizationConfig ) throws Exception;
+
+    public OrganizationConfig getOrganizationConfigForApplication( UUID applicationId ) throws Exception;
+
+    public void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception;
+    
     /**
      * will delete all entities
      * @param applicationId
