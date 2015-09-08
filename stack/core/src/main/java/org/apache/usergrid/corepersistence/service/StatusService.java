@@ -19,14 +19,46 @@
  */
 package org.apache.usergrid.corepersistence.service;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
-/**
- * Encapsulation of application operations.
- */
-public interface ApplicationService {
+import java.util.Map;
+import java.util.UUID;
 
-    Observable<Id> deleteAllEntities(final ApplicationScope applicationScope, final int limit);
+/**
+ * serializing job status or any kind
+ */
+public interface StatusService  {
+    public Observable<UUID> setStatus(final UUID jobStatusId, final Status status, final Map<String,Object> data );
+
+    public  Observable<JobStatus> getStatus(final UUID jobId);
+
+    enum Status{
+        STARTED, INPROGRESS, COMPLETE, UNKNOWN;
+    }
+
+    class JobStatus{
+        private final UUID jobStatusId;
+        private final Status status;
+        private final Map<String, Object> data;
+
+        public JobStatus(final UUID jobStatusId, final Status status, final Map<String,Object> data){
+
+            this.jobStatusId = jobStatusId;
+            this.status = status;
+            this.data = data;
+        }
+
+        public Map<String, Object> getData() {
+            return data;
+        }
+
+        public Status getStatus() {
+            return status;
+        }
+
+        public UUID getJobStatusId() {
+            return jobStatusId;
+        }
+    }
 }

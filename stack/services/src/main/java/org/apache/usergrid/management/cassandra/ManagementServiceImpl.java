@@ -3068,13 +3068,13 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public Observable<Id> deleteAllEntities(UUID applicationId){
+    public Observable<Id> deleteAllEntities(final UUID applicationId,final int limit){
         if(applicationId.equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)){
             throw new IllegalArgumentException("Can't delete from management app");
         }
 
         ApplicationService service = injector.getInstance(ApplicationService.class);
-        return service.deleteAllEntities(CpNamingUtils.getApplicationScope(applicationId));
+        return service.deleteAllEntities(CpNamingUtils.getApplicationScope(applicationId),limit);
     }
 
     private String getProperty(String key) {
