@@ -28,7 +28,8 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import java.util.Map;
@@ -38,6 +39,8 @@ import java.util.UUID;
  * Implementation for serializing job status or any kind
  */
 public class StatusServiceImpl implements StatusService {
+
+    private static final Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
 
     private final MapManagerFactory mapManagerFactory;
     final static String statusKey = "status";
@@ -59,20 +62,21 @@ public class StatusServiceImpl implements StatusService {
             try {
                 final String dataString = MAPPER.writeValueAsString(data);
                 mapManager.putString(jobString + dataKey, dataString);
+                mapManager.putString(jobString + statusKey, status.toString());
+                sub.onNext(jobId);
+                sub.onCompleted();
             } catch (Exception e) {
+                logger.error("Failed to serialize map",e);
                 throw new RuntimeException(e);
             }
-            mapManager.putString(jobString + statusKey, status.toString());
-            sub.onNext(jobId);
-            sub.onCompleted();
+
         });
     }
 
     @Override
     public Observable<JobStatus> getStatus(final UUID applicationId, UUID jobId) {
-        final String jobString = StringUtils.sanitizeUUID(jobId);
-
         return Observable.create(subscriber -> {
+            final String jobString = StringUtils.sanitizeUUID(jobId);
             Id appId = CpNamingUtils.generateApplicationId(applicationId);
             final MapManager mapManager = mapManagerFactory.createMapManager(new MapScopeImpl(appId, "status"));
             try {
@@ -81,6 +85,7 @@ public class StatusServiceImpl implements StatusService {
                 subscriber.onNext(new JobStatus(jobId,status,data));
                 subscriber.onCompleted();
             }catch (Exception e){
+                logger.error("Failed to parse map",e);
                 throw new RuntimeException(e);
             }
         });
