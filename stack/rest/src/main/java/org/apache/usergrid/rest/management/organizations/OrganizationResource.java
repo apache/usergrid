@@ -21,6 +21,7 @@ import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.usergrid.management.ActivationState;
+import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.entities.Export;
@@ -363,5 +364,59 @@ public class OrganizationResource extends AbstractContextResource {
         return Response.status( SC_OK ).entity( entity).build();
     }
 
+
+    @RequireOrganizationAccess
+    @JSONP
+    @GET
+    @Path("config")
+    public ApiResponse getConfig( @Context UriInfo ui,
+                                      @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.info( "Get configuration for organization: " + organization.getUuid() );
+
+        // TODO: check for super user, @RequireSystemAccess didn't work
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "get organization configuration" );
+
+        // TODO: check for super user
+
+        OrganizationConfig orgConfig =
+                management.getOrganizationConfigByUuid( organization.getUuid() );
+
+        response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
+        // response.setOrganizationConfig( orgConfig );
+
+        return response;
+    }
+
+
+    @RequireOrganizationAccess
+    @Consumes(MediaType.APPLICATION_JSON)
+    @JSONP
+    @PUT
+    @Path("config")
+    public ApiResponse putConfig( @Context UriInfo ui, Map<String, Object> json,
+                                       @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.debug("Put configuration for organization: " + organization.getUuid());
+
+        ApiResponse response = createApiResponse();
+        response.setAction("put organization configuration");
+
+        // TODO: check for super user
+
+        // response.setParams(ui.getQueryParameters());
+
+        OrganizationConfig orgConfig =
+                management.getOrganizationConfigByUuid( organization.getUuid() );
+        orgConfig.addProperties(json);
+        management.updateOrganizationConfig(orgConfig);
+        response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
+
+        return response;
+    }
 
 }
