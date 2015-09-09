@@ -64,6 +64,7 @@ public class OrganizationsResource extends AbstractContextResource {
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
 
     public static final String ORGANIZATION_PROPERTIES = "properties";
+    public static final String ORGANIZATION_CONFIGURATION = "configuration";
 
     @Autowired
     private ApplicationCreator applicationCreator;
