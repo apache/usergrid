@@ -17,7 +17,8 @@
 package org.apache.usergrid.management;
 
 
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
@@ -162,15 +163,6 @@ public class OrganizationConfig {
 
     public void addProperties( Map<String, Object> properties ) {
         this.properties.putAll(properties);
-        /*for (Map.Entry<String,Object> entry : properties.entrySet()) {
-            if (entry.getValue() != null) {
-                // add to properties
-                this.properties.put(entry.getKey(), entry.getValue());
-            } else {
-                // remove from properties
-                this.properties.remove(entry.getKey());
-            }
-        }*/
 
         // add default values to properties map
         addDefaultsToProperties();

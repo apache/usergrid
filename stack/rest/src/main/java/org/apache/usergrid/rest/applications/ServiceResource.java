@@ -289,13 +289,17 @@ public class ServiceResource extends AbstractContextResource {
             } else {
                 if (connectionQueryParm != null) {
                     // unrecognized parameter
-                    logger.error(String.format("Invalid connections query parameter=%s, ignoring.", connectionQueryParm));
+                    logger.error(String.format(
+                        "Invalid connections query parameter=%s, ignoring.", connectionQueryParm));
                 }
                 // use the default query parameter functionality
-                OrganizationConfig orgConfig = management.getOrganizationConfigForApplication(services.getApplicationId());
+                OrganizationConfig orgConfig =
+                    management.getOrganizationConfigForApplication(services.getApplicationId());
                 String defaultConnectionQueryParm = orgConfig.getDefaultConnectionParam();
-                returnInboundConnections = (defaultConnectionQueryParm == "in") || (defaultConnectionQueryParm == "all");
-                returnOutboundConnections = (defaultConnectionQueryParm == "out") || (defaultConnectionQueryParm == "all");
+                returnInboundConnections =
+                    (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
+                returnOutboundConnections =
+                    (defaultConnectionQueryParm.equals("out")) || (defaultConnectionQueryParm.equals("all"));
            }
         }
 
