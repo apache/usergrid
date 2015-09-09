@@ -97,8 +97,7 @@ public class ApplicationsResource extends AbstractContextResource {
                 final AtomicInteger itemsDeleted = new AtomicInteger(0);
                 try {
                     management.deleteAllEntities(applicationId, limit)
-                        .count()
-                        .doOnNext(count -> itemsDeleted.set(count))
+                        .map(id -> itemsDeleted.incrementAndGet())
                         .doOnNext(count -> {
                             if( count % 100 == 0 ){
                                 Map<String,Object> map = new LinkedHashMap<>();
