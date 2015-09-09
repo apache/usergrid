@@ -28,5 +28,5 @@ import rx.Observable;
  */
 public interface ApplicationService {
 
-    Observable<Id> deleteAllEntities(ApplicationScope applicationScope);
+    Observable<Id> deleteAllEntities(final ApplicationScope applicationScope, final int limit);
 }
