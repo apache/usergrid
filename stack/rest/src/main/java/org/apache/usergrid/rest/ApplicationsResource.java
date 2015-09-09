@@ -89,7 +89,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
         response.setAction( "clear application" );
 
-        logger.info( "clearing up application" );
+        logger.info("clearing up application");
 
 
         final Thread delete = new Thread() {
@@ -102,16 +102,18 @@ public class ApplicationsResource extends AbstractContextResource {
                         .count()
                         .doOnNext(count -> itemsDeleted.set(count))
                         .doOnNext(count -> {
-                            if( count%100 == 0 ){
+                            if( count % 100 == 0 ){
                                 Map<String,Object> map = new LinkedHashMap<>();
                                 map.put("count",itemsDeleted.intValue());
-                                statusService.setStatus(applicationId, jobId, StatusService.Status.INPROGRESS,map);
+                                final StatusService statusService = injector.getInstance(StatusService.class);
+                                statusService.setStatus(applicationId, jobId, StatusService.Status.INPROGRESS,map).subscribe();
                             }
                         })
                         .doOnCompleted(() ->{
                             Map<String,Object> map = new LinkedHashMap<>();
                             map.put("count",itemsDeleted.intValue());
-                            statusService.setStatus(applicationId,jobId, StatusService.Status.FAILED,map);
+                            final StatusService statusService = injector.getInstance(StatusService.class);
+                            statusService.setStatus(applicationId,jobId, StatusService.Status.COMPLETE,map).subscribe();
                         })
                         .subscribe();
 
@@ -124,7 +126,7 @@ public class ApplicationsResource extends AbstractContextResource {
             }
         };
 
-        delete.setName( "Delete for app : "+applicationId + " job: "+jobId );
+        delete.setName("Delete for app : " + applicationId + " job: " + jobId);
         delete.setDaemon(true);
         delete.start();
 
@@ -132,17 +134,19 @@ public class ApplicationsResource extends AbstractContextResource {
 
         Map<String,Object> data = new HashMap<>();
         data.put("jobId",jobId);
+        data.put("status",StatusService.Status.STARTED);
         response.setData(data);
         response.setSuccess();
         return new JSONWithPadding( response, callback );
     }
+
     @RequireSystemAccess
     @GET
     @Path( "{applicationId}/job/{jobId}" )
     public JSONWithPadding getStatus( @Context UriInfo ui,
                                              @PathParam("applicationId") UUID applicationId,
                                             @PathParam("jobId") UUID jobId,
-                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) {
+                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception{
         final StatusService statusService = injector.getInstance(StatusService.class);
 
         final ApiResponse response = createApiResponse();
@@ -154,7 +158,7 @@ public class ApplicationsResource extends AbstractContextResource {
         Map<String,Object> data = new HashMap<>();
         data.put("jobId",jobId);
         data.put( "status", jobStatus.getStatus().toString() );
-        data.put( "metadata", jobStatus.getData().toString() );
+        data.put( "metadata", jobStatus.getData() );
         response.setData(data);
         response.setSuccess();
 
