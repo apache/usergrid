@@ -46,11 +46,28 @@ public class SystemResource extends NamedResource {
         return new ApplicationsResource(appid,context,this);
     }
 
+    public ApplicationsResource applications(String appid, String additionalPath) {
+        return new ApplicationsResource(appid+"/"+additionalPath,context,this);
+    }
+
     public class ApplicationsResource extends NamedResource {
 
         public ApplicationsResource(final String appid, final ClientContext context, final UrlResource parent) {
             super( "applications/" + appid, context, parent );
         }
+
+        public ApiResponse get(QueryParameters queryParameters){
+
+            WebTarget resource = getTarget();
+            resource = addParametersToResource( resource, queryParameters );
+
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+                .credentials( "superuser", "superpassword" ).build();
+
+            return resource.register( feature ).request().accept( MediaType.APPLICATION_JSON )
+                .get(ApiResponse.class);
+        }
+
 
         public ApiResponse delete(QueryParameters queryParameters) {
 
@@ -66,10 +83,7 @@ public class SystemResource extends NamedResource {
     }
 
     public ApiResponse put(){
-        ApiResponse
-            response = getTarget(true)
-                .request()
-                .accept(MediaType.APPLICATION_JSON)
+        ApiResponse response = getTarget(true).request().accept(MediaType.APPLICATION_JSON)
                 .put( javax.ws.rs.client.Entity.json(""), ApiResponse.class);
         return response;
     }

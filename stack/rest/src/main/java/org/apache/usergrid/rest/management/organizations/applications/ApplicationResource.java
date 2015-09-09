@@ -50,7 +50,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
