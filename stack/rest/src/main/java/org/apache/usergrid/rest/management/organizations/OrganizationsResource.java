@@ -58,6 +58,7 @@ public class OrganizationsResource extends AbstractContextResource {
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
 
     public static final String ORGANIZATION_PROPERTIES = "properties";
+    public static final String ORGANIZATION_CONFIGURATION = "configuration";
 
     @Autowired
     private ApplicationCreator applicationCreator;
@@ -90,8 +91,6 @@ public class OrganizationsResource extends AbstractContextResource {
         if ( organization == null ) {
             throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
-
-
 
         return getSubResource( OrganizationResource.class ).init(organization);
     }
