@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.service;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.util.StringUtils;
@@ -32,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -55,12 +57,16 @@ public class StatusServiceImpl implements StatusService {
 
     @Override
     public Observable<UUID> setStatus(final UUID applicationId, final UUID jobId, final Status status, final Map<String, Object> data) {
+        Preconditions.checkNotNull(applicationId, "app id is null");
+        Preconditions.checkNotNull(jobId, "job id is null");
+        Preconditions.checkNotNull(status, "status is null");
+        final Map<String,Object> dataMap = data != null ? data : new HashMap<String,Object>();
         return Observable.create(sub -> {
             final String jobString = StringUtils.sanitizeUUID(jobId);
             final Id appId = CpNamingUtils.generateApplicationId(applicationId);
             final MapManager mapManager = mapManagerFactory.createMapManager(new MapScopeImpl(appId, "status"));
             try {
-                final String dataString = MAPPER.writeValueAsString(data);
+                final String dataString = MAPPER.writeValueAsString(dataMap);
                 mapManager.putString(jobString + dataKey, dataString);
                 mapManager.putString(jobString + statusKey, status.toString());
                 sub.onNext(jobId);
@@ -75,14 +81,21 @@ public class StatusServiceImpl implements StatusService {
 
     @Override
     public Observable<JobStatus> getStatus(final UUID applicationId, UUID jobId) {
+        Preconditions.checkNotNull(applicationId, "app id is null");
+        Preconditions.checkNotNull(jobId, "job id is null");
         return Observable.create(subscriber -> {
             final String jobString = StringUtils.sanitizeUUID(jobId);
             Id appId = CpNamingUtils.generateApplicationId(applicationId);
             final MapManager mapManager = mapManagerFactory.createMapManager(new MapScopeImpl(appId, "status"));
             try {
-                final Map<String, Object> data = MAPPER.readValue(mapManager.getString(jobString+dataKey), Map.class);
-                final Status status = Status.valueOf(mapManager.getString(jobString+statusKey));
-                subscriber.onNext(new JobStatus(jobId,status,data));
+                String statusVal = mapManager.getString(jobString + statusKey);
+                if(statusVal==null){
+                    subscriber.onNext(null);
+                }else {
+                    final Map<String, Object> data = MAPPER.readValue(mapManager.getString(jobString + dataKey), Map.class);
+                    final Status status = Status.valueOf(statusVal);
+                    subscriber.onNext(new JobStatus(jobId,status,data));
+                }
                 subscriber.onCompleted();
             }catch (Exception e){
                 logger.error("Failed to parse map",e);
