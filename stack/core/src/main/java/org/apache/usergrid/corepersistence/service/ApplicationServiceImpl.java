@@ -22,10 +22,8 @@ package org.apache.usergrid.corepersistence.service;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
-import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -56,6 +54,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
     private final MapManagerFactory mapManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
 
+
     @Inject
     public ApplicationServiceImpl(AllEntityIdsObservable allEntityIdsObservable,
                                   EntityCollectionManagerFactory entityCollectionManagerFactory,
@@ -72,6 +71,8 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.mapManagerFactory = mapManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
     }
+
+
     @Override
     public Observable<Id> deleteAllEntities(final ApplicationScope applicationScope, final int limit) {
         if (applicationScope.getApplication().getUuid().equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)) {
@@ -80,7 +81,8 @@ public class ApplicationServiceImpl  implements ApplicationService{
 
         //EventBuilder eventBuilder = injector.getInstance(EventBuilder.class);
         Observable appObservable = Observable.just(applicationScope);
-        EntityCollectionManager entityCollectionManager = entityCollectionManagerFactory.createCollectionManager(applicationScope);
+        EntityCollectionManager entityCollectionManager =
+            entityCollectionManagerFactory.createCollectionManager(applicationScope);
         GraphManager graphManager = graphManagerFactory.createEdgeManager(applicationScope);
         MapManager mapManager = getMapManagerForTypes(applicationScope);
 
@@ -88,8 +90,10 @@ public class ApplicationServiceImpl  implements ApplicationService{
             .map(entityIdScope -> ((EntityIdScope) entityIdScope).getId())
             .filter(id -> {
                 final String type = InflectionUtils.pluralize(((Id) id).getType());
-                return ! (type.equals(Schema.COLLECTION_USERS) || type.equals(Schema.COLLECTION_GROUPS)
-                    || type.equals(InflectionUtils.pluralize( Schema.TYPE_APPLICATION)) || type.equals(Schema.COLLECTION_ROLES));
+                return ! (type.equals(Schema.COLLECTION_USERS)
+                    || type.equals(Schema.COLLECTION_GROUPS)
+                    || type.equals(InflectionUtils.pluralize( Schema.TYPE_APPLICATION))
+                    || type.equals(Schema.COLLECTION_ROLES));
             })//skip application entity and users and groups and roles
             ;
 
@@ -105,6 +109,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
             .doOnNext(id -> deleteAsync(mapManager, applicationScope, (Id) id));
         return countObservable;
     }
+
 
     /**
      * 4. Delete all entity documents out of elasticsearch.
@@ -124,6 +129,8 @@ public class ApplicationServiceImpl  implements ApplicationService{
         }
 
     }
+
+
     /**
      * Get the map manager for uuid mapping
      */

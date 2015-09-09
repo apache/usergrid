@@ -19,7 +19,6 @@
  */
 package org.apache.usergrid.corepersistence.service;
 
-import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
 import java.util.Map;
@@ -37,7 +36,8 @@ public interface StatusService  {
      * @param data
      * @return job id
      */
-    Observable<UUID> setStatus(final UUID applicationdId, final UUID jobStatusId, final Status status, final Map<String,Object> data );
+    Observable<UUID> setStatus(
+        final UUID applicationdId, final UUID jobStatusId, final Status status, final Map<String,Object> data );
 
     /**
      * Get status based on app and job
