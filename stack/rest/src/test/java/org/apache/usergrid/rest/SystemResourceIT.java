@@ -24,6 +24,7 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
 import java.util.LinkedHashMap;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -52,7 +53,7 @@ public class SystemResourceIT extends AbstractRestIT {
     }
 
     @Test
-    public void testDeleteAllApplicationEntities() {
+    public void testDeleteAllApplicationEntities() throws Exception{
         int count = 10;
         for(int i =0; i<count;i++) {
             this.app().collection("tests").post(new Entity().chainPut("testval", "test"));
@@ -64,9 +65,23 @@ public class SystemResourceIT extends AbstractRestIT {
 
         org.apache.usergrid.rest.test.resource.model.ApiResponse result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
 
-        assertNotNull( result );
-        assertNotNull( "ok",result.getStatus() );
-        assertEquals(((LinkedHashMap) result.getData()).get("count"), count);
+        assertNotNull(result);
+        assertNotNull("ok", result.getStatus());
+        assertNotNull(((LinkedHashMap) result.getData()).get("jobId"));
+
+        String jobId = (String)((LinkedHashMap) result.getData()).get("jobId");
+        queryParameters = new QueryParameters();
+        for(int i = 0;i<10;i++ ) {
+            result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid(), "job/" + jobId).get(queryParameters);
+            String status = (String) ((LinkedHashMap) result.getData()).get("status");
+            if(status.equals("COMPLETE")){
+                break;
+            }else{
+                Thread.sleep(100);
+            }
+        }
+        assertEquals(((LinkedHashMap)((LinkedHashMap) result.getData()).get("metadata")).get("count"), 10);
+
     }
 
 

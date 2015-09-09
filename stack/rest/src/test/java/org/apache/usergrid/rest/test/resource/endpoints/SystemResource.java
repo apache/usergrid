@@ -48,9 +48,25 @@ public class SystemResource extends NamedResource {
     public ApplicationsResource applications(String appid) {
         return new ApplicationsResource(appid,context,this);
     }
+    public ApplicationsResource applications(String appid, String additionalPath) {
+        return new ApplicationsResource(appid+"/"+additionalPath,context,this);
+    }
     public class ApplicationsResource extends NamedResource {
         public ApplicationsResource(final String appid, final ClientContext context, final UrlResource parent ) {
             super( "applications/"+appid,context, parent );
+        }
+
+        public ApiResponse get(QueryParameters queryParameters){
+
+            WebResource resource = getResource();
+            resource = addParametersToResource( resource, queryParameters );
+
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+            resource.addFilter(httpBasicAuthFilter);
+
+            return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .get(ApiResponse.class);
         }
         public ApiResponse delete(QueryParameters queryParameters){
 
