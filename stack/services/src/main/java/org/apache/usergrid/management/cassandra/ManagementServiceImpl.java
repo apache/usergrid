@@ -18,16 +18,12 @@ package org.apache.usergrid.management.cassandra;
 
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Injector;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
-import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
-import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.service.AggregationService;
 import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
 import org.apache.usergrid.corepersistence.service.ApplicationService;
@@ -39,7 +35,6 @@ import org.apache.usergrid.management.*;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
@@ -70,7 +65,6 @@ import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import rx.*;
 import rx.Observable;
 
 import java.nio.ByteBuffer;
@@ -375,15 +369,16 @@ public class ManagementServiceImpl implements ManagementService {
             }
         } );
 
-        sm.newRequest( ServiceAction.POST, parameters( Schema.COLLECTION_GROUPS, organizationId, "activities" ), payload( properties ) )
-          .execute().getEntity();
+        sm.newRequest( ServiceAction.POST, parameters( Schema.COLLECTION_GROUPS, organizationId, "activities" ),
+            payload( properties ) ).execute().getEntity();
     }
 
 
     @Override
     public ServiceResults getOrganizationActivity( OrganizationInfo organization ) throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
-        return sm.newRequest( ServiceAction.GET, parameters( Schema.COLLECTION_GROUPS, organization.getUuid(), "feed" ) ).execute();
+        return sm.newRequest( ServiceAction.GET, parameters(
+            Schema.COLLECTION_GROUPS, organization.getUuid(), "feed" ) ).execute();
     }
 
 
@@ -391,8 +386,8 @@ public class ManagementServiceImpl implements ManagementService {
     public ServiceResults getOrganizationActivityForAdminUser( OrganizationInfo organization, UserInfo user )
             throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
-        return sm.newRequest( ServiceAction.GET,
-                parameters( Schema.COLLECTION_GROUPS, organization.getUuid(), "users", user.getUuid(), "feed" ) ).execute();
+        return sm.newRequest( ServiceAction.GET, parameters( Schema.COLLECTION_GROUPS, organization.getUuid(),
+            "users", user.getUuid(), "feed" ) ).execute();
     }
 
 
@@ -440,8 +435,8 @@ public class ManagementServiceImpl implements ManagementService {
          * Only lock on the target values. We don't want lock contention if another
          * node is trying to set the property do a different value
          */
-        Lock groupLock =
-                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, Schema.COLLECTION_GROUPS, PROPERTY_PATH );
+        Lock groupLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName,
+            Schema.COLLECTION_GROUPS, PROPERTY_PATH );
 
         Lock userLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), username, "users", "username" );
 
@@ -482,8 +477,8 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private OrganizationInfo createOrganizationInternal( UUID orgUuid, String organizationName, UserInfo user, boolean activated )
-            throws Exception {
+    private OrganizationInfo createOrganizationInternal(
+        UUID orgUuid, String organizationName, UserInfo user, boolean activated ) throws Exception {
         logger.debug("createOrganizationInternal1");
         return createOrganizationInternal( orgUuid, organizationName, user, activated, null );
     }
@@ -667,8 +662,8 @@ public class ManagementServiceImpl implements ManagementService {
         // still need the bimap to search for existing
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager(smf.getManagementAppId());
-        Results results =
-                em.getCollection(em.getApplicationRef(), Schema.COLLECTION_GROUPS, startResult, count, Level.ALL_PROPERTIES, false);
+        Results results = em.getCollection(em.getApplicationRef(),
+            Schema.COLLECTION_GROUPS, startResult, count, Level.ALL_PROPERTIES, false);
         List<OrganizationInfo> orgs = new ArrayList<OrganizationInfo>( results.size() );
         OrganizationInfo orgInfo;
         for ( Entity entity : results.getEntities() ) {
@@ -1253,7 +1248,8 @@ public class ManagementServiceImpl implements ManagementService {
         if ( verify( smf.getManagementAppId(), user.getUuid(), password ) ) {
             userInfo = getUserInfo( smf.getManagementAppId(), user );
 
-            boolean userIsSuperAdmin = properties.getSuperUser().isEnabled() && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
+            boolean userIsSuperAdmin = properties.getSuperUser().isEnabled()
+                && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
 
             boolean testUserEnabled = parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) );
             boolean userIsTestUser = testUserEnabled && properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL)
@@ -1746,7 +1742,8 @@ public class ManagementServiceImpl implements ManagementService {
         AggregationServiceFactory aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
         AggregationService aggregationService = aggregationServiceFactory.getAggregationService();
         ApplicationScope applicationScope =CpNamingUtils.getApplicationScope(applicationId);
-        return aggregationService.getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), collectionName));
+        return aggregationService.getSize(applicationScope,
+            CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), collectionName));
     }
 
 
@@ -2434,7 +2431,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendAdminUserConfirmedAwaitingActivationEmail( UserInfo user ) throws Exception {
         sendAdminUserEmail(user, "User Account Confirmed",
-                emailMsg( hashMap("confirmed_email",user.getEmail() ),PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION ) );
+                emailMsg( hashMap("confirmed_email",user.getEmail() ),
+                    PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION ) );
     }
 
 
@@ -2626,7 +2624,8 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_email_confirmation = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_EMAIL_CONFIRMATION );
-        return registration_requires_email_confirmation != null && registration_requires_email_confirmation.booleanValue();
+        return registration_requires_email_confirmation != null
+            && registration_requires_email_confirmation.booleanValue();
     }
 
 

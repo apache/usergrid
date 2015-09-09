@@ -35,6 +35,7 @@ import rx.Observable;
 import java.util.Map;
 import java.util.UUID;
 
+
 /**
  * Implementation for serializing job status or any kind
  */
@@ -53,8 +54,11 @@ public class StatusServiceImpl implements StatusService {
         this.mapManagerFactory = mapManagerFactory;
     }
 
+
     @Override
-    public Observable<UUID> setStatus(final UUID applicationId, final UUID jobId, final Status status, final Map<String, Object> data) {
+    public Observable<UUID> setStatus(
+        final UUID applicationId, final UUID jobId, final Status status, final Map<String, Object> data) {
+
         return Observable.create(sub -> {
             final String jobString = StringUtils.sanitizeUUID(jobId);
             final Id appId = CpNamingUtils.generateApplicationId(applicationId);
@@ -72,6 +76,7 @@ public class StatusServiceImpl implements StatusService {
 
         });
     }
+
 
     @Override
     public Observable<JobStatus> getStatus(final UUID applicationId, UUID jobId) {

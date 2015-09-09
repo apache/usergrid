@@ -23,10 +23,11 @@ import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
@@ -38,7 +39,6 @@ import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.providers.SignInAsProvider;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.services.ServiceManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,16 +50,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
-import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.core.util.Health;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.applications.ApplicationResource")
