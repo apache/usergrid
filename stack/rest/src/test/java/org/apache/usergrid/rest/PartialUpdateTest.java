@@ -98,8 +98,10 @@ public class PartialUpdateTest extends AbstractRestIT {
 
             // Verify that the location was updated correctly AND that
             // it is not the same object reference from the original POST
-            log.info(geolocation.get("latitude") + " != " + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()));
-            log.info(geolocation.get("longitude") + " != " + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("longitude").toString()));
+            log.info(geolocation.get("latitude") + " != "
+                + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()));
+            log.info(geolocation.get("longitude") + " != "
+                + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("longitude").toString()));
             assertNotSame(geolocation.get("latitude"),
                 Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()));
             assertEquals(geolocation.get("latitude").doubleValue(),

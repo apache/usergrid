@@ -70,7 +70,7 @@ public class SystemResource extends NamedResource {
             response = getTarget(true)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                .put( javax.ws.rs.client.Entity.json(null), ApiResponse.class);
+                .put( javax.ws.rs.client.Entity.json(""), ApiResponse.class);
         return response;
     }
 }
