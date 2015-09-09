@@ -60,7 +60,8 @@ public class SystemResourceIT extends AbstractRestIT {
         queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
         queryParameters.addParam("confirmApplicationName", this.clientSetup.getAppName());
 
-        org.apache.usergrid.rest.test.resource.model.ApiResponse result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
+        org.apache.usergrid.rest.test.resource.model.ApiResponse result =
+            clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
 
         assertNotNull( result );
         assertNotNull( "ok",result.getStatus() );

@@ -43,6 +43,6 @@ public class SetupResource extends NamedResource {
             .credentials( "superuser", "superpassword" ).build();
 
         return resource.register( feature ).request()
-            .accept( MediaType.APPLICATION_JSON ).get( Entity.class );
+            .accept( MediaType.APPLICATION_JSON ).put( javax.ws.rs.client.Entity.json(""), Entity.class );
     }
 }
