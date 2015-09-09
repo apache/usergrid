@@ -94,9 +94,8 @@ public class ClientSetup implements TestRule {
         String name = testClass + "." + methodName;
 
         try {
-
             restClient.superuserSetup();
-
+            superuserToken = restClient.management().token().get(superuserName, superuserPassword);
         } catch ( BadRequestException e ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Error creating superuser, may already exist", e );
@@ -105,7 +104,6 @@ public class ClientSetup implements TestRule {
             }
         }
 
-        superuserToken = restClient.management().token().get(superuserName, superuserPassword);
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         password = username;
