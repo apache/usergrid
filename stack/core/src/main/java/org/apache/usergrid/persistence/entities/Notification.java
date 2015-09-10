@@ -46,6 +46,7 @@ public class Notification extends TypedEntity {
 
     @EntityProperty
     private PathTokens pathTokens;
+    private String pathQuery;
 
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
@@ -258,6 +259,14 @@ public class Notification extends TypedEntity {
 
     public void setPathTokens(PathTokens pathTokens){
         this.pathTokens = pathTokens;
+    }
+
+    @JsonIgnore
+    public String getPathQuery(){
+        return pathQuery;
+    }
+    public void setPathQuery(String query){
+        pathQuery = query;
     }
 
     public static class PathTokens{

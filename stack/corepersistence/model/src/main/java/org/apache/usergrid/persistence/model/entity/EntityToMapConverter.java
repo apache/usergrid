@@ -38,6 +38,7 @@ public class EntityToMapConverter {
     public static final String LON = "longitude";
     private final JsonFactory jsonFactory = new JsonFactory();
     private final ObjectMapper objectMapper = new ObjectMapper(jsonFactory).registerModule(new GuavaModule());
+    private static final Map<String,Boolean> corruptedTypes = getCorruptedTypes();
 
     /**
      * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each StringField.
@@ -50,8 +51,6 @@ public class EntityToMapConverter {
      * @param entityObject
      * @return
      */
-
-
     public EntityMap toMap( EntityObject entityObject ) {
         EntityMap map = new EntityMap();
         return toMap(entityObject, map);
@@ -77,8 +76,12 @@ public class EntityToMapConverter {
                 entityMap.put( field.getName(), locMap );
             }
             else if ( field instanceof ByteArrayField ) {
-                ByteArrayField bf = ( ByteArrayField ) field;
 
+                ByteArrayField bf = ( ByteArrayField ) field;
+                if( corruptedTypes.containsKey(bf.getClassinfo().getName()) ){
+                    //do not deserialize this contains Query and Query has changed
+                    continue;
+                }
                 byte[] serilizedObj = bf.getValue();
                 Object o;
                 try {
@@ -139,7 +142,7 @@ public class EntityToMapConverter {
     private Object processCollectionElement( final Object element ) {
         if ( element instanceof EntityObject ) {
 
-            return toMap( ( EntityObject ) element );
+            return toMap((EntityObject) element);
         }
 
         //recurse into another list structure (2d + arrays)
@@ -153,5 +156,11 @@ public class EntityToMapConverter {
         }
 
         return element;
+    }
+
+    public static Map<String,Boolean> getCorruptedTypes() {
+        Map<String,Boolean> typeMap = new HashMap<>() ;
+        typeMap.put("org.apache.usergrid.persistence.PathQuery",true);
+        return typeMap;
     }
 }
