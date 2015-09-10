@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import org.apache.shiro.codec.Base64;
+import static org.apache.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 
@@ -80,7 +81,7 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
             principal = new Principal() {
                 @Override
                 public String getName() {
-                    return "sysadmin";
+                    return ROLE_SERVICE_ADMIN;
                 }
             };
         }
@@ -94,7 +95,7 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
 
         @Override
         public boolean isUserInRole( String role ) {
-            return role.equals( "sysadmin" );
+            return role.equals( ROLE_SERVICE_ADMIN );
         }
 
 
