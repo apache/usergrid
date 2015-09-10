@@ -363,7 +363,7 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
+    @RequireSystemAccess
     @GET
     @Path("config")
     public JSONWithPadding getConfig( @Context UriInfo ui,
@@ -389,7 +389,7 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
+    @RequireSystemAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @PUT
     @Path("config")
@@ -410,6 +410,9 @@ public class OrganizationResource extends AbstractContextResource {
                 management.getOrganizationConfigByUuid( organization.getUuid() );
         orgConfig.addProperties(json);
         management.updateOrganizationConfig(orgConfig);
+
+        // refresh orgConfig -- to pick up removed entries and defaults
+        orgConfig = management.getOrganizationConfigByUuid( organization.getUuid() );
         response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
 
         return new JSONWithPadding( response, callback );
