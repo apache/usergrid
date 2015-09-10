@@ -306,6 +306,30 @@ public class Realm extends AuthorizingRealm {
 
                     grant( info, principal,
                             getPermissionFromPath( emf.getManagementAppId(), "get,put,post,delete", "/**" ) );
+
+                    // get all organizations
+                    try {
+
+                        Map<UUID, String> allOrganizations = management.getOrganizations();
+
+                        if ( allOrganizations != null ) {
+                            for ( UUID id : allOrganizations.keySet() ) {
+                                grant( info, principal, "organizations:admin,access,get,put,post,delete:" + id );
+                            }
+                            organizationSet.putAll(allOrganizations);
+
+                            Map<UUID, String> allApplications =
+                                management.getApplicationsForOrganizations( allOrganizations.keySet() );
+                            if ( ( allApplications != null ) && !allApplications.isEmpty() ) {
+                                grant( info, principal, "applications:admin,access,get,put,post,delete:" + StringUtils
+                                    .join( allApplications.keySet(), ',' ) );
+                                applicationSet.putAll( allApplications );
+                            }
+                        }
+                    }
+                    catch ( Exception e ) {
+                        logger.error( "Unable to construct superuser permissions", e );
+                    }
                 }
                 else {
 
