@@ -77,8 +77,12 @@ public class EntityToMapConverter {
                 entityMap.put( field.getName(), locMap );
             }
             else if ( field instanceof ByteArrayField ) {
-                ByteArrayField bf = ( ByteArrayField ) field;
 
+                ByteArrayField bf = ( ByteArrayField ) field;
+                if( bf.getClassinfo().getName().contains("org.apache.usergrid.persistence.PathQuery") ){
+                    //do not deserialize this contains Query and Query has changed
+                    continue;
+                }
                 byte[] serilizedObj = bf.getValue();
                 Object o;
                 try {
