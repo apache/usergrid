@@ -58,6 +58,7 @@ import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isPermittedA
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isPermittedAccessToOrganization;
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isUser;
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.loginApplicationGuest;
+import static org.apache.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
 
 
 @Component
@@ -299,7 +300,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
         public void authorize( ContainerRequest request ) {
             logger.debug( "SystemFilter.authorize" );
             try {
-                if ( !request.isUserInRole( "sysadmin" ) ) {
+                if ( !request.isUserInRole( ROLE_SERVICE_ADMIN ) ) {
                     logger.debug( "You are not the system admin." );
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                             SecurityException.REALM );
@@ -307,8 +308,8 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
             }
             catch ( IllegalStateException e ) {
                 logger.debug( "This is an invalid state",e );
-                if ( ( request.getUserPrincipal() == null ) || !"sysadmin"
-                        .equals( request.getUserPrincipal().getName() ) ) {
+                if ( ( request.getUserPrincipal() == null ) ||
+                        !ROLE_SERVICE_ADMIN.equals( request.getUserPrincipal().getName() ) ) {
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                             SecurityException.REALM );
                 }
