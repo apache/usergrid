@@ -68,7 +68,6 @@ public class OrganizationsResource extends AbstractContextResource {
     }
 
     @Path(RootResource.ORGANIZATION_ID_PATH)
-    @RequireOrganizationAccess
     public OrganizationResource getOrganizationById( @Context UriInfo ui,
                                                      @PathParam( "organizationId" ) String organizationIdStr )
             throws Exception {
@@ -83,7 +82,6 @@ public class OrganizationsResource extends AbstractContextResource {
     }
 
     @Path( "{organizationName}" )
-    @RequireOrganizationAccess
     public OrganizationResource getOrganizationByName( @Context UriInfo ui,
                                                        @PathParam( "organizationName" ) String organizationName )
             throws Exception {

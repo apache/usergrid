@@ -42,6 +42,10 @@ public class OrganizationResource extends NamedResource {
         return new UsersResource(context, this);
     }
 
+    public ApplicationsResource applications() {
+        return new ApplicationsResource(context, this);
+    }
+
     public Organization get() {
         ApiResponse rep = getTarget( true ).request()
             .accept(MediaType.APPLICATION_JSON)
