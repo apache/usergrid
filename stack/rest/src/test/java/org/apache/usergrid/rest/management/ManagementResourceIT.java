@@ -116,18 +116,41 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // check that the test admin cannot access the new org info
 
+        //  management/organizations/{orgName}
         Response.Status status = null;
-        String returnVal = "";
-
         try {
-            returnVal = this.management().orgs().org( orgName ).get(String.class);
+            this.management().orgs().org( orgName ).get(String.class);
         }
         catch ( ClientErrorException uie ) {
             status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-
         assertNotNull( status );
         assertEquals( Response.Status.UNAUTHORIZED, status );
+
+
+        //  management/organizations/{orgName}/users
+        status = null;
+        try {
+            this.management().orgs().org( orgName ).users().get( String.class );
+        }
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
+        }
+        assertNotNull( status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
+
+
+        //  management/organizations/{orgName}/applications
+        status = null;
+        try {
+            this.management().orgs().org( orgName ).applications().get( String.class );
+        }
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
+        }
+        assertNotNull( status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
+
 
         // this admin should have access to test org
         status = null;
@@ -137,11 +160,32 @@ public class ManagementResourceIT extends AbstractRestIT {
         catch ( ClientErrorException uie ) {
             status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
+        assertNull( status );
 
+
+        // this admin should have access to test org - users
+        status = null;
+        try {
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).users().get( String.class );
+        }
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
+        }
         assertNull(status);
 
-        //test getting the organization by org
 
+        // this admin should have access to test org - apps
+        status = null;
+        try {
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).applications().get( String.class );
+        }
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
+        }
+        assertNull(status);
+
+
+        // test getting the organization by org
         status = null;
         try {
             this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );

@@ -128,7 +128,6 @@ public class ApplicationsResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
     @Path(RootResource.APPLICATION_ID_PATH)
     public ApplicationResource applicationFromOrganizationByApplicationId(
         @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr ) throws Exception {
@@ -138,7 +137,6 @@ public class ApplicationsResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
     @Path( "{applicationName}" )
     public ApplicationResource applicationFromOrganizationByApplicationName(
         @Context UriInfo ui, @PathParam( "applicationName" ) String applicationName ) throws Exception {

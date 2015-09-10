@@ -414,7 +414,6 @@ public class ApplicationResource extends AbstractContextResource {
 
 
     @Path( "imports" )
-    @RequireOrganizationAccess
     public ImportsResource importGetJson( @Context UriInfo ui,
                                           @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
         throws Exception {

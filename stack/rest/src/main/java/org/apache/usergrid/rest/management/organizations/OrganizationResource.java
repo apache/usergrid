@@ -85,21 +85,18 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
     @Path("users")
     public UsersResource getOrganizationUsers( @Context UriInfo ui ) throws Exception {
         return getSubResource( UsersResource.class ).init( organization );
     }
 
 
-    @RequireOrganizationAccess
     @Path("applications")
     public ApplicationsResource getOrganizationApplications( @Context UriInfo ui ) throws Exception {
         return getSubResource( ApplicationsResource.class ).init( organization );
     }
 
 
-    @RequireOrganizationAccess
     @Path("apps")
     public ApplicationsResource getOrganizationApplications2( @Context UriInfo ui ) throws Exception {
         return getSubResource( ApplicationsResource.class ).init( organization );
