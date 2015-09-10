@@ -78,6 +78,9 @@ public class CpNamingUtils {
     public static final String DELETED_APPLICATION_INFO = "deleted_org_application";
     public static final String DELETED_APPLICATION_INFOS = "deleted_org_applications";
 
+    public static final String ORG_CONFIG = "org_config";
+    public static final String ORG_CONFIGS = "org_configs";
+
     /**
      * The name of the map that holds our entity id->type mapping
      */
