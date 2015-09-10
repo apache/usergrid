@@ -43,6 +43,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.management.OrganizationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -277,13 +278,28 @@ public class ServiceResource extends AbstractContextResource {
                returnInboundConnections = false;
                returnOutboundConnections = false;
            } else if ("in".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = true;
                returnOutboundConnections = false;
            } else if ("out".equalsIgnoreCase(connectionQueryParm)) {
                returnInboundConnections = false;
-           } else if (! "all".equalsIgnoreCase(connectionQueryParm)) {
-               // unrecognized variable
-               if (connectionQueryParm != null)
-                   logger.error( String.format( "Invalid connection query parameter=%s, ignoring.", connectionQueryParm));
+                returnOutboundConnections = true;
+            } else if ("all".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = true;
+                returnOutboundConnections = true;
+            } else {
+                if (connectionQueryParm != null) {
+                    // unrecognized parameter
+                    logger.error(String.format(
+                        "Invalid connections query parameter=%s, ignoring.", connectionQueryParm));
+                }
+                // use the default query parameter functionality
+                OrganizationConfig orgConfig =
+                    management.getOrganizationConfigForApplication(services.getApplicationId());
+                String defaultConnectionQueryParm = orgConfig.getDefaultConnectionParam();
+                returnInboundConnections =
+                    (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
+                returnOutboundConnections =
+                    (defaultConnectionQueryParm.equals("out")) || (defaultConnectionQueryParm.equals("all"));
            }
         }
 
