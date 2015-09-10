@@ -74,10 +74,15 @@ public class WNSAdapter implements ProviderAdapter {
         try {
             List<TranslatedNotification> translatedNotifications = ( List<TranslatedNotification>) payload;
             for(TranslatedNotification translatedNotification : translatedNotifications) {
+
+                // set the optional TTL value used when pushing notifications
+                WnsNotificationRequestOptional opt = new WnsNotificationRequestOptional();
+                opt.ttl = String.valueOf(notification.getExpireTTLSeconds());
+
                 switch (translatedNotification.getType()) {
                     case "toast":
                         WnsToast toast = new WnsToastBuilder().bindingTemplateToastText01(translatedNotification.getMessage().toString()).build();
-                        service.pushToast(providerId, toast);
+                        service.pushToast(providerId, opt, toast);
                         break;
                     case "badge":
                         WnsBadge badge;
@@ -86,15 +91,17 @@ public class WNSAdapter implements ProviderAdapter {
                         } else {
                             badge = new WnsBadgeBuilder().value(translatedNotification.getMessage().toString()).build();
                         }
-                        service.pushBadge(providerId, badge);
+                        service.pushBadge(providerId, opt, badge);
                         break;
                     case "raw":
                         Object message = translatedNotification.getMessage();
                         if(message instanceof String) {
                             WnsRaw raw = new WnsRawBuilder().stream(((String) message).getBytes()).build();
-                            WnsNotificationRequestOptional opt = new WnsNotificationRequestOptional();
+
+                            // set additional optional parameter for raw notifications
                             opt.cachePolicy = "cache";
                             opt.requestForStatus = "true";
+
                             WnsNotificationResponse response = service.pushRaw(providerId, opt, raw);
                             if (!response.notificationStatus.equals("received")) { // https://msdn.microsoft.com/en-us/library/windows/apps/hh465435.aspx#pncodes_x_wns_notification
                                 throw new Exception(String.format("Notification failed status:%s, devicesStatus:%s, description:%s, debug flag:%s", response.notificationStatus, response.deviceConnectionStatus, response.errorDescription, response.debugTrace));
