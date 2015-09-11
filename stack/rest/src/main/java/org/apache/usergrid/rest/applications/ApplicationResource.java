@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
@@ -42,6 +43,7 @@ import org.apache.usergrid.rest.applications.events.EventsResource;
 import org.apache.usergrid.rest.applications.queues.QueueResource;
 import org.apache.usergrid.rest.applications.users.UsersResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
+import org.apache.usergrid.rest.exceptions.NotFoundExceptionMapper;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
@@ -589,8 +591,13 @@ public class ApplicationResource extends ServiceResource {
                 APIGEE_MOBILE_APM_CONFIG_JSON_KEY );
         //If there is no apm configuration then try to create apm config on the fly
         if ( value == null ) {
-            value = management.registerAppWithAPM( management.getOrganizationForApplication( applicationId ),
-                    management.getApplicationInfo( applicationId ) );
+            value = management.registerAppWithAPM(
+                management.getOrganizationForApplication( applicationId ),
+                management.getApplicationInfo( applicationId )
+            );
+        }
+        if(value==null){
+            throw new EntityNotFoundException("apigeeMobileConfig not found, it is possibly not enabled for your config.");
         }
         return new JSONWithPadding( value, callback );
     }
