@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
@@ -100,7 +101,12 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
         this.worker = new FlushWorker( this.flushQueue, nodeShardCounterSerialization );
 
+        //schedule the flush worker to always take
         Schedulers.newThread().createWorker().schedule( worker );
+
+        //schedule the flush timer to flush
+        Schedulers.newThread().createWorker().schedulePeriodically(new FlushTimer( this ), graphFig.getCounterFlushInterval(), graphFig.getCounterFlushInterval(),
+            TimeUnit.MILLISECONDS  );
 
     }
 
@@ -267,6 +273,26 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
          */
         public boolean isFlushing(){
             return rollUp != null;
+        }
+    }
+
+
+    /**
+     * A Flush timer to flush the buffer on an interval
+     */
+    private static class FlushTimer implements Action0{
+
+        private final NodeShardApproximation nodeShardApproximation;
+
+
+        private FlushTimer( final NodeShardApproximation nodeShardApproximation ) {
+            this.nodeShardApproximation = nodeShardApproximation;
+        }
+
+
+        @Override
+        public void call() {
+           this.nodeShardApproximation.beginFlush();
         }
     }
 }

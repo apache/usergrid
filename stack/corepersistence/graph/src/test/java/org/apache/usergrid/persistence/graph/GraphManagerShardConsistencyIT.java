@@ -171,7 +171,7 @@ public class GraphManagerShardConsistencyIT {
         final int numWorkersPerInjector = 1;
 
 
-        final long expectedShardCount = 4;
+        final long expectedShardCount = 16;
 
         /**
          * Do 4x expected shard size so we have 4 shards

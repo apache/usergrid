@@ -38,7 +38,12 @@ public interface GraphFig extends GuicyFig {
     String REPAIR_CONCURRENT_SIZE = "usergrid.graph.repair.concurrent.size";
 
     /**
-     * The size of the shards.  This is approximate, and should be set lower than what you would like your max to be
+     * The size of the shards.  This is approximate, and should be set lower than what you would like your max to be.
+     * Note that under heavy load, you will want to be aware of the tombstone_failure_threshold setting in cassandra.
+     *
+     * You will want to set this value to no more than 2x tombstone_failure_threshold to avoid failures on read during
+     * shard compaction.
+     *
      */
     String SHARD_SIZE = "usergrid.graph.shard.size";
 
@@ -57,8 +62,6 @@ public interface GraphFig extends GuicyFig {
     String SHARD_WRITE_CONSISTENCY = "usergrid.graph.shard.write.consistency";
 
     String SHARD_READ_CONSISTENCY = "usergrid.graph.shard.read.consistency";
-
-    String LOCK_TTL = "usergrid.graph.shard.lock.ttl";
 
     String SHARD_REPAIR_CHANCE = "usergrid.graph.shard.repair.chance";
 
@@ -91,8 +94,7 @@ public interface GraphFig extends GuicyFig {
     @Key( SHARD_SIZE )
     long getShardSize();
 
-    @Default( "1" )
-    //    @Default( "10" )
+    @Default( "10" )
     @Key( SHARD_AUDIT_WORKERS )
     int getShardAuditWorkerCount();
 
@@ -125,12 +127,6 @@ public interface GraphFig extends GuicyFig {
     @Key( SHARD_READ_CONSISTENCY )
     String getShardReadConsistency();
 
-    /**
-     * Get the lock TTL in millis.  Our default is 30 seconds minute, much longer than we should need
-     * @return
-     */
-    @Default( "30000" )
-    @Key( LOCK_TTL )
-    long getLockTTLMillis();
+
 }
 
