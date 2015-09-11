@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -132,14 +133,14 @@ public class CpEntityMapUtilsTest {
 
         cpEntity = CpEntityMapUtils.fromMap(properties, "loc", true);
 
-        assertTrue(cpEntity.getFieldMap().get("location") instanceof EntityObjectField);
+        assertNull(cpEntity.getFieldMap().get("location"));
 
         properties = new LinkedHashMap<String, Object>();
         properties.put("location", "denver");
 
         cpEntity = CpEntityMapUtils.fromMap(properties, "loc", true);
 
-        assertTrue(cpEntity.getFieldMap().get("location") instanceof StringField);
+        assertNull(cpEntity.getFieldMap().get("location") );
     }
 
 

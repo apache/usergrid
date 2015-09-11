@@ -40,7 +40,11 @@
             <artifactId>commons-lang3</artifactId>
             <version>${commons.lang.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
       <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
