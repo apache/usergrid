@@ -49,7 +49,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
 
     public boolean isJSONP() {
-        return isJavascript( hh.getAcceptableMediaTypes() );
+        return isJavascript(hh.getAcceptableMediaTypes());
     }
 
 
@@ -71,13 +71,18 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
             // only log real errors as errors
             logger.error( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
 
-        } else if ( logger.isDebugEnabled() ) {
-            logger.debug( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug(e.getClass().getCanonicalName() + " Server Error (" + status + ")", e);
+            }
+            switch (status){
+                case 200 : logger.info("Uncaught Exception", e); break;
+                default: logger.error("Uncaught Exception", e);
+            }
         }
 
         ApiResponse response = new ApiResponse();
 
-        logger.error("Uncaught Exception", e);
 
         AuthErrorInfo authError = AuthErrorInfo.getForException( e );
 
