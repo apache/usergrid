@@ -79,7 +79,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-//@Ignore( "Kills cassandra, needs to be part of functional testing" )
 public class GraphManagerShardConsistencyIT {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerShardConsistencyIT.class );
 
@@ -155,7 +154,7 @@ public class GraphManagerShardConsistencyIT {
 
                 final int numInjectors = 4;
 //        final int numInjectors = 2;
-        //        final int numInjectors = 1;
+//                final int numInjectors = 1;
 
         /**
          * create multiple injectors.  This way all the caches are independent of one another.  This is the same as
@@ -184,7 +183,7 @@ public class GraphManagerShardConsistencyIT {
 
 
         final ListeningExecutorService executor =
-            MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( numWorkersPerInjector ) );
+            MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( numWorkersPerInjector * numInjectors ) );
 
 
         final AtomicLong writeCounter = new AtomicLong();
@@ -217,6 +216,8 @@ public class GraphManagerShardConsistencyIT {
         for ( Future<Boolean> future : futures ) {
             future.get();
         }
+
+        log.info( "Completed writing all edges for test, beginning read" );
 
         //now get all our shards
         final NodeShardGroupSearch cache = getInstance( injectors, NodeShardGroupSearch.class );
@@ -273,7 +274,6 @@ public class GraphManagerShardConsistencyIT {
 
 
         //now start our readers
-
         while ( true ) {
 
             if ( !failures.isEmpty() ) {
@@ -332,6 +332,8 @@ public class GraphManagerShardConsistencyIT {
                 //                }
 
                 break;
+            } else{
+                log.info( "Compactions not complete.  Compacted {} shards", compactedCount );
             }
 
 
