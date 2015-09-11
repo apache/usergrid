@@ -130,6 +130,8 @@ class Migrate:
 
         try:
 
+            self.run_database_setup()
+
             # We need to check and roll the migration system to 1 if not already
             migration_system_updated = self.is_migration_system_updated()
 
@@ -220,6 +222,10 @@ class Migrate:
             self.log_metrics()
             self.logger.error('Keyboard interrupted migration. Please run again to ensure the migration finished.')
 
+    def get_database_setup_url(self):
+        url = self.endpoint + '/system/database/setup'
+        return url
+
     def get_migration_url(self):
         url = self.endpoint + '/system/migrate/run'
         return url
@@ -253,6 +259,17 @@ class Migrate:
             return response
         except requests.exceptions.RequestException as e:
             self.logger.error('Failed to start migration, %s', e)
+            exit_on_error(str(e))
+
+    def run_database_setup(self):
+        try:
+            setupUrl = self.get_database_setup_url()
+            r = requests.put(url=setupUrl, auth=(self.admin_user, self.admin_pass))
+            if r.status_code != 200:
+                exit_on_error('Database Setup Failed')
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Failed to run database setup, %s', e)
             exit_on_error(str(e))
 
     def start_index_mapping_migration(self):
