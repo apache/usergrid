@@ -774,8 +774,10 @@
       var user = {};
       var organizations = {};
       var applications = {};
-      if (err && self.logging) {
-        console.log('error trying to log user in');
+      if (err ) {
+        if(self.logging) {
+          console.log('error trying to log user in');
+        }
       } else {
         var options = {
           client: self,
