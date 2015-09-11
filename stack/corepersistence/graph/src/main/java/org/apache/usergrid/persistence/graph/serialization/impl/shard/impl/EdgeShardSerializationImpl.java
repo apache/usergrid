@@ -172,8 +172,8 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
         return Collections.singleton(
             new MultiTennantColumnFamilyDefinition( EDGE_SHARDS, BytesType.class.getSimpleName(),
                 ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
-                                                .absent() ) );
+                //we need to cache all shards if possible
+                MultiTennantColumnFamilyDefinition.CacheOption.ALL, Optional.absent() ) );
     }
 
 

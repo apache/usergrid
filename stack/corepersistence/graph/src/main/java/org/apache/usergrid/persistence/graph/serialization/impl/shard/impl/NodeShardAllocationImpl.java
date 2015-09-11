@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -36,7 +37,6 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEd
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
@@ -68,7 +68,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private final EdgeShardSerialization edgeShardSerialization;
     private final EdgeColumnFamilies edgeColumnFamilies;
     private final ShardedEdgeSerialization shardedEdgeSerialization;
-    private final NodeShardApproximation nodeShardApproximation;
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final ShardGroupCompaction shardGroupCompaction;
@@ -77,13 +76,11 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
                                     final EdgeColumnFamilies edgeColumnFamilies,
-                                    final ShardedEdgeSerialization shardedEdgeSerialization,
-                                    final NodeShardApproximation nodeShardApproximation, final TimeService timeService,
+                                    final ShardedEdgeSerialization shardedEdgeSerialization, final TimeService timeService,
                                     final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
-        this.nodeShardApproximation = nodeShardApproximation;
         this.timeService = timeService;
         this.graphFig = graphFig;
         this.shardGroupCompaction = shardGroupCompaction;
@@ -98,14 +95,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         Preconditions.checkNotNull( maxShardId, "maxShardId cannot be null" );
         GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
-        Iterator<Shard> existingShards;
+        Iterator<Shard> existingShards = null;
 
         //its a new node, it doesn't need to check cassandra, it won't exist
-        if ( isNewNode( directedEdgeMeta ) ) {
-            existingShards = Collections.singleton( MIN_SHARD ).iterator();
-        }
-
-        else {
+        if ( !isNewNode( directedEdgeMeta ) ) {
             existingShards = edgeShardSerialization.getShardMetaDataLocal( scope, maxShardId, directedEdgeMeta );
         }
 
@@ -175,25 +168,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         }
 
 
-        final Shard minShard = lastLoadedShardEntryGroup.getMinShard();
-
-
-        /**
-         * Check out if we have a count for our shard allocation
-         */
-
-        final long count = nodeShardApproximation.getCount( scope, minShard, directedEdgeMeta );
 
         final long shardSize = graphFig.getShardSize();
-
-
-        if ( count < shardSize ) {
-            logger.debug( "Our count is less than our shard size, not allocating a new shard" );
-            return false;
-        }
-
-
-        logger.debug( "Count of {} has exceeded shard config of {} will begin compacting", count, shardSize );
 
 
         /**
@@ -214,15 +190,19 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Allocate the shard
          */
 
+        final Collection<Shard> readShards = shardEntryGroup.getReadShards();
+
+        logger.debug( "About to scan read shards {} for edges to use as a pivot", readShards );
+
         final Iterator<MarkedEdge> edges = directedEdgeMeta
             .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), 0,
                 SearchByEdgeType.Order.ASCENDING );
 
 
         if ( !edges.hasNext() ) {
-            logger.warn(
-                "Tried to allocate a new shard for edge meta data {}, " + "but no max value could be found in that row",
-                directedEdgeMeta );
+            logger.debug(
+                "Tried to allocate a new shard for group {}, but no max value could be found in that row",
+                readShards );
             return false;
         }
 
@@ -242,20 +222,21 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             //we hit a pivot shard, set it since it could be the last one we encounter
             if ( i % shardSize == 0 ) {
                 marked = edges.next();
+                logger.debug("Found an edge {} to split at index {}", marked, i);
             }
             else {
                 edges.next();
             }
         }
 
-        logger.debug( "Iterated {} edges to find the last marked edge", i );
+
 
 
         /**
          * Sanity check in case our counters become severely out of sync with our edge state in cassandra.
          */
         if ( marked == null ) {
-            logger.warn( "Incorrect shard count for shard group {}, ignoring", shardEntryGroup );
+            logger.debug( "Not enough edges for shard group {}, ignoring", shardEntryGroup );
             return false;
         }
 

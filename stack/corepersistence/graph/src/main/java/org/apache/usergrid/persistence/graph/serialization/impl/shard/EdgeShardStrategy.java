@@ -46,17 +46,6 @@ public interface EdgeShardStrategy {
     Iterator<ShardEntryGroup> getReadShards( final ApplicationScope scope, final long maxTimestamp,
                                              final DirectedEdgeMeta directedEdgeMeta );
 
-    /**
-     * Increment our count meta data by the passed value.  Can be a positive or a negative number.
-     * @param scope The scope in the application
-     * @param shard The shard to use
-     * @param count The amount to increment or decrement
-     * @param directedEdgeMeta The edge meta data to use
-     * @return
-     */
-    void increment( final ApplicationScope scope, Shard shard, long count, final DirectedEdgeMeta directedEdgeMeta );
-
-
 
 
 }

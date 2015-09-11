@@ -25,9 +25,7 @@ import java.util.Iterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardGroupSearch;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 
 import com.google.inject.Inject;
@@ -41,34 +39,25 @@ import com.google.inject.Singleton;
 public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
-    private final NodeShardGroupSearch shardCache;
-    private final NodeShardApproximation shardApproximation;
+    private final NodeShardGroupSearch shardGroup;
 
 
     @Inject
-    public SizebasedEdgeShardStrategy( final NodeShardGroupSearch shardCache,
-                                       final NodeShardApproximation shardApproximation ) {
-        this.shardCache = shardCache;
-        this.shardApproximation = shardApproximation;
+    public SizebasedEdgeShardStrategy( final NodeShardGroupSearch shardGroup ) {
+        this.shardGroup = shardGroup;
     }
 
 
     @Override
     public ShardEntryGroup getWriteShards( final ApplicationScope scope,
                                         final long timestamp, final DirectedEdgeMeta directedEdgeMeta ) {
-        return shardCache.getWriteShardGroup( scope, timestamp, directedEdgeMeta);
+        return shardGroup.getWriteShardGroup( scope, timestamp, directedEdgeMeta);
     }
 
 
     @Override
     public Iterator<ShardEntryGroup> getReadShards( final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta ) {
-        return shardCache.getReadShardGroup( scope, maxTimestamp, directedEdgeMeta );
+        return shardGroup.getReadShardGroup( scope, maxTimestamp, directedEdgeMeta );
     }
 
-
-    @Override
-    public void increment( final ApplicationScope scope, final Shard shard,
-                           final long count, final DirectedEdgeMeta directedEdgeMeta) {
-        shardApproximation.increment( scope, shard,  count, directedEdgeMeta );
-    }
 }

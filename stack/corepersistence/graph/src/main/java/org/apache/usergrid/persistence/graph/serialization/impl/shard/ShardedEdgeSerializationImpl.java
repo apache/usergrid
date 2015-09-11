@@ -83,27 +83,24 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
     protected final Keyspace keyspace;
     protected final CassandraConfig cassandraConfig;
     protected final GraphFig graphFig;
-    protected final EdgeShardStrategy writeEdgeShardStrategy;
     protected final TimeService timeService;
 
 
     @Inject
     public ShardedEdgeSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
-                                         final GraphFig graphFig, final EdgeShardStrategy writeEdgeShardStrategy,
+                                         final GraphFig graphFig,
                                          final TimeService timeService ) {
 
 
         checkNotNull( "keyspace required", keyspace );
         checkNotNull( "cassandraConfig required", cassandraConfig );
         checkNotNull( "consistencyFig required", graphFig );
-        checkNotNull( "writeEdgeShardStrategy required", writeEdgeShardStrategy );
         checkNotNull( "timeService required", timeService );
 
 
         this.keyspace = keyspace;
         this.cassandraConfig = cassandraConfig;
         this.graphFig = graphFig;
-        this.writeEdgeShardStrategy = writeEdgeShardStrategy;
         this.timeService = timeService;
     }
 
@@ -126,9 +123,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).putColumn( edge, isDeleted );
 
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -156,10 +150,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).putColumn( edge, isDeleted );
 
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -184,10 +174,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).putColumn( edge, isDeleted );
 
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, targetEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -215,10 +201,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 batch.withRow( columnFamilies.getTargetNodeSourceTypeCfName(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .putColumn( edge, isDeleted );
 
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -244,10 +226,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 batch.withRow( columnFamilies.getGraphEdgeVersions(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .putColumn( column, isDeleted );
 
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -267,7 +245,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -290,7 +267,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
                 batch.withRow( columnFamilies.getSourceNodeTargetTypeCfName(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -310,7 +286,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -333,7 +308,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
                 batch.withRow( columnFamilies.getTargetNodeSourceTypeCfName(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -353,7 +327,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                             final boolean isDeleted ) {
                 batch.withRow( columnFamilies.getGraphEdgeVersions(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .deleteColumn( column );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }

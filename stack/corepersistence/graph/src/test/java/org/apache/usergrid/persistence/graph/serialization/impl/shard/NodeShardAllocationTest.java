@@ -51,6 +51,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -94,15 +95,12 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardCounterSerialization = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardCounterSerialization, timeService, graphFig, shardGroupCompaction );
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization, timeService, graphFig, shardGroupCompaction );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -143,14 +141,11 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
-
         final TimeService timeService = mock( TimeService.class );
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+           timeService, graphFig, shardGroupCompaction );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -182,8 +177,6 @@ public class NodeShardAllocationTest {
 
         final long count = graphFig.getShardSize() - 1;
 
-        when( nodeShardApproximation.getCount( scope, futureShard, targetEdgeMeta ) ).thenReturn( count );
-
         final boolean result = approximation.auditShard( scope, shardEntryGroup, targetEdgeMeta );
 
         assertFalse( "Shard allocated", result );
@@ -200,14 +193,10 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
-
         final TimeService timeService = mock( TimeService.class );
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization, timeService, graphFig, shardGroupCompaction );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -236,9 +225,6 @@ public class NodeShardAllocationTest {
          */
         final long shardCount = ( long ) ( graphFig.getShardSize() * 2.5 );
 
-
-        //return a shard size equal to our max
-        when( nodeShardApproximation.getCount( scope, firstShard, targetEdgeMeta ) ).thenReturn( shardCount );
 
 
         //this is how many we should be iterating and should set the value of the last shard we keep
@@ -320,14 +306,11 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization, timeService, graphFig, shardGroupCompaction );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -365,8 +348,6 @@ public class NodeShardAllocationTest {
         iteratedEdges.add( returnedEdge );
 
         //return a shard size equal to our max
-        when( nodeShardApproximation.getCount( scope, firstShard, targetEdgeMeta ) ).thenReturn( shardCount );
-
         ArgumentCaptor<Shard> shardValue = ArgumentCaptor.forClass( Shard.class );
 
 
@@ -415,14 +396,11 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization, timeService, graphFig, shardGroupCompaction );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -447,8 +425,6 @@ public class NodeShardAllocationTest {
         final long shardCount = graphFig.getShardSize();
 
         //return a shard size equal to our max
-        when( nodeShardApproximation.getCount( scope, firstShard, targetEdgeMeta ) ).thenReturn( shardCount );
-
         ArgumentCaptor<Shard> shardValue = ArgumentCaptor.forClass( Shard.class );
 
 
@@ -488,15 +464,12 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization, timeService, graphFig, shardGroupCompaction );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -621,9 +594,6 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
-
         final TimeService timeService = mock( TimeService.class );
 
         final long returnTime = System.currentTimeMillis();
@@ -632,14 +602,18 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization, timeService, graphFig, shardGroupCompaction );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
         final String subType = "subType";
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( nodeId, type, subType );
+
+
+        when( edgeShardSerialization
+                     .writeShardMeta( same( scope ), any(Shard.class), same( directedEdgeMeta ) ) )
+                     .thenReturn( mock( MutationBatch.class ) );
 
 
 

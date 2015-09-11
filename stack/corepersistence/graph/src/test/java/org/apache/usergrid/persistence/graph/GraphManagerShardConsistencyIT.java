@@ -25,8 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -124,7 +124,8 @@ public class GraphManagerShardConsistencyIT {
     }
 
 
-    @Test
+
+    @Test(timeout = 60000)//should never take longer than a minute
     public void writeThousandsSingleSource()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
@@ -152,9 +153,9 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
-                final int numInjectors = 4;
-//        final int numInjectors = 2;
-//                final int numInjectors = 1;
+        //                final int numInjectors = 4;
+        //        final int numInjectors = 2;
+        final int numInjectors = 1;
 
         /**
          * create multiple injectors.  This way all the caches are independent of one another.  This is the same as
@@ -171,15 +172,20 @@ public class GraphManagerShardConsistencyIT {
         final int numWorkersPerInjector = 1;
 
 
-        final long expectedShardCount = 16;
+        final long fullShardCount = 4;
+
+
 
         /**
          * Do 4x expected shard size so we have 4 shards
          */
-        final long numberOfEdges = shardSize * expectedShardCount;
+        final long numberOfEdges = shardSize * fullShardCount;
 
 
-        final long workerWriteLimit = numberOfEdges / numWorkersPerInjector / numInjectors;
+        final long expectedShardCount = fullShardCount + 1;
+
+
+        final long workerWriteLimit = numberOfEdges-1 / numWorkersPerInjector / numInjectors;
 
 
         final ListeningExecutorService executor =
@@ -220,7 +226,7 @@ public class GraphManagerShardConsistencyIT {
         log.info( "Completed writing all edges for test, beginning read" );
 
         //now get all our shards
-        final NodeShardGroupSearch cache = getInstance( injectors, NodeShardGroupSearch.class );
+        final NodeShardGroupSearch shardSearch = getInstance( injectors, NodeShardGroupSearch.class );
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceId, edgeType );
 
@@ -270,9 +276,6 @@ public class GraphManagerShardConsistencyIT {
         int compactedCount;
 
 
-        //        Thread.sleep( 1888*60*60*10 );
-
-
         //now start our readers
         while ( true ) {
 
@@ -299,9 +302,10 @@ public class GraphManagerShardConsistencyIT {
             //reset our count.  Ultimately we'll have 4 groups once our compaction completes
             compactedCount = 0;
 
-            //we have to get it from the cache, because this will trigger the compaction process
-            final Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
-            final Set<ShardEntryGroup> shardEntryGroups = new HashSet<>();
+            //we have to get it from the shardSearch, because this will trigger the compaction process
+            final Iterator<ShardEntryGroup> groups =
+                shardSearch.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
+            final Set<ShardEntryGroup> shardEntryGroups = new LinkedHashSet<>();
 
             while ( groups.hasNext() ) {
 
@@ -322,18 +326,30 @@ public class GraphManagerShardConsistencyIT {
             if ( compactedCount >= expectedShardCount ) {
                 log.info( "All compactions complete.  Compacted shards are {}.  Expected at least expectedShardCount" );
 
-                assertEquals( "Compacted should match expected", expectedShardCount, compactedCount );
 
-                //                final Object mutex = new Object();
-                //
-                //                synchronized ( mutex ){
-                //
-                //                    mutex.wait();
-                //                }
+                /**
+                 * Build a useful error message
+                 */
+                if ( expectedShardCount != compactedCount ) {
+                    final StringBuilder builder = new StringBuilder();
+
+                    builder.append( "expected " ).append( expectedShardCount ).append( " shards but returned " )
+                           .append( compactedCount ).append( ".  Shards are" );
+
+                    builder.append( logShardGroup( shardEntryGroups ) );
+
+                    fail(builder.toString());
+                }
+
+
+                log.info( "Shards are {}", logShardGroup( shardEntryGroups ) );
+
 
                 break;
-            } else{
+            }
+            else {
                 log.info( "Compactions not complete.  Compacted {} shards", compactedCount );
+                log.info( "Shard are {}", logShardGroup( shardEntryGroups ) );
             }
 
 
@@ -341,6 +357,21 @@ public class GraphManagerShardConsistencyIT {
         }
 
         executor.shutdownNow();
+    }
+
+
+    private String logShardGroup( final Set<ShardEntryGroup> shardEntryGroups ) {
+        final StringBuilder builder = new StringBuilder();
+
+
+        /**
+         * Groups
+         */
+        for ( ShardEntryGroup group : shardEntryGroups ) {
+            builder.append( "\n\t" ).append( group.toString() );
+        }
+
+        return builder.toString();
     }
 
 

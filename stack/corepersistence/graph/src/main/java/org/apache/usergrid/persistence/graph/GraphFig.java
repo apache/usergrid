@@ -66,10 +66,6 @@ public interface GraphFig extends GuicyFig {
     String SHARD_REPAIR_CHANCE = "usergrid.graph.shard.repair.chance";
 
 
-    String COUNTER_WRITE_FLUSH_COUNT = "usergrid.graph.shard.counter.beginFlush.count";
-
-    String COUNTER_WRITE_FLUSH_INTERVAL = "usergrid.graph.shard.counter.beginFlush.interval";
-
     String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
 
@@ -102,15 +98,6 @@ public interface GraphFig extends GuicyFig {
     @Key( SHARD_AUDIT_QUEUE_SIZE )
     int getShardAuditWorkerQueueSize();
 
-
-    @Default( "10000" )
-    @Key( COUNTER_WRITE_FLUSH_COUNT )
-    long getCounterFlushCount();
-
-
-    @Default( "30000" )
-    @Key( COUNTER_WRITE_FLUSH_INTERVAL )
-    long getCounterFlushInterval();
 
     @Default( "1000" )
     @Key( COUNTER_WRITE_FLUSH_QUEUE_SIZE )
