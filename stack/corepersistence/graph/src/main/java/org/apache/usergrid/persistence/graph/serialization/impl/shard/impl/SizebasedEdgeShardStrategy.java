@@ -26,7 +26,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardGroupSearch;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 
@@ -41,12 +41,12 @@ import com.google.inject.Singleton;
 public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
-    private final NodeShardCache shardCache;
+    private final NodeShardGroupSearch shardCache;
     private final NodeShardApproximation shardApproximation;
 
 
     @Inject
-    public SizebasedEdgeShardStrategy( final NodeShardCache shardCache,
+    public SizebasedEdgeShardStrategy( final NodeShardGroupSearch shardCache,
                                        final NodeShardApproximation shardApproximation ) {
         this.shardCache = shardCache;
         this.shardApproximation = shardApproximation;

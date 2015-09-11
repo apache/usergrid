@@ -60,7 +60,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardS
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardGroupSearch;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerializationImpl;
@@ -69,7 +69,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.Node
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardGroupSearchImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
@@ -112,7 +112,7 @@ public abstract class GraphModule extends AbstractModule {
 
         bind(NodeShardAllocation.class).to( NodeShardAllocationImpl.class );
         bind( NodeShardApproximation.class ).to( NodeShardApproximationImpl.class );
-        bind( NodeShardCache.class ).to( NodeShardCacheImpl.class );
+        bind( NodeShardGroupSearch.class ).to( NodeShardGroupSearchImpl.class );
         bind( NodeShardCounterSerialization.class ).to( NodeShardCounterSerializationImpl.class );
 
 

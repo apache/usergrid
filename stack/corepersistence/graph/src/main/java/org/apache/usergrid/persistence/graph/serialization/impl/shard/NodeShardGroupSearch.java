@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
  *  the allocation of new shards should be 2*shard timeout in the future.
  *
  */
-public interface NodeShardCache {
+public interface NodeShardGroupSearch {
 
 
     /**

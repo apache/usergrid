@@ -53,7 +53,7 @@ import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardGroupSearch;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -219,7 +219,7 @@ public class GraphManagerShardConsistencyIT {
         }
 
         //now get all our shards
-        final NodeShardCache cache = getInstance( injectors, NodeShardCache.class );
+        final NodeShardGroupSearch cache = getInstance( injectors, NodeShardGroupSearch.class );
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceId, edgeType );
 

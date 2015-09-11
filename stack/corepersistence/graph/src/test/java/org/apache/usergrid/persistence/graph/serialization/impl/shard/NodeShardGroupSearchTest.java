@@ -23,26 +23,29 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardGroupSearchImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardEntryGroupIterator;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -51,7 +54,7 @@ import static org.mockito.Mockito.when;
 /**
  * Test for the shard that mocks responses from the serialization
  */
-public class NodeShardCacheTest {
+public class NodeShardGroupSearchTest {
 
 
     protected ApplicationScope scope;
@@ -73,8 +76,6 @@ public class NodeShardCacheTest {
     @Test
     public void testNoShards() throws ConnectionException {
 
-        final GraphFig graphFig = getFigMock();
-
         final NodeShardAllocation allocation = mock( NodeShardAllocation.class );
 
         final Id id = IdGenerator.createId( "test" );
@@ -87,13 +88,13 @@ public class NodeShardCacheTest {
         final long newTime = 10000l;
 
 
-        NodeShardCache cache = new NodeShardCacheImpl( allocation );
+        NodeShardGroupSearch cache = new NodeShardGroupSearchImpl( allocation );
 
 
         final Optional max = Optional.absent();
 
 
-        final ShardEntryGroup group = new ShardEntryGroup( );
+        final ShardEntryGroup group = new ShardEntryGroup();
         group.addShard( new Shard( 0, 0, true ) );
 
 
@@ -102,17 +103,10 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation.getShardsLocal( same( scope ), same( max ), same( directedEdgeMeta ) ) )
+        when( allocation.getShardsLocal( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
 
-                //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
-                .thenAnswer( new Answer<Iterator<ShardEntryGroup>>() {
-
-                    @Override
-                    public Iterator<ShardEntryGroup> answer( final InvocationOnMock invocationOnMock )
-                            throws Throwable {
-                        return Collections.singletonList( group ).iterator();
-                    }
-                } );
+            //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
+            .thenAnswer( invocationOnMock -> Collections.singletonList( group ).iterator() );
 
 
         ShardEntryGroup returnedGroup = cache.getWriteShardGroup( scope, newTime, directedEdgeMeta );
@@ -163,7 +157,7 @@ public class NodeShardCacheTest {
          * Set our min mid and max
          */
 
-        NodeShardCache cache = new NodeShardCacheImpl( allocation );
+        NodeShardGroupSearch cache = new NodeShardGroupSearchImpl( allocation );
 
 
         final Shard minShard = new Shard( 0, 0, true );
@@ -174,14 +168,14 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning all shards
          */
-        final ShardEntryGroup minShardGroup = new ShardEntryGroup( );
+        final ShardEntryGroup minShardGroup = new ShardEntryGroup();
         minShardGroup.addShard( minShard );
 
-        final ShardEntryGroup midShardGroup = new ShardEntryGroup( );
+        final ShardEntryGroup midShardGroup = new ShardEntryGroup();
         midShardGroup.addShard( midShard );
 
 
-        final ShardEntryGroup maxShardGroup = new ShardEntryGroup( );
+        final ShardEntryGroup maxShardGroup = new ShardEntryGroup();
         maxShardGroup.addShard( maxShard );
 
 
@@ -189,33 +183,114 @@ public class NodeShardCacheTest {
 
 
         /**
-         * Simulate returning no shards at all.
+         * Simulate returning our minShard
          */
-        when( allocation.getShardsLocal( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
 
-                //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
-                .thenAnswer( new Answer<Iterator<ShardEntryGroup>>() {
 
-                    @Override
-                    public Iterator<ShardEntryGroup> answer( final InvocationOnMock invocationOnMock )
-                            throws Throwable {
-                        return Arrays.asList( maxShardGroup, midShardGroup, minShardGroup ).iterator();
-                    }
-                } );
+        when( allocation.getShardsLocal( same( scope ), argThat( new BaseMatcher<Optional<Shard>>() {
+            @Override
+            public void describeTo( final Description description ) {
+
+            }
+
+
+            @Override
+            public boolean matches( final Object o ) {
+                final Optional<Shard> shard = ( Optional<Shard> ) o;
+
+
+                if ( !shard.isPresent() ) {
+                    return false;
+                }
+
+                final long shardIndex = shard.get().getShardIndex();
+
+                return minShard.getShardIndex() <= shardIndex && shardIndex < midShard.getShardIndex();
+            }
+        } ), same( directedEdgeMeta ) ) )
+
+            //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
+            .thenAnswer( answer -> new ShardEntryGroupIterator( Collections.singleton( minShard ).iterator(),
+                NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
+
+
+        /**
+         * Simulate returning our midShard
+         */
+
+
+        when( allocation.getShardsLocal( same( scope ), argThat( new BaseMatcher<Optional<Shard>>() {
+            @Override
+            public void describeTo( final Description description ) {
+
+            }
+
+
+            @Override
+            public boolean matches( final Object o ) {
+                final Optional<Shard> shard = ( Optional<Shard> ) o;
+
+
+                if ( !shard.isPresent() ) {
+                    return false;
+                }
+
+                final long shardIndex = shard.get().getShardIndex();
+
+                return midShard.getShardIndex() <= shardIndex && shardIndex < maxShard.getShardIndex();
+            }
+        } ), same( directedEdgeMeta ) ) )
+
+            //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
+            .thenAnswer( answer -> new ShardEntryGroupIterator( Arrays.asList( midShard, minShard ).iterator(),
+                NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
+
+
+        /**
+         * Simulate returning our maxShard
+         */
+
+
+        when( allocation.getShardsLocal( same( scope ), argThat( new BaseMatcher<Optional<Shard>>() {
+            @Override
+            public void describeTo( final Description description ) {
+
+            }
+
+
+            @Override
+            public boolean matches( final Object o ) {
+                final Optional<Shard> shard = ( Optional<Shard> ) o;
+
+
+                if ( !shard.isPresent() ) {
+                    return false;
+                }
+
+                final long shardIndex = shard.get().getShardIndex();
+
+                return maxShard.getShardIndex() <= shardIndex;
+            }
+        } ), same( directedEdgeMeta ) ) )
+
+            //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
+            .thenAnswer(
+                answer -> new ShardEntryGroupIterator( Arrays.asList( maxShard, midShard, minShard ).iterator(),
+                    NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
 
 
         //check getting equal to our min, mid and max
 
         ShardEntryGroup writeShard = cache.getWriteShardGroup( scope, minShard.getShardIndex(), directedEdgeMeta );
 
-        assertSame( minShardGroup, writeShard );
+        assertEquals( minShardGroup, writeShard );
 
 
         Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, minShard.getShardIndex(), directedEdgeMeta );
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "min shard expected", minShardGroup, groups.next() );
+        assertEquals( "min shard expected", minShardGroup, groups.next() );
 
         assertFalse( groups.hasNext() );
 
@@ -223,18 +298,18 @@ public class NodeShardCacheTest {
         //mid
         writeShard = cache.getWriteShardGroup( scope, midShard.getShardIndex(), directedEdgeMeta );
 
-        assertSame( midShardGroup, writeShard );
+        assertEquals( midShardGroup, writeShard );
 
 
         groups = cache.getReadShardGroup( scope, midShard.getShardIndex(), directedEdgeMeta );
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "mid shard expected", midShardGroup, groups.next() );
+        assertEquals( "mid shard expected", midShardGroup, groups.next() );
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "min shard expected", minShardGroup, groups.next() );
+        assertEquals( "min shard expected", minShardGroup, groups.next() );
 
         assertFalse( groups.hasNext() );
 
@@ -243,23 +318,23 @@ public class NodeShardCacheTest {
 
         writeShard = cache.getWriteShardGroup( scope, maxShard.getShardIndex(), directedEdgeMeta );
 
-        assertSame( maxShardGroup, writeShard );
+        assertEquals( maxShardGroup, writeShard );
 
 
         groups = cache.getReadShardGroup( scope, maxShard.getShardIndex(), directedEdgeMeta );
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "max shard expected", maxShardGroup, groups.next() );
+        assertEquals( "max shard expected", maxShardGroup, groups.next() );
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "mid shard expected", midShardGroup, groups.next() );
+        assertEquals( "mid shard expected", midShardGroup, groups.next() );
 
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "min shard expected", minShardGroup, groups.next() );
+        assertEquals( "min shard expected", minShardGroup, groups.next() );
 
         assertFalse( groups.hasNext() );
 
@@ -267,18 +342,18 @@ public class NodeShardCacheTest {
         //now test at mid +1 to ensure we get mid + min
         writeShard = cache.getWriteShardGroup( scope, midShard.getShardIndex() + 1, directedEdgeMeta );
 
-        assertSame( midShardGroup, writeShard );
+        assertEquals( midShardGroup, writeShard );
 
 
         groups = cache.getReadShardGroup( scope, midShard.getShardIndex() + 1, directedEdgeMeta );
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "mid shard expected", midShardGroup, groups.next() );
+        assertEquals( "mid shard expected", midShardGroup, groups.next() );
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "min shard expected", minShardGroup, groups.next() );
+        assertEquals( "min shard expected", minShardGroup, groups.next() );
 
         assertFalse( groups.hasNext() );
 
@@ -286,7 +361,7 @@ public class NodeShardCacheTest {
         //now test at mid -1 to ensure we get min
         writeShard = cache.getWriteShardGroup( scope, midShard.getShardIndex() - 1, directedEdgeMeta );
 
-        assertSame( minShardGroup, writeShard );
+        assertEquals( minShardGroup, writeShard );
 
 
         groups = cache.getReadShardGroup( scope, midShard.getShardIndex() - 1, directedEdgeMeta );
@@ -294,7 +369,7 @@ public class NodeShardCacheTest {
 
         assertTrue( groups.hasNext() );
 
-        assertSame( "min shard expected", minShardGroup, groups.next() );
+        assertEquals( "min shard expected", minShardGroup, groups.next() );
 
         assertFalse( groups.hasNext() );
     }
@@ -304,5 +379,19 @@ public class NodeShardCacheTest {
         final GraphFig graphFig = mock( GraphFig.class );
 
         return graphFig;
+    }
+
+
+    private static final class NoOpShardCompaction implements ShardGroupCompaction {
+
+        private static final NoOpShardCompaction INSTANCE = new NoOpShardCompaction();
+
+
+        @Override
+        public ListenableFuture<AuditResult> evaluateShardGroup( final ApplicationScope scope,
+                                                                 final DirectedEdgeMeta edgeMeta,
+                                                                 final ShardEntryGroup group ) {
+            return null;
+        }
     }
 }
