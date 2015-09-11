@@ -47,6 +47,7 @@ class ConfigurableSimulation extends Simulation {
       case ScenarioType.NameRandomInfinite => EntityCollectionScenarios.getRandomEntitiesByName
       case ScenarioType.UuidRandomInfinite => EntityCollectionScenarios.getRandomEntitiesByUuid
       case ScenarioType.GetByNameSequential => EntityCollectionScenarios.getEntitiesByNameSequential
+      case ScenarioType.DoNothing => EntityCollectionScenarios.doNothing
       case _ => null
     }
   }
@@ -82,7 +83,7 @@ class ConfigurableSimulation extends Simulation {
     setUp(
       scenario
         .inject(injectStepList)
-          .protocols(Settings.httpConf.acceptHeader("application/json"))
+          .protocols(Settings.httpAppConf.connection("keep-alive").acceptHeader("application/json"))
     )
   } else {
     println(s"scenarioType ${Settings.scenarioType} not found.")

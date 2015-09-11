@@ -38,6 +38,6 @@ class SetupSimulation extends Simulation{
   setUp(
     UserScenarios.createUsersWithDevicesScenario
       .inject(splitUsers(Settings.rampUsers) into( rampUsers(10) over (10 seconds)) separatedBy (10 seconds))
-      .protocols(Settings.httpConf.acceptHeader("application/json"))
+      .protocols(Settings.httpAppConf.acceptHeader("application/json"))
   )
 }

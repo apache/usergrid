@@ -130,7 +130,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
         this.taskExecutor = MoreExecutors.listeningDecorator( TaskExecutorFactory
             .createTaskExecutor( "ShardCompaction", graphFig.getShardAuditWorkerCount(),
-                graphFig.getShardAuditWorkerQueueSize() ) );
+                graphFig.getShardAuditWorkerQueueSize(), TaskExecutorFactory.RejectionAction.ABORT ) );
     }
 
 

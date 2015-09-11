@@ -21,35 +21,38 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #URL=
 #ADMIN_USER=
 #ADMIN_PASSWORD=
-#ORG=
-#APP=
+#ENTITY_WORKER_NUM=  #may be overridden on command line
+#ENTITY_WORKER_COUNT=  #may be overridden on command line
 #AUTH_TYPE=
 #TOKEN_TYPE=
-#CREATE_ORG=
-#CREATE_APP=
-#LOAD_ENTITIES=
-#SANDBOX_COLLECTION=
-#NUM_ENTITIES=
-#SKIP_SETUP=
-#COLLECTION=
+#NUM_ENTITIES=  #may be overridden on command line
+#ENTITY_TYPE=
+#ENTITY_PREFIX=
+#ENTITY_SEED=  #may be overridden on command line
 #RETRY_COUNT=
-#END_CONDITION_TYPE=
-#END_MINUTES=
-#END_REQUEST_COUNT=
+#ENTITY_PROGRESS_COUNT=
 #CONSTANT_USERS_PER_SEC=
 #CONSTANT_USERS_DURATION=
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) UUID_FILENAME"
+[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 ORG APP [COLLECTION [SANDBOX_COLLECTION (true/false)]]"
 
-RAMP_USERS="$1"
-RAMP_TIME="$2"
-UUID_FILENAME="$3"
+ORG="$1"
+APP="$2"
+COLLECTION="gatlingitems"
+[ "$#" -ge 3 ] && COLLECTION="$3"
+SANDBOX_COLLECTION=true
+[ "$#" -ge 4 ] && SANDBOX_COLLECTION="$4"
 
-shift 3
+shift $#
 
-SCENARIO_TYPE=uuidRandomInfinite
+SCENARIO_TYPE=doNothing
+SKIP_SETUP=false
+CREATE_ORG=true
+CREATE_APP=true
+RAMP_USERS=1
+RAMP_TIME=1
 
 #Compile everything
 mvn compile
@@ -65,20 +68,21 @@ mvn gatling:execute \
 -DtokenType=${TOKEN_TYPE} \
 -DcreateOrg=${CREATE_ORG} \
 -DcreateApp=${CREATE_APP} \
--DloadEntities=${LOAD_ENTITIES} \
 -DsandboxCollection=${SANDBOX_COLLECTION} \
 -DnumEntities=${NUM_ENTITIES} \
 -DskipSetup=${SKIP_SETUP} \
 -Dcollection=${COLLECTION} \
+-DentityType=${ENTITY_TYPE} \
+-DentityPrefix=${ENTITY_PREFIX} \
+-DentitySeed=${ENTITY_SEED} \
 -DretryCount=${RETRY_COUNT} \
--DendConditionType=${END_CONDITION_TYPE} \
--DendMinutes=${END_MINUTES} \
--DendRequestCount=${END_REQUEST_COUNT} \
+-DentityProgressCount=${ENTITY_PROGRESS_COUNT} \
 -DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
 -DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
 -DscenarioType=${SCENARIO_TYPE} \
+-DloadEntities=${LOAD_ENTITIES} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
--DuuidFilename=${UUID_FILENAME} \
+-DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 

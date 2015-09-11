@@ -20,9 +20,14 @@ package org.apache.usergrid.rest.test.resource.endpoints;
 
 import javax.ws.rs.core.MediaType;
 
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+
+import java.util.UUID;
 
 
 /**
@@ -34,24 +39,46 @@ public class SystemResource extends NamedResource {
         super( "system",context, parent );
     }
 
-    //Dirty hack for path resource in new branch of two-dot-o
-    public SystemResource(final String name,final ClientContext context, final UrlResource parent ) {
-        super( name,context, parent );
-    }
-
 
     public DatabaseResource database() {
         return new DatabaseResource(context, this);
     }
 
-    public SystemResource addToPath( String pathPart ) {
-        return new SystemResource( pathPart, context, this );
-    }
 
-    public ApiResponse put(){
-        ApiResponse
-            response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                                        .put(ApiResponse.class);
-        return response;
+    public ApplicationsResource applications(String appid) {
+        return new ApplicationsResource(appid,context,this);
+    }
+    public ApplicationsResource applications(String appid, String additionalPath) {
+        return new ApplicationsResource(appid+"/"+additionalPath,context,this);
+    }
+    public class ApplicationsResource extends NamedResource {
+        public ApplicationsResource(final String appid, final ClientContext context, final UrlResource parent ) {
+            super( "applications/"+appid,context, parent );
+        }
+
+        public ApiResponse get(QueryParameters queryParameters){
+
+            WebResource resource = getResource();
+            resource = addParametersToResource( resource, queryParameters );
+
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+            resource.addFilter(httpBasicAuthFilter);
+
+            return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .get(ApiResponse.class);
+        }
+        public ApiResponse delete(QueryParameters queryParameters){
+
+            WebResource resource = getResource();
+            resource = addParametersToResource( resource, queryParameters );
+
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+            resource.addFilter(httpBasicAuthFilter);
+
+            return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .delete(ApiResponse.class);
+        }
     }
 }

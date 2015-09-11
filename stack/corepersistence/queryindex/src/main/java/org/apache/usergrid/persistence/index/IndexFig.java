@@ -122,9 +122,16 @@ public interface IndexFig extends GuicyFig {
     String getNodeName();
 
     /**
-     * The number of primary shards to use for the index in Elasticsearch.
+     * The number of primary shards to use for an index in Elasticsearch.  Typically 2x or 3x the ES nodes.
+     *
+     * Depending on the use case for Usergrid, these numbers may vary. Usergrid is defaulted
+     * to a higher number of shards based on typical Elasticsearch clusters being >= 6 nodes.
+     * You can choose how it's sharded in Elasticsearch to reach optimal indexing for your dataset.  For more
+     * info about sharding, here is a good starting point:
+     *  <https://www.elastic.co/guide/en/elasticsearch/guide/current/routing-value.html>
+     *
      */
-    @Default( "6" )
+    @Default( "18" )
     @Key( ELASTICSEARCH_NUMBER_OF_SHARDS )
     int getNumberOfShards();
 

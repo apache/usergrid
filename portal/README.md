@@ -5,7 +5,7 @@ The admin portal source code is fully open source and forkable. You can easily e
 
 The admin portal source is in the Usergrid repo here:
 
-<https://github.com/apache/incubator-usergrid/tree/master/portal>
+<https://github.com/apache/usergrid/tree/master/portal>
 
 ##About the Admin Portal
 Use the admin portal for administrative operations, including:
@@ -81,7 +81,7 @@ You can also use the Usergrid Command Line (ugc) for terminal access to the User
 ## Contributing
 We welcome your enhancements!
 
-The Admin Portal is part of the [Usergrid](http://usergrid.incubator.apache.org/), project. It is open source and licensed under the Apache License, Version 2.0.
+The Admin Portal is part of the [Usergrid](http://usergrid.apache.org/), project. It is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

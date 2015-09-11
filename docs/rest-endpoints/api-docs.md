@@ -11,6 +11,7 @@ Methods are organized by tag. Follow the methods are the [Model Definitions](#mo
 * [Entities-Collections](#entities-collections)
 * [Events](#events)
 * [Groups](#groups)
+* [Notifications](#notifications)
 * [Organizations-Applications](#organizations-applications)
 * [Permissions-Roles](#permissions-roles)
 
@@ -26,6 +27,8 @@ Methods are organized by tag. Follow the methods are the [Model Definitions](#mo
 
 <h2 class="usergrid-POST-heading">POST /management/token</h2>
 
+<a name="op-g6kolrjbqc"></a>
+
 Login with Admin-User or Organization credentials.
 
 <h3>Parameters</h3>
@@ -38,7 +41,7 @@ Login credentials either username/password or id/secret. (Specified in body).
 __200__
 
 * Description: Object containing access_token.
-* Schema: [AccessTokenReponse](#accesstokenreponse)
+* Schema: [AccessTokenResponse](#accesstokenresponse)
     
 __default__
 
@@ -47,6 +50,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/token</h2>
+
+<a name="op-1epwdjbmq5"></a>
 
 Login with App-User or Application credentials.
 
@@ -59,8 +64,8 @@ Login credentials either username/password or id/secret. (Specified in body).
 
 __200__
 
-* Description: An array of new created Admin user&#39;s info.
-* Schema: [AccessTokenReponse](#accesstokenreponse)
+* Description: Object containing access_token.
+* Schema: [AccessTokenResponse](#accesstokenresponse)
     
 __default__
 
@@ -72,6 +77,8 @@ __default__
 
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/groups/{groupId}/feed</h2>
+
+<a name="op-ogkiyu6hiw"></a>
 
 Get a group&#39;s feed through providing all the identifications.
 
@@ -98,6 +105,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users/{userId}/activities</h2>
+
+<a name="op-vxk180byil"></a>
 
 Create an activity in the activities collection.
 
@@ -126,6 +135,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/feed</h2>
+
+<a name="op-3e8mjg3ild"></a>
 
 Retrieve a user&#39;s feed through providing all the identifications.
 
@@ -156,6 +167,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/users</h2>
 
+<a name="op-0h23bhc1fo"></a>
+
 Retrieve details about the admin users in an organization.
 
 <h3>Parameters</h3>
@@ -177,6 +190,8 @@ __default__
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /management/orgs/{orgId}/users/{userId}</h2>
+
+<a name="op-tslbueyidt"></a>
 
 Remove an admin user from an organization through providing both Id of application and organization.
 
@@ -202,18 +217,20 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/users</h2>
 
+<a name="op-qq0xsfwrk9"></a>
+
 Create a whole new admin user.
 
 <h3>Parameters</h3>
 
-* __adminuserproperty__ ([CreateAdminUser](#createadminuser))
-One or more sets of user properties of which username is mandatory and must be unique. (Specified in body).
+* __CreateAdminUser__ ([CreateAdminUser](#createadminuser))
+User entity with fields required for User creation. (Specified in body).
 
 <h3>Responses</h3>
 
 __200__
 
-* Description: An array of new created Admin user&#39;s info.
+* Description: An API Response with a entities array containing the newly created Admin User.
 * Schema: [User](#user)
     
 __default__
@@ -223,6 +240,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/resetpw</h2>
+
+<a name="op-d5w5sa7r6g"></a>
 
 Initiate the reset of an admin user&#39;s password.
 
@@ -244,6 +263,8 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/users/resetpw</h2>
 
+<a name="op-mtjnervjog"></a>
+
 Complete the password reset through getting the newpassword and the old one for identification.
 
 <h3>Parameters</h3>
@@ -256,15 +277,17 @@ Parameters and value for the Captcha challenge, the admin user&#39;s response to
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#action)
+* Schema: [](#)
     
 __default__
 
-* Description: Unexpected error.
+* Description: 
 * Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}</h2>
+
+<a name="op-pqthpqruuu"></a>
 
 Retrieve details about an admin user.
 
@@ -277,7 +300,7 @@ One of the user&#39;s identification which includes username, real name, email a
 
 __200__
 
-* Description: An array of user&#39;s details
+* Description: An API Response with a entities array containing the Admin User.
 * Schema: [User](#user)
     
 __default__
@@ -287,6 +310,8 @@ __default__
     
 
 <h2 class="usergrid-PUT-heading">PUT /management/users/{userId}</h2>
+
+<a name="op-mydfdnvoxu"></a>
 
 Update the info of an admin user.
 
@@ -299,7 +324,7 @@ One of the user&#39;s identification which includes username, real name, email a
 
 __200__
 
-* Description: An array of user&#39;s details.
+* Description: An API Response with a entities array containing the updated Admin User
 * Schema: [User](#user)
     
 __default__
@@ -309,6 +334,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/activate</h2>
+
+<a name="op-ydubzwoyll"></a>
 
 Activate an admin user from a link provIded in an email notification.
 
@@ -336,6 +363,8 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /management/users/{userId}/password</h2>
 
+<a name="op-tojtjxiv8m"></a>
+
 Update an admin user&#39;s password through getting the newpassword and the old one for identification.
 
 <h3>Parameters</h3>
@@ -359,6 +388,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/reactivate</h2>
+
+<a name="op-fcsvsgqdmf"></a>
 
 Reactivate an expired admin user.
 
@@ -384,6 +415,8 @@ __default__
 
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users</h2>
+
+<a name="op-apfodlbfvw"></a>
 
 Retrieve users though query statement.
 
@@ -411,6 +444,8 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users</h2>
 
+<a name="op-vcebxhfnai"></a>
+
 Create a user in the users collection through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -436,6 +471,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}</h2>
+
+<a name="op-rxzqi79iqh"></a>
 
 Retrieve a user through providing all the identifications.
 
@@ -463,6 +500,8 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/users/{userId}</h2>
 
+<a name="op-eqfv3kglfr"></a>
+
 Update a user through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -489,6 +528,8 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/users/{userId}</h2>
 
+<a name="op-q0sbwpkbrn"></a>
+
 Remove a user through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -514,6 +555,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users/{user}/password</h2>
+
+<a name="op-tz8aby9w7l"></a>
 
 Set a user&#39;s password or reset the user&#39;s existing password.
 
@@ -546,6 +589,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/{relation}</h2>
 
+<a name="op-p3wfwppylf"></a>
+
 Retrieve a user&#39;s collections or connections through query statement.
 
 <h3>Parameters</h3>
@@ -576,6 +621,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/{collectionId}</h2>
 
+<a name="op-071uvg9uhh"></a>
+
 Retrieve collection through query statement.
 
 <h3>Parameters</h3>
@@ -604,6 +651,8 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/{collectionId}</h2>
 
+<a name="op-vlva22mrqv"></a>
+
 Update collection through query statement.
 
 <h3>Parameters</h3>
@@ -631,6 +680,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</h2>
+
+<a name="op-yhl3yuzrpo"></a>
 
 Add an entity to a collection through providing all the identifications.
 
@@ -664,6 +715,8 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</h2>
 
+<a name="op-9gfzhzym3s"></a>
+
 Remove an entity from a collection through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -696,6 +749,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/{collectionId}/{entityId}</h2>
 
+<a name="op-usi7vrth9c"></a>
+
 Retrieve an entity through providing Id of application, organization, collection and entity.
 
 <h3>Parameters</h3>
@@ -723,6 +778,8 @@ __default__
     
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/{collectionId}/{entityId}</h2>
+
+<a name="op-grwgmcmeiv"></a>
 
 One or more properties can be updated with a single request.
 
@@ -754,6 +811,8 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId}</h2>
 
+<a name="op-3pvhj9pwas"></a>
+
 Delete an entity from the collection.
 
 <h3>Parameters</h3>
@@ -782,7 +841,9 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/{entitytype}</h2>
 
-When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type. 
+<a name="op-yaupy7fiha"></a>
+
+When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type.
 
 <h3>Parameters</h3>
 
@@ -813,6 +874,8 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/events</h2>
 
+<a name="op-sahbmftblc"></a>
+
 Create an event through providing both Id of organization and application.
 
 <h3>Parameters</h3>
@@ -842,6 +905,8 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups</h2>
 
+<a name="op-lqawyn1jf7"></a>
+
 Create a new group through providing both Id of organization and application.
 
 <h3>Parameters</h3>
@@ -868,6 +933,8 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups/{groupId}/activities</h2>
 
+<a name="op-kah8tippl1"></a>
+
 Create an activity to a specific group. In this case the activity is created in the activities collection and is accessible at the /activities endpoint to users who have the permission to read that endpoint. In addition, a relationship is established between the activity and the group, and because of that, the activity will appear in the group’s feed. The group &#39;owns&#39; the activity. Also, the activity will be published in the feed of all users that are members of the group.
 
 <h3>Parameters</h3>
@@ -885,7 +952,7 @@ One or more sets of activity properties. (Specified in body).
 
 __200__
 
-* Description: An array of user&#39;s activity.
+* Description: 
 * Schema: [ActivityFeed](#activityfeed)
     
 __default__
@@ -895,6 +962,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups/{groupId}/users/{userId}</h2>
+
+<a name="op-lwbnuuzwdp"></a>
 
 Add a user to a group through providing all the identifications.
 
@@ -924,6 +993,8 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/groups/{groupId}/users/{userId}</h2>
 
+<a name="op-yrptebgezb"></a>
+
 Delete user from a group through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -952,6 +1023,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{org_Id}/{app_Id}/groups/{groupId}</h2>
 
+<a name="op-2yavprepml"></a>
+
 Get a group through through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -978,6 +1051,8 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{org_Id}/{app_Id}/groups/{groupId}</h2>
 
+<a name="op-1ogt6s1meu"></a>
+
 Update a group through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -1002,10 +1077,385 @@ __default__
 * Schema: [Error](#error)
     
 
+### Notifications
+
+
+<h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices</h2>
+
+<a name="op-gtyulxpfuh"></a>
+
+Create notifications for user through targeting by location and providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __notification__ ([CreateNotifications](#createnotifications))
+These parameters are used when forming the notification portion of the request. (Specified in body).
+* __queryStatement__ (string)
+The query statement of the location of the user. (Specified in query).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of created notification&#39;s info.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices/*/notifications</h2>
+
+<a name="op-fmxyekvv79"></a>
+
+Create notifications for all devices. This request will target all device entities.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __notification__ ([CreateNotifications](#createnotifications))
+These parameters are used when forming the notification portion of the request. (Specified in body).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of created notification&#39;s info.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices/{deviceId}/notifications</h2>
+
+<a name="op-iycz2tnhqk"></a>
+
+Create notifications for a single device. This request will target a specific device entity.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __deviceId__ (string)
+One of the device&#39;s identification which includes name or uuid. (Specified in path).
+* __notification__ ([CreateNotifications](#createnotifications))
+These parameters are used when forming the notification portion of the request. (Specified in body).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of created notification&#39;s info.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/groups/{path}/notifications</h2>
+
+<a name="op-cz55hca573"></a>
+
+Create notifications for a group. This request will target all users associated with a specific group entity.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __appId__ (string)
+One of the application&#39;s identification which includes name or uuid. (Specified in path).
+* __path__ (string)
+The path of the group. (Specified in path).
+* __notification__ ([CreateNotifications](#createnotifications))
+These parameters are used when forming the notification portion of the request. (Specified in body).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of created notification&#39;s info.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/notifications</h2>
+
+<a name="op-dt0m447vtt"></a>
+
+Retrieve one or more notifications through providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of retrieved notification&#39;s info.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-PUT-heading">PUT /{orgId}/{applicationId}/notifications/{notificationId}</h2>
+
+<a name="op-x3htrvnimm"></a>
+
+Update a Notification in order to cancel the notifcation or set a new expiration time.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __notificationId__ (string)
+One of the notification&#39;s identification which includes name or uuid. (Specified in path).
+* __notificationUpdate__ ([NotificationUpdate](#notificationupdate))
+Object with Notification fields to be updated. (Specified in body).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An API Response object containing an entity of type Notification.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{applicationId}/notifications/{notificationId}</h2>
+
+<a name="op-v8fksfkydk"></a>
+
+Delete an unsent Notification from the system.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __notificationId__ (string)
+One of the notification&#39;s identification which includes name or uuid. (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: API Response containing Notification entity that was deleted.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/receipts</h2>
+
+<a name="op-bierhevrl4"></a>
+
+Retrieve one or more receipts through providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of retrieved receipt&#39;s info.
+* Schema: [Receipt](#receipt)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/users/{userId}/notifications</h2>
+
+<a name="op-0e0sm3lp5t"></a>
+
+Create notifications for a user. This request will target a specific user entity.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __userId-3__ (string)
+One of the user&#39;s identification which includes username or UUID. (Specified in path).
+* __notification__ ([CreateNotifications](#createnotifications))
+These parameters are used when forming the notification portion of the request. (Specified in body).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of created notification&#39;s info.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{deviceId}/*/receipts</h2>
+
+<a name="op-dkszriccku"></a>
+
+Retrieve receipts associated with one or more devices through providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __deviceId__ (string)
+One of the device&#39;s identification which includes name or uuid. (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of retrieved receipt&#39;s info.
+* Schema: [Receipt](#receipt)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{notificationId}/*/queue</h2>
+
+<a name="op-t8pxsqwc6d"></a>
+
+Retrieve the list of devices associated with one or more notifications before the notifications are sent through providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __notificationId__ (string)
+One of the notification&#39;s identification which includes name or uuid. (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of retrieved device&#39;s info.
+* Schema: [Device](#device)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{notificationId}/*/receipts</h2>
+
+<a name="op-xcy3ifmfkc"></a>
+
+Retrieve receipts for one or more notifications through providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __notificationId__ (string)
+One of the notification&#39;s identification which includes name or uuid. (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of retrieved receipt&#39;s info.
+* Schema: [Receipt](#receipt)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{receiptId}/*/notifications</h2>
+
+<a name="op-xoeujjr9zv"></a>
+
+Retrieve notifications associated with one or more receipts through providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __applicationId__ (string)
+One of the application&#39;s identification which includes name or uuid (same as appId). (Specified in path).
+* __receiptId__ (string)
+One of the receipt&#39;s identification which includes name or uuid. (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of retrieved notification&#39;s info.
+* Schema: [Notification](#notification)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
 ### Organizations-Applications
 
 
 <h2 class="usergrid-POST-heading">POST /management/orgs</h2>
+
+<a name="op-vcwlytogis"></a>
 
 Create an organization through a form post.
 
@@ -1029,6 +1479,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}</h2>
 
+<a name="op-fuenkzdzx7"></a>
+
 Retrieve an organization given a specified UUID or username.
 
 <h3>Parameters</h3>
@@ -1050,6 +1502,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/activate</h2>
+
+<a name="op-rlwkfscz2c"></a>
 
 Activate an organization from a link provIded in an email notification.
 
@@ -1077,6 +1531,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps</h2>
 
+<a name="op-7rcjv4cu57"></a>
+
 Retrieve the applications in an organization through providing both Id of application and organization.
 
 <h3>Parameters</h3>
@@ -1097,7 +1553,35 @@ __default__
 * Schema: [Error](#error)
     
 
+<h2 class="usergrid-DELETE-heading">DELETE /management/orgs/{orgId}/apps/{appId}</h2>
+
+<a name="op-ytwesqwdgc"></a>
+
+Remove an application from an organization through providing both Id of application and organization.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __appId__ (string)
+One of the application&#39;s identification which includes name or uuid. (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: An array of deleted application info.
+* Schema: [AppData](#appdata)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps/{appId}/credentials</h2>
+
+<a name="op-9xfw58hzbu"></a>
 
 Retrieve the client Id and client secret credentials for an application in an organization.
 
@@ -1123,6 +1607,8 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/orgs/{orgId}/apps/{appId}/credentials</h2>
 
+<a name="op-lcqnmroopm"></a>
+
 Generate the client Id and client secret credentials for an application in an organization.
 
 <h3>Parameters</h3>
@@ -1147,6 +1633,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/credentials</h2>
 
+<a name="op-srhannjni2"></a>
+
 Retrieve the credentials for an organization client.
 
 <h3>Parameters</h3>
@@ -1168,6 +1656,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /management/orgs/{orgId}/credentials</h2>
+
+<a name="op-konb0d3faz"></a>
 
 Generate whole new credentials for an organization client.
 
@@ -1191,6 +1681,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/feed</h2>
 
+<a name="op-jmorkmmhu8"></a>
+
 Retrieve an organization&#39;s activity feed.
 
 <h3>Parameters</h3>
@@ -1213,6 +1705,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/reactivate</h2>
 
+<a name="op-2eplhfrllc"></a>
+
 Reactivate an expired organization.
 
 <h3>Parameters</h3>
@@ -1234,6 +1728,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/feed</h2>
+
+<a name="op-yitoouap1l"></a>
 
 Retrieve an admin user&#39;s activity feed.
 
@@ -1260,6 +1756,8 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles</h2>
 
+<a name="op-gzvozr9tpx"></a>
+
 Retrieve the roles in an application through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -1283,6 +1781,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/roles</h2>
+
+<a name="op-6cxfmtg8qw"></a>
 
 Create a new role through providing all the identifications.
 
@@ -1310,7 +1810,9 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/permissions</h2>
 
-Remove permissions from a role. 
+<a name="op-xhckyqr6ab"></a>
+
+Remove permissions from a role.
 
 <h3>Parameters</h3>
 
@@ -1320,15 +1822,15 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 One of the application&#39;s identification which includes name or uuid. (Specified in path).
 * __roleId__ (string)
 One of the role&#39;s identification which includes name or uuid. (Specified in path).
-* __grant_url_pattern__ (string)
-The query statement of the url pattern. (Specified in query).
+* __Permissions__ ([Permissions](#permissions))
+The query statement of the url pattern. (Specified in body).
 
 <h3>Responses</h3>
 
 __200__
 
-* Description: An array of deleted permission&#39;s info.
-* Schema: [Permission](#permission)
+* Description: Permissions object with array of the deleated Usergrid Permission strings.
+* Schema: [Permissions](#permissions)
     
 __default__
 
@@ -1337,6 +1839,8 @@ __default__
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles/{roleId}/users</h2>
+
+<a name="op-xvyk7zreff"></a>
 
 Retrieve the users in a role through providing all the identifications.
 
@@ -1353,7 +1857,7 @@ One of the role&#39;s identification which includes name or uuid. (Specified in 
 
 __200__
 
-* Description: An array of retrieved user&#39;s info.
+* Description: An API Response with a entities array of Users.
 * Schema: [User](#user)
     
 __default__
@@ -1363,6 +1867,8 @@ __default__
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/roles/{roleId}/users/{userId}</h2>
+
+<a name="op-muyc43xgrf"></a>
 
 Add a user to a role through providing all the identifications.
 
@@ -1392,6 +1898,8 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/users/{userId}</h2>
 
+<a name="op-ozbsrlozwi"></a>
+
 Remove a user from a role through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -1420,6 +1928,8 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{rolename}</h2>
 
+<a name="op-1obkbxb1zd"></a>
+
 Remove a role through providing all the identifications.
 
 <h3>Parameters</h3>
@@ -1444,1644 +1954,2024 @@ __default__
 * Schema: [Error](#error)
     
 
+<h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/roles/{roleId}/permissions</h2>
+
+<a name="op-bb3svhbvfj"></a>
+
+Retrieve permissions for a Role.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __appId__ (string)
+One of the application&#39;s identification which includes name or uuid. (Specified in path).
+* __roleId__ (string)
+One of the role&#39;s identification which includes name or uuid. (Specified in path).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: Permissions object with array of Usergrid Permission strings.
+* Schema: [Permissions](#permissions)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
+<h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/roles/{roleId}/permissions</h2>
+
+<a name="op-mu9s1qxs5u"></a>
+
+Add permissions to a role through providing all the identifications.
+
+<h3>Parameters</h3>
+
+* __orgId__ (string)
+One of the organization&#39;s identification which includes name or uuid. (Specified in path).
+* __appId__ (string)
+One of the application&#39;s identification which includes name or uuid. (Specified in path).
+* __roleId__ (string)
+One of the role&#39;s identification which includes name or uuid. (Specified in path).
+* __Permissions__ ([Permissions](#permissions))
+Permissions object with array of Usergrid Permission strings to be added. (Specified in body).
+
+<h3>Responses</h3>
+
+__200__
+
+* Description: Permissions object with array of Usergrid Permission strings.
+* Schema: [Permission](#permission)
+    
+__default__
+
+* Description: Unexpected error.
+* Schema: [Error](#error)
+    
+
 ## Models
-Properties for Usergrid default entities.
+This section lists the properties for the Usergrid Default Entities:
 
 ### AccessTokenResponse
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>access_token</td>
-        <td>string</td>
-        <td>Access-token that may be used on subsequent requests.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>expires_in</td>
-        <td>number</td>
-        <td>Time (in milliseconds) until access-token expires.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>user</td>
-        <td>ref</td>
-        <td>User object if login was done as a user.</td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>access_token</td>
+      <td>
+           string
+      </td>
+      <td>Access-token that may be used on subsequent requests.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>expires_in</td>
+      <td>
+           number
+      </td>
+      <td>Time (in milliseconds) until access-token expires.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>user</td>
+      <td>
+           [User](#user)  
+      </td>
+      <td>User object if login was done as a user.</td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### Action
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>action</td>
-        <td>string</td>
-        <td>The requested action.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>status</td>
-        <td>string</td>
-        <td>The status of the requested action.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>token</td>
-        <td>string</td>
-        <td>The token required for getting an AdminUser.</td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>action</td>
+      <td>
+           string
+      </td>
+      <td>The requested action.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>status</td>
+      <td>
+           string
+      </td>
+      <td>The status of the requested action.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>timestamp</td>
+      <td>
+           number
+      </td>
+      <td>The timestamp of the requested action.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>duration</td>
+      <td>
+           number
+      </td>
+      <td>The duration of the requested action.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>token</td>
+      <td>
+           string
+      </td>
+      <td>The token required for getting an AdminUser.</td>
+      <td>false</td>
+  </tr>
 </table>
+
+__Referring Definitions__
+  
+* [Receipt](#receipt)
+* [Device](#device)
+* [Notification](#notification)
+* [Role](#role)
+* [Event](#event)
+* [Group](#group)
+* [Credential](#credential)
+* [Organization](#organization)
+* [AppData](#appdata)
+* [User](#user)
+* [ActivityFeed](#activityfeed)
+      
 
 ### ActivityFeed
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>entityproperty</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>category</td>
-        <td>string</td>
-        <td>The category of the activity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>metadataproperty</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>objectproperty</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>title</td>
-        <td>string</td>
-        <td>The title of the activity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>verb</td>
-        <td>string</td>
-        <td>The verb of the activity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
-
-### Actor
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>displayname</td>
-        <td>string</td>
-        <td>The display of the name of the actor.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>objecttype</td>
-        <td>string</td>
-        <td>The type of the actor.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>objectuuId</td>
-        <td>string</td>
-        <td>The UUID of the actor.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>entitytype</td>
-        <td>string</td>
-        <td>The entitytype of the actor.</td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>entityproperty</td>
+      <td>
+           [Entity](#entity)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>category</td>
+      <td>
+           string
+      </td>
+      <td>The category of the activity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>metadataproperty</td>
+      <td>
+           [Metadata](#metadata)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>objectproperty</td>
+      <td>
+           [Object](#object)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>title</td>
+      <td>
+           string
+      </td>
+      <td>The title of the activity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>verb</td>
+      <td>
+           string
+      </td>
+      <td>The verb of the activity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>published</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp of the feed publish time.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
 
-### AddPermission
-
-__Properties__ 
-
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>operation</td>
-        <td>string</td>
-        <td>A comma-delimited set of HTTP methods (GET, PUT, POST, DELETE) that are allowed for the specified resource path.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>resource_path</td>
-        <td>string</td>
-        <td>The path to the resources to be accessed.</td>
-        <td>true</td>
-    </tr>
-</table>
 
 ### AddRole
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>title</td>
-        <td>string</td>
-        <td>The title of the role.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>role name</td>
-        <td>string</td>
-        <td>The name of the role.</td>
-        <td>true</td>
-    </tr>
-</table>
-
-### AdminUserUpdate
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>city</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>state</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>title</td>
+      <td>
+           string
+      </td>
+      <td>The title of the role.</td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>role name</td>
+      <td>
+           string
+      </td>
+      <td>The name of the role.</td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### AppData
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>tester/sandbox</td>
-        <td>string</td>
-        <td>The UUID of tester/sandbox.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>tester/app1</td>
-        <td>string</td>
-        <td>The UUID of tester/app1.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>tester/app2</td>
-        <td>string</td>
-        <td>The UUID of tester/app2.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
-
-### CancelMSG
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>canceled</td>
-        <td>boolean</td>
-        <td></td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>tester/sandbox</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of tester/sandbox.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>tester/app1</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of tester/app1.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>tester/app2</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of tester/app2.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
 
-### Collections
-
-__Properties__ 
-
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>activities</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>feed</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>roles</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>users</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
+__Referring Definitions__
+  
+* [Organization](#organization)
+      
 
 ### CreateActivity
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>displayName</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>username</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>image</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>verb</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>content</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>displayName</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>username</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>image</td>
+      <td>
+           [ImageModel](#imagemodel)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>verb</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>content</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### CreateAdminUser
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>username</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>email</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>password</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
-
-### CreateApp
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>token</td>
-        <td>string</td>
-        <td>The OAuth2 access token.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td>The name of the application.</td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>username</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>email</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>name</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>password</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### CreateEntities
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-</table>
-
-### CreateEntity
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>property</td>
-        <td>string</td>
-        <td>The property of the entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>value</td>
-        <td>string</td>
-        <td>The relevant value of the property.</td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
 </table>
+
 
 ### CreateEvent
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>timestamp</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>timestamp</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### CreateGroup
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>title</td>
-        <td>string</td>
-        <td>The title of the group.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>path</td>
-        <td>string</td>
-        <td>The path of the group.</td>
-        <td>true</td>
-    </tr>
-</table>
-
-### CreateNotification
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>notifier</td>
-        <td>ref</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>message</td>
-        <td>string</td>
-        <td>The push notitfication message that will be delivered to the user.</td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>title</td>
+      <td>
+           string
+      </td>
+      <td>The title of the group.</td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>path</td>
+      <td>
+           string
+      </td>
+      <td>The path of the group.</td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### CreateNotifications
 
+An array of Notifications to be created.
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
 </table>
+
 
 ### CreateOrg
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>organization</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>username</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>email</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>password</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>organization</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>username</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>name</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>email</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>password</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### CreateUser
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>username</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>username</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### Credential
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>client_Id</td>
-        <td>string</td>
-        <td>The Id of the client.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>client_secret</td>
-        <td>string</td>
-        <td>The secret of the client.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>client_Id</td>
+      <td>
+           string
+      </td>
+      <td>The Id of the client.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>client_secret</td>
+      <td>
+           string
+      </td>
+      <td>The secret of the client.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### Device
 
+Represents a single Device that is registered for recieving of Push Notifications.
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>Unique entity Id.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>type</td>
-        <td>string</td>
-        <td>Type of entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td>Notifier display name.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>metadata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td>Unique entity Id.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>type</td>
+      <td>
+           string
+      </td>
+      <td>Type of entity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>name</td>
+      <td>
+           string
+      </td>
+      <td>Notifier display name.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>created</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp in milliseconds of when the entity was created.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>modified</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp in milliseconds of when the entity was last modified.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>metadata</td>
+      <td>
+           [Metadata](#metadata)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### Entity
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>The UUID of the entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>type</td>
-        <td>string</td>
-        <td>The type of the entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>actorproperty</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>metadata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td>The name of the entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>message</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of the entity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>type</td>
+      <td>
+           string
+      </td>
+      <td>The type of the entity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>created</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp of entity creation time.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>modified</td>
+      <td>
+           [Actor](#actor)  
+      </td>
+      <td>UTC timestamp of entity modified time.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>metadata</td>
+      <td>
+           [Metadata](#metadata)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>name</td>
+      <td>
+           string
+      </td>
+      <td>The name of the entity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>message</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
+__Referring Definitions__
+  
+* [Role](#role)
+* [Event](#event)
+* [ActivityFeed](#activityfeed)
+      
 
 ### Error
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>code</td>
-        <td>integer</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>message</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>fields</td>
-        <td>object</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>code</td>
+      <td>
+           integer
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>message</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>fields</td>
+      <td>
+           object
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### Event
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>applicationName</td>
-        <td>string</td>
-        <td>The application name of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>entity</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>url</td>
-        <td>string</td>
-        <td>The url of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>applicationId</td>
-        <td>string</td>
-        <td>The application UUID of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>parameters</td>
-        <td>string</td>
-        <td>The parameters of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>organization</td>
-        <td>string</td>
-        <td>The title of the organization.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>applicationName</td>
+      <td>
+           string
+      </td>
+      <td>The application name of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>entity</td>
+      <td>
+           [Entity](#entity)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>url</td>
+      <td>
+           string
+      </td>
+      <td>The url of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>applicationId</td>
+      <td>
+           string
+      </td>
+      <td>The application UUID of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>parameters</td>
+      <td>
+           string
+      </td>
+      <td>The parameters of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>organization</td>
+      <td>
+           string
+      </td>
+      <td>The title of the organization.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### Group
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>The UUID of the group.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>type</td>
-        <td>string</td>
-        <td>The type of the group.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>created</td>
-        <td>string</td>
-        <td>The created Id for the group.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>modified</td>
-        <td>string</td>
-        <td>The modified Id for the group.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>path</td>
-        <td>string</td>
-        <td>The path of the group.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>metadata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>title</td>
-        <td>string</td>
-        <td>The title of the group.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
-
-### ImageModel
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>url</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>wIdth</td>
-        <td>integer</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>email</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of the group.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>type</td>
+      <td>
+           string
+      </td>
+      <td>The type of the group.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>created</td>
+      <td>
+           string
+      </td>
+      <td>The created Id for the group.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>modified</td>
+      <td>
+           string
+      </td>
+      <td>The modified Id for the group.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>path</td>
+      <td>
+           string
+      </td>
+      <td>The path of the group.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>metadata</td>
+      <td>
+           [Metadata](#metadata)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>title</td>
+      <td>
+           string
+      </td>
+      <td>The title of the group.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### LoginCredentials
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>grant_type</td>
-        <td>string</td>
-        <td>Grant-type must be &#39;password&#39; or &#39;client_credentials&#39;.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>username</td>
-        <td>string</td>
-        <td>Username of user attempting login, required only if grant_type is &#39;password&#39;.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>password</td>
-        <td>string</td>
-        <td>Password of user attempting login, required only if grant_type is &#39;password&#39;.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>client_id</td>
-        <td>string</td>
-        <td>Client-ID portion of credentials, required only if grant_type is &#39;client_credentials&#39;.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>client_secret</td>
-        <td>string</td>
-        <td>Client-Secret portion of credentials, required only if grant_type is &#39;client_credentials&#39;.</td>
-        <td>false</td>
-    </tr>
-</table>
-
-### Metadata
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>cursor</td>
-        <td>string</td>
-        <td>The cursor of the metadata.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>path</td>
-        <td>string</td>
-        <td>The path of the metadata.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>sets</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>collections</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>grant_type</td>
+      <td>
+           string
+      </td>
+      <td>Grant-type must be &#39;password&#39; or &#39;client_credentials&#39;.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>username</td>
+      <td>
+           string
+      </td>
+      <td>Username of user attempting login, required only if grant_type is &#39;password&#39;.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>password</td>
+      <td>
+           string
+      </td>
+      <td>Password of user attempting login, required only if grant_type is &#39;password&#39;.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>client_id</td>
+      <td>
+           string
+      </td>
+      <td>Client-ID portion of credentials, required only if grant_type is &#39;client_credentials&#39;.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>client_secret</td>
+      <td>
+           string
+      </td>
+      <td>Client-Secret portion of credentials, required only if grant_type is &#39;client_credentials&#39;.</td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### Notification
 
-__Properties__ 
-
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>Unique entity Id.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>type</td>
-        <td>string</td>
-        <td>Type of entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>payloads</td>
-        <td>string</td>
-        <td>The push notifications to be delivered.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>errorMessage</td>
-        <td>string</td>
-        <td>Error message returned by the notification service (APNs or GCM) if the notification fails entirely.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>scheduled</td>
-        <td>boolean</td>
-        <td>whether the notification is currently scheduled for delivery.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>state</td>
-        <td>string</td>
-        <td>The current delivery status of the notification &#39;FINISHED&#39;, &#39;SCHEDULED&#39; or &#39;CANCELED&#39;.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>metadata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
-
-### Notifier
+Represents a Push Notification that is either scheduled, finished or cancelled.
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>Unique entity Id.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>type</td>
-        <td>string</td>
-        <td>Type of entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td>Notifier display name.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>provider</td>
-        <td>string</td>
-        <td>Push notification provider &#39;apple&#39; or &#39;google&#39;.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>environment</td>
-        <td>string</td>
-        <td>The environment that corresponds to your app &#39;development&#39; or &#39;production&#39;.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>metadata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td>Unique entity Id.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>type</td>
+      <td>
+           string
+      </td>
+      <td>Type of entity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>created</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp in milliseconds of when the entity was created.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>modified</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp in milliseconds of when the entity was last modified.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>payloads</td>
+      <td>
+           string
+      </td>
+      <td>The push notifications to be delivered.</td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>errorMessage</td>
+      <td>
+           string
+      </td>
+      <td>Error message returned by the notification service (APNs or GCM) if the notification fails entirely.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>scheduled</td>
+      <td>
+           boolean
+      </td>
+      <td>Whether the notification is currently scheduled for delivery.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>state</td>
+      <td>
+           string
+      </td>
+      <td>The current delivery status of the notification &#39;FINISHED&#39;, &#39;SCHEDULED&#39; or &#39;CANCELED&#39;.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>metadata</td>
+      <td>
+           [Metadata](#metadata)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
 
-### Object
+
+### NotificationUpdate
+
+Represents fields that may be updated on a Notification to cause changes in Push Notification processing.
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>displayname</td>
-        <td>string</td>
-        <td>The display of the name of the object.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>objecttype</td>
-        <td>string</td>
-        <td>The type of the object.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>objectuuId</td>
-        <td>string</td>
-        <td>The UUID of the object.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>entitytype</td>
-        <td>string</td>
-        <td>The entitytype of the object.</td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>canceled</td>
+      <td>
+           boolean
+      </td>
+      <td>Setting this field to true will cancel a Notification, if it has not yet been sent.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>deliver</td>
+      <td>
+           number
+      </td>
+      <td>Specifies the UNIX timestamp time at which the Notification should be sent.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>expired</td>
+      <td>
+           number
+      </td>
+      <td>Specifies the UNIX timestamp time at which this Notification has expired.</td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### Organization
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>applicationId</td>
-        <td>string</td>
-        <td>The application Id of the owner.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>username</td>
-        <td>string</td>
-        <td>The username of the owner.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td>The name of the owner.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>email</td>
-        <td>string</td>
-        <td>The email of the owner.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>activated</td>
-        <td>boolean</td>
-        <td>Indicate whether the account is activated or not.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>disabled</td>
-        <td>boolean</td>
-        <td>Indicate whether the account is disabled or not.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>The UUID of the owner.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>adminUser</td>
-        <td>boolean</td>
-        <td>Indicate whether the use is a adminUser or not.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>displayEmail</td>
-        <td>string</td>
-        <td>The display of the email of the owner.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>htmldisplayEmail</td>
-        <td>string</td>
-        <td>The HTML display of the email of the owner.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>orgname</td>
-        <td>string</td>
-        <td>The name of the organization.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>orguuId</td>
-        <td>string</td>
-        <td>The UUID of the organization.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>applicationdata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
-
-### Permission
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>applicationName</td>
-        <td>string</td>
-        <td>The name of the application of the permission.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>entity</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>url</td>
-        <td>string</td>
-        <td>The url of the permission.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>applicationId</td>
-        <td>string</td>
-        <td>The UUID of the application.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>parameters</td>
-        <td>string</td>
-        <td>The parameters of the permission.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>organization</td>
-        <td>string</td>
-        <td>The organization of the permission.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>permissiondata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>applicationId</td>
+      <td>
+           string
+      </td>
+      <td>The application Id of the owner.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>username</td>
+      <td>
+           string
+      </td>
+      <td>The username of the owner.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>name</td>
+      <td>
+           string
+      </td>
+      <td>The name of the owner.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>email</td>
+      <td>
+           string
+      </td>
+      <td>The email of the owner.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>activated</td>
+      <td>
+           boolean
+      </td>
+      <td>Indicate whether the account is activated or not.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>disabled</td>
+      <td>
+           boolean
+      </td>
+      <td>Indicate whether the account is disabled or not.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of the owner.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>adminUser</td>
+      <td>
+           boolean
+      </td>
+      <td>Indicate whether the use is a adminUser or not.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>displayEmail</td>
+      <td>
+           string
+      </td>
+      <td>The display of the email of the owner.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>htmldisplayEmail</td>
+      <td>
+           string
+      </td>
+      <td>The HTML display of the email of the owner.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>orgname</td>
+      <td>
+           string
+      </td>
+      <td>The name of the organization.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>orguuId</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of the organization.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>applicationdata</td>
+      <td>
+           [AppData](#appdata)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
+
+### Permissions
+
+Represents a set of Permissions associated with a User or a Role, each being a Usergrid Permission String.
+
+__Properties__ 
+
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>application</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of the associated application.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>applicationName</td>
+      <td>
+           string
+      </td>
+      <td>The name of the associated application.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>organization</td>
+      <td>
+           string
+      </td>
+      <td>The name of the associated organization.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>data</td>
+      <td>
+           array
+      </td>
+      <td>Array of strings each being a Usergrid Permission String.</td>
+      <td>true</td>
+  </tr>
+</table>
+
 
 ### Receipt
 
+Represents response received from Notification service indicating success or failure.
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>Unique entity Id.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>type</td>
-        <td>string</td>
-        <td>Type of entity.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>payloads</td>
-        <td>string</td>
-        <td>The push notifications to be delivered.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>errorMessage</td>
-        <td>string</td>
-        <td>Error message returned by the notification service (APNs or GCM) if the notification fails entirely.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>errorCode</td>
-        <td>string</td>
-        <td>Error code returned by the notification service.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>sent</td>
-        <td>number</td>
-        <td>UTC timestamp in milliseconds for when the notification was sent.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>metadata</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td>Unique entity Id.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>type</td>
+      <td>
+           string
+      </td>
+      <td>Type of entity.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>created</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp in milliseconds of when the entity was created.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>modified</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp in milliseconds of when the entity was last modified.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>payloads</td>
+      <td>
+           string
+      </td>
+      <td>The push notifications to be delivered.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>errorMessage</td>
+      <td>
+           string
+      </td>
+      <td>Error message returned by the notification service (APNs or GCM) if the notification fails entirely.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>errorCode</td>
+      <td>
+           string
+      </td>
+      <td>Error code returned by the notification service.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>sent</td>
+      <td>
+           number
+      </td>
+      <td>UTC timestamp in milliseconds for when the notification was sent.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>metadata</td>
+      <td>
+           [Metadata](#metadata)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
 
 ### ResetPW
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>password</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>newpassword</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>password</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>newpassword</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### ResetPWMsg
 
+
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>recaptcha_response</td>
-        <td>string</td>
-        <td>Parameters and value for the Captcha challenge.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>recaptcha_challenge</td>
-        <td>string</td>
-        <td>The admin user&#39;s response to the Captcha challenge.</td>
-        <td>true</td>
-    </tr>
-    <tr>
-        <td>email</td>
-        <td>string</td>
-        <td></td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>recaptcha_response</td>
+      <td>
+           string
+      </td>
+      <td>Parameters and value for the Captcha challenge.</td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>recaptcha_challenge</td>
+      <td>
+           string
+      </td>
+      <td>The admin user&#39;s response to the Captcha challenge.</td>
+      <td>true</td>
+  </tr>
+  <tr>
+      <td>email</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>true</td>
+  </tr>
 </table>
+
 
 ### Role
 
-__Properties__ 
 
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>applicationName</td>
-        <td>string</td>
-        <td>The application name of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>entity</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>url</td>
-        <td>string</td>
-        <td>The url of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>applicationId</td>
-        <td>string</td>
-        <td>The application UUID of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>parameters</td>
-        <td>string</td>
-        <td>The parameters of the event.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>organization</td>
-        <td>string</td>
-        <td>The title of the organization.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>path</td>
-        <td>string</td>
-        <td>The path of the role.</td>
-        <td>false</td>
-    </tr>
-</table>
-
-### ScheduleNotification
 
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>timestamp</td>
-        <td>string</td>
-        <td>UTC timestamp in milliseconds of when schedule notifications.</td>
-        <td>true</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>applicationName</td>
+      <td>
+           string
+      </td>
+      <td>The application name of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>count</td>
+      <td>
+           number
+      </td>
+      <td>The numebr of the roles.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>entity</td>
+      <td>
+           [Entity](#entity)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>url</td>
+      <td>
+           string
+      </td>
+      <td>The url of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>applicationId</td>
+      <td>
+           string
+      </td>
+      <td>The application UUID of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>parameters</td>
+      <td>
+           string
+      </td>
+      <td>The parameters of the event.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>organization</td>
+      <td>
+           string
+      </td>
+      <td>The title of the organization.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>path</td>
+      <td>
+           string
+      </td>
+      <td>The path of the role.</td>
+      <td>false</td>
+  </tr>
 </table>
 
-### SetExpiration
-
-__Properties__ 
-
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>timestamp</td>
-        <td>string</td>
-        <td>UTC timestamp in milliseconds of when set expirations.</td>
-        <td>true</td>
-    </tr>
-</table>
-
-### Sets
-
-__Properties__ 
-
-<table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>rolenames</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>permissions</td>
-        <td>string</td>
-        <td></td>
-        <td>false</td>
-    </tr>
-</table>
 
 ### User
 
+Represents a User account which may be a user within an Application&#39;s User collection, or may be an Admin User.
+
 __Properties__ 
 
 <table width="80%" class="usergrid-table">
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>applicationId</td>
-        <td>string</td>
-        <td>The application Id of a user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>username</td>
-        <td>string</td>
-        <td>The username of a user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>name</td>
-        <td>string</td>
-        <td>The name of a user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>email</td>
-        <td>string</td>
-        <td>The email of a user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>activated</td>
-        <td>boolean</td>
-        <td>Indicate whether the account is activated or not.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>disabled</td>
-        <td>boolean</td>
-        <td>Indicate whether the account is disabled or not.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>uuid</td>
-        <td>string</td>
-        <td>The UUID of a user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>adminUser</td>
-        <td>boolean</td>
-        <td>Indicate whether the use is a adminUser or not.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>displayEmail</td>
-        <td>string</td>
-        <td>The display of the email of a user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>htmldisplayEmail</td>
-        <td>string</td>
-        <td>The HTML display of the email of a user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>organization</td>
-        <td>string</td>
-        <td>The organization of the user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>picture</td>
-        <td>string</td>
-        <td>The uri of the user&#39;s picture.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>uri</td>
-        <td>string</td>
-        <td>The uri of the user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>path</td>
-        <td>string</td>
-        <td>The path of the user.</td>
-        <td>false</td>
-    </tr>
-    <tr>
-        <td>completeMsg</td>
-        <td>ref</td>
-        <td></td>
-        <td>false</td>
-    </tr>
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>applicationId</td>
+      <td>
+           string
+      </td>
+      <td>The application Id of a user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>username</td>
+      <td>
+           string
+      </td>
+      <td>The username of a user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>name</td>
+      <td>
+           string
+      </td>
+      <td>The name of a user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>email</td>
+      <td>
+           string
+      </td>
+      <td>The email of a user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>activated</td>
+      <td>
+           boolean
+      </td>
+      <td>Indicate whether the account is activated or not.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>disabled</td>
+      <td>
+           boolean
+      </td>
+      <td>Indicate whether the account is disabled or not.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>uuid</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of a user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>adminUser</td>
+      <td>
+           boolean
+      </td>
+      <td>Indicate whether the use is a adminUser or not.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>displayEmail</td>
+      <td>
+           string
+      </td>
+      <td>The display of the email of a user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>htmldisplayEmail</td>
+      <td>
+           string
+      </td>
+      <td>The HTML display of the email of a user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>organization</td>
+      <td>
+           string
+      </td>
+      <td>The organization of the user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>picture</td>
+      <td>
+           string
+      </td>
+      <td>The uri of the user&#39;s picture.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>uri</td>
+      <td>
+           string
+      </td>
+      <td>The uri of the user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>path</td>
+      <td>
+           string
+      </td>
+      <td>The path of the user.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>completeMsg</td>
+      <td>
+           [Action](#action)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
 </table>
+
+__Referring Definitions__
+  
+* [AccessTokenResponse](#accesstokenresponse)
+      
+
+## Sub-Types
+This section lists the properties for sub-types used in Usergrid Default Entities.
+
+### Collections
+
+
+
+__Properties__ 
+
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>activities</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>feed</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>roles</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>users</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+</table>
+
+__Referring Definitions__
+  
+* [Metadata](#metadata)
+      
+
+### ImageModel
+
+
+
+__Properties__ 
+
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>duration</td>
+      <td>
+           number
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>height</td>
+      <td>
+           number
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>url</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>wIdth</td>
+      <td>
+           integer
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>email</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+</table>
+
+__Referring Definitions__
+  
+* [CreateActivity](#createactivity)
+      
+
+### Metadata
+
+
+
+__Properties__ 
+
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>cursor</td>
+      <td>
+           string
+      </td>
+      <td>The cursor of the metadata.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>path</td>
+      <td>
+           string
+      </td>
+      <td>The path of the metadata.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>sets</td>
+      <td>
+           [Sets](#sets)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>collections</td>
+      <td>
+           [Collections](#collections)  
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+</table>
+
+__Referring Definitions__
+  
+* [Receipt](#receipt)
+* [Device](#device)
+* [Notification](#notification)
+* [Notifier](#notifier)
+* [Group](#group)
+* [Entity](#entity)
+* [ActivityFeed](#activityfeed)
+      
+
+### Object
+
+
+
+__Properties__ 
+
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>displayname</td>
+      <td>
+           string
+      </td>
+      <td>The display of the name of the object.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>objecttype</td>
+      <td>
+           string
+      </td>
+      <td>The type of the object.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>objectuuId</td>
+      <td>
+           string
+      </td>
+      <td>The UUID of the object.</td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>entitytype</td>
+      <td>
+           string
+      </td>
+      <td>The entitytype of the object.</td>
+      <td>false</td>
+  </tr>
+</table>
+
+__Referring Definitions__
+  
+* [ActivityFeed](#activityfeed)
+      
+
+### Sets
+
+
+
+__Properties__ 
+
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  <tr>
+      <td>rolenames</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+  <tr>
+      <td>permissions</td>
+      <td>
+           string
+      </td>
+      <td></td>
+      <td>false</td>
+  </tr>
+</table>
+
+__Referring Definitions__
+  
+* [Metadata](#metadata)
+      

@@ -46,6 +46,7 @@ public class Notification extends TypedEntity {
 
     @EntityProperty
     private PathTokens pathTokens;
+    private String pathQuery;
 
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
@@ -229,12 +230,16 @@ public class Notification extends TypedEntity {
         return State.CREATED;
     }
 
+    @JsonIgnore
+    public long getExpireTimeMillis() {
+        long expireAtMillis = getExpire() != null ? getExpire() * 1000 : 0;
+        return expireAtMillis;
+    }
 
     @JsonIgnore
-    public int getExpireTimeInSeconds() {
-        long expirySeconds = getExpire() != null ? getExpire() * 1000 : 0;
-        return (expirySeconds > Integer.MAX_VALUE) ? Integer.MAX_VALUE
-                : (int) expirySeconds;
+    public long getExpireTTLSeconds() {
+        Long ttlSeconds = (getExpireTimeMillis() - new Date().getTime()) / 1000;
+        return ttlSeconds > 0 ? ttlSeconds : 0;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -258,6 +263,14 @@ public class Notification extends TypedEntity {
 
     public void setPathTokens(PathTokens pathTokens){
         this.pathTokens = pathTokens;
+    }
+
+    @JsonIgnore
+    public String getPathQuery(){
+        return pathQuery;
+    }
+    public void setPathQuery(String query){
+        pathQuery = query;
     }
 
     public static class PathTokens{

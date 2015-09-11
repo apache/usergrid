@@ -78,6 +78,9 @@ public class CpNamingUtils {
     public static final String DELETED_APPLICATION_INFO = "deleted_org_application";
     public static final String DELETED_APPLICATION_INFOS = "deleted_org_applications";
 
+    public static final String ORG_CONFIG = "org_config";
+    public static final String ORG_CONFIGS = "org_configs";
+
     /**
      * The name of the map that holds our entity id->type mapping
      */
@@ -110,7 +113,7 @@ public class CpNamingUtils {
      * To be used only for searching DO NOT use for creation. Use the createCollectionEdge instead.
      */
     public static String getEdgeTypeFromCollectionName( String collectionName ) {
-        return ( EDGE_COLL_PREFIX + "|" + collectionName ).toLowerCase();
+        return ((collectionName.startsWith(EDGE_COLL_PREFIX) ? collectionName  : EDGE_COLL_PREFIX + "|" + collectionName) ).toLowerCase();
     }
 
     /**

@@ -37,7 +37,7 @@ public class SetupResource extends NamedResource {
         super("setup",context,parent);
     }
 
-    public Entity get(QueryParameters queryParameters){
+    public Entity put(QueryParameters queryParameters){
 
         WebResource resource = getResource();
         resource = addParametersToResource( resource, queryParameters );
@@ -47,6 +47,6 @@ public class SetupResource extends NamedResource {
         resource.addFilter( httpBasicAuthFilter );
 
         return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                                .get( Entity.class);
+                                .put( Entity.class);
     }
 }

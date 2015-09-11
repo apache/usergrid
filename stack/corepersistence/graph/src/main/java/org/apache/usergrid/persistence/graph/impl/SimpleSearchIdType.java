@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -34,7 +35,7 @@ public class SimpleSearchIdType extends SimpleSearchEdgeType implements SearchId
 
 
     public SimpleSearchIdType( final Id node, final String edgeType, final String prefix, final String last ) {
-        super( node, prefix, last );
+        super(node, prefix, Optional.fromNullable(last));
 
         ValidationUtils.verifyString( edgeType, "edgeType" );
         this.edgeType = edgeType;

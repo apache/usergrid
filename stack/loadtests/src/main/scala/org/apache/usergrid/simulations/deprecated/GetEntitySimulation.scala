@@ -26,7 +26,7 @@ import scala.concurrent.duration._
 class GetEntitySimulation extends Simulation {
 
   // Target settings
-  val httpConf = Settings.httpConf
+  val httpConf = Settings.httpAppConf
 
   // Simulation settings
   val numUsers:Int = Settings.rampUsers

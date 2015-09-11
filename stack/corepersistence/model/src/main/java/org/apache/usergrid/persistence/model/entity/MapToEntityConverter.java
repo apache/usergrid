@@ -26,7 +26,6 @@ import org.apache.usergrid.persistence.model.collection.SchemaManager;
 import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.Location;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -44,7 +43,9 @@ public class MapToEntityConverter{
     public Entity fromMap(final Entity entity,final  Map<String, Object> map,final  SchemaManager schemaManager, final String entityType, boolean topLevel) {
 
         for ( String fieldName : map.keySet() ) {
-
+            if(fieldName.equals("size")){
+                continue;
+            }
             Object value = map.get( fieldName );
             boolean unique = schemaManager == null ? topLevel :  topLevel && schemaManager.isPropertyUnique(entityType, fieldName);
 
@@ -64,6 +65,7 @@ public class MapToEntityConverter{
                 entity.setField( new FloatField( fieldName, (Float)value, unique ));
 
             } else if ( value instanceof Long ) {
+
                 entity.setField( new LongField( fieldName, (Long)value, unique ));
 
             } else if ( value instanceof List) {
@@ -145,7 +147,15 @@ public class MapToEntityConverter{
             return newList;
 
         } else if ( sample instanceof List ) {
-            return processListForField( list ); // recursion
+            List<Object> newList = new ArrayList<Object>();
+            for (Object o : list) {
+                if (o instanceof List) {
+                    newList.add(processListForField((List) o));
+                } else {
+                    newList.add(o);
+                }
+            }
+            return newList;
 
         } else {
             return list;
@@ -170,9 +180,6 @@ public class MapToEntityConverter{
 
     /**
      * for location we need to parse two formats potentially and convert to a typed field
-     * @param value
-     * @param fieldName
-     * @param entity
      */
     private void processLocationField(Map<String, Object> value, String fieldName, Entity entity) {
         // get the object to inspect

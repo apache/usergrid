@@ -2,7 +2,7 @@
 
 ## What is the sandbox application?
 
-When you create a new Usergrid account (see Creating an Usergrid Account) to use services for developers, Usergrid creates a new application for you on its servers. With the new application, called "sandbox," you can add your own example data and try out API calls that do things with the data. Be sure to see Using the API for suggestions.
+When you create a new Usergrid account (see [Creating an Usergrid Account](creating-account.html)) to use services for developers, Usergrid creates a new application for you on its servers. With the new application, called "sandbox," you can add your own example data and try out API calls that do things with the data. Be sure to see Using the API for suggestions.
 
 ## Is the sandbox secure?
 

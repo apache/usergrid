@@ -84,6 +84,8 @@ public class IndexingUtils {
 
     public static final String ENTITY_ID_FIELDNAME = "entityId";
 
+    public static final String ENTITY_SIZE_FIELDNAME = "entitySize";
+
     public static final String ENTITY_VERSION_FIELDNAME = "entityVersion";
 
     public static final String ENTITY_TYPE_FIELDNAME = "entityType";

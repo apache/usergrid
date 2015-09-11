@@ -48,7 +48,7 @@ The following table lists a few examples of the kind of searches you can do in q
 
 ### Location
 
-If you've stored location data with your entities, you can query for the proximity of the geographical locations those entities represent. For more information on geolocation, see Geolocation.
+If you've stored location data with your entities, you can query for the proximity of the geographical locations those entities represent. For more information on geolocation, see [Geolocation](../geolocation/geolocation.html).
 
 <table class="usergrid-table">
     <tr>

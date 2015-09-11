@@ -98,7 +98,11 @@ public class NamedResource implements UrlResource {
         }
 
         if ( parameters.getLimit() != null ) {
-             resource = resource.queryParam("limit", parameters.getLimit().toString());
+            resource = resource.queryParam("limit", parameters.getLimit().toString());
+        }
+
+        if ( parameters.getConnections() != null ) {
+            resource = resource.queryParam("connections", parameters.getConnections());
         }
         //We can also post the params as queries
         if ( parameters.getFormPostData().size() > 0){
@@ -165,7 +169,7 @@ public class NamedResource implements UrlResource {
      */
     //For edge cases like Organizations and Tokens
     public ApiResponse post(Map map) {
-        return post( true, ApiResponse.class, map, null, false );
+        return post(true, ApiResponse.class, map, null, false);
 
     }
 
@@ -271,17 +275,17 @@ public class NamedResource implements UrlResource {
         if(useBasicAuthentication){
             //added httpBasicauth filter to all setup calls because they all do verification this way.
             HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
-            resource.addFilter( httpBasicAuthFilter );
+            resource.addFilter(httpBasicAuthFilter);
         }
 
         GenericType<T> gt = new GenericType<>((Class) type);
-        return builder.post( gt.getRawClass() );
+        return builder.post(gt.getRawClass());
 
     }
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {
-        return get(type,null,true);
+        return get(type, null, true);
 
     }
 
@@ -304,7 +308,7 @@ public class NamedResource implements UrlResource {
         GenericType<T> gt = new GenericType<>((Class) type);
         return resource.type(MediaType.APPLICATION_JSON_TYPE)
             .accept( MediaType.APPLICATION_JSON )
-            .get( gt.getRawClass() );
+            .get(gt.getRawClass());
 
     }
 
@@ -318,34 +322,34 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse post( FormDataMultiPart multiPartForm ) {
-        return post( true, multiPartForm );
+        return post(true, multiPartForm);
     }
 
     public ApiResponse put( boolean useToken, byte[] data, MediaType type ) {
         WebResource resource = getResource(useToken);
-        return resource.type( type ).put( ApiResponse.class, data );
+        return resource.type( type ).put(ApiResponse.class, data);
     }
 
     public ApiResponse put( byte[] data, MediaType type ) {
-        return put( true, data, type );
+        return put(true, data, type);
     }
 
     public ApiResponse put( boolean useToken, FormDataMultiPart multiPartForm ) {
         WebResource resource = getResource(useToken);
-        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).put( ApiResponse.class, multiPartForm );
+        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).put(ApiResponse.class, multiPartForm);
     }
 
     public ApiResponse put( FormDataMultiPart multiPartForm ) {
-        return put( true, multiPartForm );
+        return put(true, multiPartForm);
     }
 
     public InputStream getAssetAsStream( boolean useToken ) {
         WebResource resource = getResource(useToken);
-        return resource.accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        return resource.accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get(InputStream.class);
     }
 
     public InputStream getAssetAsStream() {
-        return getAssetAsStream( true );
+        return getAssetAsStream(true);
     }
 
     public ApiResponse delete( ) {
@@ -353,6 +357,14 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse delete( boolean useToken ) {
-        return getResource(useToken).delete( ApiResponse.class );
+        return getResource(useToken).delete(ApiResponse.class);
+    }
+
+    public ApiResponse delete( boolean useToken, QueryParameters queryParameters ) {
+        WebResource resource = getResource(useToken);
+        if(queryParameters!=null) {
+            resource = addParametersToResource(resource, queryParameters);
+        }
+        return resource.delete( ApiResponse.class );
     }
 }

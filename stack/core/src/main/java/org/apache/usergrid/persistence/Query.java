@@ -158,7 +158,9 @@ public class Query {
 
         return query;
     }
-
+    public static Query all( ){
+        return fromQL("select *");
+    }
 
     /**
      * Create a query from a property equals

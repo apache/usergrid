@@ -33,7 +33,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
-import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -207,7 +206,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2(organizationName, name, null, null);
+        return createApplicationV2( organizationName, name, null, null );
     }
 
 
@@ -229,7 +228,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         logger.debug( "New application orgName {} orgAppName {} id {} ",
             new Object[] { orgName, name, applicationId.toString() } );
 
-        return initializeApplicationV2(orgName, applicationId, appName, properties);
+        return initializeApplicationV2( orgName, applicationId, appName, properties );
     }
 
 
@@ -449,7 +448,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Map<String, UUID> getApplications() throws Exception {
-        return getApplications(CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS ));
+        return getApplications( CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS ) );
     }
 
 
@@ -511,7 +510,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void setup() throws Exception {
-        getSetup().init();
+        getSetup().initSubsystems();
+    }
+
+
+    @Override
+    public void boostrap() throws Exception {
+
+        //we want to make sure our keyspaces exist
+        setup();
+        //create the defautl applications
+        getSetup().createDefaultApplications();
+        //init any other data we need
         init();
     }
 

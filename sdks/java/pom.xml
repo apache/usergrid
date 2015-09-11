@@ -14,10 +14,8 @@
     <artifactId>usergrid-java-client</artifactId>
     <version>0.0.10-SNAPSHOT</version>
     <packaging>jar</packaging>
-
-    <description>A simple java client for usergrid</description>
-    <url>https://github.com/apigee/usergrid-stack-internal</url>
-	
+    <description>A Java client for usergrid</description>
+    <url>http://usergrid.apache.org</url>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Admin user$ &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>Admin user &mdash; Apache Usergrid 1.0 documentation</title>
   
 
   
@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/> 
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Methods" href="../rest-endpoints/api-docs.html"/>
+        <link rel="prev" title="Application" href="application.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -80,14 +82,15 @@
           
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
 </ul>
@@ -111,10 +114,23 @@
 <li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
@@ -139,9 +155,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/uploading-assets.html">Uploading assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/retrieving-assets.html">Retrieving assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../asset-and-files/folders.html">Folders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
 <ul>
@@ -152,15 +168,76 @@
 <li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="managing.html">Organization &amp; application management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="organization.html">Organization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="application.html">Application</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Admin user</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-an-admin-user">Creating an admin user</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#request-uri">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-request">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-response">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#updating-an-admin-user">Updating an admin user</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-an-admin-user">Getting an admin user</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-an-admin-user-s-password">Setting an admin user&#8217;s password</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#resetting-an-admin-user-s-password">Resetting an admin user&#8217;s password</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#initiating-a-password-reset">Initiating a password reset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#completing-a-password-reset">Completing a password reset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id15">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#activating-an-admin-user">Activating an admin user</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id16">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id17">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id18">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#reactivating-an-admin-user">Reactivating an admin user</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id19">Request URI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id20">Example - Request</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id21">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-an-admin-user-s-activity-feed">Getting an admin user&#8217;s activity feed</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id22">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id23">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id24">Example - Response</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Client SDKs</span></p>
 <ul>
@@ -200,7 +277,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>Admin user$</li>
+    <li>Admin user</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -215,7 +292,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="admin-user">
-<h1>Admin user$<a class="headerlink" href="#admin-user" title="Permalink to this headline">¶</a></h1>
+<h1>Admin user<a class="headerlink" href="#admin-user" title="Permalink to this headline">¶</a></h1>
 <p>An admin user has full access to perform any operation on all
 organization accounts of which the admin user is a member. Using the API
 Services BaaS API, you can create, update, or retrieve an admin user.
@@ -722,6 +799,15 @@ email notification.</p>
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../rest-endpoints/api-docs.html" class="btn btn-neutral float-right" title="Methods" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="application.html" class="btn btn-neutral" title="Application" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

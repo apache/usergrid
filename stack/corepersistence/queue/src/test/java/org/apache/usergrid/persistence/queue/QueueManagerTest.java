@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 
 import com.google.inject.Inject;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -65,7 +66,7 @@ public class QueueManagerTest {
 
     @Before
     public void mockApp() {
-        this.scope = new QueueScopeImpl( "testQueue", QueueScope.RegionImplementation.LOCALREGION );
+        this.scope = new QueueScopeImpl( "testQueue", QueueScope.RegionImplementation.LOCAL);
         qm = qmf.getQueueManager(scope);
     }
 
@@ -103,6 +104,29 @@ public class QueueManagerTest {
         messageList = qm.getMessages(1,5000,5000,values.getClass()).toList().toBlocking().last();
         assertTrue(messageList.size() <= 0);
 
+    }
+
+    @Test
+    public void queueSize() throws IOException,ClassNotFoundException{
+        HashMap<String,String> values = new HashMap<>();
+        values.put("test", "Test");
+
+        List<Map<String,String>> bodies = new ArrayList<>();
+        bodies.add(values);
+        long initialDepth = qm.getQueueDepth();
+        qm.sendMessages(bodies);
+        long depth = qm.getQueueDepth();
+        assertTrue(depth>0);
+        List<QueueMessage> messageList = qm.getMessages(10,5000,5000,values.getClass()).toList().toBlocking().last();
+        assertTrue(messageList.size() <= 500);
+        for(QueueMessage message : messageList){
+            assertTrue(message.getBody().equals(values));
+        }
+        if(messageList.size()>0) {
+            qm.commitMessages(messageList);
+        }
+        depth = qm.getQueueDepth();
+        assertEquals(initialDepth, depth);
     }
 
 

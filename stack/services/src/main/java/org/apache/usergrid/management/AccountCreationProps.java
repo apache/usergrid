@@ -71,10 +71,8 @@ public interface AccountCreationProps {
 
     public static final String PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS =
             "usergrid.sysadmin.approve.users";
-            //"usergrid.management.admin_users_require_activation";
     public static final String PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS =
             "usergrid.sysadmin.approve.organizations";
-            //"usergrid.management.organizations_require_activation";
     public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ORGANIZATIONS =
             "usergrid.management.notify_sysadmin_of_new_organizations";
     public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ADMIN_USERS =

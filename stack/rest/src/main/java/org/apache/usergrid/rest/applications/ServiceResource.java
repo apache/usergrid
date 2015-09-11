@@ -43,6 +43,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.management.OrganizationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -266,13 +267,50 @@ public class ServiceResource extends AbstractContextResource {
         logger.debug( "ServiceResource.executeServiceRequest" );
 
         boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        // connection info can be blocked only for GETs
+        if (action == ServiceAction.GET) {
+           if ("none".equalsIgnoreCase(connectionQueryParm)) {
+               returnInboundConnections = false;
+               returnOutboundConnections = false;
+           } else if ("in".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = true;
+               returnOutboundConnections = false;
+           } else if ("out".equalsIgnoreCase(connectionQueryParm)) {
+               returnInboundConnections = false;
+                returnOutboundConnections = true;
+            } else if ("all".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = true;
+                returnOutboundConnections = true;
+            } else {
+                if (connectionQueryParm != null) {
+                    // unrecognized parameter
+                    logger.error(String.format(
+                        "Invalid connections query parameter=%s, ignoring.", connectionQueryParm));
+                }
+                // use the default query parameter functionality
+                OrganizationConfig orgConfig =
+                    management.getOrganizationConfigForApplication(services.getApplicationId());
+                String defaultConnectionQueryParm = orgConfig.getDefaultConnectionParam();
+                returnInboundConnections =
+                    (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
+                returnOutboundConnections =
+                    (defaultConnectionQueryParm.equals("out")) || (defaultConnectionQueryParm.equals("all"));
+           }
+        }
+
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
             collectionGet = (getServiceParameters().size() == 1 && InflectionUtils
                     .isPlural(getServiceParameters().get(0)));
         }
         addQueryParams( getServiceParameters(), ui );
-        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload );
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
         response.setServiceRequest( r );
         ServiceResults results = r.execute();
         if ( results != null ) {

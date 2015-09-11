@@ -16,28 +16,22 @@
 package org.apache.usergrid.corepersistence;
 
 
-import org.apache.usergrid.corepersistence.index.*;
-import org.safehaus.guicyfig.GuicyFigModule;
-
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
 import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
 import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
-import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
-import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
-import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
-import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
-import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
-import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
-import org.apache.usergrid.corepersistence.service.CollectionService;
-import org.apache.usergrid.corepersistence.service.CollectionServiceImpl;
-import org.apache.usergrid.corepersistence.service.ConnectionService;
-import org.apache.usergrid.corepersistence.service.ConnectionServiceImpl;
+import org.apache.usergrid.corepersistence.rx.impl.*;
+import org.apache.usergrid.corepersistence.service.*;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
@@ -48,10 +42,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
+import org.safehaus.guicyfig.GuicyFigModule;
 
 
 /**
@@ -110,7 +101,8 @@ public class CoreModule  extends AbstractModule {
          * Create our migrations for within our core plugin
          */
         Multibinder<DataMigration<EntityIdScope>> dataMigrationMultibinder =
-                    Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration<EntityIdScope>>() {}, CoreMigration.class );
+                    Multibinder.newSetBinder( binder(),
+                        new TypeLiteral<DataMigration<EntityIdScope>>() {}, CoreMigration.class );
 
 
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
@@ -130,7 +122,7 @@ public class CoreModule  extends AbstractModule {
          *****/
 
 
-        bind( IndexService.class ).to( IndexServiceImpl.class );
+        bind( IndexService.class ).to(IndexServiceImpl.class);
 
         //bind the event handlers
         bind( EventBuilder.class).to( EventBuilderImpl.class );
@@ -140,9 +132,13 @@ public class CoreModule  extends AbstractModule {
         bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
 
 
-        bind( ReIndexService.class).to( ReIndexServiceImpl.class );
+        bind( ReIndexService.class).to(ReIndexServiceImpl.class);
 
-        bind( IndexLocationStrategyFactory.class ).to( IndexLocationStrategyFactoryImpl.class );
+        install(new FactoryModuleBuilder()
+            .implement(AggregationService.class, AggregationServiceImpl.class)
+            .build(AggregationServiceFactory.class));
+
+        bind(IndexLocationStrategyFactory.class).to( IndexLocationStrategyFactoryImpl.class );
 
         install(new GuicyFigModule(IndexProcessorFig.class));
 
@@ -165,6 +161,9 @@ public class CoreModule  extends AbstractModule {
 
         bind( ConnectionService.class).to( ConnectionServiceImpl.class);
 
+        bind( ApplicationService.class ).to( ApplicationServiceImpl.class );
+
+        bind( StatusService.class ).to( StatusServiceImpl.class );
     }
 
 }

@@ -67,7 +67,7 @@ public interface CassandraFig extends GuicyFig {
     String getLocalDataCenter();
 
     @Key( "cassandra.connections" )
-    @Default( "100" )
+    @Default( "15" )
     int getConnections();
 
     @Key( "cassandra.timeout" )

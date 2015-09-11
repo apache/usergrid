@@ -22,12 +22,13 @@ import org.junit.Test;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource.model.Token;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import java.util.LinkedHashMap;
+import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -38,19 +39,65 @@ public class SystemResourceIT extends AbstractRestIT {
     @Test
     public void testSystemDatabaseAlreadyRun() {
         QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
 
-        Entity result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
-
-        assertNotNull(result);
-        assertNotNull( "ok" ,(String)result.get( "status" ) );
-
-        result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
+        Entity result = clientSetup.getRestClient().system().database().setup().put( queryParameters );
 
         assertNotNull( result );
-        assertNotNull( "ok" ,(String)result.get( "status" ) );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
 
+        result = clientSetup.getRestClient().system().database().setup().put( queryParameters );
+
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
+    }
+
+    @Test
+    public void testDeleteAllApplicationEntities() throws Exception{
+        int count = 10;
+        for(int i =0; i<count;i++) {
+            this.app().collection("tests").post(new Entity().chainPut("testval", "test"));
+        }
+        this.refreshIndex();
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
+        queryParameters.addParam("confirmApplicationName", this.clientSetup.getAppName());
+
+        org.apache.usergrid.rest.test.resource.model.ApiResponse result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
+
+        assertNotNull(result);
+        assertNotNull("ok", result.getStatus());
+        assertNotNull(((LinkedHashMap) result.getData()).get("jobId"));
+
+        String jobId = (String)((LinkedHashMap) result.getData()).get("jobId");
+        queryParameters = new QueryParameters();
+        for(int i = 0;i<10;i++ ) {
+            result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid(), "job/" + jobId).get(queryParameters);
+            String status = (String) ((LinkedHashMap) result.getData()).get("status");
+            if(status.equals("COMPLETE")){
+                break;
+            }else{
+                Thread.sleep(100);
+            }
+        }
+        assertEquals(((LinkedHashMap)((LinkedHashMap) result.getData()).get("metadata")).get("count"), 10);
 
     }
 
+
+    @Test
+    public void testBoostrapAlreadyRun() {
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
+
+        Entity result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
+
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
+
+        result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
+
+        assertNotNull( result );
+        assertNotNull( "ok", ( String ) result.get( "status" ) );
+    }
 }

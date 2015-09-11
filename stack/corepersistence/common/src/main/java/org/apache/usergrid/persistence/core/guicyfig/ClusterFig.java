@@ -30,8 +30,18 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface ClusterFig extends GuicyFig{
 
-    @Default( "ug" )
-    @Key( "usergrid.cluster_name" ) //"usergrid.cluster_name"
+
+    /**
+     * This value used in guice module validations so we can force a value to be set.  See IndexSettingValidation
+     * for an example use.
+     */
+    String VALIDATION_DEFAULT_VALUE = "default-property";
+
+    String CLUSTER_NAME_PROPERTY = "usergrid.cluster_name";
+
+
+    @Default( VALIDATION_DEFAULT_VALUE )
+    @Key( CLUSTER_NAME_PROPERTY )
     String getClusterName();
 
 }

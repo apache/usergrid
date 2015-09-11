@@ -193,6 +193,8 @@ public class Entity implements Serializable, Map<String,Object> {
         return getDynamicProperties().entrySet();
     }
 
+    public Map<String,Object> metadata(){return (Map<String,Object>)get("metadata");}
+
     public UUID getUuid(){
         return UUID.fromString( ( String ) get( "uuid" ) );
     }
