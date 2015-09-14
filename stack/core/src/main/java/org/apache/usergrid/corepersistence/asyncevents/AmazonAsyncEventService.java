@@ -354,10 +354,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
         Preconditions.checkArgument(event instanceof EdgeDeleteEvent, String.format("Event Type for handleEdgeDelete must be EDGE_DELETE, got %s", event.getClass()));
 
 
-        final EdgeIndexEvent edgeIndexEvent = ( EdgeIndexEvent ) event;
+        final EdgeDeleteEvent edgeDeleteEvent = ( EdgeDeleteEvent ) event;
 
-        final ApplicationScope applicationScope = edgeIndexEvent.getApplicationScope();
-        final Edge edge = edgeIndexEvent.getEdge();
+        final ApplicationScope applicationScope = edgeDeleteEvent.getApplicationScope();
+        final Edge edge = edgeDeleteEvent.getEdge();
 
         if (logger.isDebugEnabled()) logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
 

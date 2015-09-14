@@ -52,6 +52,7 @@ import java.util.Properties;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.apache.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.*;
 
 
@@ -128,7 +129,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
             featureContext.register( SystemFilter.class );
         }
         else if ( am.isAnnotationPresent( RequireAdminUserAccess.class ) ) {
-            featureContext.register( AdminUserFilter.class );
+            featureContext.register( SystemFilter.AdminUserFilter.class );
         }
 
     }
@@ -303,47 +304,46 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     public static class SystemFilter extends AbstractFilter {
 
         @Inject
-        public SystemFilter( UriInfo uriInfo ) {
-            super(uriInfo);
+        public SystemFilter(UriInfo uriInfo) {
+            super( uriInfo );
         }
 
 
         @Override
-        public void authorize( ContainerRequestContext request ) {
+        public void authorize(ContainerRequestContext request) {
             logger.debug( "SystemFilter.authorize" );
             try {
-                if ( !request.getSecurityContext().isUserInRole( "sysadmin" ) ) {
+                if (!request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN )) {
                     logger.debug( "You are not the system admin." );
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                         SecurityException.REALM );
                 }
-            }
-            catch ( IllegalStateException e ) {
-                logger.debug( "This is an invalid state",e );
-                if ( ( request.getSecurityContext().getUserPrincipal() == null ) || !"sysadmin"
-                    .equals( request.getSecurityContext().getUserPrincipal().getName() ) ) {
+            } catch (IllegalStateException e) {
+                logger.debug( "This is an invalid state", e );
+                if ((request.getSecurityContext().getUserPrincipal() == null) ||
+                    !ROLE_SERVICE_ADMIN.equals( request.getSecurityContext().getUserPrincipal().getName() )) {
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                         SecurityException.REALM );
                 }
             }
         }
-    }
 
+        @Resource
+        public static class AdminUserFilter extends AbstractFilter {
 
-    @Resource
-    public static class AdminUserFilter extends AbstractFilter {
+            @Inject
+            public AdminUserFilter(UriInfo uriInfo) {
+                super( uriInfo );
+            }
 
-        @Inject
-        public AdminUserFilter( UriInfo uriInfo ) {
-            super(uriInfo);
-        }
-
-        @Override
-        public void authorize( ContainerRequestContext request ) {
-            logger.debug( "AdminUserFilter.authorize" );
-            if ( !isUser( getUserIdentifier() ) ) {
-                throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
+            @Override
+            public void authorize(ContainerRequestContext request) {
+                logger.debug( "AdminUserFilter.authorize" );
+                if (!isUser( getUserIdentifier() )) {
+                    throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
+                }
             }
         }
+
     }
 }
