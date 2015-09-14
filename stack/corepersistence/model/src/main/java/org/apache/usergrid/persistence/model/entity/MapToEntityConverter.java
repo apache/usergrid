@@ -238,9 +238,9 @@ public class MapToEntityConverter{
         } else {
             //can't process non enties
             logger.warn(
-                "entity cannot process location values that don't have valid location{latitude,longitude} values"
+                "entity cannot process location values that don't have valid location{latitude,longitude} values, changing to generic object"
             );
-           // entity.setField(new EntityObjectField(fieldName,fromMap( value, false))); // recursion
+            entity.setField(new EntityObjectField(fieldName,fromMap( value, false))); // recursion
         }
     }
 }
