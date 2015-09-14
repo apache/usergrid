@@ -33,6 +33,7 @@ import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.organizations.applications.ApplicationsResource;
 import org.apache.usergrid.rest.management.organizations.users.UsersResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.rest.utils.JSONPUtils;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
@@ -362,8 +363,8 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
     @JSONP
+    @RequireSystemAccess
     @GET
     @Path("config")
     public ApiResponse getConfig( @Context UriInfo ui,
@@ -389,7 +390,7 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
+    @RequireSystemAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
     @PUT
@@ -411,6 +412,9 @@ public class OrganizationResource extends AbstractContextResource {
                 management.getOrganizationConfigByUuid( organization.getUuid() );
         orgConfig.addProperties(json);
         management.updateOrganizationConfig(orgConfig);
+
+        // refresh orgConfig -- to pick up removed entries and defaults
+        orgConfig = management.getOrganizationConfigByUuid( organization.getUuid() );
         response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
 
         return response;

@@ -24,7 +24,6 @@ import com.relayrides.pushy.apns.util.TokenUtil;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.services.notifications.TaskTracker;
 
-import java.util.Calendar;
 import java.util.Date;
 /**
  * Standard apigee notificatton
@@ -44,12 +43,13 @@ public class APNsNotification extends SimpleApnsPushNotification {
      */
     public static APNsNotification create(String providerId, String payload, Notification notification, TaskTracker tracker) throws RuntimeException {
 
-        Calendar date  = Calendar.getInstance();
-        date.add(Calendar.SECOND, notification.getExpireTimeInSeconds());
+        // create Date object using milliseconds value
+        Date expiryDate = new Date(notification.getExpireTimeMillis());
+
       try {
           final byte[] token = TokenUtil.tokenStringToByteArray(providerId);
 
-          return new APNsNotification(tracker, date.getTime(), token, payload, notification);
+          return new APNsNotification(tracker, expiryDate, token, payload, notification);
       }catch(MalformedTokenStringException mtse){
           throw new RuntimeException("Exception converting token",mtse);
       }

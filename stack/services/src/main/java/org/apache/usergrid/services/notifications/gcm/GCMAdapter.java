@@ -36,7 +36,6 @@ import org.apache.usergrid.services.notifications.TaskTracker;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GCMAdapter implements ProviderAdapter {
 
@@ -71,9 +70,11 @@ public class GCMAdapter implements ProviderAdapter {
         Map<String,Object> map = (Map<String, Object>) payload;
         final String expiresKey = "time_to_live";
         if(!map.containsKey(expiresKey) && notification.getExpire() != null){
-            int expireSeconds = notification.getExpireTimeInSeconds();
-            expireSeconds = expireSeconds <= 2419200 ? expireSeconds : 2419200; //send the max gcm value documented here http://developer.android.com/google/gcm/adv.html#ttl
-            map.put(expiresKey, expireSeconds);
+            // ttl provided to GCM is in seconds.  calculate the difference from now
+            long ttlSeconds = notification.getExpireTTLSeconds();
+            // max ttl for gcm is 4 weeks - https://developers.google.com/cloud-messaging/http-server-ref
+            ttlSeconds = ttlSeconds <= 2419200 ? ttlSeconds : 2419200;
+            map.put(expiresKey, ttlSeconds);
         }
         Batch batch = getBatch( map);
         batch.add(providerId, tracker);

@@ -28,6 +28,8 @@ import javax.ws.rs.ext.Provider;
 import java.security.Principal;
 import java.util.Map;
 
+import static org.apache.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
+
 
 @Provider
 @PreMatching
@@ -76,7 +78,7 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
             principal = new Principal() {
                 @Override
                 public String getName() {
-                    return "sysadmin";
+                    return ROLE_SERVICE_ADMIN;
                 }
             };
         }
@@ -90,7 +92,7 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
 
         @Override
         public boolean isUserInRole( String role ) {
-            return role.equals( "sysadmin" );
+            return role.equals( ROLE_SERVICE_ADMIN );
         }
 
 

@@ -153,6 +153,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "devices",device1.getUuid(),"notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());

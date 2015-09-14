@@ -17,6 +17,8 @@
 package org.apache.usergrid.rest.applications;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import junit.framework.Assert;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.cassandra.SpringResource;
@@ -32,9 +34,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -857,6 +859,16 @@ public class ApplicationResourceIT extends AbstractRestIT {
         ApiResponse response = this.app().collection("users").getTarget( true, token ).request().get( ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());
+    }
+
+    @Test
+    public void getApmConfig(){
+        try {
+            Collection collection = this.app().collection("apm/apigeeMobileConfig").get();
+            fail();
+        }catch (UniformInterfaceException e){
+            Assert.assertEquals(404, e.getResponse().getStatus());
+        }
     }
 
     /**

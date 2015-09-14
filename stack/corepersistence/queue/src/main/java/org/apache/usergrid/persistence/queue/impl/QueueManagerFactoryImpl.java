@@ -25,6 +25,9 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.queue.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * manages whether we take in an external in memory override for queues.
  */
@@ -34,14 +37,25 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
 
     private final QueueFig queueFig;
     private final QueueManagerInternalFactory queuemanagerInternalFactory;
+    private final Map<String,QueueManager> defaultManager;
 
     @Inject
     public QueueManagerFactoryImpl(final QueueFig queueFig, final QueueManagerInternalFactory queuemanagerInternalFactory){
         this.queueFig = queueFig;
         this.queuemanagerInternalFactory = queuemanagerInternalFactory;
+        this.defaultManager = new HashMap<>(10);
     }
     @Override
     public QueueManager getQueueManager(QueueScope scope) {
-        return queueFig.overrideQueueForDefault() ? new DefaultQueueManager() : queuemanagerInternalFactory.getQueueManager(scope);
+        if(queueFig.overrideQueueForDefault()){
+            QueueManager manager = defaultManager.get(scope.getName());
+            if(manager==null){
+                manager = new DefaultQueueManager();
+                defaultManager.put(scope.getName(),manager);
+            }
+            return manager;
+        }else{
+            return queuemanagerInternalFactory.getQueueManager(scope);
+        }
     }
 }
