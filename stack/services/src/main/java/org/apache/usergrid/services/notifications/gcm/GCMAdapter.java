@@ -71,7 +71,7 @@ public class GCMAdapter implements ProviderAdapter {
         final String expiresKey = "time_to_live";
         if(!map.containsKey(expiresKey) && notification.getExpire() != null){
             // ttl provided to GCM is in seconds.  calculate the difference from now
-            Long ttlSeconds = notification.getExpireTTLSeconds();
+            long ttlSeconds = notification.getExpireTTLSeconds();
             // max ttl for gcm is 4 weeks - https://developers.google.com/cloud-messaging/http-server-ref
             ttlSeconds = ttlSeconds <= 2419200 ? ttlSeconds : 2419200;
             map.put(expiresKey, ttlSeconds);
