@@ -56,10 +56,6 @@ public class MapToEntityConverter{
             Object value = map.get( fieldName );
             boolean unique = schemaManager == null ? topLevel :  topLevel && schemaManager.isPropertyUnique(entityType, fieldName);
             //cannot store fields that aren't locations
-            if(fieldName.toLowerCase().equals(locationKey) && !(value instanceof Map)) {
-                logger.warn("can't map entity with location field");
-                continue;
-            }
 
             if ( value instanceof String ) {
                 String stringValue =(String)value;
