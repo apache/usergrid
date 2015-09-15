@@ -23,6 +23,8 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.TestCoreModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -52,6 +54,9 @@ import static org.junit.Assert.assertNotNull;
 @RunWith( ITRunner.class )
 @UseModules( TestCoreModule.class )
 public class ConnectionServiceImplTest {
+
+
+    private static final Logger logger = LoggerFactory.getLogger(ConnectionServiceImplTest.class);
 
     @Inject
     private GraphManagerFactory graphManagerFactory;
@@ -158,11 +163,15 @@ public class ConnectionServiceImplTest {
 
         final Edge written1 = gm.writeEdge( connection1 ).toBlocking().last();
 
+        logger.info( "Wrote edge 1 with edge {}", written1 );
+
 
         //write the second
         final Edge connection2 = CpNamingUtils.createConnectionEdge( source, connectionType, target );
 
         final Edge written2 = gm.writeEdge( connection2 ).toBlocking().last();
+
+        logger.info( "Wrote edge 2 with edge {}", written2 );
 
 
         //write the 3rd
@@ -170,7 +179,7 @@ public class ConnectionServiceImplTest {
 
         final Edge written3 = gm.writeEdge( connection3 ).toBlocking().last();
 
-
+        logger.info( "Wrote edge 3 with edge {}", written3 );
 
 
         //now run the cleanup
@@ -178,13 +187,16 @@ public class ConnectionServiceImplTest {
         final List<ConnectionScope> deletedConnections =
             connectionService.deDupeConnections( Observable.just( applicationScope ) ).toList().toBlocking().last();
 
-        assertEquals( "2 edges deleted", 2, deletedConnections.size() );
+//        assertEquals( "2 edges deleted", 2, deletedConnections.size() );
 
         //check our oldest was deleted first
 
-        assertEquals(written2, deletedConnections.get( 0 ));
 
-        assertEquals(written3, deletedConnections.get( 1 ));
+        assertEdgeData( written2, deletedConnections.get( 0 ).getEdge() );
+
+        assertEdgeData( written3, deletedConnections.get( 1 ).getEdge() );
+
+        assertEquals( "2 edges deleted", 2, deletedConnections.size() );
 
 
 
@@ -200,5 +212,21 @@ public class ConnectionServiceImplTest {
         assertEquals( 1, edges.size() );
 
         assertEquals( written1, edges.get( 0 ) );
+    }
+
+
+    /**
+     * Compares edges based on their sourceId, type, targetId and timestamp. It ignores the deleted flag
+     * @param expected
+     * @param asserted
+     */
+    private void assertEdgeData(final Edge expected, final Edge asserted){
+        assertEquals("SourceId the same", expected.getSourceNode(), expected.getTargetNode());
+        assertEquals("TargetId the same", expected.getTargetNode(), expected.getTargetNode());
+
+        assertEquals("Type the same", expected.getType(), expected.getType());
+
+        assertEquals("Timestamp the same", expected.getTimestamp(), expected.getTimestamp());
+
     }
 }
