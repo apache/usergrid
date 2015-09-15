@@ -132,9 +132,6 @@ public class ConnectionServiceImplTest {
 
         final Id source = new SimpleId( "source" );
 
-        final Id target = new SimpleId( "target" );
-
-        final String connectionType = "testConnection";
 
 
           //add to a collection
@@ -146,6 +143,15 @@ public class ConnectionServiceImplTest {
         final Edge writtenCollection = gm.writeEdge( collectionEdge ).toBlocking().last();
 
         assertNotNull("Collection edge written", writtenCollection);
+
+
+        //now write 3 connections between the same nodes.
+
+        final Id target = new SimpleId( "target" );
+
+        final String connectionType = "testConnection";
+
+
 
         //write our first connection
         final Edge connection1 = CpNamingUtils.createConnectionEdge( source, connectionType, target );
