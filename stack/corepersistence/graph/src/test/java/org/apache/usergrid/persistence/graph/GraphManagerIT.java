@@ -2353,7 +2353,7 @@ public class GraphManagerIT {
 
 
         final SearchByEdge searchDescending =
-            new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(),Long.MAX_VALUE,
+            new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), Long.MAX_VALUE,
                 SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()   );
 
         final Observable<Edge> edgesDescending = gm.loadEdgeVersions( searchDescending );
@@ -2373,7 +2373,7 @@ public class GraphManagerIT {
         //now search ascending
 
         final SearchByEdge searchAscending =
-                    new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(),Long.MAX_VALUE,
+                    new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), 0,
                         SearchByEdgeType.Order.ASCENDING, Optional.<Edge>absent()   );
 
         Observable<Edge> edgesAscending = gm.loadEdgeVersions( searchAscending );

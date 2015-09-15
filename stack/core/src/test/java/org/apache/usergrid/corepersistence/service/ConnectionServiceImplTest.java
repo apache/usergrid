@@ -49,6 +49,7 @@ import rx.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 @RunWith( ITRunner.class )
@@ -179,19 +180,20 @@ public class ConnectionServiceImplTest {
 
         final Edge written3 = gm.writeEdge( connection3 ).toBlocking().last();
 
+
         logger.info( "Wrote edge 3 with edge {}", written3 );
 
+
+
+        assertTrue( "Expected edge timestamp to be in order", written1.getTimestamp() <= written2.getTimestamp() );
+        assertTrue( "Expected edge timestamp to be in order", written2.getTimestamp() <= written3.getTimestamp() );
 
         //now run the cleanup
 
         final List<ConnectionScope> deletedConnections =
             connectionService.deDupeConnections( Observable.just( applicationScope ) ).toList().toBlocking().last();
 
-//        assertEquals( "2 edges deleted", 2, deletedConnections.size() );
-
         //check our oldest was deleted first
-
-
         assertEdgeData( written2, deletedConnections.get( 0 ).getEdge() );
 
         assertEdgeData( written3, deletedConnections.get( 1 ).getEdge() );
@@ -221,12 +223,13 @@ public class ConnectionServiceImplTest {
      * @param asserted
      */
     private void assertEdgeData(final Edge expected, final Edge asserted){
-        assertEquals("SourceId the same", expected.getSourceNode(), expected.getTargetNode());
-        assertEquals("TargetId the same", expected.getTargetNode(), expected.getTargetNode());
+        assertEquals("SourceId the same", expected.getSourceNode(), asserted.getSourceNode());
 
-        assertEquals("Type the same", expected.getType(), expected.getType());
+        assertEquals("TargetId the same", expected.getTargetNode(), asserted.getTargetNode());
 
-        assertEquals("Timestamp the same", expected.getTimestamp(), expected.getTimestamp());
+        assertEquals("Type the same", expected.getType(), asserted.getType());
+
+        assertEquals("Timestamp the same", expected.getTimestamp(), asserted.getTimestamp());
 
     }
 }
