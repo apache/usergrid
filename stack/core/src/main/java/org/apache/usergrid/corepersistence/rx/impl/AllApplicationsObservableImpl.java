@@ -93,37 +93,27 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
         //we have app infos.  For each of these app infos, we have to load the application itself
         Observable<ApplicationScope> appIds = gm.loadEdgesFromSource(
             new SimpleSearchByEdgeType( rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                Optional.absent() ) ).flatMap( new Func1<Edge, Observable<ApplicationScope>>() {
-            @Override
-            public Observable<ApplicationScope> call( final Edge edge ) {
+                Optional.absent() ) ).flatMap(edge -> {
 
-                //get the app info and load it
-                final Id appInfo = edge.getTargetNode();
+                    //get the app info and load it
+                    final Id appInfo = edge.getTargetNode();
 
-                return collectionManager.load( appInfo )
-                    //filter out null entities
-                    .filter( new Func1<Entity, Boolean>() {
-                        @Override
-                        public Boolean call( final Entity entity ) {
+                    return collectionManager.load( appInfo )
+                        //filter out null entities
+                        .filter(entity -> {
                             if ( entity == null ) {
                                 logger.warn( "Encountered a null application info for id {}", appInfo );
                                 return false;
                             }
 
                             return true;
-                        }
-                    } )
-                        //get the id from the entity
-                    .map( new Func1<Entity, ApplicationScope>() {
-
-                        @Override
-                        public ApplicationScope call( final Entity entity ) {
+                        })
+                            //get the id from the entity
+                        .map(entity -> {
                             final UUID uuid =entity.getId().getUuid();
                             return getApplicationScope( uuid );
-                        }
-                    } );
-            }
-        } );
+                        });
+                });
 
         return Observable.merge( systemIds, appIds );
     }
