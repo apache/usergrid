@@ -2627,15 +2627,6 @@ public class CpEntityManager implements EntityManager {
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
-
-        // Index CP entity into default collection scope
-        //        IndexScope defaultIndexScope = new IndexScopeImpl(
-        //            applicationScope.getApplication(),
-        //            applicationScope.getApplication(),
-        //            CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
-        //        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        //        ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
-
         // reflect changes in the legacy Entity
         entity.setUuid( cpEntity.getId().getUuid() );
         entity.setProperties( cpEntity );

@@ -98,7 +98,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         Preconditions.checkNotNull(message, "Message cannot be null");
         indexSizeCounter.inc(message.getDeIndexRequests().size());
         indexSizeCounter.inc(message.getIndexRequests().size());
-
         return  processBatch(message);
     }
 
@@ -187,8 +186,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         try {
             responses = bulkRequest.execute().actionGet( );
-        }
-        catch ( Throwable t ) {
+        } catch ( Throwable t ) {
             log.error( "Unable to communicate with elasticsearch" );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
