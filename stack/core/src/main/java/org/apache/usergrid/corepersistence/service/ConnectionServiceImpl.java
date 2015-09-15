@@ -147,18 +147,18 @@ public class ConnectionServiceImpl implements ConnectionService {
         final Observable<ApplicationScope> applicationScopeObservable ) {
 
 
-        final Observable<EntityIdScope> entityIds =allEntityIdsObservable.getEntities( applicationScopeObservable );
+        final Observable<EntityIdScope> entityIds = allEntityIdsObservable.getEntities( applicationScopeObservable );
         //now we have an observable of entityIds.  Walk each connection type
 
         //get all edge types for connections
-       return  entityIds.flatMap( entityIdScope -> {
+        return entityIds.flatMap( entityIdScope -> {
 
             final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
             final Id entityId = entityIdScope.getId();
 
-            final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope );
+            final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-           logger.debug( "Checking connections of id {} in application {}", entityId, applicationScope );
+            logger.debug( "Checking connections of id {} in application {}", entityId, applicationScope );
 
             return gm.getEdgeTypesFromSource(
                 new SimpleSearchEdgeType( entityId, CpNamingUtils.EDGE_CONN_PREFIX, Optional.absent() ) )
@@ -176,7 +176,7 @@ public class ConnectionServiceImpl implements ConnectionService {
                     return gm.loadEdgesFromSource( searchByEdge );
                 } )
 
-                //now that we have a stream of edges, stream all versions
+                    //now that we have a stream of edges, stream all versions
                 .flatMap( edge -> {
 
                     logger.debug( "Found edge {}, searching for multiple versions of edge", edge );
@@ -187,19 +187,17 @@ public class ConnectionServiceImpl implements ConnectionService {
                     return gm.loadEdgeVersions( searchByEdge );
                 } )
 
-            //skip the first version since it's the one we want to retain
-            // validate there is only 1 version of it, delete anything > than the min
-                .skip( 1 )
-                .flatMap( edgeToDelete -> {
+                    //skip the first version since it's the one we want to retain
+                    // validate there is only 1 version of it, delete anything > than the min
+                .skip( 1 ).flatMap( edgeToDelete -> {
 
                     logger.debug( "Deleting edge {}", edgeToDelete );
 
                     //mark the edge and ignore the cleanup result
                     return gm.markEdge( edgeToDelete )
-                             //delete the edge
-                             .flatMap( edge -> gm.deleteEdge( edgeToDelete ));
-                } )
-                .map( deletedEdge -> new ConnectionScope( applicationScope, deletedEdge ) ) ;
-        });
+                        //delete the edge
+                        .flatMap( edge -> gm.deleteEdge( edgeToDelete ) );
+                } ).map( deletedEdge -> new ConnectionScope( applicationScope, deletedEdge ) );
+        } );
     }
 }
