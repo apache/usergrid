@@ -20,16 +20,13 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import rx.Observable;
-
-import java.util.List;
 
 
 /**
  *  Buffer index requests
  */
-public interface IndexBufferConsumer {
+public interface IndexProducer {
 
 
     /**
