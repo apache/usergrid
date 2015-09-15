@@ -104,10 +104,6 @@ public class IndexServiceImpl implements IndexService {
 
         //do our observable for batching
         //try to send a whole batch if we can
-
-
-        //do our observable for batching
-        //try to send a whole batch if we can
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex.buffer( indexFig.getIndexBatchSize() )
 
             //map into batches based on our buffer size
