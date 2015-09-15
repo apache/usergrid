@@ -18,6 +18,9 @@
 package org.apache.usergrid.corepersistence.service;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.corepersistence.pipeline.builder.EntityBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.IdBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
@@ -46,6 +49,9 @@ import rx.Observable;
 
 @Singleton
 public class ConnectionServiceImpl implements ConnectionService {
+
+
+    private static final Logger logger = LoggerFactory.getLogger( ConnectionServiceImpl.class );
 
     private final PipelineBuilderFactory pipelineBuilderFactory;
     private final AllEntityIdsObservable allEntityIdsObservable;
@@ -152,11 +158,16 @@ public class ConnectionServiceImpl implements ConnectionService {
 
             final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope );
 
+           logger.debug( "Checking connections of id {} in application {}", entityId, applicationScope );
+
             return gm.getEdgeTypesFromSource(
                 new SimpleSearchEdgeType( entityId, CpNamingUtils.EDGE_CONN_PREFIX, Optional.absent() ) )
 
                 //now load all edges from this node of this type
                 .flatMap( edgeType -> {
+
+                    logger.debug( "Found edge of types of {}, searching for edges", edgeType );
+
                     final SearchByEdgeType searchByEdge =
                         new SimpleSearchByEdgeType( entityId, edgeType, Long.MAX_VALUE,
                             SearchByEdgeType.Order.ASCENDING, Optional.absent() );
@@ -167,6 +178,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 
                 //now that we have a stream of edges, stream all versions
                 .flatMap( edge -> {
+
+                    logger.debug( "Found edge {}, searching for multiple versions of edge", edge );
+
                     final SearchByEdge searchByEdge =
                         new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
                             Long.MAX_VALUE, SearchByEdgeType.Order.ASCENDING, Optional.absent() );
@@ -176,8 +190,16 @@ public class ConnectionServiceImpl implements ConnectionService {
             //skip the first version since it's the one we want to retain
             // validate there is only 1 version of it, delete anything > than the min
                 .skip( 1 )
-                .flatMap( edgeToDelete -> gm.deleteEdge( edgeToDelete ) )
-                .map(deletedEdge ->  new ConnectionScope( applicationScope, deletedEdge ) ) ;
+                .flatMap( edgeToDelete -> {
+
+                    logger.debug( "Deleting edge {}", edgeToDelete );
+
+                    //mark the edge and ignore the cleanup result
+                    return gm.markEdge( edgeToDelete )
+                             //delete the edge
+                             .flatMap( edge -> gm.deleteEdge( edgeToDelete ));
+                } )
+                .map( deletedEdge -> new ConnectionScope( applicationScope, deletedEdge ) ) ;
         });
     }
 }
