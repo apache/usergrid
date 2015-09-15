@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -92,7 +93,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         //batch up sets of some size and send them in batch
 
     }
-
 
     public Observable<IndexOperationMessage>  put( IndexOperationMessage message ) {
         Preconditions.checkNotNull(message, "Message cannot be null");
