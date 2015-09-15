@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -58,7 +57,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
     private final IndexCache indexCache;
     private final EsProvider esProvider;
-    private final IndexBufferConsumer producer;
+    private final IndexProducer producer;
     private final IndexFig indexFig;
     private final Timer timer;
 
@@ -66,7 +65,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
     @Inject
     public IndexRefreshCommandImpl(
                                     final EsProvider esProvider,
-                                    final IndexBufferConsumer producer,
+                                    final IndexProducer producer,
                                     final IndexFig indexFig,
                                     final MetricsFactory metricsFactory,
                                     final IndexCache indexCache ) {

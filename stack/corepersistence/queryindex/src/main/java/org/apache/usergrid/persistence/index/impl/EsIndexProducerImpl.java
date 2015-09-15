@@ -18,14 +18,10 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
-import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -38,23 +34,20 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexFig;
 
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
-import rx.Subscriber;
-import rx.schedulers.Schedulers;
 
 
 /**
  * Consumer for IndexOperationMessages
  */
 @Singleton
-public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
-    private static final Logger log = LoggerFactory.getLogger( EsIndexBufferConsumerImpl.class );
+public class EsIndexProducerImpl implements IndexProducer {
+    private static final Logger log = LoggerFactory.getLogger( EsIndexProducerImpl.class );
 
     private final IndexFig config;
     private final FailureMonitorImpl failureMonitor;
@@ -70,17 +63,17 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
 
     @Inject
-    public EsIndexBufferConsumerImpl( final IndexFig config, final EsProvider provider,
-                                      final MetricsFactory metricsFactory, final IndexFig indexFig ) {
-        this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.flush");
-        this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.size");
-        this.roundtripTimer = metricsFactory.getHistogram(EsIndexBufferConsumerImpl.class, "index_buffer.message_cycle");
+    public EsIndexProducerImpl(final IndexFig config, final EsProvider provider,
+                               final MetricsFactory metricsFactory, final IndexFig indexFig) {
+        this.flushTimer = metricsFactory.getTimer(EsIndexProducerImpl.class, "index_buffer.flush");
+        this.indexSizeCounter = metricsFactory.getCounter(EsIndexProducerImpl.class, "index_buffer.size");
+        this.roundtripTimer = metricsFactory.getHistogram(EsIndexProducerImpl.class, "index_buffer.message_cycle");
 
         //wire up the gauge of inflight messages
-        metricsFactory.addGauge(EsIndexBufferConsumerImpl.class, "index_buffer.inflight", () -> inFlight.longValue());
+        metricsFactory.addGauge(EsIndexProducerImpl.class, "index_buffer.inflight", () -> inFlight.longValue());
 
 
-        this.indexTimer = metricsFactory.getTimer( EsIndexBufferConsumerImpl.class, "index" );
+        this.indexTimer = metricsFactory.getTimer( EsIndexProducerImpl.class, "index" );
 
         this.config = config;
         this.failureMonitor = new FailureMonitorImpl(config, provider);
