@@ -79,7 +79,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
         //merge source and target then deal with the distinct values
-        return Observable.just( edge )
+        return Observable.just( edge ).filter( markedEdge-> markedEdge.isDeleted() )
                 .doOnNext( markedEdge -> {
                     //it's still in the same state as it was when we queued it. Remove it
                         LOG.info( "Removing edge {} ", markedEdge );
