@@ -1112,7 +1112,7 @@ var AUTH_NONE = 'NONE';
     var connectee = this.getEntityId(entity);
     if (!connectee) {
       if (typeof(callback) === 'function') {
-        var error = 'Error trying to delete object - no uuid specified.';
+        var error = 'Error trying to connect object - no uuid specified.';
         if (self._client.logging) {
           console.log(error);
         }
