@@ -170,7 +170,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
                     final SearchByEdgeType searchByEdge =
                         new SimpleSearchByEdgeType( entityId, edgeType, Long.MAX_VALUE,
-                            SearchByEdgeType.Order.ASCENDING, Optional.absent() );
+                            SearchByEdgeType.Order.DESCENDING, Optional.absent() );
 
                     //load edges from the source the with type specified
                     return gm.loadEdgesFromSource( searchByEdge );
@@ -182,21 +182,25 @@ public class ConnectionServiceImpl implements ConnectionService {
                     logger.debug( "Found edge {}, searching for multiple versions of edge", edge );
 
                     final SearchByEdge searchByEdge =
-                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                            Long.MAX_VALUE, SearchByEdgeType.Order.ASCENDING, Optional.absent() );
-                    return gm.loadEdgeVersions( searchByEdge );
-                } )
+                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), 0,
+                            SearchByEdgeType.Order.ASCENDING, Optional.absent() );
+                    return gm.loadEdgeVersions( searchByEdge )
+                        //skip the first version since it's the one we want to retain
+                        .skip( 1 )
+                            //mark for deletion
+                        .flatMap( edgeToDelete -> {
 
-                    //skip the first version since it's the one we want to retain
+                            logger.debug( "Deleting edge {}", edgeToDelete );
+
+                            //mark the edge and ignore the cleanup result
+                            return gm.markEdge( edgeToDelete );
+                        } )
+                            //mark all versions, then on the last, delete them from cass
+                        .flatMap( lastMarkedEdge -> gm.deleteEdge( lastMarkedEdge ) );
+
+
                     // validate there is only 1 version of it, delete anything > than the min
-                .skip( 1 ).flatMap( edgeToDelete -> {
 
-                    logger.debug( "Deleting edge {}", edgeToDelete );
-
-                    //mark the edge and ignore the cleanup result
-                    return gm.markEdge( edgeToDelete )
-                        //delete the edge
-                        .flatMap( edge -> gm.deleteEdge( edgeToDelete ) );
                 } ).map( deletedEdge -> new ConnectionScope( applicationScope, deletedEdge ) );
         } );
     }
