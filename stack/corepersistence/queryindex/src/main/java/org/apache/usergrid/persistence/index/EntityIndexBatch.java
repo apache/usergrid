@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.index;/*
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;

@@ -35,7 +35,6 @@ import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexFig;
 
@@ -64,8 +63,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final Timer flushTimer;
     private final IndexFig indexFig;
     private final Counter indexSizeCounter;
-    private final Timer offerTimer;
-    private final BufferProducer bufferProducer;
     private final Histogram roundtripTimer;
     private final Timer indexTimer;
 
@@ -78,7 +75,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                                       final MetricsFactory metricsFactory, final IndexFig indexFig ) {
         this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.flush");
         this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index_buffer.size");
-        this.offerTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index_buffer.producer");
         this.roundtripTimer = metricsFactory.getHistogram(EsIndexBufferConsumerImpl.class, "index_buffer.message_cycle");
 
         //wire up the gauge of inflight messages
@@ -92,11 +88,9 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.client = provider.getClient();
         this.indexFig = indexFig;
 
-        this.bufferProducer = new BufferProducer();
 
         //batch up sets of some size and send them in batch
 
-        startSubscription();
     }
 
 
@@ -104,34 +98,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         Preconditions.checkNotNull(message, "Message cannot be null");
         indexSizeCounter.inc(message.getDeIndexRequests().size());
         indexSizeCounter.inc(message.getIndexRequests().size());
-        Timer.Context time = offerTimer.time();
-        bufferProducer.send(message);
-        time.stop();
-        return  message.observable();
-    }
 
-
-    /**
-     * Start the subscription
-     */
-    private void startSubscription() {
-
-        //buffer on our new thread with a timeout
-        final Observable<IndexOperationMessage> observable = Observable.create(bufferProducer);
-
-        observable.subscribeOn(Schedulers.io()).flatMap(indexOpBuffer -> {
-
-            //hand off to processor in new observable thread so we can continue to buffer faster
-            return Observable.just(indexOpBuffer).flatMap(
-                indexOpBufferObservable -> ObservableTimer.time(processBatch(indexOpBufferObservable), flushTimer)
-            )
-
-                //use the I/O scheduler for thread re-use and efficiency in context switching then use our concurrent
-                // flatmap count or higher throughput of batches once buffered
-                .subscribeOn(Schedulers.io());
-        }, indexFig.getIndexFlushWorkerCount())
-            //start in the background
-            .subscribe();
+        return  processBatch(message);
     }
 
 
@@ -142,10 +110,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
      */
     private Observable<IndexOperationMessage> processBatch( final IndexOperationMessage batch ) {
 
-
         //take our stream of batches, then stream then into individual ops for consumption on ES
-
-
         final Set<IndexOperation> indexOperationSet = batch.getIndexRequests();
         final Set<DeIndexOperation> deIndexOperationSet = batch.getDeIndexRequests();
 
@@ -188,7 +153,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         //subscribe to the operations that generate requests on a new thread so that we can execute them quickly
         //mark this as done
         return processedIndexOperations.doOnNext(processedIndexOp -> {
-            processedIndexOp.done();
             roundtripTimer.update(System.currentTimeMillis() - processedIndexOp.getCreationTime());
         });
     }
@@ -251,33 +215,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             throw new RuntimeException(
                 "Error during processing of bulk index operations one of the responses failed.  Check previous log "
                     + "entries" );
-        }
-    }
-
-
-    public static class BufferProducer implements Observable.OnSubscribe<IndexOperationMessage> {
-
-        private Subscriber<? super IndexOperationMessage> subscriber;
-
-
-        /**
-         * Send the data through the buffer
-         */
-        public void send( final IndexOperationMessage indexOps ) {
-            try {
-                subscriber.onNext( indexOps );
-            }catch(Exception e){
-                //re-throws so the caller can determine failover
-                log.error( "Unable to process message for indexOp {}, error follows.", indexOps, e );
-                throw e;
-            }
-        }
-
-
-        @Override
-        public void call( final Subscriber<? super IndexOperationMessage> subscriber ) {
-            //just assigns for later use, doesn't do anything else
-            this.subscriber = subscriber;
         }
     }
 }
