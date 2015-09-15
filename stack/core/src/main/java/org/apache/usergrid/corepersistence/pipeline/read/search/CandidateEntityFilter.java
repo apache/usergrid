@@ -61,7 +61,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     @Inject
     public CandidateEntityFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
                                   final EntityIndexFactory entityIndexFactory,
-                                  final IndexLocationStrategyFactory indexLocationStrategyFactory) {
+                                  final IndexLocationStrategyFactory indexLocationStrategyFactory
+                                  ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
@@ -170,7 +171,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                 validate( candidateResult );
             }
 
-            batch.execute();
+           batch.execute().subscribe();
         }
 
 
