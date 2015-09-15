@@ -100,12 +100,12 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
     public Observable<IndexOperationMessage>  put( IndexOperationMessage message ) {
         Preconditions.checkNotNull(message, "Message cannot be null");
-        indexSizeCounter.inc( message.getDeIndexRequests().size() );
-        indexSizeCounter.inc( message.getIndexRequests().size() );
+        indexSizeCounter.inc(message.getDeIndexRequests().size());
+        indexSizeCounter.inc(message.getIndexRequests().size());
         Timer.Context time = offerTimer.time();
-        bufferProducer.send( message );
+        bufferProducer.send(message);
         time.stop();
-        return message.observable();
+        return  message.observable();
     }
 
 
@@ -114,22 +114,20 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
      */
     private void startSubscription() {
 
-
+        //buffer on our new thread with a timeout
         final Observable<IndexOperationMessage> observable = Observable.create(bufferProducer);
 
-        //buffer on our new thread with a timeout
-        observable.buffer( indexFig.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, indexFig.getIndexBufferSize(),
-            Schedulers.io() ).flatMap( indexOpBuffer -> {
+        observable.subscribeOn(Schedulers.io()).flatMap(indexOpBuffer -> {
 
             //hand off to processor in new observable thread so we can continue to buffer faster
-            return Observable.just( indexOpBuffer ).flatMap(
-                indexOpBufferObservable -> ObservableTimer.time( processBatch( indexOpBufferObservable ),flushTimer )
+            return Observable.just(indexOpBuffer).flatMap(
+                indexOpBufferObservable -> ObservableTimer.time(processBatch(indexOpBufferObservable), flushTimer)
             )
 
                 //use the I/O scheduler for thread re-use and efficiency in context switching then use our concurrent
                 // flatmap count or higher throughput of batches once buffered
-                .subscribeOn( Schedulers.io() );
-        }, indexFig.getIndexFlushWorkerCount() )
+                .subscribeOn(Schedulers.io());
+        }, indexFig.getIndexFlushWorkerCount())
             //start in the background
             .subscribe();
     }
@@ -137,63 +135,60 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
     /**
      * Process the buffer of batches
-     * @param batches
+     * @param batch
      * @return
      */
-    private Observable<IndexOperationMessage> processBatch( final List<IndexOperationMessage> batches ) {
+    private Observable<IndexOperationMessage> processBatch( final IndexOperationMessage batch ) {
 
-
-        final Observable<IndexOperationMessage> indexOps = Observable.from( batches );
 
         //take our stream of batches, then stream then into individual ops for consumption on ES
-        final Observable<BatchOperation> batchOps = indexOps.flatMap( batch -> {
 
-            final Set<IndexOperation> indexOperationSet = batch.getIndexRequests();
-            final Set<DeIndexOperation> deIndexOperationSet = batch.getDeIndexRequests();
 
-            final int indexOperationSetSize = indexOperationSet.size();
-            final int deIndexOperationSetSize = deIndexOperationSet.size();
+        final Set<IndexOperation> indexOperationSet = batch.getIndexRequests();
+        final Set<DeIndexOperation> deIndexOperationSet = batch.getDeIndexRequests();
 
-            log.debug( "Emitting {} add and {} remove operations", indexOperationSetSize, deIndexOperationSetSize );
+        final int indexOperationSetSize = indexOperationSet.size();
+        final int deIndexOperationSetSize = deIndexOperationSet.size();
 
-            indexSizeCounter.dec( indexOperationSetSize );
-            indexSizeCounter.dec( deIndexOperationSetSize );
+        log.debug("Emitting {} add and {} remove operations", indexOperationSetSize, deIndexOperationSetSize);
 
-            final Observable<IndexOperation> index = Observable.from( batch.getIndexRequests() );
-            final Observable<DeIndexOperation> deIndex = Observable.from( batch.getDeIndexRequests() );
+        indexSizeCounter.dec(indexOperationSetSize);
+        indexSizeCounter.dec(deIndexOperationSetSize);
 
-            return Observable.merge( index, deIndex );
-        } );
+        final Observable<IndexOperation> index = Observable.from(batch.getIndexRequests());
+        final Observable<DeIndexOperation> deIndex = Observable.from(batch.getDeIndexRequests());
+
+        final Observable<BatchOperation> batchOps = Observable.merge(index, deIndex);
 
         //buffer into the max size we can send ES and fire them all off until we're completed
-        final Observable<BulkRequestBuilder> requests = batchOps.buffer( indexFig.getIndexBatchSize() )
+        final Observable<BulkRequestBuilder> requests = batchOps.buffer(indexFig.getIndexBatchSize())
             //flatten the buffer into a single batch execution
-            .flatMap( individualOps -> Observable.from( individualOps )
+            .flatMap(individualOps -> Observable.from(individualOps)
                 //collect them
-                .collect( () -> initRequest(), ( bulkRequestBuilder, batchOperation ) -> {
-                    log.debug( "adding operation {} to bulkRequestBuilder {}", batchOperation, bulkRequestBuilder );
-                    batchOperation.doOperation( client, bulkRequestBuilder );
-                } ) )
+                .collect(() -> initRequest(), (bulkRequestBuilder, batchOperation) -> {
+                    log.debug("adding operation {} to bulkRequestBuilder {}", batchOperation, bulkRequestBuilder);
+                    batchOperation.doOperation(client, bulkRequestBuilder);
+                }))
                 //write them
-            .doOnNext( bulkRequestBuilder -> sendRequest( bulkRequestBuilder ) );
+            .doOnNext(bulkRequestBuilder -> sendRequest(bulkRequestBuilder));
 
 
         //now that we've processed them all, ack the futures after our last batch comes through
         final Observable<IndexOperationMessage> processedIndexOperations =
-            requests.lastOrDefault(null).flatMap( lastRequest ->{
-                if(lastRequest!=null){
-                    return Observable.from( batches ) ;
-                }else{
+            requests.lastOrDefault(null).flatMap(lastRequest -> {
+                if (lastRequest != null) {
+                    return Observable.just(batch);
+                } else {
                     return Observable.empty();
                 }
             });
 
         //subscribe to the operations that generate requests on a new thread so that we can execute them quickly
         //mark this as done
-        return processedIndexOperations.doOnNext( processedIndexOp -> {
-                processedIndexOp.done();
-                roundtripTimer.update( System.currentTimeMillis() - processedIndexOp.getCreationTime() );
-            } );
+        return processedIndexOperations.doOnNext(processedIndexOp -> {
+            processedIndexOp.done();
+            roundtripTimer.update(System.currentTimeMillis() - processedIndexOp.getCreationTime());
+        });
     }
 
 
@@ -266,12 +261,12 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         /**
          * Send the data through the buffer
          */
-        public void send( final IndexOperationMessage indexOp ) {
+        public void send( final IndexOperationMessage indexOps ) {
             try {
-                subscriber.onNext( indexOp );
+                subscriber.onNext( indexOps );
             }catch(Exception e){
                 //re-throws so the caller can determine failover
-                log.error( "Unable to process message for indexOp {}, error follows.", indexOp, e );
+                log.error( "Unable to process message for indexOp {}, error follows.", indexOps, e );
                 throw e;
             }
         }

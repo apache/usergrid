@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence.index.impl;
 
 import rx.Observable;
 
+import java.util.List;
+
 
 /**
  *  Buffer index requests
