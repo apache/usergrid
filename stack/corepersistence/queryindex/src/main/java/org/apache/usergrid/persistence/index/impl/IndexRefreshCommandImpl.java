@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
