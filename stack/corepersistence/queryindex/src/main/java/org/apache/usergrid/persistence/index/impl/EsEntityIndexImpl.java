@@ -63,8 +63,6 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
 import org.slf4j.Logger;
@@ -118,7 +116,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private final SearchRequestBuilderStrategyV2 searchRequestBuilderStrategyV2;
     private final int cursorTimeout;
     private final long queryTimeout;
-    private final IndexBufferConsumer indexBatchBufferProducer;
+    private final IndexProducer indexBatchBufferProducer;
     private final FailureMonitorImpl failureMonitor;
     private final Timer aggregationTimer;
 
@@ -133,7 +131,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                               final IndexFig indexFig,
                               final IndexRefreshCommand indexRefreshCommand,
                               final MetricsFactory metricsFactory,
-                              final IndexBufferConsumer indexBatchBufferProducer,
+                              final IndexProducer indexBatchBufferProducer,
                               final IndexLocationStrategy indexLocationStrategy
     ) {
 
