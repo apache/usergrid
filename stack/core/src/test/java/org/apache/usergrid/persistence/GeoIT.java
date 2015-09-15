@@ -33,7 +33,7 @@ import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
+import static org.junit.Assert.assertTrue;
 
 
 public class GeoIT extends AbstractCoreIT {
@@ -247,6 +247,56 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(location);
             assertNotNull(location.get("longitude"));
             assertNotNull(location.get("latitude"));
+        }
+
+    }
+
+    @Test
+    public void testNonGeolocationEntities() throws Exception {
+        //1. load test entities
+        EntityManager em = app.getEntityManager();
+        assertNotNull(em);
+
+         List<Map<String, Object>> locations =
+            new ArrayList<Map<String, Object>>();
+
+
+        locations.add(new LinkedHashMap<String, Object>() {{
+                put("name", "norwest");
+                put("location", "texas");
+            }});
+        locations.add(new LinkedHashMap<String, Object>() {{
+                put("type", "store");
+                put("name", "ashfield");
+                put("location", "new jersey");
+            }});
+
+        //2. load test entities
+        for (Map<String, Object> location : locations) {
+            Entity entity = em.create("store", location);
+            assertNotNull(entity);
+            LOG.debug("Entity {} created", entity.getProperty("name"));
+        }
+        app.refreshIndex();
+        //2. validate the size of the result
+        Query query = new Query();
+        Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
+        assertEquals("total number of 'stores'", locations.size(), listResults.size());
+        //3. verify each entity has geo data
+        for (Entity entity : listResults.entities) {
+            Object location = entity.getProperty("location");
+            assertNotNull(location);
+            assertTrue(location instanceof String);
+        }
+
+        query = Query.fromQL("select * where location='texas'");
+        listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
+        assertEquals("total number of 'stores'", 1, listResults.size());
+        //3. verify each entity has geo data
+        for (Entity entity : listResults.entities) {
+            Object location = entity.getProperty("location");
+            assertNotNull(location);
+            assertTrue(location instanceof String);
         }
 
     }

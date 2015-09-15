@@ -133,14 +133,14 @@ public class CpEntityMapUtilsTest {
 
         cpEntity = CpEntityMapUtils.fromMap(properties, "loc", true);
 
-        assertNull(cpEntity.getFieldMap().get("location"));
+        assertTrue(cpEntity.getFieldMap().get("location") instanceof EntityObjectField);
 
         properties = new LinkedHashMap<String, Object>();
         properties.put("location", "denver");
 
         cpEntity = CpEntityMapUtils.fromMap(properties, "loc", true);
 
-        assertNull(cpEntity.getFieldMap().get("location") );
+        assertTrue(cpEntity.getFieldMap().get("location") instanceof StringField);
     }
 
 
