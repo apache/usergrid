@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import rx.Observable;
 
 import java.util.List;
@@ -35,4 +36,5 @@ public interface IndexBufferConsumer {
      * @return
      */
     Observable<IndexOperationMessage>  put(IndexOperationMessage message);
+
 }
