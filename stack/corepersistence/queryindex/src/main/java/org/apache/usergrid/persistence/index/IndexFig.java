@@ -48,10 +48,6 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
 
-    String INDEX_BUFFER_SIZE = "elasticsearch.buffer_size";
-
-    String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_timeout";
-
     String INDEX_BATCH_SIZE = "elasticsearch.batch_size";
 
     String INDEX_WRITE_CONSISTENCY_LEVEL = "elasticsearch.write_consistency_level";
