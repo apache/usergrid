@@ -153,21 +153,7 @@ public interface IndexFig extends GuicyFig {
     @Default( "2" )
     int getIndexCacheMaxWorkers();
 
-    /**
-     * The maximum time to wait before the buffer flushes and sends index write requests to Elasticsearch.
-     * This is used so the application doesn't wait forever for the buffer to reach its size before writing
-     * data to Elasticsearch.
-     */
-    @Default( "250" )
-    @Key( INDEX_BUFFER_TIMEOUT )
-    long getIndexBufferTimeout();
 
-    /**
-     * The maximum buffer size to use before sending index write requests to Elasticsearch.
-     */
-    @Default( "1000" )
-    @Key( INDEX_BUFFER_SIZE )
-    int getIndexBufferSize();
 
     /**
      * The number of worker threads used for flushing batches of index write requests
