@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -87,8 +88,14 @@ public class EsIndexProducerImpl implements IndexProducer {
 
     }
 
+    public Observable<IndexOperationMessage>  put( EntityIndexBatch batch ) {
+        Preconditions.checkNotNull(batch, "Batch cannot be null");
+        return put(batch.build());
+    }
+
     public Observable<IndexOperationMessage>  put( IndexOperationMessage message ) {
-        Preconditions.checkNotNull(message, "Message cannot be null");
+
+            Preconditions.checkNotNull(message, "Message cannot be null");
         indexSizeCounter.inc(message.getDeIndexRequests().size());
         indexSizeCounter.inc(message.getIndexRequests().size());
         return  processBatch(message);

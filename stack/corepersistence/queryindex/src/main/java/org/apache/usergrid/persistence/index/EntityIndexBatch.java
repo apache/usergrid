@@ -63,10 +63,11 @@ public interface EntityIndexBatch {
 
 
     /**
-     * Execute the batch
-     * @return future to guarantee execution
+     * return built payload
+     * @return
      */
-    Observable<IndexOperationMessage> execute();
+    IndexOperationMessage build();
+
 
     /**
      * Get the number of operations in the batch
