@@ -53,7 +53,10 @@
 		<property name="realm" ref="realm" />
 	</bean>
 
-    <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager" />
+    <!--
+    <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager"/>
+    -->
+    <bean id="cacheManager" class="org.apache.usergrid.rest.security.shiro.ShiroCacheManager" />
 
     <bean id="jobServiceBootstrap" class="org.apache.usergrid.rest.JobServiceBoostrap" />
 
