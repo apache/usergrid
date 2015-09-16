@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import java.util.List;
 
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,9 +141,10 @@ public class EventBuilderImpl implements EventBuilder {
 
         //If there is nothing marked then we shouldn't return any results.
         //TODO: evaluate if we want to return null or return empty observable when we don't have any results marked as deleted.
-        if(mostRecentlyMarked == null)
-            return null;
-
+        if(mostRecentlyMarked == null) {
+            Observable<IndexOperationMessage> messageObservable = indexService.deleteEntityIndexes(applicationScope, entityId, UUIDUtils.MAX_TIME_UUID);
+            return new EntityDeleteResults(messageObservable, Observable.<List<MvccLogEntry>>empty());
+        }
         //observable of index operation messages
         //this method will need the most recent version.
         //When we go to compact the graph make sure you turn on the debugging mode for the deleted nodes so
