@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -106,7 +105,6 @@ public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
     private final EntityManagerFig entityManagerFig;
-    private final IndexProducer indexProducer;
 
     private ManagerCache managerCache;
 
@@ -129,11 +127,10 @@ public class CpRelationManager implements RelationManager {
 
     public CpRelationManager( final ManagerCache managerCache,
                               final AsyncEventService indexService, final CollectionService collectionService,
-                              final ConnectionService connectionService,final IndexProducer indexProducer,
+                              final ConnectionService connectionService,
                               final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
                               final EntityRef headEntity) {
-        this.indexProducer = indexProducer;
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -540,7 +537,8 @@ public class CpRelationManager implements RelationManager {
         final EntityIndexBatch batch = ei.createBatch();
         batch.deindex( indexScope, memberEntity );
         //TODO: this should not happen here, needs to go to  SQS
-        indexProducer.put(batch).subscribe();
+        //indexProducer.put(batch).subscribe();
+        indexService.queueEntityDelete(applicationScope,memberEntity.getId());
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {

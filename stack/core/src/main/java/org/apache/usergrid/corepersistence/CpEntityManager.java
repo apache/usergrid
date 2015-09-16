@@ -41,7 +41,6 @@ import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.IndexRefreshCommand;
-import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -184,7 +183,6 @@ public class CpEntityManager implements EntityManager {
 
     private final UUID applicationId;
     private final EntityManagerFig entityManagerFig;
-    private final IndexProducer indexProducer;
     private Application application;
 
 
@@ -248,11 +246,9 @@ public class CpEntityManager implements EntityManager {
                             final GraphManagerFactory graphManagerFactory,
                             final CollectionService collectionService,
                             final ConnectionService connectionService,
-                            final IndexProducer indexProducer,
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
-        this.indexProducer = indexProducer;
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
@@ -763,7 +759,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(entityRef, "entityRef cannot be null");
 
         CpRelationManager relationManager =
-            new CpRelationManager(managerCache, indexService, collectionService, connectionService, indexProducer, this, entityManagerFig, applicationId, entityRef );
+            new CpRelationManager(managerCache, indexService, collectionService, connectionService, this, entityManagerFig, applicationId, entityRef );
         return relationManager;
     }
 
