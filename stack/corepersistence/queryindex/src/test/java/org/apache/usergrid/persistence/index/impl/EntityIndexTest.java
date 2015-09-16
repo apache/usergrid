@@ -292,7 +292,7 @@ public class EntityIndexTest extends BaseIT {
 
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex(searchEdge, crs.get(0));
-        indexProducer.put(entityIndex.createBatch() ).subscribe();
+        indexProducer.put(entityIndexBatch ).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         //Hilda Youn
