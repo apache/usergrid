@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,15 +54,18 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final IndexProducer indexProducer;
 
 
     @Inject
     public CandidateIdFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
                               final EntityIndexFactory entityIndexFactory,
-                              final IndexLocationStrategyFactory indexLocationStrategyFactory) {
+                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                              final IndexProducer indexProducer) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.indexProducer = indexProducer;
     }
 
 
@@ -96,7 +100,7 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
                     //now we have a collection, validate our canidate set is correct.
 
                     return versionSetObservable.map(
-                        entitySet -> new EntityCollector( applicationIndex.createBatch(), entitySet,
+                        entitySet -> new EntityCollector(indexProducer, applicationIndex.createBatch(), entitySet,
                             candidateResults ) ).doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
                         entityCollector -> Observable.from( entityCollector.collectResults() ) );
                 } );
@@ -113,13 +117,15 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
         private static final Logger logger = LoggerFactory.getLogger( EntityCollector.class );
         private List<FilterResult<Id>> results = new ArrayList<>();
 
+        private final IndexProducer indexProducer;
         private final EntityIndexBatch batch;
         private final List<FilterResult<Candidate>> candidateResults;
         private final VersionSet versionSet;
 
 
-        public EntityCollector( final EntityIndexBatch batch, final VersionSet versionSet,
+        public EntityCollector( final IndexProducer indexProducer, final EntityIndexBatch batch, final VersionSet versionSet,
                                 final List<FilterResult<Candidate>> candidateResults ) {
+            this.indexProducer = indexProducer;
             this.batch = batch;
             this.versionSet = versionSet;
             this.candidateResults = candidateResults;
@@ -136,7 +142,7 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
                 validate( candidateResult );
             }
 
-            batch.execute();
+            indexProducer.put(batch).subscribe();
         }
 
 

@@ -24,6 +24,7 @@ import java.util.*;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,16 +57,19 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final IndexProducer producer;
 
 
     @Inject
     public CandidateEntityFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
                                   final EntityIndexFactory entityIndexFactory,
-                                  final IndexLocationStrategyFactory indexLocationStrategyFactory
+                                  final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                  final IndexProducer producer
                                   ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.producer = producer;
     }
 
 
@@ -107,7 +111,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                             .flatMap(idList -> entityCollectionManager.load(idList));
                         //now we have a collection, validate our canidate set is correct.
                         return entitySets.map(
-                            entitySet -> new EntityVerifier(
+                            entitySet -> new EntityVerifier(producer,
                                 applicationIndex.createBatch(), entitySet, candidateResults)
                         )
                             .doOnNext(entityCollector -> entityCollector.merge())
@@ -148,13 +152,15 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         private static final Logger logger = LoggerFactory.getLogger( EntityVerifier.class );
         private List<FilterResult<Entity>> results = new ArrayList<>();
 
+        private final IndexProducer producer;
         private final EntityIndexBatch batch;
         private final List<FilterResult<Candidate>> candidateResults;
         private final EntitySet entitySet;
 
 
-        public EntityVerifier( final EntityIndexBatch batch, final EntitySet entitySet,
+        public EntityVerifier( final IndexProducer producer, final EntityIndexBatch batch, final EntitySet entitySet,
                                final List<FilterResult<Candidate>> candidateResults ) {
+            this.producer = producer;
             this.batch = batch;
             this.entitySet = entitySet;
             this.candidateResults = candidateResults;
@@ -171,7 +177,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                 validate( candidateResult );
             }
 
-           batch.execute().subscribe();
+            producer.put(batch).subscribe();
         }
 
 

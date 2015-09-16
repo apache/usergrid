@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -96,6 +97,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
     private final EntityManagerFig entityManagerFig;
+    private final IndexProducer indexProducer;
 
     private ApplicationContext applicationContext;
 
@@ -137,6 +139,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
+        this.indexProducer = injector.getInstance(IndexProducer.class);
 
         //this line always needs to be last due to the temporary cicular dependency until spring is removed
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
@@ -199,7 +202,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService, applicationId );
+            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService, indexProducer, applicationId );
 
         return em;
     }
