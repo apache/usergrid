@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -91,7 +92,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
             .queryParam("client_id", appCredentials.getClientId())
             .queryParam("client_secret", appCredentials.getClientSecret())
             .request()
-            .accept(MediaType.APPLICATION_JSON)
             .get(ApiResponse.class);
         //assert that a valid response is returned without error
         assertNotNull(apiResponse);
@@ -741,11 +741,11 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Form payload = new Form();
         payload.param( "grant_type", "client_credentials" );
         payload.param( "client_id", clientId );
-        payload.param("client_secret", clientSecret);
+        payload.param( "client_secret", clientSecret );
 
         //POST the form to the application token endpoint
-        Token apiResponse = this.app().token().getTarget( false).request()
-            .accept(MediaType.APPLICATION_JSON)
+        Token apiResponse = this.app().token().getTarget( false ).request()
+            .accept( MediaType.APPLICATION_JSON )
             .post( javax.ws.rs.client.Entity.form(payload), Token.class);
 
         //Assert that a valid token with a valid TTL is returned
@@ -829,7 +829,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertEquals(604800, ttl);
 
         //retrieve the users collection for the application using the new token
-        ApiResponse response = this.app().collection("users").getTarget(true, token ).request().get(ApiResponse.class);
+        ApiResponse response = this.app().collection( "users" ).getTarget( true, token ).request()
+            .get(ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());
     }
@@ -856,7 +857,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertEquals(604800, ttl);
 
         //retrieve the users collection for the application using the new token
-        ApiResponse response = this.app().collection("users").getTarget( true, token ).request().get( ApiResponse.class);
+        ApiResponse response = this.app().collection( "users" ).getTarget( true, token ).request()
+            .get( ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());
     }
@@ -866,7 +868,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         try {
             Collection collection = this.app().collection("apm/apigeeMobileConfig").get();
             fail();
-        }catch (UniformInterfaceException e){
+        } catch (NotFoundException e){
             Assert.assertEquals(404, e.getResponse().getStatus());
         }
     }
