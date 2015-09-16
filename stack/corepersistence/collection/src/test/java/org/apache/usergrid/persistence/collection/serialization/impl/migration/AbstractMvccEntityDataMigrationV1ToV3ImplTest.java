@@ -121,13 +121,6 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
             Observable.just( new EntityIdScope( scope, entity1.getId() ), new EntityIdScope( scope, entity2.getId() ) );
 
 
-        final MigrationDataProvider<EntityIdScope> migrationProvider = new MigrationDataProvider<EntityIdScope>() {
-            @Override
-            public Observable<EntityIdScope> getData() {
-                return entityIdScope;
-            }
-        };
-
         final TestProgressObserver progressObserver = new TestProgressObserver();
 
         final CollectionDataVersions startVersion = getSourceVersion();
@@ -141,7 +134,7 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
 
         //now migration
         final int newVersion = mvccEntityDataMigrationImpl
-            .migrate( startVersion.getVersion(), migrationProvider, progressObserver );
+            .migrate( startVersion.getVersion(), progressObserver );
 
 
         final CollectionDataVersions expectedVersion = expectedTargetVersion();

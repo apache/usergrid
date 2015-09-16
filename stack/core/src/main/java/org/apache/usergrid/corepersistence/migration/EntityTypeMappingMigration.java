@@ -41,7 +41,7 @@ import rx.schedulers.Schedulers;
 /**
  * Migration to ensure that our entity id is written into our map data
  */
-public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> {
+public class EntityTypeMappingMigration implements DataMigration {
 
     private final ManagerCache managerCache;
     private final MigrationDataProvider<EntityIdScope> allEntitiesInSystemObservable;
@@ -56,7 +56,7 @@ public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> 
 
 
     @Override
-    public int migrate( final int currentVersion, final MigrationDataProvider<EntityIdScope> migrationDataProvider,
+    public int migrate( final int currentVersion,
                         final ProgressObserver observer ) {
 
         final AtomicLong atomicLong = new AtomicLong();

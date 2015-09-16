@@ -27,32 +27,31 @@ package org.apache.usergrid.persistence.core.migration.data;
 /**
  * Data migration.  The internal version to migrate
  *
- * @param <T>
+ * @param
  */
-public interface DataMigration<T> {
+public interface DataMigration {
 
     /**
      * Perform the migration, returning an observable with a single emitted value
      * @param currentVersion the current version of the system
-     * @param migrationDataProvider
      * @param observer The observer to receive updates of the progress
      *
      * @return The version that the system is now running
      */
-    public int migrate(final int currentVersion, MigrationDataProvider<T> migrationDataProvider, ProgressObserver observer);
+    int migrate( final int currentVersion, ProgressObserver observer );
 
     /**
      * Check if this version supports migration from the current system version.  If this returns false,
      * migrate will not be invoked
      * @return
      */
-    public boolean supports(final int currentVersion);
+    boolean supports( final int currentVersion );
 
     /**
      * Get the max version this migration can migrate to
      * @return
      */
-    public int getMaxVersion();
+    int getMaxVersion();
 
 
 }

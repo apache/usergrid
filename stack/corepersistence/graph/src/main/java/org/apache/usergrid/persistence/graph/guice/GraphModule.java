@@ -128,8 +128,8 @@ public abstract class GraphModule extends AbstractModule {
 
 
         //wire up the edg migration
-        Multibinder<DataMigration<GraphNode>> dataMigrationMultibinder =
-                Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration<GraphNode>>() {}, GraphMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder =
+                Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration>() {}, GraphMigration.class );
 
 
         dataMigrationMultibinder.addBinding().to( EdgeDataMigrationImpl.class );

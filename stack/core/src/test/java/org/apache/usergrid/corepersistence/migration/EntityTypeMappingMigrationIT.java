@@ -101,7 +101,7 @@ public class EntityTypeMappingMigrationIT  {
 
         //run it
 
-        final int returnedVersion = migration.migrate(CoreDataVersions.INITIAL.getVersion(), migrationDataProvider, progressObserver );
+        final int returnedVersion = migration.migrate(CoreDataVersions.INITIAL.getVersion(), progressObserver );
 
 
         assertEquals(CoreDataVersions.ID_MAP_FIX.getVersion(), returnedVersion);
