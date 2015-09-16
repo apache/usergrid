@@ -361,9 +361,9 @@ public class EsQueryVistor implements QueryVisitor {
         final String name = op.getProperty().getValue().toLowerCase();
         final Object value = op.getLiteral().getValue();
 
-        //special case so we support our '*' char with wildcard
+        //special case so we support our '*' char with wildcard, also should work for uuids
         if ( value instanceof String || value instanceof UUID ) {
-            final String stringValue = (value.toString()).toLowerCase().trim();
+            final String stringValue = ((value instanceof String) ? (String)value : value.toString()).toLowerCase().trim();
 
             // or field is just a string that does need a prefix us a query
             if ( stringValue.contains( "*" ) ) {
@@ -503,11 +503,7 @@ public class EsQueryVistor implements QueryVisitor {
      * Get the field name for the primitive type
      */
     private String getFieldNameForType( final Object object ) {
-        if ( object instanceof String) {
-            return IndexingUtils.FIELD_STRING_NESTED;
-        }
-
-        if(object instanceof UUID){
+        if ( object instanceof String || object instanceof UUID) {
             return IndexingUtils.FIELD_STRING_NESTED;
         }
 
@@ -540,7 +536,7 @@ public class EsQueryVistor implements QueryVisitor {
         }
 
         if ( input instanceof UUID ) {
-            return  input.toString() ;
+            return input.toString().toLowerCase() ;
         }
 
         return input;
