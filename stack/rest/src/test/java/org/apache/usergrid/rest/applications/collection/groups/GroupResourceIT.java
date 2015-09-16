@@ -258,7 +258,7 @@ public class GroupResourceIT extends AbstractRestIT {
      *
      */
     @Test
-    public void addRemoveRoleGroup() throws IOException {
+    public void addRemoveRoleGroup() throws Exception {
 
         //1. create a group
         String groupName = "testgroup";
@@ -298,10 +298,11 @@ public class GroupResourceIT extends AbstractRestIT {
         //8. delete the role
         this.app().collection("role").entity(role).delete();
         this.refreshIndex();
+        Thread.sleep(5000);
 
         //9. do a GET to make sure the role was deleted
         try {
-            this.app().collection("role").entity(role).get();
+            Entity entity1 = this.app().collection("role").entity(role).get();
             fail("Entity still exists");
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
