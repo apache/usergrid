@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,14 +111,14 @@ public class PermissionsIT extends AbstractCoreIT {
         assertNotNull( em );
 
         // em.createRole("admin", null);
-        em.createRole( "manager", null, 0 );
-        em.createRole( "member", null, 100000 );
+        em.createRole("manager", null, 0);
+        Entity memberRole = em.createRole( "member", null, 100000 );
 
         Map<String, String> roles = em.getRoles();
         assertEquals( "proper number of roles not set", 5, roles.size() );
         dump( "roles", roles );
 
-        em.deleteRole( "member" );
+        em.deleteRole("member", Optional.fromNullable(memberRole));
 
         roles = em.getRoles();
         assertEquals( "proper number of roles not set", 4, roles.size() );
