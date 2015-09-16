@@ -179,6 +179,7 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( entity2.getId(), candidate2.getId() );
         assertEquals( entity2.getVersion(), candidate2.getVersion() );
 
+        //make sure we can query uuids out as strings and not wrapped
         candidateResults =
             entityIndex.search( indexEdge, searchTypes, "select * where testuuid = '"+uuid+"'", 100, 0 );
         assertEquals(entity1.getId(),candidateResults.get(0).getId());
