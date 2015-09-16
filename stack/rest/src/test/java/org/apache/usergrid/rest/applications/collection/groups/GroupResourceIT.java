@@ -297,6 +297,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //8. delete the role
         this.app().collection("role").entity(role).delete();
+        this.refreshIndex();
 
         //9. do a GET to make sure the role was deleted
         try {

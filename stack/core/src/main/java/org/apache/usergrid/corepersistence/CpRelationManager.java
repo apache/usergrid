@@ -520,8 +520,7 @@ public class CpRelationManager implements RelationManager {
         //run our delete
         gm.loadEdgeVersions(
             CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, memberEntity.getId() ) )
-          .flatMap( edge -> gm.markEdge( edge ) ).flatMap( edge -> gm.deleteEdge( edge ) ).toBlocking()
-          .lastOrDefault( null );
+          .flatMap( edge -> gm.markEdge( edge ) ).flatMap( edge -> gm.deleteEdge( edge ) ).subscribe();
 
 
         /**
@@ -529,13 +528,7 @@ public class CpRelationManager implements RelationManager {
          *
          */
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
-        // remove item from collection index
-        SearchEdge indexScope = createCollectionSearchEdge( cpHeadEntity.getId(), collectionName );
-
-        final EntityIndexBatch batch = ei.createBatch();
-        batch.deindex( indexScope, memberEntity );
         //TODO: this should not happen here, needs to go to  SQS
         //indexProducer.put(batch).subscribe();
         indexService.queueEntityDelete(applicationScope,memberEntity.getId());
