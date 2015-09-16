@@ -107,7 +107,7 @@ public class EsQueryVistor implements QueryVisitor {
          * We use a left and a right, add our boolean query
          */
         if ( useLeftQuery && useRightQuery ) {
-            final BoolQueryBuilder qb = QueryBuilders.boolQuery().must( leftQuery ).must( rightQuery );
+            final BoolQueryBuilder qb = QueryBuilders.boolQuery().must(leftQuery).must(rightQuery);
             queryBuilders.push( qb );
         }
         //only use the left
@@ -131,7 +131,7 @@ public class EsQueryVistor implements QueryVisitor {
 
         //use left and right
         if ( useLeftFilter && useRightFilter ) {
-            final BoolFilterBuilder fb = FilterBuilders.boolFilter().must( leftFilter ).must( rightFilter );
+            final BoolFilterBuilder fb = FilterBuilders.boolFilter().must(leftFilter).must(rightFilter);
             filterBuilders.push( fb );
         }
 
@@ -166,13 +166,13 @@ public class EsQueryVistor implements QueryVisitor {
 
 
         final boolean useLeftQuery = use( leftQuery );
-        final boolean useRightQuery = use( rightQuery );
+        final boolean useRightQuery = use(rightQuery);
 
         //push our boolean filters
         if ( useLeftQuery && useRightQuery ) {
             //when we issue an OR query in usergrid, 1 or more of the terms should match.  When doing bool query in ES, there is no requirement for more than 1 to match, where as in a filter more than 1 must match
-            final BoolQueryBuilder qb = QueryBuilders.boolQuery().should( leftQuery ).should( rightQuery ).minimumNumberShouldMatch(
-                1 );
+            final BoolQueryBuilder qb = QueryBuilders.boolQuery().should( leftQuery ).should(rightQuery).minimumNumberShouldMatch(
+                1);
             queryBuilders.push( qb );
         }
         else if ( useLeftQuery ) {
@@ -189,7 +189,7 @@ public class EsQueryVistor implements QueryVisitor {
 
 
         final boolean useLeftFilter = use( leftFilter );
-        final boolean useRightFilter = use( rightFilter );
+        final boolean useRightFilter = use(rightFilter);
 
         //use left and right
         if ( useLeftFilter && useRightFilter ) {
@@ -225,7 +225,7 @@ public class EsQueryVistor implements QueryVisitor {
         final QueryBuilder notQueryBuilder = queryBuilders.pop();
 
         if ( use( notQueryBuilder ) ) {
-            final QueryBuilder notQuery = QueryBuilders.boolQuery().mustNot( notQueryBuilder );
+            final QueryBuilder notQuery = QueryBuilders.boolQuery().mustNot(notQueryBuilder);
             queryBuilders.push( notQuery  );
         }
         else {
@@ -307,14 +307,14 @@ public class EsQueryVistor implements QueryVisitor {
 
         final GeoDistanceSortBuilder geoSort =
                 SortBuilders.geoDistanceSort( IndexingUtils.FIELD_LOCATION_NESTED ).unit( DistanceUnit.METERS )
-                            .geoDistance( GeoDistance.SLOPPY_ARC ).point( lat, lon );
+                            .geoDistance(GeoDistance.SLOPPY_ARC).point(lat, lon);
 
-        final TermFilterBuilder sortPropertyName = sortPropertyTermFilter( name );
+        final TermFilterBuilder sortPropertyName = sortPropertyTermFilter(name);
 
         geoSort.setNestedFilter( sortPropertyName );
 
 
-        geoSortFields.addField( name, geoSort );
+        geoSortFields.addField(name, geoSort);
         //no op for query, push
 
 
@@ -329,7 +329,7 @@ public class EsQueryVistor implements QueryVisitor {
 
 
         final RangeFilterBuilder termQuery =
-                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).lt( sanitize( value ) );
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).lt(sanitize(value));
 
 
         queryBuilders.push( NoOpQueryBuilder.INSTANCE );
@@ -347,7 +347,7 @@ public class EsQueryVistor implements QueryVisitor {
 
 
         final RangeFilterBuilder termQuery =
-                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).lte( sanitize( value ) );
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).lte(sanitize(value));
 
 
         queryBuilders.push( NoOpQueryBuilder.INSTANCE );
@@ -361,9 +361,9 @@ public class EsQueryVistor implements QueryVisitor {
         final String name = op.getProperty().getValue().toLowerCase();
         final Object value = op.getLiteral().getValue();
 
-        //special case so we support our '*' char with wildcard
-        if ( value instanceof String ) {
-            final String stringValue = (( String ) value).toLowerCase().trim();
+        //special case so we support our '*' char with wildcard, also should work for uuids
+        if ( value instanceof String || value instanceof UUID ) {
+            final String stringValue = ((value instanceof String) ? (String)value : value.toString()).toLowerCase().trim();
 
             // or field is just a string that does need a prefix us a query
             if ( stringValue.contains( "*" ) ) {
@@ -390,7 +390,7 @@ public class EsQueryVistor implements QueryVisitor {
         // assume all other types need prefix
 
         final TermFilterBuilder termQuery =
-                FilterBuilders.termFilter( getFieldNameForType( value ), sanitize( value ) );
+                FilterBuilders.termFilter(getFieldNameForType(value), sanitize(value));
 
         filterBuilders.push( fieldNameTerm( name, termQuery ) );
 
@@ -405,7 +405,7 @@ public class EsQueryVistor implements QueryVisitor {
 
 
         final RangeFilterBuilder rangeQuery =
-                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).gt( sanitize( value ) );
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).gt(sanitize(value));
 
         filterBuilders.push( fieldNameTerm( name, rangeQuery ) );
 
@@ -420,9 +420,9 @@ public class EsQueryVistor implements QueryVisitor {
 
 
         final RangeFilterBuilder rangeQuery =
-                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).gte( sanitize( value ) );
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).gte(sanitize(value));
 
-        filterBuilders.push( fieldNameTerm( name, rangeQuery ) );
+        filterBuilders.push(fieldNameTerm(name, rangeQuery));
 
         queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
@@ -474,12 +474,12 @@ public class EsQueryVistor implements QueryVisitor {
 
         final BoolQueryBuilder booleanQuery = QueryBuilders.boolQuery();
 
-        booleanQuery.must( QueryBuilders.termQuery( IndexingUtils.FIELD_NAME_NESTED, fieldName ) );
+        booleanQuery.must( QueryBuilders.termQuery(IndexingUtils.FIELD_NAME_NESTED, fieldName) );
 
         booleanQuery.must( fieldValueQuery );
 
 
-        return QueryBuilders.nestedQuery( IndexingUtils.ENTITY_FIELDS, booleanQuery );
+        return QueryBuilders.nestedQuery(IndexingUtils.ENTITY_FIELDS, booleanQuery);
     }
 
 
@@ -503,7 +503,7 @@ public class EsQueryVistor implements QueryVisitor {
      * Get the field name for the primitive type
      */
     private String getFieldNameForType( final Object object ) {
-        if ( object instanceof String ) {
+        if ( object instanceof String || object instanceof UUID) {
             return IndexingUtils.FIELD_STRING_NESTED;
         }
 
@@ -521,10 +521,6 @@ public class EsQueryVistor implements QueryVisitor {
         }
 
 
-        if ( object instanceof UUID ) {
-            return IndexingUtils.FIELD_UUID_NESTED;
-        }
-
 
         throw new UnsupportedOperationException(
                 "Unkown search type of " + object.getClass().getName() + " encountered" );
@@ -540,7 +536,7 @@ public class EsQueryVistor implements QueryVisitor {
         }
 
         if ( input instanceof UUID ) {
-            return input.toString();
+            return input.toString().toLowerCase() ;
         }
 
         return input;

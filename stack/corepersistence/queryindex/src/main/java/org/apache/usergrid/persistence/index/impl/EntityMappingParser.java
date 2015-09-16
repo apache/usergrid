@@ -72,7 +72,7 @@ public class EntityMappingParser implements FieldParser {
      * Visit al the primitive values
      */
     private void visit( final UUID value ) {
-        fields.add( EntityField.create( fieldStack.peek(), value ) );
+       visit(value.toString());
     }
 
 
