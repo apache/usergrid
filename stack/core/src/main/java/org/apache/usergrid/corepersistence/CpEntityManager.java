@@ -1776,23 +1776,27 @@ public class CpEntityManager implements EntityManager {
 
 //TODO: does this need graphite monitoring
     @Override
-    public void deleteRole( String roleName ) throws Exception {
-        roleName = roleName.toLowerCase();
-        Set<String> permissions = getRolePermissions( roleName );
+    public void deleteRole(final String roleName ) throws Exception {
+       deleteRole(roleName, Optional.absent());
+    }
+
+    @Override
+    public void deleteRole(final String roleName, final Optional<EntityRef> roleRef ) throws Exception {
+        final String roleNameLowerCase = roleName.toLowerCase();
+        Set<String> permissions = getRolePermissions( roleNameLowerCase );
         Iterator<String> itrPermissions = permissions.iterator();
 
         while ( itrPermissions.hasNext() ) {
-            revokeRolePermission( roleName, itrPermissions.next() );
+            revokeRolePermission( roleNameLowerCase, itrPermissions.next() );
         }
 
-        removeFromDictionary( getApplicationRef(), DICTIONARY_ROLENAMES, roleName );
-        removeFromDictionary( getApplicationRef(), DICTIONARY_ROLETIMES, roleName );
-        EntityRef entity = getRoleRef( roleName );
+        removeFromDictionary(getApplicationRef(), DICTIONARY_ROLENAMES, roleNameLowerCase);
+        removeFromDictionary(getApplicationRef(), DICTIONARY_ROLETIMES, roleNameLowerCase);
+        final EntityRef entity = roleRef.isPresent() ? roleRef.get() : getRoleRef( roleNameLowerCase );
         if ( entity != null ) {
             delete( entity );
         }
     }
-
 
     @Override
     public Map<String, String> getGroupRoles( UUID groupId ) throws Exception {
