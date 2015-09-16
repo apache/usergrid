@@ -170,7 +170,7 @@ public class EntityToMapConverterTest {
     @Test
     public void testUUIDField() {
         testSingleField( new UUIDField( "Name", UUIDGenerator.newTimeUUID() ),
-            ( field, entityField ) -> assertEquals( field.getValue().toString(), entityField.get( IndexingUtils.FIELD_UUID ) ) );
+            ( field, entityField ) -> assertEquals( field.getValue().toString(), entityField.get( IndexingUtils.FIELD_STRING ) ) );
     }
 
 
