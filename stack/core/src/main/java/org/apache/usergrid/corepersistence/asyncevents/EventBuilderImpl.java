@@ -142,25 +142,29 @@ public class EventBuilderImpl implements EventBuilder {
         //If there is nothing marked then we shouldn't return any results.
         //TODO: evaluate if we want to return null or return empty observable when we don't have any results marked as deleted.
         if(mostRecentlyMarked == null) {
-            Observable<IndexOperationMessage> messageObservable = indexService.deleteEntityIndexes(applicationScope, entityId, UUIDUtils.MAX_TIME_UUID);
-            return new EntityDeleteResults(messageObservable, Observable.<List<MvccLogEntry>>empty());
+            Observable<IndexOperationMessage> messageObservable = indexService.deleteEntityIndexes(applicationScope, entityId, UUIDUtils.newTimeUUID());
+            final Observable<List<MvccLogEntry>> entries =
+                ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
+                    .doOnNext( buffer -> ecm.delete( buffer ) ).doOnCompleted(() -> gm.compactNode(entityId));
+            return new EntityDeleteResults(messageObservable, entries);
+        }else {
+            //observable of index operation messages
+            //this method will need the most recent version.
+            //When we go to compact the graph make sure you turn on the debugging mode for the deleted nodes so
+            //we can verify that we mark them. That said that part seems kinda done. as we also delete the mvcc buffers.
+            final Observable<IndexOperationMessage> edgeObservable =
+                indexService.deleteEntityIndexes(applicationScope, entityId, mostRecentlyMarked.getVersion());
+
+
+            //TODO: not sure what we need the list of versions here when we search for the mark above
+            //observable of entries as the batches are deleted
+            final Observable<List<MvccLogEntry>> entries =
+                ecm.getVersions(entityId).buffer(serializationFig.getBufferSize())
+                    .doOnNext(buffer -> ecm.delete(buffer)).doOnCompleted(() -> gm.compactNode(entityId));
+
+
+            return new EntityDeleteResults(edgeObservable, entries);
         }
-        //observable of index operation messages
-        //this method will need the most recent version.
-        //When we go to compact the graph make sure you turn on the debugging mode for the deleted nodes so
-        //we can verify that we mark them. That said that part seems kinda done. as we also delete the mvcc buffers.
-        final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
-
-
-        //TODO: not sure what we need the list of versions here when we search for the mark above
-        //observable of entries as the batches are deleted
-        final Observable<List<MvccLogEntry>> entries =
-            ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
-               .doOnNext( buffer -> ecm.delete( buffer ) ).doOnCompleted( () -> gm.compactNode( entityId ) );
-
-
-        return new EntityDeleteResults( edgeObservable, entries );
     }
 
 
