@@ -18,20 +18,18 @@ package org.apache.usergrid.persistence.index.migration;
 
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.core.migration.data.*;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import java.util.Set;
 
 /**
  * Classy class class.
  */
-public class EsIndexMigrationPlugin  extends AbstractMigrationPlugin<ApplicationScope>{
+public class EsIndexMigrationPlugin  extends AbstractMigrationPlugin {
 
     @Inject
-    public EsIndexMigrationPlugin(@IndexMigration final Set<DataMigration<ApplicationScope>> entityDataMigrations,
-                                  final MigrationDataProvider<ApplicationScope> entityIdScopeDataMigrationProvider,
+    public EsIndexMigrationPlugin(@IndexMigration final Set<DataMigration> entityDataMigrations,
                                   final MigrationInfoSerialization migrationInfoSerialization ){
-        super(entityDataMigrations,entityIdScopeDataMigrationProvider,migrationInfoSerialization);
+        super(entityDataMigrations,migrationInfoSerialization);
     }
 
     @Override

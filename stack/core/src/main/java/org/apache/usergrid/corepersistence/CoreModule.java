@@ -100,9 +100,9 @@ public class CoreModule  extends AbstractModule {
         /**
          * Create our migrations for within our core plugin
          */
-        Multibinder<DataMigration<EntityIdScope>> dataMigrationMultibinder =
+        Multibinder<DataMigration> dataMigrationMultibinder =
                     Multibinder.newSetBinder( binder(),
-                        new TypeLiteral<DataMigration<EntityIdScope>>() {}, CoreMigration.class );
+                        new TypeLiteral<DataMigration>() {}, CoreMigration.class );
 
 
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );

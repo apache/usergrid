@@ -22,11 +22,9 @@ package org.apache.usergrid.corepersistence.migration;
 
 import java.util.Set;
 
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.AbstractMigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 
 import com.google.inject.Inject;
@@ -37,17 +35,16 @@ import com.google.inject.Singleton;
  * Migration plugin for the collection module
  */
 @Singleton
-public class CoreMigrationPlugin extends AbstractMigrationPlugin<EntityIdScope> {
+public class CoreMigrationPlugin extends AbstractMigrationPlugin {
 
     public static final String PLUGIN_NAME = "core-data";
 
 
 
     @Inject
-    public CoreMigrationPlugin( @CoreMigration final Set<DataMigration<EntityIdScope>> entityDataMigrations,
-                                final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider,
+    public CoreMigrationPlugin( @CoreMigration final Set<DataMigration> entityDataMigrations,
                                 final MigrationInfoSerialization migrationInfoSerialization ) {
-        super( entityDataMigrations, entityIdScopeDataMigrationProvider, migrationInfoSerialization );
+        super( entityDataMigrations, migrationInfoSerialization );
     }
 
 
