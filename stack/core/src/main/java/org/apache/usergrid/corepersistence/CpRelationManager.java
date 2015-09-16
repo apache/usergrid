@@ -491,11 +491,9 @@ public class CpRelationManager implements RelationManager {
                 Entity itemEntity = em.get( itemRef );
                 if ( itemEntity != null ) {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole(roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                     return;
                 }
-                em.delete( itemEntity );
-                return;
             }
             em.delete( itemRef );
             return;
@@ -546,7 +544,7 @@ public class CpRelationManager implements RelationManager {
                         em.get( new SimpleEntityRef( memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
 
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole( roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                 }
             }
         }
