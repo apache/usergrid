@@ -190,12 +190,6 @@ public class CoreModule  extends AbstractModule {
 
         bind( StatusService.class ).to( StatusServiceImpl.class );
 
-        /**
-         * Install migration services
-         */
-
-          //migrations
-        //we want to make sure our generics are retained, so we use a typeliteral
 
     }
 

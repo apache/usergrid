@@ -56,24 +56,23 @@ public class DeDupConnectionDataMigration implements DataMigration {
 
         observer.start();
 
-        connectionService.deDupeConnections( allApplicationsObservable.getData() ).reduce( 0l, (count, deDuped) ->{
+        connectionService.deDupeConnections( allApplicationsObservable.getData() ).reduce( 0l, ( count, deDuped ) -> {
 
-            final long newCount = count+1;
+            final long newCount = count + 1;
 
             /**
              * Update our progress observer
              */
-            if(newCount % UPDATE_COUNT == 0){
+            if ( newCount % UPDATE_COUNT == 0 ) {
                 logger.info( "De duped {} edges", newCount );
-                observer.update( migrationVersion, String.format("De duped %d edges", newCount) );
+                observer.update( migrationVersion, String.format( "De duped %d edges", newCount ) );
             }
 
             return newCount;
-
-        }).doOnNext( total -> {
-            logger.info("Completed de-duping {} edges", total );
-            observer.complete();;
-        }).subscribe();
+        } ).doOnNext( total -> {
+            logger.info( "Completed de-duping {} edges", total );
+            observer.complete();
+        } ).subscribe();
 
         return migrationVersion;
 
@@ -82,12 +81,13 @@ public class DeDupConnectionDataMigration implements DataMigration {
 
     @Override
     public boolean supports( final int currentVersion ) {
-        return currentVersion == getMaxVersion() - 1;
+        return currentVersion <= getMaxVersion() - 1;
     }
 
 
     @Override
     public int getMaxVersion() {
-        return 1;
+        //needs to be 2 b/c our obsolete EntityTypeMappingMigration was 1
+        return 2;
     }
 }

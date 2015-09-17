@@ -49,8 +49,6 @@ public class DeDupConnectionDataMigrationTest {
     public void testVersion() {
 
         //mock up an initial system state
-        final int version = 0;
-
         final ConnectionService connectionService = mock( ConnectionService.class );
 
         final AllApplicationsObservable allApplicationsObservable = mock( AllApplicationsObservable.class );
@@ -60,7 +58,10 @@ public class DeDupConnectionDataMigrationTest {
             new DeDupConnectionDataMigration( connectionService, allApplicationsObservable );
 
 
-        assertTrue( plugin.supports( version ) );
+        //anything less than 2 should be supported
+        assertTrue( plugin.supports( 0 ) );
+
+        assertTrue( plugin.supports( 1 ) );
 
         assertFalse( plugin.supports( plugin.getMaxVersion() ) );
     }
