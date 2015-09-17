@@ -2339,15 +2339,15 @@ public class GraphManagerIT {
         //write 3 edges with 3 different timestamp
         final Edge edge1 = createEdge( sourceId, "test", target, 1, false );
 
-        gm.writeEdge( edge1 ).toBlocking().last();
+        gm.writeEdge( edge1 ).subscribe();
 
         final Edge edge2 = createEdge( sourceId, "test", target, 2, false );
 
-        gm.writeEdge( edge2 ).toBlocking().last();
+        gm.writeEdge( edge2 ).subscribe();
 
         final Edge edge3 = createEdge( sourceId, "test", target, 3, false );
 
-        gm.writeEdge( edge3 ).toBlocking().last();
+        gm.writeEdge( edge3 ).subscribe();
 
         //now test retrieving it
 

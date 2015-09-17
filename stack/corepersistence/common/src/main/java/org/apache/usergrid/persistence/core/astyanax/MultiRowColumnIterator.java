@@ -201,7 +201,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         final List<T> mergedResults;
 
         if ( containsSingleRowOnly( result ) ) {
-               mergedResults = singleRowResult( result );
+            mergedResults = singleRowResult( result );
         }
         else {
             mergedResults = mergeResults( result, selectSize );
