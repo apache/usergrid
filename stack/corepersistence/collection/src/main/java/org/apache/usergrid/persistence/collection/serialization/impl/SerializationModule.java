@@ -96,8 +96,8 @@ public class SerializationModule extends AbstractModule {
 
         //migrations
         //we want to make sure our generics are retained, so we use a typeliteral
-        Multibinder<DataMigration<EntityIdScope>> dataMigrationMultibinder = Multibinder
-            .newSetBinder( binder(), new TypeLiteral<DataMigration<EntityIdScope>>() {}, CollectionMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder
+            .newSetBinder( binder(), new TypeLiteral<DataMigration>() {}, CollectionMigration.class );
 
 
         dataMigrationMultibinder.addBinding().to( MvccEntityDataMigrationImpl.class );

@@ -21,8 +21,8 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -54,14 +54,14 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdg
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators.DescendingTimestampComparator;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators.OrderedComparator;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators
-        .SourceDirectedEdgeDescendingComparator;
+    .SourceDirectedEdgeDescendingComparator;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators
-        .TargetDirectedEdgeDescendingComparator;
+    .TargetDirectedEdgeDescendingComparator;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.EdgeSerializer;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
@@ -388,19 +388,6 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                     }
 
 
-                    @Override
-                    public void buildRange( final RangeBuilder builder ) {
-
-
-                        if ( last.isPresent() ) {
-                            super.buildRange( builder );
-                            return;
-                        }
-
-                        //start seeking at a value < our max version
-                        builder.setStart( maxTimestamp );
-                    }
-
 
                     @Override
                     protected EdgeRowKey generateRowKey( long shard ) {
@@ -411,6 +398,13 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                     @Override
                     protected Long createColumn( final MarkedEdge last ) {
                         return last.getTimestamp();
+                    }
+
+
+                    @Override
+                    protected void setTimeScan( final RangeBuilder rangeBuilder ) {
+                          //start seeking at a value < our max version
+                        rangeBuilder.setStart( maxTimestamp );
                     }
 
 
@@ -472,6 +466,14 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
+                    protected void setTimeScan( final RangeBuilder rangeBuilder ) {
+                        final ByteBuffer buffer = EdgeSerializer.INSTANCE.fromTimeRange( maxTimestamp );
+
+                        rangeBuilder.setStart( buffer );
+                    }
+
+
+                    @Override
                     protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
                         return new SimpleMarkedEdge( sourceId, type, edge.id, edge.timestamp, marked );
                     }
@@ -526,6 +528,14 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
+                    protected void setTimeScan( final RangeBuilder rangeBuilder ) {
+                        final ByteBuffer buffer = EdgeSerializer.INSTANCE.fromTimeRange( maxTimestamp );
+
+                        rangeBuilder.setStart( buffer );
+                    }
+
+
+                    @Override
                     protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
                         return new SimpleMarkedEdge( targetId, type, edge.id, edge.timestamp, marked );
                     }
@@ -570,6 +580,14 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                     @Override
                     protected DirectedEdge createColumn( final MarkedEdge last ) {
                         return new DirectedEdge( last.getSourceNode(), last.getTimestamp() );
+                    }
+
+
+                    @Override
+                    protected void setTimeScan( final RangeBuilder rangeBuilder ) {
+                        final ByteBuffer buffer = EdgeSerializer.INSTANCE.fromTimeRange( maxTimestamp );
+
+                        rangeBuilder.setStart( buffer );
                     }
 
 
@@ -625,6 +643,13 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                         return new DirectedEdge( last.getTargetNode(), last.getTimestamp() );
                     }
 
+
+                    @Override
+                    protected void setTimeScan( final RangeBuilder rangeBuilder ) {
+                        final ByteBuffer buffer = EdgeSerializer.INSTANCE.fromTimeRange( maxTimestamp );
+
+                        rangeBuilder.setStart( buffer );
+                    }
 
                     @Override
                     protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
