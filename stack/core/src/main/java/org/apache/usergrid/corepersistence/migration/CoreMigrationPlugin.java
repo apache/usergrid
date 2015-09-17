@@ -36,7 +36,7 @@ import com.google.inject.Singleton;
 @Singleton
 public class CoreMigrationPlugin extends AbstractMigrationPlugin {
 
-    public static final String PLUGIN_NAME = "collections-entity-data";
+    public static final String PLUGIN_NAME = "core-data";
 
 
 
