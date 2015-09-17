@@ -136,7 +136,7 @@ public class EsIndexMappingMigrationPlugin implements MigrationPlugin {
 
     @Override
     public int getMaxVersion() {
-        return 1;
+        return 2;//1->new storage format,2->remove uuid
     }
 
     @Override
