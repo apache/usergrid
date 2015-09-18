@@ -79,52 +79,25 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
         //merge source and target then deal with the distinct values
-        return Observable.just( edge ).flatMap( new Func1<MarkedEdge, Observable<? extends MarkedEdge>>() {
-            @Override
-            public Observable<? extends MarkedEdge> call( final MarkedEdge edge ) {
+        return Observable.just( edge ).filter( markedEdge-> markedEdge.isDeleted() )
+                .doOnNext( markedEdge -> {
+                    //it's still in the same state as it was when we queued it. Remove it
+                        LOG.info( "Removing edge {} ", markedEdge );
 
-                return getEdgeVersions( scope, edge, storageSerialization ).take( 1 )
-                        .doOnNext( new Action1<MarkedEdge>() {
-                            @Override
-                            public void call( final MarkedEdge markedEdge ) {
-                                //it's still in the same state as it was when we queued it. Remove it
-                                if ( edge.equals( markedEdge ) ) {
-                                    LOG.info( "Removing edge {} ", edge );
-
-                                    //remove from the commit log
+                        //remove from the commit log
 
 
-                                    //remove from storage
-                                    try {
-                                        storageSerialization.deleteEdge( scope, edge, timestamp ).execute();
-                                    }
-                                    catch ( ConnectionException e ) {
-                                        throw new RuntimeException( "Unable to connect to casandra", e );
-                                    }
-                                }
-                            }
-                        } );
-            }
-        } );
+                        //remove from storage
+                        try {
+                            storageSerialization.deleteEdge( scope, markedEdge, timestamp ).execute();
+                        }
+                        catch ( ConnectionException e ) {
+                            throw new RuntimeException( "Unable to connect to casandra", e );
+                        }
+                    }
+              );
     }
 
 
-    /**
-     * Get all edge versions <= the specified max from the source
-     */
-    private Observable<MarkedEdge> getEdgeVersions( final ApplicationScope scope, final Edge edge,
-                                                    final EdgeSerialization serialization ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>( "edgeVersions" ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-
-                final SimpleSearchByEdge search =
-                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                                edge.getTimestamp(), SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() );
-
-                return serialization.getEdgeVersions( scope, search );
-            }
-        } );
-    }
 }

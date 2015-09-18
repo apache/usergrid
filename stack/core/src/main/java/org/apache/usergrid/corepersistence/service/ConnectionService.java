@@ -20,6 +20,7 @@ package org.apache.usergrid.corepersistence.service;
 
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.persistence.ConnectionRef;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -46,4 +47,13 @@ public interface ConnectionService {
      * @return
      */
     Observable<ResultsPage<ConnectionRef>> searchConnectionAsRefs( final ConnectionSearch search );
+
+
+    /**
+     * An observable that will remove duplicate edges from the graph that represent connections.  All emitted scopes are scopes that have been deleted.
+     *
+     * @param applicationScopeObservable
+     * @return
+     */
+    Observable<ConnectionScope> deDupeConnections(final Observable<ApplicationScope> applicationScopeObservable);
 }

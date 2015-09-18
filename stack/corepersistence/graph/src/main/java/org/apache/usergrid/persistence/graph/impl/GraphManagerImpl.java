@@ -217,7 +217,7 @@ public class GraphManagerImpl implements GraphManager {
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgeVersions( scope,
                         new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                            Long.MAX_VALUE, SearchByEdgeType.Order.ASCENDING, Optional.absent() ) );
+                            Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent() ) );
                 }
             } ).filter( markedEdge -> markedEdge.isDeleted() ).flatMap( marked ->
                 //fire our delete listener and wait for the results
@@ -458,7 +458,7 @@ public class GraphManagerImpl implements GraphManager {
                     final long edgeTimestamp = edge.getTimestamp();
 
                     //our edge needs to not be deleted and have a version that's > max Version
-                    if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxVersion ) > 0 ) {
+                    if ( edge.isDeleted() ) {
                         return false;
                     }
 
