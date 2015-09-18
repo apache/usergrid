@@ -297,13 +297,20 @@ public class NamedResource implements UrlResource {
 
 
     public <T> T get(Class<T> type,QueryParameters queryParameters) {
-        return get( type, queryParameters, true );
+        return get(type, queryParameters, true);
     }
-
     public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken) {
+        return get(type,queryParameters,useToken,false);
+    }
+    public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken, boolean useSupertoken) {
         WebResource resource = getResource(useToken);
         if(queryParameters!=null) {
             resource = addParametersToResource(resource, queryParameters);
+        }
+        if(useSupertoken) {
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter("superuser", "superpassword");
+            resource.addFilter(httpBasicAuthFilter);
         }
         GenericType<T> gt = new GenericType<>((Class) type);
         return resource.type(MediaType.APPLICATION_JSON_TYPE)
@@ -318,7 +325,7 @@ public class NamedResource implements UrlResource {
 
     public ApiResponse post( boolean useToken, FormDataMultiPart multiPartForm ) {
         WebResource resource = getResource( useToken );
-        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).post( ApiResponse.class, multiPartForm );
+        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).post(ApiResponse.class, multiPartForm);
     }
 
     public ApiResponse post( FormDataMultiPart multiPartForm ) {
@@ -359,12 +366,29 @@ public class NamedResource implements UrlResource {
     public ApiResponse delete( boolean useToken ) {
         return getResource(useToken).delete(ApiResponse.class);
     }
-
     public ApiResponse delete( boolean useToken, QueryParameters queryParameters ) {
+        return delete(useToken,false,queryParameters);
+    }
+    public ApiResponse delete( boolean useToken, boolean useSupertoken, QueryParameters queryParameters ) {
         WebResource resource = getResource(useToken);
         if(queryParameters!=null) {
             resource = addParametersToResource(resource, queryParameters);
         }
-        return resource.delete( ApiResponse.class );
+        if(useSupertoken) {
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter("superuser", "superpassword");
+            resource.addFilter(httpBasicAuthFilter);
+        }
+        return resource.delete(ApiResponse.class);
+    }
+
+
+
+    public ClientContext getContext(){
+        return context;
+    }
+
+    public NamedResource getSubResource(final String path){
+        return SubResource.getInstance(path,this);
     }
 }

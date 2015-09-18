@@ -66,6 +66,11 @@ public class RootResource implements UrlResource {
         return null;
     }
 
+    @Override
+    public ClientContext getContext() {
+        return context;
+    }
+
     /**
      * Get the management resource
      * @return
