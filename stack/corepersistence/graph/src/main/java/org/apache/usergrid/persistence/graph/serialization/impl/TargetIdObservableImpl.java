@@ -55,18 +55,13 @@ public class TargetIdObservableImpl implements TargetIdObservable {
     public Observable<Id> getTargetNodes(final GraphManager gm, final Id sourceNode) {
 
         //only search edge types that start with collections
-        return edgesFromSourceObservable.edgesFromSourceDescending( gm, sourceNode ).map( new Func1<Edge, Id>() {
+        return edgesFromSourceObservable.edgesFromSourceDescending( gm, sourceNode ).map( edge -> {
+            final Id targetNode = edge.getTargetNode();
+
+            logger.debug( "Emitting targetId of {}", edge );
 
 
-            @Override
-            public Id call( final Edge edge ) {
-                final Id targetNode = edge.getTargetNode();
-
-                logger.debug( "Emitting targetId of {}", edge );
-
-
-                return targetNode;
-            }
+            return targetNode;
         } );
     }
 }
