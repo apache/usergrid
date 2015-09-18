@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.corepersistence.migration;
+package org.apache.usergrid.corepersistence;
 
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import com.google.inject.BindingAnnotation;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
-@BindingAnnotation
-@Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
-public @interface CoreMigration {}
+/**
+ * Test guice module for our core guice configuration
+ */
+public class TestCoreModule extends TestModule {
+
+    @Override
+    protected void configure() {
+
+        install( new CoreModule() );
+    }
+}

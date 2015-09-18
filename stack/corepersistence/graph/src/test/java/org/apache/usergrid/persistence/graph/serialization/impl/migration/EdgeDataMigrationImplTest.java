@@ -28,8 +28,9 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.guice.DataMigrationResetRule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
+import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
@@ -40,25 +41,28 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
+import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
 import org.apache.usergrid.persistence.graph.serialization.impl.GraphDataVersions;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
 
 import net.jcip.annotations.NotThreadSafe;
 
 import rx.Observable;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
 @NotThreadSafe
-@RunWith(ITRunner.class)
-@UseModules({ TestGraphModule.class })
+@RunWith( ITRunner.class )
+@UseModules( { TestGraphModule.class } )
 public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMigrationManagerProvider {
 
 
@@ -68,16 +72,26 @@ public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMig
     @Inject
     public GraphManagerFactory graphManagerFactory;
 
+
     @Inject
-    public EdgeDataMigrationImpl edgeDataMigrationImpl;
+    public Keyspace keyspace;
+
+    @Inject
+    public EdgesObservable edgesFromSourceObservable;
+
+    @Inject
+    public VersionedMigrationSet<EdgeMetadataSerialization> allVersions;
+
+    @Inject
+    public EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2;
+
 
     /**
      * Rule to do the resets we need
      */
     @Rule
-    public DataMigrationResetRule migrationTestRule = new DataMigrationResetRule(this, GraphMigrationPlugin.PLUGIN_NAME,  GraphDataVersions.INITIAL.getVersion());
-
-
+    public DataMigrationResetRule migrationTestRule =
+        new DataMigrationResetRule( this, GraphMigrationPlugin.PLUGIN_NAME, GraphDataVersions.INITIAL.getVersion() );
 
 
     @Test
@@ -90,7 +104,7 @@ public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMig
         final ApplicationScope applicationScope = new ApplicationScopeImpl( IdGenerator.createId( "application" ) );
 
 
-        GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope );
+        GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
 
         final Id sourceId1 = IdGenerator.createId( "source1" );
@@ -103,15 +117,13 @@ public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMig
         final Id target2 = IdGenerator.createId( "target2" );
 
 
-        Edge s1t1 = createEdge(sourceId1, "test", target1 );
+        Edge s1t1 = createEdge( sourceId1, "test", target1 );
 
         Edge s1t2 = createEdge( sourceId1, "baz", target2 );
 
-        Edge s2t1 = createEdge(sourceId2, "foo", target1);
+        Edge s2t1 = createEdge( sourceId2, "foo", target1 );
 
         Edge s2t2 = createEdge( sourceId2, "bar", target2 );
-
-
 
 
         gm.writeEdge( s1t1 ).toBlocking().last();
@@ -121,24 +133,24 @@ public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMig
 
 
         //walk from s1 and s2
-        final Observable<GraphNode> graphNodes = Observable.just( new GraphNode( applicationScope, sourceId1), new GraphNode(applicationScope, sourceId2 ) );
+        final Observable<GraphNode> graphNodes = Observable
+            .just( new GraphNode( applicationScope, sourceId1 ), new GraphNode( applicationScope, sourceId2 ) );
 
-        final MigrationDataProvider<GraphNode> testMigrationProvider = new MigrationDataProvider<GraphNode>() {
-            @Override
-            public Observable<GraphNode> getData() {
-                return graphNodes;
-            }
-        };
+        final MigrationDataProvider<GraphNode> testMigrationProvider = () -> graphNodes;
 
 
         final TestProgressObserver progressObserver = new TestProgressObserver();
 
 
-
         //read everything in previous version format and put it into our types.
 
 
-        final int returned = edgeDataMigrationImpl.migrate( GraphDataVersions.INITIAL.getVersion() , testMigrationProvider, progressObserver );
+        EdgeDataMigrationImpl edgeDataMigrationImpl =
+            new EdgeDataMigrationImpl( keyspace, graphManagerFactory, edgesFromSourceObservable, allVersions,
+                edgeMetadataSerializationV2, testMigrationProvider );
+
+
+        final int returned = edgeDataMigrationImpl.migrate( GraphDataVersions.INITIAL.getVersion(), progressObserver );
         //perform the migration
 
         assertEquals( "Correct version returned", returned, GraphDataVersions.META_SHARDING.getVersion() );
@@ -164,9 +176,6 @@ public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMig
 
         assertTrue( "Edge type present", source2Edges.contains( "foo" ) );
         assertTrue( "Edge type present", source2Edges.contains( "bar" ) );
-
-
-
     }
 
 
