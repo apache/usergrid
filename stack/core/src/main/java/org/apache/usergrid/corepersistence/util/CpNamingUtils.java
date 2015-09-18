@@ -21,8 +21,6 @@ package org.apache.usergrid.corepersistence.util;
 
 import java.util.UUID;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
@@ -42,7 +40,8 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.utils.UUIDUtils;
+
+import com.google.common.base.Optional;
 
 
 /**
@@ -257,6 +256,7 @@ public class CpNamingUtils {
     }
 
 
+
     /**
      * Get the application scope from the given uuid
      *
@@ -309,6 +309,8 @@ public class CpNamingUtils {
     }
 
 
+
+
     private static boolean isCollectionEdgeType( String type ) {
         return type.startsWith( EDGE_COLL_PREFIX );
     }
@@ -326,8 +328,5 @@ public class CpNamingUtils {
     }
 
 
-    public static boolean isApplication(Id id) {
-        Preconditions.checkNotNull(id);
-        return id.getType().equals("application");
-    }
+
 }

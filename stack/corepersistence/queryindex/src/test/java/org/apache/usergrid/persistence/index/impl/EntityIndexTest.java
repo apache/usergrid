@@ -127,11 +127,13 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
 
 
+        UUID uuid = UUID.randomUUID();
         Entity entity1 = new Entity( entityType );
         EntityUtils.setVersion(entity1, UUIDGenerator.newTimeUUID());
-        entity1.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
+        entity1.setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID()));
         entity1.setField( new StringField( "testfield", "test" ) );
         entity1.setField(new IntegerField("ordinal", 0));
+        entity1.setField(new UUIDField("testuuid",uuid));
 
 
         batch.index( indexEdge, entity1 );
@@ -176,6 +178,15 @@ public class EntityIndexTest extends BaseIT {
         //check the id and version
         assertEquals( entity2.getId(), candidate2.getId() );
         assertEquals( entity2.getVersion(), candidate2.getVersion() );
+
+        //make sure we can query uuids out as strings and not wrapped
+        candidateResults =
+            entityIndex.search( indexEdge, searchTypes, "select * where testuuid = '"+uuid+"'", 100, 0 );
+        assertEquals(entity1.getId(),candidateResults.get(0).getId());
+
+        candidateResults =
+            entityIndex.search( indexEdge, searchTypes, "select * where testuuid = "+uuid, 100, 0 );
+        assertEquals(entity1.getId(),candidateResults.get(0).getId());
     }
 
 
