@@ -14,21 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.usergrid.corepersistence.migration;
-
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import com.google.inject.BindingAnnotation;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+package org.apache.usergrid.corepersistence.service;
 
 
-@BindingAnnotation
-@Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
-public @interface CoreMigration {}
+import java.io.Serializable;
+
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+
+/**
+ * Tuple containing our application scope, and an edge within that applications' graph
+ */
+public class ConnectionScope implements Serializable {
+    private final Edge edge;
+    private final ApplicationScope applicationScope;
+
+
+
+
+    public ConnectionScope( ApplicationScope applicationScope, final Edge edge ) {
+        this.edge = edge;
+        this.applicationScope = applicationScope;
+    }
+
+
+    public Edge getEdge() {
+        return edge;
+    }
+
+
+    public ApplicationScope getApplicationScope() {
+        return applicationScope;
+    }
+
+
+}

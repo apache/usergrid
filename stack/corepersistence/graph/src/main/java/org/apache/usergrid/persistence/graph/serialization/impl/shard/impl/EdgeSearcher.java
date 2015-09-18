@@ -1,6 +1,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -13,6 +14,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 
 import com.google.common.base.Optional;
@@ -107,12 +109,12 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
         if ( last.isPresent() ) {
             C sourceEdge = createColumn( last.get() );
 
-
             rangeBuilder.setStart( sourceEdge, getSerializer() );
+        }else {
+            setTimeScan( rangeBuilder );
         }
 
-
-        setRangeOptions(rangeBuilder);
+        setRangeOptions( rangeBuilder );
 
 
     }
@@ -122,6 +124,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
         final boolean reversed = order == SearchByEdgeType.Order.ASCENDING;
 
         rangeBuilder.setReversed( reversed );
+
     }
 
 
@@ -153,6 +156,11 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
      */
     protected abstract C createColumn( final T last );
 
+    /**
+     * Set the time scan into the range builder
+     * @param rangeBuilder
+     */
+    protected abstract void setTimeScan(final RangeBuilder rangeBuilder);
 
     /**
      * Create an edge to return to the user based on the directed edge provided

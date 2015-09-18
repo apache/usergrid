@@ -30,6 +30,7 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.observables.MathObservable;
 
 
 /**
@@ -69,8 +70,7 @@ public class EdgeDeleteListenerImpl implements EdgeDeleteListener {
                                    Observable<Integer> targetDelete = edgeMetaRepair
                                            .repairTargets( scope, edge.getTargetNode(), edge.getType(), maxTimestamp );
 
-                                   return Observable.zip( sourceDelete, targetDelete,
-                                       ( sourceCount, targetCount ) -> sourceCount + targetCount );
+                                   return MathObservable.sumInteger( Observable.merge( sourceDelete, targetDelete ) );
                                } );
     }
 }
