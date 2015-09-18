@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.apache.usergrid.persistence.core.migration.data.AbstractMigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 
@@ -40,7 +39,7 @@ import com.google.inject.Singleton;
  * Migration plugin for the collection module
  */
 @Singleton
-public class CollectionMigrationPlugin extends AbstractMigrationPlugin<EntityIdScope> {
+public class CollectionMigrationPlugin extends AbstractMigrationPlugin {
 
     public static final String PLUGIN_NAME = "collections-entity-data";
 
@@ -48,10 +47,9 @@ public class CollectionMigrationPlugin extends AbstractMigrationPlugin<EntityIdS
 
     @Inject
     public CollectionMigrationPlugin( @CollectionMigration
-                                          final Set<DataMigration<EntityIdScope>> entityDataMigrations,
-                                      final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider,
+                                          final Set<DataMigration> entityDataMigrations,
                                       final MigrationInfoSerialization migrationInfoSerialization ) {
-        super( entityDataMigrations, entityIdScopeDataMigrationProvider, migrationInfoSerialization );
+        super( entityDataMigrations, migrationInfoSerialization );
     }
 
 

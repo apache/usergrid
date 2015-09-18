@@ -20,9 +20,9 @@ package org.apache.usergrid.persistence.graph;
 
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import com.google.common.base.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,11 +35,14 @@ import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 import rx.Observable;
@@ -836,7 +839,7 @@ public class GraphManagerIT {
         //now load the next page
 
         //tests that even if a prefix is specified, the last takes precedence
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null, Optional.fromNullable("test") );
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null, Optional.fromNullable( "test" ) );
 
         edges = gm.getEdgeTypesFromSource( edgeTypes );
 
@@ -914,7 +917,7 @@ public class GraphManagerIT {
 
         //now load the next page
 
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(), null,  Optional.fromNullable("test") );
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(), null, Optional.fromNullable( "test" ) );
 
         edges = gm.getEdgeTypesToTarget( edgeTypes );
 
@@ -2320,6 +2323,70 @@ public class GraphManagerIT {
         final GraphManager em = emf.createEdgeManager( scope );
 
         em.markEdge( null );
+    }
+
+
+    @Test
+    public void testReadMultipleVersionOrder() {
+
+        GraphManager gm = emf.createEdgeManager( scope );
+
+        final Id sourceId = createId( "source" );
+
+        final Id target = createId( "target" );
+
+
+        //write 3 edges with 3 different timestamp
+        final Edge edge1 = createEdge( sourceId, "test", target, 1, false );
+
+        gm.writeEdge( edge1 ).subscribe();
+
+        final Edge edge2 = createEdge( sourceId, "test", target, 2, false );
+
+        gm.writeEdge( edge2 ).subscribe();
+
+        final Edge edge3 = createEdge( sourceId, "test", target, 3, false );
+
+        gm.writeEdge( edge3 ).subscribe();
+
+        //now test retrieving it
+
+
+        final SearchByEdge searchDescending =
+            new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), Long.MAX_VALUE,
+                SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()   );
+
+        final Observable<Edge> edgesDescending = gm.loadEdgeVersions( searchDescending );
+
+        //search descending
+        final List<Edge> descending = edgesDescending.toList().toBlocking().single();
+
+        assertEquals( "Correct size returned", 3, descending.size() );
+
+        assertEquals( "Correct edges returned", edge3, descending.get( 0 ) );
+
+        assertEquals( "Correct edges returned", edge2, descending.get( 1 ) );
+
+        assertEquals( "Correct edges returned", edge1, descending.get( 2 ) );
+
+
+        //now search ascending
+
+        final SearchByEdge searchAscending =
+                    new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), 0,
+                        SearchByEdgeType.Order.ASCENDING, Optional.<Edge>absent()   );
+
+        Observable<Edge> edgesAscending = gm.loadEdgeVersions( searchAscending );
+
+        List<Edge> ascending = edgesAscending.toList().toBlocking().single();
+
+        assertEquals( "Correct size returned", 3, ascending.size() );
+
+        assertEquals( "Correct edges returned", edge1, ascending.get( 0 ) );
+
+        assertEquals( "Correct edges returned", edge2, ascending.get( 1 ) );
+
+        assertEquals( "Correct edges returned", edge3, ascending.get( 2 ) );
     }
 }
 

@@ -34,12 +34,12 @@ public interface MigrationPlugin {
      * Get the name of the plugin.  Must be unique
      * @return
      */
-    public String getName();
+    String getName();
 
     /**
      * Run any migrations that may need to be run in this plugin
      */
-    public void run(ProgressObserver observer);
+    void run( ProgressObserver observer );
 
 
     /**

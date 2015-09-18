@@ -29,7 +29,6 @@ import java.util.Set;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.AbstractMigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 
 import com.google.inject.Inject;
@@ -41,7 +40,7 @@ import com.google.inject.Singleton;
  * Migration plugin for the collection module
  */
 @Singleton
-public class GraphMigrationPlugin extends AbstractMigrationPlugin<GraphNode> {
+public class GraphMigrationPlugin extends AbstractMigrationPlugin {
 
     public static final String PLUGIN_NAME = "graph-data";
 
@@ -49,10 +48,9 @@ public class GraphMigrationPlugin extends AbstractMigrationPlugin<GraphNode> {
 
     @Inject
     public GraphMigrationPlugin(@GraphMigration
-                                    final Set<DataMigration<GraphNode>> entityDataMigrations,
-                                      final MigrationDataProvider<GraphNode> entityIdScopeDataMigrationProvider,
+                                    final Set<DataMigration> entityDataMigrations,
                                       final MigrationInfoSerialization migrationInfoSerialization ) {
-        super( entityDataMigrations, entityIdScopeDataMigrationProvider, migrationInfoSerialization );
+        super( entityDataMigrations, migrationInfoSerialization );
     }
 
 
