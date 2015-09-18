@@ -40,5 +40,11 @@ public interface UrlResource {
      */
     public WebResource getResource();
 
+    /**
+     * get context
+     * @return
+     */
+    public ClientContext getContext();
+
 
 }
