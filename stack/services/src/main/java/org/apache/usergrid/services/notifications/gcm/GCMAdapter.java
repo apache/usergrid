@@ -74,7 +74,7 @@ public class GCMAdapter implements ProviderAdapter {
             long ttlSeconds = notification.getExpireTTLSeconds();
             // max ttl for gcm is 4 weeks - https://developers.google.com/cloud-messaging/http-server-ref
             ttlSeconds = ttlSeconds <= 2419200 ? ttlSeconds : 2419200;
-            map.put(expiresKey, ttlSeconds);
+            map.put(expiresKey, (int)ttlSeconds);//needs to be int
         }
         Batch batch = getBatch( map);
         batch.add(providerId, tracker);
@@ -204,7 +204,12 @@ public class GCMAdapter implements ProviderAdapter {
                 Sender sender = new Sender(notifier.getApiKey());
                 Message.Builder builder = new Message.Builder();
                 builder.setData(payload);
+                if(payload.containsKey("time_to_live")){
+                    int ttl = (int)payload.get("time_to_live");
+                    builder.timeToLive(ttl);
+                }
                 Message message = builder.build();
+
 
                 MulticastResult multicastResult = sender.send(message, ids, SEND_RETRIES);
                 LOG.debug("sendNotification result: {}", multicastResult);
