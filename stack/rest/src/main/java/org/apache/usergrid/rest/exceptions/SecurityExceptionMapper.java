@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.exceptions;
 
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
@@ -37,7 +38,7 @@ public class SecurityExceptionMapper extends AbstractExceptionMapper<SecurityExc
         if ( e.getRealm() != null ) {
             return Response.status( Status.UNAUTHORIZED )
                            .header( "WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"" )
-                           .type( "application/json" ).entity( e.getJsonResponse() ).build();
+                           .type( MediaType.APPLICATION_JSON ).entity( e.getJsonResponse() ).build();
         }
         else {
             return toResponse( UNAUTHORIZED, e.getJsonResponse() );

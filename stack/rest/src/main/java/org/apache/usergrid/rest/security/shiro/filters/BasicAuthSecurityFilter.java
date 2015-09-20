@@ -17,22 +17,22 @@
 package org.apache.usergrid.rest.security.shiro.filters;
 
 
+import org.apache.shiro.codec.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.ext.Provider;
 import java.security.Principal;
 import java.util.Map;
 
-import javax.ws.rs.core.SecurityContext;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import org.apache.shiro.codec.Base64;
 import static org.apache.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
 
-import com.sun.jersey.spi.container.ContainerRequest;
 
-
-@Component
+@Provider
+@PreMatching
 public class BasicAuthSecurityFilter extends SecurityFilter {
 
     private static final Logger logger = LoggerFactory.getLogger( BasicAuthSecurityFilter.class );
@@ -44,15 +44,16 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request ) {
+    public void filter( ContainerRequestContext request ) {
+        logger.info("Filtering: " + request.getUriInfo().getBaseUri());
+
         Map<String, String> auth_types = getAuthTypes( request );
         if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) ) {
-            return request;
+            return;
         }
-
         String[] values = Base64.decodeToString( auth_types.get( AUTH_BASIC_TYPE ) ).split( ":" );
         if ( values.length < 2 ) {
-            return request;
+            return;
         }
         String name = values[0].toLowerCase();
         String password = values[1];
@@ -64,13 +65,9 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
         if ( name.equals( sysadmin_login_name ) && password.equals( sysadmin_login_password )
                 && sysadmin_login_allowed ) {
             request.setSecurityContext( new SysAdminRoleAuthenticator() );
-            logger.info( "System administrator access allowed" );
-            return request;
+            logger.debug( "System administrator access allowed" );
         }
-
-        return request;
     }
-
 
     private static class SysAdminRoleAuthenticator implements SecurityContext {
 

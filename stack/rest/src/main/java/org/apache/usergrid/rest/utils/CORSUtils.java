@@ -17,13 +17,15 @@
 package org.apache.usergrid.rest.utils;
 
 
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
+
 import java.util.Enumeration;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerResponse;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
 
 
 /* Note: At one point there was a special case in this code that would
@@ -96,27 +98,27 @@ public class CORSUtils {
     }
 
 
-    public static ContainerResponse allowAllOrigins( ContainerRequest request, ContainerResponse response ) {
+    public static ContainerResponseContext allowAllOrigins( ContainerRequestContext request, ContainerResponseContext response ) {
 
-        if ( request.getRequestHeaders().containsKey( ACCESS_CONTROL_REQUEST_METHOD ) ) {
+        if ( request.getHeaders().containsKey( ACCESS_CONTROL_REQUEST_METHOD ) ) {
 
-            for ( String value : request.getRequestHeaders().get( ACCESS_CONTROL_REQUEST_METHOD ) ) {
-                response.getHttpHeaders().add( ACCESS_CONTROL_ALLOW_METHODS, value );
+            for ( String value : request.getHeaders().get( ACCESS_CONTROL_REQUEST_METHOD ) ) {
+                response.getHeaders().add( ACCESS_CONTROL_ALLOW_METHODS, value );
             }
         }
 
-        if ( request.getRequestHeaders().containsKey( ACCESS_CONTROL_REQUEST_HEADERS ) ) {
-            for ( String value : request.getRequestHeaders().get( ACCESS_CONTROL_REQUEST_HEADERS ) ) {
-                response.getHttpHeaders().add( ACCESS_CONTROL_ALLOW_HEADERS, value );
+        if ( request.getHeaders().containsKey( ACCESS_CONTROL_REQUEST_HEADERS ) ) {
+            for ( String value : request.getHeaders().get( ACCESS_CONTROL_REQUEST_HEADERS ) ) {
+                response.getHeaders().add( ACCESS_CONTROL_ALLOW_HEADERS, value );
             }
         }
 
         boolean origin_sent = false;
-        if ( request.getRequestHeaders().containsKey( ORIGIN_HEADER ) ) {
-            for ( String value : request.getRequestHeaders().get( ORIGIN_HEADER ) ) {
+        if ( request.getHeaders().containsKey( ORIGIN_HEADER ) ) {
+            for ( String value : request.getHeaders().get( ORIGIN_HEADER ) ) {
                 if ( value != null ) {
                     origin_sent = true;
-                    response.getHttpHeaders().add( ACCESS_CONTROL_ALLOW_ORIGIN, value );
+                    response.getHeaders().add( ACCESS_CONTROL_ALLOW_ORIGIN, value );
                 }
             }
         }
@@ -124,15 +126,15 @@ public class CORSUtils {
         if ( !origin_sent ) {
             String origin = getOrigin( request );
             if ( origin != null ) {
-                response.getHttpHeaders().add( ACCESS_CONTROL_ALLOW_CREDENTIALS, "true" );
-                response.getHttpHeaders().add( ACCESS_CONTROL_ALLOW_ORIGIN, origin );
+                response.getHeaders().add( ACCESS_CONTROL_ALLOW_CREDENTIALS, "true" );
+                response.getHeaders().add( ACCESS_CONTROL_ALLOW_ORIGIN, origin );
             }
             else {
-                response.getHttpHeaders().add( ACCESS_CONTROL_ALLOW_ORIGIN, "*" );
+                response.getHeaders().add( ACCESS_CONTROL_ALLOW_ORIGIN, "*" );
             }
         }
         else {
-            response.getHttpHeaders().add( ACCESS_CONTROL_ALLOW_CREDENTIALS, "true" );
+            response.getHeaders().add( ACCESS_CONTROL_ALLOW_CREDENTIALS, "true" );
         }
 
         return response;
@@ -166,9 +168,9 @@ public class CORSUtils {
     }
 
 
-    public static String getOrigin( ContainerRequest request ) {
-        String origin = request.getRequestHeaders().getFirst( ORIGIN_HEADER );
-        String referer = request.getRequestHeaders().getFirst( REFERER_HEADER );
+    public static String getOrigin( ContainerRequestContext request ) {
+        String origin = request.getHeaders().getFirst( ORIGIN_HEADER );
+        String referer = request.getHeaders().getFirst( REFERER_HEADER );
         return getOrigin( origin, referer );
     }
 }

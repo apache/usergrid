@@ -16,22 +16,43 @@
 package org.apache.usergrid.corepersistence;
 
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.multibindings.Multibinder;
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
-import org.apache.usergrid.corepersistence.index.*;
+import org.apache.usergrid.corepersistence.index.ApplicationIndexBucketLocator;
+import org.apache.usergrid.corepersistence.index.CoreIndexFig;
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactoryImpl;
+import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
-import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
+import org.apache.usergrid.corepersistence.migration.DeDupConnectionDataMigration;
 import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
 import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
-import org.apache.usergrid.corepersistence.rx.impl.*;
-import org.apache.usergrid.corepersistence.service.*;
+import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
+import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
+import org.apache.usergrid.corepersistence.service.AggregationService;
+import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
+import org.apache.usergrid.corepersistence.service.AggregationServiceImpl;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
+import org.apache.usergrid.corepersistence.service.ApplicationServiceImpl;
+import org.apache.usergrid.corepersistence.service.CollectionService;
+import org.apache.usergrid.corepersistence.service.CollectionServiceImpl;
+import org.apache.usergrid.corepersistence.service.ConnectionService;
+import org.apache.usergrid.corepersistence.service.ConnectionServiceImpl;
+import org.apache.usergrid.corepersistence.service.StatusService;
+import org.apache.usergrid.corepersistence.service.StatusServiceImpl;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
@@ -42,7 +63,11 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
-import org.safehaus.guicyfig.GuicyFigModule;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.Multibinder;
 
 
 /**
@@ -100,12 +125,12 @@ public class CoreModule  extends AbstractModule {
         /**
          * Create our migrations for within our core plugin
          */
-        Multibinder<DataMigration<EntityIdScope>> dataMigrationMultibinder =
+        Multibinder<DataMigration> dataMigrationMultibinder =
                     Multibinder.newSetBinder( binder(),
-                        new TypeLiteral<DataMigration<EntityIdScope>>() {}, CoreMigration.class );
+                        new TypeLiteral<DataMigration>() {}, CoreMigration.class );
 
 
-        dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
+        dataMigrationMultibinder.addBinding().to( DeDupConnectionDataMigration.class );
 
 
         //wire up the collection migration plugin
@@ -164,6 +189,8 @@ public class CoreModule  extends AbstractModule {
         bind( ApplicationService.class ).to( ApplicationServiceImpl.class );
 
         bind( StatusService.class ).to( StatusServiceImpl.class );
+
+
     }
 
 }

@@ -63,6 +63,7 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -694,9 +695,27 @@ public class CpRelationManager implements RelationManager {
         final Edge edge = createConnectionEdge( cpHeadEntity.getId(), connectionType, targetEntity.getId() );
 
         final GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlocking().last();
 
-        indexService.queueNewEdge( applicationScope, targetEntity, edge );
+
+        //check if the edge exists
+
+
+        final SearchByEdge searchByEdge = new SimpleSearchByEdge(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent()  );
+
+
+        //only take 1 and count it.  If we don't have anything, create the edge
+        final int count = gm.loadEdgeVersions( searchByEdge ).take( 1 ).count().toBlocking().last();
+
+        if(count == 0) {
+            if(logger.isDebugEnabled()) {
+                logger.debug( "No edge exists between {} and {} of type {}.  Creating",
+                    new Object[] { edge.getSourceNode(), edge.getTargetNode(), edge.getType() } );
+            }
+
+            gm.writeEdge( edge ).toBlocking().last();
+
+            indexService.queueNewEdge( applicationScope, targetEntity, edge );
+        }
 
         return connection;
     }

@@ -45,9 +45,9 @@ public class ApplicationsResource extends NamedResource {
 
     public ManagementResponse getOrganizationApplications() throws IOException {
 
-        String responseString = this.getResource()
+        String responseString = this.getTarget()
             .queryParam( "access_token", context.getToken().getAccessToken() )
-            .type(MediaType.APPLICATION_JSON)
+            .request()
             .get(String.class);
 
         logger.info("Response: " + responseString);

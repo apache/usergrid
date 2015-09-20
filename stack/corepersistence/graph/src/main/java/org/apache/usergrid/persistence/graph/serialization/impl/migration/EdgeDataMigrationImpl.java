@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * The migration data provider assumes that is will visit every node in the graph
  * all edges from these source node will then be re-indexed.
  */
-public class EdgeDataMigrationImpl implements DataMigration<GraphNode> {
+public class EdgeDataMigrationImpl implements DataMigration {
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeDataMigrationImpl.class);
 
@@ -58,24 +58,26 @@ public class EdgeDataMigrationImpl implements DataMigration<GraphNode> {
     private final EdgesObservable edgesFromSourceObservable;
     private final VersionedMigrationSet<EdgeMetadataSerialization> allVersions;
     private final EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2;
+    private final MigrationDataProvider<GraphNode> migrationDataProvider;
 
     @Inject
-    public EdgeDataMigrationImpl( final Keyspace keyspace,
-                                  final GraphManagerFactory graphManagerFactory,
+    public EdgeDataMigrationImpl( final Keyspace keyspace, final GraphManagerFactory graphManagerFactory,
                                   final EdgesObservable edgesFromSourceObservable,
                                   final VersionedMigrationSet<EdgeMetadataSerialization> allVersions,
-                                  final EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2 ) {
+                                  final EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2,
+                                  final MigrationDataProvider<GraphNode> migrationDataProvider ) {
 
         this.keyspace = keyspace;
         this.graphManagerFactory = graphManagerFactory;
         this.edgesFromSourceObservable = edgesFromSourceObservable;
         this.allVersions = allVersions;
         this.edgeMetadataSerializationV2 = edgeMetadataSerializationV2;
+        this.migrationDataProvider = migrationDataProvider;
     }
 
 
     @Override
-    public int migrate( final int currentVersion, final MigrationDataProvider<GraphNode> migrationDataProvider,
+    public int migrate( final int currentVersion,
                         final ProgressObserver observer ) {
 
         final AtomicLong counter = new AtomicLong();

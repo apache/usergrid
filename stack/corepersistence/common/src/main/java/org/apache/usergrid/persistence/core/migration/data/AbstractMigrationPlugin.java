@@ -34,23 +34,20 @@ import org.slf4j.LoggerFactory;
  * Standard implementation logic for plugins to extend
  * @param <T>
  */
-public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
+public abstract class AbstractMigrationPlugin implements MigrationPlugin {
 
 
 
     private static final Logger LOG = LoggerFactory.getLogger( AbstractMigrationPlugin.class );
 
 
-    private final Set<DataMigration<T>> entityDataMigrations;
-    private final MigrationDataProvider<T> entityIdScopeDataMigrationProvider;
+    private final Set<DataMigration> entityDataMigrations;
     private final MigrationInfoSerialization migrationInfoSerialization;
 
 
-    protected AbstractMigrationPlugin( final Set<DataMigration<T>> entityDataMigrations,
-                                       final MigrationDataProvider<T> entityIdScopeDataMigrationProvider,
+    protected AbstractMigrationPlugin( final Set<DataMigration>entityDataMigrations,
                                        final MigrationInfoSerialization migrationInfoSerialization ) {
         this.entityDataMigrations = entityDataMigrations;
-        this.entityIdScopeDataMigrationProvider = entityIdScopeDataMigrationProvider;
         this.migrationInfoSerialization = migrationInfoSerialization;
     }
 
@@ -71,7 +68,7 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
 
         int max = 0;
 
-        for(DataMigration<T> entityMigration: entityDataMigrations){
+        for(DataMigration entityMigration: entityDataMigrations){
             max = Math.max( max, entityMigration.getMaxVersion() );
         }
 
@@ -85,12 +82,12 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
      * @return True if we ran a migration
      */
     private boolean runMigration( final ProgressObserver po ) {
-        DataMigration<T> migrationToExecute = null;
+        DataMigration migrationToExecute = null;
 
 
         final int version = migrationInfoSerialization.getVersion( getName() );
 
-        for ( DataMigration<T> entityMigration : entityDataMigrations ) {
+        for ( DataMigration entityMigration : entityDataMigrations ) {
             if ( entityMigration.supports( version ) ) {
                 if ( migrationToExecute != null ) {
                     throw new DataMigrationException(
@@ -113,7 +110,7 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
 
 
         //run the migration
-        final int newSystemVersion = migrationToExecute.migrate( version, entityIdScopeDataMigrationProvider, po );
+        final int newSystemVersion = migrationToExecute.migrate( version, po );
 
         //write the version
         migrationInfoSerialization.setVersion( getName(), newSystemVersion );

@@ -21,7 +21,7 @@ import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
-import com.sun.jersey.api.client.WebResource;
+import javax.ws.rs.client.WebTarget;
 
 
 /**
@@ -61,7 +61,7 @@ public class RootResource implements UrlResource {
     }
 
     @Override
-    public WebResource getResource() {
+    public WebTarget getTarget() {
         //TODO: fix this to return the proper resource in the scope we expect it, might not be needed here.
         return null;
     }

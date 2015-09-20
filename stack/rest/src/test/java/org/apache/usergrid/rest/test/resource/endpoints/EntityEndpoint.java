@@ -20,14 +20,13 @@
 
 package org.apache.usergrid.rest.test.resource.endpoints;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 public class EntityEndpoint extends NamedResource {
@@ -63,19 +62,21 @@ public class EntityEndpoint extends NamedResource {
     }
 
     public Entity get(final boolean useToken, final Token token){
-        WebResource resource  = getResource(useToken,token);
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .get(ApiResponse.class);
+        WebTarget resource  = getTarget( useToken, token );
+        ApiResponse response = resource.request()
+            .accept( MediaType.APPLICATION_JSON )
+            .get(ApiResponse.class);
 
         return new Entity(response);
     }
 
     //For testing purposes only
     public Entity get(QueryParameters parameters, final boolean useToken){
-        WebResource resource  = getResource(useToken);
+        WebTarget resource  = getTarget(useToken);
         resource = addParametersToResource(resource, parameters);
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                                       .get(ApiResponse.class);
+        ApiResponse response = resource.request()
+            .accept( MediaType.APPLICATION_JSON )
+            .get(ApiResponse.class);
 
         return new Entity(response);
     }
@@ -96,9 +97,10 @@ public class EntityEndpoint extends NamedResource {
     }
 
     public ApiResponse delete(final boolean useToken){
-        WebResource resource  = getResource(useToken);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .delete(ApiResponse.class);
+        WebTarget resource  = getTarget( useToken );
+        return resource.request()
+            .accept( MediaType.APPLICATION_JSON )
+            .delete(ApiResponse.class);
     }
 
     /**
@@ -113,9 +115,10 @@ public class EntityEndpoint extends NamedResource {
      * PUT /users/fred {"color":"red"}
      */
     public Entity put(Entity entity){
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .put(ApiResponse.class, entity);
-        return new Entity(response);
+        ApiResponse response = getTarget( true ).request()
+            .accept(MediaType.APPLICATION_JSON)
+            .put( javax.ws.rs.client.Entity.json(entity), ApiResponse.class );
+        return new Entity( response);
     }
 
 
@@ -134,11 +137,12 @@ public class EntityEndpoint extends NamedResource {
     }
 
     public Entity post(final boolean useToken){
-        WebResource resource  = getResource(useToken);
-        ApiResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .post(ApiResponse.class);
+        WebTarget resource  = getTarget(useToken);
+        ApiResponse response = resource.request()
+            .accept(MediaType.APPLICATION_JSON)
+            .post( javax.ws.rs.client.Entity.json(null), ApiResponse.class );
 
-        return new Entity(response);
+        return new Entity( response);
     }
 
     /**

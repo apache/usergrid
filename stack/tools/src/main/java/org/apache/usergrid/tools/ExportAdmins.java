@@ -23,9 +23,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.StringUtils;
 import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
@@ -385,13 +387,8 @@ public class ExportAdmins extends ExportingToolBase {
 
             task.orgNamesByUuid = managementService.getOrganizationsForAdminUser( task.adminUser.getUuid() );
 
-<<<<<<< HEAD
-            List<Org> orgs = orgMap.get( task.adminUser.getProperty( "username" ).toString().toLowerCase() );
-
-=======
             List<Org> orgs = userToOrgsMap.get( task.adminUser.getProperty( "username" ).toString().toLowerCase() );
 
->>>>>>> master
             if ( orgs != null && task.orgNamesByUuid.size() < orgs.size() ) {
 
                 // list of orgs from getOrganizationsForAdminUser() is less than expected, use userToOrgsMap
@@ -401,16 +398,6 @@ public class ExportAdmins extends ExportingToolBase {
                 }
                 task.orgNamesByUuid = bimap;
             }
-<<<<<<< HEAD
-
-            if ( task.orgNamesByUuid.isEmpty() ) {
-                logger.error("{}:{}:{} has no orgs", new Object[] {
-                        task.adminUser.getProperty("username"),
-                        task.adminUser.getProperty("email"),
-                        task.adminUser.getUuid() } );
-            }
-=======
->>>>>>> master
         }
     }
 

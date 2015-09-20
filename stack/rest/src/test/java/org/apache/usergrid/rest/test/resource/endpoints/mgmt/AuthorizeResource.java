@@ -19,7 +19,6 @@
  */
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
-import com.sun.jersey.api.client.GenericType;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
@@ -39,7 +38,7 @@ public class AuthorizeResource extends NamedResource {
      * @return
      */
     public Object post(Object requestEntity) {
-        return getResource().post(Object.class, requestEntity);
+        return getTarget().request().post( javax.ws.rs.client.Entity.json(requestEntity), Object.class);
 
     }
 
@@ -51,9 +50,7 @@ public class AuthorizeResource extends NamedResource {
      * @return
      */
     public <T> T post(Class<T> type, Object requestEntity) {
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource().post(gt.getRawClass(), requestEntity);
-
+        return getTarget().request().post( javax.ws.rs.client.Entity.json( requestEntity ), type );
     }
 
 }

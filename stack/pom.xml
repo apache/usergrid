@@ -27,7 +27,7 @@
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>2.1.0-SNAPSHOT</version>
+  <version>2.1.0-JERSEY-TEST</version>
   <name>Usergrid Parent</name>
   <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
@@ -107,14 +107,14 @@
       <jackson-version>1.9.9</jackson-version>
       <jackson-2-version>2.3.3</jackson-2-version>
       <jclouds.version>1.9.0</jclouds.version>
-      <jersey-version>1.19</jersey-version>
+      <jersey-version>2.21</jersey-version>
       <junit-version>4.12</junit-version>
       <log4j-version>1.2.16</log4j-version>
       <org.springframework.version>3.2.13.RELEASE</org.springframework.version>
-      <shiro-version>1.2.3</shiro-version>
+      <shiro-version>1.2.4</shiro-version>
       <slf4j-version>1.6.1</slf4j-version>
       <snakeyaml-version>1.9</snakeyaml-version>
-      <tomcat-version>7.0.59</tomcat-version>
+      <tomcat-version>7.0.64</tomcat-version>
       <antlr.version>3.4</antlr.version>
       <tika.version>1.4</tika.version>
       <mockito.version>1.10.8</mockito.version>
@@ -579,139 +579,139 @@
 
       <!-- Sun and Javax Package Dependencies -->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-core</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-core</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-json</artifactId>
-        <version>${jersey-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.codehaus.jettison</groupId>
-            <artifactId>jettison</artifactId>
-          </exclusion>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-json</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+        <!--<exclusions>-->
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jettison</groupId>-->
+            <!--<artifactId>jettison</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-core-asl</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-mapper-asl</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-jaxrs</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-jaxrs</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-xc</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-xc</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+          <!--<exclusion>-->
+            <!--<groupId>javax.activation</groupId>-->
+            <!--<artifactId>activation</artifactId>-->
+          <!--</exclusion>-->
+        <!--</exclusions>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-client</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-client</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-server</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-server</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-grizzly2</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-grizzly2</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>org.glassfish.grizzly</groupId>
-        <artifactId>grizzly-http-servlet-server</artifactId>
-        <version>2.1.2</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>org.glassfish.grizzly</groupId>-->
+        <!--<artifactId>grizzly-http-servlet-server</artifactId>-->
+        <!--<version>2.1.2</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>jersey-spring</artifactId>
-        <version>${jersey-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aop</artifactId>
-          </exclusion>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs</groupId>-->
+        <!--<artifactId>jersey-spring</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+        <!--<exclusions>-->
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-aop</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-core</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-beans</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-context</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-web</artifactId>-->
+          <!--</exclusion>-->
+        <!--</exclusions>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>jersey-multipart</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs</groupId>-->
+        <!--<artifactId>jersey-multipart</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
-        <artifactId>oauth-signature</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>-->
+        <!--<artifactId>oauth-signature</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
-        <artifactId>oauth-server</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>-->
+        <!--<artifactId>oauth-server</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.jersey-test-framework</groupId>
-        <artifactId>jersey-test-framework-external</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
+        <!--<artifactId>jersey-test-framework-external</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.jersey-test-framework</groupId>
-        <artifactId>jersey-test-framework-core</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
+        <!--<artifactId>jersey-test-framework-core</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
       <dependency>
         <groupId>com.sun.mail</groupId>

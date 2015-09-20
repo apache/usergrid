@@ -17,25 +17,17 @@
 package org.apache.usergrid.rest;
 
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
 
 @Path( "/system" )
@@ -57,9 +49,12 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
+
     @Path( "superuser/setup" )
-    public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getSetupSuperuser( @Context UriInfo ui,
+           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -76,7 +71,7 @@ public class SystemResource extends AbstractContextResource {
 
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 

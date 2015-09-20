@@ -17,18 +17,16 @@
 package org.apache.usergrid.rest;
 
 
-import org.junit.Test;
-
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
+import org.junit.Test;
 
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -63,7 +61,8 @@ public class SystemResourceIT extends AbstractRestIT {
         queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
         queryParameters.addParam("confirmApplicationName", this.clientSetup.getAppName());
 
-        org.apache.usergrid.rest.test.resource.model.ApiResponse result = clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
+        org.apache.usergrid.rest.test.resource.model.ApiResponse result =
+            clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
 
         assertNotNull(result);
         assertNotNull("ok", result.getStatus());

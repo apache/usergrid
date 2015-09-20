@@ -17,8 +17,8 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
-import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.NullArgumentException;
@@ -106,7 +106,9 @@ public class ApplicationResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getApplication(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getApplication(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -116,14 +118,16 @@ public class ApplicationResource extends AbstractContextResource {
         response.setApplication( sm.getApplication() );
         response.setParams( ui.getQueryParameters() );
         response.setResults( management.getApplicationMetadata( applicationId ) );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @GET
     @Path("credentials")
-    public JSONWithPadding getCredentials(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getCredentials(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -134,15 +138,17 @@ public class ApplicationResource extends AbstractContextResource {
                 new ClientCredentialsInfo( management.getClientIdForApplication( applicationId ),
                         management.getClientSecretForApplication( applicationId ) );
 
-        response.setCredentials(credentials);
-        return new JSONWithPadding( response, callback );
+        response.setCredentials( credentials );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @POST
     @Path("credentials")
-    public JSONWithPadding generateCredentials( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse generateCredentials( @Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -154,13 +160,14 @@ public class ApplicationResource extends AbstractContextResource {
                         management.newClientSecretForApplication(applicationId) );
 
         response.setCredentials( credentials );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @RequireOrganizationAccess
     @GET
+    @JSONP
     @Path("_size")
-    public JSONWithPadding getApplicationSize(
+    public ApiResponse getApplicationSize(
         @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -174,13 +181,14 @@ public class ApplicationResource extends AbstractContextResource {
         sumMap.put("size",innerMap);
         map.put("aggregation", sumMap);
         response.setMetadata(map);
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @RequireOrganizationAccess
     @GET
+    @JSONP
     @Path("{collection_name}/_size")
-    public JSONWithPadding getCollectionSize(
+    public ApiResponse getCollectionSize(
         @Context UriInfo ui,
         @PathParam( "collection_name" ) String collection_name,
         @QueryParam("callback") @DefaultValue("callback") String callback )
@@ -195,13 +203,14 @@ public class ApplicationResource extends AbstractContextResource {
         sumMap.put("size",innerMap);
         map.put("aggregation",sumMap);
         response.setMetadata(map);
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @RequireOrganizationAccess
     @GET
+    @JSONP
     @Path("collections/_size")
-    public JSONWithPadding getEachCollectionSize(
+    public ApiResponse getEachCollectionSize(
         @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
@@ -213,14 +222,16 @@ public class ApplicationResource extends AbstractContextResource {
         sumMap.put("size",sizes);
         map.put("aggregation",sumMap);
         response.setMetadata(map);
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @POST
     @Path("sia-provider")
     @Consumes(APPLICATION_JSON)
     @RequireOrganizationAccess
-    public JSONWithPadding configureProvider(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse configureProvider(
             @Context UriInfo ui,
             @QueryParam("provider_key") String siaProvider,
             Map<String, Object> json,
@@ -252,7 +263,7 @@ public class ApplicationResource extends AbstractContextResource {
 
         signInAsProvider.saveToConfiguration( json );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @POST
@@ -403,7 +414,6 @@ public class ApplicationResource extends AbstractContextResource {
 
 
     @Path( "imports" )
-    @RequireOrganizationAccess
     public ImportsResource importGetJson( @Context UriInfo ui,
                                           @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
         throws Exception {
@@ -445,7 +455,9 @@ public class ApplicationResource extends AbstractContextResource {
      */
     @PUT
     @RequireOrganizationAccess
-    public JSONWithPadding executePut(  @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePut(  @Context UriInfo ui, String body,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         if ( applicationId == null ) {
@@ -459,13 +471,15 @@ public class ApplicationResource extends AbstractContextResource {
         response.setApplication( emf.getEntityManager( applicationId ).getApplication() );
         response.setParams( ui.getQueryParameters() );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @DELETE
     @RequireOrganizationAccess
-    public JSONWithPadding executeDelete(  @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeDelete(  @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,
         @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
 
@@ -497,7 +511,7 @@ public class ApplicationResource extends AbstractContextResource {
 
         logger.debug( "ApplicationResource.delete() sending response ");
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 }

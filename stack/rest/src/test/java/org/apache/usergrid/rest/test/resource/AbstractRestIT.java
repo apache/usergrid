@@ -19,14 +19,6 @@ package org.apache.usergrid.rest.test.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.test.framework.AppDescriptor;
-import com.sun.jersey.test.framework.JerseyTest;
-import com.sun.jersey.test.framework.WebAppDescriptor;
-import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.rest.test.resource.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
@@ -35,8 +27,18 @@ import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.test.DeploymentContext;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainer;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Rule;
 
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
@@ -53,26 +55,25 @@ import static org.junit.Assert.assertEquals;
 //@RunWith( Arquillian.class )
 public class AbstractRestIT extends JerseyTest {
 
-    private static ClientConfig clientConfig = new DefaultClientConfig();
+    private static ClientConfig clientConfig = new ClientConfig();
 
     public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
 
     @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
 
-    protected static final AppDescriptor descriptor;
+    protected static final Application descriptor = new Application();
 
-    public AbstractRestIT() {
-        super( descriptor );
+
+    @Override
+    protected Application configure() {
+        return descriptor;
     }
-
 
     protected ObjectMapper mapper = new ObjectMapper();
 
     static {
-        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-        descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" )
-                .clientConfig( clientConfig ).build();
+        clientConfig.register( new JacksonFeature() );
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
     }
 
@@ -107,7 +108,6 @@ public class AbstractRestIT extends JerseyTest {
         }
     }
 
-    @Override
     protected URI getBaseURI() {
         try {
             return new URI("http://localhost:" + tomcatRuntime.getPort());
@@ -118,7 +118,28 @@ public class AbstractRestIT extends JerseyTest {
 
     @Override
     protected TestContainerFactory getTestContainerFactory() {
-        return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
+        final URI baseURI = getBaseURI();
+        return (uri, deploymentContext) -> new TestContainer() {
+            @Override
+            public ClientConfig getClientConfig() {
+                return clientConfig;
+            }
+
+            @Override
+            public URI getBaseUri() {
+                return baseURI;
+            }
+
+            @Override
+            public void start() {
+                // noop
+            }
+
+            @Override
+            public void stop() {
+                // noop
+            }
+        };
     }
 
     ///myorg/
@@ -158,30 +179,30 @@ public class AbstractRestIT extends JerseyTest {
 
 
     /**
-     * Takes in the expectedStatus message and the expectedErrorMessage then compares it to the UniformInterfaceException
+     * Takes in the expectedStatus message and the expectedErrorMessage then compares it to the ClientErrorException
      * to make sure that we got what we expected.
      * @param expectedStatus
      * @param expectedErrorMessage
      * @param uie
      */
-    public void errorParse(int expectedStatus, String expectedErrorMessage, UniformInterfaceException uie){
+    public void errorParse(int expectedStatus, String expectedErrorMessage, ClientErrorException uie){
         assertEquals(expectedStatus,uie.getResponse().getStatus());
-        JsonNode errorJson = uie.getResponse().getEntity( JsonNode.class );
+        JsonNode errorJson = uie.getResponse().readEntity( JsonNode.class );
         assertEquals( expectedErrorMessage, errorJson.get( "error" ).asText() );
 
     }
 
 
-    protected Token getAdminToken(String username, String password){
-        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
-                new Token(username, password),null,false
-        );
+    protected Token getAdminToken(String username, String password) {
+        Token token = new Token(username, password);
+        return this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, token, null, false );
     }
 
-    protected Token getAdminToken(){
-        return this.clientSetup.getRestClient().management().token().post(false,Token.class,
-                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername()),null,false
-        );
+    protected Token getAdminToken() {
+        Token token = new Token(this.clientSetup.getUsername(), this.clientSetup.getPassword());
+        return this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, token, null, false);
     }
     public Map<String, Object> getRemoteTestProperties() {
         return clientSetup.getRestClient().testPropertiesResource().get().getProperties();
