@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,18 +69,25 @@ public class IndexServiceImpl implements IndexService {
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final IndexProducer indexProducer;
     private final Timer indexTimer;
     private final Timer addTimer;
 
 
     @Inject
-    public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
-                             final EdgesObservable edgesObservable, final IndexFig indexFig, final IndexLocationStrategyFactory indexLocationStrategyFactory, final MetricsFactory metricsFactory ) {
+    public IndexServiceImpl( final GraphManagerFactory graphManagerFactory,
+                             final EntityIndexFactory entityIndexFactory,
+                             final EdgesObservable edgesObservable,
+                             final IndexFig indexFig,
+                             final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                             final MetricsFactory metricsFactory,
+                             final IndexProducer indexProducer) {
         this.graphManagerFactory = graphManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.indexProducer = indexProducer;
         this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
         this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
@@ -89,7 +97,7 @@ public class IndexServiceImpl implements IndexService {
     public Observable<IndexOperationMessage> indexEntity( final ApplicationScope applicationScope,
                                                           final Entity entity ) {
         //bootstrap the lower modules from their caches
-        final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+        final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
         final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
 
 
@@ -104,10 +112,6 @@ public class IndexServiceImpl implements IndexService {
 
         //do our observable for batching
         //try to send a whole batch if we can
-
-
-        //do our observable for batching
-        //try to send a whole batch if we can
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex.buffer( indexFig.getIndexBatchSize() )
 
             //map into batches based on our buffer size
@@ -118,7 +122,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.index( indexEdge, entity );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> batch.execute() ) );
+                .flatMap( batch -> indexProducer.put(batch) ) );
 
         return ObservableTimer.time( batches, indexTimer );
     }
@@ -146,7 +150,7 @@ public class IndexServiceImpl implements IndexService {
 
             batch.index( indexEdge, entity );
 
-            return batch.execute();
+            return indexProducer.put(batch);
         } );
 
         return ObservableTimer.time( batches, addTimer  );
@@ -189,7 +193,7 @@ public class IndexServiceImpl implements IndexService {
 
                 batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
 
-                return batch.execute();
+                return indexProducer.put(batch);
             } );
 
         return ObservableTimer.time( batches, addTimer );
@@ -225,7 +229,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.deindex( searchEdge, candidateResult );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> batch.execute() );
+                .flatMap( batch -> indexProducer.put(batch) );
 
         return ObservableTimer.time(batches, indexTimer);
     }

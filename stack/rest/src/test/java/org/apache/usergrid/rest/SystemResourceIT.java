@@ -23,6 +23,7 @@ import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.junit.Test;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -61,8 +62,7 @@ public class SystemResourceIT extends AbstractRestIT {
         queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
         queryParameters.addParam("confirmApplicationName", this.clientSetup.getAppName());
 
-        org.apache.usergrid.rest.test.resource.model.ApiResponse result =
-            clientSetup.getRestClient().system().applications(this.clientSetup.getAppUuid()).delete( queryParameters);
+        org.apache.usergrid.rest.test.resource.model.ApiResponse result = clientSetup.getRestClient().system().getSubResource("applications/" + this.clientSetup.getAppUuid()).delete(false, queryParameters);
 
         assertNotNull(result);
         assertNotNull("ok", result.getStatus());
@@ -79,7 +79,7 @@ public class SystemResourceIT extends AbstractRestIT {
                 Thread.sleep(100);
             }
         }
-        assertEquals(((LinkedHashMap)((LinkedHashMap) result.getData()).get("metadata")).get("count"), 10);
+        assertEquals(((LinkedHashMap) ((LinkedHashMap) result.getData()).get("metadata")).get("count"), 10);
 
     }
 
@@ -87,9 +87,9 @@ public class SystemResourceIT extends AbstractRestIT {
     @Test
     public void testBoostrapAlreadyRun() {
         QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
+        queryParameters.addParam("access_token", clientSetup.getSuperuserToken().getAccessToken());
 
-        Entity result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
+        Entity result = clientSetup.getRestClient().system().database().bootstrap().put(queryParameters);
 
         assertNotNull( result );
         assertNotNull( "ok", ( String ) result.get( "status" ) );
@@ -97,6 +97,18 @@ public class SystemResourceIT extends AbstractRestIT {
         result = clientSetup.getRestClient().system().database().bootstrap().put( queryParameters );
 
         assertNotNull( result );
-        assertNotNull( "ok", ( String ) result.get( "status" ) );
+        assertNotNull("ok", (String) result.get("status"));
+    }
+    @Test
+    public void testQueueDepth() {
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam("access_token", clientSetup.getSuperuserToken().getAccessToken());
+
+        Entity result = clientSetup.getRestClient().system().getSubResource("queue/size").get(Entity.class, queryParameters,false);
+
+        assertNotNull( result );
+        assertEquals(0, ((Map) result.get("data")).get("queueDepth"));
+
+
     }
 }

@@ -60,7 +60,6 @@ import com.google.inject.Injector;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
@@ -73,6 +72,7 @@ import static org.junit.Assert.assertTrue;
 @NotThreadSafe
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( StaleIndexCleanupTest.class );
+    public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
 
     // take it easy on Cassandra
     private static final long writeDelayMs = 0;
@@ -379,7 +379,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         app.refreshIndex();
 
         Thread.sleep(250); // refresh happens asynchronously, wait for some time
-        
+
 
         //we can't use our candidate result sets here.  The repair won't happen since we now have orphaned documents in our index
         //us the EM so the repair process happens
@@ -401,7 +401,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
      * Test that the EntityDeleteImpl cleans up stale indexes on update. Ensures that when an
      * entity is updated its old indexes are cleared from ElasticSearch.
      */
-    @Test(timeout=30000)
+    @Test()
     public void testCleanupOnUpdate() throws Exception {
 
         logger.info( "Started testCleanupOnUpdate()" );
@@ -425,20 +425,17 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         app.refreshIndex();
 
         CandidateResults crs = queryCollectionCp( "dogs", "dog", "select *");
-        Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
+        Assert.assertEquals("Expect no stale candidates yet", numEntities, crs.size());
 
         // turn off post processing stuff that cleans up stale entities
-        System.setProperty( EVENTS_DISABLED, "false" );
 
         // update each entity a bunch of times
 
-        List<Entity> maxVersions = new ArrayList<>(numEntities);
         int count = 0;
         for ( Entity dog : dogs ) {
-            Entity toUpdate = null;
 
             for ( int j=0; j<numUpdates; j++) {
-                toUpdate = em.get( dog.getUuid() );
+                Entity toUpdate = em.get( dog.getUuid() );
                 toUpdate.setProperty( "property", RandomStringUtils.randomAlphanumeric(10));
                 em.update(toUpdate);
                 count++;
@@ -447,7 +444,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
                 }
             }
 
-            maxVersions.add( toUpdate );
         }
         app.refreshIndex();
 

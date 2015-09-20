@@ -24,10 +24,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.usergrid.persistence.core.future.FutureObservable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import rx.Observable;
 
 
 /**
@@ -40,13 +37,11 @@ public class IndexOperationMessage implements Serializable {
     private long creationTime;
 
 
-    private final FutureObservable<IndexOperationMessage> containerFuture;
 
 
     public IndexOperationMessage() {
         this.indexRequests = new HashSet<>();
         this.deIndexRequests = new HashSet<>();
-        this.containerFuture = new FutureObservable<>( this );
         this.creationTime = System.currentTimeMillis();
     }
 
@@ -78,15 +73,6 @@ public class IndexOperationMessage implements Serializable {
         return indexRequests.isEmpty() && deIndexRequests.isEmpty();
     }
 
-    /**
-     * return the promise
-     */
-    @JsonIgnore
-    public Observable<IndexOperationMessage> observable() {
-        return containerFuture.observable();
-    }
-
-
     @Override
     public boolean equals( final Object o ) {
         if ( this == o ) {
@@ -116,10 +102,6 @@ public class IndexOperationMessage implements Serializable {
         return result;
     }
 
-    public void done() {
-        //if this has been serialized, it could be null. don't NPE if it is, there's nothing to ack
-        containerFuture.done();
-    }
 
     public long getCreationTime() {
         return creationTime;

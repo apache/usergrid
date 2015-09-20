@@ -77,8 +77,13 @@ public class SystemResource extends NamedResource {
             HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
                 .credentials( "superuser", "superpassword" ).build();
 
-            return resource.register( feature ).request().delete( ApiResponse.class );
+            return resource.register(feature).request().delete(ApiResponse.class);
 
+        }
+
+        @Override
+        public ClientContext getContext() {
+            return context;
         }
     }
 
