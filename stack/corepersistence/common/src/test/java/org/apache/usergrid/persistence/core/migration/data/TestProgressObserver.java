@@ -30,19 +30,21 @@ public class TestProgressObserver implements ProgressObserver {
 
     private boolean started = false;
 
+    private boolean complete = false;
+
 
     private List<String> updates = new ArrayList<>( 100 );
 
 
     @Override
     public void start() {
-         started = true;
+        started = true;
     }
 
 
     @Override
     public void complete() {
-        started = false;
+        complete = true;
     }
 
 
@@ -66,7 +68,6 @@ public class TestProgressObserver implements ProgressObserver {
 
     /**
      * Get if we failed
-     * @return
      */
     public boolean isFailed() {
         return failed;
@@ -78,10 +79,11 @@ public class TestProgressObserver implements ProgressObserver {
     }
 
 
+    public boolean isComplete() { return complete;}
+
 
     /**
      * Get update messages
-     * @return
      */
     public List<String> getUpdates() {
         return updates;

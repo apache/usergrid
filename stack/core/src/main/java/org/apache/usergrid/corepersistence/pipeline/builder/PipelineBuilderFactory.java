@@ -23,6 +23,9 @@ package org.apache.usergrid.corepersistence.pipeline.builder;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
+/**
+ * Factory interface for creating our pipeline builders
+ */
 public interface PipelineBuilderFactory {
 
 

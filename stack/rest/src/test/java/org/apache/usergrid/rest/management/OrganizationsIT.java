@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.usergrid.java.client.exception.ClientException;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,9 +30,9 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.RestClient;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -100,30 +101,32 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testCreateDuplicateOrgName() throws Exception {
 
-        //Create organization
+        // Create organization
         Organization organization = createOrgPayload( "testCreateDuplicateOrgName", null );
-
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
         this.refreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
-        //Ensure that the token from the newly created organization works.
+        // Ensure that the token from the newly created organization works.
         Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
+        Token tokenReturned = clientSetup.getRestClient().management().token()
+            .post( false, Token.class, tokenPayload, null );
         this.management().token().setToken(tokenReturned);
         assertNotNull( tokenReturned );
 
-        //Try to create a organization with the same name as an organization that already exists, ensure that it fails
-        Organization orgTestDuplicatePayload =
-                new Organization( organization.getOrganization(), organization.getUsername() + "test",
-                        organization.getEmail() + "test", organization.getName() + "test",
-                        organization.getPassword(), null );
+        // Try to create a organization with the same name as an organization that already exists, ensure that it fails
+        Organization orgTestDuplicatePayload = new Organization(
+            organization.getOrganization(),
+            organization.getUsername() + "test",
+            organization.getEmail() + "test",
+            organization.getName() + "test",
+            organization.getPassword(), null );
         try {
             clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
             fail("Should not have been able to create duplicate organization");
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage, ex );
         }
 
@@ -135,7 +138,7 @@ public class OrganizationsIT extends AbstractRestIT {
             tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created user" );
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,invalidGrantErrorMessage, ex );
 
         }
@@ -164,7 +167,8 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //get token from organization that was created to verify it exists.
         Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
+        Token tokenReturned = clientSetup.getRestClient().management().token()
+            .post( Token.class, tokenPayload );
 
         assertNotNull( tokenReturned );
 
@@ -179,18 +183,20 @@ public class OrganizationsIT extends AbstractRestIT {
             clientSetup.getRestClient().management().orgs().post( orgDuplicatePayload );
             fail( "Should not have created organization" );
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage,ex);
         }
 
         //try to get the token from the organization that failed to be created to verify it was not made.
-        tokenPayload = new Token( "password", organization.getUsername()+"test", organization.getPassword()+"test" );
+        tokenPayload = new Token( "password",
+            organization.getUsername()+"test",
+            organization.getPassword()+"test" );
         Token tokenError = null;
         try {
             tokenError = clientSetup.getRestClient().management().token().post(false,Token.class, tokenPayload,null );
             fail( "Should not have created organization" );
         }
-        catch ( UniformInterfaceException ex ) {
+        catch ( ClientErrorException ex ) {
             errorParse( 400,invalidGrantErrorMessage,ex );
         }
 
@@ -222,7 +228,7 @@ public class OrganizationsIT extends AbstractRestIT {
         try{
             Organization organizationReturned = clientSetup.getRestClient().management().orgs().post(queryParameters);
             fail();
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             assertEquals("ensure bad request",e.getResponse().getStatus(), 400);
         }
 
@@ -254,12 +260,12 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //create the form to hold the organization
         Form form = new Form();
-        form.add( "organization", organization.getOrganization() );
-        form.add("username", organization.getUsername());
-        form.add( "grant_type", "password" );
-        form.add( "email", organization.getEmail() );
-        form.add( "name", organization.getName() );
-        form.add("password", organization.getPassword());
+        form.param( "organization", organization.getOrganization() );
+        form.param( "username", organization.getUsername() );
+        form.param( "grant_type", "password" );
+        form.param( "email", organization.getEmail() );
+        form.param( "name", organization.getName() );
+        form.param( "password", organization.getPassword() );
 
         //Post the organization and verify it worked.
         Organization organizationReturned = clientSetup.getRestClient().management().orgs().post( form );
@@ -295,8 +301,8 @@ public class OrganizationsIT extends AbstractRestIT {
             //Delete default organization
             clientSetup.getRestClient().management().orgs().org( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
-        }catch(UniformInterfaceException uie){
-            assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
+        }catch(ClientErrorException uie){
+            assertEquals( Response.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
         }
     }
 

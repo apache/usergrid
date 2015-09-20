@@ -17,9 +17,9 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
@@ -68,7 +68,9 @@ public class ApplicationsResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getOrganizationApplications(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getOrganizationApplications(
         @Context UriInfo ui,
         @QueryParam( "deleted" ) @DefaultValue( "false" ) Boolean deleted, // only return deleted apps if true
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
@@ -79,14 +81,16 @@ public class ApplicationsResource extends AbstractContextResource {
         BiMap<UUID, String> applications = management.getApplicationsForOrganization( organization.getUuid() );
         response.setData( applications.inverse() );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @POST
     @Consumes( MediaType.APPLICATION_JSON )
-    public JSONWithPadding newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                           @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                           String callback ) throws Exception {
         String applicationName = ( String ) json.get( "name" );
@@ -97,7 +101,9 @@ public class ApplicationsResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
-    public JSONWithPadding newApplicationForOrganizationFromForm( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newApplicationForOrganizationFromForm( @Context UriInfo ui, Map<String, Object> json,
                                                                   @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                                   String callback,
                                                                   @FormParam( "name" ) String applicationName )
@@ -117,12 +123,11 @@ public class ApplicationsResource extends AbstractContextResource {
         applications.put( applicationInfo.getName(), applicationInfo.getId() );
         response.setData( applications );
         response.setResults( management.getApplicationMetadata( applicationInfo.getId() ) );
-        return new JSONWithPadding( response, callback );
+        return response;
 
     }
 
 
-    @RequireOrganizationAccess
     @Path(RootResource.APPLICATION_ID_PATH)
     public ApplicationResource applicationFromOrganizationByApplicationId(
         @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr ) throws Exception {
@@ -132,7 +137,6 @@ public class ApplicationsResource extends AbstractContextResource {
     }
 
 
-    @RequireOrganizationAccess
     @Path( "{applicationName}" )
     public ApplicationResource applicationFromOrganizationByApplicationName(
         @Context UriInfo ui, @PathParam( "applicationName" ) String applicationName ) throws Exception {

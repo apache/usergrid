@@ -18,23 +18,18 @@
 package org.apache.usergrid.rest.management;
 
 
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 public class ExportResourceIT extends AbstractRestIT {
@@ -53,8 +48,8 @@ public class ExportResourceIT extends AbstractRestIT {
             management().orgs().org( clientSetup.getOrganizationName() )
                         .app().addToPath( clientSetup.getAppUuid() ).addToPath( "export" );
         }
-        catch ( UniformInterfaceException uie ) {
-            fail("We got back " + uie.getResponse().getClientResponseStatus() + " instead of having a successful call" );
+        catch ( ClientErrorException uie ) {
+            fail("We got back " + uie.getResponse().getStatus() + " instead of having a successful call" );
         }
 
     }
@@ -73,8 +68,8 @@ public class ExportResourceIT extends AbstractRestIT {
                         .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
                         .addToPath( "users" ).addToPath( "export" ).post(ApiResponse.class,payloadBuilder() );
         }
-        catch ( UniformInterfaceException uie ) {
-            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
         assertNotNull( exportEntity );
@@ -97,8 +92,8 @@ public class ExportResourceIT extends AbstractRestIT {
             exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
-        catch ( UniformInterfaceException uie ) {
-            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
         assertNotNull( exportEntity );
@@ -111,8 +106,8 @@ public class ExportResourceIT extends AbstractRestIT {
             exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
         assertNotNull( exportEntity );
@@ -140,8 +135,8 @@ public class ExportResourceIT extends AbstractRestIT {
                                        .app().addToPath( clientSetup.getAppUuid() )
                                        .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
-        catch ( UniformInterfaceException uie ) {
-            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
         assertNotNull( exportEntity );
@@ -155,8 +150,8 @@ public class ExportResourceIT extends AbstractRestIT {
             exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
         assertNotNull( exportEntity );
@@ -185,8 +180,8 @@ public class ExportResourceIT extends AbstractRestIT {
             exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
                                        .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
 
@@ -206,8 +201,8 @@ public class ExportResourceIT extends AbstractRestIT {
                                        .addToPath( "export" ).addToPath( fake.toString() ).get( ApiResponse.class );
             fail( "Should not have been able to get fake uuid" );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
 
         }
     }
@@ -224,8 +219,8 @@ public class ExportResourceIT extends AbstractRestIT {
                 new HashMap<String, Object>() );
             fail( "Should not have passed, The payload is empty." );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -238,8 +233,8 @@ public class ExportResourceIT extends AbstractRestIT {
                         .addToPath( "export" ).post( ApiResponse.class, new HashMap<String, Object>()  );
             fail( "Should not have passed, The payload is empty." );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -255,8 +250,8 @@ public class ExportResourceIT extends AbstractRestIT {
 
             fail( "Should not have passed, The payload is empty." );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -272,8 +267,8 @@ public class ExportResourceIT extends AbstractRestIT {
                         .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -288,8 +283,8 @@ public class ExportResourceIT extends AbstractRestIT {
                         .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -303,8 +298,8 @@ public class ExportResourceIT extends AbstractRestIT {
                         .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
             fail( "Should not have passed as we didn't have an access token." );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -322,8 +317,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -344,8 +339,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -366,8 +361,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -385,8 +380,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -407,8 +402,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -429,8 +424,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -450,8 +445,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
 
         payload = payloadBuilder();
@@ -466,8 +461,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
 
         payload = payloadBuilder();
@@ -482,8 +477,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -503,8 +498,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
 
         payload = payloadBuilder();
@@ -520,8 +515,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
 
         payload = payloadBuilder();
@@ -537,8 +532,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 
@@ -559,8 +554,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
 
         payload = payloadBuilder();
@@ -577,8 +572,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
 
         payload = payloadBuilder();
@@ -595,8 +590,8 @@ public class ExportResourceIT extends AbstractRestIT {
             fail( "Should not have passed as we were missing an important part of the payload" );
 
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
     }
 

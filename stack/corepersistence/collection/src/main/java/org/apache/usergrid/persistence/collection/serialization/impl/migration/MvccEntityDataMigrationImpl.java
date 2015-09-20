@@ -65,7 +65,7 @@ import rx.schedulers.Schedulers;
  * Data migration strategy for entities
  */
 @Singleton
-public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope> {
+public class MvccEntityDataMigrationImpl implements DataMigration{
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger( MvccEntityDataMigrationImpl.class );
@@ -75,6 +75,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
     private final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
+    private final MigrationDataProvider<EntityIdScope> migrationDataProvider;
 
 
     @Inject
@@ -82,12 +83,14 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
                                         final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
                                         final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy ) {
+                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+                                        final MigrationDataProvider<EntityIdScope> migrationDataProvider ) {
         this.keyspace = keyspace;
         this.allVersions = allVersions;
         this.mvccEntitySerializationStrategyV3 = mvccEntitySerializationStrategyV3;
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
+        this.migrationDataProvider = migrationDataProvider;
     }
 
 
@@ -105,8 +108,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
 
 
     @Override
-    public int migrate( final int currentVersion, final MigrationDataProvider<EntityIdScope> migrationDataProvider,
-                        final ProgressObserver observer ) {
+    public int migrate( final int currentVersion,  final ProgressObserver observer ) {
 
         final AtomicLong atomicLong = new AtomicLong();
 

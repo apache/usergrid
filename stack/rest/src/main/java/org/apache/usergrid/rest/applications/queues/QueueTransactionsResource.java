@@ -17,29 +17,21 @@
 package org.apache.usergrid.rest.applications.queues;
 
 
-import java.util.UUID;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.mq.QueueQuery;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.UUID;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 
@@ -72,7 +64,9 @@ public class QueueTransactionsResource extends AbstractContextResource {
 
     @Path("{id}")
     @PUT
-    public JSONWithPadding updateTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Results updateTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
                                               @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -80,13 +74,15 @@ public class QueueTransactionsResource extends AbstractContextResource {
 
         UUID newTransactionId = mq.renewTransaction( queuePath, transactionId, query );
 
-        return new JSONWithPadding( Results.fromData( hashMap( "transaction", newTransactionId ) ), callback );
+        return Results.fromData( hashMap( "transaction", newTransactionId ) );
     }
 
 
     @Path("{id}")
     @DELETE
-    public JSONWithPadding removeTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Results removeTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
                                               @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -95,6 +91,6 @@ public class QueueTransactionsResource extends AbstractContextResource {
 
         mq.deleteTransaction( this.queuePath, transactionId, query );
 
-        return new JSONWithPadding( Results.fromData( hashMap( "transaction", transactionId ) ), callback );
+        return Results.fromData( hashMap( "transaction", transactionId ) );
     }
 }

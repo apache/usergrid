@@ -188,7 +188,8 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource.Abst
 
     private int pageThroughAllNotifications( String state ) throws IOException, InterruptedException {
 
-        Collection initialNode = this.app().collection("notifications").get(new QueryParameters().setQuery("select * where state='" + state + "'"));
+        Collection initialNode = this.app().collection("notifications")
+            .get(new QueryParameters().setQuery("select * where state='" + state + "'"));
 
         int count = initialNode.getNumOfEntities();
 
@@ -202,7 +203,8 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource.Abst
 
             while (cursor != null) {
 
-                Collection anotherNode = this.app().collection("notifications").get(new QueryParameters().setQuery("select * where state='" + state + "'").setCursor(cursor));
+                Collection anotherNode = this.app().collection("notifications")
+                    .get(new QueryParameters().setQuery("select * where state='" + state + "'").setCursor(cursor));
 
 
                 int returnCount = anotherNode.getNumOfEntities();

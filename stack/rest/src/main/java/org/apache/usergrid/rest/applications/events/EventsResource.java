@@ -17,6 +17,18 @@
 package org.apache.usergrid.rest.applications.events;
 
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import org.apache.usergrid.mq.QueuePosition;
+import org.apache.usergrid.mq.QueueQuery;
+import org.apache.usergrid.mq.QueueResults;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.rest.applications.ApplicationResource;
+import org.apache.usergrid.rest.applications.ServiceResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -24,19 +36,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import org.apache.usergrid.mq.QueuePosition;
-import org.apache.usergrid.mq.QueueQuery;
-import org.apache.usergrid.mq.QueueResults;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.rest.applications.ApplicationResource;
-import org.apache.usergrid.rest.applications.ServiceResource;
-
-import com.sun.jersey.api.json.JSONWithPadding;
 
 
 @Component("org.apache.usergrid.rest.applications.events.EventsResource")
@@ -54,17 +53,18 @@ public class EventsResource extends ServiceResource {
     }
 
 
-    @Override
     @GET
-    public JSONWithPadding executeGet( @Context UriInfo ui,
-                                       @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public QueueResults executeQueueGet(
+        @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
         QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
         if ( query == null ) {
             query = new QueueQuery();
         }
         query.setPosition( QueuePosition.START );
         QueueResults results = ( ( ApplicationResource ) parent ).getQueues().getFromQueue( "/events", query );
-        return new JSONWithPadding( results, callback );
+        return results;
     }
 }

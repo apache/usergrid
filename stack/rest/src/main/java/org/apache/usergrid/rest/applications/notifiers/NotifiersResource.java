@@ -16,34 +16,31 @@
  */
 package org.apache.usergrid.rest.applications.notifiers;
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.multipart.FormDataMultiPart;
-import java.io.InputStream;
-import java.util.HashMap;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.commons.io.IOUtils;
-
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriInfo;
-import java.util.LinkedHashMap;
-import java.util.UUID;
-
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServicePayload;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriInfo;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.UUID;
 
 import static org.apache.usergrid.services.ServiceParameter.addParameter;
 
@@ -106,7 +103,9 @@ public class NotifiersResource extends ServiceResource {
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Override
-    public JSONWithPadding executeMultiPartPost(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeMultiPartPost(
             @Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback,
             FormDataMultiPart multiPart)
@@ -142,7 +141,7 @@ public class NotifiersResource extends ServiceResource {
         ServicePayload payload = getPayload(certProps);
         executeServiceRequest(ui, response, ServiceAction.POST, payload);
 
-        return new JSONWithPadding(response, callback);
+        return response;
     }
 
     private String getValueOrNull(FormDataMultiPart multiPart, String name) {

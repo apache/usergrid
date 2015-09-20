@@ -18,11 +18,11 @@ package org.apache.usergrid.rest.applications.assets;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.multipart.FormDataParam;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Asset;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.services.assets.data.AssetUtils;
@@ -30,6 +30,7 @@ import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
 import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
 import org.apache.usergrid.utils.StringUtils;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +81,9 @@ public class AssetsResource extends ServiceResource {
     @Override
     @RequireApplicationAccess
     @GET
-    public JSONWithPadding executeGet( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         logger.info( "In AssetsResource.executeGet with ui: {} and callback: {}", ui, callback );
@@ -92,7 +95,9 @@ public class AssetsResource extends ServiceResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 

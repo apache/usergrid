@@ -35,13 +35,15 @@ import com.netflix.astyanax.serializers.LongSerializer;
 
 
 /**
- * Serializes to a source->target edge Note that we cannot set the edge type on de-serialization.  Only the target
- * Id and version.
+ * Serializes to a source->target edge Note that we cannot set the edge type on de-serialization.  Only the target Id
+ * and version.
  */
 public class EdgeSerializer extends AbstractSerializer<DirectedEdge> {
 
     private static final IdColDynamicCompositeSerializer ID_COL_SERIALIZER = IdColDynamicCompositeSerializer.get();
     private static final LongSerializer LONG_SERIALIZER = LongSerializer.get();
+
+    public static final EdgeSerializer INSTANCE = new EdgeSerializer();
 
 
     @Override
@@ -73,5 +75,20 @@ public class EdgeSerializer extends AbstractSerializer<DirectedEdge> {
 
 
         return new DirectedEdge( id, timestamp );
+    }
+
+
+    /**
+     * Create a scan range that represents the timestamp of the edge
+     * @param timestamp
+     * @return
+     */
+    public ByteBuffer fromTimeRange( final long timestamp ) {
+        DynamicComposite composite = new DynamicComposite();
+
+        composite.addComponent( timestamp, LONG_SERIALIZER );
+
+
+        return composite.serialize();
     }
 }
