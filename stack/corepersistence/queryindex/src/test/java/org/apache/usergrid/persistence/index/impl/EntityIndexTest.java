@@ -77,6 +77,8 @@ public class EntityIndexTest extends BaseIT {
     @Inject
     public EntityIndexFactory eif;
 
+    @Inject
+    public IndexProducer indexProducer;
 
     @Inject
     public IndexFig fig;
@@ -133,25 +135,25 @@ public class EntityIndexTest extends BaseIT {
         entity1.setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID()));
         entity1.setField( new StringField( "testfield", "test" ) );
         entity1.setField(new IntegerField("ordinal", 0));
-        entity1.setField(new UUIDField("testuuid",uuid));
+        entity1.setField(new UUIDField("testuuid", uuid));
 
 
-        batch.index( indexEdge, entity1 );
-        batch.execute().toBlocking().last();
+        batch.index(indexEdge, entity1);
+        indexProducer.put(batch).subscribe();
 
 
         Entity entity2 = new Entity( entityType );
-        EntityUtils.setVersion( entity2, UUIDGenerator.newTimeUUID() );
+        EntityUtils.setVersion(entity2, UUIDGenerator.newTimeUUID());
 
 
         List<String> list = new ArrayList<>();
-        list.add( "test" );
-        entity2.setField( new ArrayField<>( "testfield", list ) );
-        entity2.setField( new IntegerField( "ordinal", 1 ) );
+        list.add("test");
+        entity2.setField(new ArrayField<>("testfield", list));
+        entity2.setField(new IntegerField("ordinal", 1));
 
 
-        batch.index( indexEdge, entity2 );
-        batch.execute().toBlocking().last();
+        batch.index(indexEdge, entity2);
+        indexProducer.put(batch).subscribe();
 
         entityIndex.refreshAsync().toBlocking().first();
 
@@ -163,14 +165,14 @@ public class EntityIndexTest extends BaseIT {
 
         timer.stop();
 
-        assertEquals( 2, candidateResults.size() );
-        log.debug( "Query time {}ms", timer.getTime() );
+        assertEquals(2, candidateResults.size());
+        log.debug("Query time {}ms", timer.getTime());
 
         final CandidateResult candidate1 = candidateResults.get(0);
 
         //check the id and version
         assertEquals( entity1.getId(), candidate1.getId() );
-        assertEquals( entity1.getVersion(), candidate1.getVersion() );
+        assertEquals(entity1.getVersion(), candidate1.getVersion());
 
 
         final CandidateResult candidate2 = candidateResults.get(1);
@@ -215,7 +217,7 @@ public class EntityIndexTest extends BaseIT {
 
                     EntityIndexBatch batch = entityIndex.createBatch();
                     insertJsonBlob( sampleJson, batch, entityType, indexEdge, size, 0 );
-                    batch.execute().toBlocking().last();
+                    indexProducer.put(batch).subscribe();
                 }
                 catch ( Exception e ) {
                     synchronized ( failTime ) {
@@ -290,7 +292,7 @@ public class EntityIndexTest extends BaseIT {
 
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex(searchEdge, crs.get(0));
-        entityIndexBatch.execute().toBlocking().last();
+        indexProducer.put(entityIndexBatch ).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         //Hilda Youn
@@ -306,7 +308,7 @@ public class EntityIndexTest extends BaseIT {
         });
         EntityIndexBatch batch = entityIndex.createBatch();
         insertJsonBlob(sampleJson, batch, entityType, indexEdge, max, startIndex);
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         IndexRefreshCommandImpl.IndexRefreshCommandInfo info =  entityIndex.refreshAsync().toBlocking().first();
         long time = info.getExecutionTime();
         log.info("refresh took ms:" + time);
@@ -360,11 +362,11 @@ public class EntityIndexTest extends BaseIT {
 
 
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
-        EntityUtils.setId( entity, new SimpleId( "fastcar" ) );
-        EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
+        EntityUtils.setId(entity, new SimpleId( "fastcar" ) );
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID() );
+        entity.setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
 
-        entityIndex.createBatch().index( searchEdge, entity ).execute().toBlocking().last();
+        indexProducer.put(entityIndex.createBatch().index( searchEdge, entity )).toBlocking().last();
         entityIndex.refreshAsync().toBlocking().first();
 
         CandidateResults candidateResults = entityIndex
@@ -373,7 +375,7 @@ public class EntityIndexTest extends BaseIT {
 
         EntityIndexBatch batch = entityIndex.createBatch();
         batch.deindex( searchEdge, entity );
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         candidateResults = entityIndex
@@ -410,7 +412,7 @@ public class EntityIndexTest extends BaseIT {
             entity[i].setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, entityUUID ) );
 
             //index the new entity. This is where the loop will be set to create like 100 entities.
-            entityIndex.createBatch().index( searchEdge, entity[i] ).execute().toBlocking().last();
+            indexProducer.put(entityIndex.createBatch().index( searchEdge, entity[i] )).toBlocking().last();
         }
         entityIndex.refreshAsync().toBlocking().first();
 
@@ -541,7 +543,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index( indexSCope, user );
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         final String query = "where username = 'edanuff'";
@@ -550,7 +552,7 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         // EntityRef
@@ -611,7 +613,7 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( fred, UUIDGenerator.newTimeUUID() );
         batch.index( indexScope, fred);
 
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         final SearchTypes searchTypes = SearchTypes.fromTypes( "user" );
@@ -688,7 +690,7 @@ public class EntityIndexTest extends BaseIT {
         }
 
 
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
 
         entityIndex.refreshAsync().toBlocking().first();
 
@@ -755,7 +757,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index( indexSCope, user );
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         final String query = "where searchUUID = " + searchUUID;
@@ -794,7 +796,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index(indexSCope, user);
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
         final String query = "where string = 'I am*'";
@@ -851,7 +853,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         batch.index( indexSCope, first );
         batch.index( indexSCope, second );
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
 
@@ -916,7 +918,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index(indexScope2, second);
 
 
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
 
@@ -997,7 +999,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope2, second);
 
 
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
 
@@ -1107,7 +1109,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope2, second);
 
 
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
 
 
@@ -1262,7 +1264,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope2, second);
 
 
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
         entityIndex.refreshAsync().toBlocking().first();
         long size = entityIndex.getEntitySize(new SearchEdgeImpl(ownerId,type, SearchEdge.NodeType.SOURCE));
         assertTrue( size == 100 );

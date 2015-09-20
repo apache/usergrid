@@ -82,6 +82,9 @@ public class GeoPagingTest extends BaseIT {
     public CassandraFig cassandraFig;
 
     @Inject
+    public IndexProducer indexProducer;
+
+    @Inject
     @Rule
     public ElasticSearchRule elasticSearchRule;
     private EntityIndex entityIndex;
@@ -128,7 +131,7 @@ public class GeoPagingTest extends BaseIT {
 
         }
 
-        batch.execute().toBlocking().last();
+        indexProducer.put(batch).subscribe();
 
         entityIndex.refreshAsync().toBlocking().last();
 
