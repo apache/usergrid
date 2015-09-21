@@ -46,6 +46,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -113,10 +117,8 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         Preconditions.checkNotNull(key, "key is required");
 
         // determine bucketed row-key based application UUID
-
         String rowKeyString = scope.getApplication().getUuid().toString();
         final int bucket = BUCKET_LOCATOR.getCurrentBucket(rowKeyString);
-
         final BucketScopedRowKey<String> keyRowKey =
             BucketScopedRowKey.fromKey(scope.getApplication(), rowKeyString, bucket);
 
@@ -134,23 +136,26 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
             } catch (NotFoundException nfe) {
                 logger.info("Value not found");
+
             } catch (IOException ioe) {
-                logger.error("Error reading column value", ioe);
+                throw new RuntimeException("Unable to read cached value", ioe);
             }
 
         } catch (ConnectionException e) {
             throw new RuntimeException("Unable to connect to cassandra", e);
         }
+
         return null;
     }
 
 
     @Override
-    public void writeValue(CacheScope scope, K key, V value, long ttl) {
+    public void writeValue(CacheScope scope, K key, V value, Integer ttl) {
 
         Preconditions.checkNotNull( scope, "scope is required");
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( value, "value is required");
+        Preconditions.checkNotNull( ttl, "ttl is required");
 
         // determine bucketed row-key based application UUID
 
@@ -173,7 +178,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
         // serialize to the entry
         final MutationBatch batch = keyspace.prepareMutationBatch();
-        batch.withRow(SCOPED_CACHE, keyRowKey).putColumn(columnName, cacheBytes);
+        batch.withRow(SCOPED_CACHE, keyRowKey).putColumn(columnName, cacheBytes, ttl);
 
         executeBatch(batch);
     }
@@ -182,6 +187,31 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     @Override
     public void invalidate(CacheScope scope) {
 
+        Preconditions.checkNotNull(scope, "scope is required");
+
+        // determine bucketed row-key based application UUID
+        String rowKeyString = scope.getApplication().getUuid().toString();
+        final int bucket = BUCKET_LOCATOR.getCurrentBucket(rowKeyString);
+        final BucketScopedRowKey<String> keyRowKey =
+            BucketScopedRowKey.fromKey(scope.getApplication(), rowKeyString, bucket);
+
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+
+        batch.withRow(SCOPED_CACHE, keyRowKey).delete();
+        executeBatch(batch);
+    }
+
+
+    private class MutationBatchExec implements Callable<Void> {
+        private final MutationBatch myBatch;
+        private MutationBatchExec(MutationBatch batch) {
+            myBatch = batch;
+        }
+        @Override
+        public Void call() throws Exception {
+            myBatch.execute();
+            return null;
+        }
     }
 
 

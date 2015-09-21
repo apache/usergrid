@@ -22,8 +22,8 @@ package org.apache.usergrid.persistence.cache;
  */
 public interface ScopedCache<K,V> {
 
-    /** Put value into scope with ttl */
-    void put( K key, V value, long ttl );
+    /** Put value into scope with ttl (null for no ttl) */
+    void put( K key, V value, Integer ttl );
 
     /** Get value from scope */
     V get( K key );

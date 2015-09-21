@@ -28,7 +28,7 @@ public interface ScopedCacheSerialization<K,V> extends Migration {
 
     V readValue( CacheScope scope, K key );
 
-    void writeValue( CacheScope scope, K key, V value, long ttl );
+    void writeValue( CacheScope scope, K key, V value, Integer ttl );
 
     void invalidate( CacheScope scope );
 }
