@@ -18,16 +18,17 @@ package org.apache.usergrid.persistence.cache.impl;
 
 
 import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 
 /**
  * Serialize cache to/from Cassandra.
  */
-public interface ScopedCacheSerialization<K,V> {
+public interface ScopedCacheSerialization<K,V> extends Migration {
 
     V readValue( CacheScope scope, K key );
 
-    void writeValue( CacheScope scope, K key, V value );
+    void writeValue( CacheScope scope, K key, V value, long ttl );
 
     void invalidate( CacheScope scope );
 }

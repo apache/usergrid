@@ -16,18 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.map.guice;
+
+package org.apache.usergrid.persistence.cache;
 
 
+import org.apache.usergrid.persistence.cache.guice.CacheModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
-public class TestMapModule extends TestModule {
+public class CacheTestModule extends org.apache.usergrid.persistence.core.guice.TestModule {
 
     @Override
     protected void configure() {
         install( new CommonModule());
-        install( new MapModule() );
+        install( new CacheModule() );
     }
 }
