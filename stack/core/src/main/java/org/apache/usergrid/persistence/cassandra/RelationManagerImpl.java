@@ -134,8 +134,8 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    public RelationManagerImpl init( EntityManagerImpl em, CassandraService cass,  QueryExecutorService executorService, UUID applicationId,
-                                     EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
+    public RelationManagerImpl init( EntityManagerImpl em, CassandraService cass, QueryExecutorService executorService,
+                                     UUID applicationId, EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
         Assert.notNull( cass, "Cassandra service cannot be null" );
@@ -157,7 +157,7 @@ public class RelationManagerImpl implements RelationManager {
 
     private RelationManagerImpl getRelationManager( EntityRef headEntity ) {
         RelationManagerImpl rmi = new RelationManagerImpl();
-        rmi.init( em,  cass, executorService, applicationId, headEntity, indexBucketLocator );
+        rmi.init( em, cass, executorService, applicationId, headEntity, indexBucketLocator );
         return rmi;
     }
 
@@ -188,7 +188,7 @@ public class RelationManagerImpl implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateCollectionIndex")
+    @Metered( group = "core", name = "RelationManager_batchUpdateCollectionIndex" )
     public IndexUpdate batchUpdateCollectionIndex( IndexUpdate indexUpdate, EntityRef owner, String collectionName )
             throws Exception {
 
@@ -196,8 +196,7 @@ public class RelationManagerImpl implements RelationManager {
 
         Entity indexedEntity = indexUpdate.getEntity();
 
-        String bucketId = indexBucketLocator
-                .getBucket(indexedEntity.getUuid() );
+        String bucketId = indexBucketLocator.getBucket( indexedEntity.getUuid() );
 
         // the root name without the bucket
         // entity_id,collection_name,prop_name,
@@ -221,8 +220,8 @@ public class RelationManagerImpl implements RelationManager {
                 if ( "location.coordinates".equals( entry.getPath() ) ) {
                     EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
                             entry.getValue().toString() );
-                    batchRemoveLocationFromCollectionIndex( indexUpdate.getBatch(), indexBucketLocator,
-                            index_name, loc );
+                    batchRemoveLocationFromCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, index_name,
+                            loc );
                 }
             }
             else {
@@ -250,8 +249,8 @@ public class RelationManagerImpl implements RelationManager {
                     EntityLocationRef loc =
                             new EntityLocationRef( indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
                                     indexEntry.getValue().toString() );
-                    batchStoreLocationInCollectionIndex( indexUpdate.getBatch(), indexBucketLocator,
-                            index_name, indexedEntity.getUuid(), loc );
+                    batchStoreLocationInCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, index_name,
+                            indexedEntity.getUuid(), loc );
                 }
 
                 // i++;
@@ -269,13 +268,14 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getCollectionIndexes")
+    @Metered( group = "core", name = "RelationManager_getCollectionIndexes" )
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
 
         // TODO TN, read all buckets here
         List<HColumn<String, String>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ), Serializers.se, Serializers.se );
+                        key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ), Serializers.se,
+                        Serializers.se );
         Set<String> indexes = new TreeSet<String>();
         if ( results != null ) {
             for ( HColumn<String, String> column : results ) {
@@ -322,7 +322,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( "unchecked" )
     public void batchCreateCollectionMembership( Mutator<ByteBuffer> batch, EntityRef ownerRef, String collectionName,
                                                  EntityRef itemRef, EntityRef membershipRef, UUID timestampUuid )
             throws Exception {
@@ -367,8 +367,31 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @SuppressWarnings("unchecked")
-    @Metered(group = "core", name = "RelationManager_batchAddToCollections")
+    /**
+     * Add this entity to the collection set
+     */
+    public Mutator<ByteBuffer> batchAddEntityToCollection( final Mutator<ByteBuffer> batch, final String collectionName,
+                                                           final EntityRef ownerRef, final EntityRef entity,
+                                                           final UUID timestampUuid ) {
+
+        final String bucketId = indexBucketLocator.getBucket( entity.getUuid() );
+
+        final Object collections_key = key( ownerRef.getUuid(), Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId );
+
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        final CollectionRef membershipRef = new SimpleCollectionRef( ownerRef, collectionName, entity );
+
+
+        addInsertToMutator( batch, ENTITY_ID_SETS, collections_key, entity.getUuid(), membershipRef.getUuid(),
+                timestamp );
+
+        return batch;
+    }
+
+
+    @SuppressWarnings( "unchecked" )
+    @Metered( group = "core", name = "RelationManager_batchAddToCollections" )
     public Mutator<ByteBuffer> batchAddToCollections( Mutator<ByteBuffer> batch, String ownerType, List<UUID> ownerIds,
                                                       String collectionName, Entity entity, UUID timestampUuid )
             throws Exception {
@@ -384,21 +407,16 @@ public class RelationManagerImpl implements RelationManager {
 
         for ( UUID ownerId : ownerIds ) {
 
+            final EntityRef ownerRef = new SimpleEntityRef( ownerType, ownerId );
+
             CollectionRef membershipRef =
-                    new SimpleCollectionRef( new SimpleEntityRef( ownerType, ownerId ), collectionName, entity );
+                    new SimpleCollectionRef( ownerRef, collectionName, entity );
 
             membershipRefs.put( ownerId, membershipRef );
 
-            // get the bucket this entityId needs to be inserted into
-            String bucketId = indexBucketLocator
-                    .getBucket(entity.getUuid());
-
-            Object collections_key = key( ownerId, Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId );
-
             // Insert in main collection
 
-            addInsertToMutator( batch, ENTITY_ID_SETS, collections_key, entity.getUuid(), membershipRef.getUuid(),
-                    timestamp );
+            batchAddEntityToCollection( batch, collectionName, ownerRef, entity, timestampUuid );
 
             addInsertToMutator( batch, ENTITY_COMPOSITE_DICTIONARIES,
                     key( entity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ),
@@ -463,9 +481,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     /**
-     * Batch remove from collection.
-     * <p/>
-     * * Batch add to collection.
+     * Batch remove from collection. <p/> * Batch add to collection.
      *
      * @param batch the batch
      * @param collectionName the collection name
@@ -482,8 +498,8 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @SuppressWarnings("unchecked")
-    @Metered(group = "core", name = "RelationManager_batchRemoveFromCollection")
+    @SuppressWarnings( "unchecked" )
+    @Metered( group = "core", name = "RelationManager_batchRemoveFromCollection" )
     public Mutator<ByteBuffer> batchRemoveFromCollection( Mutator<ByteBuffer> batch, String collectionName,
                                                           Entity entity, boolean force, UUID timestampUuid )
             throws Exception {
@@ -496,7 +512,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         Object collections_key = key( headEntity.getUuid(), Schema.DICTIONARY_COLLECTIONS, collectionName,
-                indexBucketLocator.getBucket( entity.getUuid()) );
+                indexBucketLocator.getBucket( entity.getUuid() ) );
 
         // Remove property indexes
 
@@ -550,14 +566,15 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchDeleteConnectionIndexEntries")
+    @Metered( group = "core", name = "RelationManager_batchDeleteConnectionIndexEntries" )
     public Mutator<ByteBuffer> batchDeleteConnectionIndexEntries( IndexUpdate indexUpdate, IndexEntry entry,
                                                                   ConnectionRefImpl connection, UUID[] index_keys )
             throws Exception {
 
 
         /**
-         * Original bucket scheme.  Incorrect and legacy, but we need to keep it b/c we're not sure if the original write was the
+         * Original bucket scheme.  Incorrect and legacy, but we need to keep it b/c we're not sure if the original
+         * write was the
          * incorrect legacy system
          */
 
@@ -579,7 +596,6 @@ public class RelationManagerImpl implements RelationManager {
         Object connection_type_and_entity_type_prop_index_key =
                 key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
                         indexBucketLocator.getBucket( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE] ) );
-
 
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
@@ -652,9 +668,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-
-
-    @Metered(group = "core", name = "RelationManager_batchAddConnectionIndexEntries")
+    @Metered( group = "core", name = "RelationManager_batchAddConnectionIndexEntries" )
     public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, IndexEntry entry,
                                                                ConnectionRefImpl connection, UUID[] index_keys ) {
 
@@ -663,18 +677,16 @@ public class RelationManagerImpl implements RelationManager {
         final String bucket = indexBucketLocator.getBucket( entityId );
 
         // entity_id,prop_name
-        Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
-                bucket );
+        Object property_index_key =
+                key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(), bucket );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
-                key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        bucket );
+                key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(), bucket );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
-                key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        bucket );
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(), bucket );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
@@ -715,7 +727,7 @@ public class RelationManagerImpl implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
+    @Metered( group = "core", name = "RelationManager_batchUpdateConnectionIndex" )
     public IndexUpdate batchUpdateConnectionIndex( IndexUpdate indexUpdate, ConnectionRefImpl connection )
             throws Exception {
 
@@ -804,7 +816,7 @@ public class RelationManagerImpl implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateBackwardConnectionsPropertyIndexes")
+    @Metered( group = "core", name = "RelationManager_batchUpdateBackwardConnectionsPropertyIndexes" )
     public IndexUpdate batchUpdateBackwardConnectionsPropertyIndexes( IndexUpdate indexUpdate ) throws Exception {
 
         logger.debug( "batchUpdateBackwordConnectionsPropertyIndexes" );
@@ -880,7 +892,7 @@ public class RelationManagerImpl implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateBackwardConnectionsDictionaryIndexes")
+    @Metered( group = "core", name = "RelationManager_batchUpdateBackwardConnectionsDictionaryIndexes" )
     public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes( IndexUpdate indexUpdate ) throws Exception {
 
         logger.debug( "batchUpdateBackwardConnectionsListIndexes" );
@@ -897,8 +909,8 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @SuppressWarnings("unchecked")
-    @Metered(group = "core", name = "RelationManager_batchUpdateEntityConnection")
+    @SuppressWarnings( "unchecked" )
+    @Metered( group = "core", name = "RelationManager_batchUpdateEntityConnection" )
     public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, boolean disconnect,
                                                             ConnectionRefImpl connection, UUID timestampUuid )
             throws Exception {
@@ -1090,7 +1102,8 @@ public class RelationManagerImpl implements RelationManager {
     public void updateEntityConnection( boolean disconnect, ConnectionRefImpl connection ) throws Exception {
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
+        Mutator<ByteBuffer> batch =
+                CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         // Make or break the connection
 
@@ -1110,7 +1123,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchDisconnect")
+    @Metered( group = "core", name = "RelationManager_batchDisconnect" )
     public void batchDisconnect( Mutator<ByteBuffer> batch, UUID timestampUuid ) throws Exception {
 
 
@@ -1122,16 +1135,16 @@ public class RelationManagerImpl implements RelationManager {
         while ( itr.hasNext() ) {
             Object itrObj = itr.next();
             if ( itrObj instanceof ConnectionRefImpl ) {
-                connection = (ConnectionRefImpl) itrObj;
+                connection = ( ConnectionRefImpl ) itrObj;
             }
             else if ( itrObj instanceof SimpleEntityRef ) {
-                connection = new ConnectionRefImpl( (SimpleEntityRef) itrObj );
+                connection = new ConnectionRefImpl( ( SimpleEntityRef ) itrObj );
             }
             else if ( itrObj instanceof EntityRef ) {
-                    connection = new ConnectionRefImpl( new SimpleEntityRef((EntityRef) itr.next()));
+                connection = new ConnectionRefImpl( new SimpleEntityRef( ( EntityRef ) itr.next() ) );
             }
             else if ( itrObj instanceof UUID ) {
-                    connection = new ConnectionRefImpl( new SimpleEntityRef((UUID)itr.next()));
+                connection = new ConnectionRefImpl( new SimpleEntityRef( ( UUID ) itr.next() ) );
             }
 
             batchUpdateEntityConnection( batch, true, connection, timestampUuid );
@@ -1148,7 +1161,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchStartIndexUpdate")
+    @Metered( group = "core", name = "RelationManager_batchStartIndexUpdate" )
     public IndexUpdate batchStartIndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName,
                                               Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
                                               boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed,
@@ -1229,9 +1242,9 @@ public class RelationManagerImpl implements RelationManager {
             List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( entryName, entryValue, fulltextIndexed );
 
             if ( entryName.equalsIgnoreCase( "location" ) && ( entryValue instanceof Map ) ) {
-                @SuppressWarnings("rawtypes") double latitude =
+                @SuppressWarnings( "rawtypes" ) double latitude =
                         MapUtils.getDoubleValue( ( Map ) entryValue, "latitude" );
-                @SuppressWarnings("rawtypes") double longitude =
+                @SuppressWarnings( "rawtypes" ) double longitude =
                         MapUtils.getDoubleValue( ( Map ) entryValue, "longitude" );
                 list.add( new AbstractMap.SimpleEntry<String, Object>( "location.coordinates",
                         latitude + "," + longitude ) );
@@ -1278,7 +1291,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchUpdatePropertyIndexes")
+    @Metered( group = "core", name = "RelationManager_batchUpdatePropertyIndexes" )
     public void batchUpdatePropertyIndexes( Mutator<ByteBuffer> batch, String propertyName, Object propertyValue,
                                             boolean entitySchemaHasProperty, boolean noRead, UUID timestampUuid )
             throws Exception {
@@ -1405,13 +1418,9 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-
-
-
-
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( "unchecked" )
     @Override
-    @Metered(group = "core", name = "RelationManager_isOwner")
+    @Metered( group = "core", name = "RelationManager_isOwner" )
     public boolean isCollectionMember( String collectionName, EntityRef entity ) throws Exception {
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
@@ -1470,7 +1479,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getOwners")
+    @Metered( group = "core", name = "RelationManager_getOwners" )
     public Map<String, Map<UUID, Set<String>>> getOwners() throws Exception {
         Map<EntityRef, Set<String>> containerEntities = getContainingCollections();
         Map<String, Map<UUID, Set<String>>> owners = new LinkedHashMap<String, Map<UUID, Set<String>>>();
@@ -1487,7 +1496,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getCollections")
+    @Metered( group = "core", name = "RelationManager_getCollections" )
     public Set<String> getCollections() throws Exception {
 
         Map<String, CollectionInfo> collections = getDefaultSchema().getCollections( headEntity.getType() );
@@ -1500,7 +1509,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getCollection_start_result")
+    @Metered( group = "core", name = "RelationManager_getCollection_start_result" )
     public Results getCollection( String collectionName, UUID startResult, int count, Results.Level resultsLevel,
                                   boolean reversed ) throws Exception {
         // changed intentionally to delegate to search so that behavior is
@@ -1519,7 +1528,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getCollecitonForQuery")
+    @Metered( group = "core", name = "RelationManager_getCollecitonForQuery" )
     public Results getCollection( String collectionName, Query query, Results.Level resultsLevel ) throws Exception {
 
         // changed intentionally to delegate to search so that behavior is
@@ -1530,7 +1539,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_addToCollection")
+    @Metered( group = "core", name = "RelationManager_addToCollection" )
     public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
         Entity itemEntity = em.get( itemRef );
@@ -1545,7 +1554,8 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator(cass.getApplicationKeyspace( applicationId ), Serializers.be );
+        Mutator<ByteBuffer> batch =
+                CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         batchAddToCollection( batch, collectionName, itemEntity, timestampUuid );
 
@@ -1561,7 +1571,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_addToCollections")
+    @Metered( group = "core", name = "RelationManager_addToCollections" )
     public Entity addToCollections( List<EntityRef> owners, String collectionName ) throws Exception {
 
         Entity itemEntity = getHeadEntity();
@@ -1572,7 +1582,8 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
+        Mutator<ByteBuffer> batch =
+                CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         Schema schema = getDefaultSchema();
         for ( Entry<String, List<UUID>> entry : collectionsByType.entrySet() ) {
@@ -1595,7 +1606,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createItemInCollection")
+    @Metered( group = "core", name = "RelationManager_createItemInCollection" )
     public Entity createItemInCollection( String collectionName, String itemType, Map<String, Object> properties )
             throws Exception {
 
@@ -1630,7 +1641,8 @@ public class RelationManagerImpl implements RelationManager {
 
         if ( itemEntity != null ) {
             UUID timestampUuid = newTimeUUID();
-            Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
+            Mutator<ByteBuffer> batch = CountingMutator
+                    .createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
             batchAddToCollection( batch, collectionName, itemEntity, timestampUuid );
 
@@ -1648,7 +1660,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_removeFromCollection")
+    @Metered( group = "core", name = "RelationManager_removeFromCollection" )
     public void removeFromCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
         if ( headEntity.getUuid().equals( applicationId ) ) {
@@ -1673,7 +1685,8 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
+        Mutator<ByteBuffer> batch =
+                CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         batchRemoveFromCollection( batch, collectionName, itemEntity, timestampUuid );
 
@@ -1698,7 +1711,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchRemoveFromContainers")
+    @Metered( group = "core", name = "RelationManager_batchRemoveFromContainers" )
     public void batchRemoveFromContainers( Mutator<ByteBuffer> m, UUID timestampUuid ) throws Exception {
         Entity entity = getHeadEntity();
         // find all the containing collections
@@ -1715,7 +1728,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_copyRelationships")
+    @Metered( group = "core", name = "RelationManager_copyRelationships" )
     public void copyRelationships( String srcRelationName, EntityRef dstEntityRef, String dstRelationName )
             throws Exception {
 
@@ -1752,7 +1765,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_searchCollection")
+    @Metered( group = "core", name = "RelationManager_searchCollection" )
     public Results searchCollection( String collectionName, Query query ) throws Exception {
 
         if ( query == null ) {
@@ -1769,17 +1782,19 @@ public class RelationManagerImpl implements RelationManager {
 
         // we have something to search with, visit our tree and evaluate the
         // results
-        QueryProcessor qp = new QueryProcessor(  em, executorService, query, collection, factory );
+        QueryProcessor qp = new QueryProcessor( em, executorService, query, collection, factory );
 
-        CollectionSearchVisitorFactory collectionSearchVisitorFactory = new CollectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, collectionName );
-//        SearchCollectionVisitor visitor = new SearchCollectionVisitor( this, qp );
+        CollectionSearchVisitorFactory collectionSearchVisitorFactory =
+                new CollectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity,
+                        collectionName );
+        //        SearchCollectionVisitor visitor = new SearchCollectionVisitor( this, qp );
 
         return qp.getResults( collectionSearchVisitorFactory );
     }
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_connection_ref")
+    @Metered( group = "core", name = "RelationManager_createConnection_connection_ref" )
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
         ConnectionRefImpl connectionImpl = new ConnectionRefImpl( connection );
 
@@ -1790,7 +1805,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_connectionType")
+    @Metered( group = "core", name = "RelationManager_createConnection_connectionType" )
     public ConnectionRef createConnection( String connectionType, EntityRef connectedEntityRef ) throws Exception {
 
         headEntity = em.validate( headEntity );
@@ -1805,7 +1820,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_paired_connection_type")
+    @Metered( group = "core", name = "RelationManager_createConnection_paired_connection_type" )
     public ConnectionRef createConnection( String pairedConnectionType, EntityRef pairedEntity, String connectionType,
                                            EntityRef connectedEntityRef ) throws Exception {
 
@@ -1820,7 +1835,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_connected_entity_ref")
+    @Metered( group = "core", name = "RelationManager_createConnection_connected_entity_ref" )
     public ConnectionRef createConnection( ConnectedEntityRef... connections ) throws Exception {
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connections );
@@ -1832,7 +1847,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_connectionRef_type_entity")
+    @Metered( group = "core", name = "RelationManager_connectionRef_type_entity" )
     public ConnectionRef connectionRef( String connectionType, EntityRef connectedEntityRef ) throws Exception {
 
         ConnectionRef connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
@@ -1842,7 +1857,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_connectionRef_entity_to_entity")
+    @Metered( group = "core", name = "RelationManager_connectionRef_entity_to_entity" )
     public ConnectionRef connectionRef( String pairedConnectionType, EntityRef pairedEntity, String connectionType,
                                         EntityRef connectedEntityRef ) throws Exception {
 
@@ -1855,7 +1870,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_connectionRef_connections")
+    @Metered( group = "core", name = "RelationManager_connectionRef_connections" )
     public ConnectionRef connectionRef( ConnectedEntityRef... connections ) {
 
         ConnectionRef connection = new ConnectionRefImpl( headEntity, connections );
@@ -1865,14 +1880,14 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_deleteConnection")
+    @Metered( group = "core", name = "RelationManager_deleteConnection" )
     public void deleteConnection( ConnectionRef connectionRef ) throws Exception {
         updateEntityConnection( true, new ConnectionRefImpl( connectionRef ) );
     }
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getConnectionTypes_entity_id")
+    @Metered( group = "core", name = "RelationManager_getConnectionTypes_entity_id" )
     public Set<String> getConnectionTypes( UUID connectedEntityId ) throws Exception {
         // Add connection type to connections set
         //    addInsertToMutator(batch, ENTITY_DICTIONARIES,
@@ -1920,7 +1935,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getConnectionTypes")
+    @Metered( group = "core", name = "RelationManager_getConnectionTypes" )
     public Set<String> getConnectionTypes( boolean filterConnection ) throws Exception {
         Set<String> connections = cast( em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
         if ( connections == null ) {
@@ -1934,7 +1949,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getConnectedEntities")
+    @Metered( group = "core", name = "RelationManager_getConnectedEntities" )
     public Results getConnectedEntities( String connectionType, String connectedEntityType, Results.Level resultsLevel )
             throws Exception {
 
@@ -1961,32 +1976,34 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor(  em, executorService, query, null,factory );
+        QueryProcessor qp = new QueryProcessor( em, executorService, query, null, factory );
 
-        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, true, "" );
+        ConnectionSearchVisitorFactory collectionSearchVisitorFactory =
+                new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity,
+                        connectionRef, true, "" );
 
         return qp.getResults( collectionSearchVisitorFactory );
     }
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getConnectingEntities")
+    @Metered( group = "core", name = "RelationManager_getConnectingEntities" )
     public Results getConnectingEntities( String connectionType, String connectedEntityType,
                                           Results.Level resultsLevel ) throws Exception {
 
-        return getConnectingEntities(connectionType, connectedEntityType, resultsLevel, 0 );
+        return getConnectingEntities( connectionType, connectedEntityType, resultsLevel, 0 );
     }
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_getConnectingEntities")
-    public Results getConnectingEntities(String connectionType,
-    		String entityType, Level level, int count) throws Exception {
-		return getConnectingEntities(headEntity, connectionType, entityType, level, count );
-	}
+    @Metered( group = "core", name = "RelationManager_getConnectingEntities" )
+    public Results getConnectingEntities( String connectionType, String entityType, Level level, int count )
+            throws Exception {
+        return getConnectingEntities( headEntity, connectionType, entityType, level, count );
+    }
 
 
-	/**
+    /**
      * Get all edges that are to the targetEntity
      *
      * @param targetEntity The target entity to search edges in
@@ -1994,26 +2011,28 @@ public class RelationManagerImpl implements RelationManager {
      * @param connectedEntityType The connected entity type, if not specified all types are returned
      * @param count result limit
      */
-	private Results getConnectingEntities(EntityRef targetEntity,
-			String connectionType, String connectedEntityType, Level level, int count) throws Exception {
+    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
+                                           Level level, int count ) throws Exception {
         Query query = new Query();
         query.setResultsLevel( level );
-        query.setLimit(count);
+        query.setLimit( count );
 
         final ConnectionRefImpl connectionRef =
                 new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor(  em, executorService, query, null, factory );
+        QueryProcessor qp = new QueryProcessor( em, executorService, query, null, factory );
 
 
-        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, false, "" );
+        ConnectionSearchVisitorFactory collectionSearchVisitorFactory =
+                new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity,
+                        connectionRef, false, "" );
 
         return qp.getResults( collectionSearchVisitorFactory );
-	}
+    }
 
 
-	/**
+    /**
      * Get all edges that are to the targetEntity
      *
      * @param targetEntity The target entity to search edges in
@@ -2023,12 +2042,12 @@ public class RelationManagerImpl implements RelationManager {
      */
     private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
                                            Level resultsLevel ) throws Exception {
-    	return getConnectingEntities(targetEntity, connectionType, connectedEntityType, resultsLevel, 0);
+        return getConnectingEntities( targetEntity, connectionType, connectedEntityType, resultsLevel, 0 );
     }
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_searchConnectedEntities")
+    @Metered( group = "core", name = "RelationManager_searchConnectedEntities" )
     public Results searchConnectedEntities( Query query ) throws Exception {
 
         if ( query == null ) {
@@ -2045,9 +2064,11 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor(em, executorService, query, null,  factory );
+        QueryProcessor qp = new QueryProcessor( em, executorService, query, null, factory );
 
-        ConnectionSearchVisitorFactory collectionSearchVisitorFactory = new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity, connectionRef, true, "" );
+        ConnectionSearchVisitorFactory collectionSearchVisitorFactory =
+                new ConnectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity,
+                        connectionRef, true, "" );
 
         return qp.getResults( collectionSearchVisitorFactory );
     }
@@ -2057,6 +2078,4 @@ public class RelationManagerImpl implements RelationManager {
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception {
         return getConnectionIndexes( new ConnectionRefImpl( headEntity, connectionType, null ) );
     }
-
-
 }
