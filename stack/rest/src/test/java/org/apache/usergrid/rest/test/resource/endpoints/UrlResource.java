@@ -17,6 +17,8 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
+import org.apache.usergrid.rest.test.resource.state.ClientContext;
+
 import javax.ws.rs.client.WebTarget;
 
 /**
@@ -36,6 +38,12 @@ public interface UrlResource {
      * @return
      */
     public WebTarget getTarget();
+
+    /**
+     * get context
+     * @return
+     */
+    public ClientContext getContext();
 
 
 }

@@ -37,7 +37,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     private final IndexFig config;
     private final IndexCache indexCache;
     private final EsProvider provider;
-    private final IndexBufferConsumer indexBufferConsumer;
+    private final IndexProducer indexProducer;
     private final MetricsFactory metricsFactory;
     private final IndexRefreshCommand refreshCommand;
 
@@ -50,7 +50,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
                     config,
                     refreshCommand,
                     metricsFactory,
-                    indexBufferConsumer,
+                    indexProducer,
                     locationStrategy
                 );
                 index.initialize();
@@ -62,7 +62,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     public EsEntityIndexFactoryImpl( final IndexFig indexFig,
                                      final IndexCache indexCache,
                                      final EsProvider provider,
-                                     final IndexBufferConsumer indexBufferConsumer,
+                                     final IndexProducer indexProducer,
                                      final MetricsFactory metricsFactory,
                                      final IndexRefreshCommand refreshCommand
 
@@ -70,7 +70,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
         this.config = indexFig;
         this.indexCache = indexCache;
         this.provider = provider;
-        this.indexBufferConsumer = indexBufferConsumer;
+        this.indexProducer = indexProducer;
         this.metricsFactory = metricsFactory;
         this.refreshCommand = refreshCommand;
     }
