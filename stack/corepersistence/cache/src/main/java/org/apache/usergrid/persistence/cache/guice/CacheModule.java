@@ -18,11 +18,14 @@
 package org.apache.usergrid.persistence.cache.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.cache.impl.CacheFactoryImpl;
 import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerialization;
 import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerializationImpl;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 import java.util.Map;
 
@@ -39,7 +42,13 @@ public class CacheModule extends AbstractModule {
         bind( ScopedCacheSerialization.class ).to( ScopedCacheSerializationImpl.class );
 
         bind( new TypeLiteral<CacheFactory<String, Map<String, Object>>>() {} )
-            .to( new TypeLiteral<CacheFactoryImpl<String, Map<String, Object>>>() {} );
+            .to(new TypeLiteral<CacheFactoryImpl<String, Map<String, Object>>>() {});
+
+        bind( new TypeLiteral<ScopedCacheSerialization<String, Map<String, Object>>>() {} )
+            .to(new TypeLiteral<ScopedCacheSerializationImpl<String, Map<String, Object>>>() {});
+
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().to(Key.get(ScopedCacheSerialization.class));
 
     }
 }

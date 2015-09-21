@@ -21,28 +21,32 @@ package org.apache.usergrid.persistence.cache;
 
 
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.cache.guice.CacheModule;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertEquals;
 
 
 @RunWith( ITRunner.class )
-@UseModules( { CacheModule.class } )
+@UseModules( { CacheTestModule.class } )
 public class ScopedCacheTest {
 
-    @Inject
-    protected CacheFactory<String, Map<String, Object>> cf;
+    // this ensures that SCOPED_CACHE column family is created
+    @Inject @Rule public MigrationManagerRule migrationManagerRule;
+
+    @Inject protected CacheFactory<String, Map<String, Object>> cf;
 
     protected CacheScope scope;
-
 
     @Before
     public void mockApp(){
@@ -53,8 +57,15 @@ public class ScopedCacheTest {
     @Test
     public void testBasicOperation() {
 
-        ScopedCache cache = cf.getScopedCache(scope);
-        assertNotNull( cache );
-    }
+        ScopedCache<String, Map<String, Object>> cache = cf.getScopedCache(scope);
+        assertNotNull("should get a cache", cache);
 
+        Map<String, Object> item = new HashMap<String, Object>() {{
+            put("field1", "value1");
+        }};
+        cache.put("item", item, 0);
+        Map<String, Object> retrievedItem = cache.get("item");
+        assertNotNull( "should get back item", retrievedItem );
+        assertEquals("value1", retrievedItem.get("field1"));
+    }
 }

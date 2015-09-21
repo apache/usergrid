@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.persistence.cache.impl;
 
+import com.google.inject.Inject;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
 
@@ -27,22 +28,25 @@ public class ScopedCacheImpl<K,V> implements ScopedCache<K,V> {
 
     CacheScope scope;
 
-    public ScopedCacheImpl( CacheScope scope ) {
+    ScopedCacheSerialization<K,V> serializer;
+
+    public ScopedCacheImpl( CacheScope scope, ScopedCacheSerialization<K,V> serializer ) {
         this.scope = scope;
+        this.serializer = serializer;
     }
 
     @Override
     public void put(K key, V value, long ttl) {
-
+        serializer.writeValue( scope, key, value, ttl );
     }
 
     @Override
     public V get(K key) {
-        return null;
+        return serializer.readValue( scope, key );
     }
 
     @Override
     public void invalidate() {
-
+        throw new UnsupportedOperationException( "TODO" ); // TODO
     }
 }

@@ -17,17 +17,45 @@
 
 package org.apache.usergrid.persistence.cache.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * Access to caches.
  */
-public class CacheFactoryImpl<K,V> implements CacheFactory<K,V> {
+@Singleton
+public class CacheFactoryImpl<K, V> implements CacheFactory<K, V> {
+
+    private LoadingCache<CacheScope, ScopedCache> cacheCache;
+
+    @Inject
+    public CacheFactoryImpl( final ScopedCacheSerialization serializer ) {
+
+        cacheCache = CacheBuilder.newBuilder().maximumSize(1000).build(
+            new CacheLoader<CacheScope, ScopedCache>() {
+                public ScopedCache load(CacheScope scope) {
+                    return new ScopedCacheImpl(scope, serializer);
+                }
+            });
+    }
+
 
     @Override
-    public ScopedCache<K,V> getScopedCache( CacheScope scope ) {
-        return new ScopedCacheImpl<K,V>(scope);
+    public ScopedCache<K, V> getScopedCache(CacheScope scope) {
+        Preconditions.checkNotNull(scope);
+        try{
+            return cacheCache.get(scope);
+        } catch (ExecutionException ee) {
+            throw new RuntimeException(ee);
+        }
     }
 }
