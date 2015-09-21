@@ -36,7 +36,7 @@ public class ScopedCacheImpl<K,V> implements ScopedCache<K,V> {
     }
 
     @Override
-    public void put(K key, V value, long ttl) {
+    public void put(K key, V value, Integer ttl) {
         serializer.writeValue( scope, key, value, ttl );
     }
 
@@ -47,6 +47,6 @@ public class ScopedCacheImpl<K,V> implements ScopedCache<K,V> {
 
     @Override
     public void invalidate() {
-        throw new UnsupportedOperationException( "TODO" ); // TODO
+        serializer.invalidate(scope);
     }
 }
