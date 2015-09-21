@@ -1391,6 +1391,16 @@ public class EntityManagerImpl implements EntityManager {
 
         batchUpdateProperties( m, entity, properties, timestampUuid );
 
+        //after updating properties, we want to ensure that re-add ourselves to the entity Id sets
+
+        final CollectionInfo collection = Schema.getDefaultSchema().getCollection( Application.ENTITY_TYPE,
+                defaultCollectionName( entity.getType() ) );
+
+        final EntityRef applicationRef = getApplicationRef();
+
+        getRelationManager( applicationRef ).batchAddEntityToCollection( m,  collection.getName(),  applicationRef, entity, timestampUuid);
+
+
         batchExecute( m, CassandraService.RETRY_COUNT );
     }
 
