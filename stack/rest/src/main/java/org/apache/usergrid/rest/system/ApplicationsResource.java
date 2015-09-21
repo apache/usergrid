@@ -17,12 +17,14 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.usergrid.corepersistence.service.StatusService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

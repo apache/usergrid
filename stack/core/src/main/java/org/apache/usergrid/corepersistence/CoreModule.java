@@ -77,13 +77,9 @@ public class CoreModule  extends AbstractModule {
 
 
 
-    public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
-
-
 
     @Override
     protected void configure() {
-
 
         install( new CommonModule());
         install( new CollectionModule() {

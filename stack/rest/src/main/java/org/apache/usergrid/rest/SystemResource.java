@@ -17,17 +17,26 @@
 package org.apache.usergrid.rest;
 
 
-import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+
+import org.apache.usergrid.rest.system.ApplicationsResource;
+import org.apache.usergrid.rest.system.DatabaseResource;
+import org.apache.usergrid.rest.system.QueueSystemResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+
 
 
 @Path( "/system" )
@@ -51,7 +60,6 @@ public class SystemResource extends AbstractContextResource {
     @GET
 
     @Path( "superuser/setup" )
-    @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getSetupSuperuser( @Context UriInfo ui,
            @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -89,6 +97,11 @@ public class SystemResource extends AbstractContextResource {
     @Path( "database" )
     public DatabaseResource database() {
         return getSubResource( DatabaseResource.class );
+    }
+
+    @Path( "queue" )
+    public QueueSystemResource queue() {
+        return getSubResource( QueueSystemResource.class );
     }
 
     @Path( "applications" )

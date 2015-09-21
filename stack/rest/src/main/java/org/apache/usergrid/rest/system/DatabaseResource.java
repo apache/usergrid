@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 
 import javax.ws.rs.DefaultValue;
@@ -26,6 +26,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
