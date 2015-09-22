@@ -114,19 +114,23 @@ public class Realm extends AuthorizingRealm {
     public Realm( CacheManager cacheManager ) {
         super( cacheManager );
         setCredentialsMatcher( new AllowAllCredentialsMatcher() );
-        setPermissionResolver( new CustomPermissionResolver() );
+        setPermissionResolver(new CustomPermissionResolver());
+        setCachingEnabled(true);
+        setAuthenticationCachingEnabled(true);
     }
 
 
     public Realm( CredentialsMatcher matcher ) {
-        super( new AllowAllCredentialsMatcher() );
-        setPermissionResolver( new CustomPermissionResolver() );
+        super(new AllowAllCredentialsMatcher());
+        setPermissionResolver(new CustomPermissionResolver());
     }
 
 
     public Realm( CacheManager cacheManager, CredentialsMatcher matcher ) {
         super( cacheManager, new AllowAllCredentialsMatcher() );
         setPermissionResolver( new CustomPermissionResolver() );
+        setCachingEnabled(true);
+        setAuthenticationCachingEnabled(true);
     }
 
 
@@ -136,7 +140,7 @@ public class Realm extends AuthorizingRealm {
             logger.debug( "Replacing {} with AllowAllCredentialsMatcher", credentialsMatcher );
             credentialsMatcher = new AllowAllCredentialsMatcher();
         }
-        super.setCredentialsMatcher( credentialsMatcher );
+        super.setCredentialsMatcher(credentialsMatcher);
     }
 
 
@@ -146,7 +150,7 @@ public class Realm extends AuthorizingRealm {
             logger.debug( "Replacing {} with AllowAllCredentialsMatcher", permissionResolver );
             permissionResolver = new CustomPermissionResolver();
         }
-        super.setPermissionResolver( permissionResolver );
+        super.setPermissionResolver(permissionResolver);
     }
 
 
@@ -499,7 +503,7 @@ public class Realm extends AuthorizingRealm {
         Subject currentUser = SecurityUtils.getSubject();
         Session session = currentUser.getSession();
         session.setAttribute( "applications", applicationSet );
-        session.setAttribute( "organizations", organizationSet );
+        session.setAttribute("organizations", organizationSet);
         if ( organization != null ) {
             session.setAttribute( "organization", organization );
         }
@@ -540,7 +544,7 @@ public class Realm extends AuthorizingRealm {
 
     public static void role( SimpleAuthorizationInfo info, PrincipalIdentifier principal, String role ) {
         logger.debug( "Principal {} added to role: {}", principal, role );
-        info.addRole( role );
+        info.addRole(role);
     }
 
 
@@ -564,6 +568,30 @@ public class Realm extends AuthorizingRealm {
         }
     }
 
+
+    @Override
+    public boolean isAuthorizationCachingEnabled() {
+        return getCacheManager() != null;
+    }
+
+    public boolean isAuthenticationCachingEnabled() {
+        return getCacheManager() != null;
+    }
+
+    @Override
+    public boolean isCachingEnabled() {
+        return getCacheManager() != null;
+    }
+
+    @Override
+    public void setCacheManager(CacheManager cacheManager) {
+        super.setCacheManager(cacheManager);
+    }
+
+    @Override
+    public CacheManager getCacheManager() {
+        return super.getCacheManager();
+    }
 
     @Override
     public boolean supports( AuthenticationToken token ) {
