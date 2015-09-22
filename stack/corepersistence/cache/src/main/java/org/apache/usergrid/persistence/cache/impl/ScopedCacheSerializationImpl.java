@@ -20,10 +20,12 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
+import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.Serializer;
@@ -97,9 +99,9 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
     private final Keyspace keyspace;
 
-    private final JsonFactory JSON_FACTORY = new JsonFactory();
+    private final SmileFactory SMILE_FACTORY = new SmileFactory();
 
-    private final ObjectMapper MAPPER = new ObjectMapper( JSON_FACTORY );
+    private final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
 
 
     //------------------------------------------------------------------------------------------
@@ -111,7 +113,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
 
     @Override
-    public V readValue(CacheScope scope, K key) {
+    public V readValue(CacheScope scope, K key, TypeReference typeRef ) {
 
         Preconditions.checkNotNull(scope, "scope is required");
         Preconditions.checkNotNull(key, "key is required");
@@ -131,7 +133,12 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                     .getKey(keyRowKey).getColumn( columnName ).execute().getResult();
 
                 result.getByteBufferValue();
-                V value = MAPPER.readValue(result.getByteArrayValue(), new TypeReference<V>() {});
+                //V value = MAPPER.readValue(result.getByteArrayValue(), new TypeReference<V>() {});
+                V value = MAPPER.readValue(result.getByteArrayValue(), typeRef);
+
+                logger.info("Read cache item\n   key/value types {}/{}\n   key:value: {}:{}",
+                    new Object[] { key.getClass().getSimpleName(), value.getClass().getSimpleName(), key, value });
+
                 return value;
 
             } catch (NotFoundException nfe) {
@@ -145,12 +152,14 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
             throw new RuntimeException("Unable to connect to cassandra", e);
         }
 
+        logger.info("Cache value not found for key {}", key );
+
         return null;
     }
 
 
     @Override
-    public void writeValue(CacheScope scope, K key, V value, Integer ttl) {
+    public V writeValue(CacheScope scope, K key, V value, Integer ttl) {
 
         Preconditions.checkNotNull( scope, "scope is required");
         Preconditions.checkNotNull( key, "key is required" );
@@ -163,7 +172,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         final int bucket = BUCKET_LOCATOR.getCurrentBucket(rowKeyString);
 
         final BucketScopedRowKey<String> keyRowKey =
-            BucketScopedRowKey.fromKey( scope.getApplication(), rowKeyString, bucket);
+            BucketScopedRowKey.fromKey(scope.getApplication(), rowKeyString, bucket);
 
         // determine column name based on K key to string
         String columnName = key.toString();
@@ -179,6 +188,35 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         // serialize to the entry
         final MutationBatch batch = keyspace.prepareMutationBatch();
         batch.withRow(SCOPED_CACHE, keyRowKey).putColumn(columnName, cacheBytes, ttl);
+
+        executeBatch(batch);
+
+        logger.info("Wrote cache item\n   key/value types {}/{}\n   key:value: {}:{}",
+            new Object[]{key.getClass().getSimpleName(), value.getClass().getSimpleName(), key, value});
+
+        return value;
+    }
+
+
+    @Override
+    public void removeValue(CacheScope scope, K key) {
+
+        Preconditions.checkNotNull( scope, "scope is required");
+        Preconditions.checkNotNull( key, "key is required" );
+
+        // determine bucketed row-key based application UUID
+
+        String rowKeyString = scope.getApplication().getUuid().toString();
+        final int bucket = BUCKET_LOCATOR.getCurrentBucket(rowKeyString);
+
+        final BucketScopedRowKey<String> keyRowKey =
+            BucketScopedRowKey.fromKey(scope.getApplication(), rowKeyString, bucket);
+
+        // determine column name based on K key to string
+        String columnName = key.toString();
+
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+        batch.withRow(SCOPED_CACHE, keyRowKey).deleteColumn(columnName);
 
         executeBatch(batch);
     }

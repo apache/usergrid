@@ -20,15 +20,29 @@
 package org.apache.usergrid.persistence.cache;
 
 
+import com.google.inject.TypeLiteral;
 import org.apache.usergrid.persistence.cache.guice.CacheModule;
+import org.apache.usergrid.persistence.cache.impl.CacheFactoryImpl;
+import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerialization;
+import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerializationImpl;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+
+import java.util.Map;
 
 
 public class CacheTestModule extends org.apache.usergrid.persistence.core.guice.TestModule {
 
     @Override
     protected void configure() {
-        install( new CommonModule());
+
+        install( new CommonModule() );
         install( new CacheModule() );
+
+        bind( new TypeLiteral<CacheFactory<String, Map<String, Object>>>() {} )
+            .to(new TypeLiteral<CacheFactoryImpl<String, Map<String, Object>>>() { });
+
+        bind( new TypeLiteral<ScopedCacheSerialization<String, Map<String, Object>>>() {} )
+            .to(new TypeLiteral<ScopedCacheSerializationImpl<String, Map<String, Object>>>() { });
+
     }
 }

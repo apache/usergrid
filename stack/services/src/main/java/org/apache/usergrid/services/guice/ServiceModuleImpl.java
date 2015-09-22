@@ -19,42 +19,47 @@
 package org.apache.usergrid.services.guice;
 
 
-import org.apache.usergrid.corepersistence.CoreModule;
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.usergrid.corepersistence.ServiceModule;
 import org.apache.usergrid.management.AppInfoMigrationPlugin;
-import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.cache.CacheFactory;
+import org.apache.usergrid.persistence.cache.impl.CacheFactoryImpl;
+import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerialization;
+import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerializationImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
-import org.apache.usergrid.services.ServiceManager;
-import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.services.queues.ImportQueueListener;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.multibindings.Multibinder;
+import java.util.Map;
 
+
+// <bean id="notificationsQueueListener" class="org.apache.usergrid.services.notifications.QueueListener"
+// scope="singleton">
+// <constructor-arg name="emf" ref="entityManagerFactory" />
+// <constructor-arg name="metricsService" ref="metricsFactory" />
+// <constructor-arg name="props" ref="properties" />
+// <constructor-arg name="smf" ref="serviceManagerFactory" />
+// </bean>
 
 /**
  * Module that handles all of the guice injects for services.
  */
-
-
-/**
- *   <bean id="notificationsQueueListener" class="org.apache.usergrid.services.notifications.QueueListener"
- scope="singleton">
- <constructor-arg name="emf" ref="entityManagerFactory" />
- <constructor-arg name="metricsService" ref="metricsFactory" />
- <constructor-arg name="props" ref="properties" />
- <constructor-arg name="smf" ref="serviceManagerFactory" />
- </bean>
- */
-
 public class ServiceModuleImpl extends AbstractModule implements ServiceModule {
+
     @Override
     protected void configure() {
 
         //Seems weird, aren't we just binding the factory to the exact same factory when it goes to look for it?
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to(AppInfoMigrationPlugin.class);
+
+        bind(    new TypeLiteral<CacheFactory<String, SimpleAuthorizationInfo>>() {} )
+            .to( new TypeLiteral<CacheFactoryImpl<String, SimpleAuthorizationInfo>>() {});
+
+        bind(    new TypeLiteral<ScopedCacheSerialization<String, SimpleAuthorizationInfo>>() {})
+            .to( new TypeLiteral<ScopedCacheSerializationImpl<String, SimpleAuthorizationInfo>>() {});
 
     }
 }

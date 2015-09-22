@@ -17,17 +17,23 @@
 package org.apache.usergrid.persistence.cache;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 /**
  * Cache divided into scopes which can be individually invalidated.
  */
 public interface ScopedCache<K,V> {
 
     /** Put value into scope with ttl (null for no ttl) */
-    void put( K key, V value, Integer ttl );
+    V put( K key, V value, Integer ttl );
 
     /** Get value from scope */
-    V get( K key );
+    V get( K key, TypeReference typeRef );
+
+    /** Delete a specific cached item */
+    void remove( K key );
 
     /** Delete all cache data of all types in this scope */
     void invalidate();
+
 }

@@ -20,12 +20,12 @@
 package org.apache.usergrid.persistence.cache;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +35,6 @@ import java.util.Map;
 
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 
 
@@ -47,6 +46,8 @@ public class ScopedCacheTest {
     @Inject @Rule public MigrationManagerRule migrationManagerRule;
 
     @Inject protected CacheFactory<String, Map<String, Object>> cf;
+
+    TypeReference typeRef = new TypeReference<Map<String, Object>>() {};
 
 
     @Test
@@ -61,7 +62,7 @@ public class ScopedCacheTest {
         }};
         cache.put("item", item, 60);
 
-        Map<String, Object> retrievedItem = cache.get("item");
+        Map<String, Object> retrievedItem = cache.get("item", typeRef);
         assertNotNull( "should get back item", retrievedItem );
         assertEquals("value1", retrievedItem.get("field1"));
     }
@@ -90,11 +91,11 @@ public class ScopedCacheTest {
         }};
         cache2.put("item", item, 60);
 
-        Map<String, Object> fetched1 = cache1.get("item");
+        Map<String, Object> fetched1 = cache1.get("item", typeRef);
         assertNotNull( "should get back item", fetched1 );
         assertEquals("a_value", fetched1.get("field"));
 
-        Map<String, Object> fetched2 = cache2.get("item");
+        Map<String, Object> fetched2 = cache2.get("item", typeRef);
         assertNotNull( "should get back item", fetched2 );
         assertEquals("another_value", fetched2.get("field"));
     }
@@ -114,13 +115,13 @@ public class ScopedCacheTest {
         }};
         cache.put("item", item, 60);
 
-        Map<String, Object> retrievedItem = cache.get("item");
+        Map<String, Object> retrievedItem = cache.get("item", typeRef);
         assertNotNull( "should get back item", retrievedItem );
         assertEquals("value1", retrievedItem.get("field1"));
 
         cache.invalidate();
 
-        assertNull(cache.get("item"));
+        assertNull(cache.get("item", typeRef));
     }
 
 
@@ -138,12 +139,35 @@ public class ScopedCacheTest {
         }};
         cache.put("item", item, 1);
 
-        Map<String, Object> retrievedItem = cache.get("item");
-        assertNotNull( "should get back item", retrievedItem );
+        Map<String, Object> retrievedItem = cache.get("item", typeRef);
+        assertNotNull("should get back item", retrievedItem);
         assertEquals("value1", retrievedItem.get("field1"));
 
         try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
 
-        assertNull( cache.get("item"));
+        assertNull( cache.get("item", typeRef));
+    }
+
+    @Test
+    public void testRemove() {
+
+        CacheScope scope = new CacheScope( new SimpleId( "application" ) );
+        ScopedCache<String, Map<String, Object>> cache = cf.getScopedCache(scope);
+        assertNotNull("should get a cache", cache);
+
+        // cache item for 1 second
+
+        Map<String, Object> item = new HashMap<String, Object>() {{
+            put("field1", "value1");
+        }};
+        cache.put("item", item, 1);
+
+        Map<String, Object> retrievedItem = cache.get("item", typeRef);
+        assertNotNull( "should get back item", retrievedItem );
+        assertEquals("value1", retrievedItem.get("field1"));
+
+        cache.remove("item");
+
+        assertNull( cache.get("item", typeRef));
     }
 }

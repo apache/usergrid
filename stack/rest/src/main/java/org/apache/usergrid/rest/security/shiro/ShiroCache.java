@@ -16,12 +16,21 @@
  */
 package org.apache.usergrid.rest.security.shiro;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.usergrid.persistence.cache.CacheFactory;
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.security.shiro.principals.AdminUserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 
@@ -31,48 +40,91 @@ import java.util.Set;
 public class ShiroCache<K, V> implements Cache<K,V> {
 
     private static final Logger logger = LoggerFactory.getLogger( ShiroCacheManager.class );
-    private Cache<K,V> wrappedCache;
 
-    public ShiroCache(Cache<K,V> ehc) {
-        this.wrappedCache = ehc;
+    CacheFactory<String, V> cacheFactory;
+
+    TypeReference typeRef = new TypeReference<SimpleAuthorizationInfo>() {};
+
+
+    public ShiroCache( CacheFactory<String, V> cacheFactory ) {
+        this.cacheFactory = cacheFactory;
     }
 
     @Override
     public V get(K key) throws CacheException {
-        V value = wrappedCache.get(key);
-        //logger.debug("SnoopCache: Returning key = {} value = {}", key, value);
-        return value;
+        ScopedCache<String, V> scopedCache = getCacheScope(key);
+        if ( scopedCache != null ) {
+            return scopedCache.get( getKeyString(key), typeRef);
+        }
+        return null;
     }
 
     @Override
     public V put(K key, V value) throws CacheException {
-        logger.debug( "SnoopCache: Key class={} value value={}",
-            key.getClass().getSimpleName(), value.getClass().getSimpleName() );
-        return wrappedCache.put(key, value);
+        ScopedCache<String, V> scopedCache = getCacheScope(key);
+        if ( scopedCache != null ) {
+            return scopedCache.put( getKeyString(key) , value, 5000);
+        }
+        return null;
     }
 
     @Override
     public V remove(K key) throws CacheException {
-        return remove(key);
+        ScopedCache<String, V> scopedCache = getCacheScope(key);
+        if ( scopedCache != null ) {
+            scopedCache.remove( getKeyString(key) );
+        }
+        return null;
     }
 
     @Override
     public void clear() throws CacheException {
-        wrappedCache.clear();
     }
 
     @Override
     public int size() {
-        return wrappedCache.size();
+        return 0;
     }
 
     @Override
     public Set<K> keys() {
-        return wrappedCache.keys();
+        return Collections.EMPTY_SET;
     }
 
     @Override
     public Collection<V> values() {
-        return wrappedCache.values();
+        return Collections.EMPTY_LIST;
+    }
+
+
+    /** get cache for application scope */
+    private ScopedCache<String, V> getCacheScope( K key ) {
+
+        if ( key instanceof SimplePrincipalCollection) {
+            SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
+
+            if ( spc.getPrimaryPrincipal() instanceof AdminUserPrincipal ) {
+                AdminUserPrincipal p = (AdminUserPrincipal) spc.getPrimaryPrincipal();
+                CacheScope scope = new CacheScope(new SimpleId(p.getApplicationId(), "application"));
+                ScopedCache<String, V> scopedCache = cacheFactory.getScopedCache(scope);
+                return scopedCache;
+            }
+        }
+        return null;
+    }
+
+
+    /** key is the application UUID in string form */
+    private String getKeyString( K key ) {
+
+        if ( key instanceof SimplePrincipalCollection) {
+            SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
+
+            if ( spc.getPrimaryPrincipal() instanceof AdminUserPrincipal ) {
+                AdminUserPrincipal p = (AdminUserPrincipal) spc.getPrimaryPrincipal();
+                return p.getApplicationId().toString();
+            }
+        }
+        return null;
     }
 }
