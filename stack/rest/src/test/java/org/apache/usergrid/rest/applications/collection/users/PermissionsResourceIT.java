@@ -36,10 +36,8 @@ import static org.junit.Assert.*;
 
 
 /**
- * Tests permissions of adding and removing users from roles as well as groups
- *
+ * Tests permissions of adding and removing users from roles as well as groups.
  */
-
 public class PermissionsResourceIT extends AbstractRestIT {
 
     private static final String ROLE = "permtestrole";
@@ -53,7 +51,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
 
-    /**
+    /*hi
      * Creates a user in the default org/app combo for use by all of the tests
      */
     @Before

@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.persistence.cache.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
@@ -36,13 +37,17 @@ public class ScopedCacheImpl<K,V> implements ScopedCache<K,V> {
     }
 
     @Override
-    public void put(K key, V value, Integer ttl) {
-        serializer.writeValue( scope, key, value, ttl );
+    public V put(K key, V value, Integer ttl) {
+        return serializer.writeValue( scope, key, value, ttl );
     }
 
     @Override
-    public V get(K key) {
-        return serializer.readValue( scope, key );
+    public V get(K key, TypeReference typeRef ) {
+        return serializer.readValue( scope, key, typeRef );
+    }
+
+    public void remove( K key ) {
+        serializer.removeValue( scope, key );
     }
 
     @Override

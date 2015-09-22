@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.cache.impl;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
@@ -26,9 +27,11 @@ import org.apache.usergrid.persistence.core.migration.schema.Migration;
  */
 public interface ScopedCacheSerialization<K,V> extends Migration {
 
-    V readValue( CacheScope scope, K key );
+    V readValue( CacheScope scope, K key, TypeReference typeRef );
 
-    void writeValue( CacheScope scope, K key, V value, Integer ttl );
+    V writeValue( CacheScope scope, K key, V value, Integer ttl );
+
+    void removeValue( CacheScope scope, K key );
 
     void invalidate( CacheScope scope );
 }

@@ -16,11 +16,21 @@
  */
 package org.apache.usergrid.rest.security.shiro;
 
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.usergrid.corepersistence.GuiceFactory;
+import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
 
 
 /**
@@ -30,11 +40,16 @@ public class ShiroCacheManager implements CacheManager {
 
     private static final Logger logger = LoggerFactory.getLogger( ShiroCacheManager.class );
 
+    @Autowired
+    protected Injector injector;
+
     public ShiroCacheManager() {
     }
 
     @Override
     public <K, V> Cache<K, V> getCache(String name) throws CacheException {
-        return new ShiroCache( null ); // TODO: plugin our cache here
+        return new ShiroCache( injector.getInstance(
+            Key.get(new TypeLiteral<CacheFactory<String, SimpleAuthorizationInfo>>() {}))
+        );
     }
 }
