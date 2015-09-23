@@ -713,15 +713,16 @@ public class CpRelationManager implements RelationManager {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Marking edge {} for deletion", edgeToDelete );
             }
-            return gm.markEdge( edge );
+            return gm.markEdge( edgeToDelete );
         } ).lastOrDefault( null ).doOnNext( lastEdge -> {
             //no op if we hit our default
             if(lastEdge == null){
                 return;
             }
 
-            //queue up async processing
-            indexService.queueDeleteEdge( applicationScope, lastEdge );
+            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
+
+            gm.deleteEdge( lastEdge ).subscribe();
         }).subscribe();
 
 
