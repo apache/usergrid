@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
@@ -62,7 +61,6 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
@@ -697,25 +695,36 @@ public class CpRelationManager implements RelationManager {
         final GraphManager gm = managerCache.getGraphManager( applicationScope );
 
 
-        //check if the edge exists
+        //write new edge
+
+        gm.writeEdge( edge ).subscribe();
+
+        indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
 
-        final SearchByEdge searchByEdge = new SimpleSearchByEdge(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent()  );
+        //now read all older versions of an edge, and remove them.  Finally calling delete
+        final SearchByEdge searchByEdge =
+            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
 
 
-        //only take 1 and count it.  If we don't have anything, create the edge
-        final int count = gm.loadEdgeVersions( searchByEdge ).take( 1 ).count().toBlocking().last();
-
-        if(count == 0) {
-            if(logger.isDebugEnabled()) {
-                logger.debug( "No edge exists between {} and {} of type {}.  Creating",
-                    new Object[] { edge.getSourceNode(), edge.getTargetNode(), edge.getType() } );
+        //load our versions, only retain the most recent one
+        gm.loadEdgeVersions( searchByEdge ).skip( 1 ).flatMap( edgeToDelete -> {
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Marking edge {} for deletion", edgeToDelete );
+            }
+            return gm.markEdge( edgeToDelete );
+        } ).lastOrDefault( null ).doOnNext( lastEdge -> {
+            //no op if we hit our default
+            if(lastEdge == null){
+                return;
             }
 
-            gm.writeEdge( edge ).toBlocking().last();
+            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
 
-            indexService.queueNewEdge( applicationScope, targetEntity, edge );
-        }
+            gm.deleteEdge( lastEdge ).subscribe();
+        }).subscribe();
+
 
         return connection;
     }

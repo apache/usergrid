@@ -181,9 +181,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 
                     logger.debug( "Found edge {}, searching for multiple versions of edge", edge );
 
+                    //keep only the most recent
                     final SearchByEdge searchByEdge =
-                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), 0,
-                            SearchByEdgeType.Order.ASCENDING, Optional.absent() );
+                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                            SearchByEdgeType.Order.DESCENDING, Optional.absent() );
                     return gm.loadEdgeVersions( searchByEdge )
                         //skip the first version since it's the one we want to retain
                         .skip( 1 )
