@@ -17,7 +17,14 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
@@ -25,8 +32,7 @@ import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
-import java.io.IOException;
-import java.util.Map;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
