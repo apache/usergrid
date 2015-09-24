@@ -150,20 +150,10 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         //get old app infos to migrate
         final Observable<Entity> oldAppInfos = getOldAppInfos();
         oldAppInfos.doOnNext( oldAppInfoEntity -> {
-            try {
-                migrateAppInfo( oldAppInfoEntity, observer );
-                count.incrementAndGet();
-            }
-            catch ( Exception e ) {
-                if ( e.getCause() instanceof ApplicationAlreadyExistsException ) {
-                    count.incrementAndGet();
-                    logger.info( "Application already migrated", oldAppInfoEntity.getId().getUuid() );
-                }
-                else {
-                    logger.error( "Failed to migrate app info" + oldAppInfoEntity.getId().getUuid(), e );
-                    throw new RuntimeException( e );
-                }
-            }
+
+
+            migrateAppInfo( oldAppInfoEntity, observer );
+            count.incrementAndGet();
         } )
             //we want a doOnError to catch something going wrong, otherwise we'll mark as complete
             .doOnError( error -> {
@@ -196,7 +186,6 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             //get app info from graph to see if it has been migrated already
 
 
-
             // create org->app connections, but not for apps in dummy "usergrid" internal organization
             //avoid management org
 
@@ -209,6 +198,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         //swallow
         catch ( ApplicationAlreadyExistsException appExists ) {
             logger.info( "Application {} already migrated.  Ignoring.", name );
+            observer.update( getMaxVersion(), "Skipping application " + name + " it already exists" );
         }
         catch ( Exception e ) {
             throw new RuntimeException( e );
