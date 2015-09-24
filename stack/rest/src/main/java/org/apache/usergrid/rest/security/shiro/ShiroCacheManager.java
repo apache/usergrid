@@ -16,21 +16,24 @@
  */
 package org.apache.usergrid.rest.security.shiro;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
-import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.apache.usergrid.corepersistence.GuiceFactory;
 import org.apache.usergrid.persistence.cache.CacheFactory;
+import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
+import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -43,13 +46,44 @@ public class ShiroCacheManager implements CacheManager {
     @Autowired
     protected Injector injector;
 
+    Map<String, ShiroCache> caches = new HashMap<>();
+
     public ShiroCacheManager() {
     }
 
     @Override
     public <K, V> Cache<K, V> getCache(String name) throws CacheException {
-        return new ShiroCache( injector.getInstance(
-            Key.get(new TypeLiteral<CacheFactory<String, SimpleAuthorizationInfo>>() {}))
-        );
+        ShiroCache shiroCache = caches.get(name);
+
+        if ( shiroCache == null ) {
+
+            if ( "realm.authorizationCache".equals(name) ) {
+
+                shiroCache = new ShiroCache(
+                    new TypeReference<UsergridAuthorizationInfo>(){},
+                    injector.getInstance(
+                        Key.get(new TypeLiteral<CacheFactory<String, UsergridAuthorizationInfo>>() { })));
+
+            } else if ( "realm.authenticationCache".equals(name)) {
+
+                shiroCache = new ShiroCache(
+                    new TypeReference<UsergridAuthenticationInfo>(){},
+                    injector.getInstance(
+                        Key.get(new TypeLiteral<CacheFactory<String, UsergridAuthenticationInfo>>() { })));
+
+            } else {
+                throw new RuntimeException("Unknown Shiro cache name");
+            }
+
+            caches.put( name, shiroCache );
+        }
+        return shiroCache;
+    }
+
+    public void invalidateApplicationCaches( UUID applicationId ) {
+        for ( String key : caches.keySet() ) {
+            ShiroCache shiroCache = caches.get( key );
+            shiroCache.invalidate(applicationId);
+        }
     }
 }

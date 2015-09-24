@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.codahale.metrics.Timer;
+import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.slf4j.Logger;
@@ -107,6 +108,7 @@ public abstract class AbstractService implements Service {
     private Timer entitiesParallelGetTimer;
     private Timer invokeTimer;
 
+    protected CacheFactory cacheFactory;
 
     public AbstractService() {
 
@@ -124,6 +126,8 @@ public abstract class AbstractService implements Service {
         this.entitiesGetTimer = metricsFactory.getTimer(this.getClass(), "importEntities.get");
         this.entitiesParallelGetTimer = metricsFactory.getTimer( this.getClass(),"importEntitiesP.get" );
         this.invokeTimer = metricsFactory.getTimer( this.getClass(),"service.invoke" );
+
+        this.cacheFactory = injector.getInstance( CacheFactory.class );
     }
 
 

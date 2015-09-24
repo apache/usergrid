@@ -16,7 +16,8 @@
  */
 package org.apache.usergrid.persistence.cache.impl;
 
-import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,14 +26,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
-import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.serializers.ObjectSerializer;
@@ -48,10 +47,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 
 /**
@@ -109,6 +105,10 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     @Inject
     public ScopedCacheSerializationImpl( final Keyspace keyspace ) {
         this.keyspace = keyspace;
+        //MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        MAPPER.enableDefaultTyping();
+        MAPPER.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
+        MAPPER.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
     }
 
 
@@ -136,8 +136,8 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 //V value = MAPPER.readValue(result.getByteArrayValue(), new TypeReference<V>() {});
                 V value = MAPPER.readValue(result.getByteArrayValue(), typeRef);
 
-                logger.info("Read cache item\n   key/value types {}/{}\n   key:value: {}:{}",
-                    new Object[] { key.getClass().getSimpleName(), value.getClass().getSimpleName(), key, value });
+                logger.debug("Read cache item\n   key/value types {}/{}\n   key:value: {}:{}",
+                    new Object[]{key.getClass().getSimpleName(), value.getClass().getSimpleName(), key, value});
 
                 return value;
 
@@ -145,6 +145,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 logger.info("Value not found");
 
             } catch (IOException ioe) {
+                logger.error("Unable to read cached value", ioe);
                 throw new RuntimeException("Unable to read cached value", ioe);
             }
 
@@ -191,7 +192,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
         executeBatch(batch);
 
-        logger.info("Wrote cache item\n   key/value types {}/{}\n   key:value: {}:{}",
+        logger.debug("Wrote cache item\n   key/value types {}/{}\n   key:value: {}:{}",
             new Object[]{key.getClass().getSimpleName(), value.getClass().getSimpleName(), key, value});
 
         return value;
