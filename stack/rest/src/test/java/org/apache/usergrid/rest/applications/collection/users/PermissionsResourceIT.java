@@ -51,7 +51,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
 
-    /*hi
+    /**
      * Creates a user in the default org/app combo for use by all of the tests
      */
     @Before

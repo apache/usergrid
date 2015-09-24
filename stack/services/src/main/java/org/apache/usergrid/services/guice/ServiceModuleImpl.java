@@ -22,8 +22,7 @@ package org.apache.usergrid.services.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
-import org.apache.shiro.authz.SimpleAuthorizationInfo;
-import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.usergrid.corepersistence.ServiceModule;
 import org.apache.usergrid.management.AppInfoMigrationPlugin;
 import org.apache.usergrid.persistence.cache.CacheFactory;
@@ -31,8 +30,8 @@ import org.apache.usergrid.persistence.cache.impl.CacheFactoryImpl;
 import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerialization;
 import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerializationImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
-
-import java.util.Map;
+import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
+import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
 
 
 // <bean id="notificationsQueueListener" class="org.apache.usergrid.services.notifications.QueueListener"
@@ -55,11 +54,18 @@ public class ServiceModuleImpl extends AbstractModule implements ServiceModule {
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to(AppInfoMigrationPlugin.class);
 
-        bind(    new TypeLiteral<CacheFactory<String, SimpleAuthorizationInfo>>() {} )
-            .to( new TypeLiteral<CacheFactoryImpl<String, SimpleAuthorizationInfo>>() {});
+        bind(    new TypeLiteral<CacheFactory<String, UsergridAuthorizationInfo>>() {} )
+            .to( new TypeLiteral<CacheFactoryImpl<String, UsergridAuthorizationInfo>>() {});
 
-        bind(    new TypeLiteral<ScopedCacheSerialization<String, SimpleAuthorizationInfo>>() {})
-            .to( new TypeLiteral<ScopedCacheSerializationImpl<String, SimpleAuthorizationInfo>>() {});
+        bind(    new TypeLiteral<ScopedCacheSerialization<String, UsergridAuthorizationInfo>>() {})
+            .to(new TypeLiteral<ScopedCacheSerializationImpl<String, UsergridAuthorizationInfo>>() {
+            });
+
+        bind(    new TypeLiteral<CacheFactory<String, UsergridAuthenticationInfo>>() {} )
+            .to( new TypeLiteral<CacheFactoryImpl<String, UsergridAuthenticationInfo>>() {});
+
+        bind(    new TypeLiteral<ScopedCacheSerialization<String, UsergridAuthenticationInfo>>() {})
+            .to( new TypeLiteral<ScopedCacheSerializationImpl<String, UsergridAuthenticationInfo>>() {});
 
     }
 }

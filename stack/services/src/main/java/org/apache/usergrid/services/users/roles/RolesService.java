@@ -19,6 +19,8 @@ package org.apache.usergrid.services.users.roles;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
@@ -46,6 +48,8 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
         Entity entity = sm.getService( "/roles" ).getEntity( context.getRequest(), id );
         if ( entity != null ) {
             em.addUserToRole( user.getUuid(), entity.getName() );
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
         }
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, null );
     }
@@ -57,6 +61,8 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
         Entity entity = sm.getService( "/roles" ).getEntity( context.getRequest(), name );
         if ( entity != null ) {
             em.addUserToRole( user.getUuid(), entity.getName() );
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
         }
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, null );
     }
@@ -68,6 +74,8 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
         ServiceResults results = getItemById( context, id );
         if ( !results.isEmpty() ) {
             em.removeUserFromRole( user.getUuid(), results.getEntity().getName() );
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
         }
         return results;
     }
@@ -79,6 +87,8 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
         ServiceResults results = getItemByName( context, name );
         if ( !results.isEmpty() ) {
             em.removeUserFromRole( user.getUuid(), results.getEntity().getName() );
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
         }
         return results;
     }
