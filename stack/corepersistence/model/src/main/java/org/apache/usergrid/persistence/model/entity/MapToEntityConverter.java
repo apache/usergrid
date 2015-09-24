@@ -25,14 +25,21 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.apache.usergrid.persistence.model.collection.SchemaManager;
 import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.Location;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 
 public class MapToEntityConverter{
+    public static final Logger logger = LoggerFactory.getLogger(MapToEntityConverter.class);
 
     private final JsonFactory jsonFactory = new JsonFactory();
     private final ObjectMapper objectMapper = new ObjectMapper(jsonFactory).registerModule(new GuavaModule());
+
+    static final String locationKey = "location";
+    static final String lat = "latitude";
+    static final String lon = "longitude";
 
     public  Entity fromMap( Map<String, Object> map,  boolean topLevel ) {
 
@@ -48,9 +55,11 @@ public class MapToEntityConverter{
             }
             Object value = map.get( fieldName );
             boolean unique = schemaManager == null ? topLevel :  topLevel && schemaManager.isPropertyUnique(entityType, fieldName);
+            //cannot store fields that aren't locations
 
             if ( value instanceof String ) {
-                entity.setField( new StringField( fieldName, (String)value, unique  ));
+                String stringValue =(String)value;
+                entity.setField(new StringField(fieldName, stringValue, unique));
 
             } else if ( value instanceof Boolean ) {
                 entity.setField( new BooleanField( fieldName, (Boolean)value, unique  ));
@@ -163,14 +172,11 @@ public class MapToEntityConverter{
     }
 
 
-    private  void processMapValue(
-            Object value, String fieldName, Entity entity) {
+    private  void processMapValue( Object value, String fieldName, Entity entity) {
 
         // is the map really a location element?
         if ("location" .equals(fieldName.toString().toLowerCase()) ) {
             processLocationField((Map<String, Object>) value, fieldName, entity);
-
-
         } else {
             // not a location element, process it as map
             entity.setField(new EntityObjectField(fieldName,
@@ -187,48 +193,50 @@ public class MapToEntityConverter{
         Map<String, Object> m = new HashMap<String, Object>();
 
         // Tests expect us to treat "Longitude" the same as "longitude"
-        for ( String key : origMap.keySet() ) {
-            m.put( key.toLowerCase(), origMap.get(key) );
+        for (String key : origMap.keySet()) {
+            m.put(key.toLowerCase(), origMap.get(key));
         }
 
-        // Expect at least two fields in a Location object
-        if (m.size() >= 2) {
+        // Expect at least two fields in a Location object and must have lat lon
+        if (m.size() >= 2 && (
+            (m.containsKey(lat)  && m.containsKey(lon) )
+                || (m.containsKey("lat") && m.containsKey("lon") )
+        )) {
 
-            Double lat = null;
-            Double lon = null;
+            Double latVal, lonVal;
 
             // check the properties to make sure they are set and are doubles
-            if (m.get("latitude") != null && m.get("longitude") != null) {
+            if (m.containsKey(lat)  && m.containsKey(lon)) {
                 try {
-                    lat = Double.parseDouble(m.get("latitude").toString());
-                    lon = Double.parseDouble(m.get("longitude").toString());
+                    latVal = Double.parseDouble(m.get(lat).toString());
+                    lonVal = Double.parseDouble(m.get(lon).toString());
 
                 } catch (NumberFormatException ignored) {
                     throw new IllegalArgumentException(
-                            "Latitude and longitude must be doubles (e.g. 32.1234).");
+                        "Latitude and longitude must be doubles (e.g. 32.1234).");
                 }
-            } else if (m.get("lat") != null && m.get("lon") != null) {
+            } else if (m.containsKey("lat") && m.containsKey("lon")) {
+                logger.warn("Entity contains latitude and longitude in old format location{lat,long}"
+                );
                 try {
-                    lat = Double.parseDouble(m.get("lat").toString());
-                    lon = Double.parseDouble(m.get("lon").toString());
+                    latVal = Double.parseDouble(m.get("lat").toString());
+                    lonVal = Double.parseDouble(m.get("lon").toString());
                 } catch (NumberFormatException ignored) {
                     throw new IllegalArgumentException(""
-                            + "Latitude and longitude must be doubles (e.g. 32.1234).");
+                        + "Latitude and longitude must be doubles (e.g. 32.1234).");
                 }
             } else {
                 throw new IllegalArgumentException("Location properties require two fields - "
-                        + "latitude and longitude, or lat and lon");
+                    + "latitude and longitude, or lat and lon");
             }
 
-            if (lat != null && lon != null) {
-                entity.setField( new LocationField(fieldName, new Location(lat, lon)));
-            } else {
-                throw new IllegalArgumentException( "Unable to parse location field properties "
-                        + "- make sure they conform - lat and lon, and should be doubles.");
-            }
+            entity.setField(new LocationField(fieldName, new Location(latVal, lonVal)));
         } else {
-            throw new IllegalArgumentException("Location properties requires two fields - "
-                    + "latitude and longitude, or lat and lon.");
+            //can't process non enties
+            logger.warn(
+                "entity cannot process location values that don't have valid location{latitude,longitude} values, changing to generic object"
+            );
+            entity.setField(new EntityObjectField(fieldName,fromMap( value, false))); // recursion
         }
     }
 }

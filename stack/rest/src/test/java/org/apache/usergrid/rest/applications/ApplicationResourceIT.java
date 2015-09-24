@@ -21,10 +21,12 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
+import junit.framework.Assert;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.mgmt.OrganizationResource;
 import org.apache.usergrid.rest.test.resource.model.*;
@@ -843,6 +845,16 @@ public class ApplicationResourceIT extends AbstractRestIT {
         ApiResponse response = this.app().collection("users").getResource(true, token).get(ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());
+    }
+
+    @Test
+    public void getApmConfig(){
+        try {
+            Collection collection = this.app().collection("apm/apigeeMobileConfig").get();
+            fail();
+        }catch (UniformInterfaceException e){
+            Assert.assertEquals(404, e.getResponse().getStatus());
+        }
     }
 
     /**

@@ -54,6 +54,8 @@ public interface AsyncEventService extends ReIndexAction {
     /**
      * Fired when a new edge is added to an entity. Such as initial entity creation, adding to a collection, or creating a connection
      *
+     * TODO: We shouldn't take an entity here, only the id.  It doesn't make sense in a distributed context to pass the entity
+     *
      * @param applicationScope
      * @param entity
      * @param newEdge

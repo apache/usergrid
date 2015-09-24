@@ -147,7 +147,7 @@ public class Notification extends TypedEntity {
 
     @JsonIgnore
     public boolean isExpired() {
-        return expire != null && expire > System.currentTimeMillis();
+        return expire != null && expire < System.currentTimeMillis();
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -232,13 +232,12 @@ public class Notification extends TypedEntity {
 
     @JsonIgnore
     public long getExpireTimeMillis() {
-        long expireAtMillis = getExpire() != null ? getExpire() * 1000 : 0;
-        return expireAtMillis;
+        return getExpire() != null ? getExpire() : 0;
     }
 
     @JsonIgnore
     public long getExpireTTLSeconds() {
-        Long ttlSeconds = (getExpireTimeMillis() - new Date().getTime()) / 1000;
+        long ttlSeconds = (getExpireTimeMillis() - System.currentTimeMillis()) / 1000;
         return ttlSeconds > 0 ? ttlSeconds : 0;
     }
 

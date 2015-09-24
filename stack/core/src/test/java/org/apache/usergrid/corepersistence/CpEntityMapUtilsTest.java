@@ -21,22 +21,24 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import junit.framework.Assert;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.ListField;
+import org.apache.usergrid.persistence.model.field.LocationField;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -97,6 +99,48 @@ public class CpEntityMapUtilsTest {
         assertUserWithBlocks(cpEntity);
         Map<String,Object> map = CpEntityMapUtils.toMap(cpEntity);
         cpEntity = CpEntityMapUtils.fromMap(map,"user", true);
+    }
+
+
+    @Test
+    public void testLocation() {
+
+        /*** This tests example property input of
+
+         {
+         "nestedarray" : [ [ "fred" ] ]
+         }
+
+         ****/
+        Map<String, Object> locMap = new HashMap<>();
+        locMap.put("latitude", 123.1);
+        locMap.put("longitude", 123.1);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("location", locMap);
+
+        Entity cpEntity = CpEntityMapUtils.fromMap(properties, "loc", true);
+
+        assertTrue(cpEntity.getFieldMap().get("location") instanceof LocationField);
+
+
+        locMap = new HashMap<>();
+        locMap.put("latitude", 123.1);
+        locMap.put("lgnosoos", 123.1);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("location", locMap);
+
+        cpEntity = CpEntityMapUtils.fromMap(properties, "loc", true);
+
+        assertTrue(cpEntity.getFieldMap().get("location") instanceof EntityObjectField);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("location", "denver");
+
+        cpEntity = CpEntityMapUtils.fromMap(properties, "loc", true);
+
+        assertTrue(cpEntity.getFieldMap().get("location") instanceof StringField);
     }
 
 

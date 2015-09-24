@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
@@ -62,7 +61,7 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -694,9 +693,38 @@ public class CpRelationManager implements RelationManager {
         final Edge edge = createConnectionEdge( cpHeadEntity.getId(), connectionType, targetEntity.getId() );
 
         final GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlocking().last();
+
+
+        //write new edge
+
+        gm.writeEdge( edge ).subscribe();
 
         indexService.queueNewEdge( applicationScope, targetEntity, edge );
+
+
+        //now read all older versions of an edge, and remove them.  Finally calling delete
+        final SearchByEdge searchByEdge =
+            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+
+
+        //load our versions, only retain the most recent one
+        gm.loadEdgeVersions( searchByEdge ).skip( 1 ).flatMap( edgeToDelete -> {
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Marking edge {} for deletion", edgeToDelete );
+            }
+            return gm.markEdge( edgeToDelete );
+        } ).lastOrDefault( null ).doOnNext( lastEdge -> {
+            //no op if we hit our default
+            if(lastEdge == null){
+                return;
+            }
+
+            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
+
+            gm.deleteEdge( lastEdge ).subscribe();
+        }).subscribe();
+
 
         return connection;
     }

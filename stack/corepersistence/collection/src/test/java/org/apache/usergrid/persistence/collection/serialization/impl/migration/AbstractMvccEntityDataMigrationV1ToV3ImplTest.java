@@ -30,7 +30,10 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionDataVersions;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV3Impl;
 import org.apache.usergrid.persistence.core.guice.DataMigrationResetRule;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
@@ -48,6 +51,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import net.jcip.annotations.NotThreadSafe;
@@ -63,7 +67,8 @@ import static org.junit.Assert.assertTrue;
 @NotThreadSafe
 @RunWith( ITRunner.class )
 @UseModules( { TestCollectionModule.class } )
-public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements DataMigrationResetRule.DataMigrationManagerProvider {
+public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest
+    implements DataMigrationResetRule.DataMigrationManagerProvider {
 
 
     @Inject
@@ -76,11 +81,19 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
 
 
     @Inject
-    public MvccEntityDataMigrationImpl mvccEntityDataMigrationImpl;
+    public VersionedMigrationSet<MvccEntitySerializationStrategy> versions;
 
 
     @Inject
-    public VersionedMigrationSet<MvccEntitySerializationStrategy> versions;
+    public Keyspace keyspace;
+    @Inject
+    public VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
+    @Inject
+    public MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
+    @Inject
+    public UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+    @Inject
+    public MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
 
     /**
      * Rule to do the resets we need
@@ -121,27 +134,26 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
             Observable.just( new EntityIdScope( scope, entity1.getId() ), new EntityIdScope( scope, entity2.getId() ) );
 
 
-        final MigrationDataProvider<EntityIdScope> migrationProvider = new MigrationDataProvider<EntityIdScope>() {
-            @Override
-            public Observable<EntityIdScope> getData() {
-                return entityIdScope;
-            }
-        };
+        final MigrationDataProvider<EntityIdScope> migrationProvider = () -> entityIdScope;
 
         final TestProgressObserver progressObserver = new TestProgressObserver();
 
         final CollectionDataVersions startVersion = getSourceVersion();
 
         final MigrationRelationship<MvccEntitySerializationStrategy> tuple =
-                  versions.getMigrationRelationship( startVersion.getVersion() );
+            versions.getMigrationRelationship( startVersion.getVersion() );
 
 
         assertEquals( "Same instance for from", v1Impl.getClass(), tuple.from.getClass() );
         assertEquals( "Same instance for to", v3Impl.getClass(), tuple.to.getClass() );
 
+
+        MvccEntityDataMigrationImpl mvccEntityDataMigrationImpl = new MvccEntityDataMigrationImpl(keyspace, allVersions, mvccEntitySerializationStrategyV3, uniqueValueSerializationStrategy,  mvccLogEntrySerializationStrategy, migrationProvider);
+
+
         //now migration
-        final int newVersion = mvccEntityDataMigrationImpl
-            .migrate( startVersion.getVersion(), migrationProvider, progressObserver );
+        final int newVersion =
+            mvccEntityDataMigrationImpl.migrate( startVersion.getVersion(), progressObserver );
 
 
         final CollectionDataVersions expectedVersion = expectedTargetVersion();
@@ -190,19 +202,16 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
 
     /**
      * Get the expected source mvcc implementation for this test
-     * @return
      */
     protected abstract MvccEntitySerializationStrategy getExpectedSourceImpl();
 
     /**
      * Get the expected target mvcc for this test
-     * @return
      */
     protected abstract MvccEntitySerializationStrategy getExpectedTargetImpl();
 
     /**
      * Get the expected start version
-     * @return
      */
     protected abstract CollectionDataVersions getSourceVersion();
 
