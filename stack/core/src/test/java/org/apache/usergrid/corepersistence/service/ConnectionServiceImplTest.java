@@ -196,7 +196,7 @@ public class ConnectionServiceImplTest {
         //check our oldest was deleted first
         assertEdgeData( written2, deletedConnections.get( 0 ).getEdge() );
 
-        assertEdgeData( written3, deletedConnections.get( 1 ).getEdge() );
+        assertEdgeData( written1, deletedConnections.get( 1 ).getEdge() );
 
         assertEquals( "2 edges deleted", 2, deletedConnections.size() );
 
@@ -213,7 +213,7 @@ public class ConnectionServiceImplTest {
 
         assertEquals( 1, edges.size() );
 
-        assertEquals( written1, edges.get( 0 ) );
+        assertEquals( written3, edges.get( 0 ) );
     }
 
 

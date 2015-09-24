@@ -51,9 +51,11 @@ import json
 
 
 # Version expected in status response post-migration for entity and app-info data
-TARGET_VERSION = 2
+TARGET_APPINFO_VERSION=2
+TARGET_ENTITY_DATA_VERSION=2
+TARGET_CORE_DATA_VERSION=2
 TARGET_MIGRATION_SYSTEM_VERSION = 1
-TARGET_INDEX_MAPPING_VERSION = 1
+TARGET_INDEX_MAPPING_VERSION = 2
 
 # Set an interval (in seconds) for checking if re-index and/or migration has finished
 STATUS_INTERVAL_SECONDS = 2
@@ -63,6 +65,7 @@ PLUGIN_MIGRATION_SYSTEM = 'migration-system'
 PLUGIN_APPINFO = 'appinfo-migration'
 PLUGIN_ENTITYDATA = 'collections-entity-data'
 PLUGIN_INDEX_MAPPING = 'index_mapping_migration'
+PLUGIN_CORE_DATA = 'core-data'
 
 
 
@@ -144,9 +147,21 @@ class Migrate:
                     if migration_system_updated:
                         break
 
+            index_mapping_updated = self.is_index_mapping_updated()
+
+            if not index_mapping_updated:
+                self.logger.info('Index Mapping needs to be updated.  Updating index mapping..')
+                self.start_index_mapping_migration()
+                while not index_mapping_updated:
+                    time.sleep(STATUS_INTERVAL_SECONDS)
+                    index_mapping_updated = self.is_index_mapping_updated()
+                    if index_mapping_updated:
+                        break
+
             # Run AppInfo migration only when both appinfos and collection entity data have not been migrated
             if not self.is_data_migrated():
 
+                #Migrate app info
                 if self.is_appinfo_migrated():
                     self.logger.info('AppInfo already migrated. Resetting version for re-migration.')
                     self.reset_appinfo_migration()
@@ -164,20 +179,14 @@ class Migrate:
                         self.metrics['appinfo_migration_end'] = get_current_time()
                         break
                 self.logger.info('AppInfo Migration Ended.')
+
+
             else:
                 self.logger.info('Full Data Migration previously ran... skipping AppInfo migration.')
 
-            # We need to check and roll index mapping version to 1 if not already there
-            index_mapping_updated = self.is_index_mapping_updated()
 
-            if not index_mapping_updated:
-                self.logger.info('Index Mapping needs to be updated.  Updating index mapping..')
-                self.start_index_mapping_migration()
-                while not index_mapping_updated:
-                    time.sleep(STATUS_INTERVAL_SECONDS)
-                    index_mapping_updated = self.is_index_mapping_updated()
-                    if index_mapping_updated:
-                        break
+
+            # We need to check and roll index mapping version to 1 if not already there
 
             # Perform system re-index (it will grab date from input if provided)
             job = self.start_reindex()
@@ -202,7 +211,9 @@ class Migrate:
                 time.sleep(STATUS_INTERVAL_SECONDS)
                 self.is_data_migrated()
 
+                # self.start_core_data_migration()
                 self.start_fulldata_migration()
+
                 self.metrics['full_data_migration_start'] = get_current_time()
                 self.logger.info("Full Data Migration Started")
                 is_migrated = False
@@ -242,6 +253,21 @@ class Migrate:
         url = self.endpoint + '/system/index/rebuild'
         return url
 
+    def get_management_reindex_url(self):
+          url = self.get_reindex_url() + "/management"
+          return url
+
+
+    def start_core_data_migration(self):
+           try:
+               r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
+               response = r.json()
+               return response
+           except requests.exceptions.RequestException as e:
+               self.logger.error('Failed to start migration, %s', e)
+               exit_on_error(str(e))
+
+
     def start_fulldata_migration(self):
         try:
             r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
@@ -253,6 +279,7 @@ class Migrate:
 
     def start_migration_system_update(self):
         try:
+            #TODO fix this URL
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_MIGRATION_SYSTEM
             r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
             response = r.json()
@@ -293,7 +320,7 @@ class Migrate:
             exit_on_error(str(e))
 
     def reset_data_migration(self):
-        version = TARGET_VERSION - 1
+        version = TARGET_ENTITY_DATA_VERSION - 1
         body = json.dumps({PLUGIN_ENTITYDATA: version, PLUGIN_APPINFO: version})
         try:
             r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.admin_user, self.admin_pass))
@@ -306,7 +333,7 @@ class Migrate:
             exit_on_error(str(e))
 
     def reset_appinfo_migration(self):
-        version = TARGET_VERSION - 1
+        version = TARGET_APPINFO_VERSION - 1
         body = json.dumps({PLUGIN_APPINFO: version})
         try:
             r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.admin_user, self.admin_pass))
@@ -322,14 +349,17 @@ class Migrate:
         if status is not None:
             entity_version = status['data'][PLUGIN_ENTITYDATA]
             appinfo_version = status['data'][PLUGIN_APPINFO]
+            core_data_version = status['data'][PLUGIN_CORE_DATA]
 
-            if entity_version == TARGET_VERSION and appinfo_version == TARGET_VERSION:
+            if entity_version == TARGET_ENTITY_DATA_VERSION and appinfo_version == TARGET_APPINFO_VERSION and core_data_version == TARGET_CORE_DATA_VERSION:
                 self.logger.info('Full Data Migration status=[COMPLETE], %s=[%s], '
-                                 '%s=[%s]',
+                                 '%s=[%s], %s=%s',
                                  PLUGIN_ENTITYDATA,
                                  entity_version,
                                  PLUGIN_APPINFO,
-                                 appinfo_version)
+                                 appinfo_version,
+                                 PLUGIN_CORE_DATA,
+                                 core_data_version)
                 return True
             else:
                 self.logger.info('Full Data Migration status=[NOTSTARTED/INPROGRESS]')
@@ -340,7 +370,7 @@ class Migrate:
         if status is not None:
             appinfo_version = status['data'][PLUGIN_APPINFO]
 
-            if appinfo_version == TARGET_VERSION:
+            if appinfo_version == TARGET_APPINFO_VERSION:
                 self.logger.info('AppInfo Migration status=[COMPLETE],'
                                  '%s=[%s]',
                                  PLUGIN_APPINFO,
