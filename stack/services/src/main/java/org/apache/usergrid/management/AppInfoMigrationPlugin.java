@@ -164,10 +164,18 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
                     throw new RuntimeException( e );
                 }
             }
-        } ).doOnCompleted( () -> {
-            migrationInfoSerialization.setVersion( getName(), getMaxVersion() );
-            observer.complete();
-        } ).toBlocking().lastOrDefault( null );
+        } )
+            //we want a doOnError to catch something going wrong, otherwise we'll mark as complete
+            .doOnError( error -> {
+                logger.error( "Unable to migrate applications, an error occurred.  Please try again", error );
+                observer.failed( getMaxVersion(), "Unable to migrate applications", error );
+            } )
+
+                //if we complete successfully, set the version and notify the observer
+            .doOnCompleted( () -> {
+                migrationInfoSerialization.setVersion( getName(), getMaxVersion() );
+                observer.complete();
+            } ).subscribe();
     }
 
 
@@ -186,28 +194,23 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             UUID applicationId = getUuid( oldAppInfoMap, "applicationUuid" );
             applicationId = applicationId == null ? getUuid( oldAppInfoMap, "appUuid" ) : applicationId;
             //get app info from graph to see if it has been migrated already
-            org.apache.usergrid.persistence.Entity appInfo = getApplicationInfo( applicationId );
-            if ( appInfo == null ) {
 
-                observer.update( getMaxVersion(), "Created application_info for " + appName );
-                // create org->app connections, but not for apps in dummy "usergrid" internal organization
-                if ( !orgName.equals( "usergrid" ) ) { //avoid management org
 
-                    EntityRef orgRef = managementEm.getAlias( Group.ENTITY_TYPE, orgName );
-                    // create and connect new APPLICATION_INFO oldAppInfo to Organization
-                    managementService.createApplication( orgRef.getUuid(), name, applicationId, null );
-                }
-            }
-            else {
-                //already migrated don't do anything
-                observer.update( getMaxVersion(),
-                    "Received existing application_info for " + appName + " don't do anything" );
-            }
+
+            // create org->app connections, but not for apps in dummy "usergrid" internal organization
+            //avoid management org
+
+            EntityRef orgRef = managementEm.getAlias( Group.ENTITY_TYPE, orgName );
+            // create and connect new APPLICATION_INFO oldAppInfo to Organization
+            managementService.createApplication( orgRef.getUuid(), name, applicationId, null );
+
+            observer.update( getMaxVersion(), "Created application_info for " + appName );
+        }
+        //swallow
+        catch ( ApplicationAlreadyExistsException appExists ) {
+            logger.info( "Application {} already migrated.  Ignoring.", name );
         }
         catch ( Exception e ) {
-            String msg = "Exception writing application_info for " + name;
-            logger.error( msg, e );
-            observer.failed( getMaxVersion(), msg );
             throw new RuntimeException( e );
         }
     }
