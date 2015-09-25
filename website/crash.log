@@ -1,0 +1,143 @@
+Crashlog created at 2015-09-25 15:15:43 -0400
+
+===== MESSAGE:
+
+RuntimeError: Found 3 content files for content/v101-portal-demo/bower_components/sizzle/dist/sizzle; expected 0 or 1
+
+===== COMPILATION STACK:
+
+  (empty)
+
+===== STACK TRACE:
+
+  0. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/data_sources/filesystem.rb:170:in `block in all_split_files_in'
+  1. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/data_sources/filesystem.rb:160:in `each_pair'
+  2. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/data_sources/filesystem.rb:160:in `all_split_files_in'
+  3. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/data_sources/filesystem.rb:86:in `load_objects'
+  4. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/data_sources/filesystem.rb:45:in `items'
+  5. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:343:in `block in load_items'
+  6. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:342:in `each'
+  7. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:342:in `load_items'
+  8. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:244:in `block in load'
+  9. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:306:in `with_datasources'
+  10. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:243:in `load'
+  11. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:128:in `layouts'
+  12. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/compilation/compiler.rb:188:in `dependency_tracker'
+  13. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/memoization.rb:56:in `block in memoize'
+  14. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/compilation/compiler.rb:460:in `stores'
+  15. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/compilation/compiler.rb:147:in `unload'
+  16. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:279:in `unload'
+  17. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:259:in `rescue in load'
+  18. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/base/source_data/site.rb:263:in `load'
+  19. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/command_runner.rb:64:in `load_site'
+  20. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/commands/compile.rb:392:in `run'
+  21. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/command_runner.rb:14:in `block in call'
+  22. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/error_handler.rb:74:in `handle_while'
+  23. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/error_handler.rb:26:in `handle_while'
+  24. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/command_runner.rb:13:in `call'
+  25. /Library/Ruby/Gems/2.0.0/gems/cri-2.6.1/lib/cri/command_dsl.rb:223:in `block in runner'
+  26. /Library/Ruby/Gems/2.0.0/gems/cri-2.6.1/lib/cri/command.rb:298:in `call'
+  27. /Library/Ruby/Gems/2.0.0/gems/cri-2.6.1/lib/cri/command.rb:298:in `run_this'
+  28. /Library/Ruby/Gems/2.0.0/gems/cri-2.6.1/lib/cri/command.rb:251:in `run'
+  29. /Library/Ruby/Gems/2.0.0/gems/cri-2.6.1/lib/cri/command.rb:264:in `run'
+  30. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli.rb:59:in `block in run'
+  31. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/error_handler.rb:74:in `handle_while'
+  32. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli/error_handler.rb:26:in `handle_while'
+  33. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib/nanoc/cli.rb:57:in `run'
+  34. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/bin/nanoc:25:in `<top (required)>'
+  35. /usr/bin/nanoc:23:in `load'
+
+===== VERSION INFORMATION:
+
+nanoc 3.7.4 © 2007-2014 Denis Defreyne.
+Running ruby 2.0.0 (2014-05-08) on universal.x86_64-darwin14 with RubyGems 2.0.14.
+
+===== SYSTEM INFORMATION:
+
+Darwin macsnoopdave2013.local 14.5.0 Darwin Kernel Version 14.5.0: Wed Jul 29 02:26:53 PDT 2015; root:xnu-2782.40.9~1/RELEASE_X86_64 x86_64
+
+===== INSTALLED GEMS:
+
+  CFPropertyList 2.2.8
+  bigdecimal 1.2.0
+  colored 1.2
+  cri 2.6.1
+  htmlentities 4.3.3
+  io-console 0.4.2
+  json 1.7.7
+  libxml-ruby 2.6.0
+  mime-types 2.4.3
+  mini_portile 0.6.2
+  minitest 4.3.2
+  nanoc 3.7.4
+  nokogiri 1.5.6, 1.6.5
+  pandoc-ruby 0.7.5
+  posix-spawn 0.3.9
+  psych 2.0.0
+  pygments.rb 0.6.0
+  rack 1.6.0
+  rake 0.9.6
+  rdoc 4.0.0
+  sqlite3 1.3.7
+  test-unit 2.0.0.0
+  yajl-ruby 1.1.0
+
+===== ENVIRONMENT:
+
+ANDROID_HOME => "/Applications/Java/android-sdk-macosx/"
+ANT_HOME => "/Applications/Java/apache-ant-1.9.4"
+Apple_PubSub_Socket_Render => "/private/tmp/com.apple.launchd.0f4KqJYx5b/Render"
+CASSANDRA_HOME => "/Applications/Java/apache-cassandra-1.2.19"
+CATALINA_HOME => "/Applications/Java/apache-tomcat-7.0.59"
+CATALINA_OPTS => "-Dlog4j.configuration=file:/Applications/Java/apache-tomcat-7.0.59/lib/log4j.properties"
+CATALINA_PID => "/Applications/Java/apache-tomcat-7.0.59/catalina.pid"
+DISPLAY => ":0.0"
+ELASTICSEARCH_HOME => "/Applications/Java/elasticsearch-1.4.4-ug"
+GATLING_HOME => "/Applications/Java/gatling-charts-highcharts-2.0.0-RC5"
+GIT_SSL_NO_VERIFY => "true"
+GROOVY_HOME => "/Applications/Java/groovy"
+HOME => "/Users/ApigeeCorporation"
+JAVA_HOME => "/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home"
+JMETER_HOME => "/Applications/Java/jmeter"
+JRE_HOME => "/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home"
+LC_CTYPE => "en_US.UTF-8"
+LOGNAME => "ApigeeCorporation"
+M2_HOME => "/Applications/Java/apache-maven-3.3.1"
+MAVEN2_HOME => "/Applications/Java/apache-maven-3.3.1"
+MAVEN3_HOME => "/Applications/Java/apache-maven-3.3.1"
+MAVEN_OPTS => "-Xms7001m -Xmx7001m"
+OLDPWD => "/Users/ApigeeCorporation/src/usergrid"
+PATH => "/Users/ApigeeCorporation/bin:/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin:/Applications/Java/apache-maven-3.3.1/bin:/Applications/Java/apache-tomcat-7.0.59/bin:/Applications/Java/apache-cassandra-1.2.19/bin:/Applications/Java/elasticsearch-1.4.4-ug/bin:/Applications/Java/jmeter/bin:/Applications/Java/apache-ant-1.9.4/bin:/Applications/Java/gatling-charts-highcharts-2.0.0-RC5/bin:/Applications/Java/android-sdk-macosx//tools:/Applications/Java/android-sdk-macosx//platform-tools:/Applications/Java/groovy/bin:/usr/local/Cellar/ruby/2.0.0-p247/bin:/usr/local/bin:/usr/local/git/bin:/usr/local/sbin:/sbin:/usr/sbin:/bin:/usr/bin:/sw/bin:/usr/X11R6/bin:/opt/local/bin"
+PWD => "/Users/ApigeeCorporation/src/usergrid/website"
+RUBY_GEMS => "/usr/local/Cellar/ruby/2.0.0-p247"
+SHELL => "/bin/bash"
+SHLVL => "1"
+SSH_AUTH_SOCK => "/private/tmp/com.apple.launchd.hKMuDO4tvG/Listeners"
+TERM => "xterm-256color"
+TMPDIR => "/var/folders/mv/k7rks8y52hvb6n8rsz_j0_jc0000gp/T/"
+USER => "ApigeeCorporation"
+VIM_APP_DIR => "/Applications"
+XPC_FLAGS => "0x0"
+XPC_SERVICE_NAME => "0"
+_ => "/usr/bin/nanoc"
+__CF_USER_TEXT_ENCODING => "0x1F6:0x0:0x0"
+
+===== LOAD PATHS:
+
+  0. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib
+  1. /Library/Ruby/Gems/2.0.0/gems/colored-1.2/lib
+  2. /Library/Ruby/Gems/2.0.0/gems/cri-2.6.1/lib
+  3. /Library/Ruby/Gems/2.0.0/gems/nanoc-3.7.4/lib
+  4. /Library/Ruby/Gems/2.0.0/gems/pandoc-ruby-0.7.5/lib
+  5. /Library/Ruby/Gems/2.0.0/gems/htmlentities-4.3.3/lib
+  6. /Library/Ruby/Site/2.0.0
+  7. /Library/Ruby/Site/2.0.0/x86_64-darwin14
+  8. /Library/Ruby/Site/2.0.0/universal-darwin14
+  9. /Library/Ruby/Site
+  10. /System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0
+  11. /System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/x86_64-darwin14
+  12. /System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/universal-darwin14
+  13. /System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby
+  14. /System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0
+  15. /System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/x86_64-darwin14
+  16. /System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/universal-darwin14
