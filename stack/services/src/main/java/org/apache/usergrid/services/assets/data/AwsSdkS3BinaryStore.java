@@ -93,6 +93,9 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
     @Autowired
     private EntityManagerFactory emf;
 
+    @Autowired
+    private Properties properties;
+
     public AwsSdkS3BinaryStore( ) {
     }
 
@@ -100,37 +103,24 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
     //ideally it should only do one. and the client should be initlized at the beginning of the run.
     private AmazonS3 getS3Client() throws Exception{
 
-            this.accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
-            if(accessId == null){
-                logger.error( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR + " not properly set so amazon access key is null" );
-                throw new AwsPropertiesNotFoundException( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        this.bucketName = properties.getProperty( "usergrid.binary.bucketname" );
+        if(bucketName == null){
+            logger.error( "usergrid.binary.bucketname  not properly set so amazon bucket is null" );
+            throw new AwsPropertiesNotFoundException( "usergrid.binary.bucketname" );
 
-            }
-            this.secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+        }
 
-            if(secretKey == null){
-                logger.error( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR + " not properly set so amazon secret key is null" );
-                throw new AwsPropertiesNotFoundException( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+        AWSCredentials credentials = ugProvider.getCredentials();
+        ClientConfiguration clientConfig = new ClientConfiguration();
+        clientConfig.setProtocol(Protocol.HTTP);
 
-            }
-            this.bucketName = System.getProperty( "usergrid.binary.bucketname" );
-            if(bucketName == null){
-                logger.error( "usergrid.binary.bucketname  not properly set so amazon bucket is null" );
-                throw new AwsPropertiesNotFoundException( "usergrid.binary.bucketname" );
-
-            }
-
-            AWSCredentials credentials = new BasicAWSCredentials(accessId, secretKey);
-            ClientConfiguration clientConfig = new ClientConfiguration();
-            clientConfig.setProtocol(Protocol.HTTP);
-
-            s3Client = new AmazonS3Client(credentials, clientConfig);
-            if(regionName != null)
-                s3Client.setRegion( Region.getRegion(Regions.fromName(regionName)) );
+        s3Client = new AmazonS3Client(credentials, clientConfig);
+        if(regionName != null)
+            s3Client.setRegion( Region.getRegion(Regions.fromName(regionName)) );
 
         return s3Client;
     }
-
 
     @Override
     public void write( final UUID appId, final Entity entity, InputStream inputStream ) throws Exception {
@@ -186,7 +176,7 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
 
             // determine max size file allowed, default to 50mb
             long maxSizeBytes = 50 * FileUtils.ONE_MB;
-            String maxSizeMbString = System.getProperty( "usergrid.binary.max-size-mb", "50" );
+            String maxSizeMbString = properties.getProperty( "usergrid.binary.max-size-mb", "50" );
             if ( StringUtils.isNumeric( maxSizeMbString )) {
                 maxSizeBytes = Long.parseLong( maxSizeMbString ) * FileUtils.ONE_MB;
             }
