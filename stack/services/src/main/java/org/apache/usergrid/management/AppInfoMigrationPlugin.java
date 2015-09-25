@@ -178,6 +178,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
         final String name = ( String ) oldAppInfoMap.get( PROPERTY_NAME );
 
+        logger.info( "Attempting to migrate app {}", name );
+
         try {
             final String orgName = name.split( "/" )[0];
             final String appName = name.split( "/" )[1];
@@ -190,6 +192,15 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             //avoid management org
 
             EntityRef orgRef = managementEm.getAlias( Group.ENTITY_TYPE, orgName );
+
+            /**
+             * No op, we couldn't find the org, so we can't roll the app forward
+             */
+            if(orgRef == null){
+                logger.error( "Unable to retrieve ref for org {}.  Not migrating app {}", orgName, appName );
+                return;
+            }
+
             // create and connect new APPLICATION_INFO oldAppInfo to Organization
             managementService.createApplication( orgRef.getUuid(), name, applicationId, null );
 
