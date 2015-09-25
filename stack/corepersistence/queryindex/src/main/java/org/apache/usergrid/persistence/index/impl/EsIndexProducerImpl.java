@@ -141,7 +141,7 @@ public class EsIndexProducerImpl implements IndexProducer {
 
         //now that we've processed them all, ack the futures after our last batch comes through
         final Observable<IndexOperationMessage> processedIndexOperations =
-            requests.lastOrDefault(null).flatMap(lastRequest -> {
+            requests.flatMap(lastRequest -> {
                 if (lastRequest != null) {
                     return Observable.just(batch);
                 } else {
