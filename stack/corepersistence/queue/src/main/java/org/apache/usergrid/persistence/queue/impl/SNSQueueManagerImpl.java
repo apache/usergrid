@@ -449,6 +449,15 @@ public class SNSQueueManagerImpl implements QueueManager {
 
     }
 
+    @Override
+    public void deleteQueue() {
+        logger.warn("Deleting queue: "+getReadQueue().getUrl());
+        sqs.deleteQueue(new DeleteQueueRequest().withQueueUrl(getReadQueue().getUrl()));
+        logger.warn("Deleting queue: "+getReadQueue().getUrl()+"_dead");
+        sqs.deleteQueue(new DeleteQueueRequest().withQueueUrl(getReadQueue().getUrl()+"_dead"));
+
+    }
+
 
     @Override
     public void commitMessage(final QueueMessage queueMessage) {

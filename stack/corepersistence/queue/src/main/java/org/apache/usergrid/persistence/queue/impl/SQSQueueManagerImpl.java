@@ -327,6 +327,13 @@ public class SQSQueueManagerImpl implements QueueManager {
         return region;
     }
 
+    @Override
+    public void deleteQueue() {
+        logger.warn("Deleting queue: "+getQueue().getUrl());
+        sqs.deleteQueue(new DeleteQueueRequest().withQueueUrl(getQueue().getUrl()));
+    }
+
+
 
     /**
      * Create the SQS client for the specified settings
