@@ -93,9 +93,6 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
     @Autowired
     private EntityManagerFactory emf;
 
-    @Autowired
-    private Properties properties;
-
     public AwsSdkS3BinaryStore( ) {
     }
 
@@ -103,20 +100,20 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
     //ideally it should only do one. and the client should be initlized at the beginning of the run.
     private AmazonS3 getS3Client() throws Exception{
 
-            this.accessId = properties.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+            this.accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
             if(accessId == null){
                 logger.error( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR + " not properly set so amazon access key is null" );
                 throw new AwsPropertiesNotFoundException( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
 
             }
-            this.secretKey = properties.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+            this.secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
             if(secretKey == null){
                 logger.error( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR + " not properly set so amazon secret key is null" );
                 throw new AwsPropertiesNotFoundException( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
             }
-            this.bucketName = properties.getProperty( "usergrid.binary.bucketname" );
+            this.bucketName = System.getProperty( "usergrid.binary.bucketname" );
             if(bucketName == null){
                 logger.error( "usergrid.binary.bucketname  not properly set so amazon bucket is null" );
                 throw new AwsPropertiesNotFoundException( "usergrid.binary.bucketname" );
@@ -189,7 +186,7 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
 
             // determine max size file allowed, default to 50mb
             long maxSizeBytes = 50 * FileUtils.ONE_MB;
-            String maxSizeMbString = properties.getProperty( "usergrid.binary.max-size-mb", "50" );
+            String maxSizeMbString = System.getProperty( "usergrid.binary.max-size-mb", "50" );
             if ( StringUtils.isNumeric( maxSizeMbString )) {
                 maxSizeBytes = Long.parseLong( maxSizeMbString ) * FileUtils.ONE_MB;
             }
