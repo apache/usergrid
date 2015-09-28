@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
@@ -108,7 +109,8 @@ public class IndexOperationMessage implements Serializable {
         return creationTime;
     }
 
-    public void injest(IndexOperationMessage singleMessage) {
-        si
+    public void ingest(IndexOperationMessage singleMessage) {
+        this.indexRequests.addAll(singleMessage.getIndexRequests().stream().collect(Collectors.toList()));
+        this.deIndexRequests.addAll(singleMessage.getDeIndexRequests().stream().collect(Collectors.toList()));
     }
 }

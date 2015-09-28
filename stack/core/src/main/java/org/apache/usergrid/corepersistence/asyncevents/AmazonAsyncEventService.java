@@ -268,7 +268,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             .flatMap(indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
                 Observable.from(indexEventResults)
-                    .doOnNext(indexEventResult -> combined.injest(indexEventResult.getIndexOperationMessage().get())).subscribe();
+                    .doOnNext(indexEventResult -> combined.ingest(indexEventResult.getIndexOperationMessage().get())).subscribe();
                 indexProducer.put(combined).subscribe();
                 return Observable.from(indexEventResults);
             })
