@@ -232,56 +232,75 @@ public class AmazonAsyncEventService implements AsyncEventService {
             logger.debug("handleMessages with {} message", messages.size());
         }
 
-        Observable<IndexEventResult> merged = Observable.empty();
-        for (QueueMessage message : messages) {
+        Observable<IndexEventResult> masterObservable = Observable.from(messages).flatMap(message -> {
             final AsyncEvent event = (AsyncEvent) message.getBody();
 
             logger.debug("Processing {} event", event);
 
             if (event == null) {
                 logger.error("AsyncEvent type or event is null!");
-                continue;
+                return Observable.empty();
             }
+            try {
+                //merge each operation to a master observable;
+                if (event instanceof EdgeDeleteEvent) {
+                    return handleIndexOperation(message, queueMessage -> handleEdgeDelete(queueMessage));
+                } else if (event instanceof EdgeIndexEvent) {
+                    return handleIndexOperation(message, queueMessage -> handleEdgeIndex(queueMessage));
+                } else if (event instanceof EntityDeleteEvent) {
+                    return handleIndexOperation(message, queueMessage -> handleEntityDelete(queueMessage));
+                } else if (event instanceof EntityIndexEvent) {
+                    return handleIndexOperation(message, queueMessage -> handleEntityIndexUpdate(queueMessage));
+                } else if (event instanceof InitializeApplicationIndexEvent) {
+                    //does not return observable
+                    handleInitializeApplicationIndex(message);
+                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
+                } else {
+                    logger.error("Unknown EventType: {}", event);
+                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
+                }
+            }catch (Exception e){
+                logger.error("Failed to index entity", e,message);
+                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
+            }finally {
+                messageCycle.update(System.currentTimeMillis() - event.getCreationTime());
 
-            if (event instanceof EdgeDeleteEvent) {
-               merged = merged.mergeWith(callHandleIndex(message, queueMessage -> handleEdgeDelete(queueMessage)));
-            } else if (event instanceof EdgeIndexEvent) {
-               merged = merged.mergeWith(callHandleIndex(message, queueMessage -> handleEdgeIndex(queueMessage)));
-            } else if (event instanceof EntityDeleteEvent) {
-                merged = merged.mergeWith( callHandleIndex(message, queueMessage -> handleEntityDelete(queueMessage)));
-            } else if (event instanceof EntityIndexEvent) {
-                merged = merged.mergeWith(callHandleIndex(message, queueMessage -> handleEntityIndexUpdate(queueMessage)));
-            } else if (event instanceof InitializeApplicationIndexEvent) {
-                //does not return observable
-                handleInitializeApplicationIndex(message);
-            } else {
-                logger.error("Unknown EventType: {}", event);
             }
+        });
 
-            messageCycle.update(System.currentTimeMillis() - event.getCreationTime());
-        }
-
-        merged
+        masterObservable
+            //remove unsuccessful
             .filter(indexEventResult -> indexEventResult.success() && indexEventResult.getIndexOperationMessage().isPresent())
+            //take the max
             .buffer(MAX_TAKE)
-            .flatMap(indexEventResults -> {
+            //map them to index results and return them
+            .map(indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
-                Observable.from(indexEventResults)
-                    .doOnNext(indexEventResult -> combined.ingest(indexEventResult.getIndexOperationMessage().get())).subscribe();
-                indexProducer.put(combined).subscribe();
-                return Observable.from(indexEventResults);
+                indexEventResults.stream()
+                    .forEach(indexEventResult -> combined.ingest(indexEventResult.getIndexOperationMessage().get()));
+                indexProducer.put(combined).subscribe();//execute the index operation
+                return indexEventResults;
             })
-            .doOnNext(indexEventResult ->ack(indexEventResult.queueMessage))
+                //flat map the ops so they are back to individual
+            .flatMap(indexEventResults -> Observable.from(indexEventResults))
+            //ack each message
+            .map(indexEventResult -> {
+                ack(indexEventResult.queueMessage);
+                return indexEventResult;
+            })
             .subscribe();
     }
 
-    private Observable<IndexEventResult> callHandleIndex(QueueMessage message, Func1<QueueMessage, Observable<IndexOperationMessage>> toCall){
+    //transform index operation to
+    private Observable<IndexEventResult> handleIndexOperation(QueueMessage queueMessage,
+                                                              Func1<QueueMessage, Observable<IndexOperationMessage>> operation
+    ){
         try{
-            IndexOperationMessage indexOperationMessage =  toCall.call(message).toBlocking().lastOrDefault(null);
-            return Observable.just(new IndexEventResult(message,Optional.fromNullable(indexOperationMessage),true));
+            return operation.call(queueMessage)
+                .map(indexOperationMessage -> new IndexEventResult(queueMessage, Optional.fromNullable(indexOperationMessage), true));
         }catch (Exception e){
             logger.error("failed to run index",e);
-            return Observable.just( new IndexEventResult(message, Optional.<IndexOperationMessage>absent(),false));
+            return Observable.just( new IndexEventResult(queueMessage, Optional.<IndexOperationMessage>absent(),false));
         }
     }
 
@@ -548,7 +567,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private void subscribeAndAck( final Observable<?> observable, final QueueMessage message ){
        observable.doOnCompleted( ()-> ack(message)  ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
     }
-    public static class IndexEventResult{
+    public class IndexEventResult{
         private final QueueMessage queueMessage;
         private final Optional<IndexOperationMessage> indexOperationMessage;
         private final boolean success;
