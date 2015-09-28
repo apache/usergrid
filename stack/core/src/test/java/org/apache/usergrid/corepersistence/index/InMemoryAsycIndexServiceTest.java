@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
@@ -53,9 +54,11 @@ public class InMemoryAsycIndexServiceTest extends AsyncIndexServiceTest {
     public RxTaskScheduler rxTaskScheduler;
 
 
+    @Inject
+    public IndexProducer indexProducer;
     @Override
     protected AsyncEventService getAsyncEventService() {
-        return  new InMemoryAsyncEventService( eventBuilder, rxTaskScheduler, false  );
+        return  new InMemoryAsyncEventService( eventBuilder, rxTaskScheduler,indexProducer, false  );
     }
 
 
