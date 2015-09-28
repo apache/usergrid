@@ -243,15 +243,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 continue;
             }
 
-
             if (event instanceof EdgeDeleteEvent) {
-               merged = merged.mergeWith(callHandleIndex(queueMessage -> handleEdgeDelete(queueMessage), message));
+               merged = merged.mergeWith(callHandleIndex(message, queueMessage -> handleEdgeDelete(queueMessage)));
             } else if (event instanceof EdgeIndexEvent) {
-               merged = merged.mergeWith(callHandleIndex(queueMessage -> handleEdgeIndex(queueMessage),message));
+               merged = merged.mergeWith(callHandleIndex(message, queueMessage -> handleEdgeIndex(queueMessage)));
             } else if (event instanceof EntityDeleteEvent) {
-                merged = merged.mergeWith( callHandleIndex(queueMessage -> handleEntityDelete(queueMessage),message));
+                merged = merged.mergeWith( callHandleIndex(message, queueMessage -> handleEntityDelete(queueMessage)));
             } else if (event instanceof EntityIndexEvent) {
-                merged = merged.mergeWith(callHandleIndex(queueMessage -> handleEntityIndexUpdate(queueMessage),message));
+                merged = merged.mergeWith(callHandleIndex(message, queueMessage -> handleEntityIndexUpdate(queueMessage)));
             } else if (event instanceof InitializeApplicationIndexEvent) {
                 //does not return observable
                 handleInitializeApplicationIndex(message);
@@ -272,10 +271,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 indexProducer.put(combined).subscribe();
                 return Observable.from(indexEventResults);
             })
-            .doOnNext(indexEventResult ->ack(indexEventResult.queueMessage));
+            .doOnNext(indexEventResult ->ack(indexEventResult.queueMessage))
+            .subscribe();
     }
 
-    private Observable<IndexEventResult> callHandleIndex(Func1<QueueMessage,Observable<IndexOperationMessage>> toCall, QueueMessage message){
+    private Observable<IndexEventResult> callHandleIndex(QueueMessage message, Func1<QueueMessage, Observable<IndexOperationMessage>> toCall){
         try{
             IndexOperationMessage indexOperationMessage =  toCall.call(message).toBlocking().lastOrDefault(null);
             return Observable.just(new IndexEventResult(message,Optional.fromNullable(indexOperationMessage),true));
