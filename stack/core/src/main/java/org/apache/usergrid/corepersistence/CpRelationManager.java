@@ -535,9 +535,7 @@ public class CpRelationManager implements RelationManager {
 
         batch.deindex( indexScope, memberEntity );
 
-
-        batch.execute();
-
+        managerCache.getIndexProducer().put( batch.build()).subscribe();
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
