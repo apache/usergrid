@@ -23,20 +23,25 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
 import org.apache.usergrid.services.ServiceParameter.QueryParameter;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+
+import rx.Observable;
+import rx.schedulers.Schedulers;
+
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.firstParameterIsName;
 import static org.apache.usergrid.utils.ClassUtils.cast;
@@ -398,6 +403,11 @@ public class AbstractConnectionsService extends AbstractService {
             String entityType = getEntityType();
             item = em.create( id, entityType, context.getPayload().getProperties() );
         }
+
+        //create the connection
+        createConnection( context.getOwner(), context.getCollectionName(), item );
+
+
         return new ServiceResults( this, context, Type.CONNECTION, Results.fromEntity( item ), null, null );
     }
 
@@ -425,6 +435,35 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         updateEntities( context, r );
+
+          //create the connection
+
+        //TODO wire the RX scheduler in here and use our parallelism system
+
+
+        /**
+         * Create all the connections for all the entities
+         */
+        final List<Entity> entities = r.getEntities();
+        if ( entities != null ) {
+
+            /**
+             * Save up to 10 connections in parallel
+             */
+            Observable.from(entities).flatMap( emittedEntity -> {
+                return Observable.just( emittedEntity ).doOnNext( toSave -> {
+                    try {
+                        createConnection( context.getOwner(), context.getCollectionName(), toSave );
+                    }
+                    catch ( Exception e ) {
+                        throw new RuntimeException( "Unable to save connection", e );
+                    }
+                }).subscribeOn( Schedulers.io() );
+            }, 10).subscribe();
+
+
+        }
+
 
         return new ServiceResults( this, context, Type.CONNECTION, r, null, null );
     }
