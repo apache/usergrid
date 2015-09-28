@@ -239,7 +239,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
             if (event == null) {
                 logger.error("AsyncEvent type or event is null!");
-                return Observable.empty();
+                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
             }
             try {
                 //merge each operation to a master observable;
