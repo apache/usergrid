@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.query.ir.result;
 
 
+import java.lang.UnsupportedOperationException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -49,6 +50,11 @@ public class GatherIterator implements ResultIterator {
         this.workerCoordinator.start();
     }
 
+    /** this is needed for compiling under Java 7 */
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 
     @Override
     public void reset() {
