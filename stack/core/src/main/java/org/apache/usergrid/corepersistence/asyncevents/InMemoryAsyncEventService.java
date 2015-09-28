@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,14 +50,19 @@ public class InMemoryAsyncEventService implements AsyncEventService {
 
     private final EventBuilder eventBuilder;
     private final RxTaskScheduler rxTaskScheduler;
+    private final IndexProducer indexProducer;
     private final boolean resolveSynchronously;
 
 
     @Inject
-    public InMemoryAsyncEventService( final EventBuilder eventBuilder, final RxTaskScheduler rxTaskScheduler, boolean
-        resolveSynchronously ) {
+    public InMemoryAsyncEventService( final EventBuilder eventBuilder,
+                                      final RxTaskScheduler rxTaskScheduler,
+                                      final IndexProducer indexProducer,
+                                      boolean resolveSynchronously
+    ) {
         this.eventBuilder = eventBuilder;
         this.rxTaskScheduler = rxTaskScheduler;
+        this.indexProducer = indexProducer;
         this.resolveSynchronously = resolveSynchronously;
     }
 
@@ -117,12 +124,13 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     }
 
     public void run( Observable<?> observable ) {
+        Observable mapped = observable.map(message -> message instanceof IndexOperationMessage ? indexProducer.put((IndexOperationMessage)message) : Observable.just(message));
         //start it in the background on an i/o thread
         if ( !resolveSynchronously ) {
-            observable.subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+            mapped.subscribeOn(rxTaskScheduler.getAsyncIOScheduler()).subscribe();
         }
         else {
-            observable.toBlocking().lastOrDefault(null);
+            mapped.subscribe();
         }
     }
 

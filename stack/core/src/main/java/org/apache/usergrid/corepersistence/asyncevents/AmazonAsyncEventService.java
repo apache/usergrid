@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +71,7 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 
@@ -85,6 +88,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final QueueManager queue;
     private final QueueScope queueScope;
     private final IndexProcessorFig indexProcessorFig;
+    private final IndexProducer indexProducer;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final EntityIndexFactory entityIndexFactory;
@@ -110,11 +114,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
     @Inject
-    public AmazonAsyncEventService( final QueueManagerFactory queueManagerFactory, final IndexProcessorFig indexProcessorFig,
-                                    final MetricsFactory metricsFactory,  final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                    final IndexLocationStrategyFactory indexLocationStrategyFactory, final EntityIndexFactory entityIndexFactory,
+    public AmazonAsyncEventService( final QueueManagerFactory queueManagerFactory,
+                                    final IndexProcessorFig indexProcessorFig,
+                                    final IndexProducer indexProducer,
+                                    final MetricsFactory metricsFactory,
+                                    final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                    final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                    final EntityIndexFactory entityIndexFactory,
                                     final EventBuilder eventBuilder,
                                     final RxTaskScheduler rxTaskScheduler ) {
+        this.indexProducer = indexProducer;
 
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
@@ -219,43 +228,60 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
     private void handleMessages( final List<QueueMessage> messages ) {
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "handleMessages with {} message", messages.size() );
+        if (logger.isDebugEnabled()) {
+            logger.debug("handleMessages with {} message", messages.size());
         }
 
-        for ( QueueMessage message : messages ) {
-            final AsyncEvent event = ( AsyncEvent ) message.getBody();
+        Observable<IndexEventResult> merged = Observable.empty();
+        for (QueueMessage message : messages) {
+            final AsyncEvent event = (AsyncEvent) message.getBody();
 
-            logger.debug( "Processing {} event", event );
+            logger.debug("Processing {} event", event);
 
-            if ( event == null ) {
-                logger.error( "AsyncEvent type or event is null!" );
+            if (event == null) {
+                logger.error("AsyncEvent type or event is null!");
                 continue;
             }
 
 
-            if ( event instanceof EdgeDeleteEvent ) {
-                handleEdgeDelete( message );
-            }
-            else if ( event instanceof EdgeIndexEvent ) {
-                handleEdgeIndex( message );
-            }
-
-            else if ( event instanceof EntityDeleteEvent ) {
-                handleEntityDelete( message );
-            }
-            else if ( event instanceof EntityIndexEvent ) {
-                handleEntityIndexUpdate( message );
-            }
-
-            else if ( event instanceof InitializeApplicationIndexEvent ) {
-                handleInitializeApplicationIndex( message );
-            }
-            else {
-                logger.error( "Unknown EventType: {}", event );
+            if (event instanceof EdgeDeleteEvent) {
+               merged = merged.mergeWith(callHandleIndex(queueMessage -> handleEdgeDelete(queueMessage), message));
+            } else if (event instanceof EdgeIndexEvent) {
+               merged = merged.mergeWith(callHandleIndex(queueMessage -> handleEdgeIndex(queueMessage),message));
+            } else if (event instanceof EntityDeleteEvent) {
+                merged = merged.mergeWith( callHandleIndex(queueMessage -> handleEntityDelete(queueMessage),message));
+            } else if (event instanceof EntityIndexEvent) {
+                merged = merged.mergeWith(callHandleIndex(queueMessage -> handleEntityIndexUpdate(queueMessage),message));
+            } else if (event instanceof InitializeApplicationIndexEvent) {
+                //does not return observable
+                handleInitializeApplicationIndex(message);
+            } else {
+                logger.error("Unknown EventType: {}", event);
             }
 
-            messageCycle.update( System.currentTimeMillis() - event.getCreationTime() );
+            messageCycle.update(System.currentTimeMillis() - event.getCreationTime());
+        }
+
+        merged
+            .filter(indexEventResult -> indexEventResult.success() && indexEventResult.getIndexOperationMessage().isPresent())
+            .buffer(MAX_TAKE)
+            .flatMap(indexEventResults -> {
+                IndexOperationMessage combined = new IndexOperationMessage();
+                Observable.from(indexEventResults)
+                    .doOnNext(indexEventResult -> combined.injest(indexEventResult.getIndexOperationMessage().get())).subscribe();
+                indexProducer.put(combined).subscribe();
+                return Observable.from(indexEventResults);
+            })
+            .doOnNext(indexEventResult ->ack(indexEventResult.queueMessage));
+    }
+
+    private Observable<IndexEventResult> callHandleIndex(Func1<QueueMessage,Observable<IndexOperationMessage>> toCall, QueueMessage message){
+        try{
+            IndexOperationMessage indexOperationMessage =  toCall.call(message).toBlocking().lastOrDefault(null);
+            return Observable.just(new IndexEventResult(message,Optional.fromNullable(indexOperationMessage),true));
+        }catch (Exception e){
+            logger.error("failed to run index",e);
+            return Observable.just( new IndexEventResult(message, Optional.<IndexOperationMessage>absent(),false));
         }
     }
 
@@ -276,7 +302,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    public void handleEntityIndexUpdate(final QueueMessage message) {
+    public Observable<IndexOperationMessage> handleEntityIndexUpdate(final QueueMessage message) {
 
         Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEntityIndexUpdate" );
 
@@ -298,8 +324,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, entityId, updatedAfter);
 
         final Observable<IndexOperationMessage> observable = eventBuilder.buildEntityIndex( entityIndexOperation );
-
-        subscribeAndAck( observable, message );
+        return observable;
     }
 
 
@@ -313,7 +338,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         offer( operation );
     }
 
-    public void handleEdgeIndex(final QueueMessage message) {
+    public Observable<IndexOperationMessage> handleEdgeIndex(final QueueMessage message) {
 
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEdgeIndex");
 
@@ -333,8 +358,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(edgeIndexEvent.getEntityId()).flatMap( entity -> eventBuilder.buildNewEdge(
             applicationScope, entity, edge ) );
-
-        subscribeAndAck( edgeIndexObservable, message );
+        return edgeIndexObservable;
     }
 
     @Override
@@ -344,7 +368,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         offer( new EdgeDeleteEvent( applicationScope, edge ) );
     }
 
-    public void handleEdgeDelete(final QueueMessage message) {
+    public Observable<IndexOperationMessage> handleEdgeDelete(final QueueMessage message) {
 
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEdgeDelete");
 
@@ -362,8 +386,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         if (logger.isDebugEnabled()) logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
 
         final Observable<IndexOperationMessage> observable = eventBuilder.buildDeleteEdge( applicationScope, edge );
-
-        subscribeAndAck( observable, message );
+        return observable;
     }
 
 
@@ -378,7 +401,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         return queue.getQueueDepth();
     }
 
-    public void handleEntityDelete(final QueueMessage message) {
+    public Observable<IndexOperationMessage> handleEntityDelete(final QueueMessage message) {
 
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEntityDelete");
 
@@ -401,8 +424,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final Observable merged = Observable.merge( entityDeleteResults.getEntitiesCompacted(),
             entityDeleteResults.getIndexObservable() );
-
-        subscribeAndAck( merged, message );
+        return merged;
     }
 
 
@@ -525,5 +547,29 @@ public class AmazonAsyncEventService implements AsyncEventService {
      */
     private void subscribeAndAck( final Observable<?> observable, final QueueMessage message ){
        observable.doOnCompleted( ()-> ack(message)  ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+    }
+    public static class IndexEventResult{
+        private final QueueMessage queueMessage;
+        private final Optional<IndexOperationMessage> indexOperationMessage;
+        private final boolean success;
+
+        public IndexEventResult(QueueMessage queueMessage, Optional<IndexOperationMessage> indexOperationMessage ,boolean success){
+
+            this.queueMessage = queueMessage;
+            this.indexOperationMessage = indexOperationMessage;
+            this.success = success;
+        }
+
+        public QueueMessage getQueueMessage() {
+            return queueMessage;
+        }
+
+        public boolean success() {
+            return success;
+        }
+
+        public Optional<IndexOperationMessage> getIndexOperationMessage() {
+            return indexOperationMessage;
+        }
     }
 }
