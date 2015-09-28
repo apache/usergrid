@@ -114,7 +114,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.index( indexEdge, entity );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> batch.execute() ) );
+                .flatMap( batch -> Observable.just(batch.build()) ) );
 
         return ObservableTimer.time( batches, indexTimer );
     }
@@ -142,7 +142,7 @@ public class IndexServiceImpl implements IndexService {
 
             batch.index( indexEdge, entity );
 
-            return batch.execute();
+            return Observable.just(batch.build());
         } );
 
         return ObservableTimer.time( batches, addTimer  );
@@ -185,7 +185,7 @@ public class IndexServiceImpl implements IndexService {
 
                 batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
 
-                return batch.execute();
+                return Observable.just(batch.build());
             } );
 
         return ObservableTimer.time( batches, addTimer );
@@ -221,7 +221,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.deindex( searchEdge, candidateResult );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> batch.execute() );
+                .flatMap( batch ->Observable.just(batch.build()) );
 
         return ObservableTimer.time(batches, indexTimer);
     }
