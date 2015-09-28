@@ -27,7 +27,7 @@ Methods are organized by tag. Follow the methods are the [Model Definitions](#mo
 
 <h2 class="usergrid-POST-heading">POST /management/token</h2>
 
-<a name="op-g6kolrjbqc"></a>
+<a name="op-0bzf2cyzsh"></a>
 
 Login with Admin-User or Organization credentials.
 
@@ -51,7 +51,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/token</h2>
 
-<a name="op-1epwdjbmq5"></a>
+<a name="op-svs0512krj"></a>
 
 Login with App-User or Application credentials.
 
@@ -78,7 +78,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/groups/{groupId}/feed</h2>
 
-<a name="op-ogkiyu6hiw"></a>
+<a name="op-aektocz9dh"></a>
 
 Get a group&#39;s feed through providing all the identifications.
 
@@ -106,7 +106,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users/{userId}/activities</h2>
 
-<a name="op-vxk180byil"></a>
+<a name="op-nxy02yvl0h"></a>
 
 Create an activity in the activities collection.
 
@@ -136,7 +136,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/feed</h2>
 
-<a name="op-3e8mjg3ild"></a>
+<a name="op-o8teq5gp8a"></a>
 
 Retrieve a user&#39;s feed through providing all the identifications.
 
@@ -167,7 +167,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/users</h2>
 
-<a name="op-0h23bhc1fo"></a>
+<a name="op-fihfmp3tme"></a>
 
 Retrieve details about the admin users in an organization.
 
@@ -191,7 +191,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /management/orgs/{orgId}/users/{userId}</h2>
 
-<a name="op-tslbueyidt"></a>
+<a name="op-bsf4a7eiyt"></a>
 
 Remove an admin user from an organization through providing both Id of application and organization.
 
@@ -217,7 +217,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/users</h2>
 
-<a name="op-qq0xsfwrk9"></a>
+<a name="op-jkvb4rpfti"></a>
 
 Create a whole new admin user.
 
@@ -241,7 +241,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/users/resetpw</h2>
 
-<a name="op-d5w5sa7r6g"></a>
+<a name="op-ivi39w3d6n"></a>
 
 Initiate the reset of an admin user&#39;s password.
 
@@ -263,7 +263,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/users/resetpw</h2>
 
-<a name="op-mtjnervjog"></a>
+<a name="op-8iu1cdqxul"></a>
 
 Complete the password reset through getting the newpassword and the old one for identification.
 
@@ -287,7 +287,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}</h2>
 
-<a name="op-pqthpqruuu"></a>
+<a name="op-ok1xm0q0no"></a>
 
 Retrieve details about an admin user.
 
@@ -311,7 +311,7 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /management/users/{userId}</h2>
 
-<a name="op-mydfdnvoxu"></a>
+<a name="op-ukwxjinvyf"></a>
 
 Update the info of an admin user.
 
@@ -335,7 +335,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/activate</h2>
 
-<a name="op-ydubzwoyll"></a>
+<a name="op-xxue8ovmq9"></a>
 
 Activate an admin user from a link provIded in an email notification.
 
@@ -363,7 +363,7 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /management/users/{userId}/password</h2>
 
-<a name="op-tojtjxiv8m"></a>
+<a name="op-xpx6gbuzfw"></a>
 
 Update an admin user&#39;s password through getting the newpassword and the old one for identification.
 
@@ -389,7 +389,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/reactivate</h2>
 
-<a name="op-fcsvsgqdmf"></a>
+<a name="op-xzwpxdciff"></a>
 
 Reactivate an expired admin user.
 
@@ -416,7 +416,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users</h2>
 
-<a name="op-apfodlbfvw"></a>
+<a name="op-jndyp0tykz"></a>
 
 Retrieve users though query statement.
 
@@ -444,7 +444,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users</h2>
 
-<a name="op-vcebxhfnai"></a>
+<a name="op-aioxrj1eep"></a>
 
 Create a user in the users collection through providing all the identifications.
 
@@ -472,7 +472,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}</h2>
 
-<a name="op-rxzqi79iqh"></a>
+<a name="op-snzs7adf7o"></a>
 
 Retrieve a user through providing all the identifications.
 
@@ -500,7 +500,7 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/users/{userId}</h2>
 
-<a name="op-eqfv3kglfr"></a>
+<a name="op-euchoncmpy"></a>
 
 Update a user through providing all the identifications.
 
@@ -528,7 +528,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/users/{userId}</h2>
 
-<a name="op-q0sbwpkbrn"></a>
+<a name="op-2vwm8uuxgr"></a>
 
 Remove a user through providing all the identifications.
 
@@ -556,7 +556,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users/{user}/password</h2>
 
-<a name="op-tz8aby9w7l"></a>
+<a name="op-1vbgigzor7"></a>
 
 Set a user&#39;s password or reset the user&#39;s existing password.
 
@@ -589,7 +589,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/{relation}</h2>
 
-<a name="op-p3wfwppylf"></a>
+<a name="op-nsdxcm2w07"></a>
 
 Retrieve a user&#39;s collections or connections through query statement.
 
@@ -621,7 +621,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/{collectionId}</h2>
 
-<a name="op-071uvg9uhh"></a>
+<a name="op-da7vw2iqa7"></a>
 
 Retrieve collection through query statement.
 
@@ -651,7 +651,7 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/{collectionId}</h2>
 
-<a name="op-vlva22mrqv"></a>
+<a name="op-17qn0rvgpm"></a>
 
 Update collection through query statement.
 
@@ -681,7 +681,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</h2>
 
-<a name="op-yhl3yuzrpo"></a>
+<a name="op-6dzb3xz0wq"></a>
 
 Add an entity to a collection through providing all the identifications.
 
@@ -715,7 +715,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</h2>
 
-<a name="op-9gfzhzym3s"></a>
+<a name="op-inrrw1fqal"></a>
 
 Remove an entity from a collection through providing all the identifications.
 
@@ -749,7 +749,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/{collectionId}/{entityId}</h2>
 
-<a name="op-usi7vrth9c"></a>
+<a name="op-psiiivedhb"></a>
 
 Retrieve an entity through providing Id of application, organization, collection and entity.
 
@@ -779,7 +779,7 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/{collectionId}/{entityId}</h2>
 
-<a name="op-grwgmcmeiv"></a>
+<a name="op-7fclidczs6"></a>
 
 One or more properties can be updated with a single request.
 
@@ -811,7 +811,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId}</h2>
 
-<a name="op-3pvhj9pwas"></a>
+<a name="op-9n0wuse9mv"></a>
 
 Delete an entity from the collection.
 
@@ -841,7 +841,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/{entitytype}</h2>
 
-<a name="op-yaupy7fiha"></a>
+<a name="op-rtg6radfaq"></a>
 
 When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type.
 
@@ -874,7 +874,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/events</h2>
 
-<a name="op-sahbmftblc"></a>
+<a name="op-z0n83adeua"></a>
 
 Create an event through providing both Id of organization and application.
 
@@ -905,7 +905,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups</h2>
 
-<a name="op-lqawyn1jf7"></a>
+<a name="op-qvluwgdixe"></a>
 
 Create a new group through providing both Id of organization and application.
 
@@ -933,7 +933,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups/{groupId}/activities</h2>
 
-<a name="op-kah8tippl1"></a>
+<a name="op-kmrjsftwj3"></a>
 
 Create an activity to a specific group. In this case the activity is created in the activities collection and is accessible at the /activities endpoint to users who have the permission to read that endpoint. In addition, a relationship is established between the activity and the group, and because of that, the activity will appear in the group’s feed. The group &#39;owns&#39; the activity. Also, the activity will be published in the feed of all users that are members of the group.
 
@@ -963,7 +963,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups/{groupId}/users/{userId}</h2>
 
-<a name="op-lwbnuuzwdp"></a>
+<a name="op-79bstryyph"></a>
 
 Add a user to a group through providing all the identifications.
 
@@ -993,7 +993,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/groups/{groupId}/users/{userId}</h2>
 
-<a name="op-yrptebgezb"></a>
+<a name="op-gvqutatb2n"></a>
 
 Delete user from a group through providing all the identifications.
 
@@ -1023,7 +1023,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{org_Id}/{app_Id}/groups/{groupId}</h2>
 
-<a name="op-2yavprepml"></a>
+<a name="op-tj3j6ygyhz"></a>
 
 Get a group through through providing all the identifications.
 
@@ -1051,7 +1051,7 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{org_Id}/{app_Id}/groups/{groupId}</h2>
 
-<a name="op-1ogt6s1meu"></a>
+<a name="op-dxpamkwi1o"></a>
 
 Update a group through providing all the identifications.
 
@@ -1082,7 +1082,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices</h2>
 
-<a name="op-gtyulxpfuh"></a>
+<a name="op-8xzbizak9m"></a>
 
 Create notifications for user through targeting by location and providing all the identifications.
 
@@ -1112,7 +1112,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices/*/notifications</h2>
 
-<a name="op-fmxyekvv79"></a>
+<a name="op-ync3aqk68j"></a>
 
 Create notifications for all devices. This request will target all device entities.
 
@@ -1140,7 +1140,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices/{deviceId}/notifications</h2>
 
-<a name="op-iycz2tnhqk"></a>
+<a name="op-ghzaijhfrd"></a>
 
 Create notifications for a single device. This request will target a specific device entity.
 
@@ -1170,7 +1170,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/groups/{path}/notifications</h2>
 
-<a name="op-cz55hca573"></a>
+<a name="op-scytqcmlbb"></a>
 
 Create notifications for a group. This request will target all users associated with a specific group entity.
 
@@ -1200,7 +1200,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/notifications</h2>
 
-<a name="op-dt0m447vtt"></a>
+<a name="op-wao4e4x2ax"></a>
 
 Retrieve one or more notifications through providing all the identifications.
 
@@ -1226,7 +1226,7 @@ __default__
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{applicationId}/notifications/{notificationId}</h2>
 
-<a name="op-x3htrvnimm"></a>
+<a name="op-pfkq4xfvl4"></a>
 
 Update a Notification in order to cancel the notifcation or set a new expiration time.
 
@@ -1256,7 +1256,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{applicationId}/notifications/{notificationId}</h2>
 
-<a name="op-v8fksfkydk"></a>
+<a name="op-oajwu1ezyb"></a>
 
 Delete an unsent Notification from the system.
 
@@ -1284,7 +1284,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/receipts</h2>
 
-<a name="op-bierhevrl4"></a>
+<a name="op-bhxobegwk0"></a>
 
 Retrieve one or more receipts through providing all the identifications.
 
@@ -1310,7 +1310,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/users/{userId}/notifications</h2>
 
-<a name="op-0e0sm3lp5t"></a>
+<a name="op-uts7flpbdb"></a>
 
 Create notifications for a user. This request will target a specific user entity.
 
@@ -1340,7 +1340,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{deviceId}/*/receipts</h2>
 
-<a name="op-dkszriccku"></a>
+<a name="op-opyjl7eroi"></a>
 
 Retrieve receipts associated with one or more devices through providing all the identifications.
 
@@ -1368,7 +1368,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{notificationId}/*/queue</h2>
 
-<a name="op-t8pxsqwc6d"></a>
+<a name="op-5iqasgv3sj"></a>
 
 Retrieve the list of devices associated with one or more notifications before the notifications are sent through providing all the identifications.
 
@@ -1396,7 +1396,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{notificationId}/*/receipts</h2>
 
-<a name="op-xcy3ifmfkc"></a>
+<a name="op-unjmumv5kh"></a>
 
 Retrieve receipts for one or more notifications through providing all the identifications.
 
@@ -1424,7 +1424,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{receiptId}/*/notifications</h2>
 
-<a name="op-xoeujjr9zv"></a>
+<a name="op-iejp0wlehp"></a>
 
 Retrieve notifications associated with one or more receipts through providing all the identifications.
 
@@ -1455,7 +1455,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/orgs</h2>
 
-<a name="op-vcwlytogis"></a>
+<a name="op-asuflut8jl"></a>
 
 Create an organization through a form post.
 
@@ -1479,7 +1479,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}</h2>
 
-<a name="op-fuenkzdzx7"></a>
+<a name="op-brcy1p5pv6"></a>
 
 Retrieve an organization given a specified UUID or username.
 
@@ -1503,7 +1503,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/activate</h2>
 
-<a name="op-rlwkfscz2c"></a>
+<a name="op-volzlcrizg"></a>
 
 Activate an organization from a link provIded in an email notification.
 
@@ -1531,7 +1531,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps</h2>
 
-<a name="op-7rcjv4cu57"></a>
+<a name="op-jwpqgx4byw"></a>
 
 Retrieve the applications in an organization through providing both Id of application and organization.
 
@@ -1555,7 +1555,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /management/orgs/{orgId}/apps/{appId}</h2>
 
-<a name="op-ytwesqwdgc"></a>
+<a name="op-fzlitpxydy"></a>
 
 Remove an application from an organization through providing both Id of application and organization.
 
@@ -1581,7 +1581,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps/{appId}/credentials</h2>
 
-<a name="op-9xfw58hzbu"></a>
+<a name="op-k1cjl2fbfn"></a>
 
 Retrieve the client Id and client secret credentials for an application in an organization.
 
@@ -1607,7 +1607,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/orgs/{orgId}/apps/{appId}/credentials</h2>
 
-<a name="op-lcqnmroopm"></a>
+<a name="op-kb4kkywf0c"></a>
 
 Generate the client Id and client secret credentials for an application in an organization.
 
@@ -1633,7 +1633,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/credentials</h2>
 
-<a name="op-srhannjni2"></a>
+<a name="op-j6mwijxj8v"></a>
 
 Retrieve the credentials for an organization client.
 
@@ -1657,7 +1657,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /management/orgs/{orgId}/credentials</h2>
 
-<a name="op-konb0d3faz"></a>
+<a name="op-btrg9is9ex"></a>
 
 Generate whole new credentials for an organization client.
 
@@ -1681,7 +1681,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/feed</h2>
 
-<a name="op-jmorkmmhu8"></a>
+<a name="op-rxtw5leuxn"></a>
 
 Retrieve an organization&#39;s activity feed.
 
@@ -1705,7 +1705,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/reactivate</h2>
 
-<a name="op-2eplhfrllc"></a>
+<a name="op-2y9lik1je1"></a>
 
 Reactivate an expired organization.
 
@@ -1729,7 +1729,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/feed</h2>
 
-<a name="op-yitoouap1l"></a>
+<a name="op-07muhrw2rk"></a>
 
 Retrieve an admin user&#39;s activity feed.
 
@@ -1756,7 +1756,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles</h2>
 
-<a name="op-gzvozr9tpx"></a>
+<a name="op-ehipmupci4"></a>
 
 Retrieve the roles in an application through providing all the identifications.
 
@@ -1782,7 +1782,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/roles</h2>
 
-<a name="op-6cxfmtg8qw"></a>
+<a name="op-rrdx4m4m0p"></a>
 
 Create a new role through providing all the identifications.
 
@@ -1810,7 +1810,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/permissions</h2>
 
-<a name="op-xhckyqr6ab"></a>
+<a name="op-cwmnfuikul"></a>
 
 Remove permissions from a role.
 
@@ -1840,7 +1840,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles/{roleId}/users</h2>
 
-<a name="op-xvyk7zreff"></a>
+<a name="op-so5cnn3qsk"></a>
 
 Retrieve the users in a role through providing all the identifications.
 
@@ -1868,7 +1868,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/roles/{roleId}/users/{userId}</h2>
 
-<a name="op-muyc43xgrf"></a>
+<a name="op-fo857v2csw"></a>
 
 Add a user to a role through providing all the identifications.
 
@@ -1898,7 +1898,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/users/{userId}</h2>
 
-<a name="op-ozbsrlozwi"></a>
+<a name="op-3hxunwulpo"></a>
 
 Remove a user from a role through providing all the identifications.
 
@@ -1928,7 +1928,7 @@ __default__
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{rolename}</h2>
 
-<a name="op-1obkbxb1zd"></a>
+<a name="op-m9gq8yaswj"></a>
 
 Remove a role through providing all the identifications.
 
@@ -1956,7 +1956,7 @@ __default__
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/roles/{roleId}/permissions</h2>
 
-<a name="op-bb3svhbvfj"></a>
+<a name="op-8xgaadcvi8"></a>
 
 Retrieve permissions for a Role.
 
@@ -1984,7 +1984,7 @@ __default__
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/roles/{roleId}/permissions</h2>
 
-<a name="op-mu9s1qxs5u"></a>
+<a name="op-bgabubs4iw"></a>
 
 Add permissions to a role through providing all the identifications.
 
