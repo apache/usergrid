@@ -124,14 +124,20 @@ public class InMemoryAsyncEventService implements AsyncEventService {
     }
 
     public void run( Observable<?> observable ) {
-        Observable mapped = observable.map(message -> message instanceof IndexOperationMessage ? indexProducer.put((IndexOperationMessage)message) : Observable.just(message));
+
         //start it in the background on an i/o thread
         if ( !resolveSynchronously ) {
-            mapped.subscribeOn(rxTaskScheduler.getAsyncIOScheduler()).subscribe();
+            observable = observable.subscribeOn(rxTaskScheduler.getAsyncIOScheduler());
         }
-        else {
-            mapped.subscribe();
-        }
+
+        Observable mapped = observable.flatMap(message ->{
+            if(message instanceof IndexOperationMessage) {
+                return indexProducer.put((IndexOperationMessage)message);
+            } else{
+                return Observable.just(message);
+            }
+        });
+        mapped.subscribe();
     }
 
     @Override
