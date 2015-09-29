@@ -92,7 +92,7 @@ public class IndexLoadTestsIT extends BaseIT {
     public IndexTestFig indexTestFig;
 
     @Inject
-    public EntityIndexFactory entityIndexFactory;
+    public IndexProducer indexProducer;
 
     @Inject
     public MetricsFactory metricsFactory;
@@ -347,7 +347,8 @@ public class IndexLoadTestsIT extends BaseIT {
 
 
                     //execute
-                    entityIndexBatch.execute();
+                    IndexOperationMessage message = entityIndexBatch.build();
+                    indexProducer.put(message);
                     //stop
                     time.close();
                 } ).toBlocking().last();
