@@ -27,12 +27,14 @@ import org.apache.shiro.cache.CacheManager;
 import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
+import org.python.antlr.ast.Num;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 
@@ -41,49 +43,83 @@ import java.util.UUID;
  */
 public class ShiroCacheManager implements CacheManager {
 
-    private static final Logger logger = LoggerFactory.getLogger( ShiroCacheManager.class );
+    private static final Logger logger = LoggerFactory.getLogger(ShiroCacheManager.class);
 
     @Autowired
-    protected Injector injector;
+    private Injector injector;
 
-    Map<String, ShiroCache> caches = new HashMap<>();
+    private Map<String, ShiroCache> caches = new HashMap<>();
 
-    public ShiroCacheManager() {
-    }
+    private Properties properties;
+
+    private Integer cacheTtl = null; // specified in seconds
+
+    private static final String CACHE_TTL_PROPERTY_NAME = "usergrid.auth.cache.time-to-live";
+
+
+    public ShiroCacheManager() {}
+
 
     @Override
     public <K, V> Cache<K, V> getCache(String name) throws CacheException {
         ShiroCache shiroCache = caches.get(name);
 
-        if ( shiroCache == null ) {
+        if (shiroCache == null) {
 
-            if ( "realm.authorizationCache".equals(name) ) {
+            if ("realm.authorizationCache".equals(name)) {
 
-                shiroCache = new ShiroCache(
-                    new TypeReference<UsergridAuthorizationInfo>(){},
-                    injector.getInstance(
-                        Key.get(new TypeLiteral<CacheFactory<String, UsergridAuthorizationInfo>>() { })));
-
-            } else if ( "realm.authenticationCache".equals(name)) {
+                TypeLiteral typeLit = new TypeLiteral<CacheFactory<String, UsergridAuthorizationInfo>>() {};
 
                 shiroCache = new ShiroCache(
-                    new TypeReference<UsergridAuthenticationInfo>(){},
-                    injector.getInstance(
-                        Key.get(new TypeLiteral<CacheFactory<String, UsergridAuthenticationInfo>>() { })));
+                    new TypeReference<UsergridAuthorizationInfo>() {},
+                    (CacheFactory)injector.getInstance( Key.get(typeLit) ),
+                    getCacheTtl());
+
+            } else if ("realm.authenticationCache".equals(name)) {
+
+                TypeLiteral typeLit = new TypeLiteral<CacheFactory<String, UsergridAuthenticationInfo>>() {};
+
+                shiroCache = new ShiroCache(
+                    new TypeReference<UsergridAuthenticationInfo>() {},
+                    (CacheFactory)injector.getInstance( Key.get(typeLit) ),
+                    getCacheTtl());
 
             } else {
                 throw new RuntimeException("Unknown Shiro cache name");
             }
 
-            caches.put( name, shiroCache );
+            caches.put(name, shiroCache);
         }
         return shiroCache;
     }
 
-    public void invalidateApplicationCaches( UUID applicationId ) {
-        for ( String key : caches.keySet() ) {
-            ShiroCache shiroCache = caches.get( key );
+    public void invalidateApplicationCaches(UUID applicationId) {
+        for (String key : caches.keySet()) {
+            ShiroCache shiroCache = caches.get(key);
             shiroCache.invalidate(applicationId);
         }
     }
+
+    private Integer getCacheTtl() {
+        if ( cacheTtl == null ) {
+            String cacheTtlString = properties.getProperty(CACHE_TTL_PROPERTY_NAME);
+            try {
+                cacheTtl = Integer.parseInt(cacheTtlString);
+            } catch ( NumberFormatException nfe ) {
+                cacheTtl = 3600;
+                logger.error("Error reading property {}, setting cache TTL to {} seconds", CACHE_TTL_PROPERTY_NAME);
+            }
+        }
+        return cacheTtl;
+    }
+
+    public Properties getProperties() {
+        return properties;
+    }
+
+    @Autowired
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 }
+

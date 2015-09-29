@@ -34,7 +34,9 @@
     <!--
     <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager"/>
     -->
-    <bean id="cacheManager" class="org.apache.usergrid.rest.security.shiro.ShiroCacheManager" />
+    <bean id="cacheManager" class="org.apache.usergrid.rest.security.shiro.ShiroCacheManager">
+        <property name="properties" ref="properties" />
+    </bean>
 
 	<bean id="realm" class="org.apache.usergrid.security.shiro.Realm">
         <property name="name" value="realm" />

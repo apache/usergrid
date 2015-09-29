@@ -47,14 +47,14 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
     private static final Logger logger = LoggerFactory.getLogger( ShiroCache.class );
 
-    CacheFactory<String, V> cacheFactory;
+    private final CacheFactory<String, V> cacheFactory;
+    private final TypeReference typeRef;
+    private final Integer cacheTtl;
 
-    TypeReference typeRef = null;
-
-
-    public ShiroCache( TypeReference typeRef, CacheFactory<String, V> cacheFactory ) {
+    public ShiroCache( TypeReference typeRef, CacheFactory<String, V> cacheFactory, Integer cacheTtl ) {
         this.typeRef = typeRef;
         this.cacheFactory = cacheFactory;
+        this.cacheTtl = cacheTtl;
     }
 
     @Override
@@ -86,7 +86,7 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     public V put(K key, V value) throws CacheException {
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
-            V ret = scopedCache.put(getKeyString(key), value, 5000);
+            V ret = scopedCache.put(getKeyString(key), value, cacheTtl);
 
             if ( logger.isDebugEnabled() ) {
                 if (value instanceof UsergridAuthorizationInfo) {
