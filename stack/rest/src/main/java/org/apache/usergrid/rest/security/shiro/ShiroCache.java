@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
+import org.apache.usergrid.security.shiro.principals.ApplicationGuestPrincipal;
 import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.apache.usergrid.security.shiro.principals.OrganizationPrincipal;
 import org.apache.usergrid.security.shiro.principals.UserPrincipal;
@@ -151,6 +152,10 @@ public class ShiroCache<K, V> implements Cache<K,V> {
             } else  if ( spc.getPrimaryPrincipal() instanceof OrganizationPrincipal ) {
                 applicationId = CpNamingUtils.MANAGEMENT_APPLICATION_ID;
 
+            } else if ( spc.getPrimaryPrincipal() instanceof ApplicationGuestPrincipal) {
+                ApplicationGuestPrincipal p = (ApplicationGuestPrincipal)spc.getPrimaryPrincipal();
+                applicationId = p.getApplicationId();
+
             } else {
                 logger.error("Unknown principal type: " + spc.getPrimaryPrincipal().getClass().getSimpleName());
                 throw new RuntimeException("Unknown principal type: "
@@ -167,6 +172,10 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
         } else if ( key instanceof OrganizationPrincipal ) {
             applicationId = CpNamingUtils.MANAGEMENT_APPLICATION_ID;
+
+        } else if ( key instanceof ApplicationGuestPrincipal) {
+            ApplicationGuestPrincipal p = (ApplicationGuestPrincipal)key;
+            applicationId = p.getApplicationId();
 
         } else {
             logger.error("Unknown key type: " + key.getClass().getSimpleName());
