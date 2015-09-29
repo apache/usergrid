@@ -47,7 +47,7 @@ public class ScopedCacheTest {
 
     @Inject protected CacheFactory<String, Map<String, Object>> cf;
 
-    TypeReference typeRef = new TypeReference<Map<String, Object>>() {};
+    TypeReference typeRef = new TypeReference<HashMap<String, Object>>() {};
 
 
     @Test
