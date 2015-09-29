@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -30,9 +30,11 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 
 public class ApplicationInfo {
 
-    private final UUID id;
-    private final String name;
+    private UUID id;
+    private String name;
 
+    /** Needed for Jackson since this class is serialized to the Shiro Cache */
+    public ApplicationInfo() {}
 
     /**
      * @param id The application ID (not the same as the ID of the application_info).

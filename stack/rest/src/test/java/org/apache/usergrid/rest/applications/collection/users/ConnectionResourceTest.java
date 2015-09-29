@@ -17,33 +17,26 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
+import javax.ws.rs.NotFoundException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 /**
- * // TODO: Document this
- *
- * @author ApigeeCorporation
- * @since 4.0
+ * TODO: Document this
  */
 public class ConnectionResourceTest extends AbstractRestIT {
     private static Logger log = LoggerFactory.getLogger( ConnectionResourceTest.class );
@@ -78,11 +71,11 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         try {
 
-            this.app().collection( "users" ).entity( scott ).collection( "likes" ).collection( "peeps" ).entity( peep )
-                .get();
+            this.app().collection( "users" ).entity( scott )
+                .collection("likes").collection( "peeps" ).entity( peep ).get();
             fail( "This should throw an exception" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
             assertEquals( 404, uie.getResponse().getStatus() );
         }
@@ -103,8 +96,8 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         refreshIndex();
         //create the connection: thing1 likes thing2
-        this.app().collection( "things" ).entity( thing1 ).connection( "likes" ).collection( "things" ).entity( thing2 )
-            .post();
+        this.app().collection( "things" ).entity( thing1 )
+            .connection("likes").collection( "things" ).entity( thing2 ).post();
         refreshIndex();
 
         //test we have the "likes" in our connection meta data response
@@ -160,8 +153,8 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         refreshIndex();
         //create the connection: thing1 likes thing2
-        this.app().collection( "things" ).entity( thing1 ).connection( "likes" ).collection( "things" ).entity( thing2 )
-            .post();
+        this.app().collection( "things" ).entity( thing1 )
+            .connection("likes").collection( "things" ).entity( thing2 ).post();
         //delete thing2
         this.app().collection( "things" ).entity( thing2 ).delete();
 
@@ -172,7 +165,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
             thing2 = this.app().collection( "things" ).entity( thing2 ).get();
             fail( "This should throw an exception" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
             assertEquals( 404, uie.getResponse().getStatus() );
         }
@@ -196,8 +189,8 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         refreshIndex();
         //create the connection: thing1 likes thing2
-        this.app().collection( "things" ).entity( thing1 ).connection( "likes" ).collection( "things" ).entity( thing2 )
-            .post();
+        this.app().collection( "things" ).entity( thing1 )
+            .connection("likes").collection( "things" ).entity( thing2 ).post();
         //delete thing1
         this.app().collection( "things" ).entity( thing1 ).delete();
 
@@ -208,7 +201,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
             thing1 = this.app().collection( "things" ).entity( thing1 ).get();
             fail( "This should throw an exception" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
             assertEquals( 404, uie.getResponse().getStatus() );
         }

@@ -17,24 +17,26 @@
 package org.apache.usergrid.rest.security.shiro;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
-import org.apache.usergrid.security.shiro.principals.AdminUserPrincipal;
+import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
+import org.apache.usergrid.security.shiro.principals.OrganizationPrincipal;
 import org.apache.usergrid.security.shiro.principals.UserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
 
 
 /**
@@ -42,7 +44,7 @@ import java.util.*;
  */
 public class ShiroCache<K, V> implements Cache<K,V> {
 
-    private static final Logger logger = LoggerFactory.getLogger( ShiroCacheManager.class );
+    private static final Logger logger = LoggerFactory.getLogger( ShiroCache.class );
 
     CacheFactory<String, V> cacheFactory;
 
@@ -60,16 +62,18 @@ public class ShiroCache<K, V> implements Cache<K,V> {
         if ( scopedCache != null ) {
             V value = scopedCache.get(getKeyString(key), typeRef);
 
-            if ( value instanceof UsergridAuthorizationInfo ) {
-                UsergridAuthorizationInfo info = (UsergridAuthorizationInfo)value;
-                logger.debug("Got from AUTHZ cache {} for app {}", getKeyString(key), info.toString());
+            if ( logger.isDebugEnabled() ) {
+                if (value instanceof UsergridAuthorizationInfo) {
+                    UsergridAuthorizationInfo info = (UsergridAuthorizationInfo) value;
+                    logger.debug("Got from AUTHZ cache {} for app {}", getKeyString(key), info.toString());
 
-            } else if ( value instanceof UsergridAuthenticationInfo ) {
-                UsergridAuthenticationInfo info = (UsergridAuthenticationInfo)value;
-                logger.debug("Got from AUTHC cache {} for app {}", getKeyString(key), info.toString());
+                } else if (value instanceof UsergridAuthenticationInfo) {
+                    UsergridAuthenticationInfo info = (UsergridAuthenticationInfo) value;
+                    logger.debug("Got from AUTHC cache {} for app {}", getKeyString(key), info.toString());
 
-            } else if (value == null) {
-                logger.debug("Got NULL from cache app {} for key {}", getKeyString(key), key.toString() );
+                } else if (value == null) {
+                    logger.debug("Got NULL from cache app {} for key {}", getKeyString(key), key.toString());
+                }
             }
 
             return value;
@@ -83,13 +87,15 @@ public class ShiroCache<K, V> implements Cache<K,V> {
         if ( scopedCache != null ) {
             V ret = scopedCache.put(getKeyString(key), value, 5000);
 
-            if ( value instanceof UsergridAuthorizationInfo ) {
-                UsergridAuthorizationInfo info = (UsergridAuthorizationInfo)value;
-                logger.debug("Put to AUTHZ cache {} for app {}", getKeyString(key), info.toString());
+            if ( logger.isDebugEnabled() ) {
+                if (value instanceof UsergridAuthorizationInfo) {
+                    UsergridAuthorizationInfo info = (UsergridAuthorizationInfo) value;
+                    logger.debug("Put to AUTHZ cache {} for app {}", getKeyString(key), info.toString());
 
-            } else if ( value instanceof UsergridAuthenticationInfo ) {
-                UsergridAuthenticationInfo info = (UsergridAuthenticationInfo)value;
-                logger.debug("Put to AUTHC cache {} for app {}", getKeyString(key), info.toString());
+                } else if (value instanceof UsergridAuthenticationInfo) {
+                    UsergridAuthenticationInfo info = (UsergridAuthenticationInfo) value;
+                    logger.debug("Put to AUTHC cache {} for app {}", getKeyString(key), info.toString());
+                }
             }
 
             return ret;
@@ -129,53 +135,68 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     /** get cache for application scope */
     private ScopedCache<String, V> getCacheScope( K key ) {
 
-        if ( key instanceof SimplePrincipalCollection) {
+        UUID applicationId;
 
+        if ( key instanceof SimplePrincipalCollection) {
             SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
 
-            if ( spc.getPrimaryPrincipal() instanceof AdminUserPrincipal ) {
+            if ( spc.getPrimaryPrincipal() instanceof UserPrincipal ) {
+                UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
+                applicationId = p.getApplicationId();
 
-                AdminUserPrincipal p = (AdminUserPrincipal) spc.getPrimaryPrincipal();
-                CacheScope scope = new CacheScope(new SimpleId(p.getApplicationId(), "application"));
-                ScopedCache<String, V> scopedCache = cacheFactory.getScopedCache(scope);
-                return scopedCache;
+            } else  if ( spc.getPrimaryPrincipal() instanceof ApplicationPrincipal ) {
+                ApplicationPrincipal p = (ApplicationPrincipal)spc.getPrimaryPrincipal();
+                applicationId = p.getApplicationId();
+
+            } else  if ( spc.getPrimaryPrincipal() instanceof OrganizationPrincipal ) {
+                applicationId = CpNamingUtils.MANAGEMENT_APPLICATION_ID;
 
             } else {
-                throw new RuntimeException("Cannot determine application ID for cache scope");
+                logger.error("Unknown principal type: " + spc.getPrimaryPrincipal().getClass().getSimpleName());
+                throw new RuntimeException("Unknown principal type: "
+                    + spc.getPrimaryPrincipal().getClass().getSimpleName());
             }
 
-        } else if ( key instanceof AdminUserPrincipal ) {
+        } else if ( key instanceof UserPrincipal ) {
+            UserPrincipal p = (UserPrincipal)key;
+            applicationId = p.getApplicationId();
 
-            AdminUserPrincipal p = (AdminUserPrincipal)key;
-            CacheScope scope = new CacheScope(new SimpleId(p.getApplicationId(), "application"));
-            ScopedCache<String, V> scopedCache = cacheFactory.getScopedCache(scope);
-            return scopedCache;
+        } else if ( key instanceof ApplicationPrincipal ) {
+            ApplicationPrincipal p = (ApplicationPrincipal)key;
+            applicationId = p.getApplicationId();
+
+        } else if ( key instanceof OrganizationPrincipal ) {
+            applicationId = CpNamingUtils.MANAGEMENT_APPLICATION_ID;
 
         } else {
-            throw new RuntimeException("Cannot determine application ID for cache scope");
+            logger.error("Unknown key type: " + key.getClass().getSimpleName());
+            throw new RuntimeException("Unknown key type: " + key.getClass().getSimpleName());
         }
+
+        CacheScope scope = new CacheScope(new SimpleId(applicationId, "application"));
+        ScopedCache<String, V> scopedCache = cacheFactory.getScopedCache(scope);
+        return scopedCache;
     }
 
 
-    /** key is the user UUID in string form */
+    /** key is the user UUID in string form + class name of key */
     private String getKeyString( K key ) {
 
         if ( key instanceof SimplePrincipalCollection) {
             SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
 
             if ( spc.getPrimaryPrincipal() instanceof UserPrincipal) {
-                AdminUserPrincipal p = (AdminUserPrincipal) spc.getPrimaryPrincipal();
+                UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
                 return p.getUser().getUuid().toString();
             }
         }
 
-        return key.toString();
+        return key.toString() + "_" + key.getClass().getSimpleName();
     }
 
     public void invalidate( UUID applicationId ) {
         CacheScope scope = new CacheScope( new SimpleId(applicationId, "application") );
         ScopedCache cache = cacheFactory.getScopedCache(scope);
         cache.invalidate();
-
     }
 }

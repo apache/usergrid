@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import junit.framework.Assert;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.shiro.codec.Base64;

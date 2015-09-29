@@ -26,9 +26,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
+import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.Serializer;
+import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
@@ -136,8 +138,13 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 //V value = MAPPER.readValue(result.getByteArrayValue(), new TypeReference<V>() {});
                 V value = MAPPER.readValue(result.getByteArrayValue(), typeRef);
 
-                logger.debug("Read cache item\n   key/value types {}/{}\n   key:value: {}:{}",
-                    new Object[]{key.getClass().getSimpleName(), value.getClass().getSimpleName(), key, value});
+                logger.debug("Read cache item from scope {}\n   key/value types {}/{}\n   key:value: {}:{}",
+                    new Object[]{
+                        scope.getApplication().getUuid(),
+                        key.getClass().getSimpleName(),
+                        value.getClass().getSimpleName(),
+                        key,
+                        value});
 
                 return value;
 
@@ -192,8 +199,13 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
         executeBatch(batch);
 
-        logger.debug("Wrote cache item\n   key/value types {}/{}\n   key:value: {}:{}",
-            new Object[]{key.getClass().getSimpleName(), value.getClass().getSimpleName(), key, value});
+        logger.debug("Wrote cache item to scope {}\n   key/value types {}/{}\n   key:value: {}:{}",
+            new Object[] {
+                scope.getApplication().getUuid(),
+                key.getClass().getSimpleName(),
+                value.getClass().getSimpleName(),
+                key,
+                value});
 
         return value;
     }
@@ -237,7 +249,10 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         batch.withRow(SCOPED_CACHE, keyRowKey).delete();
-        executeBatch(batch);
+
+        final OperationResult<Void> result = executeBatch(batch);
+
+        logger.debug("Invalidated scope {}", scope.getApplication().getUuid());
     }
 
 
@@ -254,9 +269,10 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     }
 
 
-    private void executeBatch(MutationBatch batch) {
+    private OperationResult<Void> executeBatch(MutationBatch batch) {
         try {
-            batch.execute();
+            return batch.execute();
+
         } catch (ConnectionException e) {
             throw new RuntimeException("Unable to connect to cassandra", e);
         }
