@@ -76,7 +76,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
                 logger.debug(e.getClass().getCanonicalName() + " Server Error (" + status + ")", e);
             }
             switch (status){
-                case 200 : logger.info("Uncaught Exception", e); break;
+                case 200 : logger.debug("Uncaught Exception", e); break;
                 default: logger.error("Uncaught Exception", e);
             }
         }

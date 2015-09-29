@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
@@ -49,6 +50,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private final EventBuilder eventBuilder;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final EntityIndexFactory entityIndexFactory;
+    private final IndexProducer indexProducer;
 
     private AsyncEventService asyncEventService;
 
@@ -61,7 +63,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
                               final EventBuilder eventBuilder,
                               final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                              final EntityIndexFactory entityIndexFactory) {
+                              final EntityIndexFactory entityIndexFactory,
+                              final IndexProducer indexProducer) {
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
@@ -71,6 +74,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
         this.eventBuilder = eventBuilder;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.entityIndexFactory = entityIndexFactory;
+        this.indexProducer = indexProducer;
     }
 
 
@@ -92,12 +96,12 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
         switch (impl) {
             case LOCAL:
-                return new InMemoryAsyncEventService(eventBuilder, rxTaskScheduler, indexProcessorFig.resolveSynchronously());
+                return new InMemoryAsyncEventService(eventBuilder, rxTaskScheduler, indexProducer,indexProcessorFig.resolveSynchronously());
             case SQS:
-                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory,
+                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,
                     entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, rxTaskScheduler );
             case SNS:
-                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, metricsFactory,
+                return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,
                     entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, rxTaskScheduler );
             default:
                 throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
