@@ -285,7 +285,8 @@ public class AbstractConnectionsService extends AbstractService {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
             if (logger.isDebugEnabled()) {
-            	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" , count, level.name());
+            	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" ,
+                    count, level.name());
             }
         }
 
