@@ -85,19 +85,13 @@ public class ShiroCacheManager implements CacheManager {
                     getCacheTtl());
 
             } else {
-                throw new RuntimeException("Unknown Shiro cache name");
+                logger.error("Unknown Shiro Cache name: " + name);
+                throw new RuntimeException("Unknown Shiro Cache name: " + name);
             }
 
             caches.put(name, shiroCache);
         }
         return shiroCache;
-    }
-
-    public void invalidateApplicationCaches(UUID applicationId) {
-        for (String key : caches.keySet()) {
-            ShiroCache shiroCache = caches.get(key);
-            shiroCache.invalidate(applicationId);
-        }
     }
 
     private Integer getCacheTtl() {
