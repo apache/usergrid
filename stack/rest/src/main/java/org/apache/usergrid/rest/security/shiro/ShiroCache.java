@@ -27,10 +27,7 @@ import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
-import org.apache.usergrid.security.shiro.principals.ApplicationGuestPrincipal;
-import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
-import org.apache.usergrid.security.shiro.principals.OrganizationPrincipal;
-import org.apache.usergrid.security.shiro.principals.UserPrincipal;
+import org.apache.usergrid.security.shiro.principals.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +56,8 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
     @Override
     public V get(K key) throws CacheException {
+        if ( cacheTtl == 0 ) return null;
+
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
             V value = scopedCache.get(getKeyString(key), typeRef);
@@ -84,6 +83,8 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
     @Override
     public V put(K key, V value) throws CacheException {
+        if ( cacheTtl == 0 ) return null;
+
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
             V ret = scopedCache.put(getKeyString(key), value, cacheTtl);
@@ -106,6 +107,8 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
     @Override
     public V remove(K key) throws CacheException {
+        if ( cacheTtl == 0 ) return null;
+
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
             scopedCache.remove( getKeyString(key) );
@@ -115,11 +118,12 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
     @Override
     public void clear() throws CacheException {
+        // no-op: Usergrid logic will invalidate cache as necessary
     }
 
     @Override
     public int size() {
-        return 0;
+        return 0; // TODO?
     }
 
     @Override
@@ -136,50 +140,38 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     /** get cache for application scope */
     private ScopedCache<String, V> getCacheScope( K key ) {
 
-        UUID applicationId;
+        // get the principal
 
+        PrincipalIdentifier principal;
         if ( key instanceof SimplePrincipalCollection) {
-            SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
+            SimplePrincipalCollection spc = (SimplePrincipalCollection) key;
+            principal = (PrincipalIdentifier) spc.getPrimaryPrincipal();
 
-            if ( spc.getPrimaryPrincipal() instanceof UserPrincipal ) {
-                UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
-                applicationId = p.getApplicationId();
+        } else {
+            principal = (PrincipalIdentifier)key;
+        }
 
-            } else  if ( spc.getPrimaryPrincipal() instanceof ApplicationPrincipal ) {
-                ApplicationPrincipal p = (ApplicationPrincipal)spc.getPrimaryPrincipal();
-                applicationId = p.getApplicationId();
+        // get the id for the scope
 
-            } else  if ( spc.getPrimaryPrincipal() instanceof OrganizationPrincipal ) {
-                applicationId = CpNamingUtils.MANAGEMENT_APPLICATION_ID;
-
-            } else if ( spc.getPrimaryPrincipal() instanceof ApplicationGuestPrincipal) {
-                ApplicationGuestPrincipal p = (ApplicationGuestPrincipal)spc.getPrimaryPrincipal();
-                applicationId = p.getApplicationId();
-
-            } else {
-                logger.error("Unknown principal type: " + spc.getPrimaryPrincipal().getClass().getSimpleName());
-                throw new RuntimeException("Unknown principal type: "
-                    + spc.getPrimaryPrincipal().getClass().getSimpleName());
-            }
-
-        } else if ( key instanceof UserPrincipal ) {
-            UserPrincipal p = (UserPrincipal)key;
+        UUID applicationId;
+        if ( principal instanceof UserPrincipal ) {
+            UserPrincipal p = (UserPrincipal)principal;
             applicationId = p.getApplicationId();
 
-        } else if ( key instanceof ApplicationPrincipal ) {
-            ApplicationPrincipal p = (ApplicationPrincipal)key;
+        } else if ( principal instanceof ApplicationPrincipal ) {
+            ApplicationPrincipal p = (ApplicationPrincipal)principal;
             applicationId = p.getApplicationId();
 
-        } else if ( key instanceof OrganizationPrincipal ) {
+        } else if ( principal instanceof OrganizationPrincipal ) {
             applicationId = CpNamingUtils.MANAGEMENT_APPLICATION_ID;
 
-        } else if ( key instanceof ApplicationGuestPrincipal) {
-            ApplicationGuestPrincipal p = (ApplicationGuestPrincipal)key;
+        } else if ( principal instanceof ApplicationGuestPrincipal) {
+            ApplicationGuestPrincipal p = (ApplicationGuestPrincipal)principal;
             applicationId = p.getApplicationId();
 
         } else {
             logger.error("Unknown key type: " + key.getClass().getSimpleName());
-            throw new RuntimeException("Unknown key type: " + key.getClass().getSimpleName());
+            throw new RuntimeException("Unknown key type: " + principal.getClass().getSimpleName());
         }
 
         CacheScope scope = new CacheScope(new SimpleId(applicationId, "application"));
@@ -203,9 +195,4 @@ public class ShiroCache<K, V> implements Cache<K,V> {
         return key.toString() + "_" + key.getClass().getSimpleName();
     }
 
-    public void invalidate( UUID applicationId ) {
-        CacheScope scope = new CacheScope( new SimpleId(applicationId, "application") );
-        ScopedCache cache = cacheFactory.getScopedCache(scope);
-        cache.invalidate();
-    }
 }
