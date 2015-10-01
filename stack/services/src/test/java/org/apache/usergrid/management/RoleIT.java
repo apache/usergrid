@@ -26,22 +26,24 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.ServiceITSetup;
-import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
-import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 
 import org.apache.shiro.subject.Subject;
+
+import org.apache.usergrid.ServiceITSetup;
+import org.apache.usergrid.ServiceITSetupImpl;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.cassandra.ClearShiroSubject;
+
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 
 import static org.junit.Assert.assertFalse;
 
 
-@Concurrent()
+
 public class RoleIT {
     private static final Logger LOG = LoggerFactory.getLogger( RoleIT.class );
 
@@ -49,7 +51,7 @@ public class RoleIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @Test
@@ -64,6 +66,8 @@ public class RoleIT {
         UUID applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
+        setup.getEntityIndex().refresh(em.getApplicationId());
+
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "username", "edanuff5" );
         properties.put( "email", "ed@anuff.com5" );
@@ -71,6 +75,7 @@ public class RoleIT {
         User user = em.create( User.ENTITY_TYPE, User.class, properties );
 
         em.createRole( "logged-in", "Logged In", 1000 );
+        setup.getEntityIndex().refresh(em.getApplicationId());
         em.addUserToRole( user.getUuid(), "logged-in" );
 
         String accessToken = setup.getMgmtSvc().getAccessTokenForAppUser( applicationId, user.getUuid(), 0 );

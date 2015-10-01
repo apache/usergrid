@@ -25,8 +25,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.Identifier;
+
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Identifier;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.utils.ListUtils.dequeue;

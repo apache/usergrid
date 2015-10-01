@@ -22,10 +22,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
+
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-@Concurrent()
+
 public class RolesServiceIT extends AbstractServiceIT {
 
     /** Happy path test */
@@ -55,8 +57,9 @@ public class RolesServiceIT extends AbstractServiceIT {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected =  RequiredPropertyNotFoundException.class)
     public void noRoleName() throws Exception {
+
         app.put( "title", "Manager Title" );
         app.put( "inactivity", 600000l );
 
@@ -186,24 +189,23 @@ public class RolesServiceIT extends AbstractServiceIT {
     /** Test deleting all permissions */
     @Test
     public void deleteRoles() throws Exception {
+
         createAndTestRoles( ServiceAction.PUT, "manager", "Manager Title", 600000l );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/**" );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/places/**" );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/faces/names/**" );
 
         // we know we created the role successfully, now delete it
-        // check it appears in the application roles
-
-        // now grant permissions
         ServiceResults results = app.invokeService( ServiceAction.DELETE, "roles", "manager" );
-
         assertEquals( 1, results.size() );
 
-        // check the results has the data element.
+        setup.getEntityIndex().refresh(app.getId());
+
+        // check role is gone
         Role role = app.get( app.getAlias( "role", "manager" ), Role.class );
         assertNull( role );
 
-        // check our permissions are there
+        // check permissions are gone
         Set<String> permissions = app.getRolePermissions( "manager" );
         assertEquals( 0, permissions.size() );
     }

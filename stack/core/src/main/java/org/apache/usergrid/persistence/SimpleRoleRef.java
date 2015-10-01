@@ -22,6 +22,8 @@ import java.util.UUID;
 import org.springframework.util.Assert;
 import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.StringUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -95,6 +97,12 @@ public class SimpleRoleRef implements RoleRef {
     @Override
     public String getType() {
         return "role";
+    }
+
+
+    @Override
+    public Id asId() {
+        return new SimpleId( id, "role" );
     }
 
 

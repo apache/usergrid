@@ -19,24 +19,36 @@ package org.apache.usergrid;
 
 import java.util.Properties;
 
+import org.apache.usergrid.corepersistence.GuiceFactory;
+import org.apache.usergrid.management.AppInfoMigrationPlugin;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.shiro.SecurityUtils;
+
+import org.apache.usergrid.management.ApplicationCreator;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.management.importer.ImportService;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.security.providers.SignInProviderFactory;
+import org.apache.usergrid.security.tokens.TokenService;
+import org.apache.usergrid.services.ServiceManagerFactory;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.management.ApplicationCreator;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.security.providers.SignInProviderFactory;
-import org.apache.usergrid.security.tokens.TokenService;
-import org.apache.usergrid.services.ServiceManagerFactory;
+
+import java.util.Properties;
+import java.util.UUID;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
 public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetup {
-    private static final Logger LOG = LoggerFactory.getLogger( ServiceITSetupImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( ServiceITSetupImpl.class );
 
     private ServiceManagerFactory smf;
     private ManagementService managementService;
@@ -45,30 +57,42 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private SignInProviderFactory providerFactory;
     private Properties properties;
     private ExportService exportService;
+    private ImportService importService;
+    private AppInfoMigrationPlugin appInfoMigrationPlugin;
 
 
-    public ServiceITSetupImpl( CassandraResource cassandraResource ) {
-        super( cassandraResource );
+    public ServiceITSetupImpl() {
+        super();
+
+        managementService =  springResource.getBean( ManagementService.class );
+        applicationCreator = springResource.getBean( ApplicationCreator.class );
+        tokenService =       springResource.getBean( TokenService.class );
+        providerFactory =    springResource.getBean( SignInProviderFactory.class );
+        properties =         springResource.getBean( "properties", Properties.class );
+        smf =                springResource.getBean( ServiceManagerFactory.class );
+        exportService =      springResource.getBean( ExportService.class );
+        importService =      springResource.getBean( ImportService.class );
+
+        try {
+            appInfoMigrationPlugin = springResource.getBean(GuiceFactory.class)
+                .getObject().getInstance(AppInfoMigrationPlugin.class);
+        } catch ( Exception e ) {
+            logger.error("Unable to instantiate AppInfoMigrationPlugin", e);
+        }
+
+        //set our security manager for shiro
+        SecurityUtils.setSecurityManager(springResource.getBean( org.apache.shiro.mgt.SecurityManager.class ));
     }
 
 
     protected void after( Description description ) {
-        super.after( description );
-        LOG.info( "Test {}: finish with application", description.getDisplayName() );
+        super.after(description);
+        logger.info("Test {}: finish with application", description.getDisplayName());
     }
 
 
     protected void before( Description description ) throws Throwable {
-        super.before( description );
-        managementService = cassandraResource.getBean( ManagementService.class );
-        applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
-        tokenService = cassandraResource.getBean( TokenService.class );
-        providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
-        properties = cassandraResource.getBean( PropertiesFactoryBean.class ).getObject();
-        smf = cassandraResource.getBean( ServiceManagerFactory.class );
-        exportService = cassandraResource.getBean( ExportService.class );
 
-        LOG.info( "Test setup complete..." );
     }
 
 
@@ -92,7 +116,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public CassandraService getCassSvc() {
-        return cassandraResource.getBean( CassandraService.class );
+        return  springResource.getBean( CassandraService.class );
     }
 
 
@@ -104,10 +128,13 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     @Override
     public ExportService getExportService() { return exportService; }
 
+    @Override
+    public ImportService getImportService() { return importService; }
+
 
     public ServiceManagerFactory getSmf() {
         if ( smf == null ) {
-            smf = cassandraResource.getBean( ServiceManagerFactory.class );
+            smf =  springResource.getBean( ServiceManagerFactory.class );
         }
 
         return smf;
@@ -140,12 +167,18 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public String get( String key ) {
-        return properties.getProperty( key );
+        return properties.getProperty(key);
     }
 
 
     @Override
     public SignInProviderFactory getProviderFactory() {
         return providerFactory;
+    }
+
+
+
+    public void refreshIndex(UUID appid){
+        this.getEntityIndex().refresh(appid);
     }
 }

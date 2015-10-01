@@ -17,6 +17,16 @@
 package org.apache.usergrid.services.assets.data;
 
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -24,17 +34,6 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.usergrid.persistence.Entity;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.utils.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 
 /** A binary store implementation using the local file system */
@@ -51,7 +50,6 @@ public class LocalFileBinaryStore implements BinaryStore {
 
     @Autowired
     private EntityManagerFactory emf;
-
 
     /** Control where to store the file repository. In the system's temp dir by default. */
     public void setReposLocation( String reposLocation ) {
@@ -113,15 +111,15 @@ public class LocalFileBinaryStore implements BinaryStore {
         fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
         fileMetadata.put( AssetUtils.E_TAG, RandomStringUtils.randomAlphanumeric( 10 ) );
 
+        // if we were successful, write the mime type
+        if ( file.exists() ) {
+            fileMetadata.put( AssetUtils.CONTENT_TYPE , AssetMimeHandler.get().getMimeType( entity, file ));
+        }
+
         try {
             em.update( entity );
         } catch (Exception e) {
             throw new IOException("Unable to update entity filedata", e);
-        }
-
-        // if we were successful, write the mime type
-        if ( file.exists() ) {
-            AssetMimeHandler.get().getMimeType( entity, file );
         }
     }
 

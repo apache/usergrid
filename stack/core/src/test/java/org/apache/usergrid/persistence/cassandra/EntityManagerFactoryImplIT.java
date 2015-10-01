@@ -23,42 +23,55 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.apache.usergrid.Application;
+import org.apache.usergrid.CoreApplication;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.utils.UUIDUtils;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.CoreITSuite;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import rx.functions.Func0;
+import rx.functions.Func1;
+import rx.functions.Func2;
+
+import javax.annotation.concurrent.NotThreadSafe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
-@Concurrent()
+@NotThreadSafe
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
-
-    @SuppressWarnings("PointlessBooleanExpression")
-    public static final boolean USE_DEFAULT_DOMAIN = !CassandraService.USE_VIRTUAL_KEYSPACES;
 
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
 
+
     public EntityManagerFactoryImplIT() {
-        emf = CoreITSuite.cassandraResource.getBean( EntityManagerFactory.class );
+        emf = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( EntityManagerFactory.class );
     }
+
+    @Rule
+    public Application app = new CoreApplication( setup );
+
 
 
     @BeforeClass
@@ -79,28 +92,137 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( USE_DEFAULT_DOMAIN ) {
-            return CassandraService.DEFAULT_APPLICATION_ID;
-        }
-        return emf.createApplication( organizationName, applicationName );
+        Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
+        UUID appId = appInfo.getUuid();
+        return appId;
     }
 
 
     @Before
     public void initTracing() {
-        traceTagManager = CoreITSuite.cassandraResource.getBean( "traceTagManager", TraceTagManager.class );
-        traceTagReporter = CoreITSuite.cassandraResource.getBean( "traceTagReporter", TraceTagReporter.class );
+        traceTagManager = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagManager",
+            TraceTagManager.class );
+        traceTagReporter = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagReporter",
+            TraceTagReporter.class );
     }
 
 
     @Test
-    @Ignore("Fix this EntityManagerFactoryImplIT.testCreateAndGet:105->createApplication:90 » ApplicationAlreadyExists")
+    public void testDeleteApplication() throws Exception {
+        ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+
+        int maxRetries = 10;
+
+        String rand = UUIDGenerator.newTimeUUID().toString();
+
+        // create an application with a collection and an entity
+
+        String appName = "test-app-" + rand;
+        String orgName = "test-org-" + rand;
+        final UUID deletedAppId = setup.createApplication( orgName, appName );
+
+        EntityManager em = setup.getEmf().getEntityManager(deletedAppId);
+
+        Map<String, Object> properties1 = new LinkedHashMap<String, Object>();
+        properties1.put( "Name", "12 Angry Men" );
+        properties1.put( "Year", 1957 );
+        Entity film1 = em.create("film", properties1);
+
+        Map<String, Object> properties2 = new LinkedHashMap<String, Object>();
+        properties2.put( "Name", "Reservoir Dogs" );
+        properties2.put( "Year", 1992 );
+        Entity film2 = em.create( "film", properties2 );
+
+        for ( int j=0; j<maxRetries; j++ ) {
+            if ( setup.getEmf().lookupApplication( orgName + "/" + appName ).isPresent()) {
+                break;
+            }
+            Thread.sleep( 500 );
+        }
+
+        this.app.refreshIndex();
+
+
+        // wait for it to appear in delete apps list
+
+        Func2<UUID, Map<String, UUID> ,Boolean> findApps = (applicationId, apps) -> {
+            boolean found = false;
+            for (String app : apps.keySet()) {
+                UUID appId = apps.get(app);
+                if (appId.equals(applicationId)) {
+                    found = true;
+                    break;
+                }
+            }
+            return found;
+        };
+
+        Map<String,UUID> apps = setup.getEmf().getApplications();
+        boolean found = findApps.call(deletedAppId, apps);
+        assertTrue("Restored app not found in apps collection", found);
+
+        // delete the application
+        setup.getEmf().deleteApplication(deletedAppId);
+
+        this.app.refreshIndex();
+
+        found = findApps.call( deletedAppId, emf.getDeletedApplications() );
+
+        assertTrue("Deleted app must be found in in deleted apps collection", found);
+
+        // attempt to get entities in application's collections in various ways should all fail
+        found =  setup.getEmf().lookupApplication( orgName + "/" + appName ).isPresent() ;
+
+        assertFalse("Lookup of deleted app must fail", found);
+
+        // app must not be found in apps collection
+        found = findApps.call( deletedAppId, emf.getApplications());
+        assertFalse("Deleted app must not be found in apps collection", found);
+
+        // restore the app
+        emf.restoreApplication(deletedAppId);
+        final ReIndexRequestBuilder builder = reIndexService.getBuilder().withApplicationId( deletedAppId );
+
+        ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
+        int count = 0;
+        do{
+            status = reIndexService.getStatus(status.getJobId());
+            count++;
+            if(count>0){
+                if(count>10){
+                    break;
+                }
+                Thread.sleep(1000);
+            }
+        }while (status.getStatus()!= ReIndexService.Status.COMPLETE);
+
+        this.app.refreshIndex();
+
+        // test to see that app now works and is happy
+
+        // it should not be found in the deleted apps collection
+        found = findApps.call( deletedAppId, emf.getDeletedApplications());
+        assertFalse("Restored app found in deleted apps collection", found);
+        this.app.refreshIndex();
+
+        apps = setup.getEmf().getApplications();
+        found = findApps.call(deletedAppId, apps);
+
+        assertTrue("Restored app not found in apps collection", found);
+
+        // TODO: this assertion should work!
+        assertTrue(setup.getEmf().lookupApplication( orgName + "/" + appName ).isPresent());
+    }
+
+
+    @Test
     public void testCreateAndGet() throws Exception {
         TraceTag traceTag = traceTagManager.create( "testCreateAndGet" );
         traceTagManager.attach( traceTag );
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
-        UUID applicationId = createApplication( "testOrganization", "testCreateAndGet" );
+        UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet"
+                + UUIDGenerator.newTimeUUID()  );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );
@@ -123,7 +245,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         i = 0;
         for ( Entity entity : things ) {
 
-            Entity thing = em.get( entity.getUuid() );
+            Entity thing = em.get( new SimpleEntityRef("thing", entity.getUuid()));
             assertNotNull( "thing should not be null", thing );
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );
             assertEquals( "name not expected value", "thing" + i, thing.getProperty( "name" ) );
@@ -135,7 +257,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
-            Entity en = em.get( entity.getUuid() );
+            Entity en = em.get( new SimpleEntityRef("thing", entity.getUuid()));
             String type = en.getType();
             assertEquals( "type not expected value", "thing", type );
 
@@ -144,11 +266,11 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             assertTrue( "thing name should start with \"thing\"", property.toString().startsWith( "thing" ) );
 
             Map<String, Object> properties = en.getProperties();
-            assertEquals( "number of properties wrong", 5, properties.size() );
+            assertEquals( "number of properties wrong", 6, properties.size() );
         }
 
         i = 0;
-        Results results = em.get( ids, Results.Level.CORE_PROPERTIES );
+        Results results = em.getEntities( ids, "thing" );
         for ( Entity thing : results ) {
             assertNotNull( "thing should not be null", thing );
 
@@ -173,4 +295,21 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 		 */
         traceTagReporter.report( traceTagManager.detach() );
     }
+
+
+    @Test
+    public void testCreateAndImmediateGet() throws Exception {
+
+        String random = RandomStringUtils.randomAlphabetic(10);
+        String orgName = "org_" + random;
+        String appName = "app_" + random;
+        String orgAppName = orgName + "/" + appName;
+
+        UUID appId = setup.createApplication(orgName, appName);
+
+        UUID lookedUpId = setup.getEmf().lookupApplication( orgAppName ).get();
+
+        Assert.assertEquals(appId, lookedUpId);
+    }
+
 }

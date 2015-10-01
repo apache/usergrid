@@ -1,0 +1,67 @@
+
+
+<div>
+    <a name="{{name_lc}}"/>
+</div>
+
+<div class="panel panel-default">
+    
+    <div class="panel-heading">
+        <h2 class="panel-title model-heading">{{name}}
+            <a data-toggle="collapse" data-target="#collapse-{{name}}"
+               href="#collapse-{{name}}" class="collapsed collapse-button"> </a>
+        </h2>
+    </div>
+    
+    <div id="collapse-{{name}}" class="panel-body collapse">
+        
+        <p>{{description}}</p>
+        
+        <p><b>Properties</b></p>
+
+        <table width="80%" class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+            {{#properties}}
+                <tr>
+                    <td>{{name}}</td>
+                    <td>
+                        {{#ref}}<a href="#{{ref_lc}}">{{ref}}</a>{{/ref}}
+                        {{^ref}}{{type}}{{/ref}}
+                    </td>
+                    <td>{{description}}</td>
+                    <td>{{required}}</td>
+                </tr>
+            {{/properties}}
+        </table>
+
+        {{#hasReferrers}}
+        <p><b>Referring API Paths</b></p>
+        <table width="80%" class="table table-striped">
+            {{#referrers}}
+            <tr>
+                <td><p><a href="#op-{{opId}}">{{url}}</a></p></td>
+            </tr>
+            {{/referrers}}
+        </table>
+        {{/hasReferrers}}
+
+        {{#hasModelRefs}}
+            <p><b>Referring Definitions</b></p>
+            <table width="80%" class="table table-striped">
+                {{#modelRefs}}
+                    <tr>
+                        <td><p><a href="#{{refName_lc}}">{{refName}}</a></p></td>
+                    </tr>
+                {{/modelRefs}}
+            </table>
+        {{/hasModelRefs}}
+
+    </div>
+    
+</div>
+

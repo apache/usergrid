@@ -17,71 +17,65 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import java.util.Map;
-import java.util.UUID;
+import java.io.IOException;
 
-import org.codehaus.jackson.JsonNode;
-import org.junit.Rule;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
 
-import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 
 /**
  * Simple tests to test querying at the REST tier
  */
-@Concurrent()
-public class BrowserCompatibilityTest extends AbstractRestIT {
+
+public class BrowserCompatibilityTest extends org.apache.usergrid.rest.test.resource.AbstractRestIT {
 
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
-
-
+    /**
+     * Test to check chrome type accept headers
+     */
     @Test
     public void testChromeHtmlTypes() throws Exception {
         testBrowserAccept( "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" );
     }
 
 
+    /**
+     * Test to check firefox type accept headers
+     */
     @Test
     public void testFireFoxHtmlTypes() throws Exception {
         testBrowserAccept( "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" );
     }
 
-
+    /**
+     * Test to check safari type accept headers
+     */
     @Test
     public void testSafariTypes() throws Exception {
         testBrowserAccept( "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" );
     }
 
+    /**
+     * Helper method to run browser accept header tests
+     */
+    private void testBrowserAccept( String acceptHeader ) throws IOException {
 
-    private void testBrowserAccept( String acceptHeader ) {
+        //make anew entity and verify that it is accurate
+        String name = "thing1";
+        Entity payload = new Entity();
+        payload.put("name", name);
+        Entity entity = this.app().collection("things").post(payload);
+        assertEquals(entity.get("name"), name);
+        String uuid = entity.getAsString("uuid");
+        this.refreshIndex();
 
+        //now get this new entity with "text/html" in the accept header
+        Entity returnedEntity = this.app().collection("things").withAcceptHeader(acceptHeader).entity(entity).get();
+        String returnedUUID = returnedEntity.getAsString("uuid");
 
-        CustomCollection things = context.application().collection( "things" );
-
-        Map<String, String> entity = hashMap( "name", "thing1" );
-        JsonNode response = things.create( entity );
-
-        UUID entityId = getEntityId( response, 0 );
-
-        assertNotNull( entityId );
-
-        //now get it with "text/html" in the type
-
-        //now try and retrieve it
-        response = things.entity( entityId ).withAccept( acceptHeader ).get();
-
-        UUID returnedEntityId = getEntityId( response, 0 );
-
-
-        assertEquals( entityId, returnedEntityId );
+        //and make sure we got the same entity back
+        assertEquals( uuid, returnedUUID );
     }
 }

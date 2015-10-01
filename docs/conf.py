@@ -25,6 +25,9 @@
 
 import sys, os
 
+# CommonMarkParser causes all sorts of problems
+#from recommonmark.parser import CommonMarkParser
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -47,8 +50,10 @@ extensions = [
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-# The suffix of source filenames.
-source_suffix = '.md'
+#source_parsers = {
+#    '.md': CommonMarkParser,
+#}
+source_suffix = ['.md','.rst']
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -58,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Apache Usergrid'
-copyright = u'2013-2014, Apache Usergrid'
+copyright = u'2013-2015, Apache Usergrid'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -269,5 +274,6 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('./lib'))
 extensions += ["sphinxcontrib_markdown"]
  
-markdown_title = 'Apache Usergrid Documents'
-source_suffix = '.md'
+markdown_title = 'Apache Usergrid Documentation'
+
+

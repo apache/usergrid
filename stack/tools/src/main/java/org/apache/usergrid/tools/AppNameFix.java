@@ -87,7 +87,7 @@ public class AppNameFix extends ToolBase {
         startSpring();
 
 
-        EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
         final Map<UUID, String> orgs = getOrgs( line, rootEm );
 

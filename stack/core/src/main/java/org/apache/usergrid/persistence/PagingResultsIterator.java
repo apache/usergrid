@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence;
 
 import java.util.Iterator;
 import java.util.List;
+import org.apache.usergrid.persistence.Query.Level;
 
 
 /** iterates over a Results object, crossing page boundaries automatically */
@@ -26,7 +27,7 @@ public class PagingResultsIterator implements ResultsIterator, Iterable {
 
     private Results results;
     private Iterator currentPageIterator;
-    private Results.Level level;
+    private Level level;
 
 
     public PagingResultsIterator( Results results ) {
@@ -38,7 +39,7 @@ public class PagingResultsIterator implements ResultsIterator, Iterable {
      * @param level overrides the default level from the Results - in case you want to return, say, UUIDs where the
      * Query was set for Entities
      */
-    public PagingResultsIterator( Results results, Results.Level level ) {
+    public PagingResultsIterator( Results results, Level level ) {
         this.results = results;
         this.level = level;
         initCurrentPageIterator();

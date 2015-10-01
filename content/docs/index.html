@@ -1,0 +1,832 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Apache Usergrid Documentation &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="#"/>
+        <link rel="next" title="Documentation Overview" href="introduction/overview.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="#" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>Apache Usergrid Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="apache-usergrid-documentation">
+<h1>Apache Usergrid Documentation<a class="headerlink" href="#apache-usergrid-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound" id="introduction">
+<p class="caption"><span class="caption-text">Introduction</span><a class="headerlink" href="#introduction" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction/usergrid-features.html">Usergrid Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction/usergrid-features.html#data-storage-management">Data storage &amp; management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/usergrid-features.html#flexible-data-querying">Flexible data querying</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/usergrid-features.html#social">Social</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/usergrid-features.html#user-management">User management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/usergrid-features.html#geolocation">Geolocation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/usergrid-features.html#push-notifications-coming-soon">Push notifications (Coming soon...)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="introduction/data-model.html">Usergrid Data model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction/data-model.html#organizations">Organizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/data-model.html#applications">Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/data-model.html#collections">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/data-model.html#entities">Entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/data-model.html#default-entities">Default entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/data-model.html#properties">Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/data-model.html#default-properties">Default properties</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="introduction/async-vs-sync.html">Async vs. sync calls</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction/async-vs-sync.html#synchronous">Synchronous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction/async-vs-sync.html#asynchronous">Asynchronous</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="id1">
+<span id="getting-started"></span><p class="caption"><span class="caption-text">Getting Started</span><a class="headerlink" href="#id1" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/creating-account.html">Creating an Usergrid Account</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/creating-account.html#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/creating-a-new-application.html">Creating a new application</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/creating-a-new-application.html#creating-an-application">Creating an application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/creating-a-new-application.html#securing-an-application">Securing an application</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-a-sandbox-app.html#what-is-the-sandbox-application">What is the sandbox application?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-a-sandbox-app.html#is-the-sandbox-secure">Is the sandbox secure?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-a-sandbox-app.html#creating-a-new-sandbox-application">Creating a New Sandbox Application</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/using-the-api.html">Using the API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#supported-http-methods">Supported HTTP methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#base-url">Base URL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#request-construction">Request construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#accessing-collections">Accessing collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#accessing-entities">Accessing entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#issuing-queries">Issuing queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#authentication-oauth">Authentication (OAuth)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#response-format">Response format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/using-the-api.html#sdks">SDKs</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="id2">
+<span id="data-storage"></span><p class="caption"><span class="caption-text">Data Storage</span><a class="headerlink" href="#id2" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/optimizing-access.html">Data Store Best Practices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/optimizing-access.html#put-your-data-in-as-you-ll-want-to-get-it-out">Put your data in as you&#8217;ll want to get it out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/optimizing-access.html#best-practice-denormalize-for-pre-computed-query-results">Best practice: Denormalize for pre-computed query results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/collections.html">Collections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/collections.html#creating-collections">Creating Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/collections.html#retrieving-collections">Retrieving Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/collections.html#updating-collections">Updating Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/collections.html#deleting-collections">Deleting Collections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data-storage/entities.html">Entities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/entities.html#creating-custom-data-entities">Creating Custom Data Entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/entities.html#creating-multiple-custom-entities">Creating multiple custom entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/entities.html#retrieving-data-entities">Retrieving Data Entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/entities.html#updating-data-entities">Updating Data Entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-storage/entities.html#deleting-data-entities">Deleting Data Entities</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="id3">
+<span id="data-queries"></span><p class="caption"><span class="caption-text">Data Queries</span><a class="headerlink" href="#id3" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/querying-your-data.html">Querying your data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/querying-your-data.html#basic-query-usage">Basic query usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/query-parameters.html">Query parameters &amp; clauses</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/query-parameters.html#contains">Contains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/query-parameters.html#location">Location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/query-parameters.html#order-by">Order by</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/query-parameters.html#limit">Limit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/query-parameters.html#cursor">Cursor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/operators-and-types.html">Query operators &amp; data types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/operators-and-types.html#operators">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/operators-and-types.html#data-types">Data types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data-queries/advanced-query-usage.html">Advanced query usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data-queries/advanced-query-usage.html#attaching-a-query-to-all-api-calls">Attaching a query to all API calls</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="id4">
+<span id="entity-connections"></span><p class="caption"><span class="caption-text">Entity Connections</span><a class="headerlink" href="#id4" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="entity-connections/connecting-entities.html">Connecting entities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="entity-connections/connecting-entities.html#request-syntax">Request syntax</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="entity-connections/retrieving-entities.html">Retrieving connections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="entity-connections/retrieving-entities.html#request-syntax">Request syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="entity-connections/retrieving-entities.html#retrieve-all-connected-entities">Retrieve all connected entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="entity-connections/retrieving-entities.html#retrieve-all-connecting-entities-by-type">Retrieve all connecting entities by type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="entity-connections/retrieving-entities.html#retrieve-all-connecting-entities">Retrieve all connecting entities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="entity-connections/disconnecting-entities.html">Disconnecting entities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="entity-connections/disconnecting-entities.html#request-syntax">Request syntax</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="id5">
+<span id="push-notifications"></span><p class="caption"><span class="caption-text">Push Notifications</span><a class="headerlink" href="#id5" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/overview.html">Push notifications overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/overview.html#reach-your-users-with-push">Reach your users with push</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/overview.html#get-started">Get started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/overview.html#build-push-support">Build push support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/overview.html#learn-more">Learn more</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/adding-push-support.html">Adding push notifications support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/adding-push-support.html#setting-up-push-notification-support">Setting up push notification support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/adding-push-support.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/adding-push-support.html#tutorials">Tutorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/adding-push-support.html#sample-apps">Sample Apps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/adding-push-support.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/getting-started.html">Getting started with push notifications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/getting-started.html#what-are-push-notifications">What are push notifications?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/getting-started.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/getting-started.html#setup-overview">Setup overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/getting-started.html#how-it-works">How it works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/tutorial.html">Tutorial: Push notifications sample app</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/tutorial.html#before-you-begin">Before you begin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/tutorial.html#step-1-download-a-sample-app">Step 1: Download a sample app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/tutorial.html#step-2-register-with-a-notification-service-and-generate-a-certificate-key">Step 2: Register with a notification service and generate a certificate/key</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/tutorial.html#step-3-create-a-notifier">Step 3: Create a notifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/tutorial.html#step-4-configure-and-run-the-sample-app">Step 4: Configure and run the sample app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/tutorial.html#step-5-review-the-data-entities-created-by-the-sample-app">Step 5: Review the data entities created by the sample app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/tutorial.html#step-6-send-additional-push-notifications-using-other-usergrid-tools">Step 6: Send additional push notifications using other Usergrid tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/registering.html">Registering with a notification service</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/registering.html#registering-with-apple-apns">Registering with Apple APNs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/registering.html#registering-with-google-gcm">Registering with Google GCM</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/creating-notifiers.html">Creating notifiers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-notifiers.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-notifiers.html#creating-notifiers-with-the-admin-portal">Creating notifiers with the admin portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-notifiers.html#creating-notifiers-programmatically">Creating notifiers programmatically</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-notifiers.html#notifier-endpoints">Notifier endpoints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/managing-users-and-devices.html">Managing users and devices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/managing-users-and-devices.html#registering-devices">Registering devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/managing-users-and-devices.html#connecting-devices-to-users">Connecting devices to users</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#creating-notifications">Creating notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#scheduling-notifications">Scheduling notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#targeting-multiple-notifiers-or-messages">Targeting multiple notifiers or messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#setting-a-notification-expiration">Setting a notification expiration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#getting-notifications">Getting notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#canceling-sent-notifications">Canceling sent notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#deleting-unsent-notifications">Deleting unsent notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#getting-receipts">Getting receipts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/creating-and-managing-notifications.html#notification-endpoints">Notification endpoints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="push-notifications/troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/troubleshooting.html#working-with-android">Working with Android</a></li>
+<li class="toctree-l2"><a class="reference internal" href="push-notifications/troubleshooting.html#working-with-phonegap-android">Working with PhoneGap Android</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="security-authentication">
+<span id="security-and-authentication"></span><p class="caption"><span class="caption-text">Security &amp; Authentication</span><a class="headerlink" href="#security-authentication" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/using-permissions.html">Using permissions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-permissions.html#permissions-syntax">Permissions syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-permissions.html#complex-paths">Complex paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-permissions.html#assigning-permissions">Assigning permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-permissions.html#removing-permissions">Removing permissions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/using-roles.html">Using roles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-roles.html#default-roles">Default roles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-roles.html#creating-roles">Creating roles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-roles.html#assigning-roles">Assigning roles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/using-roles.html#removing-roles">Removing roles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html#authentication-levels">Authentication levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html#application-user-authentication-user-login">Application user authentication (user login)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html#application-client-authentication">Application client authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html#admin-user-authentication">Admin user authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/authenticating-users-and-application-clients.html#organization-client-authentication">Organization client authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/user-authentication-types.html">Authentication levels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/user-authentication-types.html#configuring-authentication-levels">Configuring authentication levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/user-authentication-types.html#user-authentication-level">User authentication level</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/user-authentication-types.html#admin-authentication-levels">Admin authentication levels</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/changing-token-time-live-ttl.html#default-ttl">Default ttl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/changing-token-time-live-ttl.html#changing-the-default-ttl">Changing the default ttl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/changing-token-time-live-ttl.html#changing-ttl-when-a-token-is-created">Changing ttl when a token is created</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/authenticating-api-requests.html">Authenticating API requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/authenticating-api-requests.html#authenticating-with-access-tokens">Authenticating with access tokens</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/authenticating-api-requests.html#authenticating-with-client-id-and-client-secret">Authenticating with client ID and client secret</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/revoking-tokens-logout.html#revoking-tokens-user-logout">Revoking tokens (user logout)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/facebook-sign.html">Facebook sign in</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/facebook-sign.html#facebook-login-example">Facebook login example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security-and-auth/securing-your-app.html">Security best practices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/securing-your-app.html#never-use-the-sandbox-for-a-production-app">Never use the &#8216;sandbox&#8217; for a production app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/securing-your-app.html#review-permissions-in-your-apps">Review permissions in your apps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/securing-your-app.html#edit-the-default-role">Edit the &#8216;default&#8217; role</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/securing-your-app.html#use-https">Use https</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/securing-your-app.html#acquire-access-tokens-in-a-secure-way">Acquire access tokens in a secure way</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security-and-auth/securing-your-app.html#treat-mobile-clients-as-untrustworthy">Treat mobile clients as untrustworthy</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="user-management-social-graph">
+<span id="user-management-and-social-graph"></span><p class="caption"><span class="caption-text">User Management &amp; Social Graph</span><a class="headerlink" href="#user-management-social-graph" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user-management/user-management.html">User management &amp; social graph</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-management/user-management.html#user-management">User management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/user-management.html#group-management">Group management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/user-management.html#social-connections">Social connections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/user-management.html#activity-feeds">Activity feeds</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/working-user-data.html">Working with User Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-management/working-user-data.html#creating-users">Creating users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/working-user-data.html#retrieving-user-data">Retrieving user data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/working-user-data.html#updating-deleting-user-data">Updating &amp; deleting user data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/working-user-data.html#changing-a-user-password">Changing a user password</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/working-user-data.html#resetting-a-user-password">Resetting a user password</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/group.html">Working with group data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-management/group.html#creating-groups">Creating groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/group.html#retrieving-groups">Retrieving groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/group.html#parameter-description">Parameter Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/group.html#retrieving-a-group-s-users">Retrieving a group&#8217;s users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/group.html#deleting-a-group">Deleting a group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/group.html#adding-a-user-to-a-group">Adding a user to a group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/group.html#removing-a-user-from-a-group">Removing a user from a group</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/activity.html">Activity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-management/activity.html#posting-activities">Posting activities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/activity.html#posting-an-activity-to-a-group">Posting an activity to a group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/activity.html#creating-an-activity-for-a-user-s-followers-in-a-group">Creating an activity for a user&#8217;s followers in a group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/activity.html#retrieving-activity-feeds">Retrieving activity feeds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/activity.html#retrieving-a-group-s-activity-feed">Retrieving a group&#8217;s activity feed</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/user-connections.html">Social Graph Connections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-management/user-connections.html#following-followers">Following/followers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/user-connections.html#creating-a-following-followers-connection">Creating a following/followers connection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-management/messagee-example.html">App Example - Messagee</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-management/messagee-example.html#creating-a-user-account-in-usergrid">Creating a user account in Usergrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/messagee-example.html#creating-an-app-and-users">Creating an app and users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/messagee-example.html#ios-client">iOS client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/messagee-example.html#ios-sdk">iOS SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/messagee-example.html#android-client-and-sdk">Android client and SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-management/messagee-example.html#javascript-html5-client-and-sdk">Javascript/HTML5 client and SDK</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="geo-location">
+<span id="geolocation"></span><p class="caption"><span class="caption-text">Geo-location</span><a class="headerlink" href="#geo-location" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="geolocation/geolocation.html">Geolocating your Entities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="geolocation/geolocation.html#saving-location-data-in-an-entity">Saving location data in an entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geolocation/geolocation.html#querying-location-data">Querying location data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geolocation/geolocation.html#enrich-your-app-with-location-data">Enrich your app with location data</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="assets-files">
+<span id="asset-and-file-management"></span><p class="caption"><span class="caption-text">Assets &amp; Files</span><a class="headerlink" href="#assets-files" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/uploading-assets.html">Uploading assets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="assets-and-files/uploading-assets.html#id1">Uploading assets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assets-and-files/uploading-assets.html#updating-assets">Updating assets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/retrieving-assets.html">Retrieving assets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="assets-and-files/retrieving-assets.html#retrieving-asset-data">Retrieving asset data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assets-and-files/retrieving-assets.html#retrieving-an-asset-entity">Retrieving an asset entity</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="assets-and-files/folders.html">Folders</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="assets-and-files/folders.html#linking-a-folder-to-an-asset">Linking a folder to an asset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assets-and-files/folders.html#retrieve-list-of-folder-assets">Retrieve list of folder assets</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="counters-events">
+<span id="counters-and-events"></span><p class="caption"><span class="caption-text">Counters &amp; Events</span><a class="headerlink" href="#counters-events" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html#request-syntax">Request syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html#example-request">Example request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html#example-response">Example response</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="counters-and-events/retrieving-counters.html">Retrieving counters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/retrieving-counters.html#request-syntax">Request syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/retrieving-counters.html#example-request">Example request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/retrieving-counters.html#example-response">Example response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/retrieving-counters.html#retrieving-counters-by-time-interval">Retrieving counters by time interval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/retrieving-counters.html#id1">Request syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/retrieving-counters.html#id2">Example request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="counters-and-events/retrieving-counters.html#id3">Example response</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="organizations-applications">
+<span id="organization-and-application-management"></span><p class="caption"><span class="caption-text">Organizations &amp; Applications</span><a class="headerlink" href="#organizations-applications" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/organization.html">Organization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#creating-an-organization">Creating an organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#getting-an-organization">Getting an organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#activating-an-organization">Activating an organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#reactivating-an-organization">Reactivating an organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#generating-organization-client-credentials">Generating organization client credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#retrieving-organization-client-credentials">Retrieving organization client credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#getting-an-organization-s-activity-feed">Getting an organization&#8217;s activity feed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#getting-the-applications-in-an-organization">Getting the applications in an organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#adding-an-admin-user-to-an-organization">Adding an admin user to an organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#getting-the-admin-users-in-an-organization">Getting the admin users in an organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/organization.html#removing-an-admin-user-from-an-organization">Removing an admin user from an organization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/application.html">Application</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/application.html#creating-an-application">Creating an application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/application.html#generating-application-credentials">Generating application credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/application.html#getting-application-credentials">Getting application credentials</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="orgs-and-apps/admin-user.html">Admin user</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#creating-an-admin-user">Creating an admin user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#updating-an-admin-user">Updating an admin user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#getting-an-admin-user">Getting an admin user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#setting-an-admin-user-s-password">Setting an admin user&#8217;s password</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#resetting-an-admin-user-s-password">Resetting an admin user&#8217;s password</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#completing-a-password-reset">Completing a password reset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#activating-an-admin-user">Activating an admin user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#reactivating-an-admin-user">Reactivating an admin user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#id20">Example - Request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orgs-and-apps/admin-user.html#getting-an-admin-user-s-activity-feed">Getting an admin user&#8217;s activity feed</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="api-reference">
+<span id="rest-endpoints"></span><p class="caption"><span class="caption-text">API Reference</span><a class="headerlink" href="#api-reference" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rest-endpoints/api-docs.html">Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#access-tokens">Access-Tokens</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#activities">Activities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#admin-users">Admin-Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#app-users">App-Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#entities-collections">Entities-Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#events">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#groups">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#notifications">Notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#organizations-applications">Organizations-Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#permissions-roles">Permissions-Roles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rest-endpoints/api-docs.html#models">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#accesstokenresponse">AccessTokenResponse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#action">Action</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#activityfeed">ActivityFeed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#addrole">AddRole</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#appdata">AppData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#createactivity">CreateActivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#createadminuser">CreateAdminUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#createentities">CreateEntities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#createevent">CreateEvent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#creategroup">CreateGroup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#createnotifications">CreateNotifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#createorg">CreateOrg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#createuser">CreateUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#credential">Credential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#device">Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#entity">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#error">Error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#event">Event</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#group">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#logincredentials">LoginCredentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#notification">Notification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#notificationupdate">NotificationUpdate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#organization">Organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#permissions">Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#receipt">Receipt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#resetpw">ResetPW</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#resetpwmsg">ResetPWMsg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#role">Role</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#user">User</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rest-endpoints/api-docs.html#sub-types">Sub-Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#collections">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#imagemodel">ImageModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#metadata">Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#object">Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest-endpoints/api-docs.html#sets">Sets</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="client-sdks">
+<span id="sdks"></span><p class="caption"><span class="caption-text">Client SDKs</span><a class="headerlink" href="#client-sdks" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="installing-the-stack">
+<span id="installation"></span><p class="caption"><span class="caption-text">Installing the Stack</span><a class="headerlink" href="#installing-the-stack" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#install-and-configure-cassandra">Install and configure Cassandra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#install-and-configure-tomcat">Install and configure Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#add-usergrid-war-to-tomcat">Add Usergrid WAR to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#add-usergrid-configuration-file-to-tomcat">Add Usergrid configuration file to Tomcat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#run-usergrid-database-super-user-setup">Run Usergrid Database &amp; Super User Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#build-the-usergrid-console">Build the Usergrid Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#login-to-the-usergrid-console-get-started">Login to the Usergrid Console &amp; get started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-deploy-to-tomcat.html#example-usergrid-custom-properties-file">Example <strong>usergrid-custom.properties</strong> file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-launcher-quick-start.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-launcher-quick-start.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-launcher-quick-start.html#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug1-launcher-quick-start.html#getting-started-with-the-http-api">Getting Started with the HTTP API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug2-deploy-to-tomcat.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug2-deploy-to-tomcat.html#running">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation/ug2-deploy-to-tomcat.html#example-usergrid-deployment-properties-file">Example <strong>usergrid-deployment.properties</strong> file</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="more-about-usergrid">
+<span id="about"></span><p class="caption"><span class="caption-text">More about Usergrid</span><a class="headerlink" href="#more-about-usergrid" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/presos-and-videos.html">Presentations &amp; Videos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/presos-and-videos.html#building-mobile-apps-with-apache-usergrid">Building Mobile Apps with Apache Usergrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/presos-and-videos.html#how-to-contribute-to-apache-usergrid">How to Contribute to Apache Usergrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/presos-and-videos.html#apache-usergrid-internals">Apache Usergrid Internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/presos-and-videos.html#open-source-mobile-backend-on-cassandra">Open Source Mobile Backend on Cassandra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/presos-and-videos.html#usergrid-overview">Usergrid Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/contribute-code.html">How to Contribute Code &amp; Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/contribute-code.html#code-contributions">Code Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/contribute-code.html#website-and-documentation-contributions">Website and Documentation Contributions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="introduction/overview.html" class="btn btn-neutral float-right" title="Documentation Overview" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

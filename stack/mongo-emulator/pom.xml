@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>1.0.2</version>
+    <version>2.0.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -61,19 +61,6 @@
       </testResource>
     </testResources>
 
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <storage-config>${basedir}/src/test/conf</storage-config>
-          </systemPropertyVariables>
-          <forkMode>always</forkMode>
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-        </configuration>
-      </plugin>
-    </plugins>
   </build>
 
   <dependencies>

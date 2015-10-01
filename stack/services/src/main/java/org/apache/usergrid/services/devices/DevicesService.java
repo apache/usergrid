@@ -17,13 +17,24 @@
 package org.apache.usergrid.services.devices;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Device;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.services.AbstractCollectionService;
-import org.apache.usergrid.services.ServiceContext;
-import org.apache.usergrid.services.ServiceResults;
+import rx.Observable;
+import rx.Scheduler;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 public class DevicesService extends AbstractCollectionService {
@@ -33,20 +44,54 @@ public class DevicesService extends AbstractCollectionService {
 
     public DevicesService() {
         super();
-        logger.info( "/devices" );
+        logger.debug( "/devices" );
     }
 
 
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.info( "Registering device {}", id );
+        logger.debug("Registering device {}", id);
         return super.putItemById( context, id );
     }
 
 
     @Override
     public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.info( "Attempting to connect an entity to device {}", id );
+        logger.info("Attempting to connect an entity to device {}", id);
         return super.postItemById( context, id );
+    }
+
+    protected void deleteEntityConnection(final EntityRef deviceRef, final EntityRef owner){
+        if(deviceRef == null) {
+            return;
+        }
+        try {
+            Results entities = em.getCollection(deviceRef,"users",null,100, Query.Level.REFS,false);
+            Observable.from(entities.getEntities())
+                    .map(new Func1<Entity, Boolean>() {
+                        @Override
+                        public Boolean call(Entity user) {
+                            boolean removed = false;
+                            try {
+                                if(!user.getUuid().equals(owner.getUuid())) { //skip current user
+                                    Results devicesResults = em.getCollection(user, "devices", null, 100, Query.Level.REFS, false);
+                                    List<Entity> userDevices = devicesResults.getEntities();
+                                    for (EntityRef userDevice : userDevices) {
+                                        if(userDevice.getUuid().equals(deviceRef.getUuid())) { //only remove the current device from user
+                                            em.removeFromCollection(user, "devices", userDevice);
+                                        }
+                                    }
+                                    em.removeFromCollection(deviceRef, "users", user);
+                                    removed = true;
+                                }
+                            } catch (Exception e) {
+                                logger.error("Failed to delete connection " + user.toString(), e);
+                            }
+                            return removed;
+                        }
+                    }).toBlocking().lastOrDefault(null);
+        }catch (Exception e){
+            logger.error("failed to get connection",e);
+        }
     }
 }

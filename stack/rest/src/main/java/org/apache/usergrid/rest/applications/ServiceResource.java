@@ -17,68 +17,45 @@
 package org.apache.usergrid.rest.applications;
 
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.management.OrganizationConfig;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.QueryUtils;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.rest.applications.assets.AssetsResource;
+import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.services.*;
+import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
+import org.apache.usergrid.services.assets.data.BinaryStore;
+import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
+import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.JsonUtils;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.applications.assets.AssetsResource;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
-import org.apache.usergrid.security.oauth.AccessInfo;
-import org.apache.usergrid.services.assets.data.AssetUtils;
-import org.apache.usergrid.services.assets.data.BinaryStore;
-import org.apache.usergrid.utils.InflectionUtils;
-import org.apache.commons.lang.StringUtils;
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.core.provider.EntityHolder;
-import com.sun.jersey.multipart.BodyPart;
-import com.sun.jersey.multipart.BodyPartEntity;
-import com.sun.jersey.multipart.FormDataBodyPart;
-import com.sun.jersey.multipart.FormDataMultiPart;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.io.InputStream;
+import java.util.*;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.services.ServiceParameter.addParameter;
-import static org.apache.usergrid.services.ServicePayload.batchPayload;
-import static org.apache.usergrid.services.ServicePayload.idListPayload;
-import static org.apache.usergrid.services.ServicePayload.payload;
-import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
-import static org.apache.usergrid.utils.JsonUtils.normalizeJsonTree;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 
 
 @Component
@@ -89,11 +66,18 @@ import static org.apache.usergrid.utils.JsonUtils.normalizeJsonTree;
 })
 public class ServiceResource extends AbstractContextResource {
 
-    private static final Logger LOG = LoggerFactory.getLogger( ServiceResource.class );
+    protected static final Logger logger = LoggerFactory.getLogger( ServiceResource.class );
     private static final String FILE_FIELD_NAME = "file";
 
-    @Autowired
+
+   // @Autowired
     private BinaryStore binaryStore;
+
+    @Autowired
+    private LocalFileBinaryStore localFileBinaryStore;
+
+    @Autowired
+    private AwsSdkS3BinaryStore awsSdkS3BinaryStore;
 
     protected ServiceManager services;
 
@@ -101,6 +85,18 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public ServiceResource() {
+    }
+
+
+    public void setBinaryStore(String binaryStoreType){
+
+        //TODO:GREY change this to be a property held elsewhere
+        if(binaryStoreType.equals("local")){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
     }
 
 
@@ -151,7 +147,7 @@ public class ServiceResource extends AbstractContextResource {
         if ( params != null ) {
             Query query = Query.fromQueryParams( params );
             if ( query != null ) {
-                parameters = addParameter( parameters, query );
+                parameters = ServiceParameter.addParameter( parameters, query );
             }
         }
 
@@ -167,8 +163,13 @@ public class ServiceResource extends AbstractContextResource {
             //TODO TN query parameters are not being correctly decoded here.  The URL encoded strings
             //aren't getting decoded properly
             Query query = Query.fromQueryParams( params );
+
+            if(query == null && parameters.size() > 0 && parameters.get( 0 ).isId()){
+                query = Query.fromUUID( parameters.get( 0 ).getId() );
+            }
+
             if ( query != null ) {
-                parameters = addParameter( parameters, query );
+                parameters = ServiceParameter.addParameter( parameters, query );
             }
         }
 
@@ -178,8 +179,8 @@ public class ServiceResource extends AbstractContextResource {
 
     @Path("file")
     public AbstractContextResource getFileResource( @Context UriInfo ui ) throws Exception {
-        LOG.debug( "in assets in ServiceResource" );
-        addParameter( getServiceParameters(), "assets" );
+        logger.debug( "in assets in ServiceResource" );
+        ServiceParameter.addParameter( getServiceParameters(), "assets" );
 
         PathSegment ps = getFirstPathSegment( "assets" );
         if ( ps != null ) {
@@ -194,11 +195,11 @@ public class ServiceResource extends AbstractContextResource {
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 
-        LOG.debug( "ServiceResource.addIdParameter" );
+        logger.debug( "ServiceResource.addIdParameter" );
 
         UUID itemId = UUID.fromString( entityId.getPath() );
 
-        addParameter( getServiceParameters(), itemId );
+        ServiceParameter.addParameter( getServiceParameters(), itemId );
 
         addMatrixParams( getServiceParameters(), ui, entityId );
 
@@ -210,18 +211,18 @@ public class ServiceResource extends AbstractContextResource {
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
 
-        LOG.debug( "ServiceResource.addNameParameter" );
+        logger.debug( "ServiceResource.addNameParameter" );
 
-        LOG.debug( "Current segment is {}", itemName.getPath() );
+        logger.debug( "Current segment is {}", itemName.getPath() );
 
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
             if ( query != null ) {
-                addParameter( getServiceParameters(), query );
+                ServiceParameter.addParameter( getServiceParameters(), query );
             }
         }
         else {
-            addParameter( getServiceParameters(), itemName.getPath() );
+            ServiceParameter.addParameter( getServiceParameters(), itemName.getPath() );
         }
 
         addMatrixParams( getServiceParameters(), ui, itemName );
@@ -233,16 +234,53 @@ public class ServiceResource extends AbstractContextResource {
     public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
                                                  ServicePayload payload ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeServiceRequest" );
+        logger.debug( "ServiceResource.executeServiceRequest" );
 
         boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        // connection info can be blocked only for GETs
+        if (action == ServiceAction.GET) {
+           if ("none".equalsIgnoreCase(connectionQueryParm)) {
+               returnInboundConnections = false;
+               returnOutboundConnections = false;
+           } else if ("in".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = true;
+               returnOutboundConnections = false;
+           } else if ("out".equalsIgnoreCase(connectionQueryParm)) {
+               returnInboundConnections = false;
+                returnOutboundConnections = true;
+            } else if ("all".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = true;
+                returnOutboundConnections = true;
+            } else {
+                if (connectionQueryParm != null) {
+                    // unrecognized parameter
+                    logger.error(String.format(
+                        "Invalid connections query parameter=%s, ignoring.", connectionQueryParm));
+                }
+                // use the default query parameter functionality
+                OrganizationConfig orgConfig =
+                    management.getOrganizationConfigForApplication(services.getApplicationId());
+                String defaultConnectionQueryParm = orgConfig.getDefaultConnectionParam();
+                returnInboundConnections =
+                    (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
+                returnOutboundConnections =
+                    (defaultConnectionQueryParm.equals("out")) || (defaultConnectionQueryParm.equals("all"));
+           }
+        }
+
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
             collectionGet = (getServiceParameters().size() == 1 && InflectionUtils
                     .isPlural(getServiceParameters().get(0)));
         }
         addQueryParams( getServiceParameters(), ui );
-        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload );
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
         response.setServiceRequest( r );
         ServiceResults results = r.execute();
         if ( results != null ) {
@@ -255,7 +293,7 @@ public class ServiceResource extends AbstractContextResource {
             Query query = r.getLastQuery();
             if ( query != null ) {
                 if ( query.hasSelectSubjects() ) {
-                    response.setList( query.getSelectionResults( results ) );
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
                     response.setCount( response.getList().size() );
                     response.setNext( results.getNextResult() );
                     response.setPath( results.getPath() );
@@ -276,13 +314,14 @@ public class ServiceResource extends AbstractContextResource {
 
 
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, "application/javascript"})
     @RequireApplicationAccess
-    public JSONWithPadding executeGet( @Context UriInfo ui,
+    @JSONP
+    public ApiResponse executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        LOG.debug( "ServiceResource.executeGet" );
+        logger.debug( "ServiceResource.executeGet" );
 
         ApiResponse response = createApiResponse();
 
@@ -292,26 +331,26 @@ public class ServiceResource extends AbstractContextResource {
 
         executeServiceRequest( ui, response, ServiceAction.GET, null );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @SuppressWarnings({ "unchecked" })
     public ServicePayload getPayload( Object json ) {
         ServicePayload payload = null;
-        json = normalizeJsonTree( json );
+        json = JsonUtils.normalizeJsonTree( json );
         if ( json instanceof Map ) {
             Map<String, Object> jsonMap = ( Map<String, Object> ) json;
-            payload = payload( jsonMap );
+            payload = ServicePayload.payload( jsonMap );
         }
         else if ( json instanceof List ) {
             List<?> jsonList = ( List<?> ) json;
             if ( jsonList.size() > 0 ) {
                 if ( jsonList.get( 0 ) instanceof UUID ) {
-                    payload = idListPayload( ( List<UUID> ) json );
+                    payload = ServicePayload.idListPayload( ( List<UUID> ) json );
                 }
                 else if ( jsonList.get( 0 ) instanceof Map ) {
-                    payload = batchPayload( ( List<Map<String, Object>> ) jsonList );
+                    payload = ServicePayload.batchPayload( ( List<Map<String, Object>> ) jsonList );
                 }
             }
         }
@@ -322,16 +361,16 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    @POST
-    @RequireApplicationAccess
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Object> body,
-                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
 
-        LOG.debug( "ServiceResource.executePost" );
 
-        Object json = body.getEntity();
+    /**
+     * Necessary to work around inexplicable problems with EntityHolder.
+     * See above.
+     */
+    public ApiResponse executePostWithObject( @Context UriInfo ui, Object json,
+            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
+        logger.debug( "ServiceResource.executePostWithMap" );
 
         ApiResponse response = createApiResponse();
 
@@ -344,18 +383,16 @@ public class ServiceResource extends AbstractContextResource {
 
         executeServiceRequest( ui, response, ServiceAction.POST, payload );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
-    @PUT
-    @RequireApplicationAccess
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
-                                       @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
-
-        LOG.debug( "ServiceResource.executePut" );
+    /**
+     * Necessary to work around inexplicable problems with EntityHolder.
+     * See above.
+     */
+    public ApiResponse executePutWithMap( @Context UriInfo ui, Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -368,17 +405,72 @@ public class ServiceResource extends AbstractContextResource {
 
         executeServiceRequest( ui, response, ServiceAction.PUT, payload );
 
-        return new JSONWithPadding( response, callback );
+        return response;
+    }
+
+
+    @POST
+    @RequireApplicationAccess
+    @Consumes(MediaType.APPLICATION_JSON)
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePost( @Context UriInfo ui, String body,
+            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
+        logger.debug( "ServiceResource.executePost: body = " + body );
+
+        Object json;
+        if ( StringUtils.isEmpty( body ) ) {
+            json = null;
+        } else {
+            json = readJsonToObject( body );
+        }
+
+        ApiResponse response = createApiResponse();
+
+
+        response.setAction( "post" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        ServicePayload payload = getPayload( json );
+
+        executeServiceRequest( ui, response, ServiceAction.POST, payload );
+
+        return response;
+    }
+
+
+
+    @PUT
+    @RequireApplicationAccess
+    @Consumes(MediaType.APPLICATION_JSON)
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePut( @Context UriInfo ui, String body,
+                                       @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.debug( "ServiceResource.executePut" );
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
+        return executePutWithMap(ui, json, callback);
     }
 
 
     @DELETE
     @RequireApplicationAccess
-    public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeDelete(
+        @Context UriInfo ui,
+        @QueryParam("callback") @DefaultValue("callback") String callback,
+        @QueryParam("app_delete_confirm") String confirmAppDelete )
+        throws Exception {
 
-        LOG.debug( "ServiceResource.executeDelete" );
+        logger.debug( "ServiceResource.executeDelete" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
@@ -395,12 +487,17 @@ public class ServiceResource extends AbstractContextResource {
 
             for ( Entity entity : sr.getEntities() ) {
                 if ( entity.getProperty( AssetUtils.FILE_METADATA ) != null ) {
-                    binaryStore.delete( services.getApplicationId(), entity );
+                    try {
+                        binaryStore.delete( services.getApplicationId(), entity );
+                    }catch(AwsPropertiesNotFoundException apnfe){
+                        logger.error( "Amazon Property needed for this operation not found",apnfe );
+                        response.setError( "500","Amazon Property needed for this operation not found",apnfe );
+                    }
                 }
             }
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     //    TODO Temporarily removed until we test further
@@ -462,7 +559,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public static String wrapWithCallback( AccessInfo accessInfo, String callback ) {
-        return wrapWithCallback( mapToJsonString( accessInfo ), callback );
+        return wrapWithCallback( JsonUtils.mapToJsonString( accessInfo ), callback );
     }
 
 
@@ -475,7 +572,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public static MediaType jsonMediaType( String callback ) {
-        return isNotBlank( callback ) ? new MediaType( "application", "javascript" ) : APPLICATION_JSON_TYPE;
+        return StringUtils.isNotBlank( callback ) ? new MediaType( "application", "javascript" ) : APPLICATION_JSON_TYPE;
     }
 
 
@@ -484,11 +581,13 @@ public class ServiceResource extends AbstractContextResource {
     @POST
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public JSONWithPadding executeMultiPartPost( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeMultiPartPost( @Context UriInfo ui,
                                                  @QueryParam("callback") @DefaultValue("callback") String callback,
                                                  FormDataMultiPart multiPart ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeMultiPartPost" );
+        logger.debug( "ServiceResource.executeMultiPartPost" );
         return executeMultiPart( ui, callback, multiPart, ServiceAction.POST );
     }
 
@@ -496,17 +595,29 @@ public class ServiceResource extends AbstractContextResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public JSONWithPadding executeMultiPartPut( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeMultiPartPut( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback,
                                                 FormDataMultiPart multiPart ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeMultiPartPut" );
+        logger.debug( "ServiceResource.executeMultiPartPut" );
         return executeMultiPart( ui, callback, multiPart, ServiceAction.PUT );
     }
 
 
-    private JSONWithPadding executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    private ApiResponse executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
                                               ServiceAction serviceAction ) throws Exception {
+
+        //needed for testing
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
 
         // collect form data values
         List<BodyPart> bodyParts = multiPart.getBodyParts();
@@ -517,7 +628,7 @@ public class ServiceResource extends AbstractContextResource {
                 data.put( bodyPart.getName(), bodyPart.getValue() );
             }
             else {
-                LOG.info( "skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType() );
+                logger.info( "skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType() );
             }
         }
 
@@ -537,17 +648,27 @@ public class ServiceResource extends AbstractContextResource {
 
         // process file part
         if ( fileBodyPart != null ) {
-            InputStream fileInput = ( ( BodyPartEntity ) fileBodyPart.getEntity() ).getInputStream();
+            InputStream fileInput = ( (BodyPartEntity) fileBodyPart.getEntity() ).getInputStream();
             if ( fileInput != null ) {
                 Entity entity = serviceResults.getEntity();
                 EntityManager em = emf.getEntityManager( getApplicationId() );
-                binaryStore.write( getApplicationId(), entity, fileInput );
+                try {
+                    binaryStore.write( getApplicationId(), entity, fileInput );
+                }
+                catch ( AwsPropertiesNotFoundException apnfe){
+                    logger.error( "Amazon Property needed for this operation not found",apnfe );
+                    response.setError( "500","Amazon Property needed for this operation not found",apnfe );
+                }
+                catch ( RuntimeException re){
+                    logger.error(re.getMessage());
+                    response.setError( "500", re );
+                }
                 em.update( entity );
                 serviceResults.setEntity( entity );
             }
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -564,6 +685,14 @@ public class ServiceResource extends AbstractContextResource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response uploadDataStream( @Context UriInfo ui, InputStream uploadedInputStream ) throws Exception {
 
+        //needed for testing
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
+
         ApiResponse response = createApiResponse();
         response.setAction( "get" );
         response.setApplication( services.getApplication() );
@@ -571,7 +700,15 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
 
         Entity entity = serviceResults.getEntity();
-        binaryStore.write( getApplicationId(), entity, uploadedInputStream );
+        try {
+            binaryStore.write( getApplicationId(), entity, uploadedInputStream );
+        }catch(AwsPropertiesNotFoundException apnfe){
+            logger.error( "Amazon Property needed for this operation not found",apnfe );
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }catch ( RuntimeException re ){
+            logger.error(re.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
 
         EntityManager em = emf.getEntityManager( getApplicationId() );
         em.update( entity );
@@ -586,7 +723,15 @@ public class ServiceResource extends AbstractContextResource {
                                       @HeaderParam("range") String rangeHeader,
                                       @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
 
-        LOG.debug( "ServiceResource.executeStreamGet" );
+        logger.debug( "ServiceResource.executeStreamGet" );
+
+        //Needed for testing
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "get" );
@@ -595,8 +740,8 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
         Entity entity = serviceResults.getEntity();
 
-        LOG.info( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
-                new Object[] { entityId, rangeHeader, modifiedSince } );
+        logger.info( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
+            new Object[] { entityId, rangeHeader, modifiedSince } );
 
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
 
@@ -611,7 +756,7 @@ public class ServiceResource extends AbstractContextResource {
 
         boolean range = StringUtils.isNotBlank( rangeHeader );
         long start = 0, end = 0, contentLength = 0;
-        InputStream inputStream;
+        InputStream inputStream = null;
 
         if ( range ) { // honor range request, calculate start & end
 
@@ -634,12 +779,27 @@ public class ServiceResource extends AbstractContextResource {
                     }
                 }
             }
-
-            inputStream = binaryStore.read( getApplicationId(), entity, start, end - start );
+            try {
+                inputStream = binaryStore.read( getApplicationId(), entity, start, end - start );
+            }catch(AwsPropertiesNotFoundException apnfe){
+                logger.error( "Amazon Property needed for this operation not found",apnfe );
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }catch(RuntimeException re){
+                logger.error(re.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
         }
         else { // no range
-
-            inputStream = binaryStore.read( getApplicationId(), entity );
+            try {
+                inputStream = binaryStore.read( getApplicationId(), entity );
+            }catch(AwsPropertiesNotFoundException apnfe){
+                logger.error( "Amazon Property needed for this operation not found",apnfe );
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+            catch(RuntimeException re){
+                logger.error(re.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
         }
 
         // return 404 if not found

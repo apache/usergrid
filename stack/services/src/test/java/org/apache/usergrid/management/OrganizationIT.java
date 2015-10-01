@@ -22,77 +22,101 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.management.exceptions.RecentlyUsedPasswordException;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 
+import static org.apache.usergrid.TestHelper.uniqueEmail;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-@Concurrent()
+
 public class OrganizationIT {
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl();
+
+    @Rule
+    public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
 
 
     @Test
     public void testCreateOrganization() throws Exception {
-        UserInfo user =
-                setup.getMgmtSvc().createAdminUser( "edanuff2", "Ed Anuff", "ed@anuff.com2", "test", false, false );
-        assertNotNull( user );
+//     UserInfo user =
+//     setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
+//     assertNotNull( user );
 
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "OrganizationIT", user, false );
+        final String orgName =  uniqueOrg();
+        OrganizationOwnerInfo organization =
+            newOrgAppAdminRule.createOwnerAndOrganization( orgName, uniqueUsername(), uniqueEmail(),"Ed Anuff", "test" );             //setup.getMgmtSvc().getOrganizationsForAdminUser( organization.getOwner().getUuid() );
+        //createOrganization( orgName, user, false );
         assertNotNull( organization );
 
-        Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser( user.getUuid() );
-        assertEquals( "wrong number of organizations", 1, userOrganizations.size() );
+        setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser(
+            organization.getOwner().getUuid() );
+        assertEquals("wrong number of organizations", 1, userOrganizations.size());
 
-        List<UserInfo> users = setup.getMgmtSvc().getAdminUsersForOrganization( organization.getUuid() );
-        assertEquals( "wrong number of users", 1, users.size() );
+        List<UserInfo> users = setup.getMgmtSvc().getAdminUsersForOrganization(
+            organization.getOrganization().getUuid());
+        assertEquals("wrong number of users", 1, users.size());
 
-        UUID applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "ed-application" ).getId();
-        assertNotNull( applicationId );
+        ApplicationInfo applicationInfo = setup.getMgmtSvc()
+            .createApplication(organization.getOrganization().getUuid(), "ed-application");
+        assertNotNull(applicationInfo.getId());
 
-        Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getUuid() );
+
+        setup.getEntityIndex().refresh(applicationInfo.getId());
+
+        Map<UUID, String> applications = setup.getMgmtSvc()
+            .getApplicationsForOrganization( organization.getOrganization().getUuid() );
         assertEquals( "wrong number of applications", 1, applications.size() );
 
-        OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationId );
+        OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationInfo.getId() );
         assertNotNull( organization2 );
-        assertEquals( "wrong organization name", "OrganizationIT", organization2.getName() );
+        assertEquals( "wrong organization name", organization.getOrganization().getName(), organization2.getName() );
 
-        boolean verified = setup.getMgmtSvc().verifyAdminUserPassword( user.getUuid(), "test" );
+        boolean verified = setup.getMgmtSvc().verifyAdminUserPassword( organization.getOwner().getUuid(), "test" );
         assertTrue( verified );
 
         setup.getMgmtSvc().activateOrganization( organization2 );
 
-        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( user.getUuid().toString(), "test" );
+        setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+
+        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials(
+            organization.getOwner().getUuid().toString(), "test" );
         assertNotNull( u );
 
-        String token = setup.getMgmtSvc().getAccessTokenForAdminUser( user.getUuid(), 0 );
+        String token = setup.getMgmtSvc().getAccessTokenForAdminUser( organization.getOwner().getUuid(), 0 );
         assertNotNull( token );
 
         AuthPrincipalInfo principal =
                 ( ( ManagementServiceImpl ) setup.getMgmtSvc() ).getPrincipalFromAccessToken( token, null, null );
         assertNotNull( principal );
-        assertEquals( user.getUuid(), principal.getUuid() );
+        assertEquals( organization.getOwner().getUuid(), principal.getUuid() );
 
         UserInfo new_user = setup.getMgmtSvc()
-                                 .createAdminUser( "test-user-133", "Test User", "test-user-133@mockserver.com",
+                                 .createAdminUser(uniqueUsername(), "Test User", uniqueEmail(),
                                          "testpassword", true, true );
         assertNotNull( new_user );
 
@@ -105,12 +129,16 @@ public class OrganizationIT {
 
         String[] passwords = new String[] { "password1", "password2", "password3", "password4", "password5" };
 
+
+
         UserInfo user = setup.getMgmtSvc()
-                             .createAdminUser( "edanuff3", "Ed Anuff", "ed2@anuff.com2", passwords[0], true, false );
+                             .createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), passwords[0], true, false );
         assertNotNull( user );
 
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "OrganizationTest2", user, true );
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), user, true );
         assertNotNull( organization );
+
+        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
 
         // no history, no problem
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] );
@@ -129,8 +157,11 @@ public class OrganizationIT {
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[3] ); // ok
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[4] ); // ok
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] ); // ok
+
+        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
+
         try {
-            setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[2] );
+            setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[3] );
             fail( "password change should fail" );
         }
         catch ( RecentlyUsedPasswordException e ) {
@@ -186,9 +217,10 @@ public class OrganizationIT {
         }
 
         // test history size w/ user belonging to 2 orgs
-        OrganizationInfo organization2 = setup.getMgmtSvc().createOrganization( "OrganizationTest3", user, false );
-        assertNotNull( organization );
+        OrganizationInfo organization2 = setup.getMgmtSvc().createOrganization(uniqueOrg(), user, false );
+        assertNotNull( organization2 );
 
+        setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser( user.getUuid() );
         assertEquals( "wrong number of organizations", 2, userOrganizations.size() );
 

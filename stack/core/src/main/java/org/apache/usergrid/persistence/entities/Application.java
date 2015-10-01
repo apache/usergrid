@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.entities;
 
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,18 +25,18 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityCollection;
 import org.apache.usergrid.persistence.annotations.EntityDictionary;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 /** Applications represent the topmost container for all entities. */
 @XmlRootElement
-public class Application extends TypedEntity {
+public class Application extends TypedEntity implements Serializable {
 
     public static final String ENTITY_TYPE = "application";
 
@@ -438,7 +439,7 @@ public class Application extends TypedEntity {
 
 
     @XmlRootElement
-    public static class OAuthProvider {
+    public static class OAuthProvider implements Serializable {
         String clientId;
         String clientSecret;
         String redirectUris;

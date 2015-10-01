@@ -17,15 +17,13 @@
 package org.apache.usergrid.batch;
 
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Ignore;
+
 import org.apache.usergrid.batch.repository.JobDescriptor;
 
 
 /** @author zznate */
-@Ignore
+@Ignore("Not a test")
 public class BulkTestUtils {
 
     public static JobFactory getBulkJobFactory() {

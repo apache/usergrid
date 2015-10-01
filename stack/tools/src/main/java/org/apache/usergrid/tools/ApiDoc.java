@@ -36,7 +36,9 @@ import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.tools.apidoc.swagger.ApiListing;
 import org.apache.usergrid.utils.JsonUtils;
 import org.w3c.dom.Document;
+import org.yaml.snakeyaml.Loader;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.BaseConstructor;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import org.apache.commons.cli.CommandLine;
@@ -82,7 +84,8 @@ public class ApiDoc extends ToolBase {
 
 
     public ApiListing loadListing( String section ) {
-        Yaml yaml = new Yaml( new Constructor( ApiListing.class ) );
+        Yaml yaml = new Yaml( new Loader());
+        //TODO: fix line above
         String yamlString = readClasspathFileAsString( "/apidoc/" + section + ".yaml" );
         ApiListing listing = ( ApiListing ) yaml.load( yamlString );
         return listing;

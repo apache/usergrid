@@ -28,8 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.uuid.UUIDComparator;
 
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -268,17 +267,18 @@ public class QueueIndexUpdate {
         JsonNode json = toJsonNode( obj );
         if ( ( json != null ) && json.isValueNode() ) {
             if ( json.isBigInteger() ) {
-                return json.getBigIntegerValue();
+                return json.asInt();
+                //return json.getBigIntegerValue();
             }
             else if ( json.isNumber() || json.isBoolean() ) {
-                return BigInteger.valueOf( json.getValueAsLong() );
+                return BigInteger.valueOf( json.asLong() );
             }
             else if ( json.isTextual() ) {
-                return prepStringForIndex( json.getTextValue() );
+                return prepStringForIndex( json.asText() );
             }
             else if ( json.isBinary() ) {
                 try {
-                    return wrap( json.getBinaryValue() );
+                    return wrap( json.binaryValue());
                 }
                 catch ( IOException e ) {
                 }

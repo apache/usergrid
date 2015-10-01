@@ -25,7 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.generic.GenericCollectionService;
@@ -38,7 +40,7 @@ public class ActivitiesService extends GenericCollectionService {
 
     public ActivitiesService() {
         super();
-        logger.info( "/groups/*/users/*/activities" );
+        logger.debug( "/groups/*/users/*/activities" );
     }
 
 
@@ -67,11 +69,13 @@ public class ActivitiesService extends GenericCollectionService {
             return;
         }
         em.addToCollection( user, "feed", activity );
-        Results r1 = em.getCollection( group, "users", null, 10000, Results.Level.IDS, false );
+        Results r1 = em.getCollection( group, "users", null, 10000, Level.IDS, false );
         if ( ( r1 == null ) || ( r1.isEmpty() ) ) {
             return;
         }
-        Results r2 = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.IDS );
+
+        Results r2 = em.getSourceEntities(new SimpleEntityRef(user.getType(), user.getUuid()),
+            "following", User.ENTITY_TYPE, Level.IDS);
 
         if ( ( r2 == null ) || ( r2.isEmpty() ) ) {
             return;

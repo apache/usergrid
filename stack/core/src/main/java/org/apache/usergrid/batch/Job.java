@@ -37,7 +37,8 @@ public interface Job {
 
     /**
      * Invoked when a job is marked as dead by the scheduler.  In some instances, jobs need to know
-     * this information to handle this case appropriately
+     * this information to handle this case appropriately.  Dead is defined as the retry count has been
+     * exceeded.  I.E 10 failures allowed, this is the 11th attempt to start.
      *
      * @param execution
      * @throws Exception

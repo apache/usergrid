@@ -17,6 +17,7 @@
 package org.apache.usergrid.services;
 
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -43,6 +44,8 @@ import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeLast;
 
 
 public class ServiceInfo {
+
+    public static final Charset UTF_8 = Charset.forName( "UTF-8" );
 
     private final String name;
     private final boolean rootService;
@@ -71,7 +74,7 @@ public class ServiceInfo {
         Hasher hasher = Hashing.md5().newHasher();
 
         for ( String pattern : patterns ) {
-            hasher.putString( pattern );
+            hasher.putString( pattern, UTF_8 );
         }
 
         hashCode = hasher.hash().asInt();

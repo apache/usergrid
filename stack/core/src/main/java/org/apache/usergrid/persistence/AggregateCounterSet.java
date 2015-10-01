@@ -20,8 +20,10 @@ package org.apache.usergrid.persistence;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+//import org.codehaus.jackson.map.annotate.JsonSerialize;
+//import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 public class AggregateCounterSet {
@@ -50,7 +52,7 @@ public class AggregateCounterSet {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getUser() {
         return user;
     }
@@ -61,7 +63,7 @@ public class AggregateCounterSet {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getGroup() {
         return group;
     }
@@ -72,7 +74,7 @@ public class AggregateCounterSet {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getCategory() {
         return category;
     }
@@ -83,7 +85,7 @@ public class AggregateCounterSet {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getName() {
         return name;
     }
@@ -94,7 +96,7 @@ public class AggregateCounterSet {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public List<AggregateCounter> getValues() {
         return values;
     }
@@ -105,7 +107,7 @@ public class AggregateCounterSet {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getQueue() {
         return queue;
     }

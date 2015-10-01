@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.netflix.astyanax</groupId>
+  <artifactId>astyanax-queue</artifactId>
+  <version>1.56.49-SNAPSHOT-UG-1</version>
+  <versioning>
+    <versions>
+      <version>1.56.49-SNAPSHOT-UG-1</version>
+    </versions>
+    <lastUpdated>20140319191833</lastUpdated>
+  </versioning>
+</metadata>

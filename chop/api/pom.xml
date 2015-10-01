@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>chop-parent</artifactId>
+    <groupId>org.apache.usergrid.chop</groupId>
+    <version>2.0.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Chop API</name>
+  <artifactId>chop-api</artifactId>
+  <packaging>jar</packaging>
+  <description>
+    Common API for Chop entities shared across environments and across
+    various modules of the project.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-json-provider</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.safehaus.guicyfig</groupId>
+      <artifactId>guicyfig</artifactId>
+    </dependency>
+  </dependencies>
+</project>
+

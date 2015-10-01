@@ -51,7 +51,7 @@ import org.apache.commons.io.filefilter.PrefixFileFilter;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 
 
 public class Import extends ToolBase {
@@ -189,10 +189,9 @@ public class Import extends ToolBase {
                 ( Map<String, Object> ) application.getMetadata( "dictionaries" );
 
         if ( dictionaries != null ) {
-            EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
-            Entity appEntity = rootEm.get( appId );
-
+            Entity appEntity = rootEm.get( new SimpleEntityRef( "application", appId ));
 
             for ( Entry<String, Object> dictionary : dictionaries.entrySet() ) {
                 @SuppressWarnings("unchecked") Map<Object, Object> value =
@@ -243,9 +242,9 @@ public class Import extends ToolBase {
                 continue;
             }
 
-            if ( em.get( uuid ) == null ) {
-                logger.error( "Holy hell, we wrote an entity and it's missing.  Entity Id was {} and type is {}", uuid,
-                        type );
+            if ( em.get( new SimpleEntityRef( type, uuid )) == null ) {
+                logger.error( "Holy hell, we wrote an entity and it's missing.  "
+                        + "Entity Id was {} and type is {}", uuid, type );
                 System.exit( 1 );
             }
 
@@ -445,9 +444,13 @@ public class Import extends ToolBase {
      * @param jp JsonPrser pointing to the beginning of the object.
      */
     private void importEntitysStuff( JsonParser jp, EntityManager em ) throws Exception {
+
         // The entity that owns the collections
         String entityOwnerId = jp.getCurrentName();
-        EntityRef ownerEntityRef = em.getRef( UUID.fromString( entityOwnerId ) );
+
+        // TODO: fix Import to work with Core Persistence
+        EntityRef ownerEntityRef = em.get(
+            new SimpleEntityRef( "TODO: correct type goes here", UUID.fromString( entityOwnerId )) );
 
         jp.nextToken(); // start object
 
@@ -464,7 +467,11 @@ public class Import extends ToolBase {
                     jp.nextToken(); // START_ARRAY
                     while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                         String entryId = jp.getText();
-                        EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
+
+                        // TODO: fix Import to work with Core Persistence
+                        EntityRef entryRef = em.get( new SimpleEntityRef(
+                            "TODO: correct type goes here", UUID.fromString( entryId )) );
+
                         // Store in DB
                         em.createConnection( ownerEntityRef, connectionType, entryRef );
                     }
@@ -480,7 +487,8 @@ public class Import extends ToolBase {
 
                     jp.nextToken();
 
-                    @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs( HashMap.class );
+                    @SuppressWarnings("unchecked") Map<String, Object> dictionary =
+                            jp.readValueAs( HashMap.class );
 
                     em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
                 }
@@ -492,7 +500,10 @@ public class Import extends ToolBase {
                 jp.nextToken(); // START_ARRAY
                 while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                     String entryId = jp.getText();
-                    EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
+
+                    // TODO: fix Import to work with Core Persistence
+                    EntityRef entryRef = em.get( new SimpleEntityRef(
+                        "TODO: correct type goes here", UUID.fromString( entryId )) );
 
                     // store it
                     em.addToCollection( ownerEntityRef, collectionName, entryRef );

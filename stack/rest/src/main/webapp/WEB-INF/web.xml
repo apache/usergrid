@@ -17,50 +17,53 @@
 -->
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 
-  <display-name>Usergrid REST API Server</display-name>
+    <display-name>Usergrid REST API Server</display-name>
 
-  <context-param>
+    <context-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>classpath:usergrid-rest-deploy-context.xml</param-value>
     </context-param>
 
-  <listener>
+    <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
-  
-  <listener>
+
+    <listener>
         <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
     </listener>
 
-  <filter>
+    <listener>
+        <listener-class>org.apache.usergrid.rest.ShutdownListener</listener-class>
+    </listener>
+
+    <filter>
         <filter-name>swaggerFilter</filter-name>
         <filter-class>org.apache.usergrid.rest.SwaggerServlet</filter-class>
     </filter>
-
-  <filter-mapping>
+    <filter-mapping>
         <filter-name>swaggerFilter</filter-name>
         <url-pattern>/resources.json</url-pattern>
     </filter-mapping>
-  <filter-mapping>
+    <filter-mapping>
         <filter-name>swaggerFilter</filter-name>
         <url-pattern>/applications.json</url-pattern>
     </filter-mapping>
-  <filter-mapping>
+    <filter-mapping>
         <filter-name>swaggerFilter</filter-name>
         <url-pattern>/management.json</url-pattern>
     </filter-mapping>
 
-  <!--  filter for setting default accept and Content-Type as application/json when undefined by client -->
-  <filter>
+    <!--  filter for setting default accept and Content-Type as application/json when undefined by client -->
+    <filter>
         <filter-name>contentTypeFilter</filter-name>
         <filter-class>org.apache.usergrid.rest.filters.ContentTypeFilter</filter-class>
     </filter>
-  <filter-mapping>
+    <filter-mapping>
         <filter-name>contentTypeFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-  `
-  <filter>
+
+    <filter>
         <filter-name>shiroFilter</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
         <init-param>
@@ -68,65 +71,90 @@
             <param-value>true</param-value>
         </init-param>
     </filter>
-  <filter-mapping>
+    <filter-mapping>
         <filter-name>shiroFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-	
-  <filter>
+
+    <filter>
         <filter-name>Usergrid REST API Server</filter-name>
-        <filter-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</filter-class>
+        <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
+
         <init-param>
-            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-name>jersey.config.servlet.filter.contextPath</param-name>
+            <param-value>/</param-value>
+        </init-param>
+
+        <!-- Look for resources, providers and other annotated JAX-RS things in rest package -->
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>org.apache.usergrid.rest</param-value>
         </init-param>
+
+        <!-- Look recursively in all packages -->
         <init-param>
-            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-name>jersey.config.server.provider.scanning.recursive</param-name>
             <param-value>true</param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-            <param-value>org.apache.usergrid.rest.filters.TracingFilter,org.apache.usergrid.rest.filters.MeteringFilter,org.apache.usergrid.rest.filters.JSONPCallbackFilter,org.apache.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.apache.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.apache.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter</param-value>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>
+
+                org.apache.usergrid.rest.security.SecuredResourceFilterFactory,
+                org.glassfish.jersey.server.mvc.jsp.JspMvcFeature,
+                org.glassfish.jersey.media.multipart.MultiPartFeature
+
+                <!-- Currently, we do not use the JAX-RS annotations @PermitAll, @DenyAll, @RolesAllowed -->
+                <!-- , org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature -->
+
+            </param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-            <param-value>org.apache.usergrid.rest.filters.TracingFilter,org.apache.usergrid.rest.security.CrossOriginRequestFilter,org.apache.usergrid.rest.filters.MeteringFilter</param-value>
-        </init-param>
-        <init-param>
-            <param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
-            <param-value>org.apache.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory</param-value>
-        </init-param>
-        <init-param>
-            <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
-            <param-value>true</param-value>
-        </init-param>
-        <init-param>
-            <param-name>com.sun.jersey.config.property.JSPTemplatesBasePath</param-name>
+            <param-name>jersey.config.server.mvc.templateBasePath.jsp</param-name>
             <param-value>/WEB-INF/jsp</param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
+            <param-name>jersey.config.server.wadl.disableWadl</param-name>
+            <param-value>true</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>jersey.config.servlet.filter.staticContentRegex</param-name>
             <param-value>/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\.ico))</param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.config.property.MediaTypeMappings</param-name>
-            <param-value>json:application/json,js:application/javascript<!-- Temporarily removed until more testing can occur,csv:text/csv --></param-value>
+            <param-name>jersey.config.server.mediaTypeMappings</param-name>
+            <param-value>json:application/json,js:application/javascript</param-value>
         </init-param>
+
+        <!-- Have not had success with this yet:
+        <init-param>
+            <param-name>jersey.config.server.tracing.threshold</param-name>
+            <param-value>TRACE</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>jersey.config.server.tracing.type</param-name>
+            <param-value>ALL</param-value>
+        </init-param>
+        -->
+
     </filter>
 
-  <filter-mapping>
+    <filter-mapping>
         <filter-name>Usergrid REST API Server</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-  <jsp-config>
+    <jsp-config>
         <taglib>
             <taglib-uri>http://java.sun.com/jsp/jstl/core</taglib-uri>
             <taglib-location>c.tld</taglib-location>
         </taglib>
     </jsp-config>
-
-
-
 
 </web-app>

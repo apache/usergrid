@@ -17,40 +17,28 @@
 package org.apache.usergrid.rest.management.organizations.users;
 
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.usergrid.rest.RootResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.commons.collections.MapUtils.getObject;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
@@ -83,7 +71,9 @@ public class UsersResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getOrganizationUsers( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getOrganizationUsers( @Context UriInfo ui,
                                                  @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -92,14 +82,16 @@ public class UsersResource extends AbstractContextResource {
 
         List<UserInfo> users = management.getAdminUsersForOrganization( organization.getUuid() );
         response.setData( users );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding newUserForOrganization( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newUserForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -116,7 +108,9 @@ public class UsersResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public JSONWithPadding newUserForOrganizationFromForm( @Context UriInfo ui, @FormParam("username") String username,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newUserForOrganizationFromForm( @Context UriInfo ui, @FormParam("username") String username,
                                                            @FormParam("name") String name,
                                                            @FormParam("email") String email,
                                                            @FormParam("password") String password,
@@ -124,7 +118,7 @@ public class UsersResource extends AbstractContextResource {
                                                            @QueryParam("callback") @DefaultValue("callback")
                                                            String callback ) throws Exception {
 
-        logger.info( "New user for organization: " + username );
+        logger.info( "New user for organization: " + username + " (" + email + ")");
 
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
@@ -154,7 +148,7 @@ public class UsersResource extends AbstractContextResource {
         response.setData( result );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 	/*
@@ -181,7 +175,9 @@ public class UsersResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @PUT
     @Path(RootResource.USER_ID_PATH)
-    public JSONWithPadding addUserToOrganization( @Context UriInfo ui, @PathParam("userId") String userIdStr,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse addUserToOrganization( @Context UriInfo ui, @PathParam("userId") String userIdStr,
                                                   @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -199,14 +195,16 @@ public class UsersResource extends AbstractContextResource {
         response.setData( result );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @PUT
     @Path(RootResource.EMAIL_PATH)
-    public JSONWithPadding addUserToOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse addUserToOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                          @QueryParam("callback") @DefaultValue("callback")
                                                          String callback ) throws Exception {
 
@@ -224,14 +222,16 @@ public class UsersResource extends AbstractContextResource {
         response.setData( result );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @PUT
     @Path("{username}")
-    public JSONWithPadding addUserToOrganizationByUsername( @Context UriInfo ui, @PathParam("username") String username,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse addUserToOrganizationByUsername( @Context UriInfo ui, @PathParam("username") String username,
                                                             @QueryParam("callback") @DefaultValue("callback")
                                                             String callback ) throws Exception {
 
@@ -257,14 +257,14 @@ public class UsersResource extends AbstractContextResource {
         response.setData( result );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @DELETE
     @Path(RootResource.USER_ID_PATH)
-    public JSONWithPadding removeUserFromOrganizationByUserId( @Context UriInfo ui,
+    public ApiResponse removeUserFromOrganizationByUserId( @Context UriInfo ui,
                                                                @PathParam("userId") String userIdStr,
                                                                @QueryParam("callback") @DefaultValue("callback")
                                                                String callback ) throws Exception {
@@ -283,14 +283,16 @@ public class UsersResource extends AbstractContextResource {
         response.setData( result );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @DELETE
     @Path("{username}")
-    public JSONWithPadding removeUserFromOrganizationByUsername( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse removeUserFromOrganizationByUsername( @Context UriInfo ui,
                                                                  @PathParam("username") String username,
                                                                  @QueryParam("callback") @DefaultValue("callback")
                                                                  String callback ) throws Exception {
@@ -317,14 +319,16 @@ public class UsersResource extends AbstractContextResource {
         response.setData( result );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @DELETE
     @Path(RootResource.EMAIL_PATH)
-    public JSONWithPadding removeUserFromOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse removeUserFromOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                               @QueryParam("callback") @DefaultValue("callback")
                                                               String callback ) throws Exception {
 
@@ -342,6 +346,6 @@ public class UsersResource extends AbstractContextResource {
         response.setData( result );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 }

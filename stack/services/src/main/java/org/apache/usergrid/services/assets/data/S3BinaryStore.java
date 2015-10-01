@@ -17,46 +17,37 @@
 package org.apache.usergrid.services.assets.data;
 
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Stack;
-import java.util.UUID;
-import java.util.concurrent.*;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
+import com.google.inject.Module;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.utils.StringUtils;
 import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.blobstore.options.GetOptions;
-import org.jclouds.blobstore.options.PutOptions;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Module;
-
+import java.io.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class S3BinaryStore implements BinaryStore {
 
@@ -125,8 +116,16 @@ public class S3BinaryStore implements BinaryStore {
             fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
 
             BlobStore blobStore = getContext().getBlobStore();
-            BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder( uploadFileName )
-                    .payload( data ).calculateMD5().contentType( mimeType );
+
+            // need this for JClouds 1.7.x:
+//            BlobBuilder.PayloadBlobBuilder bb =  blobStore.blobBuilder( uploadFileName )
+//                .payload( data ).calculateMD5().contentType( mimeType );
+
+            // need this for JClouds 1.8.x:
+            BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder(uploadFileName)
+                .payload( data )
+                .contentMD5( Hashing.md5().newHasher().putBytes( data ).hash() )
+                .contentType( mimeType );
 
             fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
             if ( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ) != null ) {
@@ -147,7 +146,6 @@ public class S3BinaryStore implements BinaryStore {
             executors.submit( new UploadWorker( appId, entity, inputStream, data, written ) );
         }
     }
-
 
     private ExecutorService getExecutorService() {
 
@@ -242,13 +240,21 @@ public class S3BinaryStore implements BinaryStore {
                 tempFile.deleteOnExit();
                 os = new BufferedOutputStream( new FileOutputStream( tempFile.getAbsolutePath() ) );
                 os.write( data );
+                written += data.length;
                 written += IOUtils.copyLarge( inputStream, os, 0, maxSizeBytes + 1 );
+
+                LOG.debug("Write temp file {} length {}", tempFile.getName(), written);
 
             } catch ( IOException e ) {
                 throw new RuntimeException( "Error creating temp file", e );
 
             } finally {
                 if ( os != null ) {
+                    try {
+                        os.flush();
+                    } catch (IOException e) {
+                        LOG.error( "Error flushing data to temporary upload file", e );
+                    }
                     IOUtils.closeQuietly( os );
                 }
             }
@@ -259,7 +265,7 @@ public class S3BinaryStore implements BinaryStore {
 
             if ( tempFile.length() > maxSizeBytes ) {
                 LOG.debug("File too large. Temp file size (bytes) = {}, " +
-                        "Max file size (bytes) = {} ", tempFile.length(), maxSizeBytes);
+                          "Max file size (bytes) = {} ", tempFile.length(), maxSizeBytes);
                 try {
                     EntityManager em = emf.getEntityManager( appId );
                     fileMetadata.put( "error", "Asset size " + tempFile.length()
@@ -282,8 +288,15 @@ public class S3BinaryStore implements BinaryStore {
 
                 BlobStore blobStore = getContext().getBlobStore();
 
-                BlobBuilder.PayloadBlobBuilder bb =  blobStore.blobBuilder( uploadFileName )
-                        .payload( tempFile ).calculateMD5().contentType( mimeType );
+                // need this for JClouds 1.7.x:
+//                BlobBuilder.PayloadBlobBuilder bb =  blobStore.blobBuilder( uploadFileName )
+//                    .payload( tempFile ).calculateMD5().contentType( mimeType );
+
+                // need this for JClouds 1.8.x:
+                BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder( uploadFileName )
+                    .payload( tempFile )
+                    .contentMD5( Files.hash( tempFile, Hashing.md5() ) )
+                    .contentType( mimeType );
 
                 if ( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ) != null ) {
                     bb.contentDisposition( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ).toString() );
@@ -299,12 +312,11 @@ public class S3BinaryStore implements BinaryStore {
 
                 LOG.debug( "S3 upload complete eTag=" + eTag);
 
-                // update entity with information about uploaded asset
-
+                // update entity with eTag
                 EntityManager em = emf.getEntityManager( appId );
-                fileMetadata.put( AssetUtils.E_TAG, eTag );
                 fileMetadata.put( AssetUtils.LAST_MODIFIED, System.currentTimeMillis() );
                 fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
+                fileMetadata.put( AssetUtils.E_TAG, eTag );
                 em.update( entity );
             }
             catch ( Exception e ) {

@@ -17,20 +17,33 @@
 package org.apache.usergrid;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static junit.framework.Assert.assertNotNull;
 
@@ -44,6 +57,9 @@ public class CoreApplication implements Application, TestRule {
     protected CoreITSetup setup;
     protected EntityManager em;
     protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    private EntityIndexFactory entityIndexFactory;
+    private EntityIndex applicationIndex;
+    private EntityManager managementEm;
 
 
     public CoreApplication( CoreITSetup setup ) {
@@ -120,12 +136,6 @@ public class CoreApplication implements Application, TestRule {
 
 
     @Override
-    public Entity get( UUID id ) throws Exception {
-        return em.get( id );
-    }
-
-
-    @Override
     public Statement apply( final Statement base, final Description description ) {
         return new Statement() {
             @Override
@@ -144,29 +154,98 @@ public class CoreApplication implements Application, TestRule {
 
 
     protected void after( Description description ) {
-        LOG.info( "Test {}: finish with application", description.getDisplayName() );
+        LOG.info("Test {}: finish with application", description.getDisplayName());
+
+//        try {
+//            setup.getEmf().getEntityManager(id).().get();
+//        }catch (Exception ee){
+//            throw new RuntimeException(ee);
+//        }
     }
 
 
-    protected void before( Description description ) throws Exception {
-        orgName = description.getClassName();
-        appName = description.getMethodName();
+    /**
+     * Create an application with the given app name and org name
+     * @param orgName
+     * @param appName
+     */
+    public void createApplication(final String orgName, final String appName) throws Exception {
+        this.orgName = orgName;
+        this.appName = appName;
         id = setup.createApplication( orgName, appName );
-        assertNotNull( id );
+        managementEm =  setup.getEmf().getEntityManager(setup.getEmf().getManagementAppId());
+        assertNotNull(id);
 
-        em = setup.getEmf().getEntityManager( id );
-        assertNotNull( em );
+        em = setup.getEmf().getEntityManager(id);
+        Injector injector = setup.getInjector();
+        IndexLocationStrategyFactory indexLocationStrategyFactory = injector.getInstance(IndexLocationStrategyFactory.class);
+        entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
+        applicationIndex =  entityIndexFactory.createEntityIndex(
+            indexLocationStrategyFactory.getIndexLocationStrategy(CpNamingUtils.getApplicationScope(id))
+        );
+        assertNotNull(em);
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
+
+//        //wait for the index before proceeding
+//        em.refreshIndex();
+
     }
 
+    protected void before( Description description ) throws Exception {
+        final String orgName = description.getClassName()+ UUIDGenerator.newTimeUUID();
+        final String appName = description.getMethodName();
 
-    public EntityManager getEm() {
-        return em;
+        createApplication( orgName, appName  );
     }
+
 
 
     public QueueManager getQm() {
         return setup.getQmf().getQueueManager( getId() );
     }
+
+
+    @Override
+    public void remove(Entity entity) throws Exception {
+        em.delete( entity );
+    }
+
+
+    @Override
+    public void remove(EntityRef entityRef) throws Exception {
+        em.delete( entityRef );
+    }
+
+
+    @Override
+    public Entity get( EntityRef entityRef ) throws Exception {
+        return em.get( entityRef );
+    }
+
+
+    @Override
+    public Entity get( UUID id, String type ) throws Exception {
+        return em.get( new SimpleEntityRef( type, id ) );
+    }
+
+
+    @Override
+    public synchronized void refreshIndex() {
+        //Insert test entity and find it
+        setup.getEmf().refreshIndex(CpNamingUtils.getManagementApplicationId().getUuid());
+
+        if(!em.getApplicationId().equals(CpNamingUtils.getManagementApplicationId().getUuid())) {
+            setup.getEmf().refreshIndex(em.getApplicationId());
+        }
+    }
+
+
+    @Override
+    public EntityManager getEntityManager() {
+        return em;
+    }
+
+    @Override
+    public ApplicationService getApplicationService(){ return setup.getApplicationService();}
 }

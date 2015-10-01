@@ -25,23 +25,28 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.MapUtils;
 
+import static org.apache.usergrid.TestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
 /** @author zznate */
-@Concurrent()
+
 public class FacebookProviderIT {
 
     private static SignInProviderFactory providerFactory;
@@ -51,22 +56,22 @@ public class FacebookProviderIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @BeforeClass
     public static void setup() throws Exception {
-        providerFactory = ServiceITSuite.cassandraResource.getBean( SignInProviderFactory.class );
+        providerFactory =  SpringResource.getInstance().getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
-                                  .createAdminUser( "fbuser", "Facebook User", "user@facebook.com", "test", false,
+                                  .createAdminUser( uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
                                           false );
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "fb-organization", adminUser, true );
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "fb-application" ).getId();
     }
 
 
     @Test
-    @Ignore
+    @Ignore("Requires Facebook credentials")
     public void verifyGetOrCreateOk() throws Exception {
         Application application = setup.getEmf().getEntityManager( applicationId ).getApplication();
         Map fb_user = MapUtils.hashMap( "id", "12345678" ).map( "name", "Facebook User" ).map( "username", "fb.user" );

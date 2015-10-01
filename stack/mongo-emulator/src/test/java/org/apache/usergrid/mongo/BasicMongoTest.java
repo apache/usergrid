@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.apache.usergrid.mongo.protocol.OpDelete;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 
@@ -110,10 +110,10 @@ public class BasicMongoTest extends AbstractMongoTest {
 
         // check we can find it when using the native entity manager
 
-        UUID appId = emf.lookupApplication( "test-organization/test-app" );
+        UUID appId = emf.lookupApplication( "test-organization/test-app" ).get();
         EntityManager em = emf.getEntityManager( appId );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( (String)returnedObject.get("type"), id ));
 
         assertNotNull( entity );
         assertEquals( "nico", entity.getProperty( "name" ) );
@@ -228,10 +228,10 @@ public class BasicMongoTest extends AbstractMongoTest {
 
         Thread.sleep( 5000 );
 
-        UUID appId = emf.lookupApplication( "test-organization/test-app" );
+        UUID appId = emf.lookupApplication( "test-organization/test-app" ).get();
         EntityManager em = emf.getEntityManager( appId );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( (String)returnedObject.get("type"), id ) );
 
         assertNotNull( entity );
         assertEquals( "nico", entity.getProperty( "name" ) );
@@ -290,10 +290,10 @@ public class BasicMongoTest extends AbstractMongoTest {
 
         // check it has been deleted
 
-        UUID appId = emf.lookupApplication( "test-organization/test-app" );
+        UUID appId = emf.lookupApplication( "test-organization/test-app" ).get();
         EntityManager em = emf.getEntityManager( appId );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( (String)returnedObject.get("type"), id ) );
 
         assertNull( entity );
     }
@@ -345,7 +345,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         assertFalse( cursor.hasNext() );
 
         // check it has been deleted
-        UUID appId = emf.lookupApplication( "test-organization/test-app" );
+        UUID appId = emf.lookupApplication( "test-organization/test-app" ).get();
         EntityManager em = emf.getEntityManager( appId );
 
         Results results =

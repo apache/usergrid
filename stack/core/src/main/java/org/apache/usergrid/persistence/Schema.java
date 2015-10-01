@@ -41,17 +41,16 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.smile.SmileFactory;
-import org.codehaus.jackson.type.TypeReference;
+import org.apache.usergrid.persistence.model.collection.SchemaManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.reflect.FieldUtils;
+
 import org.apache.usergrid.persistence.annotations.EntityCollection;
 import org.apache.usergrid.persistence.annotations.EntityDictionary;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
@@ -66,9 +65,12 @@ import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.MapUtils;
 
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang.reflect.FieldUtils;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -94,7 +96,7 @@ import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
  *
  * @author edanuff
  */
-public class Schema {
+public class Schema implements SchemaManager {
 
     private static final Logger logger = LoggerFactory.getLogger( Schema.class );
 
@@ -111,6 +113,7 @@ public class Schema {
     public static final String PROPERTY_CREATED = "created";
     public static final String PROPERTY_CONFIRMED = "confirmed";
     public static final String PROPERTY_DISABLED = "disabled";
+    public static final String PROPERTY_ADMIN = "admin";
     public static final String PROPERTY_UUID = "uuid";
     public static final String PROPERTY_EMAIL = "email";
     public static final String PROPERTY_ITEM = "item";
@@ -246,7 +249,7 @@ public class Schema {
     public Schema() {
         setDefaultSchema( this );
 
-        mapper.configure( SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false );
+        mapper.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,false );
     }
 
 
@@ -537,7 +540,7 @@ public class Schema {
                 JsonNode properties = schemaNode.get( "properties" );
                 if ( properties instanceof ObjectNode ) {
                     Set<String> fieldsToRemove = new LinkedHashSet<String>();
-                    Iterator<String> i = properties.getFieldNames();
+                    Iterator<String> i = properties.fieldNames();
                     while ( i.hasNext() ) {
                         String propertyName = i.next();
                         if ( !hasProperty( entityType, propertyName ) ) {
@@ -695,7 +698,8 @@ public class Schema {
 
 
     /** @return value */
-    public boolean isPropertyMutable( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyMutable(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity != null && entity.isPropertyMutable(propertyName);
@@ -703,7 +707,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyUnique( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyUnique(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity != null && entity.isPropertyUnique(propertyName);
@@ -711,7 +716,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyIndexed( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyIndexed(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity == null || !entity.hasProperty(propertyName) || entity.isPropertyIndexed(propertyName);
@@ -719,7 +725,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyFulltextIndexed( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyFulltextIndexed(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity == null || !entity.hasProperty(propertyName) || entity.isPropertyFulltextIndexed(propertyName);
@@ -727,7 +734,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyTimestamp( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyTimestamp(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity != null && entity.isPropertyTimestamp(propertyName);
@@ -1418,10 +1426,10 @@ public class Schema {
     /*
      * public Entity toEntity(Reader reader) { Entity entity =
      * mapper.convertValue(reader, Entity.class); return entity; }
-     * 
+     *
      * public Entity toEntity(InputStream input) { Entity entity =
      * mapper.convertValue(input, Entity.class); return entity; }
-     * 
+     *
      * public Entity toEntity(String string) { Entity entity =
      * mapper.convertValue(string, Entity.class); return entity; }
      */

@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.services.AbstractCollectionService;
 import org.apache.usergrid.services.ServiceContext;
@@ -43,7 +42,7 @@ public class RolesService extends AbstractCollectionService {
 
     public RolesService() {
         super();
-        logger.info( "/roles" );
+        logger.debug( "/roles" );
 
         declareEntityDictionary( "permissions" );
     }
@@ -52,8 +51,7 @@ public class RolesService extends AbstractCollectionService {
     @Override
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
         if ( ( context.getOwner() != null ) && Group.ENTITY_TYPE.equals( context.getOwner().getType() ) ) {
-            return getItemById( context,
-                    SimpleRoleRef.getIdForGroupIdAndRoleName( context.getOwner().getUuid(), name ) );
+            return getItemById( context, em.getGroupRoleRef( context.getOwner().getUuid(), name ).getUuid() );
         }
         return super.getItemByName( context, name );
     }
@@ -61,7 +59,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#getEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String)
@@ -91,7 +89,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#putEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String,
@@ -107,7 +105,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#postEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String,
@@ -146,7 +144,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#deleteEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String)
@@ -195,18 +193,6 @@ public class RolesService extends AbstractCollectionService {
         }
 
         return super.deleteEntityDictionary( context, refs, dictionary );
-    }
-
-
-    public ServiceResults newApplicationRole( String roleName, String roleTitle, long inactivity ) throws Exception {
-        em.createRole( roleName, roleTitle, inactivity );
-        return getApplicationRoles();
-    }
-
-
-    public ServiceResults deleteApplicationRole( String roleName ) throws Exception {
-        em.deleteRole( roleName );
-        return getApplicationRolePermissions( roleName );
     }
 
 

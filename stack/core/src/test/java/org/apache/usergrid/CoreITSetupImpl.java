@@ -17,33 +17,45 @@
 package org.apache.usergrid;
 
 
-import java.util.UUID;
-
+import com.google.inject.Injector;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
+import org.apache.usergrid.mq.QueueManagerFactory;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.IndexBucketLocator;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.mq.QueueManagerFactory;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.utils.JsonUtils;
+
+import java.util.UUID;
 
 
-public class CoreITSetupImpl implements CoreITSetup {
+public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
+    private final Injector injector;
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
-    protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
-    protected CassandraResource cassandraResource;
-    protected boolean enabled = false;
+
+    protected SpringResource springResource;
 
 
-    public CoreITSetupImpl( CassandraResource cassandraResource ) {
-        this.cassandraResource = cassandraResource;
+    public CoreITSetupImpl( ) {
+        springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
+
+        cassandraService = springResource.getBean( CassandraService.class );
+        emf = springResource.getBean( EntityManagerFactory.class );
+        qmf = springResource.getBean( QueueManagerFactory.class );
+        injector = springResource.getBean(Injector.class);
+
+
     }
 
 
@@ -77,19 +89,12 @@ public class CoreITSetupImpl implements CoreITSetup {
      */
     protected void before( Description description ) throws Throwable {
         LOG.info( "Setting up for {}", description.getDisplayName() );
-        initialize();
-    }
 
 
-    private void initialize() {
-        if ( !enabled ) {
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
-            qmf = cassandraResource.getBean( QueueManagerFactory.class );
-            indexBucketLocator = cassandraResource.getBean( IndexBucketLocator.class );
-            cassandraService = cassandraResource.getBean( CassandraService.class );
-            enabled = true;
-        }
+
+
     }
+
 
 
     /** Override to tear down your specific external resource. */
@@ -100,62 +105,65 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     @Override
     public EntityManagerFactory getEmf() {
-        if ( emf == null ) {
-            initialize();
-        }
-
         return emf;
     }
 
 
     @Override
     public QueueManagerFactory getQmf() {
-        if ( qmf == null ) {
-            initialize();
-        }
-
-        return qmf;
+         return qmf;
     }
 
-
     @Override
-    public IndexBucketLocator getIbl() {
-        if ( indexBucketLocator == null ) {
-            initialize();
-        }
-
-        return indexBucketLocator;
+    public ApplicationService getApplicationService(){
+        return injector.getInstance(ApplicationService.class);
     }
 
 
     @Override
     public CassandraService getCassSvc() {
-        if ( cassandraService == null ) {
-            initialize();
-        }
-
         return cassandraService;
     }
 
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( USE_DEFAULT_APPLICATION ) {
-            return CassandraService.DEFAULT_APPLICATION_ID;
-        }
+        Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
+        UUID applicationId = appInfo.getUuid();
 
-        if ( emf == null ) {
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
-        }
-
-        return emf.createApplication( organizationName, applicationName );
+        return applicationId;
     }
-
 
     @Override
     public void dump( String name, Object obj ) {
         if ( obj != null && LOG.isInfoEnabled() ) {
             LOG.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
+        }
+    }
+
+    @Override
+    public Injector getInjector() {
+        return injector;
+    }
+
+    @Override
+    public TestEntityIndex getEntityIndex(){
+        return this;
+    }
+
+    @Override
+    public void refresh(UUID appId){
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException ie){
+
+        }
+        emf.refreshIndex(appId);
+
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException ie){
+
         }
     }
 }

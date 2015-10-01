@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 
 public class SimpleCollectionRef implements CollectionRef {
@@ -69,6 +71,12 @@ public class SimpleCollectionRef implements CollectionRef {
     @Override
     public String getType() {
         return type;
+    }
+
+
+    @Override
+    public Id asId() {
+        return new SimpleId( id, type );
     }
 
 

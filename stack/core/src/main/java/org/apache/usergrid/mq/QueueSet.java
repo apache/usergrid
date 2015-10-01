@@ -25,8 +25,7 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 
 @XmlRootElement
@@ -173,7 +172,7 @@ public class QueueSet {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Object getCursor() {
         // TODO Auto-generated method stub
         return null;

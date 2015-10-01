@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
@@ -126,44 +127,10 @@ public class ServiceResults extends Results {
     }
 
 
-    public ServiceResults getPreviousResults() {
-        return previousResults;
-    }
-
-
     public Map<String, Object> getServiceMetadata() {
         return serviceMetadata;
     }
 
-
-    public boolean hasSelection() {
-        if ( request == null ) {
-            return false;
-        }
-        Query q = getQuery();
-        if ( q != null ) {
-            return q.hasSelectSubjects();
-        }
-        return false;
-    }
-
-
-    public List<Object> getSelectionResults() {
-        Query q = getQuery();
-        if ( q == null ) {
-            return null;
-        }
-        return q.getSelectionResults( this );
-    }
-
-
-    public Object getSelectionResult() {
-        Query q = getQuery();
-        if ( q == null ) {
-            return null;
-        }
-        return q.getSelectionResult( this );
-    }
 
 
     public String getPath() {

@@ -17,14 +17,16 @@
 package org.apache.usergrid;
 
 
-import java.util.Properties;
-
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
+
+import java.util.Properties;
+import java.util.UUID;
 
 
 public interface ServiceITSetup extends CoreITSetup {
@@ -39,6 +41,10 @@ public interface ServiceITSetup extends CoreITSetup {
     Properties getProps();
 
     ExportService getExportService();
+
+    ImportService getImportService();
+
+    void refreshIndex(UUID appid);
 
     /**
      * Convenience method to set a property in the Properties object returned by getProps();
@@ -60,4 +66,5 @@ public interface ServiceITSetup extends CoreITSetup {
     String get( String key );
 
     SignInProviderFactory getProviderFactory();
+
 }

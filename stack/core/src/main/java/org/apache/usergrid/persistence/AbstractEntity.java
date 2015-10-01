@@ -27,13 +27,24 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.persistence.model.entity.EntityToMapConverter;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+
+//import org.codehaus.jackson.annotate.JsonAnyGetter;
+//import org.codehaus.jackson.annotate.JsonAnySetter;
+//import org.codehaus.jackson.annotate.JsonIgnore;
+//import org.codehaus.jackson.map.annotate.JsonSerialize;
+//import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 /**
@@ -53,11 +64,12 @@ public abstract class AbstractEntity implements Entity {
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
     protected Map<String, Set<Object>> dynamic_sets = new TreeMap<String, Set<Object>>( String.CASE_INSENSITIVE_ORDER );
+    protected long size;
 
 
     @Override
     @EntityProperty(required = true, mutable = false, basic = true, indexed = false)
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getUuid() {
         return uuid;
     }
@@ -81,9 +93,25 @@ public abstract class AbstractEntity implements Entity {
     }
 
 
+
+    @Override
+    public Id asId() {
+        return new SimpleId( uuid, getType() );
+    }
+
+    @Override
+    public void setSize(final long size){this.setMetadata("size",size);}
+
+    @JsonIgnore
+    @Override
+    public long getSize() {
+        Object size = this.getMetadata("size");
+        return size != null && size instanceof Long ? (Long) size : 0;
+    }
+
     @Override
     @EntityProperty(indexed = true, required = true, mutable = false)
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getCreated() {
         return created;
     }
@@ -98,9 +126,10 @@ public abstract class AbstractEntity implements Entity {
     }
 
 
+
     @Override
     @EntityProperty(indexed = true, required = true, mutable = true)
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getModified() {
         return modified;
     }
@@ -116,7 +145,7 @@ public abstract class AbstractEntity implements Entity {
 
 
     @Override
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getName() {
         Object value = getProperty( PROPERTY_NAME );
 
@@ -138,7 +167,7 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     public final Object getProperty( String propertyName ) {
-        return Schema.getDefaultSchema().getEntityProperty( this, propertyName );
+        return Schema.getDefaultSchema().getEntityProperty(this, propertyName);
     }
 
 
@@ -151,7 +180,13 @@ public abstract class AbstractEntity implements Entity {
     @Override
     public void setProperties( Map<String, Object> properties ) {
         dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
-        addProperties( properties );
+        addProperties(properties);
+    }
+
+    @Override
+    public void setProperties(org.apache.usergrid.persistence.model.entity.Entity cpEntity){
+        setProperties( CpEntityMapUtils.toMap(cpEntity) );
+        this.setSize(cpEntity.getSize());
     }
 
 
@@ -167,7 +202,7 @@ public abstract class AbstractEntity implements Entity {
 
 
     @Override
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Object getMetadata( String key ) {
         return getDataset( "metadata", key );
     }
@@ -345,4 +380,5 @@ public abstract class AbstractEntity implements Entity {
         }
         return true;
     }
+
 }

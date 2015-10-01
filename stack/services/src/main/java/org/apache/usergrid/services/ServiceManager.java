@@ -63,7 +63,7 @@ public class ServiceManager {
     public static final String COLLECTION_SUFFIX = "." + COLLECTION;
     public static final String OSS_PACKAGE_PREFIX = "org.apache.usergrid.services";
     public static final String COM_PACKAGE_PREFIX = "com.usergrid.services";
-    public static final String SERVICE_PACKAGE_PREFIXES = "usergird.service.packages";
+    public static final String SERVICE_PACKAGE_PREFIXES = "usergrid.service.packages";
 
     public static final String APPLICATION_REQUESTS = "application.requests";
     public static final String APPLICATION_REQUESTS_PER = APPLICATION_REQUESTS + ".";
@@ -82,7 +82,7 @@ public class ServiceManager {
 
     // search for commercial packages first for SaaS version
     public static String[] package_prefixes = {
-            COM_PACKAGE_PREFIX, OSS_PACKAGE_PREFIX
+            OSS_PACKAGE_PREFIX
     };
 
 
@@ -99,7 +99,12 @@ public class ServiceManager {
         if ( em != null ) {
             try {
                 application = em.getApplication();
-                applicationId = em.getApplicationRef().getUuid();
+                if(application == null){
+                    Exception e = new RuntimeException("application id {"+em.getApplicationId()+"} is returning null");
+                    logger.error("Failed to get application",e);
+                    throw e;
+                }
+                applicationId = application.getUuid();
             }
             catch ( Exception e ) {
                 logger.error( "This should never happen", e );
@@ -147,7 +152,7 @@ public class ServiceManager {
 
     /** Return true if our current applicationId is the managment Id */
     public boolean isMangementApplication() {
-        return CassandraService.MANAGEMENT_APPLICATION_ID.equals( getApplicationId() );
+        return smf.getManagementAppId().equals( getApplicationId() );
     }
 
 
@@ -337,13 +342,13 @@ public class ServiceManager {
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters ) throws Exception {
-        return newRequest( action, false, parameters, null );
+        return newRequest( action, false, parameters, null, true, true );
     }
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters, ServicePayload payload )
             throws Exception {
-        return newRequest( action, false, parameters, payload );
+        return newRequest( action, false, parameters, payload, true, true );
     }
 
 
@@ -361,7 +366,8 @@ public class ServiceManager {
 
 
     public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
-                                      ServicePayload payload ) throws Exception {
+                                      ServicePayload payload, boolean returnsInboundConnections,
+                                      boolean returnsOutboundConnections ) throws Exception {
 
         if ( em != null ) {
             if ( action != null ) {
@@ -391,9 +397,14 @@ public class ServiceManager {
         }
 
         String serviceName = pluralize( ServiceParameter.dequeueParameter( parameters ).getName() );
-        return new ServiceRequest( this, action, serviceName, parameters, payload, returnsTree );
+        return new ServiceRequest( this, action, serviceName, parameters, payload, returnsTree,
+            returnsInboundConnections, returnsOutboundConnections );
     }
 
+    public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
+                                      ServicePayload payload ) throws Exception {
+        return newRequest( action, returnsTree, parameters, payload, true, true );
+    }
 
     public void notifyExecutionEventListeners( ServiceAction action, ServiceRequest request, ServiceResults results,
                                                ServicePayload payload ) {

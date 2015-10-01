@@ -18,28 +18,30 @@
  */
 'use strict';
 
-AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log,$location) {
+AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
+  $q, $http, $resource, $log, $location) {
 
   var requestTimes = [],
     running = false,
     currentRequests = {};
 
-  function reportError(data,config){
-      console.error(data)
+  function reportError(data, config) {
+    console.error(data)
   };
-  var getAccessToken = function(){
+  var getAccessToken = function() {
     return sessionStorage.getItem('accessToken');
   };
 
   return {
-    get:function(prop,isObject){
-      return isObject ? this.client().getObject(prop) : this.client().get(prop);
+    get: function(prop, isObject) {
+      return isObject ? this.client().getObject(prop) : this.client().get(
+        prop);
     },
-    set:function(prop,value){
-      this.client().set(prop,value);
+    set: function(prop, value) {
+      this.client().set(prop, value);
 
     },
-    getUrls: function(qs){
+    getUrls: function(qs) {
       var host = $location.host();
       var BASE_URL = '';
       var DATA_URL = '';
@@ -49,7 +51,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
           //development
           DATA_URL = 'https://api.usergrid.com';
           break;
-        default :
+        default:
           DATA_URL = Usergrid.overrideUrl;
           break;
       }
@@ -62,90 +64,112 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         PROFILE_URL: BASE_URL + '/accounts/my_account',
         LOGOUT_URL: BASE_URL + '/accounts/sign_out',
         apiUrl: DATA_URL,
-        use_sso:use_sso
+        use_sso: use_sso
       };
     },
-    orgLogin:function(username,password){
+    orgLogin: function(username, password) {
       var self = this;
       this.client().set('email', username);
       this.client().set('token', null);
-      this.client().orgLogin(username,password,function(err, data, user, organizations, applications){
-        if(err){
-          $rootScope.$broadcast('loginFailed', err,data);
-        }else{
-          self.initializeCurrentUser(function () {
-            $rootScope.$broadcast('loginSuccesful', user, organizations, applications);
+      this.client().orgLogin(username, password, function(err, data, user,
+        organizations, applications) {
+        if (err) {
+          $rootScope.$broadcast('loginFailed', err, data);
+        } else {
+          self.initializeCurrentUser(function() {
+            $rootScope.$broadcast('loginSuccesful', user, organizations,
+              applications);
           });
         }
       });
     },
-    checkAuthentication:function(force){
+    checkAuthentication: function(force) {
       var ug = this;
       var client = ug.client();
 
-      var initialize = function () {
-            ug.initializeCurrentUser(function () {
-              $rootScope.userEmail = client.get('email');
-              $rootScope.organizations = client.getObject('organizations');
-              $rootScope.applications = client.getObject('applications');
-              $rootScope.currentOrg = client.get('orgName');
-              $rootScope.currentApp = client.get('appName');
-              var size = 0, key;
-              for (key in  $rootScope.applications) {
-                if ($rootScope.applications.hasOwnProperty(key)) size++;
-              }
-              $rootScope.$broadcast('checkAuthentication-success', client.getObject('organizations'), client.getObject('applications'), client.get('orgName'), client.get('appName'), client.get('email'));
-            });
-          },
-          isAuthenticated = function () {
-            var authenticated = client.get('token') !== null && client.get('organizations') !== null;
-            if (authenticated) {
-              initialize();
+      var initialize = function() {
+          ug.initializeCurrentUser(function() {
+            $rootScope.userEmail = client.get('email');
+            $rootScope.organizations = client.getObject('organizations');
+            $rootScope.applications = client.getObject('applications');
+            $rootScope.currentOrg = client.get('orgName');
+            $rootScope.currentApp = client.get('appName');
+            var size = 0,
+              key;
+            for (key in $rootScope.applications) {
+              if ($rootScope.applications.hasOwnProperty(key)) size++;
             }
-            return authenticated;
-          };
-      if(!isAuthenticated() || force){
-        if(!client.get('token')){
-          return $rootScope.$broadcast('checkAuthentication-error','no token',{},client.get('email'));
+            $rootScope.$broadcast('checkAuthentication-success', client.getObject(
+              'organizations'), client.getObject('applications'), client.get(
+              'orgName'), client.get('appName'), client.get('email'));
+          });
+        },
+        isAuthenticated = function() {
+          var authenticated = client.get('token') !== null && client.get(
+            'organizations') !== null;
+          if (authenticated) {
+            initialize();
+          }
+          return authenticated;
+        };
+      if (!isAuthenticated() || force) {
+        if (!client.get('token')) {
+          return $rootScope.$broadcast('checkAuthentication-error',
+            'no token', {}, client.get('email'));
         }
-        this.client().reAuthenticateLite(function(err){
-          var missingData = err || ( !client.get('orgName') || !client.get('appName') || !client.getObject('organizations') || !client.getObject('applications'));
-          var email  = client.get('email');
-          if(err || missingData){
-            $rootScope.$broadcast('checkAuthentication-error',err,missingData,email);
-          }else{
+        this.client().reAuthenticateLite(function(err) {
+          var missingData = err || (!client.get('orgName') || !client.get(
+              'appName') || !client.getObject('organizations') || !client
+            .getObject('applications'));
+          var email = client.get('email');
+          if (err || missingData) {
+            $rootScope.$broadcast('checkAuthentication-error', err,
+              missingData, email);
+          } else {
             initialize();
           }
         });
       }
     },
-    reAuthenticate:function(email,eventOveride){
+    reAuthenticate: function(email, eventOveride) {
       var ug = this;
-      this.client().reAuthenticate(email,function(err, data, user, organizations, applications){
-        if(!err){
+      this.client().reAuthenticate(email, function(err, data, user,
+        organizations, applications) {
+        if (!err) {
           $rootScope.currentUser = user;
         }
-        if(!err){
+        if (!err) {
           $rootScope.userEmail = user.get('email');
           $rootScope.organizations = organizations;
           $rootScope.applications = applications;
           $rootScope.currentOrg = ug.get('orgName');
           $rootScope.currentApp = ug.get('appName');
-          $rootScope.currentUser = user._data;
-          $rootScope.currentUser.profileImg = utility.get_gravatar($rootScope.currentUser.email);
+          $rootScope.currentUser = data;
+          $rootScope.currentUser.profileImg = utility.get_gravatar(
+            $rootScope.currentUser.email);
         }
-        $rootScope.$broadcast((eventOveride || 'reAuthenticate')+'-' + (err ? 'error' : 'success'),err, data, user, organizations, applications);
+        $rootScope.$broadcast((eventOveride || 'reAuthenticate') + '-' + (
+            err ? 'error' : 'success'), err, data, user, organizations,
+          applications);
 
       });
     },
     logoutCallback: function() {
       $rootScope.$broadcast('userNotAuthenticated');
     },
-    logout:function(){
+    logout: function() {
       $rootScope.activeUI = false;
       $rootScope.userEmail = 'user@apigee.com';
-      $rootScope.organizations = {"noOrg":{name:"No Orgs Found"}};
-      $rootScope.applications = {"noApp":{name:"No Apps Found"}};
+      $rootScope.organizations = {
+        "noOrg": {
+          name: "No Orgs Found"
+        }
+      };
+      $rootScope.applications = {
+        "noApp": {
+          name: "No Apps Found"
+        }
+      };
       $rootScope.currentOrg = 'No Org Found';
       $rootScope.currentApp = 'No App Found';
       sessionStorage.setItem('accessToken', null);
@@ -155,38 +179,39 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       this.client().logout();
       this._client = null;
     },
-    client: function(){
+    client: function() {
       var options = {
-        buildCurl:true,
-        logging:true
+        buildCurl: Usergrid.options.client.buildCurl || false,
+        logging: Usergrid.options.client.logging || false
       };
-      if(Usergrid.options && Usergrid.options.client){
+      if (Usergrid.options && Usergrid.options.client) {
         options.keys = Usergrid.options.client;
       }
 
       this._client = this._client || new Usergrid.Client(options,
-          $rootScope.urls().DATA_URL
+        $rootScope.urls().DATA_URL
       );
       return this._client;
     },
-    setClientProperty:function(key,value){
+    setClientProperty: function(key, value) {
       this.client().set(key, value);
     },
-    getTopCollections: function () {
+    getTopCollections: function() {
       var options = {
-        method:'GET',
+        method: 'GET',
         endpoint: ''
       }
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error getting collections');
+          $rootScope.$broadcast('alert', 'error',
+            'error getting collections');
         } else {
           var collections = data.entities[0].metadata.collections;
           $rootScope.$broadcast('top-collections-received', collections);
         }
       });
     },
-    createCollection: function (collectionName) {
+    createCollection: function(collectionName) {
       var collections = {};
       collections[collectionName] = {};
       var metadata = {
@@ -195,84 +220,152 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       }
       var options = {
-        method:'PUT',
+        method: 'PUT',
         body: metadata,
         endpoint: ''
       }
-      this.client().request(options, function (err, data) {
+      var self = this;
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error creating collection');
-        } else {
-          $rootScope.$broadcast('collection-created', collections);
+          console.error(err);
+          return $rootScope.$broadcast('alert', 'error',
+            'error creating collection');
         }
+        self.client().createEntity({
+          type: collectionName,
+          testData: 'test'
+        }, function(err, entity) {
+          if (err) {
+            console.error(err);
+            return $rootScope.$broadcast('alert', 'error',
+              'error creating collection');
+          }
+          entity.destroy(function() {
+            self.getTopCollections(function(err, collections) {
+              if (err) {
+                $rootScope.$broadcast('alert', 'error',
+                  'error creating collection');
+              } else {
+                $rootScope.$broadcast('collection-created',
+                  collections);
+              }
+            });
+          });
+
+        })
+
+
       });
     },
-    getApplications: function () {
-      this.client().getApplications(function (err, applications) {
-        if (err) {
-           applications && console.error(applications);
-        }else{
-          $rootScope.$broadcast('applications-received', applications);
-        }
-      });
-    },
-    getAdministrators: function () {
-      this.client().getAdministrators(function (err, administrators) {
-        if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error getting administrators');
-        }
-        $rootScope.$broadcast('administrators-received', administrators);
-      });
-    },
-    createApplication: function (appName) {
-      this.client().createApplication(appName, function (err, applications) {
-        if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error creating application');
-        }else{
-          $rootScope.$broadcast('applications-created', applications,appName);
-          $rootScope.$broadcast('applications-received', applications);
-        }
-      });
-    },
-    createAdministrator: function (adminName) {
-      this.client().createAdministrator(adminName, function (err, administrators) {
-        if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error creating administrator');
-        }
-        $rootScope.$broadcast('administrators-received', administrators);
-      });
-    },
-    getFeed: function () {
+    createCollectionWithEntity: function(collectionName, entityData) {
+      try{
+        entityData=JSON.parse(entityData);
+      }catch(e){
+        $rootScope.$broadcast('alert', 'error', 'JSON is not valid');
+        return;
+      }
       var options = {
-        method:'GET',
-        endpoint:'management/organizations/'+this.client().get('orgName')+'/feed',
-        mQuery:true
+        method: 'POST',
+        endpoint: collectionName,
+        body: entityData
+      }
+      var self = this;
+      self.client().request(options, function(err, entity) {
+        if (err) {
+          console.error(err);
+          return $rootScope.$broadcast('alert', 'error',
+              'error creating collection');
+        }
+        self.getTopCollections(function(err, collections) {
+          if (err) {
+            $rootScope.$broadcast('alert', 'error',
+                'error creating collection');
+          } else {
+            $rootScope.$broadcast('alert', 'success', 'Collection created successfully.');
+            $rootScope.$broadcast('collection-created',
+                collections);
+          }
+        });
+      });
+    },
+    getApplications: function() {
+      this.client().getApplications(function(err, applications) {
+        if (err) {
+          applications && console.error(applications);
+        } else {
+          $rootScope.$broadcast('applications-received', applications);
+        }
+      });
+    },
+    getAdministrators: function() {
+      this.client().getAdministrators(function(err, administrators) {
+        if (err) {
+          $rootScope.$broadcast('alert', 'error',
+            'error getting administrators');
+        }
+        $rootScope.$broadcast('administrators-received', administrators);
+      });
+    },
+    createApplication: function(appName) {
+      this.client().createApplication(appName, function(err, applications) {
+        if (err) {
+          $rootScope.$broadcast('alert', 'error',
+            'error creating application');
+        } else {
+          $rootScope.$broadcast('applications-created', applications,
+            appName);
+          $rootScope.$broadcast('applications-received', applications);
+        }
+      });
+    },
+    createAdministrator: function(adminName) {
+      this.client().createAdministrator(adminName, function(err,
+        administrators) {
+        if (err) {
+          $rootScope.$broadcast('alert', 'error',
+            'error creating administrator');
+        }
+        $rootScope.$broadcast('administrators-received', administrators);
+      });
+    },
+    getFeed: function() {
+      var options = {
+        method: 'GET',
+        endpoint: 'management/organizations/' + this.client().get('orgName') +
+          '/feed',
+        mQuery: true
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error getting feed');
         } else {
           var feedData = data.entities;
           var feed = [];
-          var i=0;
-          for (i=0; i < feedData.length; i++) {
+          var i = 0;
+          for (i = 0; i < feedData.length; i++) {
             var date = (new Date(feedData[i].created)).toUTCString();
 
             var title = feedData[i].title;
 
-            var n=title.indexOf(">");
-            title = title.substring(n+1,title.length);
+            var n = title.indexOf(">");
+            title = title.substring(n + 1, title.length);
 
-            n=title.indexOf(">");
-            title = title.substring(n+1,title.length);
+            n = title.indexOf(">");
+            title = title.substring(n + 1, title.length);
 
             if (feedData[i].actor) {
               title = feedData[i].actor.displayName + ' ' + title;
             }
-            feed.push({date:date, title:title});
+            feed.push({
+              date: date,
+              title: title
+            });
           }
           if (i === 0) {
-            feed.push({date:"", title:"No Activities found."});
+            feed.push({
+              date: "",
+              title: "No Activities found."
+            });
           }
 
           $rootScope.$broadcast('feed-received', feed);
@@ -280,13 +373,13 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       });
 
     },
-    createGroup: function (path, title) {
+    createGroup: function(path, title) {
       var options = {
-        path:path,
-        title:title
+        path: path,
+        title: title
       }
       var self = this;
-      this.groupsCollection.addEntity(options, function(err){
+      this.groupsCollection.addEntity(options, function(err) {
         if (err) {
           $rootScope.$broadcast('groups-create-error', err);
         } else {
@@ -295,13 +388,13 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-    createRole: function (name, title) {
+    createRole: function(name, title) {
       var options = {
-        name:name,
-        title:title
-          },
-          self = this;
-      this.rolesCollection.addEntity(options, function(err){
+          name: name,
+          title: title
+        },
+        self = this;
+      this.rolesCollection.addEntity(options, function(err) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error creating role');
         } else {
@@ -309,20 +402,22 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-    createUser: function (username, name, email, password){
+    createUser: function(username, name, email, password) {
       var options = {
-        username:username,
-        name:name,
-        email:email,
-        password:password
+        username: username,
+        name: name,
+        email: email,
+        password: password
       }
       var self = this;
-      this.usersCollection.addEntity(options, function(err, data){
+      this.usersCollection.addEntity(options, function(err, data) {
         if (err) {
           if (typeof data === 'string') {
             $rootScope.$broadcast("alert", "error", "error: " + data);
           } else {
-            $rootScope.$broadcast("alert", "error", "error creating user. the email address might already exist.");
+            $rootScope.$broadcast("alert", "error",
+              "error creating user. the email address might already exist."
+            );
           }
         } else {
           $rootScope.$broadcast('users-create-success', self.usersCollection);
@@ -331,10 +426,10 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-    getCollection: function (type, path, orderBy, query, limit) {
+    getCollection: function(type, path, orderBy, query, limit) {
       var options = {
-        type:path,
-        qs:{}
+        type: path,
+        qs: {}
       }
       if (query) {
         options.qs['ql'] = query;
@@ -342,7 +437,8 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
 
       //force order by 'created desc' if none exists
       if (options.qs.ql) {
-        options.qs['ql'] = options.qs.ql + ' order by ' + (orderBy || 'created desc');
+        options.qs['ql'] = options.qs.ql + ' order by ' + (orderBy ||
+          'created desc');
       } else {
         options.qs['ql'] = ' order by ' + (orderBy || 'created desc');
       }
@@ -350,39 +446,40 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       if (limit) {
         options.qs['limit'] = limit;
       }
-      this.client().createCollection(options, function (err, collection, data) {
+      this.client().createCollection(options, function(err, collection, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error getting ' + collection._type + ': ' + data.error_description);
+          $rootScope.$broadcast('alert', 'error', 'error getting ' +
+            collection._type + ': ' + data.error_description);
           $rootScope.$broadcast(type + '-error', collection);
         } else {
           $rootScope.$broadcast(type + '-received', collection);
         }
         //temporarily adding scope.apply to get working in prod, otherwise the events won't get broadcast
         //todo - we need an apply strategy for 3rd party ug calls!
-        if(!$rootScope.$$phase) {
+        if (!$rootScope.$$phase) {
           $rootScope.$apply();
         }
       });
     },
-    runDataQuery: function (queryPath, searchString, queryLimit) {
+    runDataQuery: function(queryPath, searchString, queryLimit) {
       this.getCollection('query', queryPath, null, searchString, queryLimit);
     },
     runDataPOSTQuery: function(queryPath, body) {
       var self = this;
       var options = {
-        method:'POST',
-        endpoint:queryPath,
-        body:body
+        method: 'POST',
+        endpoint: queryPath,
+        body: body
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error: ' + data.error_description);
-          $rootScope.$broadcast('error-running-query',  data);
+          $rootScope.$broadcast('error-running-query', data);
         } else {
 
           var queryPath = data.path;
           //remove preceeding slash
-          queryPath = queryPath.replace(/^\//, ''); 
+          queryPath = queryPath.replace(/^\//, '');
           self.getCollection('query', queryPath, null, 'order by modified DESC', null);
 
         }
@@ -391,9 +488,9 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     runDataPutQuery: function(queryPath, searchString, queryLimit, body) {
       var self = this;
       var options = {
-        method:'PUT',
-        endpoint:queryPath,
-        body:body
+        method: 'PUT',
+        endpoint: queryPath,
+        body: body
       };
 
       if (searchString) {
@@ -403,13 +500,14 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         options.qs['queryLimit'] = queryLimit;
       }
 
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error: ' + data.error_description);
         } else {
 
           var queryPath = data.path;
-          self.getCollection('query', queryPath, null, 'order by modified DESC', null);
+          self.getCollection('query', queryPath, null,
+            'order by modified DESC', null);
 
         }
       });
@@ -417,8 +515,8 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     runDataDeleteQuery: function(queryPath, searchString, queryLimit) {
       var self = this;
       var options = {
-        method:'DELETE',
-        endpoint:queryPath
+        method: 'DELETE',
+        endpoint: queryPath
       };
 
       if (searchString) {
@@ -428,74 +526,80 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         options.qs['queryLimit'] = queryLimit;
       }
 
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error: ' + data.error_description);
         } else {
 
           var queryPath = data.path;
-          self.getCollection('query', queryPath, null, 'order by modified DESC', null);
+          self.getCollection('query', queryPath, null,
+            'order by modified DESC', null);
 
         }
       });
     },
-    getUsers: function () {
-      this.getCollection('users','users','username');
+    getUsers: function() {
+      this.getCollection('users', 'users', 'username');
       var self = this;
-      $rootScope.$on("users-received",function(evt, users){
+      $rootScope.$on("users-received", function(evt, users) {
         self.usersCollection = users;
       })
     },
-    getGroups: function () {
-      this.getCollection('groups','groups','title');
+    getGroups: function() {
+      this.getCollection('groups', 'groups', 'title');
       var self = this;
       $rootScope.$on('groups-received', function(event, roles) {
         self.groupsCollection = roles;
       });
 
-     },
-    getRoles: function () {
-      this.getCollection('roles','roles','name');
+    },
+    getRoles: function() {
+      this.getCollection('roles', 'roles', 'name');
       var self = this;
       $rootScope.$on('roles-received', function(event, roles) {
         self.rolesCollection = roles
       });
     },
-    getNotifiers: function () {
+    getNotifiers: function() {
       var query = '',
-          limit = '100',
-          self = this;
-      this.getCollection('notifiers','notifiers','created', query, limit);
+        limit = '100',
+        self = this;
+      this.getCollection('notifiers', 'notifiers', 'created', query, limit);
       $rootScope.$on('notifiers-received', function(event, notifiers) {
         self.notifiersCollection = notifiers;
       });
     },
-    getNotificationHistory: function (type) {
+    getNotificationHistory: function(type) {
       var query = null;
       if (type) {
         query = "select * where state = '" + type + "'";
       }
-      this.getCollection('notifications','notifications', 'created desc', query);
+      this.getCollection('notifications', 'notifications', 'created desc',
+        query);
       var self = this;
       $rootScope.$on('notifications-received', function(event, notifications) {
         self.notificationCollection = notifications;
       });
     },
-    getNotificationReceipts: function (uuid) {
-      this.getCollection('receipts', 'notifications/'+uuid+'/receipts');
+    getNotificationReceipts: function(uuid) {
+      this.getCollection('receipts', 'receipts', 'created desc',
+        'notificationUUID=' + uuid);
       var self = this;
       $rootScope.$on('receipts-received', function(event, receipts) {
         self.receiptsCollection = receipts;
       });
     },
-    getIndexes: function (path) {
+    getIndexes: function(path) {
       var options = {
-        method:'GET',
-        endpoint: path.split('/').concat('indexes').filter(function(bit){return bit && bit.length}).join('/')
+        method: 'GET',
+        endpoint: path.split('/').concat('indexes').filter(function(bit) {
+          return bit && bit.length
+        }).join('/')
       }
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'Problem getting indexes: ' + data.error);
+          $rootScope.$broadcast('alert', 'error',
+            'Problem getting indexes: ' + data.error);
         } else {
           $rootScope.$broadcast('indexes-received', data.data);
         }
@@ -503,25 +607,28 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     },
     sendNotification: function(path, body) {
       var options = {
-        method:'POST',
+        method: 'POST',
         endpoint: path,
-        body:body
+        body: body
       }
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'Problem creating notification: ' + data.error);
+          $rootScope.$broadcast('alert', 'error',
+            'Problem creating notification: ' + data.error);
         } else {
           $rootScope.$broadcast('send-notification-complete');
         }
       });
     },
-    getRolesUsers: function (username) {
+    getRolesUsers: function(username) {
       var self = this;
       var options = {
-        type:'roles/users/'+username,
-        qs:{ql:'order by username'}
+        type: 'roles/users/' + username,
+        qs: {
+          ql: 'order by username'
+        }
       }
-      this.client().createCollection(options, function (err, users) {
+      this.client().createCollection(options, function(err, users) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error getting users');
         } else {
@@ -530,49 +637,51 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-    getTypeAheadData: function (type, searchString, searchBy, orderBy) {
+    getTypeAheadData: function(type, searchString, searchBy, orderBy) {
 
       var self = this;
       var search = '';
-      var qs = {limit: 100};
+      var qs = {
+        limit: 100
+      };
       if (searchString) {
-        search = "select * where "+searchBy+" = '"+searchString+"'";
+        search = "select * where " + searchBy + " = '" + searchString + "'";
       }
       if (orderBy) {
-        search = search + " order by "+orderBy;
+        search = search + " order by " + orderBy;
       }
       if (search) {
         qs.ql = search;
       }
       var options = {
-        method:'GET',
+        method: 'GET',
         endpoint: type,
-        qs:qs
+        qs: qs
       }
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error getting '+type);
+          $rootScope.$broadcast('alert', 'error', 'error getting ' + type);
         } else {
           var entities = data.entities;
-          $rootScope.$broadcast(type +'-typeahead-received', entities);
+          $rootScope.$broadcast(type + '-typeahead-received', entities);
         }
       });
     },
-    getUsersTypeAhead: function (searchString) {
+    getUsersTypeAhead: function(searchString) {
       this.getTypeAheadData('users', searchString, 'username', 'username');
     },
-    getGroupsTypeAhead: function (searchString) {
+    getGroupsTypeAhead: function(searchString) {
       this.getTypeAheadData('groups', searchString, 'path', 'path');
     },
-    getRolesTypeAhead: function (searchString) {
+    getRolesTypeAhead: function(searchString) {
       this.getTypeAheadData('roles', searchString, 'name', 'name');
     },
-    getGroupsForUser: function (user) {
+    getGroupsForUser: function(user) {
       var self = this;
       var options = {
-        type:'users/'+user+'/groups'
+        type: 'users/' + user + '/groups'
       }
-      this.client().createCollection(options, function (err, groups) {
+      this.client().createCollection(options, function(err, groups) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error getting groups');
         } else {
@@ -582,53 +691,56 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-    addUserToGroup: function (user, group) {
+    addUserToGroup: function(user, group) {
       var self = this;
       var options = {
-        type:'users/'+user+'/groups/'+group
+        type: 'users/' + user + '/groups/' + group
       }
-      this.client().createEntity(options, function (err, entity) {
+      this.client().createEntity(options, function(err, entity) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error adding user to group');
+          $rootScope.$broadcast('alert', 'error',
+            'error adding user to group');
         } else {
           $rootScope.$broadcast('user-added-to-group-received');
         }
       });
     },
-    addUserToRole: function (user, role) {
+    addUserToRole: function(user, role) {
       var options = {
-        method:'POST',
-        endpoint:'roles/'+role+'/users/'+user
+        method: 'POST',
+        endpoint: 'roles/' + role + '/users/' + user
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error adding user to role');
+          $rootScope.$broadcast('alert', 'error',
+            'error adding user to role');
         } else {
           $rootScope.$broadcast('role-update-received');
         }
       });
     },
-    addGroupToRole: function (group, role) {
+    addGroupToRole: function(group, role) {
       var options = {
-        method:'POST',
-        endpoint:'roles/'+role+'/groups/'+group
+        method: 'POST',
+        endpoint: 'roles/' + role + '/groups/' + group
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error adding group to role');
+          $rootScope.$broadcast('alert', 'error',
+            'error adding group to role');
         } else {
           $rootScope.$broadcast('role-update-received');
         }
       });
     },
-    followUser: function (user) {
+    followUser: function(user) {
       var self = this;
-      var username =  $rootScope.selectedUser.get('uuid');
+      var username = $rootScope.selectedUser.get('uuid');
       var options = {
-        method:'POST',
-        endpoint:'users/'+username+'/following/users/'+user
+        method: 'POST',
+        endpoint: 'users/' + username + '/following/users/' + user
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error following user');
         } else {
@@ -636,13 +748,15 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-    newPermission: function (permission, type, entity) { //"get,post,put:/mypermission"
+    newPermission: function(permission, type, entity) { //"get,post,put:/mypermission"
       var options = {
-        method:'POST',
-        endpoint:type+'/'+entity+'/permissions',
-        body:{"permission":permission}
+        method: 'POST',
+        endpoint: type + '/' + entity + '/permissions',
+        body: {
+          "permission": permission
+        }
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error adding permission');
         } else {
@@ -650,190 +764,191 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-    newUserPermission: function (permission, username) {
-      this.newPermission(permission,'users',username)
+    newUserPermission: function(permission, username) {
+      this.newPermission(permission, 'users', username)
     },
-    newGroupPermission: function (permission, path) {
-      this.newPermission(permission,'groups',path)
+    newGroupPermission: function(permission, path) {
+      this.newPermission(permission, 'groups', path)
     },
-    newRolePermission: function (permission, name) {
-      this.newPermission(permission,'roles',name)
+    newRolePermission: function(permission, name) {
+      this.newPermission(permission, 'roles', name)
     },
 
-    deletePermission: function (permission, type, entity) { //"get,post,put:/mypermission"
+    deletePermission: function(permission, type, entity) { //"get,post,put:/mypermission"
       var options = {
-        method:'DELETE',
-        endpoint:type+'/'+entity+'/permissions',
-        qs:{permission:permission}
+        method: 'DELETE',
+        endpoint: type + '/' + entity + '/permissions',
+        qs: {
+          permission: permission
+        }
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error deleting permission');
+          $rootScope.$broadcast('alert', 'error',
+            'error deleting permission');
         } else {
           $rootScope.$broadcast('permission-update-received');
         }
       });
     },
-    deleteUserPermission: function (permission, user) {
-      this.deletePermission(permission,'users',user);
+    deleteUserPermission: function(permission, user) {
+      this.deletePermission(permission, 'users', user);
     },
-    deleteGroupPermission: function (permission, group) {
-      this.deletePermission(permission,'groups',group);
+    deleteGroupPermission: function(permission, group) {
+      this.deletePermission(permission, 'groups', group);
     },
-    deleteRolePermission: function (permission, rolename) {
-      this.deletePermission(permission,'roles',rolename);
+    deleteRolePermission: function(permission, rolename) {
+      this.deletePermission(permission, 'roles', rolename);
     },
-    removeUserFromRole: function (user, role) { //"get,post,put:/mypermission"
+    removeUserFromRole: function(user, role) { //"get,post,put:/mypermission"
       var options = {
-        method:'DELETE',
-        endpoint:'roles/'+role+'/users/'+user
+        method: 'DELETE',
+        endpoint: 'roles/' + role + '/users/' + user
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error removing user from role');
+          $rootScope.$broadcast('alert', 'error',
+            'error removing user from role');
         } else {
           $rootScope.$broadcast('role-update-received');
         }
       });
     },
-    removeUserFromGroup: function (group, role) { //"get,post,put:/mypermission"
+    removeUserFromGroup: function(group, role) { //"get,post,put:/mypermission"
       var options = {
-        method:'DELETE',
-        endpoint:'roles/'+role+'/groups/'+group
+        method: 'DELETE',
+        endpoint: 'roles/' + role + '/groups/' + group
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error removing role from the group');
+          $rootScope.$broadcast('alert', 'error',
+            'error removing role from the group');
         } else {
           $rootScope.$broadcast('role-update-received');
         }
       });
     },
-    createAndroidNotifier: function (name, APIkey) {
+    createWinNotifier: function(name,sid,apiKey, logging){
       var options = {
-        method:'POST',
-        endpoint:'notifiers',
-        body:{"apiKey":APIkey,"name":name,"provider":"google"}
-      };
-      this.client().request(options, function (err, data) {
-        if (err) {
-          console.error(data);
-          $rootScope.$broadcast('alert', 'error', 'error creating notifier ');
-        } else {
-          $rootScope.$broadcast('alert', 'success', 'New notifier created successfully.');
-          $rootScope.$broadcast('notifier-update');
+        method: 'POST',
+        endpoint: 'notifiers',
+        body: {
+          "sid": sid,
+          "apiKey": apiKey,
+          "name": name,
+          "logging": logging,
+          "provider": "windows"
         }
-      });
-
+      };
+      this.client().request(options, this.notifierResponseReceived);
     },
-    createAppleNotifier: function (file, name, environment, certificatePassword ) {
+    createAndroidNotifier: function(name, APIkey) {
+      var options = {
+        method: 'POST',
+        endpoint: 'notifiers',
+        body: {
+          "apiKey": APIkey,
+          "name": name,
+          "provider": "google"
+        }
+      };
+      this.client().request(options, this.notifierResponseReceived);
+    },
+    createAppleNotifier: function(file, name, environment,
+      certificatePassword) {
 
       var provider = 'apple';
 
       var formData = new FormData();
-        formData.append("p12Certificate", file);
+      formData.append("p12Certificate", file);
 
-        formData.append('name', name);
-        formData.append('provider', provider);
-        formData.append('environment', environment);
-        formData.append('certificatePassword', certificatePassword || "");
-      //var body = {'p12Certificate':file, "name":name,'environment':environment,"provider":provider};
-      //if(certificatePassword){
-        //    body.certificatePassword = certificatePassword;
-      //}
+      formData.append('name', name);
+      formData.append('provider', provider);
+      formData.append('environment', environment);
+      formData.append('certificatePassword', certificatePassword || "");
+
       var options = {
-        method:'POST',
-        endpoint:'notifiers',
-        formData:formData
+        method: 'POST',
+        endpoint: 'notifiers',
+        formData: formData
       };
-      this.client().request(options, function (err, data) {
-        if (err) {
-          console.error(data);
-          $rootScope.$broadcast('alert', 'error', data.error_description  || 'error creating notifier');
-        } else {
-          $rootScope.$broadcast('alert', 'success', 'New notifier created successfully.');
-          $rootScope.$broadcast('notifier-update');
-        }
-      });
-
+      this.client().request(options, this.notifierResponseReceived);
     },
-    deleteNotifier: function (name) {
-      var options = {
-        method:'DELETE',
-        endpoint: 'notifiers/'+name
-      };
-      this.client().request(options, function (err, data) {
-        if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error deleting notifier');
-        } else {
-          $rootScope.$broadcast('notifier-update');
-        }
-      });
-
+    notifierResponseReceived:function(err, data) {
+      if (err) {
+        console.error(data);
+        $rootScope.$broadcast('alert', 'error', data.error_description || 'error creating notifier');
+      } else {
+        $rootScope.$broadcast('alert', 'success',
+            'New notifier created successfully.');
+        $rootScope.$broadcast('notifier-update');
+      }
     },
-    initializeCurrentUser: function (callback) {
-      callback = callback || function(){};
-      if($rootScope.currentUser && !$rootScope.currentUser.reset){
+    initializeCurrentUser: function(callback) {
+      callback = callback || function() {};
+      if ($rootScope.currentUser && !$rootScope.currentUser.reset) {
         callback($rootScope.currentUser);
         return $rootScope.$broadcast('current-user-initialized', '');
       }
       var options = {
-        method:'GET',
-        endpoint:'management/users/'+ this.client().get('email'),
-        mQuery:true
+        method: 'GET',
+        endpoint: 'management/users/' + this.client().get('email'),
+        mQuery: true
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'Error getting user info');
         } else {
           $rootScope.currentUser = data.data;
-          $rootScope.currentUser.profileImg = utility.get_gravatar($rootScope.currentUser.email);
-          $rootScope.userEmail =$rootScope.currentUser.email;
+          $rootScope.currentUser.profileImg = utility.get_gravatar(
+            $rootScope.currentUser.email);
+          $rootScope.userEmail = $rootScope.currentUser.email;
           callback($rootScope.currentUser);
           $rootScope.$broadcast('current-user-initialized', $rootScope.currentUser);
         }
       });
     },
 
-    updateUser: function (user) {
+    updateUser: function(user) {
       var body = {};
       body.username = user.username;
       body.name = user.name;
       body.email = user.email;
       var options = {
-        method:'PUT',
-        endpoint:'management/users/' + user.uuid + '/',
-        mQuery:true,
-        body:body
+        method: 'PUT',
+        endpoint: 'management/users/' + user.uuid + '/',
+        mQuery: true,
+        body: body
       };
       var self = this;
-      this.client().request(options, function (err, data) {
-        self.client().set('email',user.email);
-        self.client().set('username',user.username);
+      this.client().request(options, function(err, data) {
+        self.client().set('email', user.email);
+        self.client().set('username', user.username);
         if (err) {
-          return $rootScope.$broadcast('user-update-error',data);
+          return $rootScope.$broadcast('user-update-error', data);
         }
         $rootScope.currentUser.reset = true;
-        self.initializeCurrentUser(function(){
+        self.initializeCurrentUser(function() {
           $rootScope.$broadcast('user-update-success', $rootScope.currentUser);
         });
       });
     },
 
-    resetUserPassword: function (user) {
+    resetUserPassword: function(user) {
       var body = {};
       body.oldpassword = user.oldPassword;
       body.newpassword = user.newPassword;
       body.username = user.username;
       var options = {
-        method:'PUT',
-        endpoint:'management/users/' + user.uuid + '/',
-        body:body,
-        mQuery:true
+        method: 'PUT',
+        endpoint: 'management/users/' + user.uuid + '/',
+        body: body,
+        mQuery: true
       }
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
-         return  $rootScope.$broadcast('alert', 'error', 'Error resetting password');
+          return $rootScope.$broadcast('alert', 'error',
+            'Error resetting password');
         }
         //remove old and new password fields so they don't end up as part of the entity object
         $rootScope.currentUser.oldPassword = '';
@@ -842,67 +957,75 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       });
 
     },
-    getOrgCredentials: function () {
+    getOrgCredentials: function() {
       var options = {
-        method:'GET',
-        endpoint:'management/organizations/'+this.client().get('orgName')+'/credentials',
-        mQuery:true
-      };
-      this.client().request(options, function (err, data) {
-        if (err && data.credentials) {
-          $rootScope.$broadcast('alert', 'error', 'Error getting credentials');
-        } else {
-          $rootScope.$broadcast('org-creds-updated', data.credentials);
-        }
-      });
-    },
-    regenerateOrgCredentials: function () {
-      var self = this;
-      var options = {
-        method:'POST',
-        endpoint:'management/organizations/'+ this.client().get('orgName') + '/credentials',
-        mQuery:true
+        method: 'GET',
+        endpoint: 'management/organizations/' + this.client().get('orgName') +
+          '/credentials',
+        mQuery: true
       };
       this.client().request(options, function(err, data) {
         if (err && data.credentials) {
-          $rootScope.$broadcast('alert', 'error', 'Error regenerating credentials');
+          $rootScope.$broadcast('alert', 'error',
+            'Error getting credentials');
         } else {
-          $rootScope.$broadcast('alert', 'success', 'Regeneration of credentials complete.');
           $rootScope.$broadcast('org-creds-updated', data.credentials);
         }
       });
     },
-    getAppCredentials: function () {
+    regenerateOrgCredentials: function() {
+      var self = this;
       var options = {
-        method:'GET',
-        endpoint:'credentials'
+        method: 'POST',
+        endpoint: 'management/organizations/' + this.client().get('orgName') +
+          '/credentials',
+        mQuery: true
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err && data.credentials) {
-          $rootScope.$broadcast('alert', 'error', 'Error getting credentials');
+          $rootScope.$broadcast('alert', 'error',
+            'Error regenerating credentials');
+        } else {
+          $rootScope.$broadcast('alert', 'success',
+            'Regeneration of credentials complete.');
+          $rootScope.$broadcast('org-creds-updated', data.credentials);
+        }
+      });
+    },
+    getAppCredentials: function() {
+      var options = {
+        method: 'GET',
+        endpoint: 'credentials'
+      };
+      this.client().request(options, function(err, data) {
+        if (err && data.credentials) {
+          $rootScope.$broadcast('alert', 'error',
+            'Error getting credentials');
         } else {
           $rootScope.$broadcast('app-creds-updated', data.credentials);
         }
       });
     },
 
-    regenerateAppCredentials: function () {
+    regenerateAppCredentials: function() {
       var self = this;
       var options = {
-        method:'POST',
-        endpoint:'credentials'
+        method: 'POST',
+        endpoint: 'credentials'
       };
       this.client().request(options, function(err, data) {
         if (err && data.credentials) {
-          $rootScope.$broadcast('alert', 'error', 'Error regenerating credentials');
+          $rootScope.$broadcast('alert', 'error',
+            'Error regenerating credentials');
         } else {
-          $rootScope.$broadcast('alert', 'success', 'Regeneration of credentials complete.');
+          $rootScope.$broadcast('alert', 'success',
+            'Regeneration of credentials complete.');
           $rootScope.$broadcast('app-creds-updated', data.credentials);
         }
       });
     },
 
-    signUpUser: function(orgName,userName,name,email,password){
+    signUpUser: function(orgName, userName, name, email, password) {
       var formData = {
         "organization": orgName,
         "username": userName,
@@ -911,138 +1034,160 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         "password": password
       };
       var options = {
-        method:'POST',
-        endpoint:'management/organizations',
-        body:formData,
-        mQuery:true
+        method: 'POST',
+        endpoint: 'management/organizations',
+        body: formData,
+        mQuery: true
       };
       var client = this.client();
       client.request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('register-error', data);
         } else {
-          $rootScope.$broadcast('register-success',data);
+          $rootScope.$broadcast('register-success', data);
         }
       });
     },
-    resendActivationLink: function(id){
+    resendActivationLink: function(id) {
       var options = {
         method: 'GET',
-        endpoint: 'management/users/'+id+'/reactivate',
-        mQuery:true
+        endpoint: 'management/users/' + id + '/reactivate',
+        mQuery: true
       };
-      this.client().request(options, function (err, data) {
+      this.client().request(options, function(err, data) {
         if (err) {
           $rootScope.$broadcast('resend-activate-error', data);
         } else {
-          $rootScope.$broadcast('resend-activate-success',data);
+          $rootScope.$broadcast('resend-activate-success', data);
         }
       });
     },
-    getAppSettings: function(){
-      $rootScope.$broadcast('app-settings-received',{});
+    getAppSettings: function() {
+      $rootScope.$broadcast('app-settings-received', {});
     },
-    getActivities: function(){
-        this.client().request({method:'GET',endpoint:'activities', qs:{limit:200}},function(err,data){
-          if(err) return $rootScope.$broadcast('app-activities-error',data);
-          var entities = data.entities;
-          //set picture if there is none and change gravatar to secure
-          entities.forEach(function(entity) {
-            if (!entity.actor.picture) {
-              entity.actor.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "img/user_profile.png"
+    getActivities: function() {
+      this.client().request({
+        method: 'GET',
+        endpoint: 'activities',
+        qs: {
+          limit: 200
+        }
+      }, function(err, data) {
+        if (err) return $rootScope.$broadcast('app-activities-error', data);
+        var entities = data.entities;
+        //set picture if there is none and change gravatar to secure
+        entities.forEach(function(entity) {
+          if (!entity.actor.picture) {
+            entity.actor.picture = window.location.protocol + "//" +
+              window.location.host + window.location.pathname +
+              "img/user_profile.png"
+          } else {
+            entity.actor.picture = entity.actor.picture.replace(
+              /^http:\/\/www.gravatar/i, 'https://secure.gravatar');
+            //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
+            //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
+            if (~entity.actor.picture.indexOf('http')) {
+              entity.actor.picture = entity.actor.picture;
             } else {
-              entity.actor.picture = entity.actor.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
-              //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
-              //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
-              if (~entity.actor.picture.indexOf('http')) {
-                entity.actor.picture = entity.actor.picture;
-              } else {
-                entity.actor.picture = 'https://apigee.com/usergrid/img/user_profile.png';
-              }
+              entity.actor.picture =
+                'https://apigee.com/usergrid/img/user_profile.png';
             }
-        });
-          $rootScope.$broadcast('app-activities-received',data.entities);
-        });
-    },
-    getEntityActivities: function(entity, isFeed){
-        var route = isFeed ? 'feed' : 'activities'
-        var endpoint = entity.get('type') + '/' + entity.get('uuid') + '/'+route ;
-        var options = {
-          method:'GET',
-          endpoint:endpoint,
-          qs:{limit:200}
-        };
-        this.client().request(options, function (err, data) {
-          if(err){
-            $rootScope.$broadcast(entity.get('type')+'-'+route+'-error',data);
           }
-          data.entities.forEach(function(entityInstance) {
-            entityInstance.createdDate = (new Date( entityInstance.created)).toUTCString();
-          });
-          $rootScope.$broadcast(entity.get('type')+'-'+route+'-received',data.entities);
         });
+        $rootScope.$broadcast('app-activities-received', data.entities);
+      });
     },
-    addUserActivity:function(user,content){
+    getEntityActivities: function(entity, isFeed) {
+      var route = isFeed ? 'feed' : 'activities'
+      var endpoint = entity.get('type') + '/' + entity.get('uuid') + '/' +
+        route;
+      var options = {
+        method: 'GET',
+        endpoint: endpoint,
+        qs: {
+          limit: 200
+        }
+      };
+      this.client().request(options, function(err, data) {
+        if (err) {
+          $rootScope.$broadcast(entity.get('type') + '-' + route + '-error',
+            data);
+        }
+        data.entities.forEach(function(entityInstance) {
+          entityInstance.createdDate = (new Date(entityInstance.created))
+            .toUTCString();
+        });
+        $rootScope.$broadcast(entity.get('type') + '-' + route +
+          '-received', data.entities);
+      });
+    },
+    addUserActivity: function(user, content) {
       var options = {
         "actor": {
-        "displayName": user.get('username'),
-        "uuid": user.get('uuid'),
-        "username":user.get('username')
-          },
+          "displayName": user.get('username'),
+          "uuid": user.get('uuid'),
+          "username": user.get('username')
+        },
         "verb": "post",
         "content": content
       };
-      this.client().createUserActivity(user.get('username'), options, function(err, activity) { //first argument can be 'me', a uuid, or a username
-        if (err) {
-          $rootScope.$broadcast('user-activity-add-error', err);
-        } else {
-          $rootScope.$broadcast('user-activity-add-success', activity);
-        }
-      });
+      this.client().createUserActivity(user.get('username'), options,
+        function(err, activity) { //first argument can be 'me', a uuid, or a username
+          if (err) {
+            $rootScope.$broadcast('user-activity-add-error', err);
+          } else {
+            $rootScope.$broadcast('user-activity-add-success', activity);
+          }
+        });
     },
-    runShellQuery:function(method,path,payload){
+    runShellQuery: function(method, path, payload) {
       var path = path.replace(/^\//, ''); //remove leading slash if it does
       var options = {
         "method": method,
-        "endpoint":path
+        "endpoint": path
       };
-      if(payload){
-        options["body"]=payload;
+      if (payload) {
+        options["body"] = payload;
       }
-      this.client().request(options,function(err,data){
-        if(err) {
+      this.client().request(options, function(err, data) {
+        if (err) {
           $rootScope.$broadcast('shell-error', data);
-        }else{
+        } else {
           $rootScope.$broadcast('shell-success', data);
         }
       });
     },
-    addOrganization:function(user,orgName){
+    addOrganization: function(user, orgName) {
       var options = {
-        method: 'POST',
-        endpoint: 'management/users/'+user.uuid+'/organizations',
-        body:{organization:orgName},
-        mQuery:true
-          }, client = this.client(),self=this;
-      client.request(options,function(err,data){
-        if(err){
+          method: 'POST',
+          endpoint: 'management/users/' + user.uuid + '/organizations',
+          body: {
+            organization: orgName
+          },
+          mQuery: true
+        },
+        client = this.client(),
+        self = this;
+      client.request(options, function(err, data) {
+        if (err) {
           $rootScope.$broadcast('user-add-org-error', data);
-        }else{
+        } else {
           $rootScope.$broadcast('user-add-org-success', $rootScope.organizations);
         }
       });
     },
-    leaveOrganization:function(user,org){
+    leaveOrganization: function(user, org) {
       var options = {
         method: 'DELETE',
-        endpoint: 'management/users/'+user.uuid+'/organizations/'+org.uuid,
-        mQuery:true
+        endpoint: 'management/users/' + user.uuid + '/organizations/' + org
+          .uuid,
+        mQuery: true
       }
-      this.client().request(options,function(err,data){
-        if(err){
+      this.client().request(options, function(err, data) {
+        if (err) {
           $rootScope.$broadcast('user-leave-org-error', data);
-        }else{
-          delete  $rootScope.organizations[org.name];
+        } else {
+          delete $rootScope.organizations[org.name];
           $rootScope.$broadcast('user-leave-org-success', $rootScope.organizations);
         }
       });
@@ -1053,30 +1198,30 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
      * @param {string} url location of the file/endpoint.
      * @return {Promise} Resolves to JSON.
      */
-    httpGet: function (id, url) {
+    httpGet: function(id, url) {
       var items, deferred;
 
       deferred = $q.defer();
 
       $http.get((url || configuration.ITEMS_URL)).
-        success(function (data, status, headers, config) {
-          var result;
-          if (id) {
-            angular.forEach(data, function (obj, index) {
-              if (obj.id === id) {
-                result = obj;
-              }
-            });
-          } else {
-            result = data;
-          }
-          deferred.resolve(result);
-        }).
-        error(function (data, status, headers, config) {
-          $log.error(data, status, headers, config);
-          reportError(data,config);
-          deferred.reject(data);
-        });
+      success(function(data, status, headers, config) {
+        var result;
+        if (id) {
+          angular.forEach(data, function(obj, index) {
+            if (obj.id === id) {
+              result = obj;
+            }
+          });
+        } else {
+          result = data;
+        }
+        deferred.resolve(result);
+      }).
+      error(function(data, status, headers, config) {
+        $log.error(data, status, headers, config);
+        reportError(data, config);
+        deferred.reject(data);
+      });
 
       return deferred.promise;
     },
@@ -1087,44 +1232,50 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
      * @param {string} successCallback function called on success.
      */
 
-    jsonp: function (objectType,criteriaId,params,successCallback) {
-      if(!params){
+    jsonp: function(objectType, criteriaId, params, successCallback) {
+      if (!params) {
         params = {};
       }
       params.demoApp = $rootScope.demoData;
       params.access_token = getAccessToken();
       params.callback = 'JSON_CALLBACK';
-      var uri = $rootScope.urls().DATA_URL  + '/' + $rootScope.currentOrg + '/' + $rootScope.currentApp + '/apm/' + objectType + '/' + criteriaId;
-      return this.jsonpRaw(objectType,criteriaId,params,uri,successCallback);
+      var uri = $rootScope.urls().DATA_URL + '/' + $rootScope.currentOrg +
+        '/' + $rootScope.currentApp + '/apm/' + objectType + '/' + criteriaId;
+      return this.jsonpRaw(objectType, criteriaId, params, uri,
+        successCallback);
     },
 
-    jsonpSimple: function (objectType,appId,params) {
-      var uri = $rootScope.urls().DATA_URL  + '/' + $rootScope.currentOrg + '/' + $rootScope.currentApp + '/apm/' + objectType + "/" + appId;
-      return this.jsonpRaw(objectType,appId,params,uri);
+    jsonpSimple: function(objectType, appId, params) {
+      var uri = $rootScope.urls().DATA_URL + '/' + $rootScope.currentOrg +
+        '/' + $rootScope.currentApp + '/apm/' + objectType + "/" + appId;
+      return this.jsonpRaw(objectType, appId, params, uri);
     },
-    calculateAverageRequestTimes: function(){
-      if(!running){
+    calculateAverageRequestTimes: function() {
+      if (!running) {
         var self = this;
         running = true;
-        setTimeout(function(){
-          running=false;
-          var length = requestTimes.length < 10 ? requestTimes.length  : 10;
-          var sum = requestTimes.slice(0, length).reduce(function(a, b) { return a + b });
+        setTimeout(function() {
+          running = false;
+          var length = requestTimes.length < 10 ? requestTimes.length : 10;
+          var sum = requestTimes.slice(0, length).reduce(function(a, b) {
+            return a + b
+          });
           var avg = sum / length;
-          self.averageRequestTimes = avg/1000;
-          if(self.averageRequestTimes > 5){
-            $rootScope.$broadcast('request-times-slow',self.averageRequestTimes);
+          self.averageRequestTimes = avg / 1000;
+          if (self.averageRequestTimes > 5) {
+            $rootScope.$broadcast('request-times-slow', self.averageRequestTimes);
           }
-        },3000);
+        }, 3000);
       }
     },
-    jsonpRaw: function (objectType,appId,params,uri,successCallback) {
-      if(typeof successCallback !== 'function'){
+    jsonpRaw: function(objectType, appId, params, uri, successCallback) {
+      if (typeof successCallback !== 'function') {
         successCallback = null;
       }
-      uri = uri || ($rootScope.urls().DATA_URL  + '/' + $rootScope.currentOrg + '/' + $rootScope.currentApp + '/' + objectType);
+      uri = uri || ($rootScope.urls().DATA_URL + '/' + $rootScope.currentOrg +
+        '/' + $rootScope.currentApp + '/' + objectType);
 
-      if(!params){
+      if (!params) {
         params = {};
       }
 
@@ -1136,91 +1287,102 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
 
       var deferred = $q.defer();
 
-      var diff = function(){
+      var diff = function() {
         currentRequests[uri]--;
-        requestTimes.splice(0,0 ,new Date().getTime() - start);
+        requestTimes.splice(0, 0, new Date().getTime() - start);
         self.calculateAverageRequestTimes();
       };
 
       successCallback && $rootScope.$broadcast("ajax_loading", objectType);
       var reqCount = currentRequests[uri] || 0;
-      if(self.averageRequestTimes > 5 && reqCount>1){
-        setTimeout(function(){
+      if (self.averageRequestTimes > 5 && reqCount > 1) {
+        setTimeout(function() {
           deferred.reject(new Error('query in progress'));
-        },50);
+        }, 50);
         return deferred;
       }
       currentRequests[uri] = (currentRequests[uri] || 0) + 1;
 
-      $http.jsonp(uri,{params:params}).
-        success(function(data, status, headers, config) {
-          diff();
-          if(successCallback){
-            successCallback(data, status, headers, config);
-            $rootScope.$broadcast("ajax_finished", objectType);
-          }
-          deferred.resolve(data);
-        }).
-        error(function(data, status, headers, config) {
-          diff();
-          $log.error("ERROR: Could not get jsonp data. " +uri);
-          reportError(data,config);
-          deferred.reject(data);
-        });
+      $http.jsonp(uri, {
+        params: params
+      }).
+      success(function(data, status, headers, config) {
+        diff();
+        if (successCallback) {
+          successCallback(data, status, headers, config);
+          $rootScope.$broadcast("ajax_finished", objectType);
+        }
+        deferred.resolve(data);
+      }).
+      error(function(data, status, headers, config) {
+        diff();
+        $log.error("ERROR: Could not get jsonp data. " + uri);
+        reportError(data, config);
+        deferred.reject(data);
+      });
 
       return deferred.promise;
     },
 
-    resource: function(params,isArray) {
+    resource: function(params, isArray) {
       //temporary url for REST endpoints
 
-      return $resource($rootScope.urls().DATA_URL + '/:orgname/:appname/:username/:endpoint',
-        {
+      return $resource($rootScope.urls().DATA_URL +
+        '/:orgname/:appname/:username/:endpoint', {
 
-        },
-        {
+        }, {
           get: {
-            method:'JSONP',
+            method: 'JSONP',
             isArray: isArray,
             params: params
           },
           login: {
-            method:'GET',
+            method: 'GET',
             url: $rootScope.urls().DATA_URL + '/management/token',
             isArray: false,
             params: params
           },
           save: {
-            url: $rootScope.urls().DATA_URL + '/' + params.orgname + '/' + params.appname,
-            method:'PUT',
+            url: $rootScope.urls().DATA_URL + '/' + params.orgname + '/' +
+              params.appname,
+            method: 'PUT',
             isArray: false,
             params: params
           }
         });
     },
 
-    httpPost: function(url,callback,payload,headers){
+    httpPost: function(url, callback, payload, headers) {
 
       var accessToken = getAccessToken();
 
-      if(payload){
+      if (payload) {
         payload.access_token = accessToken;
-      }else{
-        payload = {access_token:accessToken}
+      } else {
+        payload = {
+          access_token: accessToken
+        }
       }
 
-      if(!headers){
-        headers = {Bearer:accessToken};
+      if (!headers) {
+        headers = {
+          Bearer: accessToken
+        };
       }
 
-      $http({method: 'POST', url: url, data: payload, headers: headers}).
-        success(function(data, status, headers, config) {
-          callback(data)
-        }).
-        error(function(data, status, headers, config) {
-          reportError(data,config);
-          callback(data)
-        });
+      $http({
+        method: 'POST',
+        url: url,
+        data: payload,
+        headers: headers
+      }).
+      success(function(data, status, headers, config) {
+        callback(data)
+      }).
+      error(function(data, status, headers, config) {
+        reportError(data, config);
+        callback(data)
+      });
 
     }
   }

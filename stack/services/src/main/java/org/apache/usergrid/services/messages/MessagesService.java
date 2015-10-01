@@ -29,6 +29,6 @@ public class MessagesService extends AbstractCollectionService {
 
     public MessagesService() {
         super();
-        logger.info( "/messages" );
+        logger.debug( "/messages" );
     }
 }

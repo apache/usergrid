@@ -23,39 +23,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.parameters;
 
 
-@Concurrent()
-public class ServiceRequestIT {
+
+public class ServiceRequestIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceRequestIT.class );
+
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
-
-
     @Test
     public void testPaths() throws Exception {
 
-        UUID applicationId = DEFAULT_APPLICATION_ID;
 
-        ServiceManager services = setup.getSmf().getServiceManager( applicationId );
+        ServiceManager services = setup.getSmf().getServiceManager( app.getId() );
 
         ServiceRequest path = services.newRequest( ServiceAction.GET, parameters( "users", "bob" ), null );
         // path = path.addSegment("users", "bob");

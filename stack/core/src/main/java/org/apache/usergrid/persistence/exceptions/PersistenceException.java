@@ -17,7 +17,7 @@
 package org.apache.usergrid.persistence.exceptions;
 
 
-public class PersistenceException extends Exception {
+public class PersistenceException extends RuntimeException {
 
     /**
      *

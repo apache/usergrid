@@ -1,0 +1,104 @@
+#!/bin/bash
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. The ASF licenses this file to You
+# under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License. For additional information regarding
+# copyright in this work, please see the NOTICE file in the top level
+# directory of this distribution.
+#
+
+
+# Starts and stops chop web application.
+
+NAME=chop-webapp
+PIDFILE=/var/run/$NAME/$NAME.pid
+DESC="Chop Webapp"
+CMD_PATT="chop-webapp"
+LOGFILE=/var/log/chop-webapp.log
+. /lib/lsb/init-functions
+
+if [ `id -u` -ne 0 ]; then
+        echo "You need root privileges to run this script"
+        exit 1
+fi
+
+if [ "x$CHOP_HOME" = "x" ]; then
+    CHOP_HOME=/opt/chop
+fi
+
+is_running()
+{
+    if [ -f $PIDFILE ]; then
+        pid=`cat $PIDFILE`
+        grep -Eq "$CMD_PATT" "/proc/$pid/cmdline" 2>/dev/null && return 0
+        return 1
+    fi
+    return 3
+}
+
+case "$1" in
+start)
+        is_running
+        stat=$?
+        case "$stat" in
+                0) echo $DESC "is already running..." ;;
+                1) echo "Could not access pidfile for $DESC" ;;
+                *)
+                echo "Starting "$DESC" ... "
+                [ -e `dirname "$PIDFILE"` ] || \
+                        install -d -m755 `dirname $PIDFILE`
+                DAEMON="/usr/bin/java"
+                ARGS=" -jar -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 $CHOP_HOME/webapp/chop-webapp-2.0.0-SNAPSHOT-shaded.jar -e -d /var/lib/elasticsearch"
+		start-stop-daemon --start --quiet --make-pidfile --pidfile "$PIDFILE" --background  --exec /bin/bash -- -c "exec ${DAEMON} ${ARGS} > ${LOGFILE} 2>&1"
+	;;
+        esac
+;;
+
+stop)
+        is_running
+        stat=$?
+        case "$stat" in
+        0)
+                echo "Stopping" $DESC
+                echo "PID: " $PIDFILE
+                start-stop-daemon -K -p "$PIDFILE" -R TERM/30/KILL/5 >/dev/null
+                rm -f "$PIDFILE";;
+        1) echo "Could not access pidfile for $DESC" ;;
+        *) echo $DESC" is not running..." ;;
+        esac
+;;
+
+restart)
+        $0 stop
+        $0 start
+;;
+
+status)
+        is_running
+        stat=$?
+        case "$stat" in
+                0) log_success_msg "$DESC is running" ;;
+                1) log_failure_msg "could not access pidfile for $DESC" ;;
+                *) log_success_msg "$DESC is not running" ;;
+        esac
+        exit "$stat"
+;;
+kill)
+        start-stop-daemon -K -p "$PIDFILE" -R TERM/30/KILL/5 >/dev/null
+        rm -f "$PIDFILE"
+        echo $DESC "is killed..."
+;;
+*)
+        echo "Usage: $0 {start|stop|restart|status|kill}"
+        exit 1
+esac

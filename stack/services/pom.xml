@@ -21,13 +21,13 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>1.0.2</version>
+    <version>2.1.1-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
   <!-- Override these properties in your settings.xml in an active profile -->
   <properties>
-    <services.it.forkCount>2</services.it.forkCount>
+
   </properties>
 
   <artifactId>usergrid-services</artifactId>
@@ -44,191 +44,7 @@
     </plugins>
   </reporting>
 
-  <profiles>
-    <profile>
-      <id>unit</id>
-      <activation>
-        <property>
-          <name>unit</name>
-          <value>true</value>
-        </property>
-      </activation>
 
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <!-- TODO: make this into a small configuration but based on settings.xml -->
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-
-              <includes>
-                <include>**/ServiceTestSuite.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*ITSuite.java</exclude>
-                <!-- TODO - add these suites too -->
-                <!-- <exclude>**/*Test.java</exclude> -->
-                <exclude>**/ConcurrentService*Suite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-
-              <parallel>both</parallel>
-              <forkCount>${services.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
-
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-              <argLine>
-                <!-- -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar -->
-                -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
-
-              <includes>
-                <include>**/ServiceITSuite.java</include>
-                <include>**/ServiceTestSuite.java</include>
-                <include>**/*IT.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*Concurrent*Suite.java</exclude>
-                <exclude>**/ActivitiesServiceIT.java</exclude>
-                <exclude>**/ApplicationCreatorIT.java</exclude>
-                <exclude>**/ApplicationsServiceIT.java</exclude>
-                <exclude>**/CollectionServiceIT.java</exclude>
-                <exclude>**/ConnectionsServiceIT.java</exclude>
-                <exclude>**/ManagementServiceIT.java</exclude>
-                <exclude>**/EmailFlowIT.java</exclude>
-                <exclude>**/FacebookProviderIT.java</exclude>
-                <exclude>**/GroupServiceIT.java</exclude>
-                <exclude>**/OrganizationIT.java</exclude>
-                <exclude>**/PingIdentityProviderIT.java</exclude>
-                <exclude>**/RoleIT.java</exclude>
-                <exclude>**/RolesServiceIT.java</exclude>
-                <exclude>**/ServiceRequestIT.java</exclude>
-                <exclude>**/ServiceFactoryIT.java</exclude>
-                <exclude>**/ServiceInvocationIT.java</exclude>
-                <exclude>**/UsersServiceIT.class</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>unit-concurrent</id>
-      <activation>
-        <property>
-          <name>unit-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <accessKey>${aws.s3.key}</accessKey>
-              <secretKey>${aws.s3.secret}</secretKey>
-              <bucketName>${aws.s3.bucket}</bucketName>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-              <argLine>
-               <!--  -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar-->
-			   -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
-
-              <includes>
-                <include>**/ConcurrentServiceTestSuite.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/ServiceITSuite.java</exclude>
-                <exclude>**/ServiceTestSuite.java</exclude>
-                <exclude>**/ConcurrentServiceITSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-
-    <profile>
-      <id>integ-concurrent</id>
-      <activation>
-        <property>
-          <name>integ-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-              <argLine>
-                <!-- -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar -->
-				-javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
-
-              <includes>
-                <include>**/ConcurrentServiceITSuite.java</include>
-                <include>**/TokenServiceIT.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/ServiceITSuite.java</exclude>
-                <exclude>**/ServiceTestSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <!-- PROFILES -->
 
@@ -238,7 +54,7 @@
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
         <includes>
-          <include>**/*.xml</include>
+            <include>**/*.xml</include>
         </includes>
       </resource>
       <resource>
@@ -253,44 +69,58 @@
           <include>**/*.yaml</include>
           <include>**/*.xml</include>
           <include>**/*.properties</include>
+          <include>**/*.p12</include>
+          <include>**/*.json</include>
         </includes>
       </testResource>
       <testResource>
         <directory>src/main/python</directory>
       </testResource>
     </testResources>
+
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <storage-config>${basedir}/src/test/conf</storage-config>
-            <target.directory>${project.build.directory}</target.directory>
-          </systemPropertyVariables>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.plugin.version}</version>
 
-          <parallel>both</parallel>
-          <forkCount>${services.it.forkCount}</forkCount>
-          <reuseForks>false</reuseForks>
+            <configuration>
+                <systemPropertyVariables>
+                    <storage-config>${basedir}/src/test/conf</storage-config>
+                    <target.directory>${project.build.directory}</target.directory>
+                </systemPropertyVariables>
+                <parallel>${usergrid.it.parallel}</parallel>
+                <forkCount>${usergrid.it.forkCount}</forkCount>
+                <threadCount>${usergrid.it.threads}</threadCount>
+                <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+                <useSystemClassLoader>false</useSystemClassLoader>
+                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                </argLine>
+                <includes>
+                    <include>**/*IT.java</include>
+                    <include>**/*Test.java</include>
+                </includes>
 
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-          <argLine>
-            <!-- -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar-->
-			-javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-          </argLine>
+                <!-- exclude our serial tests -->
+                <excludes>
+                    <exclude>**/*Scheduler*IT.java</exclude>
+                    <exclude>**/*Notification*IT.java</exclude>
+                </excludes>
+            </configuration>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.maven.surefire</groupId>
+                    <artifactId>${surefire.plugin.artifactName}</artifactId>
+                    <version>${surefire.plugin.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.codehaus.plexus</groupId>
+                    <artifactId>plexus-utils</artifactId>
+                    <version>3.0.21</version>
+                </dependency>
+            </dependencies>
 
-          <includes>
-            <include>**/ServiceITSuite.java</include>
-            <include>**/ServiceTestSuite.java</include>
-            <include>**/TokenServiceIT.java</include>
-            <include>**/*Test.java</include>
-          </includes>
-          <excludes>
-            <!-- <exclude>**/*Test.java</exclude> -->
-            <exclude>**/*Concurrent*Suite.java</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
+        </plugin>
     </plugins>
   </build>
 
@@ -304,6 +134,7 @@
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
+
 
     <dependency>
       <groupId>org.apache.usergrid</groupId>
@@ -366,20 +197,33 @@
 
     <!-- SUN, Javax Package and Other Com Dependencies -->
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-core</artifactId>
-    </dependency>
+      <!-- Required only when you are using JAX-RS Client -->
+      <dependency>
+          <groupId>org.glassfish.jersey.core</groupId>
+          <artifactId>jersey-client</artifactId>
+          <version>2.21</version>
+      </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
-    </dependency>
+      <dependency>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-json-jackson</artifactId>
+          <version>2.21</version>
+      </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.sun.jersey</groupId>-->
+      <!--<artifactId>jersey-core</artifactId>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+      <!--<groupId>com.sun.jersey</groupId>-->
+      <!--<artifactId>jersey-client</artifactId>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+      <!--<groupId>com.sun.jersey</groupId>-->
+      <!--<artifactId>jersey-json</artifactId>-->
+    <!--</dependency>-->
 
     <!-- Codehaus, JClouds, Spring and Other Org Dependencies -->
 
@@ -401,12 +245,12 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
-      <exclusions>
-        <exclusion>
-          <artifactId>jackson-databind</artifactId>
-          <groupId>com.fasterxml.jackson.core</groupId>
-        </exclusion>
-      </exclusions>
+      <!--<exclusions>-->
+        <!--<exclusion>-->
+          <!--<artifactId>jackson-databind</artifactId>-->
+          <!--<groupId>com.fasterxml.jackson.core</groupId>-->
+        <!--</exclusion>-->
+      <!--</exclusions>-->
     </dependency>
 
     <dependency>
@@ -417,6 +261,16 @@
     <dependency>
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-core</artifactId>
+        <exclusions>
+            <exclusion>
+                <artifactId>guice-assistedinject</artifactId>
+                <groupId>com.google.inject.extensions</groupId>
+            </exclusion>
+            <exclusion>
+                <artifactId>guice</artifactId>
+                <groupId>com.google.inject</groupId>
+            </exclusion>
+        </exclusions>
     </dependency>
 
     <dependency>
@@ -463,41 +317,51 @@
       <!-- Testing and Logging Dependencies -->
     <dependency>
       <!--
-      Do not remove this slf4j-api dependency remove even though pulled 
+      Do not remove this slf4j-api dependency remove even though pulled
       in transitively. If not present IntelliJ IDEA wigs out.
       -->
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-core</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
+      <dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>usergrid-core</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+          <classifier>tests</classifier>
+      </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-config</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
+      <dependency>
+          <groupId>${project.parent.groupId}</groupId>
+          <artifactId>common</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+      </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-test-utils</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>usergrid-config</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+          <classifier>tests</classifier>
+      </dependency>
 
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>usergrid-test-utils</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+      </dependency>
+
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <scope>test</scope>
+      </dependency>
+
+
 
     <dependency>
       <groupId>org.springframework</groupId>
@@ -565,6 +429,47 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.relayrides</groupId>
+      <artifactId>pushy</artifactId>
+      <!-- The sha in the version is the git commit used in this build.  Check out the pushy source, then this commit to build the library locally -->
+      <version>0.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.ganyo</groupId>
+      <artifactId>gcm-server</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.clearspring.analytics</groupId>
+      <artifactId>stream</artifactId>
+      <version>2.7.0</version>
+    </dependency>
+
+      <dependency>
+          <groupId>com.github.fernandospr</groupId>
+          <artifactId>java-wns</artifactId>
+          <version>1.3</version>
+          <exclusions>
+              <exclusion>
+                  <artifactId>jackson-jaxrs</artifactId>
+                  <groupId>org.codehaus.jackson</groupId>
+              </exclusion>
+              <!-- Would be nice if we could exclude this dependency on Jersey 1.
+                   Apparently Java-WNS 1.3.1 will move to Jersey 2.
+              <exclusion>
+                  <artifactId>jersey-apache-client</artifactId>
+                  <groupId>com.sun.jersey.contribs</groupId>
+              </exclusion>
+              <exclusion>
+                  <artifactId>jersey-client</artifactId>
+                  <groupId>com.sun.jersey</groupId>
+              </exclusion>
+              -->
+          </exclusions>
+      </dependency>
 
   </dependencies>
 </project>

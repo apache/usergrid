@@ -17,32 +17,13 @@
 package org.apache.usergrid.rest.applications;
 
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import org.apache.usergrid.exception.NotImplementedException;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import org.apache.amber.oauth2.common.error.OAuthError;
+import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+import org.apache.amber.oauth2.common.message.types.GrantType;
+import org.apache.shiro.authz.UnauthorizedException;
+import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.DisabledAppUserException;
@@ -50,36 +31,41 @@ import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAppUserException;
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.applications.events.EventsResource;
 import org.apache.usergrid.rest.applications.queues.QueueResource;
 import org.apache.usergrid.rest.applications.users.UsersResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
+import org.apache.usergrid.rest.exceptions.NotFoundExceptionMapper;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
+import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import org.apache.amber.oauth2.common.error.OAuthError;
-import org.apache.amber.oauth2.common.exception.OAuthProblemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
-import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.codec.Base64;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Map;
+import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 import static org.apache.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
@@ -246,6 +232,8 @@ public class ApplicationResource extends ServiceResource {
                     errorDescription = "user disabled";
                 }
                 catch ( Exception e1 ) {
+                    logger.warn( "Unexpected exception during token username/password verification", e1 );
+
                 }
             }
             else if ( "pin".equals( grant_type ) ) {
@@ -253,6 +241,8 @@ public class ApplicationResource extends ServiceResource {
                     user = management.verifyAppUserPinCredentials( services.getApplicationId(), username, pin );
                 }
                 catch ( Exception e1 ) {
+                    logger.warn( "Unexpected exception during token pin verification", e1 );
+
                 }
             }
             else if ( "client_credentials".equals( grant_type ) ) {
@@ -264,16 +254,12 @@ public class ApplicationResource extends ServiceResource {
                     }
                 }
                 catch ( Exception e1 ) {
+                    logger.warn( "Unexpected exception during token client authentication", e1 );
                 }
-            }
-            else if ( "authorization_code".equals( grant_type ) ) {
-                AccessInfo access_info = new AccessInfo();
-                access_info.setAccessToken( code );
-                return Response.status( SC_OK ).type( jsonMediaType( callback ) )
-                               .entity( wrapWithCallback( access_info, callback ) ).build();
             }
 
             if ( user == null ) {
+                logger.debug("Returning 400 bad request due to: " + errorDescription );
                 OAuthResponse response =
                         OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                                      .setErrorDescription( errorDescription ).buildJSONMessage();
@@ -321,10 +307,10 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("token")
     @Consumes(APPLICATION_JSON)
-    public Response getAccessTokenPostJson( @Context UriInfo ui, @HeaderParam("Authorization") String authorization,
-                                            Map<String, Object> json,
-                                            @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception {
+    public Response getAccessTokenPostJson( @Context UriInfo ui,
+            @HeaderParam("Authorization") String authorization,
+            Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -345,15 +331,17 @@ public class ApplicationResource extends ServiceResource {
             }
         }
 
-        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, client_secret, code,
-                ttl, redirect_uri, callback );
+        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id,
+                client_secret, code, ttl, redirect_uri, callback );
     }
 
 
     @GET
     @Path("credentials")
     @RequireApplicationAccess
-    public JSONWithPadding getKeys( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getKeys( @Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -367,19 +355,17 @@ public class ApplicationResource extends ServiceResource {
                 new ClientCredentialsInfo( management.getClientIdForApplication( services.getApplicationId() ),
                         management.getClientSecretForApplication( services.getApplicationId() ) );
 
-        return new JSONWithPadding(
-                createApiResponse().withCredentials( kp ).withAction( "get application keys" ).withSuccess(),
-                callback );
+        return   createApiResponse().withCredentials( kp ).withAction( "get application keys" ).withSuccess();
     }
 
 
     @POST
     @Path("credentials")
     @RequireApplicationAccess
-    @Produces(MediaType.APPLICATION_JSON)
-    public JSONWithPadding generateKeys( @Context UriInfo ui,
-                                         @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse generateKeys( @Context UriInfo ui,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         logger.debug( "AuthResource.keys" );
 
@@ -387,22 +373,23 @@ public class ApplicationResource extends ServiceResource {
             throw new UnauthorizedException();
         }
 
-        ClientCredentialsInfo kp =
-                new ClientCredentialsInfo( management.getClientIdForApplication( services.getApplicationId() ),
-                        management.newClientSecretForApplication( services.getApplicationId() ) );
+        ClientCredentialsInfo kp = new ClientCredentialsInfo(
+            management.getClientIdForApplication( services.getApplicationId() ),
+            management.newClientSecretForApplication( services.getApplicationId() ) );
 
-        return new JSONWithPadding(
-                createApiResponse().withCredentials( kp ).withAction( "generate application keys" ).withSuccess(),
-                callback );
+        return createApiResponse().withCredentials( kp ).withAction( "generate application keys" ).withSuccess();
     }
 
 
     @GET
     @Path("authorize")
-    public Viewable showAuthorizeForm( @Context UriInfo ui, @QueryParam("response_type") String response_type,
-                                       @QueryParam("client_id") String client_id,
-                                       @QueryParam("redirect_uri") String redirect_uri,
-                                       @QueryParam("scope") String scope, @QueryParam("state") String state ) {
+    public Viewable showAuthorizeForm(
+            @Context UriInfo ui,
+            @QueryParam("response_type") String response_type,
+            @QueryParam("client_id") String client_id,
+            @QueryParam("redirect_uri") String redirect_uri,
+            @QueryParam("scope") String scope,
+            @QueryParam("state") String state ) {
 
         try {
             UUID uuid = getUUIDFromClientId( client_id );
@@ -434,12 +421,15 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("authorize")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable handleAuthorizeForm( @Context UriInfo ui, @FormParam("response_type") String response_type,
-                                         @FormParam("client_id") String client_id,
-                                         @FormParam("redirect_uri") String redirect_uri,
-                                         @FormParam("scope") String scope, @FormParam("state") String state,
-                                         @FormParam("username") String username,
-                                         @FormParam("password") String password ) {
+    public Response handleAuthorizeForm( @Context UriInfo ui,
+            @FormParam("response_type") String response_type,
+            @FormParam("client_id") String client_id,
+            @FormParam("redirect_uri") String redirect_uri,
+            @FormParam("scope") String scope, @FormParam("state") String state,
+            @FormParam("username") String username,
+            @FormParam("password") String password ) {
+
+        logger.debug( "ApplicationResource /authorize: {}/{}", username, password );
 
         try {
             responseType = response_type;
@@ -460,6 +450,7 @@ public class ApplicationResource extends ServiceResource {
                 errorDescription = "user disabled";
             }
             catch ( Exception e1 ) {
+                logger.warn("Unexpected exception in authorize username/password verification", e1);
             }
 
             if ( ( user != null ) && isNotBlank( redirect_uri ) ) {
@@ -476,27 +467,24 @@ public class ApplicationResource extends ServiceResource {
             ApplicationInfo app = management.getApplicationInfo( applicationId );
             applicationName = app.getName();
 
-            return handleViewable( "authorize_form", this );
+            return Response.ok( handleViewable( "authorize_form", this ) ).build() ;
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            logger.debug("handleAuthorizeForm failed", e);
+            return Response.ok( handleViewable( "error", this ) ).build() ;
         }
     }
 
 
-    @DELETE
-    @RequireApplicationAccess
     @Override
-    public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
-
-        logger.debug( "ApplicationResource.executeDelete" );
-
-        throw new NotImplementedException( "Application delete is not allowed yet" );
+    @DELETE
+    @RequireOrganizationAccess
+    public ApiResponse executeDelete( @Context final UriInfo ui, @DefaultValue( "callback" ) final String callback,
+                                          final String confirmAppDelete ) throws Exception {
+        throw new UnsupportedOperationException( "Delete must be done from the management endpoint" );
     }
 
 
@@ -595,7 +583,9 @@ public class ApplicationResource extends ServiceResource {
 
     @GET
     @Path("apm/apigeeMobileConfig")
-    public JSONWithPadding getAPMConfig( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Object getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         EntityManager em = emf.getEntityManager( applicationId );
@@ -603,9 +593,14 @@ public class ApplicationResource extends ServiceResource {
                 APIGEE_MOBILE_APM_CONFIG_JSON_KEY );
         //If there is no apm configuration then try to create apm config on the fly
         if ( value == null ) {
-            value = management.registerAppWithAPM( management.getOrganizationForApplication( applicationId ),
-                    management.getApplicationInfo( applicationId ) );
+            value = management.registerAppWithAPM(
+                management.getOrganizationForApplication( applicationId ),
+                management.getApplicationInfo( applicationId )
+            );
         }
-        return new JSONWithPadding( value, callback );
+        if(value==null){
+            throw new EntityNotFoundException("apigeeMobileConfig not found, it is possibly not enabled for your config.");
+        }
+        return value;
     }
 }

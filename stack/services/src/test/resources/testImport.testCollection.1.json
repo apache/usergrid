@@ -1,0 +1,13 @@
+[ {
+    "Metadata" : {
+        "uuid" : "5db4619a-ad7c-11e4-adba-bd162708d0a6",
+        "type" : "user",
+        "name" : "me",
+        "created" : 1423171038761,
+        "modified" : 1423171038761,
+        "username" : "junkRealName",
+        "email" : "burp0@anuff.com"
+    },
+    "connections" : { },
+    "dictionaries" : { }
+} ]

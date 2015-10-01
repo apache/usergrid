@@ -28,6 +28,6 @@ public class GroupsService extends org.apache.usergrid.services.groups.GroupsSer
 
     public GroupsService() {
         super();
-        logger.info( "/roles/*/groups" );
+        logger.debug( "/roles/*/groups" );
     }
 }

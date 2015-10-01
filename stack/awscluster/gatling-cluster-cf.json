@@ -1,0 +1,386 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description" : "Gatling Cluster",
+    "Parameters": {
+        "InstanceCount": {
+            "Description": "The number of gatling instances to create",
+            "Type": "Number",
+            "Default": "1",
+            "MinValue": "1"
+        },
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "Default": "ug-cloudformation",
+            "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+        },
+        "InstanceType": {
+            "Description": "WebServer EC2 instance type",
+            "Type": "String",
+            "Default": "c3.xlarge",
+            "AllowedValues": [
+                "t1.micro",
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m2.xlarge",
+                "m2.2xlarge",
+                "m2.4xlarge",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "c1.medium",
+                "c1.xlarge",
+                "c3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge",
+                "c3.8xlarge",
+                "g2.2xlarge",
+                "r3.large",
+                "r3.xlarge",
+                "r3.2xlarge",
+                "r3.4xlarge",
+                "r3.8xlarge",
+                "i2.xlarge",
+                "i2.2xlarge",
+                "i2.4xlarge",
+                "i2.8xlarge",
+                "hi1.4xlarge",
+                "hs1.8xlarge",
+                "cr1.8xlarge",
+                "cc2.8xlarge",
+                "cg1.4xlarge"
+            ],
+            "ConstraintDescription": "Must be a valid EC2 instance type."
+        },
+        "OperatorEMail": {
+            "Description": "Email address to notify if there are any scaling operations",
+            "Type": "String",
+            "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
+            "ConstraintDescription": "Must be a valid email address."
+        },
+        "SSHLocation": {
+            "Description": "The IP address range that can be used to SSH to the EC2 instances",
+            "Type": "String",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+        },
+        "Branch": {
+            "Description": "The branch of usergrid to check out",
+            "Type": "String",
+            "Default": "master"
+        }
+    },
+
+    "Mappings" : {
+        "AWSInstanceType2Arch": {
+            "t1.micro": {
+                "Arch": "64"
+            },
+            "m1.small": {
+                "Arch": "64"
+            },
+            "m1.medium": {
+                "Arch": "64"
+            },
+            "m1.large": {
+                "Arch": "64"
+            },
+            "m1.xlarge": {
+                "Arch": "64"
+            },
+            "m3.large": {
+                "Arch": "64"
+            },
+            "m3.xlarge": {
+                "Arch": "64"
+            },
+            "c3.large": {
+                "Arch": "64"
+            },
+            "c3.xlarge": {
+                "Arch": "64"
+            },
+            "c3.2xlarge": {
+                "Arch": "64"
+            },
+            "c3.4xlarge": {
+                "Arch": "64"
+            }
+        },
+        "AWSRegionArch2AMI": {
+            "ap-southeast-2": {
+                "64": "ami-8dcd88b7"
+            },
+            "us-east-1": {
+                "64": "ami-9301c7f8"
+            },
+            "us-west-2": {
+                "64": "ami-ed5751dd"
+            }
+        },
+        "TwoAZs": {
+            "ap-southeast-2": {
+                "AZ1": "ap-southeast-2a",
+                "AZ2": "ap-southeast-2b"
+            },
+            "us-east-1": {
+                "AZ1": "us-east-1b",
+                "AZ2": "us-east-1c"
+            },
+            "us-west-2": {
+                "AZ1": "us-west-2a",
+                "AZ2": "us-west-2b"
+            }
+        }
+
+
+    },
+
+    "Resources" : {
+        "NotificationTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription": [ { "Endpoint": { "Ref": "OperatorEMail" }, "Protocol": "email" } ]
+            }
+        },
+        "GatlingServerGroup" : {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "CreationPolicy" : {
+                "ResourceSignal" : {
+                    "Timeout" : "PT15M",
+                    "Count"   : { "Ref" : "InstanceCount" }
+                }
+            },
+            "Properties" : {
+                "AvailabilityZones": [
+                    {
+                        "Fn::FindInMap": [
+                            "TwoAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ1"
+                        ]
+                    },
+                    {
+                        "Fn::FindInMap": [
+                            "TwoAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ2"
+                        ]
+                    }
+                ],
+                "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+                "MinSize" : { "Ref" : "InstanceCount" },
+                "MaxSize" : "10",
+                "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ],
+                "NotificationConfiguration" : {
+                    "TopicARN" : { "Ref" : "NotificationTopic" },
+                    "NotificationTypes" : [ "autoscaling:EC2_INSTANCE_LAUNCH","autoscaling:EC2_INSTANCE_LAUNCH_ERROR","autoscaling:EC2_INSTANCE_TERMINATE", "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"]
+                }
+            }
+        },
+
+        "LaunchConfig" : {
+            "Type" : "AWS::AutoScaling::LaunchConfiguration",
+            "Metadata" : {
+                "Comment" : "Install Gatling",
+                "AWS::CloudFormation::Init" : {
+                    "config" : {
+                        "files" : {
+                            "/etc/profile.d/aws-credentials.sh" : {
+                                "content": { "Fn::Join" : ["", [
+                                    "export AWS_ACCESS_KEY=", { "Ref":"GatlingKey" }, "\n",
+                                    "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] }, "\n"
+                                ]]}
+                            },
+
+                            "/etc/s3cfg" : {
+                                "content": { "Fn::Join" : ["", [
+                                    "access_key=", { "Ref":"GatlingKey" }, "\n",
+                                    "secret_key=", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] }, "\n"
+                                ]]}
+                            },
+                            "/etc/profile.d/maven.sh" : {
+                                "content" : { "Fn::Join" : ["", [
+                                    "export M3_HOME=/usr/local/apache-maven/apache-maven-3.1.1\n",
+                                    "export M3=$M3_HOME/bin\n",
+                                    "export MAVEN_OPTS=\"-Xms256m -Xmx512m\"\n",
+                                    "export PATH=$M3:$PATH\n"
+                                ]]}
+                            },
+
+                            "/etc/security/limits.d/gatling_filehandles.conf" : {
+                                "content": { "Fn::Join" : ["", [
+                                    "ubuntu soft nofile 80000\n",
+                                    "ubuntu hard nofile 80000\n"
+                                ]]}
+                            }
+                        }
+                    }
+                },
+                "services" : {}
+            },
+            "Properties" : {
+                "KeyName" : { "Ref" : "KeyName" },
+                "ImageId" : {
+                    "Fn::FindInMap" : [
+                        "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ]},
+                "SecurityGroups" : [ { "Ref" : "InstanceSecurityGroup" } ],
+                "InstanceType" : { "Ref" : "InstanceType" },
+                "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+                    "#!/bin/bash -xe\n",
+                    "##This script is generated by cloud-init.  The rendered version is usually located at /var/lib/cloud/instance/scripts/part-001\n",
+                    "apt-get install zip unzip wget -y\n",
+                    "wget https://bootstrap.pypa.io/ez_setup.py -O - | python\n",
+                    "easy_install  https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+                    "/usr/local/bin/cfn-init -v ",
+                    "         --stack ", { "Ref" : "AWS::StackName" },
+                    "         --resource LaunchConfig ",
+                    "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+
+                    "add-apt-repository ppa:webupd8team/java --yes\n",
+                    "add-apt-repository ppa:awstools-dev/awstools --yes\n",
+                    "apt-get update\n",
+                    "echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections\n",
+                    "apt-get install oracle-java8-installer oracle-java8-set-default expect expect-dev git ec2-api-tools maven -y --force-yes\n",
+                    "update-java-alternatives -s java-8-oracle\n",
+
+                    "cd ~ubuntu\n",
+                    "git clone -b ",{ "Ref":"Branch" } , " https://github.com/apache/usergrid.git usergrid\n",
+                    "chown -R ubuntu:ubuntu usergrid\n",
+
+                    "ec2-create-tags $(curl -k http://169.254.169.254/latest/meta-data/instance-id) --region ", { "Ref" : "AWS::Region" }," --aws-access-key ",{ "Ref":"GatlingKey" }, " --aws-secret-key ", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] } ," --tag Name=", { "Ref":"AWS::StackName"  }, "\n",
+                    "/usr/local/bin/cfn-signal --success true --stack ", { "Ref" : "AWS::StackName" }, " --resource GatlingServerGroup --region ", { "Ref" : "AWS::Region" }, "\n"
+                ]]}}
+            }
+        },
+
+        "GatlingUser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "root",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "*",
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "GatlingKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "GatlingUser"
+                }
+            }
+        },
+
+        "WebServerScaleUpPolicy" : {
+            "Type" : "AWS::AutoScaling::ScalingPolicy",
+            "Properties" : {
+                "AdjustmentType" : "ChangeInCapacity",
+                "AutoScalingGroupName" : { "Ref" : "GatlingServerGroup" },
+                "Cooldown" : "60",
+                "ScalingAdjustment" : "1"
+            }
+        },
+        "WebServerScaleDownPolicy" : {
+            "Type" : "AWS::AutoScaling::ScalingPolicy",
+            "Properties" : {
+                "AdjustmentType" : "ChangeInCapacity",
+                "AutoScalingGroupName" : { "Ref" : "GatlingServerGroup" },
+                "Cooldown" : "60",
+                "ScalingAdjustment" : "-1"
+            }
+        },
+
+        "ElasticLoadBalancer" : {
+            "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties" : {
+                "AvailabilityZones": [
+                    {
+                        "Fn::FindInMap": [
+                            "TwoAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ1"
+                        ]
+                    },
+                    {
+                        "Fn::FindInMap": [
+                            "TwoAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ2"
+                        ]
+                    }
+                ],
+                "Listeners" : [ {
+                    "LoadBalancerPort" : "80",
+                    "InstancePort" : "80",
+                    "Protocol" : "HTTP"
+                } ],
+                "HealthCheck" : {
+                    "Target" : "HTTP:80/",
+                    "HealthyThreshold" : "3",
+                    "UnhealthyThreshold" : "5",
+                    "Interval" : "30",
+                    "Timeout" : "5"
+                }
+            }
+        },
+
+        "InstanceSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Enable SSH access and HTTP from the load balancer only",
+                "SecurityGroupIngress" : [ {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "22",
+                    "ToPort" : "22",
+                    "CidrIp" : { "Ref" : "SSHLocation"}
+                },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort" : "80",
+                        "ToPort" : "80",
+                        "SourceSecurityGroupOwnerId" : {"Fn::GetAtt" : ["ElasticLoadBalancer", "SourceSecurityGroup.OwnerAlias"]},
+                        "SourceSecurityGroupName" : {"Fn::GetAtt" : ["ElasticLoadBalancer", "SourceSecurityGroup.GroupName"]}
+                    } ]
+            }
+        }
+    },
+
+    "Outputs" : {
+        "URL" : {
+            "Description" : "The URL of the website",
+            "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}]]}
+        }
+    }
+}

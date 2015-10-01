@@ -28,8 +28,8 @@ import org.apache.usergrid.persistence.entities.JobData;
 
 
 /**
- * you could make an enum here, that contains the state info look at scotts code and emulate that to see wha tyou can
- * return in the json object
+ * Make an enum here, that contains the state info (look at Scott's
+ * code and emulate that to see what you can return in the JSON object).
  */
 @Component("exportJob")
 public class ExportJob extends OnlyOnceJob {
@@ -46,7 +46,7 @@ public class ExportJob extends OnlyOnceJob {
 
     @Override
     public void doJob( JobExecution jobExecution ) throws Exception {
-        logger.info( "execute ExportJob {}", jobExecution );
+        logger.info( "execute ExportJob {}", jobExecution.getJobId().toString() );
 
         JobData jobData = jobExecution.getJobData();
         if ( jobData == null ) {

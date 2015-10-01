@@ -19,26 +19,15 @@ package org.apache.usergrid.rest.management;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Timer;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.api.view.Viewable;
-import com.sun.jersey.client.apache.ApacheHttpClient;
-import com.sun.jersey.client.apache.ApacheHttpClientHandler;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Injector;
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpConnectionManager;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.params.HttpClientParams;
-import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
-import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationCreator;
@@ -48,7 +37,7 @@ import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
-import org.apache.usergrid.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
@@ -56,7 +45,12 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-import org.codehaus.jackson.JsonNode;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +58,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -104,23 +100,24 @@ public class ManagementResource extends AbstractContextResource {
      *
      * /management/users/<user-name>/login
      * /management/users/<user-name>/password
-     * 
+     *
      */
 
     @Autowired
     private ApplicationCreator applicationCreator;
 
     @Autowired
-    MetricsFactory metricsFactory;
+    Injector injector;
+
 
     private static Client jerseyClient = null;
 
 
     // names for metrics to be collected
-    private static final String SSO_TOKENS_REJECTED = "sso_tokens_rejected";
-    private static final String SSO_TOKENS_VALIDATED = "sso_tokens_validated";
-    private static final String SSO_CREATED_LOCAL_ADMINS = "sso_created_local_admins";
-    private static final String SSO_PROCESSING_TIME = "sso_processing_time";
+    private static final String SSO_TOKENS_REJECTED = "sso.tokens_rejected";
+    private static final String SSO_TOKENS_VALIDATED = "sso.tokens_validated";
+    private static final String SSO_CREATED_LOCAL_ADMINS = "sso.created_local_admins";
+    private static final String SSO_PROCESSING_TIME = "sso.processing_time";
 
     // usergrid configuration property names needed
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
@@ -129,8 +126,19 @@ public class ManagementResource extends AbstractContextResource {
     public static final String CENTRAL_CONNECTION_TIMEOUT =   "usergrid.central.connection.timeout";
     public static final String CENTRAL_READ_TIMEOUT =         "usergrid.central.read.timeout";
 
+    MetricsFactory metricsFactory = null;
+
+
     public ManagementResource() {
         logger.info( "ManagementResource initialized" );
+    }
+
+
+    MetricsFactory getMetricsFactory() {
+        if ( metricsFactory == null ) {
+            metricsFactory = injector.getInstance( MetricsFactory.class );
+        }
+        return metricsFactory;
     }
 
 
@@ -234,7 +242,7 @@ public class ManagementResource extends AbstractContextResource {
                         String[] values = Base64.decodeToString( token ).split( ":" );
 
                         if ( values.length >= 2 ) {
-                            client_id = values[0].toLowerCase();
+                            client_id = values[0];
                             client_secret = values[1];
                         }
                     }
@@ -290,6 +298,8 @@ public class ManagementResource extends AbstractContextResource {
             }
 
             if ( user == null ) {
+                //TODO: this could be fixed to return the reason why a user is null. In some cases the USER is not found
+                //so a 404 would be more appropriate etc...
                 OAuthResponse response =
                         OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                                      .setErrorDescription( errorDescription ).buildJSONMessage();
@@ -443,7 +453,9 @@ public class ManagementResource extends AbstractContextResource {
                                          @FormParam( "username" ) String username,
                                          @FormParam( "password" ) String password ) {
 
-        try {
+       logger.debug( "ManagementResource /authorize: {}/{}", username, password );
+
+       try {
             responseType = response_type;
             clientId = client_id;
             redirectUri = redirect_uri;
@@ -479,6 +491,7 @@ public class ManagementResource extends AbstractContextResource {
             throw e;
         }
         catch ( Exception e ) {
+            logger.debug("handleAuthorizeForm failed", e);
             return handleViewable( "error", e );
         }
     }
@@ -571,8 +584,8 @@ public class ManagementResource extends AbstractContextResource {
         }
         AccessInfo accessInfo = null;
 
-        Timer processingTimer = metricsFactory.getTimer(
-                ManagementResource.class, SSO_PROCESSING_TIME );
+        Timer processingTimer = getMetricsFactory().getTimer(
+            ManagementResource.class, SSO_PROCESSING_TIME );
 
         Timer.Context timerContext = processingTimer.time();
 
@@ -582,7 +595,7 @@ public class ManagementResource extends AbstractContextResource {
             JsonNode accessInfoNode = getMeFromUgCentral( extAccessToken );
 
             JsonNode userNode = accessInfoNode.get( "user" );
-            String username = userNode.get( "username" ).getTextValue();
+            String username = userNode.get( "username" ).textValue();
 
             // if user does not exist locally then we need to fix that
 
@@ -594,12 +607,12 @@ public class ManagementResource extends AbstractContextResource {
                 // create local user and and organizations they have on the central Usergrid instance
                 logger.info("User {} does not exist locally, creating", username );
 
-                String name  = userNode.get( "name" ).getTextValue();
-                String email = userNode.get( "email" ).getTextValue();
+                String name  = userNode.get( "name" ).textValue();
+                String email = userNode.get( "email" ).textValue();
                 String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
 
                 JsonNode orgsNode = userNode.get( "organizations" );
-                Iterator<String> fieldNames = orgsNode.getFieldNames();
+                Iterator<String> fieldNames = orgsNode.fieldNames();
 
                 if ( !fieldNames.hasNext() ) {
                     // no organizations for user exist in response from central Usergrid SSO
@@ -624,8 +637,8 @@ public class ManagementResource extends AbstractContextResource {
                         userId = ownerOrgInfo.getOwner().getUuid();
                         userInfo = ownerOrgInfo.getOwner();
 
-                        Counter createdAdminsCounter = metricsFactory.getCounter(
-                                ManagementResource.class, SSO_CREATED_LOCAL_ADMINS );
+                        Counter createdAdminsCounter = getMetricsFactory().getCounter(
+                            ManagementResource.class, SSO_CREATED_LOCAL_ADMINS );
                         createdAdminsCounter.inc();
 
                         logger.info( "Created user {} and org {}", username, orgName );
@@ -633,7 +646,8 @@ public class ManagementResource extends AbstractContextResource {
                     } else {
 
                         // already created user, so just create an org
-                        final OrganizationInfo organization = management.createOrganization( orgName, userInfo, true );
+                        final OrganizationInfo organization =
+                            management.createOrganization( orgName, userInfo, true );
 
                         applicationCreator.createSampleFor( organization );
 
@@ -657,7 +671,8 @@ public class ManagementResource extends AbstractContextResource {
             throw e;
         }
 
-        final Response response = Response.status( SC_OK ).type( jsonMediaType( callback ) ).entity( accessInfo ).build();
+        final Response response = Response.status( SC_OK )
+            .type( jsonMediaType( callback ) ).entity( accessInfo ).build();
 
         timerContext.stop();
 
@@ -675,10 +690,10 @@ public class ManagementResource extends AbstractContextResource {
 
         // prepare to count tokens validated and rejected
 
-        Counter tokensRejectedCounter = metricsFactory.getCounter(
-                ManagementResource.class, SSO_TOKENS_REJECTED );
-        Counter tokensValidatedCounter = metricsFactory.getCounter(
-                ManagementResource.class, SSO_TOKENS_VALIDATED );
+        Counter tokensRejectedCounter = getMetricsFactory().getCounter(
+            ManagementResource.class, SSO_TOKENS_REJECTED );
+        Counter tokensValidatedCounter = getMetricsFactory().getCounter(
+            ManagementResource.class, SSO_TOKENS_VALIDATED );
 
         // create URL of central Usergrid's /management/me endpoint
 
@@ -693,8 +708,8 @@ public class ManagementResource extends AbstractContextResource {
         Client client = getJerseyClient();
         final JsonNode accessInfoNode;
         try {
-            accessInfoNode = client.resource( me )
-                    .type( MediaType.APPLICATION_JSON_TYPE)
+            accessInfoNode = client.target( me ).request()
+                    .accept( MediaType.APPLICATION_JSON_TYPE )
                     .get(JsonNode.class);
 
             tokensValidatedCounter.inc();
@@ -724,12 +739,8 @@ public class ManagementResource extends AbstractContextResource {
                     poolSize = Integer.parseInt( poolSizeStr );
                 }
 
-                MultiThreadedHttpConnectionManager cm = new MultiThreadedHttpConnectionManager();
-                HttpConnectionManagerParams cmParams = cm.getParams();
-                cmParams.setMaxTotalConnections( poolSize );
-                HttpClient httpClient = new HttpClient( cm );
-
-                // create Jersey Client using that HTTPClient and with configured timeouts
+                PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
+                connectionManager.setMaxTotal(poolSize);
 
                 int timeout = 20000; // ms
                 final String timeoutStr = properties.getProperty( CENTRAL_CONNECTION_TIMEOUT );
@@ -743,14 +754,14 @@ public class ManagementResource extends AbstractContextResource {
                     readTimeout = Integer.parseInt( readTimeoutStr );
                 }
 
-                ClientConfig clientConfig = new DefaultClientConfig();
-                clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-                clientConfig.getProperties().put( ClientConfig.PROPERTY_CONNECT_TIMEOUT, timeout ); // ms
-                clientConfig.getProperties().put( ClientConfig.PROPERTY_READ_TIMEOUT, readTimeout ); // ms
+                ClientConfig clientConfig = new ClientConfig();
+                clientConfig.register( new JacksonFeature() );
+                clientConfig.property( ApacheClientProperties.CONNECTION_MANAGER, connectionManager );
+                clientConfig.connectorProvider( new ApacheConnectorProvider() );
 
-                ApacheHttpClientHandler handler = new ApacheHttpClientHandler( httpClient, clientConfig );
-                jerseyClient = new ApacheHttpClient( handler );
-
+                jerseyClient = ClientBuilder.newClient( clientConfig );
+                jerseyClient.property( ClientProperties.CONNECT_TIMEOUT, timeout );
+                jerseyClient.property( ClientProperties.READ_TIMEOUT, readTimeout );
             }
         }
 

@@ -1,0 +1,101 @@
+{
+    "entity": {
+        "dynamic": "strict",
+        "properties": {
+            "entityId": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "entitySize": {
+                "type": "long",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "entityVersion": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "entityType": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "applicationId": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "nodeId": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "edgeName": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "entityNodeType": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "edgeTimestamp": {
+                "type": "long",
+                "doc_values": true
+            },
+            "edgeSearch": {
+                "type": "string",
+                "index": "not_analyzed",
+                "doc_values": true
+            },
+            "fields": {
+                "type": "nested",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "index": "not_analyzed",
+                        "doc_values": true
+                    },
+                    "boolean": {
+                        "type": "boolean",
+                        "doc_values": true
+                    },
+                    "long": {
+                        "type": "long",
+                        "doc_values": true
+                    },
+                    "double": {
+                        "type": "double",
+                        "doc_values": true
+                    },
+                    "location": {
+                        "type": "geo_point",
+                        "lat_lon": true,
+                        "geohash": true,
+                        "doc_values": true
+                    },
+                    "string": {
+                        "type": "string",
+                        "norms": {
+                            "enabled": false
+                        },
+                        "fields": {
+                            "exact": {
+                                "type": "string",
+                                "index": "not_analyzed",
+                                "doc_values": true,
+                                "ignore_above": 10922
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "_all": {
+            "enabled": false
+        }
+    }
+}

@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Push notifications overview &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Adding push notifications support" href="adding-push-support.html"/>
+        <link rel="prev" title="Disconnecting entities" href="../entity-connections/disconnecting-entities.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Push notifications overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#reach-your-users-with-push">Reach your users with push</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-started">Get started</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#get-started-with-a-tutorial">Get started with a tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#find-what-you-can-do-with-it">Find what you can do with it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#see-the-prerequisites">See the prerequisites</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#build-push-support">Build push support</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-push-notifications-support">Setting up push notifications support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#register-your-app">Register your app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-a-notifier">Create a notifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#register-client-devices">Register client devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#send-and-manage-notifications">Send and manage notifications</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#learn-more">Learn more</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#troubleshoot-your-push-support">Troubleshoot your push support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Push notifications overview</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/push-notifications/overview.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="push-notifications-overview">
+<h1>Push notifications overview<a class="headerlink" href="#push-notifications-overview" title="Permalink to this headline">¶</a></h1>
+<table style="border: solid 1px grey">
+<tr>
+<td width="40%" style="padding:1em"><img alt="../_images/iphonemessage.png" src="../_images/iphonemessage.png" />
+</td>
+<td><div class="section" id="reach-your-users-with-push">
+<h2>Reach your users with push<a class="headerlink" href="#reach-your-users-with-push" title="Permalink to this headline">¶</a></h2>
+<p>With the new push notifications feature in the Usergrid, you can send
+announcements to your app&#8217;s users.</p>
+<ul class="simple">
+<li><strong>Reach your app&#8217;s users</strong> with messages they care about.</li>
+<li><strong>Keep your app footprint low</strong> while communicating in a high-value
+way with your app&#8217;s users.</li>
+</ul>
+<p><a class="reference external" href="getting-started.html">Read more</a></p>
+</td>
+</tr>
+</table>
+
+<p></p></div>
+<div class="section" id="get-started">
+<h2>Get started<a class="headerlink" href="#get-started" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="get-started-with-a-tutorial">
+<h3><a class="reference external" href="tutorial.html">Get started with a tutorial</a><a class="headerlink" href="#get-started-with-a-tutorial" title="Permalink to this headline">¶</a></h3>
+<p>Build your first push-enabled app using an Apigee sample.</p>
+</div>
+<div class="section" id="find-what-you-can-do-with-it">
+<h3><a class="reference external" href="getting-started.html">Find what you can do with it</a><a class="headerlink" href="#find-what-you-can-do-with-it" title="Permalink to this headline">¶</a></h3>
+<p>A video and introduction.</p>
+</div>
+<div class="section" id="see-the-prerequisites">
+<h3><a class="reference external" href="getting-started.html#prerequisites">See the prerequisites</a><a class="headerlink" href="#see-the-prerequisites" title="Permalink to this headline">¶</a></h3>
+<p>Depending on your supported app platforms, you&#8217;ll need just a few
+things.</p>
+</div>
+</div>
+<div class="section" id="build-push-support">
+<h2>Build push support<a class="headerlink" href="#build-push-support" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="setting-up-push-notifications-support">
+<h3><a class="reference external" href="getting-started.html">Setting up push notifications support</a><a class="headerlink" href="#setting-up-push-notifications-support" title="Permalink to this headline">¶</a></h3>
+<p>Connect Apple or Google with Usergrid and your app.</p>
+</div>
+<div class="section" id="register-your-app">
+<h3><a class="reference external" href="registering.html">Register your app</a><a class="headerlink" href="#register-your-app" title="Permalink to this headline">¶</a></h3>
+<p>Register with Apple or Google.</p>
+</div>
+<div class="section" id="create-a-notifier">
+<h3><a class="reference external" href="creating-notifiers.html">Create a notifier</a><a class="headerlink" href="#create-a-notifier" title="Permalink to this headline">¶</a></h3>
+<p>Your application uses this to send messages.</p>
+</div>
+<div class="section" id="register-client-devices">
+<h3><a class="reference external" href="managing-users-and-devices.html">Register client devices</a><a class="headerlink" href="#register-client-devices" title="Permalink to this headline">¶</a></h3>
+<p>Your app code registers to receive notifications.</p>
+</div>
+<div class="section" id="send-and-manage-notifications">
+<h3><a class="reference external" href="creating-and-managing-notifications.html">Send and manage notifications</a><a class="headerlink" href="#send-and-manage-notifications" title="Permalink to this headline">¶</a></h3>
+<p>You can do this from app code or the admin portal.</p>
+</div>
+</div>
+<div class="section" id="learn-more">
+<h2>Learn more<a class="headerlink" href="#learn-more" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="troubleshoot-your-push-support">
+<h3><a class="reference external" href="troubleshooting.html">Troubleshoot your push support</a><a class="headerlink" href="#troubleshoot-your-push-support" title="Permalink to this headline">¶</a></h3>
+<p>Things don&#8217;t work as you expect?</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="adding-push-support.html" class="btn btn-neutral float-right" title="Adding push notifications support" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../entity-connections/disconnecting-entities.html" class="btn btn-neutral" title="Disconnecting entities" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

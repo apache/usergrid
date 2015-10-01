@@ -19,9 +19,15 @@ package org.apache.usergrid.count.common;
 
 import java.io.IOException;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonMethod;
-import org.codehaus.jackson.map.ObjectMapper;
+//import org.codehaus.jackson.annotate.JsonAutoDetect;
+//import org.codehaus.jackson.annotate.JsonMethod;
+//import org.codehaus.jackson.map.ObjectMapper;
+
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 
 /** @author zznate */
@@ -40,7 +46,7 @@ public class CountSerDeUtils {
 
     public static Count deserialize( String json ) {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility( JsonMethod.CREATOR, JsonAutoDetect.Visibility.ANY );
+        mapper.setVisibility( PropertyAccessor.CREATOR, JsonAutoDetect.Visibility.ANY );
 
         try {
             return mapper.readValue( json, Count.class );

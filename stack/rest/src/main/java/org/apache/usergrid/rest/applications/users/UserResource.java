@@ -17,34 +17,18 @@
 package org.apache.usergrid.rest.applications.users;
 
 
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.codehaus.jackson.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import net.tanesha.recaptcha.ReCaptchaImpl;
+import net.tanesha.recaptcha.ReCaptchaResponse;
+import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
@@ -52,24 +36,19 @@ import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
+import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import org.apache.amber.oauth2.common.exception.OAuthProblemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
-import org.apache.commons.lang.StringUtils;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.util.Map;
+import java.util.UUID;
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
-
-import net.tanesha.recaptcha.ReCaptchaImpl;
-import net.tanesha.recaptcha.ReCaptchaResponse;
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getSubjectUserId;
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isApplicationUser;
+import static javax.servlet.http.HttpServletResponse.*;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.*;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
@@ -104,21 +83,29 @@ public class UserResource extends ServiceResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
         if ( json != null ) {
             json.remove( "password" );
             json.remove( "pin" );
         }
 
-        return super.executePut( ui, json, callback );
+        return super.executePutWithMap( ui, json, callback );
     }
 
 
     @PUT
     @Path("password")
-    public JSONWithPadding setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -142,7 +129,7 @@ public class UserResource extends ServiceResource {
 
         if ( targetUserId == null ) {
             response.setError( "User not found" );
-            return new JSONWithPadding( response, callback );
+            return response;
         }
 
 
@@ -156,13 +143,15 @@ public class UserResource extends ServiceResource {
             management.setAppUserPassword( getApplicationId(), targetUserId, oldPassword, newPassword );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @POST
     @Path("password")
-    public JSONWithPadding setUserPasswordPost( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse setUserPasswordPost( @Context UriInfo ui, Map<String, Object> json,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         return setUserPasswordPut( ui, json, callback );
@@ -171,7 +160,9 @@ public class UserResource extends ServiceResource {
 
     @POST
     @Path("deactivate")
-    public JSONWithPadding deactivate( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse deactivate( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -181,13 +172,15 @@ public class UserResource extends ServiceResource {
 
         response.withEntity( user );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @GET
     @Path("sendpin")
-    public JSONWithPadding sendPin( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse sendPin( @Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -203,13 +196,15 @@ public class UserResource extends ServiceResource {
             response.setError( "User not found" );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @POST
     @Path("sendpin")
-    public JSONWithPadding postSendPin( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse postSendPin( @Context UriInfo ui,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         return sendPin( ui, callback );
@@ -219,7 +214,9 @@ public class UserResource extends ServiceResource {
     @GET
     @Path("setpin")
     @RequireApplicationAccess
-    public JSONWithPadding setPin( @Context UriInfo ui, @QueryParam("pin") String pin,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse setPin( @Context UriInfo ui, @QueryParam("pin") String pin,
                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -235,7 +232,7 @@ public class UserResource extends ServiceResource {
             response.setError( "User not found" );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -243,7 +240,9 @@ public class UserResource extends ServiceResource {
     @Path("setpin")
     @Consumes("application/x-www-form-urlencoded")
     @RequireApplicationAccess
-    public JSONWithPadding postPin( @Context UriInfo ui, @FormParam("pin") String pin,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse postPin( @Context UriInfo ui, @FormParam("pin") String pin,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -259,7 +258,7 @@ public class UserResource extends ServiceResource {
             response.setError( "User not found" );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -267,7 +266,9 @@ public class UserResource extends ServiceResource {
     @Path("setpin")
     @Consumes(MediaType.APPLICATION_JSON)
     @RequireApplicationAccess
-    public JSONWithPadding jsonPin( @Context UriInfo ui, JsonNode json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse jsonPin( @Context UriInfo ui, JsonNode json,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -276,14 +277,14 @@ public class UserResource extends ServiceResource {
         response.setAction( "set user pin" );
 
         if ( getUser() != null ) {
-            String pin = json.path( "pin" ).getTextValue();
+            String pin = json.path( "pin" ).textValue();
             management.setAppUserPin( getApplicationId(), getUserUuid(), pin );
         }
         else {
             response.setError( "User not found" );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
@@ -455,7 +456,9 @@ public class UserResource extends ServiceResource {
 
     @GET
     @Path("reactivate")
-    public JSONWithPadding reactivate( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse reactivate( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -466,13 +469,15 @@ public class UserResource extends ServiceResource {
         management.startAppUserActivationFlow( getApplicationId(), user );
 
         response.setAction( "reactivate user" );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @POST
     @Path("revoketokens")
-    public JSONWithPadding revokeTokensPost( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -483,13 +488,15 @@ public class UserResource extends ServiceResource {
         management.revokeAccessTokensForAppUser( getApplicationId(), getUserUuid() );
 
         response.setAction( "revoked user tokens" );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @PUT
     @Path("revoketokens")
-    public JSONWithPadding revokeTokensPut( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse revokeTokensPut( @Context UriInfo ui,
                                             @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         return revokeTokensPost( ui, callback );
@@ -498,7 +505,9 @@ public class UserResource extends ServiceResource {
 
     @POST
     @Path("revoketoken")
-    public JSONWithPadding revokeTokenPost( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam("callback") @DefaultValue("callback") String callback,
                                             @QueryParam("token") String token ) throws Exception {
 
@@ -509,13 +518,15 @@ public class UserResource extends ServiceResource {
         management.revokeAccessTokenForAppUser( token );
 
         response.setAction( "revoked user token" );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @PUT
     @Path("revoketoken")
-    public JSONWithPadding revokeTokenPut( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse revokeTokenPut( @Context UriInfo ui,
                                            @QueryParam("callback") @DefaultValue("callback") String callback,
                                            @QueryParam("token") String token ) throws Exception {
         return revokeTokenPost( ui, callback, token );

@@ -23,19 +23,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 
-@Concurrent()
+
 public class PermissionsIT extends AbstractCoreIT {
 
     private static final Logger logger = LoggerFactory.getLogger( PermissionsIT.class );
@@ -48,7 +53,7 @@ public class PermissionsIT extends AbstractCoreIT {
 
     @Test
     public void testPermissionTimeout() throws Exception {
-        UUID applicationId = setup.createApplication( "permissionsTest", "testPermissionTimeout" );
+        UUID applicationId = setup.createApplication( "permissionsTest", "testPermissionTimeout" + UUIDGenerator.newTimeUUID()  );
 
         assertNotNull( applicationId );
 
@@ -98,21 +103,22 @@ public class PermissionsIT extends AbstractCoreIT {
     public void testPermissions() throws Exception {
         logger.info( "PermissionsIT.testPermissions" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testPermissions" );
+        UUID applicationId = setup.createApplication( "testOrganization"+ UUIDGenerator.newTimeUUID(), "testPermissions" + UUIDGenerator
+            .newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
         // em.createRole("admin", null);
-        em.createRole( "manager", null, 0 );
-        em.createRole( "member", null, 100000 );
+        em.createRole("manager", null, 0);
+        Entity memberRole = em.createRole( "member", null, 100000 );
 
         Map<String, String> roles = em.getRoles();
         assertEquals( "proper number of roles not set", 5, roles.size() );
         dump( "roles", roles );
 
-        em.deleteRole( "member" );
+        em.deleteRole("member", Optional.fromNullable(memberRole));
 
         roles = em.getRoles();
         assertEquals( "proper number of roles not set", 4, roles.size() );
@@ -141,6 +147,8 @@ public class PermissionsIT extends AbstractCoreIT {
         dump( "group roles", roles );
 
         em.deleteGroupRole( group.getUuid(), "author" );
+        app.refreshIndex();
+        Thread.sleep(1000);
 
         roles = em.getGroupRoles( group.getUuid() );
         assertEquals( "proper number of group roles not set", 1, roles.size() );
@@ -148,9 +156,10 @@ public class PermissionsIT extends AbstractCoreIT {
 
         em.addUserToGroupRole( user.getUuid(), group.getUuid(), "admin" );
 
-        Results r = em.getUsersInGroupRole( group.getUuid(), "admin", Results.Level.ALL_PROPERTIES );
-        assertEquals( "proper number of users in group role not set", 1, r.size() );
+        app.refreshIndex();
+        Results r = em.getUsersInGroupRole( group.getUuid(), "admin", Level.ALL_PROPERTIES );
         dump( "entities", r.getEntities() );
+        assertEquals( "proper number of users in group role not set", 1, r.size() );
 
         em.grantRolePermission( "admin", "users:access:*" );
         em.grantRolePermission( "admin", "groups:access:*" );

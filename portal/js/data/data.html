@@ -6,9 +6,9 @@
   The ASF licenses this file to You under the Apache License, Version 2.0
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,36 @@
   </fieldset>
   </bsmodal>
 
+<bsmodal id="newCollectionWithEntity" title="Create new collection"
+    close="hideModal" closelabel="Cancel"
+    extrabutton="newCollectionWithEntityDialog" extrabuttonlabel="Create"
+    buttonid="collection" ng-cloak>
+  <fieldset>
+    <div class="control-group">
+      <label for="new-collection-name">Collection Name:</label>
+      <div class="controls">
+        <input type="text" ug-validate required
+          ng-pattern="collectionNameRegex"
+          ng-attr-title="{{collectionNameRegexDescription}}"
+          ng-model="$parent.newCollection.name"
+          placeholder="newCollection"
+          name="collection"
+          id="new-collection-name"
+          class="input-xlarge" />
+        <p class="help-block hide"></p>
+      </div>
+      <div class="controls">
+        <label for="new-collection-entity">Create a new entity for your collection:</label>
+        <textarea
+        ng-model="$parent.newCollection.entity" id="new-collection-entity" class="span6 pull-left" rows="4">{ "name":"value" }</textarea>
+        <br>
+        <a class="btn pull-left" ng-click="validateEntityData();">Validate JSON</a>
+        <p class="help-block hide"></p>
+      </div>
+    </div>
+  </fieldset>
+  </bsmodal>
+
   <div id="intro-page">
     <page-title title=" Collections" icon="&#128254;"></page-title>
   </div>
@@ -41,7 +71,7 @@
   <section class="row-fluid">
     <div id="intro-list" class="span3 user-col">
       <a class="btn btn-primary" id="new-collection-link"
-        ng-click="showModal('newCollection')" title="new collection"><i
+        ng-click="showModal('newCollectionWithEntity')" title="new collection"><i
         class="pictogram">&#57347;</i></a> <a class="help_tooltip"
         ng-mouseover="help.sendTooltipGA('data new collection')"
         ng-show="help.helpTooltipsEnabled" href="#"

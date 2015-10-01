@@ -21,8 +21,7 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>1.0.0</version>
-        <relativePath>../</relativePath>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -74,8 +73,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                     <optimize>true</optimize>
                     <debug>true</debug>
                     <showDeprecation>true</showDeprecation>
@@ -95,7 +94,7 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <include>**/org/usergrid/**</include>
+				    <include>**/org/apache/usergrid/**</include>
                             </includes>
                         </configuration>
                     </execution>
@@ -231,12 +230,6 @@
 
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-logging-juli</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-jasper</artifactId>
             <scope>test</scope>
         </dependency>
@@ -250,12 +243,6 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jsp-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>juli</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -275,7 +262,7 @@
 
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>
         </dependency>
 

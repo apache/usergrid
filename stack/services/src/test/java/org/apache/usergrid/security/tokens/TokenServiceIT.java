@@ -20,27 +20,25 @@ package org.apache.usergrid.security.tokens;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl
-        ;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -51,30 +49,27 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
+
 public class TokenServiceIT {
 
     static Logger log = LoggerFactory.getLogger( TokenServiceIT.class );
 
-    // app-level data generated only once
-    private static UserInfo adminUser;
+    // app-level data generated only once per test
+    private UserInfo adminUser;
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
-
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl(  );
 
 
-    @BeforeClass
-    public static void setup() throws Exception {
+    @Rule
+    public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
+
+    @Before
+    public void setup() throws Exception {
         log.info( "in setup" );
-        adminUser =
-                setup.getMgmtSvc().createAdminUser( "edanuff34", "Ed Anuff", "ed@anuff34.com", "test", false, false );
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "TokenServiceTestOrg", adminUser, true );
-
-        // TODO update to organizationName/applicationName
-        setup.getMgmtSvc().createApplication( organization.getUuid(), "TokenServiceTestOrg/ed-application" ).getId();
+        adminUser = newOrgAppAdminRule.getAdminInfo();
     }
 
 
@@ -84,8 +79,8 @@ public class TokenServiceIT {
 
         Map<String, Object> data = new HashMap<String, Object>() {
             {
-                put( "email", "ed@anuff34.com" );
-                put( "username", "edanuff34" );
+                put( "email", adminUser.getEmail());
+                put( "username", adminUser.getUsername());
             }
         };
 
@@ -99,8 +94,8 @@ public class TokenServiceIT {
         long last_access = tokenInfo.getAccessed();
 
         assertEquals( "email_confirm", tokenInfo.getType() );
-        assertEquals( "ed@anuff34.com", tokenInfo.getState().get( "email" ) );
-        assertEquals( "edanuff34", tokenInfo.getState().get( "username" ) );
+        assertEquals( adminUser.getEmail(), tokenInfo.getState().get( "email" ) );
+        assertEquals( adminUser.getUsername(), tokenInfo.getState().get( "username" ) );
 
         tokenInfo = setup.getTokenSvc().getTokenInfo( tokenStr );
 
@@ -304,9 +299,7 @@ public class TokenServiceIT {
     @Test
     public void appDefaultExpiration() throws Exception {
 
-        OrganizationOwnerInfo orgInfo =
-                setup.getMgmtSvc().createOwnerAndOrganization( "foo", "foobar", "foobar", "foo@bar.com", "foobar" );
-        ApplicationInfo appInfo = setup.getMgmtSvc().createApplication( orgInfo.getOrganization().getUuid(), "bar" );
+        ApplicationInfo appInfo = newOrgAppAdminRule.getApplicationInfo();
         EntityManager em = setup.getEmf().getEntityManager( appInfo.getId() );
         Application app = em.getApplication();
         AuthPrincipalInfo userPrincipal =
@@ -321,11 +314,7 @@ public class TokenServiceIT {
 
     @Test
     public void appExpiration() throws Exception {
-
-        OrganizationOwnerInfo orgInfo =
-                setup.getMgmtSvc().createOwnerAndOrganization( "foo2", "foobar2", "foobar", "foo2@bar.com", "foobar" );
-
-        ApplicationInfo appInfo = setup.getMgmtSvc().createApplication( orgInfo.getOrganization().getUuid(), "bar" );
+        ApplicationInfo appInfo = newOrgAppAdminRule.getApplicationInfo();
 
         EntityManager em = setup.getEmf().getEntityManager( appInfo.getId() );
 
@@ -402,11 +391,7 @@ public class TokenServiceIT {
 
     @Test
     public void appExpirationInfinite() throws Exception {
-
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization( "appExpirationInfinite",
-                "appExpirationInfinite", "foobar", "appExpirationInfinite@bar.com", "foobar" );
-
-        ApplicationInfo appInfo = setup.getMgmtSvc().createApplication( orgInfo.getOrganization().getUuid(), "bar" );
+        ApplicationInfo appInfo = newOrgAppAdminRule.getApplicationInfo();
 
         EntityManager em = setup.getEmf().getEntityManager( appInfo.getId() );
 

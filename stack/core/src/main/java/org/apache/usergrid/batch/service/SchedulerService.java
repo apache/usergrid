@@ -51,4 +51,7 @@ public interface SchedulerService {
 
     /** Get the stats for a job */
     JobStat getStatsForJob( String jobName, UUID jobId ) throws Exception;
+
+    /** Should only be needed for testing */
+    void refreshIndex();
 }

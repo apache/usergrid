@@ -17,37 +17,30 @@
 package org.apache.usergrid.rest.organizations;
 
 
-import java.util.UUID;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.usergrid.rest.RootResource;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.google.common.base.Optional;
+import com.google.common.collect.BiMap;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.ApplicationResource;
 import org.apache.usergrid.rest.exceptions.NoOpException;
 import org.apache.usergrid.rest.exceptions.OrganizationApplicationNotFoundException;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.PathingUtils;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.utils.UUIDUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import org.apache.shiro.authz.UnauthorizedException;
-
-import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.UUID;
 
 
 @Component("org.apache.usergrid.rest.organizations.OrganizationResource")
@@ -57,6 +50,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
         "application/ecmascript", "text/jscript"
 })
 public class OrganizationResource extends AbstractContextResource {
+
+    private static final Logger logger = LoggerFactory.getLogger( OrganizationResource.class );
 
     String organizationName;
 
@@ -73,7 +68,7 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     private ApplicationResource appResourceFor( UUID applicationId ) throws Exception {
-        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) && !SubjectUtils.isServiceAdmin() ) {
+        if ( applicationId.equals( emf.getManagementAppId() ) && !SubjectUtils.isServiceAdmin() ) {
             throw new UnauthorizedException();
         }
 
@@ -102,9 +97,14 @@ public class OrganizationResource extends AbstractContextResource {
         if (organizationId == null) {
             return null;
         }
-        BiMap<UUID, String> apps = management.getApplicationsForOrganization( organizationId );
-        if ( apps.get( applicationId ) == null ) {
-            return null;
+
+        // don't look up app if request is a PUT because a PUT can be used to restore a deleted app
+        if ( httpServletRequest.getMethod().equalsIgnoreCase("PUT") ) {
+
+            BiMap<UUID, String> apps = management.getApplicationsForOrganization(organizationId);
+            if (apps.get(applicationId) == null) {
+                return null;
+            }
         }
 
         return appResourceFor( applicationId );
@@ -129,17 +129,28 @@ public class OrganizationResource extends AbstractContextResource {
     public ApplicationResource getApplicationByName( @PathParam("applicationName") String applicationName )
             throws Exception {
 
+        logger.debug("getApplicationByName: " + applicationName );
+
         if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();
         }
 
         String orgAppName = PathingUtils.assembleAppName( organizationName, applicationName );
-        UUID applicationId = emf.lookupApplication( orgAppName );
-        if ( applicationId == null ) {
-            throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
+        Optional<UUID> optionalAppId = emf.lookupApplication( orgAppName );
+
+        if ( !optionalAppId.isPresent()) {
+
+            // TODO: fix this hacky work-around for apparent Jersey issue
+            UUID applicationId = UUIDUtils.tryExtractUUID( applicationName );
+
+            if ( applicationId == null ) {
+                throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
+            }else{
+                optionalAppId = Optional.fromNullable(applicationId);
+            }
         }
 
-        return appResourceFor( applicationId );
+        return appResourceFor( optionalAppId.get() );
     }
 
 
@@ -166,11 +177,8 @@ public class OrganizationResource extends AbstractContextResource {
 
     @DELETE
     @RequireOrganizationAccess
-    public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
-
-
+    public void executeDelete(
+        @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
         throw new NotImplementedException( "Organization delete is not allowed yet" );
     }
 }

@@ -1,0 +1,75 @@
+<div class="content-page" style="min-height: 500px;">
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+  <span style="float: left">
+    <a href="#!/push/history" class="notifications-links" id="return-to-notifications"><- Return to All Notifications</a></span>
+  <br>
+
+  <div style="clear: both;">&nbsp;</div>
+  <table class="table">
+    <tbody>
+    <tr class="zebraRows notifications-row">
+      <td class="notifications-details bold-header">Created</td>
+      <td class="notifications-details bold-header">Payload</td>
+      <td class="notifications-details bold-header">Sent</td>
+      <td class="notifications-details bold-header">Error</td>
+    </tr>
+
+    <tr class="zebraRows notifications-row" ng-repeat="receipt in receiptsCollection._list">
+      <td class="details">{{receipt.get('created')}}</td>
+      <td class="details">{{receipt.get('payload')}}</td>
+      <td class="details">{{receipt.get('sent')}}</td>
+      <td class="view-details">{{receipt.get('errorCode') + (receipt.get('errorCode') ? ':' : '')}} {{receipt.get('errorMessage')}}</td>
+    </tr>
+  </table>
+  <br>
+
+
+
+  <div style="height:20px">&nbsp;</div>
+  <div style="padding: 10px 5px 10px 5px">
+    <button class="btn btn-primary" ng-click="getPrevious()" style="display:{{previous_display}}">< Previous</button>
+    <button class="btn btn-primary" ng-click="getNext()" style="display:{{next_display}}; float:right;">Next ></button>
+  </div>
+
+</div>
+
+
+
+<!--div id="notificationsReceipt-panel" class="panel-buffer">
+  <div class="well thingy">
+    <span class="title">Notification Receipts</span>
+    <span style="float: right"><a href="#" class="notifications-links" id="return-to-notifications"><- Return to All Notifications</a></span>
+  </div>
+  <div style="float: left">
+    <ul class="nav nav-pills">
+      <li class="active"><a href="#" id="view-notification-receipt-all">All</a></li>
+      <li><a href="#" id="view-notification-receipt-received">Received</a></li>
+      <li><a href="#" id="view-notification-receipt-failed">Failed</a></li>
+    </ul>
+  </div>
+  <div style="margin-top:35px;">&nbsp;</div>
+  <div id="notification-receipts-display">
+    <br><br>No Notifications found.
+  </div>
+
+  <ul id="notification-receipt-pagination" class="pager">
+    <li style="display: none" id="notification-receipt-previous" class="previous"><a >&larr; Previous</a></li>
+    <li style="display: none" id="notification-receipt-next" class="next"><a >Next &rarr;</a></li>
+  </ul>
+
+</div-->

@@ -42,8 +42,7 @@ import org.apache.usergrid.mongo.query.MongoQueryParser;
 import org.apache.usergrid.mongo.utils.BSONUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
@@ -52,6 +51,8 @@ import org.apache.usergrid.utils.MapUtils;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.subject.Subject;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 import static org.apache.usergrid.utils.JsonUtils.toJsonMap;
 import static org.apache.usergrid.utils.MapUtils.entry;
@@ -210,7 +211,7 @@ public class OpQuery extends OpCrud {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.mongo.protocol.OpCrud#doOp()
      */
     @Override
@@ -280,7 +281,9 @@ public class OpQuery extends OpCrud {
             return handleAuthFails( this );
         }
 
-        PrincipalCredentialsToken token = PrincipalCredentialsToken.getFromAdminUserInfoAndPassword( user, key );
+        PrincipalCredentialsToken token =
+                PrincipalCredentialsToken.getFromAdminUserInfoAndPassword(
+                        user, key, handler.getEmf().getManagementAppId() );
         Subject subject = SubjectUtils.getSubject();
 
         try {
@@ -401,7 +404,7 @@ public class OpQuery extends OpCrud {
             }
             else {
                 results = em.getCollection( em.getApplicationRef(), getCollectionName(), null, count,
-                        Results.Level.ALL_PROPERTIES, false );
+                        Level.ALL_PROPERTIES, false );
             }
             if ( !results.isEmpty() ) {
                 for ( Entity entity : results.getEntities() ) {

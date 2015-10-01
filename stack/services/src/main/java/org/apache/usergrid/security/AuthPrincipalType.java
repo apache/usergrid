@@ -20,6 +20,7 @@ package org.apache.usergrid.security;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 
@@ -28,7 +29,7 @@ import static org.apache.usergrid.utils.CodecUtils.base64;
 
 public enum AuthPrincipalType {
     ORGANIZATION( "ou", Group.ENTITY_TYPE ), ADMIN_USER( "ad", User.ENTITY_TYPE ),
-    APPLICATION( "ap", "application_info" ), APPLICATION_USER( "au", User.ENTITY_TYPE );
+    APPLICATION( "ap", CpNamingUtils.APPLICATION_INFO ), APPLICATION_USER( "au", User.ENTITY_TYPE );
 
     public static final int PREFIX_LENGTH = 3;
     public static final int BASE64_PREFIX_LENGTH = 4;

@@ -22,12 +22,11 @@ import java.util.Map;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MultivaluedMap;
 
 
@@ -42,9 +41,9 @@ public abstract class AbstractProvider implements SignInAsProvider {
     AbstractProvider( EntityManager entityManager, ManagementService managementService ) {
         this.entityManager = entityManager;
         this.managementService = managementService;
-        ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-        client = Client.create( clientConfig );
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.register( new JacksonFeature() );
+        client = ClientBuilder.newClient( clientConfig );
     }
 
 

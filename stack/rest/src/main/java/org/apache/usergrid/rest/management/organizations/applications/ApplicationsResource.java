@@ -17,38 +17,28 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.usergrid.rest.RootResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -78,9 +68,12 @@ public class ApplicationsResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getOrganizationApplications( @Context UriInfo ui,
-                                                        @QueryParam( "callback" ) @DefaultValue( "callback" )
-                                                        String callback ) throws Exception {
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getOrganizationApplications(
+        @Context UriInfo ui,
+        @QueryParam( "deleted" ) @DefaultValue( "false" ) Boolean deleted, // only return deleted apps if true
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get organization application" );
@@ -88,14 +81,16 @@ public class ApplicationsResource extends AbstractContextResource {
         BiMap<UUID, String> applications = management.getApplicationsForOrganization( organization.getUuid() );
         response.setData( applications.inverse() );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @POST
     @Consumes( MediaType.APPLICATION_JSON )
-    public JSONWithPadding newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                           @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                           String callback ) throws Exception {
         String applicationName = ( String ) json.get( "name" );
@@ -106,11 +101,15 @@ public class ApplicationsResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
-    public JSONWithPadding newApplicationForOrganizationFromForm( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newApplicationForOrganizationFromForm( @Context UriInfo ui, Map<String, Object> json,
                                                                   @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                                   String callback,
                                                                   @FormParam( "name" ) String applicationName )
             throws Exception {
+
+        logger.debug("newApplicationForOrganizationFromForm");
 
         Preconditions.checkArgument( !isEmpty( applicationName ),
                 "The 'name' parameter is required and cannot be empty: " + applicationName );
@@ -124,25 +123,23 @@ public class ApplicationsResource extends AbstractContextResource {
         applications.put( applicationInfo.getName(), applicationInfo.getId() );
         response.setData( applications );
         response.setResults( management.getApplicationMetadata( applicationInfo.getId() ) );
-        return new JSONWithPadding( response, callback );
+        return response;
+
     }
 
 
-    @RequireOrganizationAccess
     @Path(RootResource.APPLICATION_ID_PATH)
-    public ApplicationResource applicationFromOrganizationByApplicationId( @Context UriInfo ui,
-                                                                           @PathParam( "applicationId" )
-                                                                           String applicationIdStr ) throws Exception {
+    public ApplicationResource applicationFromOrganizationByApplicationId(
+        @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr ) throws Exception {
 
-        return getSubResource( ApplicationResource.class ).init( organization, UUID.fromString( applicationIdStr ) );
+        return getSubResource( ApplicationResource.class )
+            .init(organization, UUID.fromString(applicationIdStr));
     }
 
 
-    @RequireOrganizationAccess
     @Path( "{applicationName}" )
-    public ApplicationResource applicationFromOrganizationByApplicationName( @Context UriInfo ui,
-                                                                             @PathParam( "applicationName" )
-                                                                             String applicationName ) throws Exception {
+    public ApplicationResource applicationFromOrganizationByApplicationName(
+        @Context UriInfo ui, @PathParam( "applicationName" ) String applicationName ) throws Exception {
 
         String appName =
                 applicationName.contains( "/" ) ? applicationName : organization.getName() + "/" + applicationName;

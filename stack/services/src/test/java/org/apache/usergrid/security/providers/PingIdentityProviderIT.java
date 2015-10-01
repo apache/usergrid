@@ -25,23 +25,25 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.MapUtils;
 
 import static junit.framework.Assert.assertNotNull;
 
 
 /** @author zznate */
-@Ignore
-@Concurrent()
+@Ignore("Experimental Ping Indentiyy test")
+
 public class PingIdentityProviderIT {
     private static UserInfo adminUser;
     private static OrganizationInfo organization;
@@ -51,7 +53,7 @@ public class PingIdentityProviderIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @BeforeClass

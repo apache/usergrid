@@ -17,36 +17,42 @@
 package org.apache.usergrid.rest;
 
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Injector;
+import net.tanesha.recaptcha.ReCaptcha;
+import net.tanesha.recaptcha.ReCaptchaFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
+import org.glassfish.jersey.server.CloseableService;
+import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import com.sun.jersey.api.core.HttpContext;
-import com.sun.jersey.api.core.ResourceContext;
-import com.sun.jersey.api.view.Viewable;
-import com.sun.jersey.spi.CloseableService;
-
-import net.tanesha.recaptcha.ReCaptcha;
-import net.tanesha.recaptcha.ReCaptchaFactory;
-
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.removeEnd;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ResourceContext;
+import javax.ws.rs.core.*;
+import javax.xml.ws.spi.http.HttpContext;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 
 public abstract class AbstractContextResource {
+
+    protected static final TypeReference<Map<String, Object>> mapTypeReference = new TypeReference<Map<String, Object>>() {
+    };
+    protected static final TypeReference<List<Object>> listTypeReference = new TypeReference<List<Object>>() {
+    };
+    protected static final ObjectMapper mapper = new ObjectMapper();
+
 
     protected AbstractContextResource parent;
 
@@ -87,7 +93,12 @@ public abstract class AbstractContextResource {
     protected QueueManagerFactory qmf;
 
     @Autowired
+    protected Injector injector;
+
+    @Autowired
     protected TokenService tokens;
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractContextResource.class);
 
 
     public AbstractContextResource() {
@@ -99,25 +110,26 @@ public abstract class AbstractContextResource {
     }
 
 
-    public void setParent( AbstractContextResource parent ) {
+    public void setParent(AbstractContextResource parent) {
         this.parent = parent;
     }
 
 
-    public <T extends AbstractContextResource> T getSubResource( Class<T> t ) {
-        T subResource = resourceContext.getResource( t );
-        subResource.setParent( this );
+    public <T extends AbstractContextResource> T getSubResource(Class<T> t) {
+        logger.debug("getSubResource: " + t.getCanonicalName());
+        T subResource = resourceContext.getResource(t);
+        subResource.setParent(this);
         return subResource;
     }
 
 
-    public PathSegment getFirstPathSegment( String name ) {
-        if ( name == null ) {
+    public PathSegment getFirstPathSegment(String name) {
+        if (name == null) {
             return null;
         }
         List<PathSegment> segments = uriInfo.getPathSegments();
-        for ( PathSegment segment : segments ) {
-            if ( name.equals( segment.getPath() ) ) {
+        for (PathSegment segment : segments) {
+            if (name.equals(segment.getPath())) {
                 return segment;
             }
         }
@@ -126,40 +138,72 @@ public abstract class AbstractContextResource {
 
 
     public boolean useReCaptcha() {
-        return isNotBlank( properties.getRecaptchaPublic() ) && isNotBlank( properties.getRecaptchaPrivate() );
+        return StringUtils.isNotBlank(properties.getRecaptchaPublic())
+            && StringUtils.isNotBlank(properties.getRecaptchaPrivate());
     }
 
 
     public String getReCaptchaHtml() {
-        if ( !useReCaptcha() ) {
+        if (!useReCaptcha()) {
             return "";
         }
-        ReCaptcha c = ReCaptchaFactory
-                .newSecureReCaptcha( properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false );
-        return c.createRecaptchaHtml( null, null );
+        ReCaptcha c = ReCaptchaFactory.newSecureReCaptcha(
+            properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false);
+        return c.createRecaptchaHtml(null, null);
     }
 
 
-    public void sendRedirect( String location ) {
-        if ( isNotBlank( location ) ) {
-            throw new RedirectionException( location );
+    public void sendRedirect(String location) {
+        if (StringUtils.isNotBlank(location)) {
+            throw new RedirectionException(location);
         }
     }
 
 
-    public Viewable handleViewable( String template, Object model ) {
-        String template_property = "usergrid.view" + removeEnd( this.getClass().getName().toLowerCase(), "resource" )
-                .substring( AbstractContextResource.class.getPackage().getName().length() ) + "." + template
-                .toLowerCase();
-        String redirect_url = properties.getProperty( template_property );
-        if ( isNotBlank( redirect_url ) ) {
-            sendRedirect( redirect_url );
+    public Viewable handleViewable(String template, Object model) {
+
+        String className = this.getClass().getName().toLowerCase();
+        String packageName = AbstractContextResource.class.getPackage().getName();
+
+        String template_property = "usergrid.view" +
+            StringUtils.removeEnd(className.toLowerCase(), "resource")
+                .substring(packageName.length()) + "." + template.toLowerCase();
+
+        String redirect_url = properties.getProperty(template_property);
+
+        if (StringUtils.isNotBlank(redirect_url)) {
+            logger.debug("Redirecting to URL: ", redirect_url);
+            sendRedirect(redirect_url);
         }
-        return new Viewable( template, model, this.getClass() );
+        logger.debug("Dispatching to viewable with template: {}",
+            template, template_property);
+
+        Viewable viewable = new Viewable(template, model);
+        return viewable;
     }
 
 
     protected ApiResponse createApiResponse() {
-        return new ApiResponse( properties );
+        return new ApiResponse(properties);
+    }
+
+    protected EntityManagerFactory getEmf(){
+        return emf;
+    }
+    /**
+     * Next three new methods necessary to work around inexplicable problems with EntityHolder.
+     * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
+     * https://groups.google.com/forum/#!topic/usergrid/yyAJdmsBfig
+     */
+    protected Object readJsonToObject(String content) throws IOException {
+
+        JsonNode jsonNode = mapper.readTree(content);
+        Object jsonObject;
+        if (jsonNode.isArray()) {
+            jsonObject = mapper.readValue(content, listTypeReference);
+        } else {
+            jsonObject = mapper.readValue(content, mapTypeReference);
+        }
+        return jsonObject;
     }
 }

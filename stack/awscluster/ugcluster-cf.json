@@ -1,0 +1,2062 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Usergrid AWS Cluster",
+    "Parameters": {
+        "DnsSubDomain": {
+            "Description": "DNS name for stack, must not already exist in Route53.",
+            "Type": "String",
+            "Default": "ugtest"
+        },
+        "DnsDomain": {
+            "Description": "DNS domain for stack, must already exist in Route53",
+            "Type": "String",
+            "Default": "usergrid.com"
+        },
+        "ReleaseBucket": {
+            "Description": "S3 Bucket where Usergrid assembly is to be found.",
+            "Type": "String",
+            "Default": "ug-cloudformation"
+        },
+        "RestMinServers": {
+            "Description": "Minimum number of REST servers.",
+            "Type": "Number",
+            "Default": "1",
+            "MinValue": "1"
+        },
+        "RestMaxServers": {
+            "Description": "Maximum number REST servers.",
+            "Type": "Number",
+            "Default": "3",
+            "MinValue": "1"
+        },
+        "RestInstanceType": {
+            "Description": "Instance type for REST servers",
+            "Type": "String",
+            "Default": "c3.xlarge",
+            "AllowedValues": [
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m3.xlarge",
+                "m3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge"
+            ],
+            "ConstraintDescription": "must be valid instance type."
+        },
+      "RestIndexWorkers":{
+        "Description": "The number of index workers to ingest ElasticSearch batch operations per tomcat",
+        "Type": "Number",
+        "Default": "8",
+        "MinValue": "3"
+      },
+      "TomcatThreadsPerCore": {
+        "Description": "Number of threads to configure tomcat for per core",
+        "Type": "Number",
+        "Default": "50",
+        "MinValue": "1"
+      },
+        "KeyPair": {
+          "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+          "Type": "AWS::EC2::KeyPair::KeyName",
+          "Default": "ug-cloudformation",
+          "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+        },
+        "CassClusterName": {
+            "Description": "Name to be used for Cassandra cluster.",
+            "Type": "String",
+            "Default": "usergrid"
+        },
+        "CassNumServers": {
+            "Description": "Number of Cass servers to start.",
+            "Type": "Number",
+            "Default": "6",
+            "MinValue": "2"
+        },
+        "CassInstanceType": {
+            "Description": "Instance type for Cass servers",
+            "Type": "String",
+            "Default": "c3.4xlarge",
+            "AllowedValues": [
+                "c3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge"
+            ],
+            "ConstraintDescription": "must be valid instance type."
+        },
+        "CassReplicationFactor": {
+            "Description": "Cassandra replication factor",
+            "Type": "Number",
+            "Default": "2",
+            "MinValue": "1"
+        },
+
+      "CassReadConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
+      "CassWriteConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
+        "ESClusterName": {
+            "Description": "Name to be used for Elasticsearch cluster.",
+            "Type": "String",
+            "Default": "usergrid"
+        },
+        "ESNumServers": {
+            "Description": "Number of ES servers to start.",
+            "Type": "Number",
+            "Default": "6",
+            "MinValue": "2"
+        },
+        "ESNumMasterServers": {
+                   "Description": "Number of ES master servers to start.",
+                   "Type": "Number",
+                   "Default": "1",
+                   "MinValue": "1"
+               },
+
+
+        "ESInstanceType": {
+            "Description": "Instance type for ES servers",
+            "Type": "String",
+            "Default": "c3.4xlarge",
+            "AllowedValues": [
+                "c3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge"
+            ],
+            "ConstraintDescription": "must be valid instance type."
+        },
+        "SuperUserEmail": {
+            "Description": "Email for superuser user",
+            "Type": "String",
+            "Default": "tnine+super@apigee.com"
+        },
+        "TestAdminUserEmail": {
+            "Description": "Email for test admin user",
+            "Type": "String",
+            "Default": "tnine+admin@apigee.com"
+        },
+        "NotificationEmail": {
+            "Description": "Email for notifications",
+            "Type": "String",
+            "Default": "tnine+super@apigee.com"
+        },
+        "GraphiteInstanceType": {
+            "Description": "Instance type for Graphite server",
+            "Type": "String",
+            "Default": "m3.large",
+            "AllowedValues": [
+                "t1.micro",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m3.large",
+                "m1.xlarge",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "c3.4xlarge"
+            ],
+            "ConstraintDescription": "must be valid instance type."
+        },
+        "GraphiteNumServers": {
+            "Description": "Minimum number of graphite servers. There should only be one",
+            "Type": "Number",
+            "Default": "1",
+            "MinValue": "1"
+        },
+        "OpsCenterInstanceType": {
+                   "Description": "Instance type for Opscenter server",
+                   "Type": "String",
+                   "Default": "c3.large",
+                   "AllowedValues": [
+                       "c3.large",
+                       "c3.xlarge",
+                       "c3.2xlarge",
+                       "c3.4xlarge"
+                   ],
+                   "ConstraintDescription": "must be valid instance type."
+               },
+               "OpsCenterNumServers": {
+                   "Description": "Minimum number of opscenter servers. There should only be one",
+                   "Type": "Number",
+                   "Default": "1",
+                   "MinValue": "1"
+               },
+        "InstallYourkit": {
+            "Description": "Install the yourkit remote profiling agent into tomcat.  Valid values are 'true' or 'false'",
+            "Type": "String",
+            "Default": "false"
+        }
+    },
+    "Mappings": {
+        "AWSInstanceType2Arch": {
+            "t1.micro": {
+                "Arch": "64"
+            },
+            "m1.small": {
+                "Arch": "64"
+            },
+            "m1.medium": {
+                "Arch": "64"
+            },
+            "m1.large": {
+                "Arch": "64"
+            },
+            "m1.xlarge": {
+                "Arch": "64"
+            },
+            "m3.large": {
+                "Arch": "64"
+            },
+            "m3.xlarge": {
+                "Arch": "64"
+            },
+            "c3.large": {
+                "Arch": "64"
+            },
+            "c3.xlarge": {
+                "Arch": "64"
+            },
+            "c3.2xlarge": {
+                "Arch": "64"
+            },
+            "c3.4xlarge": {
+                "Arch": "64"
+            }
+        },
+        "AWSRegionArch2AMI": {
+            "ap-southeast-2": {
+                "64": "ami-c1335ffb"
+            },
+            "us-east-1": {
+                "64": "ami-b89f18d0"
+            },
+            "us-west-2": {
+                "64": "ami-194a0429"
+            }
+        },
+        "FourAZs": {
+            "ap-southeast-2": {
+                "AZ1": "ap-southeast-2a",
+                "AZ2": "ap-southeast-2b",
+                "AZ3": "ap-southeast-2a",
+                "AZ4": "ap-southeast-2b"
+            },
+            "us-east-1": {
+                "AZ1": "us-east-1b",
+                "AZ2": "us-east-1c",
+                "AZ3": "us-east-1d",
+                "AZ4": "us-east-1e"
+            },
+            "us-west-2": {
+                "AZ1": "us-west-2a",
+                "AZ2": "us-west-2b",
+                "AZ3": "us-west-2c",
+                "AZ4": "us-west-2a"
+            }
+        }
+    },
+    "Resources": {
+        "GraphiteUser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "root",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "*",
+                                    "Resource": "*"
+
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "GraphiteKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "GraphiteUser"
+                }
+            }
+        },
+        "GraphiteAutoScalingLaunchConfiguration":{
+         "Type":"AWS::AutoScaling::LaunchConfiguration",
+         "Properties":{
+            "UserData":{
+               "Fn::Base64":{
+                  "Fn::Join":[
+                     "",
+                     [
+                      "#!/bin/bash -x\n",
+                      "sudo git clone https://github.com/hopsoft/docker-graphite-statsd.git \n",
+                      "sudo ./docker-graphite-statsd/bin/start \n",
+                      "sudo git clone https://github.com/dotcloud/collectd-graphite.git \n",
+                      "sudo collectd-graphite/docker build -t collectd-graphite . \n",
+
+                      "#!/bin/bash -ex\n",
+                      "# REST SERVER STARTUP \n",
+                      "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                      "\n",
+                      "mkdir -p /usr/share/usergrid\n",
+                      "\n",
+                      "# create script that sets our environment variables\n",
+                      "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                      "alias sudo='sudo -E'\n",
+                      "\n",
+                      "export TYPE=graphite\n",
+                      "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n",
+                      "\n",
+                      "export DNS_NAME=", { "Ref":"DnsSubDomain" }, "\n",
+                      "export DNS_DOMAIN=", { "Ref":"DnsDomain" },
+                      "\n",
+                      "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                      "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                      "export ELB_NAME=", { "Ref":"RestElasticLoadBalancer" }, "\n",
+                      "\n",
+                      "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                      "export EC2_REGION=", { "Ref":"AWS::Region" },
+                      "\n",
+                      "export EC2_URL=https://ec2.amazonaws.com/\n",
+                      "\n",
+                      "export REST_SECURITY_GROUP_NAME=", { "Ref":"RestSecurityGroup" }, "\n",
+                      "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                      "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                      "EOF\n",
+                      "\n",
+                      "# put AWS creds in environment\n",
+                      "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                      "export AWS_ACCESS_KEY=", { "Ref":"RestKey" }, "\n",
+                      "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
+                      "EOF\n",
+                      "\n",
+                      "# setup s3cmd (will be installed by init script) \n",
+                      "cat >/etc/s3cfg <<EOF\n",
+                      "access_key=", { "Ref":"RestKey" }, "\n",
+                      "secret_key=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
+                      "EOF\n",
+                      "chmod 644 /etc/s3cfg\n",
+                      "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                      "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                      "\n",
+                      "# download usergrid and init script bundle from S3\n",
+                      "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                      "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                      "apt-get update\n",
+                      "apt-get -y install s3cmd\n",
+                      "cd /usr/share/usergrid\n",
+                      "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                      "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                      "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                      "chmod 755 ./init_instance/*.sh\n",
+                      "cd ./init_instance\n",
+                      "# Init as a REST intance \n",
+                      "sh ./init_graphite_server.sh\n"
+                   ]
+                  ]
+
+               }
+            },
+            "KeyName":{
+               "Ref":"KeyPair"
+            },
+            "ImageId":{
+               "Fn::FindInMap":[
+                  "AWSRegionArch2AMI",
+                  {
+                     "Ref":"AWS::Region"
+                  },
+                  {
+                     "Fn::FindInMap":[
+                        "AWSInstanceType2Arch",
+                        {
+                           "Ref":"GraphiteInstanceType"
+                        },
+                        "Arch"
+                     ]
+                  }
+               ]
+            },
+            "InstanceType":{
+               "Ref":"GraphiteInstanceType"
+            },
+            "IamInstanceProfile":{
+               "Ref":"RootInstanceProfile"
+            },
+            "SecurityGroups":[
+                            {
+                               "Ref":"GraphiteSecurityGroup"
+                            }
+                         ]
+
+         }
+      },
+        "GraphiteAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Version": "2014-07-24",
+            "Properties": {
+                "AvailabilityZones": [
+                    {
+                        "Fn::FindInMap": [
+                            "FourAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ1"
+                        ]
+                    },
+                    {
+                        "Fn::FindInMap": [
+                            "FourAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ2"
+                        ]
+                    },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ3"
+                         ]
+                     },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ4"
+                         ]
+                     }
+                ],
+                "LaunchConfigurationName": {
+                    "Ref": "GraphiteAutoScalingLaunchConfiguration"
+                },
+                "MinSize": {
+                    "Ref": "GraphiteNumServers"
+                },
+                "MaxSize": {
+                    "Ref": "GraphiteNumServers"
+                },
+                "NotificationConfiguration": {
+                    "TopicARN": {
+                        "Ref": "NotificationTopic"
+                    },
+                    "NotificationTypes": [
+                        "autoscaling:EC2_INSTANCE_LAUNCH",
+                        "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                        "autoscaling:EC2_INSTANCE_TERMINATE",
+                        "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                    ]
+                }
+            }
+        },
+        "OpsCenterUser": {
+                        "Type": "AWS::IAM::User",
+                        "Properties": {
+                            "Path": "/",
+                            "Policies": [
+                                {
+                                    "PolicyName": "root",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Action": "*",
+                                                "Resource": "*"
+
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+        "OpsCenterKey": {
+                        "Type": "AWS::IAM::AccessKey",
+                        "Properties": {
+                            "UserName": {
+                                "Ref": "OpsCenterUser"
+                            }
+                        }
+                    },
+        "OpsCenterAutoScalingLaunchConfiguration":{
+                     "Type":"AWS::AutoScaling::LaunchConfiguration",
+                     "Properties":{
+                        "UserData":{
+                           "Fn::Base64":{
+                              "Fn::Join":[
+                                 "",
+                                 [
+                                    "#!/bin/bash -ex\n",
+                                    "# OPSCENTER NODE STARTUP \n",
+                                    "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                                    "\n",
+                                    "mkdir -p /usr/share/usergrid\n",
+                                    "\n",
+                                    "# create script that sets our environment variables\n",
+                                    "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                                    "alias sudo='sudo -E'\n", "\n",
+                                    "export TYPE=opscenter\n",
+                                    "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
+                                    "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                                    "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                                    "\n",
+                                    "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                                    "export EC2_REGION=", { "Ref":"AWS::Region" },
+                                    "\n",
+                                    "export EC2_URL=https://ec2.amazonaws.com/\n",
+                                    "\n",
+                                    "export OPSCENTER_SECURITY_GROUP_NAME=", { "Ref":"OpsCenterSecurityGroup" }, "\n",
+                                    "\n",
+                                    "\n",
+                                    "export CASSANDRA_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
+                                    "export CASSANDRA_NUM_SERVERS=", { "Ref":"CassNumServers" }, "\n",
+                                    "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                                    "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
+                                    "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
+                                    "\n",
+                                    "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                                    "\n",
+                                    "EOF\n",
+                                    "\n",
+                                    "# put AWS creds in environment\n",
+                                    "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                                    "export AWS_ACCESS_KEY=", { "Ref":"CassKey" }, "\n",
+                                    "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] }, "\n",
+                                    "EOF\n",
+                                    "\n",
+                                    "# put AWS creds Priam's config file\n",
+                                    "cat >/etc/awscredential.properties <<EOF\n",
+                                    "AWSACCESSID=", { "Ref":"CassKey" }, "\n",
+                                    "AWSKEY=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] },
+                                    "\n",
+                                    "EOF\n",
+                                    "\n",
+                                    "# setup s3cmd (will be installed by init script) \n",
+                                    "cat >/etc/s3cfg <<EOF\n",
+                                    "access_key=", { "Ref":"CassKey" }, "\n",
+                                    "secret_key=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] },
+                                    "\n",
+                                    "EOF\n",
+                                    "chmod 644 /etc/s3cfg\n",
+                                    "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                                    "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                                    "\n",
+                                    "# download usergrid and init script bundle from S3\n",
+                                    "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                    "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                                    "apt-get update\n",
+                                    "apt-get -y install s3cmd\n",
+                                    "cd /usr/share/usergrid\n",
+                                    "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                    "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                    "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                    "chmod 755 ./init_instance/*.sh\n",
+                                    "cd ./init_instance\n",
+                                    "# init as an opscenter node \n",
+                                    "sh ./init_opscenter_server.sh\n"
+                               ]
+                              ]
+
+                           }
+                        },
+                        "KeyName":{
+                           "Ref":"KeyPair"
+                        },
+                        "ImageId":{
+                           "Fn::FindInMap":[
+                              "AWSRegionArch2AMI",
+                              {
+                                 "Ref":"AWS::Region"
+                              },
+                              {
+                                 "Fn::FindInMap":[
+                                    "AWSInstanceType2Arch",
+                                    {
+                                       "Ref":"OpsCenterInstanceType"
+                                    },
+                                    "Arch"
+                                 ]
+                              }
+                           ]
+                        },
+                        "InstanceType":{
+                           "Ref":"OpsCenterInstanceType"
+                        },
+                        "IamInstanceProfile":{
+                           "Ref":"RootInstanceProfile"
+                        },
+                        "SecurityGroups":[
+                                        {
+                                           "Ref":"OpsCenterSecurityGroup"
+                                        }
+                                     ],
+
+                         "BlockDeviceMappings": [
+                             {
+                                 "DeviceName": "/dev/sdb",
+                                 "VirtualName": "ephemeral0"
+                             },
+                             {
+                                 "DeviceName": "/dev/sdc",
+                                 "VirtualName": "ephemeral1"
+                              }
+                            ]
+
+                     }
+                  },
+        "OpsCenterAutoScalingGroup": {
+                        "Type": "AWS::AutoScaling::AutoScalingGroup",
+                        "Version": "2014-07-24",
+                        "Properties": {
+                          "AvailabilityZones": [
+                                {
+                                    "Fn::FindInMap": [
+                                        "FourAZs",
+                                        {
+                                            "Ref": "AWS::Region"
+                                        },
+                                        "AZ1"
+                                    ]
+                                },
+                                {
+                                    "Fn::FindInMap": [
+                                        "FourAZs",
+                                        {
+                                            "Ref": "AWS::Region"
+                                        },
+                                        "AZ2"
+                                    ]
+                                },
+                                {
+                                     "Fn::FindInMap": [
+                                         "FourAZs",
+                                         {
+                                             "Ref": "AWS::Region"
+                                         },
+                                         "AZ3"
+                                     ]
+                                 },
+                                {
+                                     "Fn::FindInMap": [
+                                         "FourAZs",
+                                         {
+                                             "Ref": "AWS::Region"
+                                         },
+                                         "AZ4"
+                                     ]
+                                 }
+                            ],
+                            "LaunchConfigurationName": {
+                                "Ref": "OpsCenterAutoScalingLaunchConfiguration"
+                            },
+                            "MinSize": {
+                                "Ref": "OpsCenterNumServers"
+                            },
+                            "MaxSize": {
+                                "Ref": "OpsCenterNumServers"
+                            },
+                            "NotificationConfiguration": {
+                                "TopicARN": {
+                                    "Ref": "NotificationTopic"
+                                },
+                                "NotificationTypes": [
+                                    "autoscaling:EC2_INSTANCE_LAUNCH",
+                                    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                                    "autoscaling:EC2_INSTANCE_TERMINATE",
+                                    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                                ]
+                            }
+                        }
+                    },
+        "RestUser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "root",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "*",
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "RestKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "RestUser"
+                }
+            }
+        },
+        "CassUser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "root",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "*",
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "CassKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "CassUser"
+                }
+            }
+        },
+        "ESUser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "root",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "*",
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ESKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "CassUser"
+                }
+            }
+        },
+        "CassAutoScalingLaunchConfiguration":{
+         "Type":"AWS::AutoScaling::LaunchConfiguration",
+         "Properties":{
+            "UserData":{
+               "Fn::Base64":{
+                  "Fn::Join":[
+                     "",
+                     [
+                        "#!/bin/bash -ex\n",
+                        "# CASSANDRA NODE STARTUP \n",
+                        "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                        "\n",
+                        "mkdir -p /usr/share/usergrid\n",
+                        "\n",
+                        "# create script that sets our environment variables\n",
+                        "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                        "alias sudo='sudo -E'\n", "\n",
+                        "export TYPE=cass\n",
+                        "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
+                        "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                        "\n",
+                        "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                        "export EC2_REGION=", { "Ref":"AWS::Region" },
+                        "\n",
+                        "export EC2_URL=https://ec2.amazonaws.com/\n",
+                        "\n",
+                        "export CASS_SECURITY_GROUP_NAME=", { "Ref":"CassSecurityGroup" }, "\n",
+                        "\n",
+                        "\n",
+                        "export CASSANDRA_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
+                        "export CASSANDRA_NUM_SERVERS=", { "Ref":"CassNumServers" }, "\n",
+                        "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                        "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
+                        "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
+                        "\n",
+                        "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                        "\n",
+                        "EOF\n",
+                        "\n",
+                        "# put AWS creds in environment\n",
+                        "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                        "export AWS_ACCESS_KEY=", { "Ref":"CassKey" }, "\n",
+                        "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] }, "\n",
+                        "EOF\n",
+                        "\n",
+                        "# put AWS creds Priam's config file\n",
+                        "cat >/etc/awscredential.properties <<EOF\n",
+                        "AWSACCESSID=", { "Ref":"CassKey" }, "\n",
+                        "AWSKEY=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] },
+                        "\n",
+                        "EOF\n",
+                        "\n",
+                        "# setup s3cmd (will be installed by init script) \n",
+                        "cat >/etc/s3cfg <<EOF\n",
+                        "access_key=", { "Ref":"CassKey" }, "\n",
+                        "secret_key=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] },
+                        "\n",
+                        "EOF\n",
+                        "chmod 644 /etc/s3cfg\n",
+                        "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                        "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                        "\n",
+                        "# download usergrid and init script bundle from S3\n",
+                        "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                        "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                        "apt-get update\n",
+                        "apt-get -y install s3cmd\n",
+                        "cd /usr/share/usergrid\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "chmod 755 ./init_instance/*.sh\n",
+                        "cd ./init_instance\n",
+                        "# init as a Cassandra node \n",
+                        "sh ./init_db_server.sh\n"
+                     ]
+                  ]
+               }
+            },
+                "KeyName": {
+                    "Ref": "KeyPair"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSRegionArch2AMI",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "AWSInstanceType2Arch",
+                                {
+                                    "Ref": "CassInstanceType"
+                                },
+                                "Arch"
+                            ]
+                        }
+                    ]
+                },
+                "InstanceType": {
+                    "Ref": "CassInstanceType"
+                },
+                "IamInstanceProfile": {
+                    "Ref": "RootInstanceProfile"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "CassSecurityGroup"
+                    }
+                ],
+
+                 "BlockDeviceMappings": [
+                     {
+                         "DeviceName": "/dev/sdb",
+                         "VirtualName": "ephemeral0"
+                     },
+                     {
+                         "DeviceName": "/dev/sdc",
+                         "VirtualName": "ephemeral1"
+                      }
+                    ]
+            }
+      },
+        "CassAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Version": "2009-05-15",
+            "Properties": {
+              "AvailabilityZones": [
+                    {
+                        "Fn::FindInMap": [
+                            "FourAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ1"
+                        ]
+                    },
+                    {
+                        "Fn::FindInMap": [
+                            "FourAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ2"
+                        ]
+                    },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ3"
+                         ]
+                     },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ4"
+                         ]
+                     }
+                ],
+                "LaunchConfigurationName": {
+                    "Ref": "CassAutoScalingLaunchConfiguration"
+                },
+                "MinSize": {
+                    "Ref": "CassNumServers"
+                },
+                "MaxSize": {
+                    "Ref": "CassNumServers"
+                },
+                "NotificationConfiguration": {
+                    "TopicARN": {
+                        "Ref": "NotificationTopic"
+                    },
+                    "NotificationTypes": [
+                        "autoscaling:EC2_INSTANCE_LAUNCH",
+                        "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                        "autoscaling:EC2_INSTANCE_TERMINATE",
+                        "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                    ]
+                }
+            }
+        },
+        "ESMasterAutoScalingLaunchConfiguration":{
+         "Type":"AWS::AutoScaling::LaunchConfiguration",
+         "Properties":{
+            "UserData":{
+               "Fn::Base64":{
+                  "Fn::Join":[
+                     "",
+                     [
+                        "#!/bin/bash -ex\n",
+                        "# ES NODE STARTUP \n",
+                        "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                        "\n",
+                        "mkdir -p /usr/share/usergrid\n",
+                        "\n",
+                        "# create script that sets our environment variables\n",
+                        "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                        "alias sudo='sudo -E'\n", "\n",
+                        "export TYPE=es\n",
+                        "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
+                        "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                        "\n",
+                        "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                        "export EC2_REGION=", { "Ref":"AWS::Region" },
+                        "\n",
+                        "export EC2_URL=https://ec2.amazonaws.com/\n",
+                        "\n",
+                        "export ES_SECURITY_GROUP_NAME=", { "Ref":"ESSecurityGroup" }, "\n",
+                        "\n",
+                        "\n",
+                        "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
+                        "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
+                         "export ES_MASTER=true", "\n",
+
+                        "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+
+                        "\n",
+                        "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                        "\n",
+                        "EOF\n",
+                        "\n",
+                        "# put AWS creds in environment\n",
+                        "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                        "export AWS_ACCESS_KEY=", { "Ref":"ESKey" }, "\n",
+                        "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "ESKey", "SecretAccessKey" ] }, "\n",
+                        "EOF\n",
+                        "\n",
+                        "# setup s3cmd (will be installed by init script) \n",
+                        "cat >/etc/s3cfg <<EOF\n",
+                        "access_key=", { "Ref":"ESKey" }, "\n",
+                        "secret_key=", { "Fn::GetAtt":[ "ESKey", "SecretAccessKey" ] },
+                        "\n",
+                        "EOF\n",
+                        "chmod 644 /etc/s3cfg\n",
+                        "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                        "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                        "\n",
+                        "# download usergrid and init script bundle from S3\n",
+                        "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                        "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                        "apt-get update\n",
+                        "apt-get -y install s3cmd\n",
+                        "cd /usr/share/usergrid\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "chmod 755 ./init_instance/*.sh\n",
+                        "cd ./init_instance\n",
+                        "# init as an ES node \n",
+                        "sh ./init_es_server.sh\n"
+                     ]
+                  ]
+               }
+            },
+                "KeyName": {
+                    "Ref": "KeyPair"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSRegionArch2AMI",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "AWSInstanceType2Arch",
+                                {
+                                    "Ref": "CassInstanceType"
+                                },
+                                "Arch"
+                            ]
+                        }
+                    ]
+                },
+                "InstanceType": {
+                    "Ref": "ESInstanceType"
+                },
+                "IamInstanceProfile": {
+                    "Ref": "RootInstanceProfile"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "ESSecurityGroup"
+                    }
+                ],
+
+                 "BlockDeviceMappings": [
+                     {
+                         "DeviceName": "/dev/sdb",
+                         "VirtualName": "ephemeral0"
+                     },
+                     {
+                         "DeviceName": "/dev/sdc",
+                         "VirtualName": "ephemeral1"
+                      }
+                    ]
+            }
+      },
+        "ESMasterAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Version": "2009-05-15",
+            "Properties": {
+              "AvailabilityZones": [
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ1"
+                          ]
+                      },
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ2"
+                          ]
+                      },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ3"
+                           ]
+                       },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ4"
+                           ]
+                       }
+                  ],
+                "LaunchConfigurationName": {
+                    "Ref": "ESMasterAutoScalingLaunchConfiguration"
+                },
+                "MinSize": {
+                    "Ref": "ESNumMasterServers"
+                },
+                "MaxSize": {
+                    "Ref": "ESNumMasterServers"
+                },
+                "NotificationConfiguration": {
+                    "TopicARN": {
+                        "Ref": "NotificationTopic"
+                    },
+                    "NotificationTypes": [
+                        "autoscaling:EC2_INSTANCE_LAUNCH",
+                        "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                        "autoscaling:EC2_INSTANCE_TERMINATE",
+                        "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                    ]
+                }
+            }
+        },
+        "ESAutoScalingLaunchConfiguration":{
+                 "Type":"AWS::AutoScaling::LaunchConfiguration",
+                 "Properties":{
+                    "UserData":{
+                       "Fn::Base64":{
+                          "Fn::Join":[
+                             "",
+                             [
+                                "#!/bin/bash -ex\n",
+                                "# ES NODE STARTUP \n",
+                                "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                                "\n",
+                                "mkdir -p /usr/share/usergrid\n",
+                                "\n",
+                                "# create script that sets our environment variables\n",
+                                "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                                "alias sudo='sudo -E'\n", "\n",
+                                "export TYPE=es\n",
+                                "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
+                                "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                                "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                                "\n",
+                                "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                                "export EC2_REGION=", { "Ref":"AWS::Region" },
+                                "\n",
+                                "export EC2_URL=https://ec2.amazonaws.com/\n",
+                                "\n",
+                                "export ES_SECURITY_GROUP_NAME=", { "Ref":"ESSecurityGroup" }, "\n",
+                                "\n",
+                                "\n",
+                                "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
+                                "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
+                                 "export ES_MASTER=false","\n",
+                                "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                                "\n",
+                                "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                                "\n",
+                                "EOF\n",
+                                "\n",
+                                "# put AWS creds in environment\n",
+                                "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                                "export AWS_ACCESS_KEY=", { "Ref":"ESKey" }, "\n",
+                                "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "ESKey", "SecretAccessKey" ] }, "\n",
+                                "EOF\n",
+                                "\n",
+                                "# setup s3cmd (will be installed by init script) \n",
+                                "cat >/etc/s3cfg <<EOF\n",
+                                "access_key=", { "Ref":"ESKey" }, "\n",
+                                "secret_key=", { "Fn::GetAtt":[ "ESKey", "SecretAccessKey" ] },
+                                "\n",
+                                "EOF\n",
+                                "chmod 644 /etc/s3cfg\n",
+                                "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                                "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                                "\n",
+                                "# download usergrid and init script bundle from S3\n",
+                                "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                                "apt-get update\n",
+                                "apt-get -y install s3cmd\n",
+                                "cd /usr/share/usergrid\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "chmod 755 ./init_instance/*.sh\n",
+                                "cd ./init_instance\n",
+                                "# init as an ES node \n",
+                                "sh ./init_es_server.sh\n"
+                             ]
+                          ]
+                       }
+                    },
+                        "KeyName": {
+                            "Ref": "KeyPair"
+                        },
+                        "ImageId": {
+                            "Fn::FindInMap": [
+                                "AWSRegionArch2AMI",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                {
+                                    "Fn::FindInMap": [
+                                        "AWSInstanceType2Arch",
+                                        {
+                                            "Ref": "CassInstanceType"
+                                        },
+                                        "Arch"
+                                    ]
+                                }
+                            ]
+                        },
+                        "InstanceType": {
+                            "Ref": "ESInstanceType"
+                        },
+                        "IamInstanceProfile": {
+                            "Ref": "RootInstanceProfile"
+                        },
+                        "SecurityGroups": [
+                            {
+                                "Ref": "ESSecurityGroup"
+                            }
+                        ],
+
+                         "BlockDeviceMappings": [
+                             {
+                                 "DeviceName": "/dev/sdb",
+                                 "VirtualName": "ephemeral0"
+                             },
+                             {
+                                 "DeviceName": "/dev/sdc",
+                                 "VirtualName": "ephemeral1"
+                              }
+                            ]
+                    }
+              },
+        "ESAutoScalingGroup": {
+                    "Type": "AWS::AutoScaling::AutoScalingGroup",
+                    "Version": "2009-05-15",
+                    "Properties": {
+                      "AvailabilityZones": [
+                              {
+                                  "Fn::FindInMap": [
+                                      "FourAZs",
+                                      {
+                                          "Ref": "AWS::Region"
+                                      },
+                                      "AZ1"
+                                  ]
+                              },
+                              {
+                                  "Fn::FindInMap": [
+                                      "FourAZs",
+                                      {
+                                          "Ref": "AWS::Region"
+                                      },
+                                      "AZ2"
+                                  ]
+                              },
+                              {
+                                   "Fn::FindInMap": [
+                                       "FourAZs",
+                                       {
+                                           "Ref": "AWS::Region"
+                                       },
+                                       "AZ3"
+                                   ]
+                               },
+                              {
+                                   "Fn::FindInMap": [
+                                       "FourAZs",
+                                       {
+                                           "Ref": "AWS::Region"
+                                       },
+                                       "AZ4"
+                                   ]
+                               }
+                          ],
+                        "LaunchConfigurationName": {
+                            "Ref": "ESAutoScalingLaunchConfiguration"
+                        },
+                        "MinSize": {
+                            "Ref": "ESNumServers"
+                        },
+                        "MaxSize": {
+                            "Ref": "ESNumServers"
+                        },
+                        "NotificationConfiguration": {
+                            "TopicARN": {
+                                "Ref": "NotificationTopic"
+                            },
+                            "NotificationTypes": [
+                                "autoscaling:EC2_INSTANCE_LAUNCH",
+                                "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                                "autoscaling:EC2_INSTANCE_TERMINATE",
+                                "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                            ]
+                        }
+                    }
+                },
+        "RestAutoScalingLaunchConfiguration":{
+                 "Type":"AWS::AutoScaling::LaunchConfiguration",
+                 "Properties":{
+                    "UserData":{
+                       "Fn::Base64":{
+                          "Fn::Join":[
+                             "",
+                             [
+                                "#!/bin/bash -ex\n",
+                                "# REST SERVER STARTUP \n",
+                                "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                                "\n",
+                                "mkdir -p /usr/share/usergrid\n",
+                                "\n",
+                                "# create script that sets our environment variables\n",
+                                "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                                "alias sudo='sudo -E'\n",
+                                "\n",
+                                "export TYPE=rest\n",
+                                "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n",
+                                "export YOURKIT=", { "Ref":"InstallYourkit" }, "\n",
+                                "export DNS_NAME=", { "Ref":"DnsSubDomain" }, "\n",
+                                "export DNS_DOMAIN=", { "Ref":"DnsDomain" }, "\n",
+                                "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                                "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                                "export ELB_NAME=", { "Ref":"RestElasticLoadBalancer" }, "\n",
+                                "\n",
+                                "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                                "export EC2_REGION=", { "Ref":"AWS::Region" }, "\n",
+                                "export EC2_URL=https://ec2.amazonaws.com/\n", "\n",
+                                "export REST_SECURITY_GROUP_NAME=", { "Ref":"RestSecurityGroup" }, "\n",
+                                "export DB_SECURITY_GROUP_NAME=", { "Ref":"CassSecurityGroup" }, "\n",
+                                "\n",
+                                "export CASSANDRA_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
+                                "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
+                                "export CASSANDRA_NUM_SERVERS=", { "Ref":"CassNumServers" }, "\n",
+                                "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                                "export TOMCAT_NUM_SERVERS=", { "Ref":"RestMinServers" }, "\n",
+                                "\n",
+                                "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
+                                "\n",
+                                "export CASSANDRA_READ_CONSISTENCY=", { "Ref":"CassReadConsistency" }, "\n",
+                                "\n",
+                                "export CASSANDRA_WRITE_CONSISTENCY=", { "Ref":"CassWriteConsistency" }, "\n",
+                                "\n",
+                               "export INDEX_WORKER_COUNT=", { "Ref":"RestIndexWorkers" }, "\n",
+
+                                "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
+                                "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
+                                 "\n",
+                                "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                                "\n",
+                                "export NUM_THREAD_PROC=", { "Ref":"TomcatThreadsPerCore" }, "\n",
+                                "\n",
+                                "export SUPER_USER_EMAIL=", { "Ref":"SuperUserEmail" }, "\n",
+                                "export TEST_ADMIN_USER_EMAIL=", { "Ref":"TestAdminUserEmail" }, "\n",
+                                "\n",
+                                "EOF\n",
+                                "\n",
+                                "# put AWS creds in environment\n",
+                                "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                                "export AWS_ACCESS_KEY=", { "Ref":"RestKey" }, "\n",
+                                "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
+                                "EOF\n",
+                                "\n",
+                                "# setup s3cmd (will be installed by init script) \n",
+                                "cat >/etc/s3cfg <<EOF\n",
+                                "access_key=", { "Ref":"RestKey" }, "\n",
+                                "secret_key=", { "Fn::GetAtt":[ "RestKey", "SecretAccessKey" ] }, "\n",
+                                "EOF\n",
+                                "chmod 644 /etc/s3cfg\n",
+                                "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                                "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                                "\n",
+                                "# download usergrid and init script bundle from S3\n",
+                                "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                                "apt-get update\n",
+                                "apt-get -y install s3cmd\n",
+                                "cd /usr/share/usergrid\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/ROOT.war\n",
+                                "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "mv ROOT.war webapps/ROOT.war\n",
+                                "chmod 755 ./init_instance/*.sh\n",
+                                "cd ./init_instance\n",
+                                "# Init as a REST intance \n",
+                                "sh ./init_rest_server.sh\n"
+                             ]
+                          ]
+                       }
+                    },
+                    "KeyName":{
+                       "Ref":"KeyPair"
+                    },
+                    "ImageId":{
+                       "Fn::FindInMap":[
+                          "AWSRegionArch2AMI",
+                          {
+                             "Ref":"AWS::Region"
+                          },
+                          {
+                             "Fn::FindInMap":[
+                                "AWSInstanceType2Arch",
+                                {
+                                   "Ref":"RestInstanceType"
+                                },
+                                "Arch"
+                             ]
+                          }
+                       ]
+                    },
+                    "InstanceType":{
+                       "Ref":"RestInstanceType"
+                    },
+                    "IamInstanceProfile":{
+                       "Ref":"RootInstanceProfile"
+                    },
+                    "SecurityGroups":[
+                       {
+                          "Ref":"RestSecurityGroup"
+                       }
+                    ]
+                 }
+              },
+        "RestAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Version": "2009-05-15",
+            "Properties": {
+              "AvailabilityZones": [
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ1"
+                          ]
+                      },
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ2"
+                          ]
+                      },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ3"
+                           ]
+                       },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ4"
+                           ]
+                       }
+                  ],
+                "LaunchConfigurationName": {
+                    "Ref": "RestAutoScalingLaunchConfiguration"
+                },
+                "MinSize": {
+                    "Ref": "RestMinServers"
+                },
+                "MaxSize": {
+                    "Ref": "RestMaxServers"
+                },
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": "1800",
+                "LoadBalancerNames": [
+                    {
+                        "Ref": "RestElasticLoadBalancer"
+                    }
+                ],
+                "NotificationConfiguration": {
+                    "TopicARN": {
+                        "Ref": "NotificationTopic"
+                    },
+                    "NotificationTypes": [
+                        "autoscaling:EC2_INSTANCE_LAUNCH",
+                        "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                        "autoscaling:EC2_INSTANCE_TERMINATE",
+                        "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                    ]
+                }
+            }
+        },
+        "RestServerScaleUpPolicy": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AdjustmentType": "ChangeInCapacity",
+                "AutoScalingGroupName": {
+                    "Ref": "RestAutoScalingGroup"
+                },
+                "Cooldown": "60",
+                "ScalingAdjustment": "1"
+            }
+        },
+        "RestServerScaleDownPolicy": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AdjustmentType": "ChangeInCapacity",
+                "AutoScalingGroupName": {
+                    "Ref": "RestAutoScalingGroup"
+                },
+                "Cooldown": "60",
+                "ScalingAdjustment": "-1"
+            }
+        },
+        "CPUAlarmHigh": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Scale-up if CPU > 60% for 10 minutes",
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": "600",
+                "EvaluationPeriods": "2",
+                "Threshold": "60",
+                "AlarmActions": [
+                    {
+                        "Ref": "RestServerScaleUpPolicy"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "AutoScalingGroupName",
+                        "Value": {
+                            "Ref": "RestAutoScalingGroup"
+                        }
+                    }
+                ],
+                "ComparisonOperator": "GreaterThanThreshold"
+            }
+        },
+        "CPUAlarmLow": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Scale-down if CPU < 10% for 10 minutes",
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": "600",
+                "EvaluationPeriods": "2",
+                "Threshold": "10",
+                "AlarmActions": [
+                    {
+                        "Ref": "RestServerScaleDownPolicy"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "AutoScalingGroupName",
+                        "Value": {
+                            "Ref": "RestAutoScalingGroup"
+                        }
+                    }
+                ],
+                "ComparisonOperator": "LessThanThreshold"
+            }
+        },
+        "RestElasticLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties": {
+              "AvailabilityZones": [
+                    {
+                        "Fn::FindInMap": [
+                            "FourAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ1"
+                        ]
+                    },
+                    {
+                        "Fn::FindInMap": [
+                            "FourAZs",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "AZ2"
+                        ]
+                    },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ3"
+                         ]
+                     },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ4"
+                         ]
+                     }
+                ],
+                "Listeners": [
+                    {
+                        "LoadBalancerPort": "80",
+                        "InstancePort": "8080",
+                        "Protocol": "HTTP"
+                    }
+                ],
+                "HealthCheck": {
+                    "Target": "HTTP:8080/status",
+                    "HealthyThreshold": "2",
+                    "UnhealthyThreshold": "8",
+                    "Interval": "10",
+                    "Timeout": "5"
+                },
+                "CrossZone": "true"
+            }
+        },
+        "NotificationTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription": [
+                    {
+                        "Endpoint": {
+                            "Ref": "NotificationEmail"
+                        },
+                        "Protocol": "email"
+                    }
+                ]
+            }
+        },
+        "DnsRecord": {
+            "Type": "AWS::Route53::RecordSetGroup",
+            "Properties": {
+                "HostedZoneName": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Ref": "DnsDomain"
+                            },
+                            ""
+                        ]
+                    ]
+                },
+                "RecordSets": [
+                    {
+                        "Name": {
+                            "Fn::Join": [
+                                ".",
+                                [
+                                    {
+                                        "Ref": "DnsSubDomain"
+                                    },
+                                    {
+                                        "Ref": "DnsDomain"
+                                    }
+                                ]
+                            ]
+                        },
+                        "Type": "A",
+                        "AliasTarget": {
+                            "HostedZoneId": {
+                                "Fn::GetAtt": [
+                                    "RestElasticLoadBalancer",
+                                    "CanonicalHostedZoneNameID"
+                                ]
+                            },
+                            "DNSName": {
+                                "Fn::GetAtt": [
+                                    "RestElasticLoadBalancer",
+                                    "CanonicalHostedZoneName"
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "RootRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/"
+            }
+        },
+        "RolePolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "root",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": "*",
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "RootRole"
+                    }
+                ]
+            }
+        },
+        "RootInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "RootRole"
+                    }
+                ]
+            }
+        },
+        "ESSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "ElasticSearch Machines",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "9200",
+                        "ToPort": "9200",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "AllowCassToESOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "ESSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "CassSecurityGroup"
+                }
+            }
+        },
+        "AllowRestToESOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "ESSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "RestSecurityGroup"
+                }
+            }
+        },
+        "CassSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Database Machines",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "AllowCassToCassOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "CassSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "CassSecurityGroup"
+                }
+            }
+        },
+        "AllowESToCassOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "CassSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "ESSecurityGroup"
+                }
+            }
+        },
+        "AllowESToESOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "ESSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "ESSecurityGroup"
+                }
+            }
+        },
+        "AllowRestToCassOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "CassSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "RestSecurityGroup"
+                }
+            }
+        },
+        "AllowCassToRestOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "RestSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "CassSecurityGroup"
+                }
+            }
+        },
+        "AllowESToRestOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "RestSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "ESSecurityGroup"
+                }
+            }
+        },
+        "AllowCassToCassOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "CassSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "CassSecurityGroup"
+                }
+            }
+        },
+        "AllowOpsCenterToCassOnAllPorts": {
+                "Type": "AWS::EC2::SecurityGroupIngress",
+                "Properties": {
+                    "GroupName": {
+                        "Ref": "CassSecurityGroup"
+                    },
+                    "IpProtocol": "tcp",
+                    "FromPort": "1",
+                    "ToPort": "65535",
+                    "SourceSecurityGroupName": {
+                        "Ref": "OpsCenterSecurityGroup"
+                    }
+                }
+            },
+
+        "RestSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "REST Machines",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8080",
+                        "ToPort": "8080",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "GraphiteSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Graphic Machines",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "AllowESToGraphiteAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "GraphiteSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "ESSecurityGroup"
+                }
+            }
+        },
+        "AllowCassToGraphiteAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "GraphiteSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "CassSecurityGroup"
+                }
+            }
+        },
+        "AllowRestToGraphiteAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "GraphiteSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "RestSecurityGroup"
+                }
+            }
+        },
+        "OpsCenterSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Opscenter Machines",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8888",
+                        "ToPort": "8888",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "AllowCassToOpscenterAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "OpsCenterSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "CassSecurityGroup"
+                }
+            }
+        }
+
+    }
+}

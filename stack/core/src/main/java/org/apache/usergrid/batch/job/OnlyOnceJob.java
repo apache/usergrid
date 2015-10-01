@@ -25,8 +25,7 @@ import org.apache.usergrid.batch.Job;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 
 
 /**
@@ -40,6 +39,9 @@ public abstract class OnlyOnceJob implements Job {
 
     @Autowired
     private LockManager lockManager;
+
+    @Autowired
+    private EntityManagerFactory emf;
 
 
     /**
@@ -59,7 +61,7 @@ public abstract class OnlyOnceJob implements Job {
 
         String lockId = execution.getJobId().toString();
 
-        Lock lock = lockManager.createLock( MANAGEMENT_APPLICATION_ID, String.format( "/jobs/%s", lockId ) );
+        Lock lock = lockManager.createLock( emf.getManagementAppId(), String.format( "/jobs/%s", lockId ) );
 
         // the job is still running somewhere else. Try again in getDelay() milliseconds
         if ( !lock.tryLock( 0, TimeUnit.MILLISECONDS ) ) {
