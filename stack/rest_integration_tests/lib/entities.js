@@ -69,7 +69,7 @@ module.exports = {
                 body: options
             }, function(e, r, body) {
                 var error = responseLib.getError(e, r);
-                returnBody.push(body.entities[0]);
+                !error && returnBody.push(body.entities[0]);
                 cb(error, error ? error : body.entities[0]);
             });
         }, function(err,bodies) {

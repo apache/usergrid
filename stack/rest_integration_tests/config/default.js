@@ -19,6 +19,8 @@ module.exports = {
     orgName: "test-organization", //must
     appName: "test-app", //must pre create app
     numberOfUsers: 5,
+    numberOfEntitiesConsistent: 100,
+    consistentChecks:3,
     numberOfEntities: 20,
     org: {
         clientId: "",
