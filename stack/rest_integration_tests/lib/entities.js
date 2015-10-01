@@ -69,8 +69,9 @@ module.exports = {
                 body: options
             }, function(e, r, body) {
                 var error = responseLib.getError(e, r);
-                !error && returnBody.push(body.entities[0]);
-                cb(error, error ? error : body.entities[0]);
+                var entity = body && body.entities ? body.entities.pop() : null;
+                entity &&  returnBody.push(entity);
+                cb(error, error ? error : entity);
             });
         }, function(err,bodies) {
            cb(err,returnBody);
