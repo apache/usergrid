@@ -1,4 +1,5 @@
 .idea
+jssecacerts
 .sonar-ide.properties
 .clover
 atlassian-ide-plugin.xml
@@ -29,10 +30,10 @@ DS_Store
 /console/.gitignore
 /websocket/${activemq.base}/
 /tools/export/
-/config/src/main/resources/usergrid-custom.properties
+/config/src/main/resources/usergrid-deployment.properties
 /config/src/test/resources/usergrid-custom-test.properties
 /standalone/usergrid-custom-standalone.properties
-/rest/src/main/resources/usergrid-custom.properties
+/rest/src/main/resources/usergrid-deployment.properties
 
 usergrid-custom*
 

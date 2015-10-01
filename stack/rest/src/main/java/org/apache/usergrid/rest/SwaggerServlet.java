@@ -33,6 +33,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +42,9 @@ import org.springframework.context.ApplicationContext;
 import org.apache.commons.lang.text.StrSubstitutor;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.springframework.web.context.support.WebApplicationContextUtils.getRequiredWebApplicationContext;
 import static org.apache.usergrid.rest.utils.CORSUtils.allowAllOrigins;
 import static org.apache.usergrid.utils.StringUtils.readClasspathFileAsString;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 
 public class SwaggerServlet extends HttpServlet implements Filter {
@@ -85,7 +86,8 @@ public class SwaggerServlet extends HttpServlet implements Filter {
         if ( sc == null ) {
             return null;
         }
-        ApplicationContext appContext = getRequiredWebApplicationContext( sc );
+        ApplicationContext appContext =
+                WebApplicationContextUtils.getRequiredWebApplicationContext( sc );
         return appContext.getBean( beanName );
     }
 
@@ -161,7 +163,7 @@ public class SwaggerServlet extends HttpServlet implements Filter {
             if ( json != null ) {
                 allowAllOrigins( request, response );
                 if ( "get".equalsIgnoreCase( request.getMethod() ) ) {
-                    response.setContentType( "application/json" );
+                    response.setContentType( MediaType.APPLICATION_JSON );
                     response.getWriter().print( json );
                     return true;
                 }

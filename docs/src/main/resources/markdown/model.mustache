@@ -1,0 +1,34 @@
+
+### {{name}}
+
+{{description}}
+
+__Properties__ 
+
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+  </tr>
+  {{#properties}}
+  <tr>
+      <td>{{name}}</td>
+      <td>
+          {{#ref}} [{{ref}}](#{{ref_lc}}) {{/ref}} {{^ref}}{{type}}{{/ref}}
+      </td>
+      <td>{{description}}</td>
+      <td>{{required}}</td>
+  </tr>
+  {{/properties}}
+</table>
+
+{{#hasModelRefs}}
+__Referring Definitions__
+  
+{{#modelRefs}}
+* [{{refName}}](#{{refName_lc}})
+{{/modelRefs}}
+      
+{{/hasModelRefs}}

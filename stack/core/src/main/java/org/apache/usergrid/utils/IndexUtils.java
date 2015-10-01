@@ -30,22 +30,23 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ClassUtils.isBasicType;
 import static org.apache.usergrid.utils.JsonUtils.quoteString;
 import static org.apache.usergrid.utils.JsonUtils.toJsonNode;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class IndexUtils {
@@ -109,7 +110,7 @@ public class IndexUtils {
             Object[] newHistory = Arrays.copyOf( history, history.length + 1 );
             newHistory[history.length] = node;
             ObjectNode c = ( ObjectNode ) node;
-            Iterator<Entry<String, JsonNode>> i = c.getFields();
+            Iterator<Entry<String, JsonNode>> i = c.fields();
             while ( i.hasNext() ) {
                 Entry<String, JsonNode> e = i.next();
                 String newPath;
@@ -141,14 +142,14 @@ public class IndexUtils {
 
             if ( node instanceof JsonNode ) {
                 if ( ( ( JsonNode ) node ).isTextual() ) {
-                    node = ( ( JsonNode ) node ).getTextValue();
+                    node = ( ( JsonNode ) node ).asText();
                     UUID uuid = UUIDUtils.tryGetUUID( ( String ) node );
                     if ( uuid != null ) {
                         node = uuid;
                     }
                 }
                 else if ( ( ( JsonNode ) node ).isNumber() ) {
-                    node = ( ( JsonNode ) node ).getNumberValue();
+                    node = ( ( JsonNode ) node ).asInt();
                 }
                 else {
                     return;
@@ -203,15 +204,23 @@ public class IndexUtils {
 
 
     public static List<String> keywords( String source ) {
-        TokenStream ts = analyzer.tokenStream( "keywords", new StringReader( source ) );
         List<String> keywords = new ArrayList<String>();
+        TokenStream ts = null;
         try {
+            ts = analyzer.tokenStream( "keywords", new StringReader( source ) );
+            ts.reset();
             while ( ts.incrementToken() ) {
-                keywords.add( ts.getAttribute( TermAttribute.class ).term() );
+                keywords.add( ts.getAttribute( CharTermAttribute.class ).toString() );
             }
+            ts.end();
         }
         catch ( IOException e ) {
             LOG.error( "Error getting keywords ", e );
+        }
+        finally {
+            try {
+                 ts.close();
+            } catch (IOException ignored) {}
         }
         return keywords;
     }

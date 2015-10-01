@@ -70,6 +70,7 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
 
         //if any error occurs, we need to notify the observer so it can perform it's own error handling
         catch ( Throwable t ) {
+            log.error( "Unable to emit items from iterator {}", name, t );
             subscriber.onError( t );
         }
     }

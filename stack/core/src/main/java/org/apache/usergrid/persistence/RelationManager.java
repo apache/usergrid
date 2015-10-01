@@ -17,12 +17,15 @@
 package org.apache.usergrid.persistence;
 
 
+import java.nio.ByteBuffer;
+import org.apache.usergrid.persistence.Query;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.usergrid.persistence.Query.Level;
 
-import org.apache.usergrid.persistence.Results.Level;
+import me.prettyprint.hector.api.mutation.Mutator;
 
 
 public interface RelationManager {
@@ -44,14 +47,12 @@ public interface RelationManager {
 
     public Set<String> getCollections() throws Exception;
 
-    public Results getCollection( String collectionName, UUID startResult, int count, Results.Level resultsLevel,
+    public Results getCollection( String collectionName, UUID startResult, int count, Level resultsLevel,
                                   boolean reversed ) throws Exception;
 
-    public Results getCollection( String collectionName, Query query, Results.Level resultsLevel ) throws Exception;
+    public Results getCollection( String collectionName, Query query, Level resultsLevel ) throws Exception;
 
     public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception;
-
-    public Entity addToCollections( List<EntityRef> owners, String collectionName ) throws Exception;
 
     public Entity createItemInCollection( String collectionName, String itemType, Map<String, Object> properties )
             throws Exception;
@@ -62,6 +63,16 @@ public interface RelationManager {
             throws Exception;
 
     public Results searchCollection( String collectionName, Query query ) throws Exception;
+
+    /**
+     * this loops for consistentcy and is dangerous to run often
+     * @param collectionName
+     * @param query
+     * @param expectedResults
+     * @return
+     * @throws Exception
+     */
+    public Results searchCollectionConsistent( String collectionName, Query query, int expectedResults ) throws Exception;
 
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception;
 
@@ -93,11 +104,11 @@ public interface RelationManager {
      * @param connectionType The type/name of the connection
      * @param connectedEntityType The type of
      */
-    public Results getConnectedEntities( String connectionType, String connectedEntityType, Results.Level resultsLevel )
+    public Results getTargetEntities(String connectionType, String connectedEntityType, Level resultsLevel)
             throws Exception;
 
-    public Results getConnectingEntities( String connectionType, String connectedEntityType,
-                                          Results.Level resultsLevel ) throws Exception;
+    public Results getSourceEntities(String connectionType, String connectedEntityType,
+                                     Level resultsLevel) throws Exception;
 
     // public Results searchConnectedEntitiesForProperty(String connectionType,
     // String connectedEntityType, String propertyName,
@@ -105,10 +116,13 @@ public interface RelationManager {
     // UUID startResult, int count, boolean reversed, Level resultsLevel)
     // throws Exception;
 
-    public Results getConnectingEntities(String connectionType, String entityType, Level level, int count) throws Exception;
+    public Results getSourceEntities(
+        String connectionType, String entityType, Level level, int count) throws Exception;
 
-	public Results searchConnectedEntities( Query query ) throws Exception;
+	public Results searchTargetEntities(Query query) throws Exception;
 
 
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception;
+
+
 }

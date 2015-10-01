@@ -21,13 +21,6 @@ import java.io.File;
 import java.util.Map;
 
 
-/**
- *
- *
- */
 public interface S3Export {
     void copyToS3( File ephemeral,Map<String,Object> exportInfo, String filename );
-
-    String getFilename ();
-
 }

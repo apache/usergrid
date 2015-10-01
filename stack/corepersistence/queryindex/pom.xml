@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <artifactId>persistence</artifactId>
+        <groupId>org.apache.usergrid</groupId>
+        <version>2.1.1-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <description>Module provates indexing and query of Entities via ElasticSearch</description>
+
+    <artifactId>queryindex</artifactId>
+    <name>Usergrid Queryindex</name>
+
+    <build>
+
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </testResource>
+        </testResources>
+
+        <plugins>
+
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr3-maven-plugin</artifactId>
+                <version>${antlr.version}</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <outputDirectory>src/main/java</outputDirectory>
+                        </configuration>
+                        <goals>
+                            <goal>antlr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                       <groupId>org.apache.maven.plugins</groupId>
+                       <artifactId>maven-surefire-plugin</artifactId>
+
+                       <configuration>
+                           <includes>
+                               <include>**/*IT.java</include>
+                               <include>**/*Test.java</include>
+                           </includes>
+                           <!-- run this one manually to stress test -->
+                           <excludes>
+                               <exclude>**/IndexLoadTestsIT.java</exclude>
+                           </excludes>
+
+                       </configuration>
+
+                   </plugin>
+
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <!-- major dependencies -->
+
+
+
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>map</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+                  <groupId>${project.parent.groupId}</groupId>
+                  <artifactId>queue</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+              </dependency>
+
+
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch.version}</version>
+            <exclusions>
+
+                <!-- because embedded ES 1.3.2 search wants ALTLR 3.5 but embedded C* needs 3.4 -->
+                <exclusion>
+                    <artifactId>antlr-runtime</artifactId>
+                    <groupId>org.antlr</groupId>
+                </exclusion>
+
+            </exclusions>
+        </dependency>
+
+        <!-- Test dependencies  -->
+
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>collection</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>queue</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- common stuff, logging, etc.-->
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons.codec.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons.collections.version}</version>
+            <type>jar</type>
+        </dependency>
+
+      <dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>common</artifactId>
+          <version>${project.version}</version>
+          <classifier>tests</classifier>
+          <scope>test</scope>
+      </dependency>
+
+    </dependencies>
+
+</project>

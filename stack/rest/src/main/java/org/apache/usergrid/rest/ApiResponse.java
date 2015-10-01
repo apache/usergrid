@@ -17,7 +17,15 @@
 package org.apache.usergrid.rest;
 
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,23 +35,29 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.apache.usergrid.management.OrganizationConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.rest.exceptions.UncaughtException;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.services.ServiceRequest;
 import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.utils.InflectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.lang.StringUtils;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
@@ -62,6 +76,7 @@ public class ApiResponse {
     private String errorUri;
     private String exception;
     private String callback;
+    private UUID errorId;
 
     private String path;
     private String uri;
@@ -82,8 +97,12 @@ public class ApiResponse {
     private Map<String, List<String>> params;
     private List<AggregateCounterSet> counters;
     private ClientCredentialsInfo credentials;
+    private OrganizationConfig organizationConfig;
 
     protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+
+    protected final Collection<String> IGNORE_QP = Arrays.asList("client_id", "client_secret", "password", "username", "access_token",
+                    "client_credentials", "fb_access_token", "fq_access_token", "ping_access_token", "token");
 
     @Autowired
     protected ServerEnvironmentProperties serverEnvironmentProperties;
@@ -163,12 +182,18 @@ public class ApiResponse {
             code = exceptionToErrorCode( e );
         }
         error = code;
-        errorDescription = description;
-        if ( e != null ) {
-            if ( description == null ) {
-                errorDescription = e.getMessage();
+        if ( e instanceof UncaughtException ) {
+            errorId = ((UncaughtException) e).getTimeUUID();
+            errorDescription = "Internal Server Error";
+            exception = UncaughtException.class.getName();
+        } else {
+            errorDescription = description;
+            if (e != null) {
+                if (description == null) {
+                    errorDescription = e.getMessage();
+                }
+                exception = e.getClass().getName();
             }
-            exception = e.getClass().getName();
         }
     }
 
@@ -204,6 +229,15 @@ public class ApiResponse {
         this.errorUri = errorUri;
     }
 
+    @JsonProperty( "error_id" )
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public UUID getErrorId() {
+        return errorId;
+    }
+
+    public void setErrorId(UUID errorId) {
+        this.errorId = errorId;
+    }
 
     @JsonSerialize( include = Inclusion.NON_NULL )
     public String getException() {
@@ -379,6 +413,21 @@ public class ApiResponse {
     }
 
 
+    /**
+     * Set the response from the EM results
+     * @param results
+     * @return
+     */
+    public ApiResponse withResults(Results results){
+        entities = results.getEntities();
+        next = results.getNextResult();
+        cursor = results.getCursor();
+        counters = results.getCounters();
+
+        return this;
+    }
+
+
     public ApiResponse withResults( ServiceResults results ) {
         setResults( results );
         return this;
@@ -532,6 +581,17 @@ public class ApiResponse {
     }
 
 
+    @JsonProperty("configuration")
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public OrganizationConfig getOrganizationConfig() {
+        return organizationConfig;
+    }
+
+    public void setOrganizationConfig(OrganizationConfig organizationConfig) {
+        this.organizationConfig = organizationConfig;
+    }
+
+
     @JsonSerialize( include = Inclusion.NON_NULL )
     public Map<String, List<String>> getParams() {
         return params;
@@ -541,6 +601,7 @@ public class ApiResponse {
     public void setParams( Map<String, List<String>> params ) {
         Map<String, List<String>> q = new LinkedHashMap<String, List<String>>();
         for ( String k : params.keySet() ) {
+            if (IGNORE_QP.contains(k.toLowerCase())) continue;
             List<String> v = params.get( k );
             if ( v != null ) {
                 q.put( k, new ArrayList<String>( v ) );

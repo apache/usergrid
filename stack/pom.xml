@@ -27,89 +27,112 @@
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>1.0.2</version>
+  <version>2.1.1-SNAPSHOT</version>
   <name>Usergrid Parent</name>
   <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
 
-  <properties>
-    <!-- =================================================================== -->
-    <!-- Properties: Deployment Setting Defaults                             -->
-    <!-- =================================================================== -->
-    <!-- NOTE: override from the CLI or settings.xml                 -->
-    <!-- NOTE: add server credentials config via settings            -->
-    <!-- NOTE: <settings>                                            -->
-    <!-- NOTE:   <servers>                                           -->
-    <!-- NOTE:     <server>                                          -->
-    <!-- NOTE:       <id>usergrid.releases</id>                      -->
-    <!-- NOTE:       <username>akarasulu</username>                  -->
-    <!-- NOTE:       <password>*********</password>                  -->
-    <!-- NOTE:     </server>                                         -->
-    <!-- NOTE:     <server>                                          -->
-    <!-- NOTE:       <id>usergrid.snapshots</id>                     -->
-    <!-- NOTE:       <username>akarasulu</username>                  -->
-    <!-- NOTE:       <password>*********</password>                  -->
-    <!-- NOTE:     </server>                                         -->
-    <!-- NOTE:   </servers>                                          -->
-    <!-- NOTE:                                                       -->
-    <!-- NOTE:   <profiles>                                          -->
-    <!-- NOTE:     <profile>                                         -->
-    <!-- NOTE:       <id>deployment</id>                             -->
-    <!-- NOTE:       <properties>                                    -->
-    <!-- NOTE:         <release.repository.url>                      -->
-    <!-- NOTE:           https://to/your/custom/releases/repository  -->
-    <!-- NOTE:         </release.repository.url>                     -->
-    <!-- NOTE:         <snapshot.repository.url>                     -->
-    <!-- NOTE:           https://to/your/custom/snapshots/repository -->
-    <!-- NOTE:         </shapshot.repository.url>                    -->
-    <!-- NOTE:       </properties>                                   -->
-    <!-- NOTE:     </profile>                                        -->
-    <!-- NOTE:   </profiles>                                         -->
-    <!-- NOTE:                                                       -->
-    <!-- NOTE:   <activeProfiles>                                    -->
-    <!-- NOTE:     <activeProfile>deployment</activeProfile>         -->
-    <!-- NOTE:   </activeProfiles>                                   -->
-    <!-- NOTE: </settings>                                           -->
+    <properties>
+      <!-- =================================================================== -->
+      <!-- Properties: Deployment Setting Defaults                             -->
+      <!-- =================================================================== -->
+      <!-- NOTE: override from the CLI or settings.xml                 -->
+      <!-- NOTE: add server credentials config via settings            -->
+      <!-- NOTE: <settings>                                            -->
+      <!-- NOTE:   <servers>                                           -->
+      <!-- NOTE:     <server>                                          -->
+      <!-- NOTE:       <id>usergrid.releases</id>                      -->
+      <!-- NOTE:       <username>akarasulu</username>                  -->
+      <!-- NOTE:       <password>*********</password>                  -->
+      <!-- NOTE:     </server>                                         -->
+      <!-- NOTE:     <server>                                          -->
+      <!-- NOTE:       <id>usergrid.snapshots</id>                     -->
+      <!-- NOTE:       <username>akarasulu</username>                  -->
+      <!-- NOTE:       <password>*********</password>                  -->
+      <!-- NOTE:     </server>                                         -->
+      <!-- NOTE:   </servers>                                          -->
+      <!-- NOTE:                                                       -->
+      <!-- NOTE:   <profiles>                                          -->
+      <!-- NOTE:     <profile>                                         -->
+      <!-- NOTE:       <id>deployment</id>                             -->
+      <!-- NOTE:       <properties>                                    -->
+      <!-- NOTE:         <release.repository.url>                      -->
+      <!-- NOTE:           https://to/your/custom/releases/repository  -->
+      <!-- NOTE:         </release.repository.url>                     -->
+      <!-- NOTE:         <snapshot.repository.url>                     -->
+      <!-- NOTE:           https://to/your/custom/snapshots/repository -->
+      <!-- NOTE:         </shapshot.repository.url>                    -->
+      <!-- NOTE:       </properties>                                   -->
+      <!-- NOTE:     </profile>                                        -->
+      <!-- NOTE:   </profiles>                                         -->
+      <!-- NOTE:                                                       -->
+      <!-- NOTE:   <activeProfiles>                                    -->
+      <!-- NOTE:     <activeProfile>deployment</activeProfile>         -->
+      <!-- NOTE:   </activeProfiles>                                   -->
+      <!-- NOTE: </settings>                                           -->
 
-    <!-- =================================================================== -->
-    <!-- Properties: General Settings -->
-    <!-- =================================================================== -->
+      <snapshot.repository.url>
+        https://repository.apache.org/content/repositories/snapshots
+      </snapshot.repository.url>
+      <release.repository.url>
+        https://repository.apache.org/service/local/staging/deploy/maven2
+      </release.repository.url>
 
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <!-- =================================================================== -->
+      <!-- Properties: General Settings -->
+      <!-- =================================================================== -->
 
-    <!-- you can override these via MAVEN_OPTS -->
-    <ug.heapmax>2048m</ug.heapmax>
-    <ug.heapmin>2048m</ug.heapmin>
-	<ug.argline>-Djava.awt.headless=true</ug.argline>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
-    <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
+      <!-- you can override these via MAVEN_OPTS -->
+      <ug.heapmax>4096m</ug.heapmax>
+      <ug.heapmin>2048m</ug.heapmin>
+  	  <ug.argline>-Djava.awt.headless=true</ug.argline>
 
-    <!-- =================================================================== -->
-    <!-- Properties: Dependency Settings -->
-    <!-- =================================================================== -->
+      <usergrid-custom-spring-properties>classpath:/usergrid-deployment.properties</usergrid-custom-spring-properties>
+      <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
 
-    <amber-version>0.22-incubating</amber-version>
-    <cassandra-version>1.2.12</cassandra-version>
-    <hector-om-version>3.0-03</hector-om-version>
-    <hector-version>1.1-4</hector-version>
-    <hector-test-version>1.1-4</hector-test-version>
-    <jackson-version>1.9.9</jackson-version>
-    <jclouds.version>1.7.1</jclouds.version>
-    <jersey-version>1.18</jersey-version>
-    <junit-version>4.11</junit-version>
-    <log4j-version>1.2.16</log4j-version>
-    <metrics-version>2.1.2</metrics-version>
-    <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
-    <shiro-version>1.2.0</shiro-version>
-    <slf4j-version>1.6.1</slf4j-version>
-    <snakeyaml-version>1.8</snakeyaml-version>
-    <tomcat-version>7.0.42</tomcat-version>
-    <antlr.version>3.4</antlr.version>
-    <tika.version>1.4</tika.version>
-    <metrics.version>3.0.0</metrics.version>
-    <rx.version>0.19.6</rx.version>
-  </properties>
+      <!-- =================================================================== -->
+      <!-- Properties: Dependency Settings -->
+      <!-- =================================================================== -->
+
+      <amber-version>0.22-incubating</amber-version>
+      <aws.version>1.10.20</aws.version>
+      <cassandra-version>1.2.18</cassandra-version>
+      <guava.version>18.0</guava.version>
+      <guice.version>4.0-beta5</guice.version>
+      <hector-om-version>3.0-03</hector-om-version>
+      <hector-version>1.1-4</hector-version>
+      <hector-test-version>1.1-4</hector-test-version>
+      <jackson-version>1.9.9</jackson-version>
+      <jackson-2-version>2.3.3</jackson-2-version>
+      <jclouds.version>1.9.0</jclouds.version>
+      <jersey-version>2.21</jersey-version>
+      <junit-version>4.12</junit-version>
+      <log4j-version>1.2.16</log4j-version>
+      <org.springframework.version>3.2.13.RELEASE</org.springframework.version>
+      <shiro-version>1.2.4</shiro-version>
+      <slf4j-version>1.6.1</slf4j-version>
+      <snakeyaml-version>1.9</snakeyaml-version>
+      <tomcat-version>7.0.64</tomcat-version>
+      <antlr.version>3.4</antlr.version>
+      <tika.version>1.4</tika.version>
+      <mockito.version>1.10.8</mockito.version>
+
+      <!-- only use half the cores on the machine for testing -->
+      <usergrid.it.parallel>methods</usergrid.it.parallel>
+      <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
+      <usergrid.it.forkCount>1</usergrid.it.forkCount>
+      <usergrid.it.threads>8</usergrid.it.threads>
+
+      <metrics.version>3.0.0</metrics.version>
+        <surefire.plugin.artifactName>surefire-junit47</surefire.plugin.artifactName>
+      <surefire.plugin.version>2.18.1</surefire.plugin.version>
+      <powermock.version>1.6.1</powermock.version>
+
+      <maven.build.timestamp.format>yyyy-MM-dd'T'HH-mm-ss'Z'</maven.build.timestamp.format>
+
+    </properties>
 
   <licenses>
     <license>
@@ -154,21 +177,37 @@
       <id>tonuquq</id>
       <name>Alex Karasulu</name>
     </developer>
+    <developer>
+      <id>snoopdave</id>
+      <name>Dave Johnson</name>
+    </developer>
   </developers>
 
   <modules>
-    <module>java-sdk-old</module>
+    <module>build-tools</module>
+    <module>test-utils</module>
     <module>config</module>
+    <module>corepersistence</module>
     <module>core</module>
     <module>services</module>
-    <module>tools</module>
-    <module>mongo-emulator</module>
-    <module>websocket</module>
     <module>rest</module>
+    <!--
+    <module>tools</module>
+    <module>websocket</module>
+    -->
+    <!--
+    Re-enable when we have a fix for the AppleJavaExtensions jar issue
+    https://issues.apache.org/jira/browse/USERGRID-224
     <module>launcher</module>
-    <module>test-utils</module>
-    <!--<module>query-validator</module>-->
-    <module>build-tools</module>
+    -->
+    <!--
+    Not supported in 2.0 ATM.  We will re-visit after our refactor work
+    <module>mongo-emulator</module>-->
+    <!--
+    Re-enable when query-validator updated to work with Core Persistence.
+    https://issues.apache.org/jira/browse/USERGRID-221
+    <module>query-validator</module>
+    -->
   </modules>
 
   <dependencyManagement>
@@ -241,11 +280,11 @@
           </exclusion>
         </exclusions>
       </dependency>
-      
+
       <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-s3</artifactId>
-        <version>1.9.31</version>
+        <version>${aws.version}</version>
       </dependency>
 
 
@@ -317,7 +356,22 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr-runtime</artifactId>
           </exclusion>
-
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcomponents-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcomponents-core</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
@@ -416,12 +470,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-core</artifactId>
-        <version>3.0.3</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.apache.cassandra</groupId>
         <artifactId>cassandra-thrift</artifactId>
         <version>${cassandra-version}</version>
@@ -481,14 +529,8 @@
 
       <dependency>
         <groupId>org.apache.tomcat</groupId>
-        <artifactId>catalina</artifactId>
-        <version>6.0.29</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>juli</artifactId>
-        <version>6.0.29</version>
+        <artifactId>tomcat-catalina</artifactId>
+        <version>${tomcat-version}</version>
       </dependency>
 
       <dependency>
@@ -537,139 +579,139 @@
 
       <!-- Sun and Javax Package Dependencies -->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-core</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-core</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-json</artifactId>
-        <version>${jersey-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.codehaus.jettison</groupId>
-            <artifactId>jettison</artifactId>
-          </exclusion>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-json</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+        <!--<exclusions>-->
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jettison</groupId>-->
+            <!--<artifactId>jettison</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-core-asl</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-mapper-asl</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-jaxrs</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-jaxrs</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-xc</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-xc</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+          <!--<exclusion>-->
+            <!--<groupId>javax.activation</groupId>-->
+            <!--<artifactId>activation</artifactId>-->
+          <!--</exclusion>-->
+        <!--</exclusions>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-client</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-client</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-server</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-server</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-grizzly2</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-grizzly2</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>org.glassfish.grizzly</groupId>
-        <artifactId>grizzly-http-servlet-server</artifactId>
-        <version>2.1.2</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>org.glassfish.grizzly</groupId>-->
+        <!--<artifactId>grizzly-http-servlet-server</artifactId>-->
+        <!--<version>2.1.2</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>jersey-spring</artifactId>
-        <version>${jersey-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aop</artifactId>
-          </exclusion>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs</groupId>-->
+        <!--<artifactId>jersey-spring</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+        <!--<exclusions>-->
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-aop</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-core</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-beans</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-context</artifactId>-->
+          <!--</exclusion>-->
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+          <!--<exclusion>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-web</artifactId>-->
+          <!--</exclusion>-->
+        <!--</exclusions>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>jersey-multipart</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs</groupId>-->
+        <!--<artifactId>jersey-multipart</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
-        <artifactId>oauth-signature</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>-->
+        <!--<artifactId>oauth-signature</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
-        <artifactId>oauth-server</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>-->
+        <!--<artifactId>oauth-server</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.jersey-test-framework</groupId>
-        <artifactId>jersey-test-framework-external</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
+        <!--<artifactId>jersey-test-framework-external</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
-      <dependency>
-        <groupId>com.sun.jersey.jersey-test-framework</groupId>
-        <artifactId>jersey-test-framework-core</artifactId>
-        <version>${jersey-version}</version>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
+        <!--<artifactId>jersey-test-framework-core</artifactId>-->
+        <!--<version>${jersey-version}</version>-->
+      <!--</dependency>-->
 
       <dependency>
         <groupId>com.sun.mail</groupId>
@@ -701,6 +743,47 @@
         <version>1.2</version>
       </dependency>
 
+      <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- Just the annotations; use this dependency if you want to attach annotations
+           to classes without connecting them to the code. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- databinding; ObjectMapper, JsonNode and related classes are here -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- smile (binary JSON). Other artifacts in this group do other formats. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-smile</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+      <!-- JAX-RS provider -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-json-provider</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+      <!-- Support for JAX-B annotations as additional configuration -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-jaxb-annotations</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
       <!-- Other Commercial Dependencies -->
 
       <dependency>
@@ -730,13 +813,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>15.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-annotation</artifactId>
-        <version>${metrics-version}</version>
+        <version>${guava.version}</version>
       </dependency>
 
       <dependency>
@@ -848,15 +925,16 @@
 
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-xc</artifactId>
-        <version>${jackson-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-smile</artifactId>
         <version>${jackson-version}</version>
       </dependency>
+
+        <dependency>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-xc</artifactId>
+          <version>${jackson-version}</version>
+        </dependency>
+
 
       <dependency>
         <groupId>org.codehaus.jettison</groupId>
@@ -876,11 +954,13 @@
         <version>1.6.0</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.mongodb</groupId>
-        <artifactId>mongo-java-driver</artifactId>
-        <version>2.9.0</version>
-      </dependency>
+
+      <!--not supported in 2.0, see above
+      <dependency>-->
+        <!--<groupId>org.mongodb</groupId>-->
+        <!--<artifactId>mongo-java-driver</artifactId>-->
+        <!--<version>2.9.0</version>-->
+      <!--</dependency>-->
 
       <dependency>
         <groupId>org.python</groupId>
@@ -899,6 +979,7 @@
           </exclusion>
         </exclusions>
       </dependency>
+
 
       <dependency>
         <groupId>org.springframework</groupId>
@@ -978,44 +1059,8 @@
         <version>${snakeyaml-version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-core</artifactId>
-        <version>${metrics-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
-      <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-spring</artifactId>
-        <version>${metrics-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-          </exclusion>
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aop</artifactId>
-          </exclusion>
-
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-          </exclusion>
-
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context-support</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
       <dependency>
         <groupId>jline</groupId>
@@ -1081,28 +1126,30 @@
         <version>1.9</version>
       </dependency>
 
+        <!-- note that right now, we can't advance beyon 1.10.8 until this issue is fixed
+        https://code.google.com/p/powermock/issues/detail?id=524-->
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-all</artifactId>
-        <version>1.9.5-rc1</version>
+        <version>1.10.8</version>
       </dependency>
 
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-module-junit4</artifactId>
-        <version>1.5.1</version>
+        <version>${powermock.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-module-junit4-rule-agent</artifactId>
-        <version>1.5.1</version>
+        <version>${powermock.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-api-mockito</artifactId>
-        <version>1.5.1</version>
+        <version>${powermock.version}</version>
       </dependency>
 
       <dependency>
@@ -1185,6 +1232,13 @@
         <groupId>org.apache.jclouds</groupId>
         <artifactId>jclouds-blobstore</artifactId>
         <version>${jclouds.version}</version>
+          <exclusions>
+              <!-- blows up our version of guice-->
+                          <exclusion>
+                              <groupId>com.google.inject.extensions</groupId>
+                              <artifactId>guice-assistedinject</artifactId>
+                          </exclusion>
+          </exclusions>
       </dependency>
 
       <dependency>
@@ -1206,6 +1260,13 @@
             <groupId>aopalliance</groupId>
             <artifactId>aopalliance</artifactId>
           </exclusion>
+
+            <!-- if this is uncommented out sends our service tier into bootloop -->
+            <!-- blows up our version of guice-->
+            <!--<exclusion>-->
+                <!--<groupId>com.google.inject.extensions</groupId>-->
+                <!--<artifactId>guice-assistedinject</artifactId>-->
+            <!--</exclusion>-->
         </exclusions>
       </dependency>
 
@@ -1258,9 +1319,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.usergrid</groupId>
+        <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid-java-client</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.10-SNAPSHOT</version>
       </dependency>
 
       <dependency>
@@ -1345,7 +1406,22 @@
         <artifactId>activation</artifactId>
         <version>1.1</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.relayrides</groupId>
+        <artifactId>pushy</artifactId>
+        <!-- The sha in the version is the git commit used in this build.  Check out the pushy source, then this commit to build the library locally -->
+        <version>0.4</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.ganyo</groupId>
+          <artifactId>gcm-server</artifactId>
+          <version>1.0.2</version>
+      </dependency>
+
     </dependencies>
+
   </dependencyManagement>
 
   <dependencies>
@@ -1356,381 +1432,80 @@
   </dependencies>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>sonar-maven-plugin</artifactId>
-          <version>2.1</version>
-        </plugin>
-
-        <!--
-                <plugin>
-                  <groupId>com.structure101.java</groupId>
-                  <artifactId>maven-structure101-plugin</artifactId>
-                  <version>1.1</version>
-                </plugin>
-        -->
-        <plugin>
-          <groupId>org.antlr</groupId>
-          <artifactId>antlr3-maven-plugin</artifactId>
-          <version>${antlr.version}</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>antlr-maven-plugin</artifactId>
-          <version>2.2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <version>1.7</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.4</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-changes-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>2.10</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>2.4.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.1</version>
-          <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
-            <optimize>true</optimize>
-            <showDeprecation>true</showDeprecation>
-            <debug>true</debug>
-            <encoding>UTF-8</encoding>
-            <showWarnings>true</showWarnings>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.8</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.7</version>
-          <inherited>true</inherited>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-docck-plugin</artifactId>
-          <version>1.0</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-ear-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-eclipse-plugin</artifactId>
-          <version>2.9</version>
-          <inherited>true</inherited>
-          <configuration>
-            <downloadSources>true</downloadSources>
-            <downloadJavadocs>true</downloadJavadocs>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-ejb-plugin</artifactId>
-          <version>2.3</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.3.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-gpg-plugin</artifactId>
-          <version>1.4</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>2.4</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>2.4</version>
-          <executions>
-            <execution>
-              <id>test-jar-execution</id>
-              <phase>package</phase>
-              <goals>
-                <goal>test-jar</goal>
-              </goals>
-              <configuration>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.8</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jxr-plugin</artifactId>
-          <version>2.3</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-plugin-plugin</artifactId>
-          <version>2.9</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-pmd-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>2.4</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-release-plugin</artifactId>
-          <version>2.4.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-remote-resources-plugin</artifactId>
-          <version>1.2.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-scm-plugin</artifactId>
-          <version>1.5</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>2.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.3</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>2.2.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-stage-plugin</artifactId>
-          <version>1.0-alpha-2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-report-plugin</artifactId>
-          <version>2.15</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.15</version>
-          <configuration>
-            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-war-plugin</artifactId>
-          <version>2.1.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.geronimo.genesis.plugins</groupId>
-          <artifactId>tools-maven-plugin</artifactId>
-          <version>1.4</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.xbean</groupId>
-          <artifactId>maven-xbean-plugin</artifactId>
-          <version>3.8</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.modello</groupId>
-          <artifactId>modello-maven-plugin</artifactId>
-          <version>1.5</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>1.7</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>clirr-maven-plugin</artifactId>
-          <version>2.3</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>dashboard-maven-plugin</artifactId>
-          <version>1.0.0-beta-1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>2.3.2</version>
-          <configuration>
-            <xmlOutput>false</xmlOutput>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>javancss-maven-plugin</artifactId>
-          <version>2.0</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>l10n-maven-plugin</artifactId>
-          <version>1.0-alpha-2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>taglist-maven-plugin</artifactId>
-          <version>2.4</version>
-          <configuration>
-            <tags>
-              <tag>TODO</tag>
-              <tag>@todo</tag>
-              <tag>@deprecated</tag>
-              <tag>FIXME</tag>
-            </tags>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>versions-maven-plugin</artifactId>
-          <version>1.2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>com.agilejava.docbkx</groupId>
-          <artifactId>docbkx-maven-plugin</artifactId>
-          <version>2.0.13</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>jdepend-maven-plugin</artifactId>
-          <version>2.0-beta-2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo.jspc</groupId>
-          <artifactId>jspc-maven-plugin</artifactId>
-          <version>2.0-alpha-3</version>
-          <configuration>
-            <includeInProject>false</includeInProject>
-            <webFragmentFile>${project.build.directory}/web-fragment.xml.txt</webFragmentFile>
-          </configuration>
-          <executions>
-            <execution>
-              <id>jspc</id>
-              <goals>
-                <goal>compile</goal>
-              </goals>
-            </execution>
-          </executions>
-          <dependencies>
-            <dependency>
-              <groupId>org.codehaus.mojo.jspc</groupId>
-              <artifactId>jspc-compiler-tomcat6</artifactId>
-              <version>2.0-alpha-3</version>
-            </dependency>
-          </dependencies>
-        </plugin>
-      </plugins>
-    </pluginManagement>
 
     <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>sonar-maven-plugin</artifactId>
-      </plugin>
+
+
+                <!--
+                        <plugin>
+                          <groupId>com.structure101.java</groupId>
+                          <artifactId>maven-structure101-plugin</artifactId>
+                          <version>1.1</version>
+                        </plugin>
+                -->
+
+
+                <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-jar-plugin</artifactId>
+                  <version>2.5</version>
+                  <executions>
+                    <execution>
+                      <id>test-jar-execution</id>
+                      <phase>package</phase>
+                      <goals>
+                        <goal>test-jar</goal>
+                      </goals>
+                      <configuration>
+                      </configuration>
+                    </execution>
+                  </executions>
+                </plugin>
+
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-surefire-plugin</artifactId>
+                      <version>${surefire.plugin.version}</version>
+                      <configuration>
+                          <parallel>${usergrid.it.parallel}</parallel>
+                          <forkCount>${usergrid.it.forkCount}</forkCount>
+                          <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+                          <threadCount>${usergrid.it.forkCount}</threadCount>
+                          <!-- see this page for documentation on classloading issues http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
+                          <useSystemClassLoader>false</useSystemClassLoader>
+                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+                          <testFailureIgnore>false</testFailureIgnore>
+                      </configuration>
+
+                      <!-- TODO, we may need an exclusion.  Appears to be a classloader bug
+                      http://stackoverflow.com/questions/27225140/intermittent-noclassdeffounderror-when-running-a-maven-surefire-build-in-jenkins
+                      -->
+                      <dependencies>
+                          <dependency>
+                              <groupId>org.apache.maven.surefire</groupId>
+                              <artifactId>${surefire.plugin.artifactName}</artifactId>
+                              <version>${surefire.plugin.version}</version>
+
+                              <!--<exclusions>-->
+                                  <!--<exclusion>-->
+                                      <!--<groupId>org.apache.maven.surfire</groupId>-->
+                                      <!--<artifactId>common-junit3</artifactId>-->
+                                  <!--</exclusion>-->
+                              <!--</exclusions>-->
+                          </dependency>
+                          <!-- override plex utils, otherwise bug from above SO post happens-->
+                          <dependency>
+                              <groupId>org.codehaus.plexus</groupId>
+                              <artifactId>plexus-utils</artifactId>
+                              <version>3.0.21</version>
+                          </dependency>
+                      </dependencies>
+                  </plugin>
 
 
         <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
-            <version>0.10</version>
             <executions>
                 <execution>
                     <phase>verify</phase>
@@ -1747,12 +1522,14 @@
                     <exclude>**/*.json</exclude>
                     <exclude>**/*.log</exclude>
                     <exclude>**/*.md5</exclude>
+                    <exclude>**/*.opts</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
                     <exclude>**/.gitignore</exclude>
                     <exclude>**/.idea/**</exclude>
                     <exclude>**/*.iml</exclude>
+                    <exclude>**/*.log</exclude>
                     <exclude>**/nbactions.xml</exclude>
                     <exclude>**/nb-configuration.xml</exclude>
                     <exclude>**/.classpath/**</exclude>
@@ -1770,17 +1547,29 @@
                     <exclude>**/**QueryFilter.tokens</exclude>
                     <exclude>**/**QueryFilterLexer.java</exclude>
                     <exclude>**/**QueryFilterParser.java</exclude>
+                    <exclude>**/**.conf</exclude>
+                    <exclude>**/**.csv</exclude>
+                    <exclude>**/aws.properties</exclude>
+                    <exclude>**/tempExport*</exclude>
+                    <exclude>loadtests/loadtest_setup.sh</exclude>
+		    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
+                    <exclude>loadtests/.java-version</exclude>
+
+                    <!-- gatling loadtest data files -->
+                    <exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/datafiles/**.txt</exclude>
+                    <exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/**.txt</exclude>
+                    <exclude>loadtests/src/test/resources/**.csv</exclude>
 
                     <!-- other -->
+                    <exclude>**/catalina_base/**</exclude>
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
-                    <exclude>**/src/test/resources/**</exclude>
-                    <exclude>**/cloudbees.xml</exclude>
-                  <exclude>**/doc/**</exclude>
-                  <exclude>**/awscluster/**</exclude>
-                    <exclude>**/aws.properties</exclude>
-                    <exclude>**/launcher-vagrant/**</exclude>
-                    <exclude>**/usergrid-custom.properties</exclude>
+                    <exclude>**/dummy.txt</exclude>
+		    <exclude>**/cloudbees.xml</exclude>
+		    <exclude>**/catalina_base/**</exclude>
+                    <exlude>loadtests/gatling/lib/**</exlude>
+                    <exlude>loadtests/gatling/user-files/**</exlude>
+                    <exlude>rest_integration_tests/node_modules/**</exlude>
 
                 </excludes>
             </configuration>
@@ -1791,8 +1580,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <optimize>true</optimize>
           <showDeprecation>true</showDeprecation>
           <debug>true</debug>
@@ -1801,15 +1590,6 @@
         </configuration>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -1823,7 +1603,7 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>1.6.0</version>
+                  <version>1.8.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.0,)</version>
@@ -1837,7 +1617,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.10</version>
         <configuration>
           <configLocation>usergrid/checkstyle.xml</configLocation>
         </configuration>
@@ -1854,11 +1633,6 @@
 
   <reporting>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.8</version>
-      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -1872,13 +1646,14 @@
     </plugins>
   </reporting>
 
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/../m2/repository</url>
-        </repository>
-    </repositories>
+
+    <!--<repositories>-->
+        <!--<repository>-->
+            <!--<id>local-dependencies</id>-->
+            <!--<name>local-depedendencies</name>-->
+            <!--<url>file://${project.basedir}/../m2/repository</url>-->
+        <!--</repository>-->
+    <!--</repositories>-->
 
     <scm>
     	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
@@ -1886,4 +1661,6 @@
     	<tag>HEAD</tag>
     	<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</developerConnection>
     </scm>
+
 </project>
+

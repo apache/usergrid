@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.generic.GenericCollectionService;
@@ -37,7 +38,7 @@ public class ActivitiesService extends GenericCollectionService {
 
     public ActivitiesService() {
         super();
-        logger.info( "/groups/*/activities" );
+        logger.debug( "/groups/*/activities" );
     }
 
 
@@ -66,7 +67,7 @@ public class ActivitiesService extends GenericCollectionService {
             return;
         }
         em.addToCollection( group, "feed", activity );
-        Results r = em.getCollection( group, "users", null, 10000, Results.Level.REFS, false );
+        Results r = em.getCollection( group, "users", null, 10000, Level.REFS, false );
         List<EntityRef> refs = r.getRefs();
         if ( refs != null ) {
             em.addToCollections( refs, "feed", activity );

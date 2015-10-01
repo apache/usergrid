@@ -28,6 +28,6 @@ public class UsersService extends org.apache.usergrid.services.users.UsersServic
 
     public UsersService() {
         super();
-        logger.info( "/groups/*/users" );
+        logger.debug( "/groups/*/users" );
     }
 }

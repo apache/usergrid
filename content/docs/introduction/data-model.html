@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usergrid Data model &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Async vs. sync calls" href="async-vs-sync.html"/>
+        <link rel="prev" title="Usergrid Features" href="usergrid-features.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Usergrid Data model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#organizations">Organizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#applications">Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#collections">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entities">Entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#default-entities">Default entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#properties">Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#default-properties">Default properties</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Usergrid Data model</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/introduction/data-model.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usergrid-data-model">
+<h1>Usergrid Data model<a class="headerlink" href="#usergrid-data-model" title="Permalink to this headline">¶</a></h1>
+<p>Usergrid models the data for your apps as application-specific
+collections of data entities managed within an organization. The
+following is an overview of the component hierarchy that makes up the
+data model, and is intended to help you understand how data is stored,
+managed and accessed.</p>
+<div class="section" id="organizations">
+<h2>Organizations<a class="headerlink" href="#organizations" title="Permalink to this headline">¶</a></h2>
+<p>An organization contains one or more applications, and represents
+administrator-level access. Multiple accounts may be given administrator
+access to an organization. Accounts can also be members of multiple
+organizations.</p>
+<p>An organization with the same name as your username is automatically
+created for you when you sign up. By default, you are assigned as the
+administrator of this organization.</p>
+</div>
+<div class="section" id="applications">
+<h2>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h2>
+<p>In Usergrid, you can create one or more applications within an
+organization. Applications represent an instance of application data
+associated with an app, and you may create as many applications as you
+wish. This allows you to utilize the backend in a way that corresponds
+to your development process. For example, you might create separate
+applications for development and production instances of your app. By
+default, all organization have a sandbox application (see Using a
+<a class="reference external" href="../getting-started/using-a-sandbox-app.html">Sandbox Application</a>
+for important information regarding the default sandbox application).</p>
+<p>Each application provides the infrastructure for storing, retrieving,
+updating and deleting the entities and collections associated with a
+specific app instance.</p>
+</div>
+<div class="section" id="collections">
+<h2>Collections<a class="headerlink" href="#collections" title="Permalink to this headline">¶</a></h2>
+<p>Usergrid stores all data entities in uniquely-named collections.
+Collections are created automatically for every entity type, including
+custom entities, and are named using the plural form of the entity type
+they store. For example, all user entities are stored in the /users
+collection, and all device entities in the /devices collection. An
+entity can belong to only one collection.</p>
+<p>Currently, collections cannot be renamed or deleted; however, all of the
+data entities in a collection can be updated or deleted.</p>
+</div>
+<div class="section" id="entities">
+<h2>Entities<a class="headerlink" href="#entities" title="Permalink to this headline">¶</a></h2>
+<p>An entity represents a basic, JSON-formatted data object that is used by
+your app, such as a user, device, event or asset. Unlike records in
+conventional database tables, which have a rigid schema that defines
+what they can store and how they can be related to each other, Usergrid
+entities are very flexible. This makes Usergrid a powerful solution for
+managing data for modern applications, where people, places, and content
+often need to be associated in a way that is most appropriate from a
+user perspective.</p>
+<p>Here is a simple example of an entity:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;5c0c1789-d503-11e1-b36a-12313b01d5c1&quot;</span><span class="p">,</span>
+  <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;user&quot;</span><span class="p">,</span>
+  <span class="s">&quot;created&quot;</span> <span class="p">:</span> <span class="mi">1343074620374</span><span class="p">,</span>
+  <span class="s">&quot;modified&quot;</span> <span class="p">:</span> <span class="mi">1355442681264</span><span class="p">,</span>
+  <span class="s">&quot;username&quot;</span> <span class="p">:</span> <span class="s">&quot;john.doe&quot;</span><span class="p">,</span>
+  <span class="s">&quot;email&quot;</span> <span class="p">:</span> <span class="s">&quot;jdoe57@mail.com&quot;</span><span class="p">,</span>
+  <span class="s">&quot;name&quot;</span> <span class="p">:</span> <span class="s">&quot;John Doe&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="default-entities">
+<h2>Default entities<a class="headerlink" href="#default-entities" title="Permalink to this headline">¶</a></h2>
+<p>The following entity types are predefined in Usergrid. For more details,
+see the <a class="reference external" href="../rest-endpoints/api-docs.html">API Reference</a></p>
+<ul class="simple">
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#user">user</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#group">group</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#role">role</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#application">application</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#activity">activity</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#device">device</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#asset">asset</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#folder">folder</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#event">event</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#notifier">notifier</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#notification">notification</a></li>
+<li><a class="reference external" href="../rest-endpoints/api-docs.html#recept">receipt</a></li>
+</ul>
+</div>
+<div class="section" id="properties">
+<h2>Properties<a class="headerlink" href="#properties" title="Permalink to this headline">¶</a></h2>
+<p>A data entity is a set of properties, which can each contain any
+JSON-representable value, including a nested JSON document. All entities
+have predefined properties, but you are free to define any number of
+custom properties for any entity. Default properties require specific
+data types for validation purposes, while custom properties can be any
+JSON data type. Most predefined and all application-defined entity
+properties are indexed, allowing you to query collections quickly and
+easily.</p>
+<p>Individual or multiple properties can be updated in a single operation;
+however, partial updating of nested JSON documents is not supported.
+This means that all properties of a nested document must be provided in
+a PUT request for the update of the nested document to be processed,
+even if the some of the values have not changed.</p>
+</div>
+<div class="section" id="default-properties">
+<h2>Default properties<a class="headerlink" href="#default-properties" title="Permalink to this headline">¶</a></h2>
+<p>At a minimum, each entity is defined by two properties, both of which
+are strings: type and UUID. The entity &#8216;type&#8217; is the singular form of
+the collection the entity is stored in. For example, an entity in the
+&#8216;users&#8217; collection has an entity type of &#8216;user&#8217;. The entity &#8216;UUID&#8217; is an
+immutable universally unique identifier, which can be used to reference
+the entity. A UUID is automatically generated for every entity when it
+is created. You can also create custom entities and entity properties;
+however, Usergrid reserves certain entity types with pre-defined
+properties by default. For a complete list of reserved entities and
+properties, see Default Data Entity Types.</p>
+<p>When you access the system via the API, you’ll always provide your
+organization UUID or name, application UUID or name, and typically the
+UUID or name of the entity you’re modifying or retrieving.</p>
+<p>All entities have the following default properties:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="12%" />
+<col width="73%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Property</td>
+<td>Type</td>
+<td>Description</td>
+</tr>
+<tr class="row-even"><td>uuid</td>
+<td>UUID</td>
+<td>Entity unique id</td>
+</tr>
+<tr class="row-odd"><td>type</td>
+<td>string</td>
+<td>entity type (for example, user)</td>
+</tr>
+<tr class="row-even"><td>created</td>
+<td>long</td>
+<td>UTC timestamp in milliseconds of when the entity was
+created</td>
+</tr>
+<tr class="row-odd"><td>modified</td>
+<td>long</td>
+<td>UTC timestamp in milliseconds of when the entity was
+last modified</td>
+</tr>
+</tbody>
+</table>
+<p>Custom entities also have an optional name property that is a string
+identifier.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="async-vs-sync.html" class="btn btn-neutral float-right" title="Async vs. sync calls" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usergrid-features.html" class="btn btn-neutral" title="Usergrid Features" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

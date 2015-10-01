@@ -23,11 +23,13 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_URI;
@@ -66,7 +68,9 @@ public interface Entity extends EntityRef, Comparable<Entity> {
     @JsonIgnore
     public Map<String, Object> getProperties();
 
-    public void setProperties( Map<String, Object> properties );
+    void setProperties( Map<String, Object> properties );
+
+    void setProperties(org.apache.usergrid.persistence.model.entity.Entity cpEntity);
 
     public void addProperties( Map<String, Object> properties );
 
@@ -100,4 +104,9 @@ public interface Entity extends EntityRef, Comparable<Entity> {
 
     @JsonAnyGetter
     public abstract Map<String, Object> getDynamicProperties();
+
+    @JsonIgnore
+    long getSize();
+    void setSize(long size);
+
 }

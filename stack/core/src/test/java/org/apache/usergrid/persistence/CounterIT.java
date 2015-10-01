@@ -1,4 +1,5 @@
 /*
+
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,29 +23,37 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.CoreITSuite;
-import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
-import org.apache.usergrid.count.SimpleBatcher;
+import net.jcip.annotations.NotThreadSafe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.junit.Assert.fail;
 
 
-@Concurrent()
+@NotThreadSafe
 public class CounterIT extends AbstractCoreIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
+
+    @Rule
+    public ImmediateCounterRule counterRule = new ImmediateCounterRule();
 
     long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
 
@@ -54,36 +63,30 @@ public class CounterIT extends AbstractCoreIT {
     }
 
 
-    @Before
-    public void getSubmitter() {
-        //set the batcher to block the submit so we wait for results when testing
-        SimpleBatcher batcher = CoreITSuite.cassandraResource.getBean( SimpleBatcher.class );
-
-        batcher.setBlockingSubmit( true );
-        batcher.setBatchSize( 1 );
-    }
-
-
+    @Ignore( "needs to have elasticsearch refreshes implemented" )
     @Test
     public void testIncrementAndDecrement() throws Exception {
 
         LOG.info( "CounterIT.testIncrementAndDecrement" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCountersIandD" );
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
+
+
         assertNotNull( em );
+
+        final UUID applicationId = em.getApplicationId();
 
         Map<String, Long> counters = em.getEntityCounters( applicationId );
         assertEquals( null, counters.get( "application.collection.users" ) );
 
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = UUIDUtils.newTimeUUID(); // UUID.();
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "name", "test-name" );
         userProperties.put( "username", "test-username" );
         userProperties.put( "email", "test-email" );
         User user = ( User ) em.create( uuid, "user", userProperties ).toTypedEntity();
+
         LOG.debug( "user={}", user );
 
 
@@ -91,6 +94,7 @@ public class CounterIT extends AbstractCoreIT {
         assertEquals( new Long( 1 ), counters.get( "application.collection.users" ) );
 
         em.delete( user );
+
         counters = em.getEntityCounters( applicationId );
         assertEquals( new Long( 0 ), counters.get( "application.collection.users" ) );
     }
@@ -100,10 +104,8 @@ public class CounterIT extends AbstractCoreIT {
     public void testCounters() throws Exception {
         LOG.info( "CounterIT.testCounters" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCounters" );
-        assertNotNull( applicationId );
+        EntityManager em = app.getEntityManager();
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
 
@@ -128,19 +130,19 @@ public class CounterIT extends AbstractCoreIT {
         }
 
         Results r = em.getAggregateCounters( null, null, null, "visits", CounterResolution.SIX_HOUR, ts,
-                System.currentTimeMillis(), false );
+            System.currentTimeMillis(), false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.SIX_HOUR, ts,
-                System.currentTimeMillis(), false );
+            System.currentTimeMillis(), false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.SIX_HOUR, ts,
-                System.currentTimeMillis(), true );
+            System.currentTimeMillis(), true );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.ALL, ts, System.currentTimeMillis(),
-                false );
+            false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         for ( int i = 0; i < 10; i++ ) {
@@ -151,7 +153,7 @@ public class CounterIT extends AbstractCoreIT {
         }
 
         r = em.getAggregateCounters( null, null, null, "clicks", CounterResolution.HALF_HOUR, ts,
-                System.currentTimeMillis(), true );
+            System.currentTimeMillis(), true );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
         Query query = new Query();
@@ -177,24 +179,55 @@ public class CounterIT extends AbstractCoreIT {
 
 
     @Test
+    @Ignore()
     public void testCommunityCounters() throws Exception {
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
+
+        // get counts at start of test
+        Query query = new Query();
+        query.addCounterFilter( "admin.logins:*:*:*" );
+        query.setStartTime( ts );
+        query.setFinishTime( System.currentTimeMillis() );
+        query.setResolution( CounterResolution.SIX_HOUR );
+
+        Results or = em.getAggregateCounters( query );
+        final long originalCount;
+        if ( or.getCounters().get( 0 ).getValues().isEmpty() ) {
+            originalCount = 0;
+        }
+        else {
+            originalCount = or.getCounters().get( 0 ).getValues().get( 0 ).getValue();
+        }
+
+        Map<String, Long> counts = em.getApplicationCounters();
+        final long originalAdminLoginsCount;
+        if ( counts.get( "admin.logins" ) == null ) {
+            originalAdminLoginsCount = 0;
+        }
+        else {
+            originalAdminLoginsCount = counts.get( "admin.logins" );
+        }
+
+        String randomSuffix = UUIDGenerator.newTimeUUID().toString();
+        String orgName = "testCounter" + randomSuffix;
+        String appName = "testEntityCounters" + randomSuffix;
 
         Group organizationEntity = new Group();
-        organizationEntity.setPath( "tst-counter" );
-        organizationEntity.setProperty( "name", "testCounter" );
+        organizationEntity.setPath( "tst-counter" + randomSuffix );
+        organizationEntity.setProperty( "name", orgName );
         organizationEntity = em.create( organizationEntity );
 
-
-        UUID applicationId = setup.getEmf().createApplication( "testCounter", "testEntityCounters" );
+        Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName );
+        UUID applicationId = appInfo.getUuid();
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put( "name", "testCounter/testEntityCounters" );
-        Entity applicationEntity = em.create( applicationId, "application_info", properties );
+        properties.put( "name", orgName + "/" + appName );
+        Entity applicationEntity = em.create( applicationId, CpNamingUtils.APPLICATION_INFO, properties );
 
-        em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",
-                new SimpleEntityRef( "application_info", applicationId ) );
+        //Creating connections like below doesn't work.
 
+        em.createConnection( organizationEntity.toTypedEntity(), "owns", applicationEntity );
 
         Event event = new Event();
         event.setTimestamp( System.currentTimeMillis() );
@@ -203,34 +236,94 @@ public class CounterIT extends AbstractCoreIT {
 
         // TODO look at row syntax of event counters being sent
         em.create( event );
-    /*
-    event = new Event();
-    event.setTimestamp(System.currentTimeMillis());
-    event.addCounter("admin.logins", 1);
-    em.create(event);
-   */
-        Map<String, Long> counts = em.getApplicationCounters();
+
+        // event = new Event();
+        // event.setTimestamp(System.currentTimeMillis());
+        // event.addCounter("admin.logins", 1);
+        // em.create(event);
+
+        counts = em.getApplicationCounters();
         LOG.info( JsonUtils.mapToJsonString( counts ) );
         assertNotNull( counts.get( "admin.logins" ) );
-        assertEquals( 1, counts.get( "admin.logins" ).longValue() );
+        assertEquals( 1, counts.get( "admin.logins" ).longValue() - originalAdminLoginsCount );
+
         // Q's:
         // how to "count" a login to a specific application?
         // when org is provided, why is it returning 8? Is it 4 with one 'event'?
 
         Results r = em.getAggregateCounters( null, null, null, "admin.logins", CounterResolution.ALL, ts,
-                System.currentTimeMillis(), false );
+            System.currentTimeMillis(), false );
+
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() );
-        //counts = em.getEntityCounters(organizationEntity.getUuid());
-        //LOG.info(JsonUtils.mapToJsonString(counts));
-        Query query = new Query();
-        query.addCounterFilter( "admin.logins:*:*:*" );
-        query.setStartTime( ts );
-        query.setFinishTime( System.currentTimeMillis() );
-        query.setResolution( CounterResolution.SIX_HOUR );
-        //query.setPad(true);
+        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalAdminLoginsCount );
+
         r = em.getAggregateCounters( query );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() );
+        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalCount );
+    }
+
+
+    @Test
+    public void testTimedFlush() throws Exception {
+        LOG.info( "CounterIT.testCounters" );
+
+        EntityManager em = app.getEntityManager();
+
+
+        assertNotNull( em );
+
+
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        // UUID groupId = UUID.randomUUID();
+
+
+        Event event;
+
+        for ( int i = 0; i < 100; i++ ) {
+            event = new Event();
+            event.setTimestamp( ts + ( i * 60 * 1000 ) );
+            event.addCounter( "visits", 1 );
+            event.setUser( user1 );
+            em.create( event );
+
+            event = new Event();
+            event.setTimestamp( ts + ( i * 60 * 1000 ) );
+            event.addCounter( "visits", 1 );
+            event.setUser( user2 );
+            em.create( event );
+        }
+
+        //sleep to ensure the flush has executed
+        Thread.sleep( 30000 );
+
+
+        final long totalCount = returnCounts( em, "visits" );
+
+        assertEquals(200, totalCount);
+    }
+
+
+    private long returnCounts( final EntityManager em, final String counterName ) {
+        Results r = em.getAggregateCounters( null, null, null, counterName, CounterResolution.SIX_HOUR, ts,
+            System.currentTimeMillis(), false );
+
+
+
+
+        final AggregateCounterSet counter = r.getCounters().get( 0 );
+
+        assertEquals(counterName, counter.getName());
+
+        long count = 0;
+
+        for(final AggregateCounter value: counter.getValues()){
+            count += value.getValue();
+        }
+
+        return count;
+
+
+
     }
 }

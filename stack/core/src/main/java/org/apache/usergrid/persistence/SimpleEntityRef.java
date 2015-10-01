@@ -17,7 +17,13 @@
 package org.apache.usergrid.persistence;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.UUID;
+
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 
 public class SimpleEntityRef implements EntityRef {
@@ -26,26 +32,31 @@ public class SimpleEntityRef implements EntityRef {
 
     protected final String type;
 
-    protected final UUID id;
+    protected final UUID uuid;
 
 
-    public SimpleEntityRef( UUID id ) {
-        this.id = id;
+    public SimpleEntityRef( UUID uuid ) {
+        this.uuid = uuid;
         type = null;
     }
 
 
-    public SimpleEntityRef( String type, UUID id ) {
+    @JsonCreator
+    public SimpleEntityRef(@JsonProperty("type")  String type,@JsonProperty("uuid")  UUID uuid ) {
         this.type = type;
-        this.id = id;
+        this.uuid = uuid;
     }
 
 
     public SimpleEntityRef( EntityRef entityRef ) {
         type = entityRef.getType();
-        id = entityRef.getUuid();
+        uuid = entityRef.getUuid();
     }
 
+
+    public static SimpleEntityRef fromId(final Id id){
+        return new SimpleEntityRef(id.getType(), id.getUuid()  );
+    }
 
     public static EntityRef ref() {
         return new SimpleEntityRef( null, null );
@@ -54,7 +65,7 @@ public class SimpleEntityRef implements EntityRef {
 
     @Override
     public UUID getUuid() {
-        return id;
+        return uuid;
     }
 
 
@@ -64,13 +75,19 @@ public class SimpleEntityRef implements EntityRef {
     }
 
 
+    @Override
+    public Id asId() {
+        return new SimpleId( uuid, type );
+    }
+
+
     public static EntityRef ref( String entityType, UUID entityId ) {
         return new SimpleEntityRef( entityType, entityId );
     }
 
 
-    public static EntityRef ref( UUID entityId ) {
-        return new SimpleEntityRef( null, entityId );
+    public static EntityRef ref( UUID uuid ) {
+        return new SimpleEntityRef( null, uuid );
     }
 
 
@@ -83,7 +100,7 @@ public class SimpleEntityRef implements EntityRef {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        result = prime * result + ( ( uuid == null ) ? 0 : uuid.hashCode() );
         result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
         return result;
     }
@@ -101,12 +118,12 @@ public class SimpleEntityRef implements EntityRef {
             return false;
         }
         SimpleEntityRef other = ( SimpleEntityRef ) obj;
-        if ( id == null ) {
-            if ( other.id != null ) {
+        if ( uuid == null ) {
+            if ( other.uuid != null ) {
                 return false;
             }
         }
-        else if ( !id.equals( other.id ) ) {
+        else if ( !uuid.equals( other.uuid ) ) {
             return false;
         }
         if ( type == null ) {
@@ -123,13 +140,13 @@ public class SimpleEntityRef implements EntityRef {
 
     @Override
     public String toString() {
-        if ( ( type == null ) && ( id == null ) ) {
+        if ( ( type == null ) && ( uuid == null ) ) {
             return "EntityRef(" + NULL_ID.toString() + ")";
         }
         if ( type == null ) {
-            return "EntityRef(" + id.toString() + ")";
+            return "EntityRef(" + uuid.toString() + ")";
         }
-        return type + "(" + id + ")";
+        return type + "(" + uuid + ")";
     }
 
 

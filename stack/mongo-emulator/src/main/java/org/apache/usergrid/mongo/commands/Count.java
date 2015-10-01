@@ -26,8 +26,9 @@ import org.apache.usergrid.mongo.MongoChannelHandler;
 import org.apache.usergrid.mongo.protocol.OpQuery;
 import org.apache.usergrid.mongo.protocol.OpReply;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 
 import static org.apache.usergrid.utils.MapUtils.entry;
@@ -55,7 +56,7 @@ public class Count extends MongoCommand {
         try {
             Results results =
                     em.getCollection( em.getApplicationRef(), ( String ) opQuery.getQuery().get( "count" ), null,
-                            100000, Results.Level.IDS, false );
+                            100000, Level.IDS, false );
             reply.addDocument( map( entry( "n", results.size() * 1.0 ), entry( "ok", 1.0 ) ) );
         }
         catch ( Exception ex ) {

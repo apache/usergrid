@@ -17,10 +17,17 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.usergrid.persistence.index.SelectFieldMapping;
+import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.ListUtils;
+
+import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
 /**
@@ -46,5 +53,46 @@ public class QueryUtils {
             return ListUtils.first( params.get( PARAM_QUERY ) );
         }
         return null;
+    }
+
+
+    /**
+     * When a query has select fields, parse the results into a result set by the field mappings
+     * @param q
+     * @param rs
+     * @return
+     */
+    public static List<Object> getSelectionResults( Query q, Results rs ) {
+
+        List<Entity> entities = rs.getEntities();
+        if ( entities == null ) {
+            return null;
+        }
+
+        if ( !q.hasSelectSubjects() ) {
+            return cast( entities );
+        }
+
+        List<Object> results = new ArrayList<Object>();
+
+        for ( Entity entity : entities ) {
+
+
+            Collection<SelectFieldMapping> selects = q.getSelectAssignments();
+            for ( SelectFieldMapping select : selects ) {
+                Object obj = JsonUtils.select( entity, select.getSourceFieldName(), false );
+                if ( obj != null ) {
+                    Map<String, Object> result = new LinkedHashMap<String, Object>();
+                    result.put( select.getTargetFieldName(), obj );
+                    results.add( result );
+                }
+            }
+        }
+
+        if ( results.size() == 0 ) {
+            return null;
+        }
+
+        return results;
     }
 }

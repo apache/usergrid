@@ -17,38 +17,24 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Results.Level;
-import org.apache.usergrid.persistence.entities.Group;
-import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.hector.CountingMutator;
+import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-
-@Concurrent()
 public class CountingMutatorIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( CountingMutatorIT.class );
 
@@ -77,7 +63,8 @@ public class CountingMutatorIT extends AbstractCoreIT {
         //temporarily set our max size to 10 for testing
         CountingMutator.MAX_SIZE = 10;
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testFlushingMutatorOnConnections" );
+        UUID applicationId = setup.createApplication(
+            "testOrganization", "testFlushingMutator-" + UUIDGenerator.newTimeUUID() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -87,10 +74,9 @@ public class CountingMutatorIT extends AbstractCoreIT {
         properties.put( "username", "testuser" );
         properties.put( "email", "test@foo.bar" );
         Entity created = em.create( "user", properties );
+        app.refreshIndex();
 
         Entity returned = em.get( created.getUuid() );
-
-
 
         int writeSize = ( int ) ( CountingMutator.MAX_SIZE*2.5);
 
@@ -103,18 +89,16 @@ public class CountingMutatorIT extends AbstractCoreIT {
 
 
             Entity connectedEntity = em.create( "user", connectedProps );
+            app.refreshIndex();
 
-            /*Connect from our new entity to our root one so it's updated when paging
-            /
-             */
-
-                 em.createConnection( connectedEntity, "following", returned );
+            // Connect from our new entity to our root one so it's updated when paging
+            em.createConnection( connectedEntity, "following", returned );
         }
 
         //now verify our connections were created properly
 
-        PagingResultsIterator itr = new PagingResultsIterator(em.getConnectingEntities( returned.getUuid(), "following",
-                "user", Level.ALL_PROPERTIES, 1000 ));
+        PagingResultsIterator itr = new PagingResultsIterator(em.getSourceEntities(
+            returned, "following", "user", Level.ALL_PROPERTIES, 1000));
 
         int count = 0;
 

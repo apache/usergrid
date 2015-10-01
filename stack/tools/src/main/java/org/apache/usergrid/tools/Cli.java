@@ -28,8 +28,7 @@ import java.util.UUID;
 import org.codehaus.jackson.JsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceParameter;
@@ -44,8 +43,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
+import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 
 
 public class Cli extends ToolBase {
@@ -84,7 +82,7 @@ public class Cli extends ToolBase {
     public void handleInput() throws QueryParseException {
         BufferedReader d = new BufferedReader( new InputStreamReader( System.in ) );
 
-        UUID applicationId = DEFAULT_APPLICATION_ID;
+        UUID applicationId = null;
 
         while ( true ) {
             System.out.println();
@@ -105,13 +103,13 @@ public class Cli extends ToolBase {
                 applicationId = UUIDUtils.tryExtractUUID( s );
                 if ( applicationId == null ) {
                     try {
-                        applicationId = emf.lookupApplication( s.trim() );
+                        applicationId = emf.lookupApplication( s.trim() ).get();
                     }
                     catch ( Exception e ) {
                     }
                 }
                 if ( applicationId == null ) {
-                    applicationId = DEFAULT_APPLICATION_ID;
+                    System.out.print("Cannot find application: " + s.trim() );
                 }
                 System.out.println( "Using application " + applicationId );
                 continue;

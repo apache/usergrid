@@ -19,36 +19,35 @@ package org.apache.usergrid.services;
 
 import java.util.UUID;
 
-import org.junit.Ignore;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 
 import org.apache.usergrid.services.simple.SimpleService;
 
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
-@Concurrent()
+
 public class ServiceFactoryIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceFactoryIT.class );
-
-
-    @Ignore
-    @Test
-    public void testServiceFactory() throws Exception {
-        logger.info( "test service factory" );
-    }
 
 
     @Test
     public void testPackagePrefixes() throws Exception {
         logger.info( "test package prefixes" );
 
-        UUID applicationId = setup.getEmf().createApplication( "org", "app" );
+        Entity appInfo = setup.getEmf().createApplicationV2(uniqueOrg(), uniqueApp());
+        UUID applicationId = appInfo.getUuid();
+
+
         ServiceManager sm = setup.getSmf().getServiceManager( applicationId );
         Service service = sm.getService( "simple" );
         assertEquals( "/simple", service.getServiceType() );

@@ -24,13 +24,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_ACTIVATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_ADMIN;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_CONFIRMED;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_DISABLED;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_EMAIL;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_USERNAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.utils.ConversionUtils.getBoolean;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
@@ -48,10 +48,11 @@ public class UserInfo {
     private final boolean confirmed;
     private final boolean disabled;
     private final Map<String, Object> properties;
+    private final boolean admin;
 
 
     public UserInfo( UUID applicationId, UUID id, String username, String name, String email, boolean confirmed,
-                     boolean activated, boolean disabled, Map<String, Object> properties ) {
+                     boolean activated, boolean disabled, Map<String, Object> properties, boolean admin ) {
         this.applicationId = applicationId;
         this.id = id;
         this.username = username;
@@ -61,6 +62,7 @@ public class UserInfo {
         this.activated = activated;
         this.disabled = disabled;
         this.properties = properties;
+        this.admin = admin;
     }
 
 
@@ -73,6 +75,7 @@ public class UserInfo {
         confirmed = getBoolean( properties.remove( PROPERTY_CONFIRMED ) );
         activated = getBoolean( properties.remove( PROPERTY_ACTIVATED ) );
         disabled = getBoolean( properties.remove( PROPERTY_DISABLED ) );
+        admin = getBoolean( properties.remove( PROPERTY_ADMIN) );
         this.properties = properties;
     }
 
@@ -135,7 +138,7 @@ public class UserInfo {
 
 
     public boolean isAdminUser() {
-        return MANAGEMENT_APPLICATION_ID.equals( applicationId );
+        return admin;
     }
 
 

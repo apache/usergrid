@@ -20,12 +20,12 @@ package org.apache.usergrid.utils;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.usergrid.persistence.entities.Activity;
-import org.apache.usergrid.persistence.entities.User;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.entities.Activity;
+import org.apache.usergrid.persistence.entities.User;
 
 import static org.junit.Assert.assertEquals;
 

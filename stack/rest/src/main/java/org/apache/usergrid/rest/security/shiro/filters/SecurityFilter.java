@@ -17,29 +17,26 @@
 package org.apache.usergrid.rest.security.shiro.filters;
 
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.UriInfo;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-import org.apache.commons.lang.StringUtils;
-
-import com.sun.jersey.api.core.HttpContext;
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.UriInfo;
+import javax.xml.ws.spi.http.HttpContext;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
-
 
 public abstract class SecurityFilter implements ContainerRequestFilter {
 
@@ -88,6 +85,7 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
 
 
     @Autowired
+    @Qualifier("properties")
     public void setProperties( Properties properties ) {
         this.properties = properties;
     }
@@ -115,8 +113,8 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
     }
 
 
-    public static Map<String, String> getAuthTypes( ContainerRequest request ) {
-        String auth_header = request.getHeaderValue( HttpHeaders.AUTHORIZATION );
+    public static Map<String, String> getAuthTypes( ContainerRequestContext request ) {
+        String auth_header = request.getHeaderString( HttpHeaders.AUTHORIZATION );
         if ( auth_header == null ) {
             return null;
         }

@@ -1,0 +1,42 @@
+#!/bin/bash
+# 
+#  Licensed to the Apache Software Foundation (ASF) under one or more
+#   contributor license agreements.  The ASF licenses this file to You
+#  under the Apache License, Version 2.0 (the "License"); you may not
+#  use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.  For additional information regarding
+#  copyright in this work, please see the NOTICE file in the top level
+#  directory of this distribution.
+#
+
+
+# Install and stop Cassandra
+echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/datastax.community.list
+
+curl -L https://debian.datastax.com/debian/repo_key | sudo apt-key add -
+
+sudo apt-get update
+sudo apt-get install datastax-agent
+
+
+cd /usr/share/usergrid/scripts
+
+#Wait for the opscenter node to come up
+groovy wait_for_instances.groovy opscenter 1
+
+#Wait for opscenter to come up
+
+groovy configure_opscenter_agent.groovy > /var/lib/datastax-agent/conf/address.yaml
+
+sudo service datastax-agent stop
+sudo service datastax-agent start
+
+

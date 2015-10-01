@@ -17,6 +17,8 @@
 package org.apache.usergrid.rest.test;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
@@ -28,8 +30,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -37,7 +37,9 @@ import org.springframework.stereotype.Component;
 import org.apache.usergrid.rest.AbstractContextResource;
 
 
-/** For testing purposes only and only works with usergrid.test=true */
+/**
+ * Set properties at runtime, for testing purposes only and only works with usergrid.test=true.
+ */
 @Component
 @Scope("prototype")
 @Path("/testproperties")

@@ -24,7 +24,7 @@
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
 	<import resource="classpath:/usergrid-services-context.xml" />
-	
+
 	<context:component-scan base-package="org.apache.usergrid.rest" />
 
 
@@ -47,16 +47,15 @@
 		<property name="securityManager" ref="securityManager" />
 	</bean>
 
-	<bean id="mongoServer" class="org.apache.usergrid.mongo.MongoServer"
-		init-method="startServer" destroy-method="stopServer" />
-
 	<!-- override the security manager -->
 	<bean id="securityManager" class="org.apache.usergrid.rest.security.shiro.RestSecurityManager">
 		<property name="cacheManager" ref="cacheManager" />
 		<property name="realm" ref="realm" />
 	</bean>
 
-	<bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager" />
+    <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager" />
+
+    <bean id="jobServiceBootstrap" class="org.apache.usergrid.rest.JobServiceBoostrap" />
 
 	<!-- override the task executor -->
 	<bean id="taskExecutor"
@@ -66,8 +65,17 @@
 		<property name="queueCapacity" value="25" />
 	</bean>
 
-    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
+    <bean id="serviceResource"
+           class="org.apache.usergrid.rest.applications.ServiceResource" scope="prototype">
+        <property name="binaryStore" value="${usergrid.binary.uploader}"/>
+    </bean>
+
+    <bean id="localFileBinaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
         <property name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>
+
+    <bean id="awsSdkS3BinaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
+    </bean>
+
 
 </beans>

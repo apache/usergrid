@@ -20,7 +20,7 @@ package org.apache.usergrid.services;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.entities.Activity;
@@ -28,7 +28,7 @@ import org.apache.usergrid.persistence.entities.Activity;
 import static org.junit.Assert.assertNotNull;
 
 
-@Concurrent()
+
 public class ActivitiesServiceIT extends AbstractServiceIT {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger( ActivitiesServiceIT.class );

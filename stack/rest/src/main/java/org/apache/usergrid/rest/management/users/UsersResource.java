@@ -17,43 +17,31 @@
 package org.apache.usergrid.rest.management.users;
 
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import net.tanesha.recaptcha.ReCaptchaImpl;
+import net.tanesha.recaptcha.ReCaptchaResponse;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
+import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.ManagementResource;
-import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
-import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
-
-import net.tanesha.recaptcha.ReCaptchaImpl;
-import net.tanesha.recaptcha.ReCaptchaResponse;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
@@ -73,7 +61,7 @@ public class UsersResource extends AbstractContextResource {
 
 
     public UsersResource() {
-        logger.info( "ManagementUsersResource initialized" );
+        logger.debug( "ManagementUsersResource initialized" );
     }
 
 
@@ -116,7 +104,9 @@ public class UsersResource extends AbstractContextResource {
 
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
-    public JSONWithPadding createUser( @Context UriInfo ui, @FormParam( "username" ) String username,
+    @JSONP
+    @Produces( {MediaType.APPLICATION_JSON, "application/javascript" })
+    public ApiResponse createUser( @Context UriInfo ui, @FormParam( "username" ) String username,
                                        @FormParam( "name" ) String name, @FormParam( "email" ) String email,
                                        @FormParam( "password" ) String password,
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
@@ -146,23 +136,23 @@ public class UsersResource extends AbstractContextResource {
             throw mappableSecurityException( AuthErrorInfo.BAD_CREDENTIALS_SYNTAX_ERROR );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 	/*
      * @POST
-	 * 
+	 *
 	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
 	 * createUserFromMultipart(@Context UriInfo ui,
-	 * 
+	 *
 	 * @FormDataParam("username") String username,
-	 * 
+	 *
 	 * @FormDataParam("name") String name,
-	 * 
+	 *
 	 * @FormDataParam("email") String email,
-	 * 
+	 *
 	 * @FormDataParam("password") String password) throws Exception {
-	 * 
+	 *
 	 * return createUser(ui, username, name, email, password); }
 	 */
 
@@ -219,7 +209,7 @@ public class UsersResource extends AbstractContextResource {
                 errorMsg = "Incorrect Captcha, try again...";
                 return handleViewable("resetpw_email_form", this);
             }
-            
+
         }
         catch ( RedirectionException e ) {
             throw e;

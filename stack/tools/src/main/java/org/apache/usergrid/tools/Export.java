@@ -36,16 +36,16 @@ import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.tools.bean.ExportOrg;
 import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.commons.cli.CommandLine;
 
 import com.google.common.collect.BiMap;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 public class Export extends ExportingToolBase {
@@ -125,9 +125,9 @@ public class Export extends ExportingToolBase {
             JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
 
             // load the dictionary
-            EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
-            Entity appEntity = rootEm.get( application.getKey() );
+            Entity appEntity = rootEm.get( new SimpleEntityRef( "application", application.getKey()));
 
             Map<String, Object> dictionaries = new HashMap<String, Object>();
 
@@ -145,7 +145,7 @@ public class Export extends ExportingToolBase {
             EntityManager em = emf.getEntityManager( application.getKey() );
 
             // Get application
-            Entity nsEntity = em.get( application.getKey() );
+            Entity nsEntity = em.get( new SimpleEntityRef( "application", application.getKey()));
 
             Set<String> collections = em.getApplicationCollections();
 
@@ -175,7 +175,7 @@ public class Export extends ExportingToolBase {
 
                 Query query = new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
-                query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                query.setResultsLevel( Level.ALL_PROPERTIES );
 
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
@@ -307,7 +307,9 @@ public class Export extends ExportingToolBase {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Level.IDS );
+            Results results = em.getConnectedEntities( 
+                    entity, connectionType, null, Level.IDS );
+
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {

@@ -26,15 +26,17 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.apache.usergrid.services.ServiceResults;
 
 import com.google.common.collect.BiMap;
+import rx.Observable;
 
 
 public interface ManagementService {
@@ -45,8 +47,6 @@ public interface ManagementService {
 
     public void addAdminUserToOrganization( UserInfo user, OrganizationInfo organization, boolean email )
             throws Exception;
-
-    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId ) throws Exception;
 
     public AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
 
@@ -69,8 +69,9 @@ public interface ManagementService {
     public UserInfo createAdminFromPrexistingPassword( User user, CredentialsInfo ci ) throws Exception;
 
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception;
-
     public ApplicationInfo createApplication( UUID organizationId, String applicationName,
+                                              Map<String, Object> properties ) throws Exception;
+    public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
                                               Map<String, Object> properties ) throws Exception;
 
     public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
@@ -97,6 +98,8 @@ public interface ManagementService {
     public User deactivateUser( UUID applicationId, UUID userId ) throws Exception;
 
     public void deactivateOrganization( UUID organizationId ) throws Exception;
+
+    public UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception;
 
     public void deleteOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 
@@ -153,6 +156,8 @@ public interface ManagementService {
     public ApplicationInfo getApplicationInfo( String applicationName ) throws Exception;
 
     public ApplicationInfo getApplicationInfo( UUID applicationId ) throws Exception;
+
+    ApplicationInfo getDeletedApplicationInfo(UUID applicationId) throws Exception;
 
     public ApplicationInfo getApplicationInfo( Identifier id ) throws Exception;
 
@@ -325,4 +330,31 @@ public interface ManagementService {
 
     /** For testing purposes only */
     public Properties getProperties();
+
+    public void deleteApplication(UUID applicationId) throws Exception;
+
+    public ApplicationInfo restoreApplication(UUID applicationId) throws Exception;
+
+    long getApplicationSize(final UUID applicationId);
+
+    long getCollectionSize(final UUID applicationId, final String collectionName);
+
+    Map<String,Long> getEachCollectionSize(final UUID applicationId);
+
+    public OrganizationConfig getOrganizationConfigByName( String organizationName ) throws Exception;
+
+    public OrganizationConfig getOrganizationConfigByUuid( UUID id ) throws Exception;
+
+    public Map<String, Object> getOrganizationConfigData( OrganizationConfig organizationConfig ) throws Exception;
+
+    public OrganizationConfig getOrganizationConfigForApplication( UUID applicationId ) throws Exception;
+
+    public void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception;
+    
+    /**
+     * will delete all entities
+     * @param applicationId
+     * @return
+     */
+    Observable<Id> deleteAllEntities(final UUID applicationId,final int limit);
 }

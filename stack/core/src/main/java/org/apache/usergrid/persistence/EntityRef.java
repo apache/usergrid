@@ -16,8 +16,9 @@
  */
 package org.apache.usergrid.persistence;
 
-
 import java.util.UUID;
+
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 public interface EntityRef {
@@ -35,4 +36,6 @@ public interface EntityRef {
      * @return the type
      */
     public String getType();
+
+    public Id asId();
 }

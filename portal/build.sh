@@ -51,5 +51,3 @@ echo or run it now using the following command:
 echo grunt dev
 echo ###
 echo Happy Usergriding!
-
-

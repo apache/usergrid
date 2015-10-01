@@ -68,7 +68,7 @@ public class EmbeddedServerHelper {
 
             log.info( "Starting executor" );
 
-            executor.execute( new CassandraRunner() );
+            executor.execute( new ITRunner() );
             log.info( "Started executor" );
         }
         else {
@@ -180,7 +180,7 @@ public class EmbeddedServerHelper {
     }
 
 
-    class CassandraRunner implements Runnable {
+    class ITRunner implements Runnable {
 
         @Override
         public void run() {

@@ -1,0 +1,215 @@
+<div class="content-page">
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+    <page-title icon="&#9874;" title="Configure Notifiers"></page-title>
+
+
+  <bsmodal id="deleteNotifier"
+           title="Delete Notifier"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="deleteNotifiersDialog"
+           extrabuttonlabel="Delete"
+           ng-cloak>
+    <p>Are you sure you want to delete the notifier(s)?</p>
+  </bsmodal>
+
+  <a style="float: right" target="_blank" href="http://apigee.com/docs/usergrid/content/push-notifications" class="notifications-links">Learn more in our docs</a>
+  <tabs>
+    <pane heading="Notifiers">
+
+        <bsmodal id="deleteNotifiers"
+                 title="Are you sure you want to delete the notifiers(s)?"
+                 close="hideModal"
+                 closelabel="Cancel"
+                 extrabutton="deleteNotifiersDialog"
+                 extrabuttonlabel="Delete"
+                 ng-cloak>
+            <fieldset>
+                <div class="control-group">
+                </div>
+            </fieldset>
+        </bsmodal>
+
+      <span  class="button-strip">
+        <button class="btn btn-primary" ng-disabled="!valueSelected(notifiersCollection._list)" ng-click="deleteNotifiersDialog()">Delete Notifier(s)</button>
+      </span>
+      <table class="table table-striped collection-list">
+        <tbody>
+        <tr class="zebraRows notifications-row">
+          <td style="width: 30px;"><input type="checkbox"  ng-click="selectAllEntities(notifiersCollection._list,this,'queryBoxesSelected',true)"></td>
+          <td class="notifications-details bold-header">Provider</td>
+          <td class="notifications-details bold-header">Notifier</td>
+        </tr>
+
+        <tr class="zebraRows notifications-row" ng-repeat="notifier in notifiersCollection._list">
+          <td>
+            <input
+              type="checkbox"
+              ng-value="notifier.uuid"
+
+              ng-model="notifier.checked"
+              >
+          </td>
+          <td class="details">{{notifier.get('provider')}}</td>
+          <td class="details">{{notifier.get('name')}}</td>
+        </tr>
+      </table>
+    </pane>
+
+    <pane heading="Apple">
+      <div style="margin-top: 10px;"> <!-- ng-controller="PushConfigCtrl"-->
+        <div class="user-header-title">Apple Push Notification Service</div>
+        <br>
+        A Notifier allows App Services to connect to and deliver a message to a communication provider such as
+        Apple's APNs. Upload Development and Production Certificates (.p12) to set up a bridge between your app
+        and APNs for push notifications on iOS devices.
+
+          For more help: view our
+          <a href="#!/push/getStarted" class="notifications-links">getting started page</a>
+          for more info on how to generate and download an iOS .p12 certificate at the Apple Developer Connection website.
+          <br>
+          <br>
+        <form name="iosNotifierForm" id="iosNotifierForm"  ng-submit="createAppleNotifier()" class="form-horizontal" novalidate>
+
+          <fieldset>
+            <div class="control-group">
+              <label  for="ios-notifier-name"><strong>Name this notifier </strong></label>
+              <div class="">
+                <input type="text" id="ios-notifier-name" required ug-validate ng-model="notifier.appleNotifierName" class="" class="span6">
+                <br>
+                The notifier name is used as the key for push data.  Give this a name that describes the certificate being uploaded.
+              </div>
+            <br>
+              <label  for="ios-cert"><strong>Certificate </strong></label>
+              <div class="">
+                <input type="file" data-file="param.file"  id="ios-cert" />
+              </div>
+            <br>
+              <strong>Environment </strong>
+              <div class="">
+                <select ng-model="notifier.appleEnvironment" required ug-validate id="ios-env">
+                  <option value="development">development</option>
+                  <option value="production">production</option>
+                </select>
+              </div>
+            <br>
+              <strong>Certificate Password</strong>
+              <div class="">
+                <input ng-model="notifier.appleCertPassword" type="text"  title="Please enter a password." class="span6" autocomplete="off" placeholder="ex: appledev"/>
+                <br>
+                Only applicable if your certificate is password protected
+              </div>
+            </div>
+
+            <input type="submit" ng-disabled="!iosNotifierForm.$valid" class="btn btn-primary" value="Create Notifier"/>
+          </fieldset>
+        </form>
+
+      </div>
+
+    </pane>
+    <pane heading="Android">
+
+      <div style="margin-top: 10px;">
+        <span class="title">Google Cloud Messaging</span>
+        <br>
+        A Notifier allows App Services to connect to and deliver a message to a communication provider such as
+        Google Cloud Messaging (GCM). Copy and paste your API key to create a bridge between your app
+        and GCM for push notifications on Android devices..
+        <br><br>
+
+        For more help: see our <a href="#!/getting-started/setup" class="notifications-links">getting started page</a> page.
+
+        <form id="droidNotifierForm" name="droidNotifierForm" ng-submit="createAndroidNotifier()" class="form-horizontal" novalidate>
+          <fieldset>
+            <div class="control-group">
+              <strong>Name this notifier </strong>
+              <div  >
+                <input ng-model="notifier.androidNotifierName" id="droid-notifier-name" required ug-validate type="text" class="span6" autocomplete="off" placeholder="ex: androidDev"/>
+                <br>
+                The notifier name is used as the key for push data.  Give this a name that describes the API key being uploaded.
+              </div>
+            </div>
+
+            <div class="control-group">
+              <strong>API Key </strong>
+              <div  >
+                <input ng-model="notifier.androidNotifierAPIKey" id="droid-key-value" required type="text" class="span6" autocomplete="off" ug-validate/>
+              </div>
+            </div>
+            <input type="submit" href="" class="btn btn-primary" ng-disabled="!droidNotifierForm.$valid"  value="Create Notifier"/>
+          </fieldset>
+          </form>
+      </div>
+
+    </pane>
+
+    <pane heading="Windows">
+      <div style="margin-top: 10px;">
+        <span class="title">Windows Notifications Service</span>
+        <br>
+        A Notifier allows App Services to connect to and deliver a message to a communication provider such as
+        Windows Notifications Service (WNS). Copy and paste your API key to create a bridge between your app
+        and WNS for push notifications on windows devices..
+        <br><br>
+
+        For more help: see our <a href="#!/getting-started/setup" class="notifications-links">getting started page</a> page.
+
+        <form id="winNotifierForm" name="winNotifierForm" ng-submit="createWinNotifier()" class="form-horizontal" novalidate>
+          <fieldset>
+            <div class="control-group">
+              <strong>Name this notifier </strong>
+              <div  >
+                <input ng-model="notifier.winNotifierName" id="win-notifier-name" required ug-validate type="text" class="span6" autocomplete="off" placeholder="ex: winDev"/>
+                <br>
+                The notifier name is used as the key for push data.  Give this a name that describes the API key being uploaded.
+              </div>
+            </div>
+
+            <div class="control-group">
+              <strong>WNS Sid </strong>
+              <div  >
+                <input ng-model="notifier.winNotifierSid" id="win-sid-value" required type="text" class="span6" autocomplete="off" ug-validate/>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <strong>Secret </strong>
+              <div  >
+                <input ng-model="notifier.winNotifierAPISecret" id="win-secret-value" required type="text" class="span6" autocomplete="off" ug-validate/>
+              </div>
+              <br/>
+              Secret will not be returned in other api calls for security reasons.
+            </div>
+
+            <div class="control-group">
+              <strong>Logging </strong>
+              <div  >
+                <input type="checkbox" title="Yes" ng-model="notifier.winNotifierLogging" name="win-logging-value" checked /> Logging Enabled &nbsp;
+              </div>
+            </div>
+
+            <input type="submit" href="" class="btn btn-primary" ng-disabled="!winNotifierForm.$valid"  value="Create Notifier"/>
+          </fieldset>
+        </form>
+      </div>
+    </pane>
+
+  </tabs>
+
+</div>

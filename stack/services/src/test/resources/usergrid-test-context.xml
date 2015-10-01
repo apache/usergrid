@@ -16,32 +16,34 @@
     limitations under the License.
 -->
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
-	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
-	xsi:schemaLocation="
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-	<bean id="properties"
-		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-		<property name="singleton" value="true" />
-		<property name="ignoreResourceNotFound" value="true" />
-		<property name="locations">
-			<list>
-				<value>classpath:/usergrid-default.properties</value>
-				<value>classpath:/usergrid-test.properties</value>
-				<value>${usergrid-custom-spring-test-properties}</value>
-			</list>
-		</property>
-	</bean>
+    <bean id="properties"
+          class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="singleton" value="true" />
+        <property name="ignoreResourceNotFound" value="true" />
+        <property name="locations">
+            <list>
+                <value>classpath:/usergrid-default.properties</value>
+                <value>classpath:/usergrid-test.properties</value>
+                <value>${usergrid-custom-spring-test-properties}</value>
+            </list>
+        </property>
+    </bean>
 
-	<import resource="classpath:/usergrid-services-context.xml" />
+    <import resource="classpath:/usergrid-services-context.xml" />
 
-    <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
+    <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
+        <constructor-arg ref="injector"/>
     </bean>
+
     <!-- The default schema manager -->
     <!-- refer to a named schemaManager from the DataControl annotation thusly -->
     <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
@@ -49,14 +51,14 @@
         <constructor-arg ref="cassandraCluster"/>
     </bean>
 
-    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
+    <bean id="localFileBinaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
         <property name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>
 
     <!--<bean id="binaryStore" class="org.apache.usergrid.services.assets.data.S3BinaryStore">-->
-        <!--<constructor-arg name="accessId" value="xx" />-->
-        <!--<constructor-arg name="secretKey" value="xx" />-->
-        <!--<constructor-arg name="bucketName" value="xx" />-->
+    <!--<constructor-arg name="accessId" value="xx" />-->
+    <!--<constructor-arg name="secretKey" value="xx" />-->
+    <!--<constructor-arg name="bucketName" value="xx" />-->
     <!--</bean>-->
 
 </beans>

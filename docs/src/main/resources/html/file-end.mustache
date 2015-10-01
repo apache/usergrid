@@ -1,0 +1,30 @@
+
+    </div>
+    <div class="col-md-1"></div>
+</div>
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    
+<script>
+if ("onhashchange" in window) {
+    window.onhashchange = function () {
+        var hash = window.location.hash;
+        if ( hash.substring(0,1) != "/") {
+            hash = hash.substring(1, hash.length);
+
+            $("#collapse-" + hash).removeClass("collapse");
+            $("a[href=#collapse-" + hash + "]").removeClass("collapsed");
+
+            $("#" + hash).removeClass("collapse");
+            $("a[href=#" + hash + "]").removeClass("collapsed");
+        }
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,27 +1,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.symbolicName>org.apache.usergrid</bundle.symbolicName>
         <bundle.namespace>org.apache.usergrid</bundle.namespace>
         <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
-        <jackson-version>2.2.0</jackson-version>
+        <jackson-version>2.3.1</jackson-version>
     </properties>
-	
-    <parent>
-        <groupId>org.apache.usergrid</groupId>
-        <artifactId>usergrid</artifactId>
-        <version>1.0.0</version>
-        <relativePath>../../stack</relativePath>
-    </parent>
-	
+
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid-java-client</artifactId>
-    <version>1.0.0</version>
+    <version>0.0.10-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>A Java client for usergrid</description>
-    <url>http://usergrid.incubator.apache.org</url>
-	
+    <url>http://usergrid.apache.org</url>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -47,6 +41,7 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -55,6 +50,22 @@
                     <doclet>com.sun.tools.doclets.standard.Standard</doclet>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <optimize>true</optimize>
+                    <showDeprecation>true</showDeprecation>
+                    <debug>true</debug>
+                    <encoding>UTF-8</encoding>
+                    <showWarnings>true</showWarnings>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -99,11 +110,11 @@
     </repositories>
     <name>Apache Usergrid Java SDK</name>
     <organization>
-    	<name>The Apache Software Foundation</name>
-    	<url>http://apache.org</url>
+        <name>The Apache Software Foundation</name>
+        <url>http://apache.org</url>
     </organization>
     <issueManagement>
-    	<system>JIRA</system>
-    	<url>https://issues.apache.org/jira/browse/USERGRID</url>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/USERGRID</url>
     </issueManagement>
 </project>

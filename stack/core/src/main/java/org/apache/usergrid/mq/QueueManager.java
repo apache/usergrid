@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.CounterResolution;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.exceptions.TransactionNotFoundException;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 
 public interface QueueManager {

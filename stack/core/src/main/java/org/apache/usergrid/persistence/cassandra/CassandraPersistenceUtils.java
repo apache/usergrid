@@ -29,14 +29,16 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.IndexType;
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.utils.JsonUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import me.prettyprint.cassandra.service.ThriftColumnDef;
 import me.prettyprint.hector.api.ClockResolution;
@@ -62,13 +64,12 @@ import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.serializeEntityProperty;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.utils.ClassUtils.isBasicType;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.JsonUtils.toJsonNode;
 import static org.apache.usergrid.utils.StringUtils.replaceAll;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
-
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /** @author edanuff */
 public class CassandraPersistenceUtils {
@@ -78,16 +79,6 @@ public class CassandraPersistenceUtils {
     /** Logger for batch operations */
     private static final Logger batch_logger =
             LoggerFactory.getLogger( CassandraPersistenceUtils.class.getPackage().getName() + ".BATCH" );
-
-    /**
-     *
-     */
-    public static final ByteBuffer PROPERTY_TYPE_AS_BYTES = bytebuffer( PROPERTY_TYPE );
-
-    /**
-     *
-     */
-    public static final ByteBuffer PROPERTY_ID_AS_BYTES = bytebuffer( PROPERTY_UUID );
 
     /**
      *
@@ -144,34 +135,6 @@ public class CassandraPersistenceUtils {
     }
 
 
-    public static void addPropertyToMutator( Mutator<ByteBuffer> m, Object key, String entityType, String propertyName,
-                                             Object propertyValue, long timestamp ) {
-
-        logBatchOperation( "Insert", ApplicationCF.ENTITY_PROPERTIES, key, propertyName, propertyValue, timestamp );
-
-        HColumn<ByteBuffer, ByteBuffer> column = createColumn( bytebuffer( propertyName ),
-                serializeEntityProperty( entityType, propertyName, propertyValue ), timestamp, be, be );
-        m.addInsertion( bytebuffer( key ), ApplicationCF.ENTITY_PROPERTIES.toString(), column );
-    }
-
-
-    public static void addPropertyToMutator( Mutator<ByteBuffer> m, Object key, String entityType,
-                                             Map<String, ?> columns, long timestamp ) throws Exception {
-
-        for ( Entry<String, ?> entry : columns.entrySet() ) {
-            addPropertyToMutator( m, key, entityType, entry.getKey(), entry.getValue(), timestamp );
-        }
-    }
-
-
-    /** Delete the row */
-    public static void addDeleteToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, long timestamp )
-            throws Exception {
-
-        logBatchOperation( "Delete", columnFamily, key, null, null, timestamp );
-
-        m.addDeletion( bytebuffer( key ), columnFamily.toString(), timestamp );
-    }
 
 
     public static void addDeleteToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, Object columnName,
@@ -186,20 +149,6 @@ public class CassandraPersistenceUtils {
         m.addDeletion( bytebuffer( key ), columnFamily.toString(), bytebuffer( columnName ), be, timestamp );
     }
 
-
-    public static void addDeleteToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, long timestamp,
-                                           Object... columnNames ) throws Exception {
-
-        for ( Object columnName : columnNames ) {
-            logBatchOperation( "Delete", columnFamily, key, columnName, null, timestamp );
-
-            if ( columnName instanceof List<?> ) {
-                columnName = DynamicComposite.toByteBuffer( ( List<?> ) columnName );
-            }
-
-            m.addDeletion( bytebuffer( key ), columnFamily.toString(), bytebuffer( columnName ), be, timestamp );
-        }
-    }
 
 
     public static Map<String, ByteBuffer> getColumnMap( List<HColumn<String, ByteBuffer>> columns ) {
@@ -224,30 +173,6 @@ public class CassandraPersistenceUtils {
             column_map.put( column_name, column.getValue() );
         }
         return column_map;
-    }
-
-
-    public static List<ByteBuffer> getAsByteKeys( List<UUID> ids ) {
-        List<ByteBuffer> keys = new ArrayList<ByteBuffer>();
-        for ( UUID id : ids ) {
-            keys.add( bytebuffer( key( id ) ) );
-        }
-        return keys;
-    }
-
-
-    /** @return timestamp value for current time */
-    public static long createTimestamp() {
-        return createClockResolution( ClockResolution.MICROSECONDS ).createClock();
-    }
-
-
-    /** @return normalized group path */
-    public static String normalizeGroupPath( String path ) {
-        path = replaceAll( path.toLowerCase().trim(), "//", "/" );
-        path = removeStart( path, "/" );
-        path = removeEnd( path, "/" );
-        return path;
     }
 
 
@@ -298,35 +223,12 @@ public class CassandraPersistenceUtils {
         if ( keyStr.length() == 0 ) {
             return NULL_ID;
         }
-        UUID uuid = UUID.nameUUIDFromBytes( keyStr.getBytes() );
+        UUID uuid = UUID.nameUUIDFromBytes( keyStr.getBytes() ); //UUIDUtils.newTimeUUID(); //UUID.nameUUIDFromBytes( keyStr.getBytes() );
         logger.debug( "Key {} equals UUID {}", keyStr, uuid );
         return uuid;
     }
 
-
-    /** @return UUID for entity alias */
-    public static UUID aliasID( UUID ownerId, String aliasType, String alias ) {
-        return keyID( ownerId, aliasType, alias );
-    }
-
-
-    public static Mutator<ByteBuffer> buildSetIdListMutator( Mutator<ByteBuffer> batch, UUID targetId,
-                                                             String columnFamily, String keyPrefix, String keySuffix,
-                                                             List<UUID> keyIds, long timestamp ) throws Exception {
-        for ( UUID keyId : keyIds ) {
-            ByteBuffer key = null;
-            if ( ( StringUtils.isNotEmpty( keyPrefix ) ) || ( StringUtils.isNotEmpty( keySuffix ) ) ) {
-                key = bytebuffer( keyPrefix + keyId.toString() + keySuffix );
-            }
-            else {
-                key = bytebuffer( keyId );
-            }
-            addInsertToMutator( batch, columnFamily, key, targetId, ByteBuffer.allocate( 0 ), timestamp );
-        }
-        return batch;
-    }
-
-
+  //No longer does retries
     public static MutationResult batchExecute( Mutator<?> m, int retries ) {
         return m.execute();
 
@@ -349,17 +251,17 @@ public class CassandraPersistenceUtils {
         JsonNode json = toJsonNode( obj );
         if ( ( json != null ) && json.isValueNode() ) {
             if ( json.isBigInteger() ) {
-                return json.getBigIntegerValue();
+                return json.asInt();
             }
             else if ( json.isNumber() || json.isBoolean() ) {
-                return BigInteger.valueOf( json.getValueAsLong() );
+                return BigInteger.valueOf( json.asLong() );
             }
             else if ( json.isTextual() ) {
-                return json.getTextValue();
+                return json.asText();
             }
             else if ( json.isBinary() ) {
                 try {
-                    return wrap( json.getBinaryValue() );
+                    return wrap( json.binaryValue() );
                 }
                 catch ( IOException e ) {
                 }
@@ -369,16 +271,6 @@ public class CassandraPersistenceUtils {
         return json;
     }
 
-
-    public static ByteBuffer toStorableBinaryValue( Object obj ) {
-        obj = toStorableValue( obj );
-        if ( obj instanceof JsonNode ) {
-            return JsonUtils.toByteBuffer( obj );
-        }
-        else {
-            return bytebuffer( obj );
-        }
-    }
 
 
     public static ByteBuffer toStorableBinaryValue( Object obj, boolean forceJson ) {
@@ -459,15 +351,4 @@ public class CassandraPersistenceUtils {
     }
 
 
-    public static void validateKeyspace( CFEnum[] cf_enums, KeyspaceDefinition ksDef ) {
-        Map<String, ColumnFamilyDefinition> cfs = new HashMap<String, ColumnFamilyDefinition>();
-        for ( ColumnFamilyDefinition cf : ksDef.getCfDefs() ) {
-            cfs.put( cf.getName(), cf );
-        }
-        for ( CFEnum c : cf_enums ) {
-            if ( !cfs.keySet().contains( c.getColumnFamily() ) ) {
-
-            }
-        }
-    }
 }

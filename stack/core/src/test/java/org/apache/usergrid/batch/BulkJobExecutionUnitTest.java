@@ -20,21 +20,19 @@ package org.apache.usergrid.batch;
 import java.util.UUID;
 
 import org.junit.Test;
+
 import org.apache.usergrid.batch.JobExecution.Status;
 import org.apache.usergrid.batch.repository.JobDescriptor;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.JobStat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-
 /**
  * @author zznate
  * @author tnine
  */
-@Concurrent()
 public class BulkJobExecutionUnitTest {
 
     @Test

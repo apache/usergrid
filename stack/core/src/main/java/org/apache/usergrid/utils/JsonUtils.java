@@ -25,21 +25,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.exception.JsonReadException;
 import org.apache.usergrid.exception.JsonWriteException;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.index.query.Identifier;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.io.JsonStringEncoder;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.codehaus.jackson.smile.SmileFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import static org.apache.commons.lang.StringUtils.substringAfter;
-
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 
@@ -55,9 +57,12 @@ public class JsonUtils {
 
     private static ObjectMapper indentObjectMapper = new ObjectMapper();
 
+    private static final Pattern UUID_PATTERN = Pattern.compile( Identifier.UUID_REX );
+
 
     static {
-        indentObjectMapper.getSerializationConfig().set( Feature.INDENT_OUTPUT, true );
+        //indentObjectMapper.getSerializationConfig().set( Feature.INDENT_OUTPUT, true );
+        indentObjectMapper.getSerializationConfig().with( SerializationFeature.INDENT_OUTPUT );
     }
 
 
@@ -168,7 +173,7 @@ public class JsonUtils {
     private static UUID tryConvertToUUID( Object o ) {
         if ( o instanceof String ) {
             String s = ( String ) o;
-            if ( s.length() == 36 ) {
+            if ( UUID_PATTERN.matcher( s ).matches() ) {
                 try {
                     return UUID.fromString( s );
                 }

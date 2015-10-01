@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.entities.Activity;
 import org.apache.usergrid.persistence.entities.Activity.ActivityObject;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.ServiceResults;
@@ -38,7 +39,7 @@ public class ActivitiesService extends GenericCollectionService {
 
     public ActivitiesService() {
         super();
-        logger.info( "/users/*/activities" );
+        logger.debug( "/users/*/activities" );
     }
 
 
@@ -130,17 +131,21 @@ public class ActivitiesService extends GenericCollectionService {
         }
         //add activity
         em.addToCollection( user, "feed", activity );
+
         //publish to all connections
-        Results results =  em.getConnectingEntities(user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS);
+        Results results =  em.getSourceEntities(
+            new SimpleEntityRef(user.getType(), user.getUuid()),
+            "following", User.ENTITY_TYPE, Level.REFS);
+
         if( results != null ){
             PagingResultsIterator itr = new PagingResultsIterator(results);
 
             List<EntityRef> refs = new ArrayList<EntityRef>();
-            ConnectedEntityRef c;
+            EntityRef c;
             int breaker = 10000;
             //collect
             while (itr.hasNext()) {
-                c = (ConnectedEntityRef) itr.next();
+                c = (EntityRef) itr.next();
                 refs.add(c);
                 //break out when you get too big
                 if( refs.size() > breaker ){

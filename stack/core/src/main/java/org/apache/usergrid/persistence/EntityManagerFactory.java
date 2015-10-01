@@ -17,64 +17,101 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 
-// TODO: Auto-generated Javadoc
+import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
+import rx.Observable;
 
 
 /**
- * The interface class that specifies the operations that can be performed on the Usergrid Datastore. This interface is
- * designed to be implemented by different backends. Although these operations are meant to take advantage of the
- * capabilities of Cassandra, they should be implementable using other relational databases such as MySql or NoSQL
- * databases such as GAE or MongoDB.
+ * The interface that specifies the operations that can be performed on the Usergrid Datastore.
+ * This interface is designed to be implemented by different backends. Although these
+ * operations are meant to take advantage of the capabilities of Cassandra, they should be
+ * implementable using other relational databases such as MySql or NoSQL databases such as GAE or
+ * MongoDB.
  */
 public interface EntityManagerFactory {
-
-    /**
-     * A string description provided by the implementing class.
-     *
-     * @return description text
-     *
-     * @throws Exception the exception
-     */
-    public abstract String getImpementationDescription() throws Exception;
 
     /**
      * Gets the entity manager.
      *
      * @param applicationId the application id
      *
-     * @return EntityDao for the specfied parameters
+     * @return EntityDao for the specified parameters
      */
-    public abstract EntityManager getEntityManager( UUID applicationId );
+    EntityManager getEntityManager( UUID applicationId );
 
     /**
-     * Creates a new application.
-     *
-     * @param name a unique application name.
-     *
-     * @return the newly created application id.
-     *
-     * @throws Exception the exception
+     * get management app em
+     * @return
      */
-    public abstract UUID createApplication( String organizationName, String name ) throws Exception;
+    EntityManager getManagementEntityManager();
+
+
+        /**
+         * Creates a new application.
+         *
+         * @param name a unique application name.
+         *
+         * @return Entity of type application_info that represents the newly created Application
+         *
+         * @throws Exception the exception
+         */
+    Entity createApplicationV2( String organizationName, String name ) throws Exception;
 
     /**
-     * Creates a Application entity. All entities except for applications must be attached to a Application.
+     * Creates a Application entity. All entities except for applications must be attached to a
+     * Application.
      *
      * @param name the name of the application to create.
      * @param properties property values to create in the new entity or null.
      *
-     * @return the newly created application id.
+     * @return Entity of type application_info that represents the newly created Application
      *
      * @throws Exception the exception
      */
-    public abstract UUID createApplication( String organizationName, String name, Map<String, Object> properties )
-            throws Exception;
+    Entity createApplicationV2(
+        String organizationName, String name, UUID applicationId, Map<String, Object> properties ) throws Exception;
 
-    public abstract UUID importApplication( String organization, UUID applicationId, String name,
+
+    /**
+     * Delete Application.
+     *
+     * @param applicationId UUID of Application to be deleted.
+     */
+    void deleteApplication( UUID applicationId ) throws Exception;
+
+//    /**
+//     *
+//     * @param applicationUUID
+//     * @param collectionFromName
+//     * @param collectionToName
+//     * @return
+//     * @throws Exception
+//     */
+//    Observable migrateAppInfo( UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception;
+
+    /**
+     * Restore deleted application.
+     */
+    Entity restoreApplication( UUID applicationId) throws Exception;
+
+    /**
+     *
+     * @param organization
+     * @param applicationId
+     * @param name
+     * @param properties
+     * @return
+     * @throws Exception
+     */
+    UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
 
     /**
@@ -86,7 +123,7 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract UUID lookupApplication( String name ) throws Exception;
+    Optional<UUID> lookupApplication( String name ) throws Exception;
 
     /**
      * Returns all the applications in the system.
@@ -95,15 +132,60 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract Map<String, UUID> getApplications() throws Exception;
+    Map<String, UUID> getApplications() throws Exception;
 
-    public abstract void setup() throws Exception;
+    public Map<String, UUID> getDeletedApplications() throws Exception;
 
-    public abstract Map<String, String> getServiceProperties();
+    /**
+     * Sets up core system resources
+     * @throws Exception
+     */
+    void setup() throws Exception;
 
-    public abstract boolean updateServiceProperties( Map<String, String> properties );
+    /**
+     * Boostraps system data so that we can operate usergrid
+     * @throws Exception
+     */
+    void boostrap() throws Exception;
 
-    public abstract boolean setServiceProperty( String name, String value );
+    Map<String, String> getServiceProperties();
 
-    public abstract boolean deleteServiceProperty( String name );
+    boolean updateServiceProperties( Map<String, String> properties );
+
+    boolean setServiceProperty( String name, String value );
+
+    boolean deleteServiceProperty( String name );
+
+    /**
+     * @return Entity of type application_info that represents the newly created application.
+     */
+    public Entity initializeApplicationV2(
+        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
+
+
+
+    public UUID getManagementAppId();
+
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex(UUID applicationId);
+
+    /**
+     * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph
+     */
+    public long performEntityCount();
+
+    /** For testing purposes */
+    public void flushEntityManagerCaches();
+
+
+    public Health getEntityStoreHealth();
+
+    public Health getIndexHealth();
+
+    void initializeManagementIndex();
+
+    public interface ProgressObserver {
+
+        public void onProgress(EntityRef entity);
+
+    }
 }

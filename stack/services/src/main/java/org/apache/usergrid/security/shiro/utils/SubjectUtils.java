@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.apache.usergrid.security.shiro.principals.UserPrincipal;
 
@@ -38,6 +37,7 @@ import org.apache.shiro.subject.Subject;
 import com.google.common.collect.BiMap;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import static org.apache.usergrid.security.shiro.Realm.ROLE_ADMIN_USER;
 import static org.apache.usergrid.security.shiro.Realm.ROLE_APPLICATION_ADMIN;
 import static org.apache.usergrid.security.shiro.Realm.ROLE_APPLICATION_USER;
@@ -243,15 +243,13 @@ public class SubjectUtils {
         String applicationName = null;
         UUID applicationId = null;
         BiMap<UUID, String> applications = getApplications();
+
         if ( applications == null ) {
             return null;
         }
         if ( identifier.isName() ) {
             applicationName = identifier.getName().toLowerCase();
             applicationId = applications.inverse().get( applicationName );
-            if ( applicationId == null ) {
-                applicationId = applications.inverse().get( identifier.getName() );
-            }
         }
         else if ( identifier.isUUID() ) {
             applicationId = identifier.getUUID();
@@ -424,7 +422,7 @@ public class SubjectUtils {
             currentUser.checkPermission( permission );
         }
         catch ( org.apache.shiro.authz.UnauthenticatedException e ) {
-            logger.error( "checkPermission(): Subject is anonymous" );
+            logger.debug( "checkPermission(): Subject is anonymous" );
         }
     }
 

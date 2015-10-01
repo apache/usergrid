@@ -18,498 +18,421 @@
 package org.apache.usergrid.rest.management;
 
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.codehaus.jackson.JsonNode;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 
-/**
- *
- *
- */
-@Concurrent
 public class ExportResourceIT extends AbstractRestIT {
+
 
 
     public ExportResourceIT() throws Exception {
 
     }
 
-    @Test
-    public void exportCallSuccessful() throws Exception {
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-        JsonNode node = null;
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( ClientResponse.Status.OK, responseStatus );
-    }
-
-
-    //is this test still valid knowing that the sch. won't run in intelliJ?
     @Ignore
-    public void exportCallCreationEntities100() throws Exception {
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-        JsonNode node = null;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: make sure to put a valid admin token here.
-        //TODO: always put dummy values here and ignore this test.
-
-
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-
-        payload.put( "properties", properties );
-
-        for ( int i = 0; i < 100; i++ ) {
-            Map<String, String> userCreation = hashMap( "type", "app_user" ).map( "name", "fred" + i );
-
-            node = resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .post( JsonNode.class, userCreation );
-        }
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( ClientResponse.Status.OK, responseStatus );
-    }
-
-
     @Test
     public void exportApplicationUUIDRetTest() throws Exception {
-        ClientResponse.Status responseStatus = ClientResponse.Status.ACCEPTED;
-        String uuid;
-        UUID jobUUID = null;
-        JsonNode node = null;
-
-
-        HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() ).addToPath( "export" );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            fail("We got back " + uie.getResponse().getStatus() + " instead of having a successful call" );
         }
 
-        assertEquals( ClientResponse.Status.ACCEPTED, responseStatus );
-        assertNotNull( node.get( "Export Entity" ) );
     }
 
-
-    //
+    @Ignore
     @Test
     public void exportCollectionUUIDRetTest() throws Exception {
-        ClientResponse.Status responseStatus = ClientResponse.Status.ACCEPTED;
-        String uuid;
-        UUID jobUUID = null;
-        JsonNode node = null;
-
 
         HashMap<String, Object> payload = payloadBuilder();
+        ApiResponse exportEntity = null;
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+
+
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
+                        .addToPath( "users" ).addToPath( "export" ).post(ApiResponse.class,payloadBuilder() );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
-        assertEquals( ClientResponse.Status.ACCEPTED, responseStatus );
-        assertNotNull( node.get( "Export Entity" ) );
+        assertNotNull( exportEntity );
+        assertNotNull( exportEntity.getProperties().get( "Export Entity" ));
     }
 
 
+    /**
+     * Check that you can get the org export uuid returned and that you can check the status of the job using that uuid.
+     * @throws Exception
+     */
+    @Ignore
     @Test
     public void exportGetOrganizationJobStatTest() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-        HashMap<String, Object> payload = payloadBuilder();
+        ApiResponse exportEntity = null;
+
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
-        assertEquals( ClientResponse.Status.OK,responseStatus);
 
-        String uuid = String.valueOf( node.get( "Export Entity" ) );
-        uuid = uuid.replaceAll( "\"", "" );
+        assertNotNull( exportEntity );
+        String uuid = ( String ) exportEntity.getProperties().get( "Export Entity" );
+        assertNotNull( uuid );
 
+        exportEntity = null;
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + uuid )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
-
-        assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertNotNull( exportEntity );
+        String state = (String) exportEntity.getProperties().get( "state" );
+        assertEquals( "SCHEDULED", state);
     }
+//
+//
 
 
-    //all tests should be moved to OrganizationResourceIT ( *not* Organizations there is a difference)
+    /**
+     * Check that you can get the app export uuid returned and that you can check the status of the job using that uuid.
+     * @throws Exception
+     */
+
+    @Ignore
     @Test
     public void exportGetApplicationJobStatTest() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-        HashMap<String, Object> payload = payloadBuilder();
+        ApiResponse exportEntity = null;
 
-        node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                         .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        String uuid = String.valueOf( node.get( "Export Entity" ) );
-        uuid = uuid.replaceAll( "\"", "" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + uuid )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
+                                       .app().addToPath( clientSetup.getAppUuid() )
+                                       .addToPath( "export" ).post( ApiResponse.class, payloadBuilder() );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
+        assertNotNull( exportEntity );
+        String uuid = ( String ) exportEntity.getProperties().get( "Export Entity" );
+        assertNotNull( uuid );
 
-        assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        exportEntity = null;
+        refreshIndex();
+        try {
+
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
+        }
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
+        }
+
+        assertNotNull( exportEntity );
+        String state = (String) exportEntity.getProperties().get( "state" );
+        assertEquals( "SCHEDULED", state);
     }
 
 
+    @Ignore
     @Test
     public void exportGetCollectionJobStatTest() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-        HashMap<String, Object> payload = payloadBuilder();
+        ApiResponse exportEntity = null;
 
-        node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                         .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        String uuid = String.valueOf( node.get( "Export Entity" ) );
-        uuid = uuid.replaceAll( "\"", "" );
+        exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
+                                   .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
+                                   .addToPath( "users" ).addToPath( "export" )
+                                   .post( ApiResponse.class, payloadBuilder() );
 
+        assertNotNull( exportEntity );
+        String uuid = ( String ) exportEntity.getProperties().get( "Export Entity" );
+        assertNotNull( uuid );
+
+        exportEntity = null;
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + uuid )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            exportEntity = management().orgs().org( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            fail( "We got back "+uie.getResponse().getStatus()+" instead of having a successful call" );
         }
 
 
-        assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertNotNull( exportEntity );
+        String state = (String) exportEntity.getProperties().get( "state" );
+        assertEquals( "SCHEDULED", state);
     }
-
-
-    //    //do an unauthorized test for both post and get
-    @Test
+//
+//
+//    //    //do an unauthorized test for both post and get
+@Ignore
+@Test
     public void exportGetWrongUUID() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + fake )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( fake.toString() ).get( ApiResponse.class );
+            fail( "Should not have been able to get fake uuid" );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
+
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
 
     //
+    @Ignore
     @Test
     public void exportPostApplicationNullPointerProperties() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                                       .app().addToPath( clientSetup.getAppUuid() )
+                                       .addToPath( "export" ).post( ApiResponse.class,
+                new HashMap<String, Object>() );
+            fail( "Should not have passed, The payload is empty." );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
 
+    @Ignore
     @Test
     public void exportPostOrganizationNullPointerProperties() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .addToPath( "export" ).post( ApiResponse.class, new HashMap<String, Object>()  );
+            fail( "Should not have passed, The payload is empty." );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
-
 
     //
+    @Ignore
     @Test
     public void exportPostCollectionNullPointer() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "collection" ).addToPath( "users" )
+                        .addToPath( "export" ).post( ApiResponse.class, new HashMap<String, Object>()  );
+
+            fail( "Should not have passed, The payload is empty." );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
-
+    @Ignore
     @Test
     public void exportGetCollectionUnauthorized() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export/" + fake )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "collection" ).addToPath( "users" )
+                        .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
+            fail( "Should not have passed as we didn't have an access token." );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.UNAUTHORIZED, responseStatus );
     }
 
-
+    @Ignore
     @Test
     public void exportGetApplicationUnauthorized() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + fake )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
+            fail( "Should not have passed as we didn't have an access token." );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.UNAUTHORIZED, responseStatus );
     }
 
-
+    @Ignore
     @Test
     public void exportGetOrganizationUnauthorized() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + fake )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .addToPath( "export" ).addToPath( fake.toString() ).get(ApiResponse.class ,false);
+            fail( "Should not have passed as we didn't have an access token." );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.UNAUTHORIZED, responseStatus );
     }
 
-
+    @Ignore
     @Test
     public void exportPostOrganizationNullPointerStorageInfo() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         //remove storage_info field
         properties.remove( "storage_info" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+
+    @Ignore
     @Test
     public void exportPostApplicationNullPointerStorageInfo() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         //remove storage_info field
         properties.remove( "storage_info" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "export" ).post( ApiResponse.class,
+                payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+    @Ignore
     @Test
     public void exportPostCollectionNullPointerStorageInfo() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         //remove storage_info field
         properties.remove( "storage_info" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "collection" ).addToPath( "users" )
+                        .addToPath( "export" ).post( ApiResponse.class,
+                payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+    @Ignore
     @Test
     public void exportPostOrganizationNullPointerStorageProvider() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         //remove storage_info field
         properties.remove( "storage_provider" );
 
-
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
-                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+
+    @Ignore
     @Test
     public void exportPostApplicationNullPointerStorageProvider() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         //remove storage_info field
         properties.remove( "storage_provider" );
 
-
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "export" ).post( ApiResponse.class,
+                payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+    @Ignore
     @Test
     public void exportPostCollectionNullPointerStorageProvider() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         //remove storage_info field
         properties.remove( "storage_provider" );
 
-
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "collection" ).addToPath( "users" )
+                        .addToPath( "export" ).post( ApiResponse.class,
+                payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+
+    @Ignore
     @Test
     public void exportPostOrganizationNullPointerStorageVerification() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
@@ -517,30 +440,30 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
-                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
         payload = payloadBuilder();
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
         storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
         //remove storage_key field
-        storage_info.remove( "s3_access_id" );
+        storage_info.remove( "s3_access_id");
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
-                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
         payload = payloadBuilder();
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
@@ -549,21 +472,19 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "bucket_location" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
-                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+    @Ignore
     @Test
     public void exportPostApplicationNullPointerStorageVerification() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
@@ -571,14 +492,15 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
         payload = payloadBuilder();
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
@@ -587,14 +509,15 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_access_id" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
         payload = payloadBuilder();
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
@@ -603,21 +526,20 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "bucket_location" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+    @Ignore
     @Test
     public void exportPostCollectionNullPointerStorageVerification() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
         HashMap<String, Object> payload = payloadBuilder();
         HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
         HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
@@ -625,14 +547,16 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "collection" ).addToPath( "users" )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
         payload = payloadBuilder();
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
@@ -641,29 +565,34 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_access_id" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "collection" ).addToPath( "users" )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
         payload = payloadBuilder();
         properties = ( HashMap<String, Object> ) payload.get( "properties" );
         storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
+        //remove storage_key field
         storage_info.remove( "bucket_location" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management().orgs().org( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() )
+                        .addToPath( "collection" ).addToPath( "users" )
+                        .addToPath( "export" ).post( ApiResponse.class, payload );
+            fail( "Should not have passed as we were missing an important part of the payload" );
+
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), uie.getResponse().getStatus() );
         }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
 

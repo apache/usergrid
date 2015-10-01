@@ -17,14 +17,6 @@
 package org.apache.usergrid.security.providers;
 
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
@@ -32,12 +24,16 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.utils.JsonUtils;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.apache.usergrid.utils.ListUtils.anyNull;
 
@@ -85,12 +81,16 @@ public class FoursquareProvider extends AbstractProvider {
 
     @Override
     public User createOrAuthenticate( String externalToken ) throws BadTokenException {
-        ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-        Client client = Client.create( clientConfig );
-        WebResource web_resource = client.resource( "https://api.foursquare.com/v2/users/self" );
-        Map<String, Object> body = web_resource.queryParam( "oauth_token", externalToken ).queryParam( "v", "20120623" )
-                                               .accept( MediaType.APPLICATION_JSON ).get( Map.class );
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.register( new JacksonFeature() );
+        client = ClientBuilder.newClient( clientConfig );
+
+        Map<String, Object> body = client.target( "https://api.foursquare.com/v2/users/self" )
+            .queryParam( "oauth_token", externalToken )
+            .queryParam( "v", "20120623" )
+            .request()
+                .accept( MediaType.APPLICATION_JSON )
+                .get( Map.class );
 
         Map<String, Object> fq_user = ( Map<String, Object> ) ( ( Map<?, ?> ) body.get( "response" ) ).get( "user" );
 
@@ -125,8 +125,8 @@ public class FoursquareProvider extends AbstractProvider {
         try {
             if ( ( fq_user != null ) && !anyNull( fq_user_id, fq_user_name ) ) {
 
-                Results r = entityManager.searchCollection( entityManager.getApplicationRef(), "users",
-                        Query.findForProperty( "foursquare.id", fq_user_id ) );
+                final Query query = Query.fromEquals(  "foursquare.id" ,   fq_user_id );
+                Results r = entityManager.searchCollection( entityManager.getApplicationRef(), "users", query );
 
                 if ( r.size() > 1 ) {
                     logger.error( "Multiple users for FQ ID: " + fq_user_id );

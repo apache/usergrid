@@ -20,26 +20,28 @@ package org.apache.usergrid.system;
 import java.util.Date;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.apache.usergrid.CoreITSuite;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.utils.MapUtils;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
 /** @author zznate */
-@Concurrent
 public class UsergridSystemMonitorIT {
+
     private UsergridSystemMonitor usergridSystemMonitor;
 
 
     @Before
     public void setupLocal() {
-        usergridSystemMonitor = CoreITSuite.cassandraResource.getBean( UsergridSystemMonitor.class );
+        usergridSystemMonitor = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( UsergridSystemMonitor.class );
     }
 
 

@@ -19,6 +19,7 @@ package org.apache.usergrid.count;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import org.apache.usergrid.count.common.Count;
 
 import static junit.framework.Assert.assertEquals;

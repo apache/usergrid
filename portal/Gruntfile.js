@@ -367,6 +367,7 @@ module.exports = function(grunt) {
       install: {
         options: {
           cleanup: false,
+
           copy: false
         }
       }

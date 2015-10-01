@@ -1,0 +1,74 @@
+<assembly>
+
+<!--
+	Licensed to the Apache Software Foundation (ASF) under one or more
+	contributor license agreements.  See the NOTICE file distributed with
+	this work for additional information regarding copyright ownership.
+	The ASF licenses this file to You under the Apache License, Version 2.0
+	(the "License"); you may not use this file except in compliance with
+	the License.  You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+    -->
+
+    <id>any</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <!-- <files>
+
+        <file>
+            <outputDirectory>webapps</outputDirectory>
+            <source>${stack.war}</source>
+            <destName>ROOT.war</destName>
+        </file>
+
+    </files> -->
+
+    <fileSets>
+
+        <fileSet>
+            <outputDirectory>.</outputDirectory>
+            <directory>${project.basedir}/src/main/dist</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+        </fileSet>
+
+
+        <fileSet>
+            <outputDirectory>./scripts</outputDirectory>
+            <directory>./src/main/groovy</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+        </fileSet>
+
+      <fileSet>
+               <outputDirectory>./cql</outputDirectory>
+               <directory>./src/main/cql</directory>
+               <includes>
+                   <include>**</include>
+               </includes>
+           </fileSet>
+
+        <fileSet>
+            <outputDirectory>./webapps/portal</outputDirectory>
+            <directory>${portal.dir}</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+        </fileSet>
+
+    </fileSets>
+
+</assembly>

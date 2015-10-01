@@ -17,118 +17,96 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
+import net.jcip.annotations.NotThreadSafe;
+import org.apache.commons.io.IOUtils;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 
-import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.JsonNode;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.applications.utils.UserRepo;
-import org.apache.usergrid.services.assets.data.AssetUtils;
-
-import org.apache.commons.io.IOUtils;
-
-import com.sun.jersey.multipart.FormDataMultiPart;
-
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
-
-@Concurrent()
+@NotThreadSafe
 public class AssetResourceIT extends AbstractRestIT {
 
+    private String access_token;
     private Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
+    private Map<String, Object> originalProperties;
 
 
-    /** @Deprecated Tests legacy API */
-    @Test
-    public void verifyBinaryCrud() throws Exception {
-        UserRepo.INSTANCE.load( resource(), access_token );
 
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        Map<String, String> payload =
-                hashMap( "path", "my/clean/path" ).map( "owner", userId.toString() ).map( "someprop", "somevalue" );
+    @Before
+    public void setup(){
+        originalProperties = getRemoteTestProperties();
+        setTestProperty(PROPERTIES_USERGRID_BINARY_UPLOADER, "local");
 
-        JsonNode node =
-                resource().path( "/test-organization/test-app/assets" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( JsonNode.class, payload );
-        JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        UUID id = UUID.fromString( idNode.getTextValue() );
-        assertNotNull( idNode.getTextValue() );
-        logNode( node );
 
-        byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
-        resource().path( "/test-organization/test-app/assets/" + id.toString() + "/data" )
-                .queryParam( "access_token", access_token ).type( MediaType.APPLICATION_OCTET_STREAM_TYPE ).put( data );
+        access_token = this.getAdminToken().getAccessToken();
 
-        InputStream is = resource().path( "/test-organization/test-app/assets/" + id.toString() + "/data" )
-                .queryParam( "access_token", access_token ).get( InputStream.class );
+    }
 
-        byte[] foundData = IOUtils.toByteArray( is );
-        assertEquals( 7979, foundData.length );
-
-        node = resource().path( "/test-organization/test-app/assets/my/clean/path" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
-                .get( JsonNode.class );
-
-        idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        assertEquals( id.toString(), idNode.getTextValue() );
+    @After
+    public void teardown(){
+        setTestProperties(originalProperties);
     }
 
 
     @Test
     public void octetStreamOnDynamicEntity() throws Exception {
-        UserRepo.INSTANCE.load( resource(), access_token );
+
+        this.refreshIndex();
+
+        //  post an asset entity
 
         Map<String, String> payload = hashMap( "name", "assetname" );
+        ApiResponse postResponse = pathResource( getOrgAppPath( "foos" )).post( payload );
+        UUID assetId = postResponse.getEntities().get(0).getUuid();
+        assertNotNull(assetId);
 
-        JsonNode node = resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+        // post a binary asset to that entity
 
-        JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        String uuid = idNode.getTextValue();
-        assertNotNull( uuid );
-        logNode( node );
+        byte[] data = IOUtils.toByteArray( getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+        ApiResponse putResponse = pathResource( getOrgAppPath("foos/" + assetId) )
+            .put( data, MediaType.APPLICATION_OCTET_STREAM_TYPE );
 
-        byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
-        resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .type( MediaType.APPLICATION_OCTET_STREAM_TYPE ).put( data );
+        // check that the asset entity has asset metadata
 
-        // get entity
-        node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
-        logNode( node );
-        Assert.assertEquals( "image/jpeg", node.findValue( AssetUtils.CONTENT_TYPE ).getTextValue() );
-        Assert.assertEquals( 7979, node.findValue( "content-length" ).getIntValue() );
-        idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        assertEquals( uuid, idNode.getTextValue() );
+        ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" + assetId) ).get( ApiResponse.class );
+        Entity entity = getResponse.getEntities().get(0);
+        Map<String, Object> fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        Assert.assertEquals( "image/jpeg", fileMetadata.get( "content-type" ) );
+        Assert.assertEquals( 7979,         fileMetadata.get( "content-length" ));
+        assertEquals( assetId, entity.getUuid() );
 
-        // get data by UUID
-        InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        // get binary asset by UUID
 
+        InputStream is = pathResource( getOrgAppPath("foos/" + assetId) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
 
-        // get data by name
-        is = resource().path( "/test-organization/test-app/foos/assetname" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        // get binary asset by name
 
+        is = pathResource( getOrgAppPath("foos/assetname") ).getAssetAsStream();
         foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
     }
@@ -136,50 +114,28 @@ public class AssetResourceIT extends AbstractRestIT {
 
     @Test
     public void multipartPostFormOnDynamicEntity() throws Exception {
-        UserRepo.INSTANCE.load( resource(), access_token );
+
+        this.refreshIndex();
+
+        // post data larger than 5M
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
+        FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        ApiResponse putResponse = pathResource(getOrgAppPath("foos")).post(form);
+        this.refreshIndex();
 
-        FormDataMultiPart form = new FormDataMultiPart()
-                .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        UUID assetId = putResponse.getEntities().get(0).getUuid();
+        assertNotNull(assetId);
 
-        JsonNode node = resource().path( "/test-organization/test-app/foos" )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.MULTIPART_FORM_DATA )
-                .post( JsonNode.class, form );
-
-        JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        String uuid = idNode.getTextValue();
-        assertNotNull( uuid );
-        logNode( node );
-
-        // get entity
-        node = resource().path( "/test-organization/test-app/foos/" + uuid )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE )
-                .get( JsonNode.class );
-
-        logNode( node );
-        assertEquals( "application/octet-stream", node.findValue( AssetUtils.CONTENT_TYPE ).getTextValue() );
-        assertEquals( 5324800, node.findValue( AssetUtils.CONTENT_LENGTH ).getIntValue() );
-        idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        assertEquals( uuid, idNode.getTextValue() );
+        // retry until upload complete and we can get the data
 
         int retries = 0;
         boolean done = false;
         byte[] foundData = new byte[0];
-
-        // retry until upload complete
         while ( !done && retries < 30 ) {
 
-            // get data
             try {
-                InputStream is = resource().path( "/test-organization/test-app/foos/" + uuid )
-                        .queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
-                        .get( InputStream.class );
-
+                InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
                 foundData = IOUtils.toByteArray( is );
                 done = true;
 
@@ -189,173 +145,128 @@ public class AssetResourceIT extends AbstractRestIT {
             retries++;
         }
 
+        //  did we get expected number of bytes of data?
+
         assertEquals( 5324800, foundData.length );
 
-        // delete
-        node = resource().path( "/test-organization/test-app/foos/" + uuid )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE )
-                .delete( JsonNode.class );
+        pathResource( getOrgAppPath( "foos/" + assetId ) ).delete();
     }
 
 
     @Test
     public void multipartPutFormOnDynamicEntity() throws Exception {
-        UserRepo.INSTANCE.load( resource(), access_token );
+
+        this.refreshIndex();
+
+        // post an entity
 
         Map<String, String> payload = hashMap( "foo", "bar" );
+        ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+        UUID assetId = postResponse.getEntities().get(0).getUuid();
+        assertNotNull( assetId );
 
-        JsonNode node = resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+        // post asset to that entity
 
-        JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        String uuid = idNode.getTextValue();
-        assertNotNull( uuid );
-        logNode( node );
-
-        // set file & assetname
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
-        FormDataMultiPart form = new FormDataMultiPart().field( "foo", "bar2" )
-                                                        .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        FormDataMultiPart form = new FormDataMultiPart()
+            .field( "foo", "bar2" )
+            .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        ApiResponse putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        this.refreshIndex();
 
-        long created = System.currentTimeMillis();
-        node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA ).put( JsonNode.class, form );
-        logNode( node );
+        // get entity and check asset metadata
 
-        // get entity
-        node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
-        logNode( node );
-        assertEquals( "image/jpeg", node.findValue( AssetUtils.CONTENT_TYPE ).getTextValue() );
-        assertEquals( 7979, node.findValue( AssetUtils.CONTENT_LENGTH ).getIntValue() );
-        idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        assertEquals( uuid, idNode.getTextValue() );
-        JsonNode nameNode = node.get( "entities" ).get( 0 ).get( "foo" );
-        assertEquals( "bar2", nameNode.getTextValue() );
-        long lastModified = node.findValue( AssetUtils.LAST_MODIFIED ).getLongValue();
-        Assert.assertEquals( created, lastModified, 500 );
+        ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
+        Entity entity = getResponse.getEntities().get( 0 );
+        Map<String, Object> fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        long lastModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
 
-        // get data
-        InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( "image/jpeg" ).get( InputStream.class );
+        assertEquals( assetId,      entity.getUuid() );
+        assertEquals( "bar2",       entity.get("foo") );
+        assertEquals( "image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
+        assertEquals( 7979,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
 
+        // get asset and check size
+
+        InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
 
-        // post new data
-        node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA ).put( JsonNode.class, form );
-        logNode( node );
-        assertTrue( lastModified != node.findValue( AssetUtils.LAST_MODIFIED ).getLongValue() );
+        // upload new asset to entity, then check that it was updated
+
+        ApiResponse putResponse2 = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        entity = putResponse2.getEntities().get( 0 );
+        fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        long justModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
+        assertNotEquals( lastModified, justModified );
     }
 
 
     @Test
     public void largeFileInS3() throws Exception {
-        UserRepo.INSTANCE.load( resource(), access_token );
+
+        this.refreshIndex();
+
+        // upload file larger than 5MB
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
         FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
+        UUID assetId = postResponse.getEntities().get(0).getUuid();
+        LOG.info( "Waiting for upload to finish..." );
+        Thread.sleep( 2000 );
 
-        // send data
-        JsonNode node = resource().path( "/test-organization/test-app/foos" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA )
-                .post( JsonNode.class, form );
-        logNode( node );
-        JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-        String uuid = idNode.getTextValue();
+        // check that entire file was uploaded
 
-        // get entity
-        long timeout = System.currentTimeMillis() + 60000;
-        while ( true ) {
-            LOG.info( "Waiting for upload to finish..." );
-            Thread.sleep( 2000 );
-            node = resource().path( "/test-organization/test-app/foos/" + uuid )
-                    .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
-                    .get( JsonNode.class );
-            logNode( node );
-
-            // poll for the upload to complete
-            if ( node.findValue( AssetUtils.E_TAG ) != null ) {
-                break;
-            }
-            if ( System.currentTimeMillis() > timeout ) {
-                throw new TimeoutException();
-            }
-        }
+        ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
         LOG.info( "Upload complete!" );
-
-        // get data
-        InputStream is =
-                resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
-
+        InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray( is );
-        assertEquals( 5324800, foundData.length );
+        assertEquals( data.length, foundData.length );
 
-        // delete
-        node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+        // delete file
+
+        pathResource( getOrgAppPath( "foos/" + assetId ) ).delete();
     }
 
     @Test
     public void fileTooLargeShouldResultInError() throws Exception {
 
+        this.refreshIndex();
+
+        // set max file size down to 6mb
+
         Map<String, String> props = new HashMap<String, String>();
         props.put( "usergrid.binary.max-size-mb", "6" );
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+        pathResource( "testproperties" ).post( props );
 
         try {
 
-            UserRepo.INSTANCE.load( resource(), access_token );
+            // upload a file larger than 6mb
 
-            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ) );
-            FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+            final StreamDataBodyPart part = new StreamDataBodyPart(
+                "file", getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ), "ship");
+            final MultiPart multipart = new FormDataMultiPart().bodyPart( part );
 
-            // send data
-            JsonNode node = resource().path( "/test-organization/test-app/bars" ).queryParam( "access_token", access_token )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.MULTIPART_FORM_DATA )
-                    .post( JsonNode.class, form );
-            //logNode( node );
-            JsonNode idNode = node.get( "entities" ).get( 0 ).get( "uuid" );
-            String uuid = idNode.getTextValue();
+            ApiResponse postResponse = pathResource( getOrgAppPath( "bars" ) ).post( multipart );
+            UUID assetId = postResponse.getEntities().get(0).getUuid();
 
-            // get entity
             String errorMessage = null;
-            long timeout = System.currentTimeMillis() + 60000;
-            while (true) {
-                LOG.info( "Waiting for upload to finish..." );
-                Thread.sleep( 2000 );
-                node = resource().path( "/test-organization/test-app/bars/" + uuid )
-                        .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
-                //logNode( node );
+            LOG.info( "Waiting for upload to finish..." );
+            Thread.sleep( 2000 );
 
-                // poll for the error to happen
-                if (node.findValue( "error" ) != null) {
-                    errorMessage = node.findValue("error").asText();
-                    break;
-                }
-                if (System.currentTimeMillis() > timeout) {
-                    throw new TimeoutException();
-                }
-            }
+            // attempt to get asset entity, it should contain error
 
-            assertTrue( errorMessage.startsWith("Asset size "));
+            ApiResponse getResponse = pathResource( getOrgAppPath( "bars/" +assetId ) ).get( ApiResponse.class );
+            Map<String, Object> fileMetadata = (Map<String, Object>)getResponse.getEntities().get(0).get("file-metadata");
+            assertTrue( fileMetadata.get( "error" ).toString().startsWith( "Asset size " ) );
 
         } finally {
-            props = new HashMap<String, String>();
+
+            // set max upload size back to default 25mb
+
             props.put( "usergrid.binary.max-size-mb", "25" );
-            resource().path( "/testproperties" )
-                    .queryParam( "access_token", access_token )
-                    .accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+            pathResource( "testproperties" ).post( props );
         }
     }
 
@@ -365,100 +276,62 @@ public class AssetResourceIT extends AbstractRestIT {
     @Test
     public void deleteConnectionToAsset() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-
-        final String uuid;
+        this.refreshIndex();
 
         // create the entity that will be the asset, an image
 
         Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
-
-        JsonNode node = resource().path("/test-organization/test-app/foos")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, payload);
-        JsonNode idNode = node.get("entities").get(0).get("uuid");
-        uuid = idNode.getTextValue();
+        ApiResponse postReponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+        final UUID uuid = postReponse.getEntities().get(0).getUuid();
 
         // post image data to the asset entity
 
         byte[] data = IOUtils.toByteArray(this.getClass().getResourceAsStream("/cassandra_eye.jpg"));
-        resource().path("/test-organization/test-app/foos/" + uuid)
-                .queryParam("access_token", access_token)
-                .type(MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .put(data);
+        pathResource( getOrgAppPath( "foos/" + uuid ) ).put( data, MediaType.APPLICATION_OCTET_STREAM_TYPE );
 
         // create an imagegallery entity
 
         Map<String, String> imageGalleryPayload = hashMap("name", "my image gallery");
 
-        JsonNode imageGalleryNode = resource().path("/test-organization/test-app/imagegalleries")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, imageGalleryPayload);
-
-        JsonNode imageGalleryIdNode = imageGalleryNode.get("entities").get(0).get("uuid");
-        String imageGalleryId = imageGalleryIdNode.getTextValue();
+        ApiResponse postResponse2 = pathResource( getOrgAppPath( "imagegalleries" ) ).post( imageGalleryPayload );
+        UUID imageGalleryId = postResponse2.getEntities().get(0).getUuid();
 
         // connect imagegallery to asset
 
-        JsonNode connectNode = resource()
-                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class);
+        ApiResponse connectResponse = pathResource(
+            getOrgAppPath( "imagegalleries/" + imageGalleryId + "/contains/" + uuid ) ).post( ApiResponse.class );
+        this.refreshIndex();
 
         // verify connection from imagegallery to asset
 
-        JsonNode listConnectionsNode = resource()
-                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .get(JsonNode.class);
-        assertEquals(uuid, listConnectionsNode.get("entities").get(0).get("uuid").getTextValue());
+        ApiResponse containsResponse = pathResource(
+            getOrgAppPath( "imagegalleries/" + imageGalleryId + "/contains/" ) ).get( ApiResponse.class );
+        assertEquals( uuid, containsResponse.getEntities().get(0).getUuid() );
 
         // delete the connection
 
-        resource().path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .delete();
+        pathResource( getOrgAppPath( "imagegalleries/" + imageGalleryId + "/contains/" + uuid ) ).delete();
+        this.refreshIndex();
 
         // verify that connection is gone
 
-        listConnectionsNode = resource()
-                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .get(JsonNode.class);
-        assertFalse(listConnectionsNode.get("entities").getElements().hasNext());
+        ApiResponse listResponse = pathResource(
+            getOrgAppPath( "imagegalleries/" + imageGalleryId + "/contains/" )).get( ApiResponse.class );
+        assertEquals( 0, listResponse.getEntityCount() );
 
         // asset should still be there
 
-        JsonNode assetNode = resource().path("/test-organization/test-app/foos/" + uuid)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON_TYPE)
-                .get(JsonNode.class);
+        ApiResponse getResponse2 = pathResource( getOrgAppPath( "foos/" + uuid ) ).get( ApiResponse.class );
+        Entity entity = getResponse2.getEntities().get(0);
+        Map<String, Object> fileMetadata = (Map<String, Object>)entity.get("file-metadata");
 
-        logNode(assetNode);
-        Assert.assertEquals("image/jpeg", assetNode.findValue(AssetUtils.CONTENT_TYPE).getTextValue());
-        Assert.assertEquals(7979, assetNode.findValue("content-length").getIntValue());
-        JsonNode assetIdNode = assetNode.get("entities").get(0).get("uuid");
-        assertEquals(uuid, assetIdNode.getTextValue());
+        Assert.assertEquals("image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ));
+        Assert.assertEquals(7979, fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+        assertEquals(uuid, entity.getUuid());
 
         // asset data should still be there
 
-        InputStream assetIs = resource().path("/test-organization/test-app/foos/" + uuid)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .get(InputStream.class);
-
+        InputStream assetIs = pathResource( getOrgAppPath( "foos/" + uuid ) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray(assetIs);
         assertEquals(7979, foundData.length);
     }

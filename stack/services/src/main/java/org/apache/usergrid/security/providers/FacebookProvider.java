@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.User;
@@ -93,8 +93,11 @@ public class FacebookProvider extends AbstractProvider {
 
     @Override
     Map<String, Object> userFromResource( String externalToken ) {
-        return client.resource( apiUrl ).queryParam( "access_token", externalToken )
-                     .accept( MediaType.APPLICATION_JSON ).get( Map.class );
+        return client.target( apiUrl )
+            .queryParam( "access_token", externalToken )
+            .request()
+                .accept( MediaType.APPLICATION_JSON )
+                .get( Map.class );
     }
 
 
@@ -117,8 +120,8 @@ public class FacebookProvider extends AbstractProvider {
 
             Results r = null;
             try {
-                r = entityManager.searchCollection( entityManager.getApplicationRef(), "users",
-                        Query.findForProperty( "facebook.id", fb_user_id ) );
+                final Query query = Query.fromEquals( "facebook.id",  fb_user_id );
+                r = entityManager.searchCollection( entityManager.getApplicationRef(), "users", query );
             }
             catch ( Exception ex ) {
                 throw new BadTokenException( "Could not lookup user for that Facebook ID", ex );

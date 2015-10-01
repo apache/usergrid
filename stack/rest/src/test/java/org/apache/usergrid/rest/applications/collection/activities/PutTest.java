@@ -17,36 +17,34 @@
 package org.apache.usergrid.rest.applications.collection.activities;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertEquals;
 
-import org.codehaus.jackson.JsonNode;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-
-import static org.junit.Assert.assertEquals;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
- * // TODO: Document this
- *
- * @author ApigeeCorporation
- * @since 4.0
+ * Activity update test.
  */
 public class PutTest extends AbstractRestIT {
-
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+    private static final Logger log= LoggerFactory.getLogger( PutTest.class );
 
 
     @Test //USERGRID-545
-    public void putMassUpdateTest() {
+    public void putMassUpdateTest() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CollectionEndpoint activities = this.app().collection("activities");
 
         Map actor = hashMap( "displayName", "Erin" );
         Map newActor = hashMap( "displayName", "Bob" );
@@ -58,23 +56,25 @@ public class PutTest extends AbstractRestIT {
 
 
         for ( int i = 0; i < 5; i++ ) {
-
             props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
+            Entity activity = activities.post(new Entity(props));
         }
+
+        refreshIndex();
 
         String query = "select * ";
 
-        JsonNode node = activities.withQuery( query ).get();
-        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
+        Collection collection = activities.get();
+        String uuid = collection.getResponse().getEntities().get( 0 ).getUuid().toString();
         StringBuilder buf = new StringBuilder( uuid );
-
-
-        activities.addToUrlEnd( buf );
+        buf.append( "/" );
+        buf.append( buf );
         props.put( "actor", newActor );
-        node = activities.put( props );
-        node = activities.withQuery( query ).get();
+        Entity activity = activities.post(new Entity(props));
 
-        assertEquals( 6, node.get( "entities" ).size() );
+        refreshIndex();
+
+        collection = activities.get(  );
+        assertEquals( 6, collection.getResponse().getEntities().size() );
     }
 }

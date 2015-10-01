@@ -1,0 +1,5 @@
+This product includes software developed at:
+https://github.com/bazaarvoice/s3-upload-maven-plugin/wiki
+http://apache.org
+
+

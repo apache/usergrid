@@ -17,31 +17,35 @@
 package org.apache.usergrid.rest;
 
 
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.system.ApplicationsResource;
+import org.apache.usergrid.rest.system.DatabaseResource;
+import org.apache.usergrid.rest.system.QueueSystemResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
 
-@Path("/system")
+
+@Path( "/system" )
 @Component
-@Scope("singleton")
-@Produces({
-        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript"
-})
+@Scope( "singleton" )
+@Produces( {
+    MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+    "application/ecmascript", "text/jscript"
+} )
 public class SystemResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( SystemResource.class );
@@ -54,43 +58,12 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
-    @Path("database/setup")
-    public JSONWithPadding getSetup( @Context UriInfo ui,
-                                     @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
 
-        ApiResponse response = createApiResponse();
-        response.setAction( "cassandra setup" );
-
-        logger.info( "Setting up Cassandra" );
-
-
-        try {
-            emf.setup();
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to complete core database setup, possibly due to it being setup already", e );
-        }
-
-        try {
-            management.setup();
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to complete management database setup, possibly due to it being setup already", e );
-        }
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
-    }
-
-
-    @RequireSystemAccess
-    @GET
-    @Path("superuser/setup")
-    public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                                              @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    @Path( "superuser/setup" )
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getSetupSuperuser( @Context UriInfo ui,
+           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "superuser setup" );
@@ -106,6 +79,33 @@ public class SystemResource extends AbstractContextResource {
 
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
+    }
+
+
+
+    @Path( "migrate" )
+    public MigrateResource migrate() {
+        return getSubResource( MigrateResource.class );
+    }
+
+
+    @Path( "index" )
+    public IndexResource index() { return getSubResource( IndexResource.class ); }
+
+
+    @Path( "database" )
+    public DatabaseResource database() {
+        return getSubResource( DatabaseResource.class );
+    }
+
+    @Path( "queue" )
+    public QueueSystemResource queue() {
+        return getSubResource( QueueSystemResource.class );
+    }
+
+    @Path( "applications" )
+    public ApplicationsResource applications() {
+        return getSubResource( ApplicationsResource.class );
     }
 }

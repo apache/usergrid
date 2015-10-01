@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -30,12 +30,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.command.Md5HashCommand;
 import org.apache.usergrid.security.crypto.command.Sha1HashCommand;
@@ -52,8 +53,12 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
+import static org.apache.usergrid.TestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueEmail;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -63,43 +68,50 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author zznate
  */
-@Concurrent()
+
 public class ManagementServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
 
-    private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
 
-    // app-level data generated only once
-    private static UserInfo adminUser;
-    private static OrganizationInfo organization;
-    private static UUID applicationId;
+     @ClassRule
+    public static final ServiceITSetup setup = new ServiceITSetupImpl();
+
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
+    @Rule
+    public NewOrgAppAdminRule orgAppAdminRule = new NewOrgAppAdminRule( setup );
 
 
-    @BeforeClass
-    public static void setup() throws Exception {
+    // app-level data generated only once
+    private UserInfo adminUser;
+    private UUID applicationId;
+
+
+    @Before
+    public void setup() throws Exception {
         LOG.info( "in setup" );
-        adminUser = setup.getMgmtSvc().createAdminUser( "edanuff", "Ed Anuff", "ed@anuff.com", "test", false, false );
-        organization = setup.getMgmtSvc().createOrganization( "ed-organization", adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "ed-application" ).getId();
+
+
+        adminUser = orgAppAdminRule.getAdminInfo();
+        applicationId = orgAppAdminRule.getApplicationInfo().getId();
+
+        setup.getEntityIndex().refresh(applicationId);
     }
+
 
 
     @Test
     public void testGetTokenForPrincipalAdmin() throws Exception {
         String token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
-                .getTokenForPrincipal( TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                .getTokenForPrincipal( TokenCategory.ACCESS, null, setup.getEmf().getManagementAppId(),
                         AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), 0 );
         // ^ same as:
         // managementService.getAccessTokenForAdminUser(user.getUuid());
         assertNotNull( token );
         token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
-                .getTokenForPrincipal( TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                .getTokenForPrincipal( TokenCategory.ACCESS, null, setup.getEmf().getManagementAppId(),
                         AuthPrincipalType.APPLICATION_USER, adminUser.getUuid(), 0 );
         // This works because ManagementService#getSecret takes the same code
         // path
@@ -124,7 +136,7 @@ public class ManagementServiceIT {
 
         assertNotNull( user );
         String token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
-                .getTokenForPrincipal( TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                .getTokenForPrincipal( TokenCategory.ACCESS, null, setup.getEmf().getManagementAppId(),
                         AuthPrincipalType.APPLICATION_USER, user.getUuid(), 0 );
         assertNotNull( token );
     }
@@ -132,20 +144,33 @@ public class ManagementServiceIT {
 
     @Test
     public void testCountAdminUserAction() throws Exception {
-        SimpleBatcher batcher = cassandraResource.getBean( SimpleBatcher.class );
+        SimpleBatcher batcher = SpringResource.getInstance().getBean( SimpleBatcher.class );
 
         batcher.setBlockingSubmit( true );
         batcher.setBatchSize( 1 );
 
-        setup.getMgmtSvc().countAdminUserAction( adminUser, "login" );
-
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Map<String, Long> counts = em.getApplicationCounters();
         LOG.info( JsonUtils.mapToJsonString( counts ) );
         LOG.info( JsonUtils.mapToJsonString( em.getCounterNames() ) );
+
+        final Long existingCounts = counts.get( "admin_logins" );
+
+        final long startCount = existingCounts == null ? 0 : existingCounts;
+
+
+        setup.getMgmtSvc().countAdminUserAction( adminUser, "login" );
+
+
+        counts = em.getApplicationCounters();
+        LOG.info( JsonUtils.mapToJsonString( counts ) );
+        LOG.info( JsonUtils.mapToJsonString( em.getCounterNames() ) );
         assertNotNull( counts.get( "admin_logins" ) );
-        assertEquals( 1, counts.get( "admin_logins" ).intValue() );
+
+        final long newCount = counts.get( "admin_logins" );
+
+        assertEquals( 1l, newCount - startCount );
     }
 
 
@@ -169,6 +194,8 @@ public class ManagementServiceIT {
         assertNull( user.getDeactivated() );
 
         setup.getMgmtSvc().activateAppUser( applicationId, user.getUuid() );
+
+        setup.getEntityIndex().refresh(applicationId);
 
         user = em.get( entity.getUuid(), User.class );
 
@@ -227,7 +254,7 @@ public class ManagementServiceIT {
         properties.put( "username", "test" + uuid );
         properties.put( "email", String.format( "test%s@anuff.com", uuid ) );
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Entity entity = em.create( "user", properties );
 
@@ -435,7 +462,7 @@ public class ManagementServiceIT {
     }
 
 
-    @Ignore
+    @Ignore("Why is this ignored?")
     public void superUserGetOrganizationsPage() throws Exception {
         int beforeSize = setup.getMgmtSvc().getOrganizations().size() - 1;
         // create 15 orgs
@@ -456,12 +483,15 @@ public class ManagementServiceIT {
     @Test
     public void authenticateAdmin() throws Exception {
 
-        String username = "tnine";
+        String username = uniqueUsername();
         String password = "test";
 
         UserInfo adminUser = setup.getMgmtSvc()
-                                  .createAdminUser( username, "Todd Nine", UUID.randomUUID() + "@apigee.com", password,
+                                  .createAdminUser( username, "Todd Nine",uniqueEmail(), password,
                                           false, false );
+
+        EntityManager em = setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
+        setup.getEntityIndex().refresh(applicationId);
 
         UserInfo authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( username, password );
 
@@ -482,7 +512,7 @@ public class ManagementServiceIT {
      */
     @Test
     public void testAdminPasswordChangeShaType() throws Exception {
-        String username = "testAdminPasswordChangeShaType";
+        String username = uniqueUsername();
         String password = "test";
 
 
@@ -490,7 +520,7 @@ public class ManagementServiceIT {
         user.setActivated( true );
         user.setUsername( username );
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         User storedUser = em.create( user );
 
@@ -504,7 +534,7 @@ public class ManagementServiceIT {
 
 
         Sha1HashCommand command = new Sha1HashCommand();
-        byte[] hashed = command.hash( password.getBytes( "UTF-8" ), info, userId, MANAGEMENT_APPLICATION_ID );
+        byte[] hashed = command.hash( password.getBytes( "UTF-8" ), info, userId, setup.getEmf().getManagementAppId() );
 
         info.setSecret( encodeBase64URLSafeString( hashed ) );
         info.setCipher( command.getName() );
@@ -512,21 +542,23 @@ public class ManagementServiceIT {
 
         em.addToDictionary( storedUser, DICTIONARY_CREDENTIALS, "password", info );
 
+        setup.getEntityIndex().refresh(applicationId);
+
 
         //verify authorization works
         User authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, password );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, password );
 
         assertEquals( userId, authedUser.getUuid() );
 
         //test we can change the password
         String newPassword = "test2";
 
-        setup.getMgmtSvc().setAppUserPassword( MANAGEMENT_APPLICATION_ID, userId, password, newPassword );
+        setup.getMgmtSvc().setAppUserPassword( setup.getEmf().getManagementAppId(), userId, password, newPassword );
 
         //verify authorization works
         authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, newPassword );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, newPassword );
 
         assertEquals( userId, authedUser.getUuid() );
     }
@@ -537,7 +569,7 @@ public class ManagementServiceIT {
      */
     @Test
     public void testAdminPasswordChangeMd5ShaType() throws Exception {
-        String username = "testAdminPasswordChangeMd5ShaType";
+        String username = uniqueUsername();
         String password = "test";
 
 
@@ -545,9 +577,10 @@ public class ManagementServiceIT {
         user.setActivated( true );
         user.setUsername( username );
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         User storedUser = em.create( user );
+        setup.getEntityIndex().refresh(applicationId);
 
 
         UUID userId = storedUser.getUuid();
@@ -564,8 +597,8 @@ public class ManagementServiceIT {
 
         Sha1HashCommand sha1 = new Sha1HashCommand();
 
-        byte[] hashed = md5.hash( password.getBytes( "UTF-8" ), info, userId, MANAGEMENT_APPLICATION_ID );
-        hashed = sha1.hash( hashed, info, userId, MANAGEMENT_APPLICATION_ID );
+        byte[] hashed = md5.hash( password.getBytes( "UTF-8" ), info, userId, setup.getEmf().getManagementAppId() );
+        hashed = sha1.hash( hashed, info, userId, setup.getEmf().getManagementAppId() );
 
         info.setSecret( encodeBase64URLSafeString( hashed ) );
         //set the final cipher to sha1
@@ -579,18 +612,18 @@ public class ManagementServiceIT {
 
         //verify authorization works
         User authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, password );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, password );
 
         assertEquals( userId, authedUser.getUuid() );
 
         //test we can change the password
         String newPassword = "test2";
 
-        setup.getMgmtSvc().setAppUserPassword( MANAGEMENT_APPLICATION_ID, userId, password, newPassword );
+        setup.getMgmtSvc().setAppUserPassword( setup.getEmf().getManagementAppId(), userId, password, newPassword );
 
         //verify authorization works
         authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, newPassword );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, newPassword );
 
         assertEquals( userId, authedUser.getUuid() );
     }
@@ -599,12 +632,14 @@ public class ManagementServiceIT {
     @Test
     public void authenticateUser() throws Exception {
 
-        String username = "tnine";
+        String username = uniqueUsername();
         String password = "test";
-        String orgName = "autneticateUser";
-        String appName = "authenticateUser";
+        String orgName = uniqueOrg();
+        String appName = uniqueApp();
 
-        UUID appId = setup.getEmf().createApplication( orgName, appName );
+        Entity appInfo = setup.getEmf().createApplicationV2( orgName, appName );
+        UUID appId = appInfo.getUuid();
+
 
         User user = new User();
         user.setActivated( true );
@@ -614,6 +649,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
+        setup.getEntityIndex().refresh(applicationId);
 
         UUID userId = storedUser.getUuid();
 
@@ -630,6 +666,8 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
 
+        setup.getEntityIndex().refresh(applicationId);
+
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );
     }
@@ -640,12 +678,14 @@ public class ManagementServiceIT {
      */
     @Test
     public void testAppUserPasswordChangeShaType() throws Exception {
-        String username = "tnine";
+        String username = "tnine"+newUUIDString();
         String password = "test";
-        String orgName = "testAppUserPasswordChangeShaType";
-        String appName = "testAppUserPasswordChangeShaType";
+        String orgName = "testAppUserPasswordChangeShaType"+newUUIDString();
+        String appName = "testAppUserPasswordChangeShaType"+newUUIDString();
 
-        UUID appId = setup.getEmf().createApplication( orgName, appName );
+        Entity appInfo = setup.getEmf().createApplicationV2(orgName, appName);
+        UUID appId = appInfo.getUuid();
+
 
         User user = new User();
         user.setActivated( true );
@@ -655,6 +695,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
+        setup.getEntityIndex().refresh(applicationId);
 
         UUID userId = storedUser.getUuid();
 
@@ -684,6 +725,8 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
 
+        setup.getEntityIndex().refresh(applicationId);
+
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );
 
@@ -696,12 +739,13 @@ public class ManagementServiceIT {
      */
     @Test
     public void testAppUserPasswordChangeMd5ShaType() throws Exception {
-        String username = "tnine";
+        String username = uniqueUsername();
         String password = "test";
-        String orgName = "testAppUserPasswordChangeMd5ShaType";
-        String appName = "testAppUserPasswordChangeMd5ShaType";
+        String orgName = uniqueOrg();
+        String appName = uniqueApp();
 
-        UUID appId = setup.getEmf().createApplication( orgName, appName );
+        Entity appInfo = setup.getEmf().createApplicationV2(orgName, appName);
+        UUID appId = appInfo.getUuid();
 
         User user = new User();
         user.setActivated( true );
@@ -711,6 +755,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
+        setup.getEntityIndex().refresh(applicationId);
 
         UUID userId = storedUser.getUuid();
 
@@ -746,6 +791,8 @@ public class ManagementServiceIT {
         String newPassword = "test2";
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
+
+        setup.getEntityIndex().refresh(applicationId);
 
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );

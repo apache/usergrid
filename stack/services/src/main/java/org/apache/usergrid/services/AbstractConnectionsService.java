@@ -23,19 +23,25 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
 import org.apache.usergrid.services.ServiceParameter.QueryParameter;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+
+import rx.Observable;
+import rx.schedulers.Schedulers;
+
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.firstParameterIsName;
 import static org.apache.usergrid.utils.ClassUtils.cast;
@@ -171,12 +177,14 @@ public class AbstractConnectionsService extends AbstractService {
         Results r = null;
 
         if ( connecting() ) {
-            r = em.getConnectingEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
-                    Results.Level.ALL_PROPERTIES );
+            r = em.getSourceEntities(
+                new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
+                context.getCollectionName(), null, Level.ALL_PROPERTIES);
         }
         else {
-            r = em.getConnectedEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
-                    Results.Level.ALL_PROPERTIES );
+            r = em.getTargetEntities(
+                new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
+                context.getCollectionName(), null, Level.ALL_PROPERTIES);
         }
 
         importEntities( context, r );
@@ -198,7 +206,7 @@ public class AbstractConnectionsService extends AbstractService {
             entity = importEntity( context, ( Entity ) entity );
         }
         else {
-            entity = em.getRef( id );
+            entity = em.get( id );
         }
 
         if ( entity == null ) {
@@ -236,8 +244,8 @@ public class AbstractConnectionsService extends AbstractService {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        if ( results.size() == 1 && !em
-                .isConnectionMember( context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
+        if ( results.size() == 1 && !em.isConnectionMember(
+                context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -260,14 +268,9 @@ public class AbstractConnectionsService extends AbstractService {
                 nameProperty = "name";
             }
 
-            EntityRef ref = em.getAlias( query.getEntityType(), name );
-            if ( ref == null ) {
-                return null;
-            }
-
             //TODO T.N. USERGRID-1919 actually validate this is connected
 
-            Entity entity = em.get( ref );
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
             if ( entity == null ) {
                 return null;
             }
@@ -277,7 +280,7 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         int count = query.getLimit();
-        Results.Level level = Results.Level.REFS;
+        Level level = Level.REFS;
         if ( !context.moreParameters() ) {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
@@ -287,11 +290,12 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         if ( context.getRequest().isReturnsTree() ) {
-            level = Results.Level.ALL_PROPERTIES;
+            level = Level.ALL_PROPERTIES;
         }
 
 //        query.setLimit( count );
-        // usergrid-2389: User defined limit in the query is ignored. Fixed it by following same style in AstractCollectionService
+        // usergrid-2389: User defined limit in the query is ignored. Fixed it by following
+        // same style in AstractCollectionService
         query.setLimit( query.getLimit( count ) );
         query.setResultsLevel( level );
 
@@ -299,18 +303,21 @@ public class AbstractConnectionsService extends AbstractService {
 
         if ( connecting() ) {
             if ( query.hasQueryPredicates() ) {
-                logger.info( "Attempted query of backwards connections" );
+                logger.debug( "Attempted query of backwards connections" );
                 return null;
             }
             else {
-//            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),
+//            	r = em.getSourceEntities( context.getOwner().getUuid(), query.getConnectionType(),
 //            			query.getEntityType(), level );
-                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding the limit to the method parameter downstream.
-            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),query.getEntityType(), level , query.getLimit()); 
+                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding
+                // the limit to the method parameter downstream.
+            	r = em.getSourceEntities(
+                    new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
+                    query.getConnectionType(), query.getEntityType(), level, query.getLimit());
             }
         }
         else {
-            r = em.searchConnectedEntities( context.getOwner(), query );
+            r = em.searchTargetEntities(context.getOwner(), query);
         }
 
         importEntities( context, r );
@@ -331,6 +338,7 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         Entity entity = em.get( id );
+
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -358,11 +366,7 @@ public class AbstractConnectionsService extends AbstractService {
             if ( query.containsSingleNameOrEmailIdentifier() ) {
                 String name = query.getSingleNameOrEmailIdentifier();
 
-                EntityRef ref = em.getAlias( query.getEntityType(), name );
-                if ( ref == null ) {
-                    throw new ServiceResourceNotFoundException( context );
-                }
-                entity = em.get( ref );
+                entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
                 if ( entity == null ) {
                     throw new ServiceResourceNotFoundException( context );
                 }
@@ -399,6 +403,11 @@ public class AbstractConnectionsService extends AbstractService {
             String entityType = getEntityType();
             item = em.create( id, entityType, context.getPayload().getProperties() );
         }
+
+        //create the connection
+        createConnection( context.getOwner(), context.getCollectionName(), item );
+
+
         return new ServiceResults( this, context, Type.CONNECTION, Results.fromEntity( item ), null, null );
     }
 
@@ -420,12 +429,41 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
 
-        Results r = em.searchConnectedEntities( context.getOwner(), query );
+        Results r = em.searchTargetEntities(context.getOwner(), query);
         if ( r.isEmpty() ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
         updateEntities( context, r );
+
+          //create the connection
+
+        //TODO wire the RX scheduler in here and use our parallelism system
+
+
+        /**
+         * Create all the connections for all the entities
+         */
+        final List<Entity> entities = r.getEntities();
+        if ( entities != null ) {
+
+            /**
+             * Save up to 10 connections in parallel
+             */
+            Observable.from(entities).flatMap( emittedEntity -> {
+                return Observable.just( emittedEntity ).doOnNext( toSave -> {
+                    try {
+                        createConnection( context.getOwner(), context.getCollectionName(), toSave );
+                    }
+                    catch ( Exception e ) {
+                        throw new RuntimeException( "Unable to save connection", e );
+                    }
+                }).subscribeOn( Schedulers.io() );
+            }, 10).subscribe();
+
+
+        }
+
 
         return new ServiceResults( this, context, Type.CONNECTION, r, null, null );
     }
@@ -473,11 +511,7 @@ public class AbstractConnectionsService extends AbstractService {
                 nameProperty = "name";
             }
 
-            EntityRef ref = em.getAlias( query.getEntityType(), name );
-            if ( ref == null ) {
-                throw new ServiceResourceNotFoundException( context );
-            }
-            Entity entity = em.get( ref );
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
             if ( entity == null ) {
                 throw new ServiceResourceNotFoundException( context );
             }

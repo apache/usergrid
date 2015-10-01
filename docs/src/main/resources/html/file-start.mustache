@@ -1,0 +1,54 @@
+<html>
+<head>
+    <title>{{title}}</title>
+    
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <link rel="stylesheet" href="api-docs.css">
+    
+    <style type="text/css">
+        .panel-default > .panel-heading.GET{
+            background-color: rgba(54, 180, 255, 0.42);
+            background-image: none;
+        }
+        .panel-default > .panel-heading.POST {
+            background-color: rgba(0, 128, 0, 0.38);
+            background-image: none;
+        }
+        .panel-default > .panel-heading.PUT{
+            background-color: rgba(255, 165, 0, 0.41);
+            background-image: none;
+        }
+        .panel-default > .panel-heading.DELETE {
+            background-color: rgba(255, 0, 0, 0.29);
+            background-image: none;
+        }
+
+        .panel-heading a.collapse-button:after {
+            font-family:'Glyphicons Halflings';
+            content:"\e114";
+            float: right;
+            color: grey;
+        }
+        .panel-heading a.collapse-button.collapsed:after {
+            content:"\e080";
+        }
+
+        table td {
+            font-size: small;
+        }
+    </style>
+    
+</head>
+<body>
+
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+    
+    <h1>{{title}}</h1>
+    <p>Generated from Swagger.</p>

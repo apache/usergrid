@@ -24,8 +24,8 @@
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
 	<import resource="classpath:/usergrid-rest-context.xml" />
-	
-	
+
+
 	<bean id="properties"
 		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
 		<property name="singleton" value="true" />
@@ -33,11 +33,9 @@
 		<property name="locations">
 			<list>
 				<value>classpath:/usergrid-default.properties</value>
-                <value>${usergrid-custom-spring-properties}</value>
+				<value>classpath:/usergrid-deployment.properties</value>
 			</list>
 		</property>
 	</bean>
-	
-
 
 </beans>

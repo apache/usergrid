@@ -22,32 +22,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.collections.comparators.ComparatorChain;
+
 import org.apache.usergrid.mq.Query.FilterOperator;
 import org.apache.usergrid.mq.Query.FilterPredicate;
 import org.apache.usergrid.mq.Query.SortPredicate;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityPropertyComparator;
-import org.apache.usergrid.utils.ListUtils;
 import org.apache.usergrid.utils.NumberUtils;
-import org.apache.usergrid.utils.StringUtils;
 
-import org.apache.commons.collections.comparators.ComparatorChain;
-
-import static java.lang.Integer.parseInt;
-
-import static org.apache.commons.codec.binary.Base64.decodeBase64;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.removeEnd;
-import static org.apache.commons.lang.StringUtils.split;
 import static org.apache.usergrid.mq.Query.SortDirection.DESCENDING;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 
 
 public class QueryProcessor {
@@ -99,89 +87,91 @@ public class QueryProcessor {
     private void process() {
         slices = new ArrayList<QuerySlice>();
 
-        // consolidate all the filters into a set of ranges
-        Set<String> names = getFilterPropertyNames();
-        for ( String name : names ) {
-            FilterOperator operator = null;
-            Object value = null;
-            RangeValue start = null;
-            RangeValue finish = null;
-            for ( FilterPredicate f : filters ) {
-                if ( f.getPropertyName().equals( name ) ) {
-                    operator = f.getOperator();
-                    value = f.getValue();
-                    RangePair r = getRangeForFilter( f );
-                    if ( r.start != null ) {
-                        if ( ( start == null ) || ( r.start.compareTo( start, false ) < 0 ) ) {
-                            start = r.start;
-                        }
-                    }
-                    if ( r.finish != null ) {
-                        if ( ( finish == null ) || ( r.finish.compareTo( finish, true ) > 0 ) ) {
-                            finish = r.finish;
-                        }
-                    }
-                }
-            }
-            slices.add( new QuerySlice( name, operator, value, start, finish, null, false ) );
-        }
-
-        // process sorts
-        if ( ( slices.size() == 0 ) && ( sorts.size() > 0 ) ) {
-            // if no filters, turn first filter into a sort
-            SortPredicate sort = ListUtils.dequeue( sorts );
-            slices.add( new QuerySlice( sort.getPropertyName(), null, null, null, null, null,
-                    sort.getDirection() == DESCENDING ) );
-        }
-        else if ( sorts.size() > 0 ) {
-            // match up sorts with existing filters
-            for ( ListIterator<SortPredicate> iter = sorts.listIterator(); iter.hasNext(); ) {
-                SortPredicate sort = iter.next();
-                QuerySlice slice = getSliceForProperty( sort.getPropertyName() );
-                if ( slice != null ) {
-                    slice.reversed = sort.getDirection() == DESCENDING;
-                    iter.remove();
-                }
-            }
-        }
-
-        // attach cursors to slices
-        if ( ( cursor != null ) && ( cursor.indexOf( ':' ) >= 0 ) ) {
-            String[] cursors = split( cursor, '|' );
-            for ( String c : cursors ) {
-                String[] parts = split( c, ':' );
-                if ( parts.length == 2 ) {
-                    int cursorHashCode = parseInt( parts[0] );
-                    for ( QuerySlice slice : slices ) {
-                        int sliceHashCode = slice.hashCode();
-                        logger.info( "Comparing cursor hashcode " + cursorHashCode + " to " + sliceHashCode );
-                        if ( sliceHashCode == cursorHashCode ) {
-                            if ( isNotBlank( parts[1] ) ) {
-                                ByteBuffer cursorBytes = ByteBuffer.wrap( decodeBase64( parts[1] ) );
-                                slice.setCursor( cursorBytes );
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        throw new UnsupportedOperationException( "query not supported" );
+//        // consolidate all the filters into a set of ranges
+//        Set<String> names = getFilterPropertyNames();
+//        for ( String name : names ) {
+//            FilterOperator operator = null;
+//            Object value = null;
+//            RangeValue start = null;
+//            RangeValue finish = null;
+//            for ( FilterPredicate f : filters ) {
+//                if ( f.getPropertyName().equals( name ) ) {
+//                    operator = f.getOperator();
+//                    value = f.getValue();
+//                    RangePair r = getRangeForFilter( f );
+//                    if ( r.start != null ) {
+//                        if ( ( start == null ) || ( r.start.compareTo( start, false ) < 0 ) ) {
+//                            start = r.start;
+//                        }
+//                    }
+//                    if ( r.finish != null ) {
+//                        if ( ( finish == null ) || ( r.finish.compareTo( finish, true ) > 0 ) ) {
+//                            finish = r.finish;
+//                        }
+//                    }
+//                }
+//            }
+//            slices.add( new QuerySlice( name, operator, value, start, finish, null, false ) );
+//        }
+//
+//        // process sorts
+//        if ( ( slices.size() == 0 ) && ( sorts.size() > 0 ) ) {
+//            // if no filters, turn first filter into a sort
+//            SortPredicate sort = ListUtils.dequeue( sorts );
+//            slices.add( new QuerySlice( sort.getPropertyName(), null, null, null, null, null,
+//                    sort.getDirection() == DESCENDING ) );
+//        }
+//        else if ( sorts.size() > 0 ) {
+//            // match up sorts with existing filters
+//            for ( ListIterator<SortPredicate> iter = sorts.listIterator(); iter.hasNext(); ) {
+//                SortPredicate sort = iter.next();
+//                QuerySlice slice = getSliceForProperty( sort.getPropertyName() );
+//                if ( slice != null ) {
+//                    slice.reversed = sort.getDirection() == DESCENDING;
+//                    iter.remove();
+//                }
+//            }
+//        }
+//
+//        // attach cursors to slices
+//        if ( ( cursor != null ) && ( cursor.indexOf( ':' ) >= 0 ) ) {
+//            String[] cursors = split( cursor, '|' );
+//            for ( String c : cursors ) {
+//                String[] parts = split( c, ':' );
+//                if ( parts.length == 2 ) {
+//                    int cursorHashCode = parseInt( parts[0] );
+//                    for ( QuerySlice slice : slices ) {
+//                        int sliceHashCode = slice.hashCode();
+//                        logger.info( "Comparing cursor hashcode " + cursorHashCode + " to " + sliceHashCode );
+//                        if ( sliceHashCode == cursorHashCode ) {
+//                            if ( isNotBlank( parts[1] ) ) {
+//                                ByteBuffer cursorBytes = ByteBuffer.wrap( decodeBase64( parts[1] ) );
+//                                slice.setCursor( cursorBytes );
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
 
     @SuppressWarnings("unchecked")
     public List<Entity> sort( List<Entity> entities ) {
-
-        if ( ( entities != null ) && ( sorts.size() > 0 ) ) {
-            // Performing in memory sort
-            logger.info( "Performing in-memory sort of {} entities", entities.size() );
-            ComparatorChain chain = new ComparatorChain();
-            for ( SortPredicate sort : sorts ) {
-                chain.addComparator(
-                        new EntityPropertyComparator( sort.getPropertyName(), sort.getDirection() == DESCENDING ) );
-            }
-            Collections.sort( entities, chain );
-        }
-        return entities;
+        throw new UnsupportedOperationException( "Unsupported" );
+//
+//        if ( ( entities != null ) && ( sorts.size() > 0 ) ) {
+//            // Performing in memory sort
+//            logger.info( "Performing in-memory sort of {} entities", entities.size() );
+//            ComparatorChain chain = new ComparatorChain();
+//            for ( SortPredicate sort : sorts ) {
+//                chain.addComparator(
+//                        new EntityPropertyComparator( sort.getPropertyName(), sort.getDirection() == DESCENDING ) );
+//            }
+//            Collections.sort( entities, chain );
+//        }
+//        return entities;
     }
 
 
@@ -400,40 +390,6 @@ public class QueryProcessor {
         }
     }
 
-
-    public RangePair getRangeForFilter( FilterPredicate f ) {
-        Object searchStartValue = toIndexableValue( f.getStartValue() );
-        Object searchFinishValue = toIndexableValue( f.getFinishValue() );
-        if ( StringUtils.isString( searchStartValue ) && StringUtils.isStringOrNull( searchFinishValue ) ) {
-            if ( "*".equals( searchStartValue ) ) {
-                searchStartValue = null;
-            }
-            if ( searchFinishValue == null ) {
-                searchFinishValue = searchStartValue;
-            }
-            if ( ( searchStartValue != null ) && searchStartValue.toString().endsWith( "*" ) ) {
-                searchStartValue = removeEnd( searchStartValue.toString(), "*" );
-                searchFinishValue = searchStartValue + "\uFFFF";
-                if ( isBlank( searchStartValue.toString() ) ) {
-                    searchStartValue = "\0000";
-                }
-            }
-            else if ( searchFinishValue != null ) {
-                searchFinishValue = searchFinishValue + "\u0000";
-            }
-        }
-        RangeValue rangeStart = null;
-        if ( searchStartValue != null ) {
-            rangeStart = new RangeValue( indexValueCode( searchStartValue ), searchStartValue,
-                    f.getOperator() != FilterOperator.GREATER_THAN );
-        }
-        RangeValue rangeFinish = null;
-        if ( searchFinishValue != null ) {
-            rangeFinish = new RangeValue( indexValueCode( searchFinishValue ), searchFinishValue,
-                    f.getOperator() != FilterOperator.LESS_THAN );
-        }
-        return new RangePair( rangeStart, rangeFinish );
-    }
 
 
     public static class QuerySlice {

@@ -17,142 +17,79 @@
 package org.apache.usergrid.rest.management;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
-import org.codehaus.jackson.JsonNode;
-import org.junit.Test;
-
-import org.apache.commons.lang.StringUtils;
-
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.*;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.usergrid.utils.MapUtils.hashMap;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.*;
 
 import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
-
 
 /**
  * @author tnine
  */
-@Concurrent()
+@NotThreadSafe // due to use of /testproperties end-point
 public class ManagementResourceIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ManagementResourceIT.class);
+    private org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource management;
 
     public ManagementResourceIT() throws Exception {
 
     }
 
 
+    @Before
+    public void setup() {
+        management= clientSetup.getRestClient().management();
+        Token token = management.token()
+            .get( new QueryParameters()
+                .addParam( "grant_type", "password" )
+                .addParam( "username", clientSetup.getEmail() )
+                .addParam( "password", clientSetup.getPassword() ) );
+        management.token().setToken(token);
+    }
+
     /**
      * Test if we can reset our password as an admin
      */
     @Test
     public void setSelfAdminPasswordAsAdmin() {
-
-        String newPassword = "foo";
-
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "newpassword", newPassword );
+        UUID uuid =  UUIDUtils.newTimeUUID();
+        management.token().setToken(clientSetup.getSuperuserToken());
+        management.orgs()
+            .org( clientSetup.getOrganizationName() )
+            .users()
+            .post( ApiResponse.class, new User( "test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test" ) );
+        Map<String, Object> data = new HashMap<>();
+        data.put( "newpassword", "foo" );
         data.put( "oldpassword", "test" );
-
-        // change the password as admin. The old password isn't required
-        JsonNode node = resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
-
-        assertNull( getError( node ) );
-
-        adminAccessToken = mgmtToken( "test", newPassword );
-
-        data.put( "oldpassword", newPassword );
+        management.users()
+            .user( "test" + uuid )
+            .password()
+            .post( Entity.class, data );
+        Token token = management.token().post(Token.class, new Token( "test"+uuid, "foo" ) );
+        management.token().setToken( token );
+        data.clear();
+        data.put( "oldpassword", "foo" );
         data.put( "newpassword", "test" );
-
-        node = resource().path( "/management/users/test/password" ).queryParam( "access_token", adminAccessToken )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .post( JsonNode.class, data );
-
-        assertNull( getError( node ) );
-    }
-
-
-    @Test
-    public void passwordMismatchErrorAdmin() {
-        String origPassword = "foo";
-        String newPassword = "bar";
-
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "newpassword", origPassword );
-
-        // now change the password, with an incorrect old password
-
-        data.put( "oldpassword", origPassword );
-        data.put( "newpassword", newPassword );
-
-        Status responseStatus = null;
-
-        try {
-            resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertNotNull( responseStatus );
-
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-
-
-    @Test
-    public void setAdminPasswordAsSysAdmin() {
-
-        String superToken = superAdminToken();
-
-        String newPassword = "foo";
-
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "newpassword", newPassword );
-
-        // change the password as admin. The old password isn't required
-        JsonNode node = resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
-                                  .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                  .post( JsonNode.class, data );
-
-        assertNull( getError( node ) );
-
-        // log in with the new password
-        String token = mgmtToken( "test", newPassword );
-
-        assertNotNull( token );
-
-        data.put( "newpassword", "test" );
-
-        // now change the password back
-        node = resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .post( JsonNode.class, data );
-
-        assertNull( getError( node ) );
+        management.users().user("test"+uuid).password().post(Entity.class, data);
     }
 
 
@@ -162,75 +99,102 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void crossOrgsNotViewable() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization( "crossOrgsNotViewable",
-                "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password" );
+        String differentiator = UUIDUtils.newTimeUUID().toString();
+        String username = "test" + differentiator;
+        String name = "someguy2" + differentiator;
+        String email = "someguy" + differentiator + "@usergrid.com";
+        String password = "password";
+        String orgName = "someneworg" + differentiator;
+
+        Entity payload =
+                new Entity().chainPut("company", "Apigee" );
+
+        Organization organization = new Organization(orgName,username,email,name,password,payload);
+
+        Organization node = management().orgs().post(  organization );
+        management.token().get(clientSetup.getUsername(), clientSetup.getPassword());
 
         // check that the test admin cannot access the new org info
 
-        Status status = null;
-
+        //  management/organizations/{orgName}
+        Response.Status status = null;
         try {
-            resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getName() ) )
-                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            this.management().orgs().org( orgName ).get(String.class);
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-
         assertNotNull( status );
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
 
+
+        //  management/organizations/{orgName}/users
         status = null;
-
         try {
-            resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getUuid() ) )
-                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            this.management().orgs().org( orgName ).users().get( String.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-
         assertNotNull( status );
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
+
+
+        //  management/organizations/{orgName}/applications
+        status = null;
+        try {
+            this.management().orgs().org( orgName ).applications().get( String.class );
+        }
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
+        }
+        assertNotNull( status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
+
 
         // this admin should have access to test org
         status = null;
         try {
-            resource().path( "/management/orgs/test-organization" ).queryParam( "access_token", adminAccessToken )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                      .get( JsonNode.class );
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
-
         assertNull( status );
 
-        OrganizationInfo org = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
 
+        // this admin should have access to test org - users
         status = null;
         try {
-            resource().path( String.format( "/management/orgs/%s", org.getUuid() ) )
-                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).users().get( String.class );
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
+        }
+        assertNull(status);
+
+
+        // this admin should have access to test org - apps
+        status = null;
+        try {
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).applications().get( String.class );
+        }
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
+        }
+        assertNull(status);
+
+
+        // test getting the organization by org
+        status = null;
+        try {
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).get( String.class );
+        }
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertNull( status );
-    }
-
-
-    @Test
-    public void mgmtUserFeed() throws Exception {
-        JsonNode userdata = resource().path( "/management/users/test@usergrid.com/feed" )
-                                      .queryParam( "access_token", adminAccessToken )
-                                      .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        assertTrue( StringUtils.contains( this.getEntity( userdata, 0 ).get( "title" ).asText(),
-                "<a href=\"mailto:test@usergrid.com\">" ) );
+        assertNull(status);
     }
 
 
@@ -245,6 +209,9 @@ public class ManagementResourceIT extends AbstractRestIT {
         for ( i = 0; i < 10; i++ ) {
             users1.add( "follower" + Integer.toString( i ) );
         }
+
+        refreshIndex(  );
+
         checkFeed( "leader1", users1 );
         //try with 11
         List<String> users2 = new ArrayList<String>();
@@ -255,17 +222,25 @@ public class ManagementResourceIT extends AbstractRestIT {
     }
 
 
-    private void checkFeed( String leader, List<String> followers ) {
-        JsonNode userFeed;
+    private void checkFeed( String leader, List<String> followers ) throws IOException {
+        List<Entity> userFeed;
+
         //create user
         createUser( leader );
+        refreshIndex(   );
+
         String preFollowContent = leader + ": pre-something to look for " + UUID.randomUUID().toString();
+
         addActivity( leader, leader + " " + leader + "son", preFollowContent );
+        refreshIndex(  );
+
         String lastUser = followers.get( followers.size() - 1 );
         int i = 0;
         for ( String user : followers ) {
             createUser( user );
+            refreshIndex( );
             follow( user, leader );
+            refreshIndex(  );
         }
         userFeed = getUserFeed( lastUser );
         assertTrue( userFeed.size() == 1 );
@@ -275,38 +250,44 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertTrue( userFeed.size() == 1 );
         String postFollowContent = leader + ": something to look for " + UUID.randomUUID().toString();
         addActivity( leader, leader + " " + leader + "son", postFollowContent );
+
+        refreshIndex(  );
+
         //check feed
         userFeed = getUserFeed( lastUser );
         assertNotNull( userFeed );
         assertTrue( userFeed.size() > 1 );
-        String serialized = userFeed.toString();
-        assertTrue( serialized.indexOf( postFollowContent ) > 0 );
-        assertTrue( serialized.indexOf( preFollowContent ) > 0 );
+        String serialized = ((Entity)userFeed.get(0))
+            .get( "content" )
+            .toString()+ ((Entity)userFeed.get(1))
+            .get( "content" ).toString();
+        assertTrue( serialized.indexOf( postFollowContent ) >= 0 );
+        assertTrue( serialized.indexOf( preFollowContent ) >= 0 );
     }
 
 
     private void createUser( String username ) {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put( "username", username );
-        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
-                  .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                  .post( JsonNode.class, payload );
+       this.app().collection("users").post(String.class, payload);
     }
 
 
-    private JsonNode getUserFeed( String username ) {
-        JsonNode userFeed = resource().path( "/test-organization/test-app/users/" + username + "/feed" )
-                                      .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                      .get( JsonNode.class );
-        return userFeed.get( "entities" );
+    private List<Entity> getUserFeed( String username ) throws IOException {
+        Collection collection = this.app().collection("users").entity(username).collection("feed").get();
+        return collection.getResponse().getEntities();
     }
 
 
     private void follow( String user, String followUser ) {
         //post follow
-        resource().path( "/test-organization/test-app/users/" + user + "/following/users/" + followUser )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, new HashMap<String, String>() );
+        Entity entity = this.app()
+            .collection( "users" )
+            .entity(user)
+            .collection("following")
+            .collection("users")
+            .entity(followUser)
+            .post();
     }
 
 
@@ -317,142 +298,173 @@ public class ManagementResourceIT extends AbstractRestIT {
         Map<String, String> actorMap = new HashMap<String, String>();
         actorMap.put( "displayName", name );
         actorMap.put( "username", user );
-        activityPayload.put( "actor", actorMap );
-        resource().path( "/test-organization/test-app/users/" + user + "/activities" )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, activityPayload );
+        activityPayload.put("actor", actorMap);
+        Entity entity = this.app()
+            .collection( "users" )
+            .entity(user)
+            .collection("activities")
+            .post( new Entity( activityPayload ) );
     }
 
 
     @Test
     public void mgmtCreateAndGetApplication() throws Exception {
 
-        OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "name", "mgmt-org-app" );
-
         // POST /applications
-        JsonNode appdata = resource().path( "/management/orgs/" + orgInfo.getUuid() + "/applications" )
-                                     .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
-        logNode( appdata );
-        appdata = getEntity( appdata, 0 );
+        ApiResponse apiResponse = management()
+            .orgs()
+            .org( clientSetup.getOrganizationName() )
+            .app()
+            .post( new Application( "mgmt-org-app" ) );
 
-        assertEquals( "test-organization/mgmt-org-app", appdata.get( "name" ).asText() );
-        assertEquals( "Roles", appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ).asText() );
-        assertEquals( 3, appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "count" ).asInt() );
+
+        refreshIndex();
+
+        Entity appdata = apiResponse.getEntities().get(0);
+        assertEquals((clientSetup.getOrganizationName() + "/mgmt-org-app")
+            .toLowerCase(), appdata.get("name") .toString() .toLowerCase());
+        assertNotNull(appdata.get("metadata"));
+        Map metadata =(Map) appdata.get( "metadata" );
+        assertNotNull(metadata.get("collections"));
+        Map collections =  ((Map)metadata.get("collections"));
+        assertNotNull(collections.get("roles"));
+        Map roles =(Map) collections.get("roles");
+        assertNotNull(roles.get("title"));
+        assertEquals("Roles", roles.get("title").toString());
+        assertEquals(4, roles.size());
+
+        refreshIndex(   );
 
         // GET /applications/mgmt-org-app
-        appdata = resource().path( "/management/orgs/" + orgInfo.getUuid() + "/applications/mgmt-org-app" )
-                            .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                            .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
-        logNode( appdata );
 
-        assertEquals( "test-organization", appdata.get( "organization" ).asText() );
-        assertEquals( "mgmt-org-app", appdata.get( "applicationName" ).asText() );
-        assertEquals( "http://sometestvalue/test-organization/mgmt-org-app", appdata.get( "uri" ).getTextValue() );
-        appdata = getEntity( appdata, 0 );
 
-        assertEquals( "test-organization/mgmt-org-app", appdata.get( "name" ).asText() );
-        assertEquals( "Roles", appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ).asText() );
-        assertEquals( 3, appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "count" ).asInt() );
+        Entity app = management().orgs().org( clientSetup.getOrganizationName() ).app().addToPath("mgmt-org-app").get();
+
+
+        assertEquals(this.clientSetup.getOrganizationName().toLowerCase(), app.get("organizationName").toString());
+        assertEquals( "mgmt-org-app", app.get( "applicationName" ).toString() );
+
+        assertEquals( clientSetup.getOrganizationName().toLowerCase() + "/mgmt-org-app", app.get( "name" ).toString() );
+        metadata =(Map) appdata.get( "metadata" );
+        collections =  ((Map)metadata.get("collections"));
+        roles =(Map) collections.get("roles");
+
+        assertEquals( "Roles", roles.get("title").toString() );
+        assertEquals(4, roles.size());
+
     }
 
+    @Test
+    public void checkSizes() throws Exception {
+        final String appname = clientSetup.getAppName();
+        this.app().collection("testCollection").post(new Entity().chainPut("name","test"));
+        refreshIndex();
+        Entity size = management().orgs().org( clientSetup.getOrganizationName() ).app().addToPath(appname).addToPath("_size").get();
+        Entity rolesSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("roles/_size").get();
+        Entity collectionsSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("collections/_size").get();
+
+        assertTrue(size != null);
+        assertTrue(rolesSize != null);
+        int sum =  (int)((LinkedHashMap)((LinkedHashMap)size.metadata().get("aggregation")).get("size")).get("application");
+        int sumRoles = (int)((LinkedHashMap)((LinkedHashMap)rolesSize.metadata().get("aggregation")).get("size")).get("roles");
+        int sumRoles2 = (int)((LinkedHashMap)((LinkedHashMap)collectionsSize.metadata().get("aggregation")).get("size")).get("roles");
+
+        assertTrue(size != null);
+        assertTrue(rolesSize != null);
+
+        assertNotEquals(sum, sumRoles);
+        assertTrue(sum > sumRoles);
+        assertTrue(sumRoles == sumRoles2);
+    }
 
     @Test
     public void tokenTtl() throws Exception {
 
         long ttl = 2000;
 
-        JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                                  .queryParam( "ttl", String.valueOf( ttl ) ).accept( MediaType.APPLICATION_JSON )
-                                  .get( JsonNode.class );
+        Token token = management.token().get( new QueryParameters()
+            .addParam( "grant_type", "password" )
+            .addParam( "username", clientSetup.getEmail() )
+            .addParam( "password", clientSetup.getPassword() )
+            .addParam( "ttl", String.valueOf( ttl ) ) );
+
 
         long startTime = System.currentTimeMillis();
 
-        String token = node.get( "access_token" ).getTextValue();
 
         assertNotNull( token );
 
-        JsonNode userdata = resource().path( "/management/users/test@usergrid.com" ).queryParam( "access_token", token )
-                                      .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        Entity userdata = management.users().entity(clientSetup.getEmail()).get(token);
 
-        assertEquals( "test@usergrid.com", userdata.get( "data" ).get( "email" ).asText() );
+        assertNotNull(userdata.get("email").toString());
 
         // wait for the token to expire
-        Thread.sleep( ttl - (System.currentTimeMillis() - startTime) + 1000 );
+        Thread.sleep(  (System.currentTimeMillis() - startTime) + ttl );
 
-        Status responseStatus = null;
+        Response.Status responseStatus = null;
         try {
-            userdata = resource().path( "/management/users/test@usergrid.com" ).accept( MediaType.APPLICATION_JSON )
-                                 .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            userdata = management.users().user(clientSetup.getEmail()).get();
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.UNAUTHORIZED, responseStatus );
+        assertEquals( Response.Status.UNAUTHORIZED, responseStatus );
     }
 
 
     @Test
     public void token() throws Exception {
-        JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                                  .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        Token myToken = management.token()
+            .get( new QueryParameters()
+                .addParam( "grant_type", "password" )
+                .addParam( "username", clientSetup.getEmail() )
+                .addParam( "password", clientSetup.getPassword() ) );
 
-        logNode( node );
-        String token = node.get( "access_token" ).getTextValue();
+        String token = myToken.getAccessToken();
         assertNotNull( token );
 
         // set an organization property
-        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Organization payload = new Organization();
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "securityLevel", 5 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-        node = resource().path( "/management/organizations/test-organization" )
-                         .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
+        management.orgs().org( clientSetup.getOrganizationName() ).put( payload );
+
 
         // ensure the organization property is included
-        node = resource().path( "/management/token" ).queryParam( "access_token", token )
-                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        logNode( node );
-
-        JsonNode securityLevel = node.findValue( "securityLevel" );
-        assertNotNull( securityLevel );
-        assertEquals( 5L, securityLevel.asLong() );
+        String obj = management.token().get(String.class,new QueryParameters().addParam("access_token", token));
+        assertTrue(obj.indexOf("securityLevel")>0);
     }
 
 
     @Test
     public void meToken() throws Exception {
-        JsonNode node = resource().path( "/management/me" ).queryParam( "grant_type", "password" )
-                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                                  .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        QueryParameters queryParameters = new QueryParameters()
+            .addParam( "grant_type", "password" )
+            .addParam( "username", clientSetup.getUsername() )
+            .addParam( "password", clientSetup.getPassword() );
+        Token myToken = management.me().get( Token.class, queryParameters );
 
-        logNode( node );
-        String token = node.get( "access_token" ).getTextValue();
+
+        String token = myToken.getAccessToken();
         assertNotNull( token );
 
-        node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        logNode( node );
+        Entity entity = management.me().get( Entity.class );
 
-        assertNotNull( node.get( "passwordChanged" ) );
-        assertNotNull( node.get( "access_token" ) );
-        assertNotNull( node.get( "expires_in" ) );
-        JsonNode userNode = node.get( "user" );
+        assertNotNull( entity.get( "passwordChanged" ) );
+        assertNotNull( entity.get( "access_token" ) );
+        assertNotNull( entity.get( "expires_in" ) );
+        Map<String,Object> userNode =(Map<String,Object>) entity.get( "user" );
         assertNotNull( userNode );
         assertNotNull( userNode.get( "uuid" ) );
         assertNotNull( userNode.get( "username" ) );
         assertNotNull( userNode.get( "email" ) );
         assertNotNull( userNode.get( "name" ) );
         assertNotNull( userNode.get( "properties" ) );
-        JsonNode orgsNode = userNode.get( "organizations" );
+        Map<String,Object> orgsNode = (Map<String,Object>) userNode.get( "organizations" );
         assertNotNull( orgsNode );
-        JsonNode orgNode = orgsNode.get( "test-organization" );
+        Map<String,Object> orgNode =(Map<String,Object>) orgsNode.entrySet().iterator().next().getValue();
         assertNotNull( orgNode );
         assertNotNull( orgNode.get( "name" ) );
         assertNotNull( orgNode.get( "properties" ) );
@@ -461,20 +473,18 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     @Test
     public void meTokenPost() throws Exception {
-        Map<String, String> payload =
-                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" );
+        Map<String, String> payload = hashMap( "grant_type", "password" )
+            .map( "username", clientSetup.getUsername() )
+            .map( "password", clientSetup.getPassword() );
 
-        JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = management.me().post( JsonNode.class, payload );
 
-        logNode( node );
-        String token = node.get( "access_token" ).getTextValue();
+        logger.info("node:", node);
+        String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
 
-        node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        logNode( node );
+        node = management.me().get( JsonNode.class );
     }
 
 
@@ -482,166 +492,119 @@ public class ManagementResourceIT extends AbstractRestIT {
     public void meTokenPostForm() {
 
         Form form = new Form();
-        form.add( "grant_type", "password" );
-        form.add( "username", "test@usergrid.com" );
-        form.add( "password", "test" );
+        form.param( "grant_type", "password" );
+        form.param( "username", clientSetup.getUsername() );
+        form.param( "password", clientSetup.getPassword() );
 
-        JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-                                  .entity( form, MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( JsonNode.class );
+        JsonNode node = management.me().post( JsonNode.class, form );
+        logger.info( "node:", node);
 
-        logNode( node );
-        String token = node.get( "access_token" ).getTextValue();
+        String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
 
-        node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-        logNode( node );
+        node = target().path( "/management/me" )
+            .queryParam( "access_token", token ).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .get( JsonNode.class );
+        logger.info("node:", node );
+
     }
 
 
     @Test
     public void ttlNan() throws Exception {
 
-        Map<String, String> payload =
-                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
-                                                   .map( "ttl", "derp" );
+        Map<String, String> payload = hashMap( "grant_type", "password" )
+            .map( "username", clientSetup.getUsername() )
+            .map( "password", clientSetup.getPassword() )
+            .map( "ttl", "derp" );
 
-        Status responseStatus = null;
+        Response.Status responseStatus = null;
         try {
-            resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+           management.token().post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus());
         }
 
-        assertEquals( Status.BAD_REQUEST, responseStatus );
+        assertEquals( Response.Status.BAD_REQUEST, responseStatus );
     }
 
 
     @Test
     public void ttlOverMax() throws Exception {
 
-        Map<String, String> payload =
-                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
-                                                   .map( "ttl", Long.MAX_VALUE + "" );
+        Map<String, String> payload = hashMap( "grant_type", "password" )
+            .map( "username", clientSetup.getUsername() )
+            .map( "password", clientSetup.getPassword() )
+            .map( "ttl", Long.MAX_VALUE + "" );
 
-        Status responseStatus = null;
+        Response.Status responseStatus = null;
 
         try {
-            resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            management.token().post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            responseStatus = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.BAD_REQUEST, responseStatus );
+        assertEquals( Response.Status.BAD_REQUEST, responseStatus );
     }
 
 
     @Test
     public void revokeToken() throws Exception {
-        String token1 = super.adminToken();
-        String token2 = super.adminToken();
+        Token token1 = management.token().get(clientSetup.getUsername(),clientSetup.getPassword());
 
-        JsonNode response = resource().path( "/management/users/test" ).queryParam( "access_token", token1 )
-                                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                      .get( JsonNode.class );
+        Entity response = management.users().user(clientSetup.getUsername()).get();
 
-        assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
+        assertNotNull(response.get("email").toString());
 
-        response = resource().path( "/management/users/test" ).queryParam( "access_token", token2 )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
+        response =   management.users().user(clientSetup.getUsername()).get();
 
-        assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
+        assertNotNull(response.get("email").toString());
 
         // now revoke the tokens
-        response =
-                resource().path( "/management/users/test/revoketokens" ).queryParam( "access_token", superAdminToken() )
-                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                          .post( JsonNode.class );
+        response = management.users().user(
+            clientSetup.getUsername()).revokeTokens().post(true,Entity.class,null, null,false);
 
         // the tokens shouldn't work
 
-        Status status = null;
+        Response.Status status = null;
 
         try {
-            response = resource().path( "/management/users/test" ).queryParam( "access_token", token1 )
-                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                 .get( JsonNode.class );
+            response = management.users().user(clientSetup.getUsername()).get();
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
 
-        status = null;
+        Token token3 = management.token().get(clientSetup.getUsername(), clientSetup.getPassword());
 
-        try {
-            response = resource().path( "/management/users/test" ).queryParam( "access_token", token2 )
-                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                 .get( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( Status.UNAUTHORIZED, status );
-
-        String token3 = super.adminToken();
-        String token4 = super.adminToken();
-
-        response = resource().path( "/management/users/test" ).queryParam( "access_token", token3 )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
-
-        assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
-
-        response = resource().path( "/management/users/test" ).queryParam( "access_token", token4 )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
-
-        assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
+        response = management.users().user(clientSetup.getUsername()).get();
+        assertNotNull(response.get("email").toString());
 
         // now revoke the token3
-        response = resource().path( "/management/users/test/revoketoken" ).queryParam( "access_token", token3 )
-                             .queryParam( "token", token3 ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "token", token3.getAccessToken() );
+        management.users().user(
+            clientSetup.getUsername()).revokeToken().post( false, Entity.class,null,queryParameters );
 
         // the token3 shouldn't work
-
         status = null;
 
         try {
-            response = resource().path( "/management/users/test" ).queryParam( "access_token", token3 )
-                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                 .get( JsonNode.class );
+            management.users().user(clientSetup.getUsername()).get();
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        catch ( ClientErrorException uie ) {
+            status = Response.Status.fromStatusCode( uie.getResponse().getStatus() );
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Response.Status.UNAUTHORIZED, status );
 
-        status = null;
-
-        try {
-            response = resource().path( "/management/users/test" ).queryParam( "access_token", token4 )
-                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                 .get( JsonNode.class );
-
-            status = Status.OK;
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( Status.OK, status );
     }
 
 
@@ -652,70 +615,66 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String rand = RandomStringUtils.randomAlphanumeric(10);
         final String username = "user_" + rand;
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization(
-                username, username, "Test User", username + "@example.com", "password" );
+        management().orgs().post(
+            new Organization( username, username, username+"@example.com", username, "password", null ) );
 
-        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
-            put("username", username );
-            put("password", "password");
-            put("grant_type", "password");
-        }};
-        JsonNode accessInfoNode = resource().path("/management/token")
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .post( JsonNode.class, loginInfo );
-        String accessToken = accessInfoNode.get( "access_token" ).getTextValue();
+        refreshIndex();
+
+        refreshIndex();
+        QueryParameters queryParams = new QueryParameters()
+            .addParam( "username", username )
+            .addParam( "password", "password" )
+            .addParam( "grant_type", "password" );
+        Token accessInfoNode = management.token().get(queryParams);
+        String accessToken = accessInfoNode.getAccessToken();
 
         // set the Usergrid Central SSO URL because Tomcat port is dynamically assigned
 
-        String suToken = superAdminToken();
+        String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
         props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
-
-        // attempt to validate the token, must be valid
-
-        JsonNode validatedNode = resource().path( "/management/externaltoken" )
-            .queryParam( "access_token", suToken ) // as superuser
-            .queryParam( "ext_access_token", accessToken )
-            .queryParam( "ttl", "1000" )
-            .get( JsonNode.class );
-        String validatedAccessToken = validatedNode.get( "access_token" ).getTextValue();
-        assertEquals( accessToken, validatedAccessToken );
-
-        // attempt to validate an invalid token, must fail
+        pathResource( "testproperties" ).post( props );
 
         try {
-            resource().path( "/management/externaltoken" )
-                .queryParam( "access_token", suToken ) // as superuser
-                .queryParam( "ext_access_token", "rubbish_token")
-                .queryParam( "ttl", "1000" )
-                .get( JsonNode.class );
-            fail("Validation should have failed");
-        } catch ( UniformInterfaceException actual ) {
-            assertEquals( 404, actual.getResponse().getStatus() );
-            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
-            logger.error( "ERROR: " + errorMsg );
-            assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
+
+            // attempt to validate the token, must be valid
+            queryParams = new QueryParameters()
+                .addParam( "ext_access_token", accessToken )
+                .addParam( "ttl", "1000" );
+
+            Entity validatedNode = management.externaltoken().get( Entity.class, queryParams );
+            String validatedAccessToken = validatedNode.get( "access_token" ).toString();
+            assertEquals( accessToken, validatedAccessToken );
+
+            // attempt to validate an invalid token, must fail
+
+            try {
+                queryParams = new QueryParameters()
+                    .addParam( "access_token", suToken )
+                    .addParam( "ext_access_token", "rubbish_token" )
+                    .addParam( "ttl", "1000" );
+
+                validatedNode = management.externaltoken().get( Entity.class, queryParams );
+
+                fail( "Validation should have failed" );
+
+            } catch (ClientErrorException actual) {
+                assertEquals( 404, actual.getResponse().getStatus() );
+                String errorMsg = actual.getResponse().readEntity( JsonNode.class )
+                    .get( "error_description" ).toString();
+                logger.error( "ERROR: " + errorMsg );
+                assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
+            }
+
+            // TODO: how do we test the create new user and organization case?
+
+        } finally {
+
+            // unset the Usergrid Central SSO URL so it does not interfere with other tests
+
+            props.put( USERGRID_CENTRAL_URL, "" );
+            pathResource( "testproperties" ).post( props );
         }
-
-
-
-        // TODO: how do we test the create new user and organization case?
-
-
-
-        // unset the Usergrid Central SSO URL so it does not interfere with other tests
-
-        props.put( USERGRID_CENTRAL_URL, "" );
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
 
     }
 
@@ -727,65 +686,58 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
         final String username = "user_" + rand;
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization(
-                username, username, "Test User", username + "@example.com", "password" );
+        management().orgs().post(
+            new Organization( username, username, username+"@example.com", username, "password", null ) );
 
         // turn on validate external tokens by setting the usergrid.central.url
 
-        String suToken = superAdminToken();
+        String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
-        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
-
-        // calls to login as an Admin User must now fail
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
+        pathResource( "testproperties" ).post( props );
 
         try {
+            // calls to login as an Admin User must now fail
+
+            try {
+
+                Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+                    put( "username", username );
+                    put( "password", "password" );
+                    put( "grant_type", "password" );
+                }};
+                ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
+                fail( "Login as Admin User must fail when validate external tokens is enabled" );
+
+            } catch (ClientErrorException actual) {
+                assertEquals( 400, actual.getResponse().getStatus() );
+                String errorMsg = actual.getResponse().readEntity( JsonNode.class )
+                    .get( "error_description" ).toString();
+                logger.error( "ERROR: " + errorMsg );
+                assertTrue( errorMsg.contains( "Admin Users must login via" ) );
+
+            } catch (Exception e) {
+                fail( "We expected a ClientErrorException" );
+            }
+
+            // login as superuser must succeed
 
             Map<String, Object> loginInfo = new HashMap<String, Object>() {{
-                put("username", username );
-                put("password", "password");
-                put("grant_type", "password");
+                put( "username", "superuser" );
+                put( "password", "superpassword" );
+                put( "grant_type", "password" );
             }};
-            JsonNode accessInfoNode = resource().path("/management/token")
-                    .type( MediaType.APPLICATION_JSON_TYPE )
-                    .post( JsonNode.class, loginInfo );
-            fail("Login as Admin User must fail when validate external tokens is enabled");
+            ApiResponse postResponse2 = pathResource( "management/token" ).post( loginInfo );
+            String accessToken = postResponse2.getAccessToken();
+            assertNotNull( accessToken );
 
-        } catch ( UniformInterfaceException actual ) {
-            assertEquals( 400, actual.getResponse().getStatus() );
-            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
-            logger.error( "ERROR: " + errorMsg );
-            assertTrue( errorMsg.contains( "Admin Users must login via" ));
+        } finally {
 
-        } catch ( Exception e ) {
-            fail( "We expected a UniformInterfaceException" );
+            // turn off validate external tokens by un-setting the usergrid.central.url
+
+            props.put( USERGRID_CENTRAL_URL, "" );
+            pathResource( "testproperties" ).post( props );
         }
-
-        // login as superuser must succeed
-
-        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
-            put("username", "superuser");
-            put("password", "superpassword");
-            put("grant_type", "password");
-        }};
-        JsonNode accessInfoNode = resource().path("/management/token")
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, loginInfo );
-        String accessToken = accessInfoNode.get( "access_token" ).getTextValue();
-        assertNotNull( accessToken );
-
-        // turn off validate external tokens by un-setting the usergrid.central.url
-
-        props.put( USERGRID_CENTRAL_URL, "" );
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
     }
 
 }

@@ -1,0 +1,44 @@
+{
+"name" : "UsergridStack",
+        "id" : "eb8663d0-da0d-11e3-9c1a-0800200c9a66",
+        "clusters" : [
+        {
+        "name" : "Cassandra",
+                "instanceSpec" : {
+                "imageId" : "ami-56a0463e",
+                        "type" : "m1.large",
+                        "keyName" : "TestKeyPair",
+                        "setupScripts" : [ "file://./cassandra_setup.sh" ],
+                        "scriptEnvironment" : {
+                        "CLUSTER_NAME" : "cassandra-cluster"
+                        }
+                },
+                "size" : 3
+        },
+        {
+        "name" : "ElasticSearch",
+                "instanceSpec" : {
+                "imageId" : "ami-56a0463e",
+                        "type" : "m1.large",
+                        "keyName" : "TestKeyPair",
+                        "setupScripts" : [ "file://./elasticsearch_setup.sh" ],
+                        "scriptEnvironment" : {
+                        "CLUSTER_NAME" : "elasticsearch-cluster"
+                        }
+                },
+                "size" : 3
+        }
+        ],
+        "dataCenter" : "us-east-1a",
+        "ipRuleSet" : {
+        "name" : "ChopTestSecurityGroup",
+                "id" : "275e5de0-da0e-11e3-9c1a-0800200c9a66",
+                "inboundRules" : [ {
+                "ipProtocol" : "tcp",
+                        "toPort" : 65535,
+                        "fromPort" : 1,
+                        "ipRanges" : [ "0.0.0.0/0" ]
+                } ],
+                "outboundRules" : [ ]
+        }
+}

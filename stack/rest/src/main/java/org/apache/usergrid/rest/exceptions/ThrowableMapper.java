@@ -17,11 +17,23 @@
 package org.apache.usergrid.rest.exceptions;
 
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** Will map to HTTP 500 INTERNAL_SERVER_ERROR because parent does */
 @Provider
 public class ThrowableMapper extends AbstractExceptionMapper<Throwable> {
 
+    private static final Logger logger = LoggerFactory.getLogger( ThrowableMapper.class );
+
+    @Override
+    public Response toResponse( final Throwable throwable ) {
+       logger.error( "An uncaught exception occurred during HTTP invocation", throwable );
+
+        return super.toResponse( throwable );
+    }
 }

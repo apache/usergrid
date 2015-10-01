@@ -29,9 +29,11 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
@@ -45,19 +47,15 @@ public class AbstractCollectionService extends AbstractService {
 
 
     public AbstractCollectionService() {
-        // addSet("indexes");
         declareMetadataType( "indexes" );
     }
-
-    // cname/id/
-
 
     @Override
     public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception {
         if ( !isRootService() ) {
             return null;
         }
-        Entity entity = em.get( uuid );
+        Entity entity = em.get( new SimpleEntityRef( getEntityType(), uuid ));
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -75,11 +73,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entityRef = em.getAlias( getEntityType(), name );
-        if ( entityRef == null ) {
-            return null;
-        }
-        Entity entity = em.get( entityRef );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -91,16 +85,18 @@ public class AbstractCollectionService extends AbstractService {
         EntityRef entity = null;
 
         if ( !context.moreParameters() ) {
-            entity = em.get( id );
+            entity = em.get( new SimpleEntityRef( getEntityType(), id) );
 
             entity = importEntity( context, ( Entity ) entity );
         }
         else {
-            entity = em.getRef( id );
+            entity = em.get( new SimpleEntityRef( getEntityType(), id) );
         }
 
         if ( entity == null ) {
-            throw new ServiceResourceNotFoundException( context );
+            logger.info( "miss on entityType: {} with uuid: {}", getEntityType(), id );
+            String msg = "Cannot find entity associated with uuid: " + id;
+            throw new EntityNotFoundException( msg );
         }
 
 
@@ -151,11 +147,12 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entity = em.getAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
 
         if ( entity == null ) {
             logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
-            throw new ServiceResourceNotFoundException( context );
+            String msg = "Cannot find entity with name: "+name;
+            throw new EntityNotFoundException( msg );
         }
 
         // the context of the entity they're trying to load isn't owned by the owner
@@ -168,16 +165,15 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         if ( !context.moreParameters() ) {
-            entity = em.get( entity );
-            entity = importEntity( context, ( Entity ) entity );
+            entity = importEntity( context, entity );
         }
 
         checkPermissionsForEntity( context, entity );
 
     /*
-     * Results.Level level = Results.Level.REFS; if (isEmpty(parameters)) {
-     * level = Results.Level.ALL_PROPERTIES; }
-     * 
+     * Level level = Level.REFS; if (isEmpty(parameters)) {
+     * level = Level.ALL_PROPERTIES; }
+     *
      * Results results = em.searchCollectionForProperty(owner,
      * getCollectionName(), null, nameProperty, name, null, null, 1, level);
      * EntityRef entity = results.getRef();
@@ -195,15 +191,15 @@ public class AbstractCollectionService extends AbstractService {
         checkPermissionsForCollection( context );
 
         int count = 1;
-        Results.Level level = Results.Level.REFS;
+        Level level = Level.REFS;
 
         if ( !context.moreParameters() ) {
             count = 0;
-            level = Results.Level.ALL_PROPERTIES;
+            level = Level.ALL_PROPERTIES;
         }
 
         if ( context.getRequest().isReturnsTree() ) {
-            level = Results.Level.ALL_PROPERTIES;
+            level = Level.ALL_PROPERTIES;
         }
 
         query = new Query( query );
@@ -214,9 +210,7 @@ public class AbstractCollectionService extends AbstractService {
             query.setReversed( isCollectionReversed( context ) );
         }
 
-        if ( !query.isSortSet() ) {
-            query.addSort( getCollectionSort( context ) );
-        }
+
     /*
      * if (count > 0) { query.setMaxResults(count); }
      */
@@ -246,10 +240,11 @@ public class AbstractCollectionService extends AbstractService {
             return getItemsByQuery( context, new Query() );
         }
 
-        int count = 10;
-        Results r =
-                em.getCollection( context.getOwner(), context.getCollectionName(), null, count, Level.ALL_PROPERTIES,
-                        isCollectionReversed( context ) );
+        logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
+        int count = Query.DEFAULT_LIMIT;
+
+        Results r = em.getCollection( context.getOwner(), context.getCollectionName(),
+            null, count, Level.ALL_PROPERTIES, isCollectionReversed( context ) );
 
         importEntities( context, r );
 
@@ -271,6 +266,7 @@ public class AbstractCollectionService extends AbstractService {
         checkPermissionsForEntity( context, id );
 
         Entity item = em.get( id );
+
         if ( item != null ) {
             validateEntityType( item, id );
             updateEntity( context, item, context.getPayload() );
@@ -292,9 +288,9 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        Entity entity;
-        if ( ref == null ) {
+       // EntityRef ref = em.getAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        if ( entity == null ) {
             // null entity ref means we tried to put a non-existing entity
             // before we create a new entity for it, we should check for permission
             checkPermissionsForCollection(context);
@@ -306,7 +302,6 @@ public class AbstractCollectionService extends AbstractService {
             entity = em.create( getEntityType(), properties );
         }
         else {
-            entity = em.get( ref );
             entity = importEntity( context, entity );
             checkPermissionsForEntity( context, entity );
             updateEntity( context, entity );
@@ -331,9 +326,6 @@ public class AbstractCollectionService extends AbstractService {
         if ( !query.isReversedSet() ) {
             query.setReversed( isCollectionReversed( context ) );
         }
-        if ( !query.isSortSet() ) {
-            query.addSort( getCollectionSort( context ) );
-        }
 
         Results r = em.searchCollection( context.getOwner(), context.getCollectionName(), query );
         if ( r.isEmpty() ) {
@@ -354,11 +346,11 @@ public class AbstractCollectionService extends AbstractService {
         if ( context.getPayload().isBatch() ) {
             List<Entity> entities = new ArrayList<Entity>();
             List<Map<String, Object>> batch = context.getPayload().getBatchProperties();
-            logger.info( "Attempting to batch create " + batch.size() + " entities in collection " + context
+            logger.debug( "Attempting to batch create " + batch.size() + " entities in collection " + context
                     .getCollectionName() );
             int i = 1;
             for ( Map<String, Object> p : batch ) {
-                logger.info( "Creating entity " + i + " in collection " + context.getCollectionName() );
+                logger.debug( "Creating entity " + i + " in collection " + context.getCollectionName() );
 
                 Entity item = null;
 
@@ -367,14 +359,14 @@ public class AbstractCollectionService extends AbstractService {
                             p );
                 }
                 catch ( Exception e ) {
-                    logger.error( "Entity " + i + " unable to be created in collection " + context.getCollectionName(),
+                    logger.debug( "Entity " + i + " unable to be created in collection " + context.getCollectionName(),
                             e );
 
                     i++;
                     continue;
                 }
 
-                logger.info(
+                logger.debug(
                         "Entity " + i + " created in collection " + context.getCollectionName() + " with UUID " + item
                                 .getUuid() );
 
@@ -416,7 +408,7 @@ public class AbstractCollectionService extends AbstractService {
         }
         checkPermissionsForEntity( context, id );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -438,12 +430,12 @@ public class AbstractCollectionService extends AbstractService {
             return super.postItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        if ( ref == null ) {
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        return postItemById( context, ref.getUuid() );
+        return postItemById( context, entity.getUuid() );
     }
 
 
@@ -468,7 +460,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemById( context, id );
         }
 
-        Entity item = em.get( id );
+        Entity item = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         if ( item == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -492,11 +484,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        if ( ref == null ) {
-            throw new ServiceResourceNotFoundException( context );
-        }
-        Entity entity = em.get( ref );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -527,10 +515,6 @@ public class AbstractCollectionService extends AbstractService {
 
         if ( !query.isReversedSet() ) {
             query.setReversed( isCollectionReversed( context ) );
-        }
-
-        if ( !query.isSortSet() ) {
-            query.addSort( getCollectionSort( context ) );
         }
 
 

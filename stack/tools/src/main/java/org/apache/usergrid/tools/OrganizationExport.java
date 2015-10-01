@@ -25,7 +25,7 @@ import java.util.UUID;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
 import org.apache.commons.cli.CommandLine;
@@ -34,8 +34,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 import au.com.bytecode.opencsv.CSVWriter;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 /**
@@ -127,7 +125,7 @@ public class OrganizationExport extends ExportingToolBase {
 
     private Results getOrganizations( Query query ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         return em.searchCollection( em.getApplicationRef(), "groups", query );
     }
 }

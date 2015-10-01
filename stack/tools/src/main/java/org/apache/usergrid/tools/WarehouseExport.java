@@ -52,9 +52,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
@@ -74,6 +73,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
