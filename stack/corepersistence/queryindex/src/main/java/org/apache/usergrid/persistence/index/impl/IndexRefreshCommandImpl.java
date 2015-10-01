@@ -193,7 +193,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                 //delete the item
                 IndexOperationMessage indexOperationMessage = new IndexOperationMessage();
                 indexOperationMessage.addDeIndexRequest( deIndexRequest );
-                producer.put( indexOperationMessage );
+                producer.put( indexOperationMessage ).subscribe();
             } );
 
 

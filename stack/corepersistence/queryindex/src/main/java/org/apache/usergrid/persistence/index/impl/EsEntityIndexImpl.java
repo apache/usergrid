@@ -116,7 +116,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private final SearchRequestBuilderStrategyV2 searchRequestBuilderStrategyV2;
     private final int cursorTimeout;
     private final long queryTimeout;
-    private final IndexProducer indexBatchBufferProducer;
     private final FailureMonitorImpl failureMonitor;
     private final Timer aggregationTimer;
 
@@ -131,13 +130,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                               final IndexFig indexFig,
                               final IndexRefreshCommand indexRefreshCommand,
                               final MetricsFactory metricsFactory,
-                              final IndexProducer indexBatchBufferProducer,
                               final IndexLocationStrategy indexLocationStrategy
     ) {
 
         this.indexFig = indexFig;
         this.indexLocationStrategy = indexLocationStrategy;
-        this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.failureMonitor = new FailureMonitorImpl( indexFig, provider );
         this.esProvider = provider;
         this.indexRefreshCommand = indexRefreshCommand;
@@ -374,7 +371,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     @Override
     public EntityIndexBatch createBatch() {
         EntityIndexBatch batch =
-            new EsEntityIndexBatchImpl(indexLocationStrategy , indexBatchBufferProducer, this );
+            new EsEntityIndexBatchImpl(indexLocationStrategy, this );
         return batch;
     }
 
