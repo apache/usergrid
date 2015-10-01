@@ -178,7 +178,7 @@ public class EsIndexProducerImpl implements IndexProducer {
         try {
             responses = bulkRequest.execute().actionGet( );
         } catch ( Throwable t ) {
-            log.error( "Unable to communicate with elasticsearch" );
+            log.error( "Unable to communicate with elasticsearch", t );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }finally{
@@ -189,6 +189,8 @@ public class EsIndexProducerImpl implements IndexProducer {
 
         boolean error = false;
 
+        final StringBuilder errorString = new StringBuilder(  );
+
         for ( BulkItemResponse response : responses ) {
 
             if ( response.isFailed() ) {
@@ -197,13 +199,14 @@ public class EsIndexProducerImpl implements IndexProducer {
                     response.getType(), response.getIndex(), response.getFailureMessage() );
 
                 error = true;
+
+                errorString.append( response.getFailureMessage() ).append( "\n" );
             }
         }
 
         if ( error ) {
             throw new RuntimeException(
-                "Error during processing of bulk index operations one of the responses failed.  Check previous log "
-                    + "entries" );
+                "Error during processing of bulk index operations one of the responses failed. \n" + errorString);
         }
     }
 }
