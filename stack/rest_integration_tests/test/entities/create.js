@@ -20,7 +20,7 @@ var config = require('../../config');
 
 module.exports = {
     test: function() {
-        var numberOfRecords = 30;
+        var numberOfRecords = config.numberOfEntitiesConsistency;
         var uuid = require("uuid");
         var id = "resttest_"+ uuid.v1().toString().replace("-", "");
 
