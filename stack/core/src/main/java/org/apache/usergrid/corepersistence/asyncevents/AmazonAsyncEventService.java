@@ -270,24 +270,32 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         masterObservable
             //remove unsuccessful
-            .filter(indexEventResult -> indexEventResult.success() && indexEventResult.getIndexOperationMessage().isPresent())
+            .filter( indexEventResult -> indexEventResult.success() && indexEventResult.getIndexOperationMessage()
+                                                                                       .isPresent() )
             //take the max
-            .buffer(MAX_TAKE)
+            .buffer( MAX_TAKE )
             //map them to index results and return them
-            .map(indexEventResults -> {
+            .flatMap( indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
-                indexEventResults.stream()
-                    .forEach(indexEventResult -> combined.ingest(indexEventResult.getIndexOperationMessage().get()));
-                indexProducer.put(combined).subscribe();//execute the index operation
-                return indexEventResults;
-            })
+                indexEventResults.stream().forEach(
+                    indexEventResult -> combined.ingest( indexEventResult.getIndexOperationMessage().get() ) );
+
+                //ack after successful completion of the operation.
+                return indexProducer.put( combined ).flatMap(
+                    operationResult -> Observable.from( indexEventResults ) )
+                    //ack each message, but only if we didn't error.  If we did, we'll want to log it and
+                                    .map( indexEventResult -> {
+                                        ack( indexEventResult.queueMessage );
+                                        return indexEventResult;
+                                    } ).doOnError( error ->
+                    {
+                        logger.error( "Unable to write messages to elasticsearch.  Messages not acked", error );
+                    });
+            } )
                 //flat map the ops so they are back to individual
-            .flatMap(indexEventResults -> Observable.from(indexEventResults))
-            //ack each message
-            .map(indexEventResult -> {
-                ack(indexEventResult.queueMessage);
-                return indexEventResult;
-            })
+
+            //overwhelms ES
+            .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() )
             .subscribe();
     }
 
@@ -559,14 +567,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    /**
-     * Subscribes to the observable and acks the message via SQS on completion
-     * @param observable
-     * @param message
-     */
-    private void subscribeAndAck( final Observable<?> observable, final QueueMessage message ){
-       observable.doOnCompleted( ()-> ack(message)  ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
-    }
     public class IndexEventResult{
         private final QueueMessage queueMessage;
         private final Optional<IndexOperationMessage> indexOperationMessage;
