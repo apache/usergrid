@@ -46,6 +46,37 @@ module.exports = {
             cb(error, error ? error : body);
         });
     },
+    createEach: function(collection, numberOfEntities, cb) {
+        var url = urls.appendOrgCredentials(urls.appUrl() + collection);
+        var requestArray = []
+        geos = random.geo(config.location, 2000, numberOfEntities);
+        // console.log(geos);
+        for (var i = 0; i < numberOfEntities; i++) {
+            requestArray.push({
+                consistentProperty: "somethingConsistent",
+                randomProperty: "somethingRandom - " + random.randomString(10),
+                intProperty: random.randomNumber(5),
+                optionsProperty: random.abc(),
+                location: geos[i],
+                title: "A Tale of Two Cities"
+            });
+        }
+        var returnBody = [];
+        async.each(requestArray, function(options, cb) {
+            request.post({
+                url: url,
+                json: true,
+                body: options
+            }, function(e, r, body) {
+                var error = responseLib.getError(e, r);
+                returnBody.push(body.entities[0]);
+                cb(error, error ? error : body.entities[0]);
+            });
+        }, function(err,bodies) {
+           cb(err,returnBody);
+        });
+
+    },
     deleteAll: function(collection, cb) {
         var url = urls.appendOrgCredentials(urls.appUrl() + collection);
         deleteAllEntities(collection, function(e) {
@@ -71,6 +102,16 @@ module.exports = {
     },
     get: function(collection, numberOfEntities, cb) {
         var url = urls.appendOrgCredentials(urls.appUrl() + collection + "?limit=" + numberOfEntities.toString());
+        request.get({
+            url: url,
+            json: true
+        }, function(e, r, body) {
+            var error = responseLib.getError(e, r);
+            cb(error, error ? error : body);
+        })
+    },
+    getByUuid: function(collection, uuid, cb) {
+        var url = urls.appendOrgCredentials(urls.appUrl() + collection + "/"+uuid);
         request.get({
             url: url,
             json: true

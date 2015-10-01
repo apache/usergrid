@@ -21,6 +21,9 @@ var config = require('../../config');
 module.exports = {
     test: function() {
         var numberOfRecords = 30;
+        var uuid = require("uuid");
+        var id = "resttest_"+ uuid.v1().toString().replace("-", "");
+
         describe("create entities", function() {
             it("should create " + numberOfRecords.toString() + " entities in the " + config.entitiesTestCollection + " collection", function(done) {
                 this.slow(numberOfRecords * 500);
@@ -29,9 +32,28 @@ module.exports = {
                     body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(numberOfRecords);
                     body.entities.forEach(function(entity) {
                         entity.should.have.property("uuid").and.match(/(\w{8}(-\w{4}){3}-\w{12}?)/);
-                    })
+                    });
                     done();
                 })
+            });
+            it("should create " + numberOfRecords.toString() + " entities in the " + id + " collection and check for consistency", function(done) {
+                this.slow(numberOfRecords * 500);
+                entities.createEach(id, numberOfRecords, function(err, bodies) {
+                    should(err).be.null;
+                    bodies.should.be.an.instanceOf(Array).and.have.lengthOf(numberOfRecords);
+                    bodyMap = {};
+                    bodies.forEach(function(body){
+                        bodyMap[body.uuid] = body;
+                    });
+                    entities.get(id, numberOfRecords, function (err,entityArray) {
+                        should(err).be.null;
+                        entityArray.entities.forEach(function(entity){
+                            delete(bodyMap[entity.uuid]);
+                        });
+                        should(Object.keys(bodyMap)).have.lengthOf(0);
+                        done();
+                    });
+                });
             });
         });
     }
