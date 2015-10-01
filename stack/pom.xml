@@ -97,7 +97,7 @@
       <!-- =================================================================== -->
 
       <amber-version>0.22-incubating</amber-version>
-      <aws.version>1.10.6</aws.version>
+      <aws.version>1.10.20</aws.version>
       <cassandra-version>1.2.18</cassandra-version>
       <guava.version>18.0</guava.version>
       <guice.version>4.0-beta5</guice.version>

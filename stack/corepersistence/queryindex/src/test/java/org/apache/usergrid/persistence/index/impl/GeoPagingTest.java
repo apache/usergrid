@@ -70,7 +70,6 @@ public class GeoPagingTest extends BaseIT {
     @Inject
     public EntityIndexFactory eif;
 
-
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
@@ -131,7 +130,7 @@ public class GeoPagingTest extends BaseIT {
 
         }
 
-        indexProducer.put(batch).subscribe();
+        indexProducer.put( batch.build()).subscribe();
 
         entityIndex.refreshAsync().toBlocking().last();
 

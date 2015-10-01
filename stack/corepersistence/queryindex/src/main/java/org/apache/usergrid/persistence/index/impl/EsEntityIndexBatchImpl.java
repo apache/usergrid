@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.*;
@@ -41,7 +42,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final IndexAlias alias;
 
     private final IndexLocationStrategy indexLocationStrategy;
-    private final IndexProducer indexBatchBufferProducer;
 
     private final EntityIndex entityIndex;
     private final ApplicationScope applicationScope;
@@ -49,12 +49,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     public EsEntityIndexBatchImpl( final IndexLocationStrategy locationStrategy,
-                                   final IndexProducer indexBatchBufferProducer,
                                    final EntityIndex entityIndex
     ) {
         this.indexLocationStrategy = locationStrategy;
 
-        this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.entityIndex = entityIndex;
         this.applicationScope = indexLocationStrategy.getApplicationScope();
 
@@ -121,7 +119,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     }
 
     @Override
-    public IndexOperationMessage build(){
+    public IndexOperationMessage build() {
         return container;
     }
 

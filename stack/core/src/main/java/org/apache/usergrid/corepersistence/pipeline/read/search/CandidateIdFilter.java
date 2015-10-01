@@ -100,8 +100,8 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
                     //now we have a collection, validate our canidate set is correct.
 
                     return versionSetObservable.map(
-                        entitySet -> new EntityCollector(indexProducer, applicationIndex.createBatch(), entitySet,
-                            candidateResults ) ).doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
+                        entitySet -> new EntityCollector( applicationIndex.createBatch(), entitySet,
+                            candidateResults, indexProducer ) ).doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
                         entityCollector -> Observable.from( entityCollector.collectResults() ) );
                 } );
 
@@ -117,18 +117,18 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
         private static final Logger logger = LoggerFactory.getLogger( EntityCollector.class );
         private List<FilterResult<Id>> results = new ArrayList<>();
 
-        private final IndexProducer indexProducer;
         private final EntityIndexBatch batch;
         private final List<FilterResult<Candidate>> candidateResults;
+        private final IndexProducer indexProducer;
         private final VersionSet versionSet;
 
 
-        public EntityCollector( final IndexProducer indexProducer, final EntityIndexBatch batch, final VersionSet versionSet,
-                                final List<FilterResult<Candidate>> candidateResults ) {
-            this.indexProducer = indexProducer;
+        public EntityCollector( final EntityIndexBatch batch, final VersionSet versionSet,
+                                final List<FilterResult<Candidate>> candidateResults, final IndexProducer indexProducer ) {
             this.batch = batch;
             this.versionSet = versionSet;
             this.candidateResults = candidateResults;
+            this.indexProducer = indexProducer;
             this.results = new ArrayList<>( versionSet.size() );
         }
 
@@ -142,7 +142,8 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
                 validate( candidateResult );
             }
 
-            indexProducer.put(batch).subscribe();
+            indexProducer.put( batch.build()).subscribe();
+
         }
 
 

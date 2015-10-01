@@ -87,14 +87,12 @@ public class IndexLoadTestsIT extends BaseIT {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
-    @Inject
-    public IndexProducer indexProducer;
 
     @Inject
     public IndexTestFig indexTestFig;
 
     @Inject
-    public EntityIndexFactory entityIndexFactory;
+    public IndexProducer indexProducer;
 
     @Inject
     public MetricsFactory metricsFactory;
@@ -348,8 +346,9 @@ public class IndexLoadTestsIT extends BaseIT {
                     batchWriteTPS.mark();
 
 
-                    indexProducer.put(entityIndexBatch).subscribe();
-
+                    //execute
+                    IndexOperationMessage message = entityIndexBatch.build();
+                    indexProducer.put(message);
                     //stop
                     time.close();
                 } ).toBlocking().last();
