@@ -1,0 +1,47 @@
+{
+  "introjs": [{
+    "element": "#intro-1-org",
+    "intro": "<p class='introjstooltipheader'>Your organizations</p><p>Click to view a list of the organizations you have access to. Orgs are how applications are grouped and managed in Usergrid.</p>",
+    "position": "right"
+  }, {
+    "element": "#intro-2-app-menu",
+    "intro": "<p class='introjstooltipheader'>Your applications</p><p>Click to view a list of applications in the currently selected organization. Applications represent unique data stores in Usergrid.</p>",
+    "position": "right"
+  }, {
+    "element": "#intro-3-side-menu",
+    "intro": "<p class='introjstooltipheader'>Usergrid features menu</p><p>Click an item in the menu to configure and manage the corresponding feature.</p><p>From here you can configure and manage everything about the currently selected API BaaS application, such as user access, push notifications, your data store, and more.</p>",
+    "position": "right"
+  }, {
+    "element": "#intro-4-current-org",
+    "intro": "<p class='introjstooltipheader'>Current organization</p><p>This is the unique name and UUID of the currently selected organization.</p>",
+    "position": "right"
+  }, {
+    "element": "#intro-5-applications",
+    "intro": "<p class='introjstooltipheader'>Applications</p><p>These are the names and UUIDs of all the applications available in the currently selected organization.</p>",
+    "position": "right"
+  }, {
+    "element": "#intro-6-org-api-creds",
+    "intro": "<p class='introjstooltipheader'>Organization API credentials</p><p>These are your credentials for organization-level access.</p><p>Your organization client ID and secret can be used to authenticate any API request against any application in the organization, so use them cautiously, and never use them in a mobile app or client-side code. If you believe your organization credentials have been compromised, regenerate them.</p>",
+    "position": "right"
+  }, {
+    "element": "#intro-7-org-admins",
+    "intro": "<p class='introjstooltipheader'>Organization administrators</p><p>These are the users that have administrator privileges to the currently selected organization.</p><p>These users can use their username and password to authenticate any API request against any application in the currently selected organization.</p>",
+    "position": "right"
+  }, {
+    "element": "#intro-8-activities",
+    "intro": "<p class='introjstooltipheader'>Activities</p><p>This is the activity stream for the currently selected organization.</p><p>Here you can monitor org-level activities such as when a new application is created in the org.</p>",
+    "position": "left"
+  }, {
+    "element": "#intro-9-sdks",
+    "intro": "<p class='introjstooltipheader'>Download an SDK!</p><p>Ready to start using Usergrid to power your app? Download one of our SDKs to get developing in your preferred language fast!</p>",
+    "position": "bottom"
+  }],
+
+  "tooltip": {
+    "tooltip_current_org": "The name and UUID for the organization you're logged into. An org is how your applications are grouped in Usergrid.",
+    "tooltip_applications": "A list of the applications in your org. Applications represent unique data stores.",
+    "tooltip_org_api_creds": "These credentials can be sent from server-based code to authenticate as an org admin user. Org admins have full access to make any API call to an organization and all of the applications in it. Don't use these in a mobile app or client-side code!",
+    "tooltip_org_admins": "A list of people who have org admin access to this organization.",
+    "tooltip_activities": "A list of recent activities that have occurred in this organization, such as the creation of a new application."
+  }
+}
