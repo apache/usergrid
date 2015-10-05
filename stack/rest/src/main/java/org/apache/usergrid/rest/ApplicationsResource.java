@@ -105,21 +105,27 @@ public class ApplicationsResource extends AbstractContextResource {
                                 Map<String,Object> map = new LinkedHashMap<>();
                                 map.put("count",itemsDeleted.intValue());
                                 final StatusService statusService = injector.getInstance(StatusService.class);
-                                statusService.setStatus(applicationId, jobId, StatusService.Status.INPROGRESS,map).subscribe();
+                                statusService.setStatus(applicationId, jobId, StatusService.Status.INPROGRESS,map)
+                                    .subscribe();//do not want to throw this exception
                             }
                         })
-                        .doOnCompleted(() ->{
-                            Map<String,Object> map = new LinkedHashMap<>();
-                            map.put("count",itemsDeleted.intValue());
+                        .doOnCompleted(() -> {
+                            Map<String, Object> map = new LinkedHashMap<>();
+                            map.put("count", itemsDeleted.intValue());
                             final StatusService statusService = injector.getInstance(StatusService.class);
-                            statusService.setStatus(applicationId,jobId, StatusService.Status.COMPLETE,map).subscribe();
+                            statusService.setStatus(applicationId, jobId, StatusService.Status.COMPLETE, map)
+                                .toBlocking().lastOrDefault(null);//want to rethrow this exception
                         })
-                        .subscribe();
+                        .toBlocking().lastOrDefault(null);//expecting exception to be caught if job fails
 
                 } catch ( Exception e ) {
                     Map<String,Object> map = new LinkedHashMap<>();
                     map.put("exception",e);
-                    statusService.setStatus(applicationId,jobId, StatusService.Status.FAILED,map).subscribe();
+                    try {
+                        statusService.setStatus(applicationId, jobId, StatusService.Status.FAILED, map).toBlocking().lastOrDefault(null);//leave as subscribe if fails retry
+                    }catch (Exception subE){
+                        logger.error("failed to update status "+jobId,subE);
+                    }
                     logger.error( "Failed to delete appid:"+applicationId + " jobid:"+jobId+" count:"+itemsDeleted, e );
                 }
             }
@@ -129,8 +135,12 @@ public class ApplicationsResource extends AbstractContextResource {
         delete.setDaemon(true);
         delete.start();
 
-        statusService.setStatus(applicationId,jobId, StatusService.Status.STARTED,new LinkedHashMap<>()).subscribe();
-
+        try {
+            //should throw exception if can't start
+            statusService.setStatus(applicationId, jobId, StatusService.Status.STARTED, new LinkedHashMap<>()).toBlocking().lastOrDefault(null);
+        }catch (Exception e){
+            logger.error("failed to set status for " + jobId, e);
+        }
         Map<String,Object> data = new HashMap<>();
         data.put("jobId",jobId);
         data.put("status",StatusService.Status.STARTED);
