@@ -205,6 +205,13 @@ public class EsIndexProducerImpl implements IndexProducer {
         }
 
         if ( error ) {
+            if(errorString.lastIndexOf("rejected execution (queue capacity")>=0){
+                try{
+                    Thread.sleep(indexFig.getSleepTimeForQueueError());
+                }catch (InterruptedException ie){
+                    //move on
+                }
+            }
             throw new RuntimeException(
                 "Error during processing of bulk index operations one of the responses failed. \n" + errorString);
         }

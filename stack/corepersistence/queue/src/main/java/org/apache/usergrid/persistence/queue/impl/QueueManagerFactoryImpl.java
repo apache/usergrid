@@ -47,7 +47,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
     }
     @Override
     public QueueManager getQueueManager(QueueScope scope) {
-        if(queueFig.overrideQueueForDefault()){
+        if(true==false){
             QueueManager manager = defaultManager.get(scope.getName());
             if(manager==null){
                 manager = new DefaultQueueManager();

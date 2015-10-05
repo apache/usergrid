@@ -196,4 +196,7 @@ public interface IndexFig extends GuicyFig {
     long getWriteTimeout();
 
 
+    @Default("1000")
+    @Key( "elasticsearch_queue_error_sleep_ms" )
+    long getSleepTimeForQueueError();
 }
