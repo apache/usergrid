@@ -239,7 +239,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
             if (event == null) {
                 logger.error("AsyncEvent type or event is null!");
-                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
+                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
             }
             try {
                 //merge each operation to a master observable;
@@ -254,10 +254,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 } else if (event instanceof InitializeApplicationIndexEvent) {
                     //does not return observable
                     handleInitializeApplicationIndex(message);
-                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
+                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
                 } else {
                     logger.error("Unknown EventType: {}", event);
-                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
+                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
                 }
             }catch (Exception e){
                 logger.error("Failed to index entity", e,message);
@@ -270,20 +270,25 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         return masterObservable
             //remove unsuccessful
-            .filter( indexEventResult -> indexEventResult.success() && indexEventResult.getIndexOperationMessage()
-                                                                                       .isPresent() )
+            .filter( indexEventResult -> indexEventResult.shouldProcess()  )
             //take the max
             .buffer( MAX_TAKE )
             //map them to index results and return them
             .flatMap( indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
                 indexEventResults.stream().forEach(
-                    indexEventResult -> combined.ingest( indexEventResult.getIndexOperationMessage().get() ) );
+                    indexEventResult ->{
+                        if(indexEventResult.getIndexOperationMessage().isPresent()) {
+                            combined.ingest(indexEventResult.getIndexOperationMessage().get());
+                        }
+                    } );
+
 
                 //ack after successful completion of the operation.
-                return indexProducer.put( combined ).flatMap( operationResult -> Observable.from( indexEventResults ) )
+                return indexProducer.put( combined )
+                    .flatMap( operationResult -> Observable.from( indexEventResults ) )
                     //ack each message, but only if we didn't error.  If we did, we'll want to log it and
-                                    .map( indexEventResult -> {
+                    .map( indexEventResult -> {
                                         ack( indexEventResult.queueMessage );
                                         return indexEventResult;
                                     } );
@@ -562,21 +567,21 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public class IndexEventResult{
         private final QueueMessage queueMessage;
         private final Optional<IndexOperationMessage> indexOperationMessage;
-        private final boolean success;
+        private final boolean shouldProcess;
 
-        public IndexEventResult(QueueMessage queueMessage, Optional<IndexOperationMessage> indexOperationMessage ,boolean success){
+        public IndexEventResult(QueueMessage queueMessage, Optional<IndexOperationMessage> indexOperationMessage ,boolean shouldProcess){
 
             this.queueMessage = queueMessage;
             this.indexOperationMessage = indexOperationMessage;
-            this.success = success;
+            this.shouldProcess = shouldProcess;
         }
 
         public QueueMessage getQueueMessage() {
             return queueMessage;
         }
 
-        public boolean success() {
-            return success;
+        public boolean shouldProcess() {
+            return shouldProcess;
         }
 
         public Optional<IndexOperationMessage> getIndexOperationMessage() {
