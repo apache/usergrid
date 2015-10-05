@@ -285,13 +285,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
                 //ack after successful completion of the operation.
-                return indexProducer.put( combined )
-                    .flatMap( operationResult -> Observable.from( indexEventResults ) )
-                    //ack each message, but only if we didn't error.  If we did, we'll want to log it and
-                    .map( indexEventResult -> {
-                                        ack( indexEventResult.queueMessage );
-                                        return indexEventResult;
-                                    } );
+                return indexProducer.put(combined)
+                    .flatMap(operationResult -> Observable.from(indexEventResults));
+
             } );
 
     }
@@ -538,7 +534,15 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         }
                     })
                             //this won't block our read loop, just reads and proceeds
-                            .flatMap( messages -> handleMessages( messages ) ).subscribeOn( Schedulers.newThread() );
+                            .map(messages ->
+                                    handleMessages(messages)
+                                        .map(indexEventResult -> {
+                                            ack( indexEventResult.getQueueMessage() );
+                                            return indexEventResult;
+                                        })
+                                        .toBlocking().lastOrDefault(null)
+                            )//ack each message, but only if we didn't error.  If we did, we'll want to log it and
+                            .subscribeOn( Schedulers.newThread() );
 
             //start in the background
 
