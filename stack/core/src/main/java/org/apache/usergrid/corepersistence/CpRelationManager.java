@@ -518,8 +518,8 @@ public class CpRelationManager implements RelationManager {
         //run our delete
         gm.loadEdgeVersions(
             CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, memberEntity.getId() ) )
-          .flatMap( edge -> gm.markEdge( edge ) ).flatMap( edge -> gm.deleteEdge( edge ) ).toBlocking()
-          .lastOrDefault( null );
+          .flatMap(edge -> gm.markEdge(edge)).flatMap(edge -> gm.deleteEdge(edge)).toBlocking()
+          .lastOrDefault(null);
 
 
         /**
@@ -535,7 +535,7 @@ public class CpRelationManager implements RelationManager {
 
         batch.deindex( indexScope, memberEntity );
 
-        managerCache.getIndexProducer().put( batch.build()).subscribe();
+        managerCache.getIndexProducer().put( batch.build()).toBlocking().lastOrDefault(null); // this should throw an exception
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -695,7 +695,7 @@ public class CpRelationManager implements RelationManager {
 
         //write new edge
 
-        gm.writeEdge( edge ).subscribe();
+        gm.writeEdge(edge).toBlocking().lastOrDefault(null); //throw an exception if this fails
 
         indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
@@ -707,21 +707,21 @@ public class CpRelationManager implements RelationManager {
 
 
         //load our versions, only retain the most recent one
-        gm.loadEdgeVersions( searchByEdge ).skip( 1 ).flatMap( edgeToDelete -> {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "Marking edge {} for deletion", edgeToDelete );
+        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Marking edge {} for deletion", edgeToDelete);
             }
-            return gm.markEdge( edgeToDelete );
-        } ).lastOrDefault( null ).doOnNext( lastEdge -> {
+            return gm.markEdge(edgeToDelete );
+        }).lastOrDefault(null).doOnNext(lastEdge -> {
             //no op if we hit our default
-            if(lastEdge == null){
+            if (lastEdge == null) {
                 return;
             }
 
             //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
 
-            gm.deleteEdge( lastEdge ).subscribe();
-        }).subscribe();
+            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
+        }).toBlocking().lastOrDefault(null);//this should throw an exception
 
 
         return connection;
