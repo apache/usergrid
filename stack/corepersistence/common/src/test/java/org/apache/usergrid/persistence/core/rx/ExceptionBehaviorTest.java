@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import rx.Observable;
 import rx.Observer;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -31,11 +32,19 @@ public class ExceptionBehaviorTest {
 
     //this test shows toBlocking re-throws exceptions correctly
     @Test( expected = TestException.class )
-    public void throwOnBlocking() {
+    public void throwOnBlockingFirst() {
 
         Observable.range( 0, 1 ).map( integer -> {
             throw new TestException( "I throw and exception" );
         } ).toBlocking().first();
+    }
+
+    @Test( expected = TestException.class )
+    public void throwOnBlockingLast() {
+
+        Observable.range( 0, 1 ).map( integer -> {
+            throw new TestException( "I throw and exception" );
+        } ).toBlocking().last();
     }
 
 //
@@ -65,6 +74,27 @@ public class ExceptionBehaviorTest {
         } ).subscribe( exceptionObserver );
 
         exceptionObserver.checkResult();
+    }
+
+    /**
+     *  Tests working with observers
+     */
+    @Test( expected = TestException.class )
+    public void throwOnSubscribeObservableNewThread() throws Exception {
+
+        final ReThrowObserver exceptionObserver = new ReThrowObserver();
+
+        Observable.range( 0, 1 ).map(integer -> {
+            throw new TestException("I throw and exception");
+        })
+            .doOnError(t -> exceptionObserver.onError(t))
+            .subscribeOn(Schedulers.newThread())
+            .subscribe(exceptionObserver);
+
+        for(int i =0; i<5; i++) {
+            exceptionObserver.checkResult();
+            Thread.sleep(200);
+        }
     }
 
 
