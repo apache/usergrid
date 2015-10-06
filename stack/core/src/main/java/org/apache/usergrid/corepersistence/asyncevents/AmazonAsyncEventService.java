@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.base.Optional;
@@ -226,6 +227,28 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     }
 
+    /**
+     * Ack message in SQS
+     */
+    public void ack(final List<QueueMessage> messages) {
+
+        final Timer.Context timer = this.ackTimer.time();
+
+        try{
+            queue.commitMessages(messages);
+
+            //decrement our in-flight counter
+            inFlight.decrementAndGet();
+
+        }catch(Exception e){
+            throw new RuntimeException("Unable to ack messages", e);
+        }finally {
+            timer.stop();
+        }
+
+
+    }
+
 
     private Observable<QueueMessage> handleMessages( final List<QueueMessage> messages ) {
         if (logger.isDebugEnabled()) {
@@ -243,7 +266,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
             if (event == null) {
                 logger.error("AsyncEvent type or event is null!");
-                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
+                return Observable.just(new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent()));
             }
             try {
                 //merge each operation to a master observable;
@@ -258,23 +281,24 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 } else if (event instanceof InitializeApplicationIndexEvent) {
                     //does not return observable
                     handleInitializeApplicationIndex(message);
-                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
+                    return Observable.just(new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent()));
                 } else {
-                    logger.error("Unknown EventType: {}", event);
-                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
+                    logger.error("Unknown EventType: {}", event);//TODO: print json instead
+                    return Observable.just(new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent()));
                 }
             } catch (Exception e) {
                 logger.error("Failed to index entity", e, message);
-                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
+                return Observable.just(new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent()));
             } finally {
                 messageCycle.update(System.currentTimeMillis() - event.getCreationTime());
 
             }
         });
 
+        //filter for success, send to the index(optional), ack
         return masterObservable
             //remove unsuccessful
-            .filter(indexEventResult -> indexEventResult.shouldProcess())
+            .filter(indexEventResult -> indexEventResult.getQueueMessage().isPresent())
             //take the max
             .buffer( MAX_TAKE )
             //map them to index results and return them
@@ -290,8 +314,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
                 //ack after successful completion of the operation.
                 return indexProducer.put(combined)
-                    .flatMap(operationResult -> Observable.from(indexEventResults))
-                    .map(result -> result.getQueueMessage());
+                    .flatMap(indexOperationMessage -> Observable.from(indexEventResults))
+                    .map(result -> result.getQueueMessage().get());
 
             });
 
@@ -303,10 +327,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
     ){
         try{
             return operation.call(queueMessage)
-                .map(indexOperationMessage -> new IndexEventResult(queueMessage, Optional.fromNullable(indexOperationMessage), true));
+                .map(indexOperationMessage -> new IndexEventResult(Optional.fromNullable(queueMessage), Optional.fromNullable(indexOperationMessage)));
         }catch (Exception e){
             logger.error("failed to run index",e);
-            return Observable.just( new IndexEventResult(queueMessage, Optional.<IndexOperationMessage>absent(),false));
+            return Observable.just( new IndexEventResult(Optional.fromNullable(queueMessage), Optional.<IndexOperationMessage>absent()));
         }
     }
 
@@ -543,10 +567,17 @@ public class AmazonAsyncEventService implements AsyncEventService {
                             //this won't block our read loop, just reads and proceeds
                             .flatMap(messages ->
                                     handleMessages(messages)
-                                        .doOnNext(message -> {
-                                            //ack each message, but only if we didn't error.
-                                            ack(message);
+                                        .buffer(MAX_TAKE)
+                                        .doOnNext(messagesToAck -> {
+                                            try {
+                                                //ack each message, but only if we didn't error.
+                                                ack(messagesToAck);
+                                            } catch (Exception e) {
+                                                logger.error("failed to ack messages to sqs", messagesToAck.get(0).getMessageId(), e);
+                                                //do not rethrow so we can process all of them
+                                            }
                                         })
+                                        .flatMap(messagesToAck -> Observable.from(messagesToAck))
                             );
 
             //start in the background
@@ -574,23 +605,19 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
     public class IndexEventResult{
-        private final QueueMessage queueMessage;
+        private final Optional<QueueMessage> queueMessage;
         private final Optional<IndexOperationMessage> indexOperationMessage;
-        private final boolean shouldProcess;
 
-        public IndexEventResult(QueueMessage queueMessage, Optional<IndexOperationMessage> indexOperationMessage ,boolean shouldProcess){
+
+        public IndexEventResult(Optional<QueueMessage> queueMessage, Optional<IndexOperationMessage> indexOperationMessage ){
 
             this.queueMessage = queueMessage;
             this.indexOperationMessage = indexOperationMessage;
-            this.shouldProcess = shouldProcess;
+
         }
 
-        public QueueMessage getQueueMessage() {
+        public Optional<QueueMessage> getQueueMessage() {
             return queueMessage;
-        }
-
-        public boolean shouldProcess() {
-            return shouldProcess;
         }
 
         public Optional<IndexOperationMessage> getIndexOperationMessage() {
