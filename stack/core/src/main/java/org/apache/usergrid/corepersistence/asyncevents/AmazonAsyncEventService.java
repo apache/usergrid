@@ -547,12 +547,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                             //ack each message, but only if we didn't error.
                                             ack(message);
                                         })
-                            )
-                            .subscribeOn(Schedulers.newThread());
+                            );
 
             //start in the background
 
-            final Subscription subscription = consumer.subscribe();
+            final Subscription subscription = consumer.subscribeOn(Schedulers.newThread()).subscribe();
 
             subscriptions.add(subscription);
         }
