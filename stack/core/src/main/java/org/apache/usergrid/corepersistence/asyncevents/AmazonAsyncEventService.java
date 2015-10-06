@@ -227,7 +227,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    private Observable<IndexEventResult> handleMessages( final List<QueueMessage> messages ) {
+    private Observable<QueueMessage> handleMessages( final List<QueueMessage> messages ) {
         if (logger.isDebugEnabled()) {
             logger.debug("handleMessages with {} message", messages.size());
         }
@@ -290,7 +290,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
                 //ack after successful completion of the operation.
                 return indexProducer.put(combined)
-                    .flatMap(operationResult -> Observable.from(indexEventResults));
+                    .flatMap(operationResult -> Observable.from(indexEventResults))
+                    .map(result -> result.getQueueMessage());
 
             });
 
@@ -448,7 +449,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final Observable<IndexOperationMessage> merged = entityDeleteResults
             .getEntitiesCompacted()
-            .collect(() -> new ArrayList<>(),(list,item)-> list.add(item))
+            .collect(() -> new ArrayList<>(), (list, item) -> list.add(item))
             .flatMap(collected -> entityDeleteResults.getIndexObservable()) ;
         return merged;
     }
@@ -499,7 +500,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private void startWorker() {
         synchronized (mutex) {
 
-            Observable<IndexEventResult> consumer =
+            Observable<QueueMessage> consumer =
                     Observable.create(new Observable.OnSubscribe<List<QueueMessage>>() {
                         @Override
                         public void call(final Subscriber<? super List<QueueMessage>> subscriber) {
@@ -540,14 +541,13 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         }
                     })
                             //this won't block our read loop, just reads and proceeds
-                            .map(messages ->
+                            .flatMap(messages ->
                                     handleMessages(messages)
-                                        .map(indexEventResult -> {
-                                            ack(indexEventResult.getQueueMessage());
-                                            return indexEventResult;
+                                        .doOnNext(message -> {
+                                            //ack each message, but only if we didn't error.
+                                            ack(message);
                                         })
-                                        .toBlocking().lastOrDefault(null)
-                            )//ack each message, but only if we didn't error.  If we did, we'll want to log it and
+                            )
                             .subscribeOn(Schedulers.newThread());
 
             //start in the background
