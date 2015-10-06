@@ -233,8 +233,12 @@ public class AmazonAsyncEventService implements AsyncEventService {
         }
 
         Observable<IndexEventResult> masterObservable = Observable.from(messages).flatMap(message -> {
-            final AsyncEvent event = (AsyncEvent) message.getBody();
-
+            AsyncEvent event = null;
+            try{
+                event = (AsyncEvent) message.getBody();
+            }catch (ClassCastException cce){
+                logger.error("Failed to deserialize message body",cce);
+            }
             logger.debug("Processing {} event", event);
 
             if (event == null) {
@@ -259,10 +263,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
                     logger.error("Unknown EventType: {}", event);
                     return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
                 }
-            }catch (Exception e){
-                logger.error("Failed to index entity", e,message);
+            } catch (Exception e) {
+                logger.error("Failed to index entity", e, message);
                 return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
-            }finally {
+            } finally {
                 messageCycle.update(System.currentTimeMillis() - event.getCreationTime());
 
             }
@@ -270,25 +274,25 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         return masterObservable
             //remove unsuccessful
-            .filter( indexEventResult -> indexEventResult.shouldProcess()  )
+            .filter(indexEventResult -> indexEventResult.shouldProcess())
             //take the max
             .buffer( MAX_TAKE )
             //map them to index results and return them
-            .flatMap( indexEventResults -> {
+            .flatMap(indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
                 indexEventResults.stream().forEach(
-                    indexEventResult ->{
-                        if(indexEventResult.getIndexOperationMessage().isPresent()) {
+                    indexEventResult -> {
+                        if (indexEventResult.getIndexOperationMessage().isPresent()) {
                             combined.ingest(indexEventResult.getIndexOperationMessage().get());
                         }
-                    } );
+                    });
 
 
                 //ack after successful completion of the operation.
                 return indexProducer.put(combined)
                     .flatMap(operationResult -> Observable.from(indexEventResults));
 
-            } );
+            });
 
     }
 
@@ -376,8 +380,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(edgeIndexEvent.getEntityId()).flatMap( entity -> eventBuilder.buildNewEdge(
-            applicationScope, entity, edge ) );
+        final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(edgeIndexEvent.getEntityId()).flatMap(entity -> eventBuilder.buildNewEdge(
+            applicationScope, entity, edge));
         return edgeIndexObservable;
     }
 
@@ -442,8 +446,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
 
 
-        final Observable merged = Observable.merge( entityDeleteResults.getEntitiesCompacted(),
-            entityDeleteResults.getIndexObservable() );
+        final Observable<IndexOperationMessage> merged = entityDeleteResults.getEntitiesCompacted().flatMap(mvccLogEntries -> entityDeleteResults.getIndexObservable()) ;
         return merged;
     }
 
@@ -537,12 +540,12 @@ public class AmazonAsyncEventService implements AsyncEventService {
                             .map(messages ->
                                     handleMessages(messages)
                                         .map(indexEventResult -> {
-                                            ack( indexEventResult.getQueueMessage() );
+                                            ack(indexEventResult.getQueueMessage());
                                             return indexEventResult;
                                         })
                                         .toBlocking().lastOrDefault(null)
                             )//ack each message, but only if we didn't error.  If we did, we'll want to log it and
-                            .subscribeOn( Schedulers.newThread() );
+                            .subscribeOn(Schedulers.newThread());
 
             //start in the background
 
