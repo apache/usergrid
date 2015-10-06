@@ -29,40 +29,47 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #TOKEN_TYPE=
 #CREATE_ORG=
 #CREATE_APP=
-#LOAD_ENTITIES=
 #SANDBOX_COLLECTION=
-#NUM_ENTITIES=  #may be overridden on command line
+#NUM_ENTITIES= #ignored
 #SKIP_SETUP=
 #COLLECTION=
+#ENTITY_TYPE=
 #ENTITY_PREFIX=
 #ENTITY_SEED=  #may be overridden on command line
 #RETRY_COUNT=
+#ENTITY_PROGRESS_COUNT=
 #CONSTANT_USERS_PER_SEC=
 #CONSTANT_USERS_DURATION=
+#FLUSH_CSV
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) ENTITY_PREFIX [NUM_ENTITIES [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]"
+[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [UUID_FILENAME [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
-ENTITY_PREFIX="$3"
-[ "$#" -ge 4 ] && NUM_ENTITIES="$4"
-[ "$#" -ge 5 ] && ENTITY_SEED="$5"
-[ "$#" -ge 6 ] && ENTITY_WORKER_NUM="$6"
-[ "$#" -ge 7 ] && ENTITY_WORKER_COUNT="$7"
+[ "$#" -ge 3 ] && UUID_FILENAME="$3"
+[ "$#" -ge 4 ] && ENTITY_SEED="$4"
+[ "$#" -ge 5 ] && ENTITY_WORKER_NUM="$5"
+[ "$#" -ge 6 ] && ENTITY_WORKER_COUNT="$6"
 
 shift $#
 
-SCENARIO_TYPE=deleteEntities
-INTERLEAVED_WORKER_FEED=true
+SCENARIO_TYPE=loadEntities
+NEW_CSV_ON_FLUSH=true
+FLUSH_CSV=10000
+
+# don't load entities as part of setup (loading entities is the point of the test)
+LOAD_ENTITIES=false
 
 #Compile everything
 mvn compile
 
 #Execute the test
 mvn gatling:execute \
--DinterleavedWorkerFeed=${INTERLEAVED_WORKER_FEED} \
+-DflushCsv=${FLUSH_CSV} \
+-DunlimitedFeed=true \
+-DnewCsvOnFlush=${NEW_CSV_ON_FLUSH} \
 -DbaseUrl=${URL} \
 -DadminUser=${ADMIN_USER}  \
 -DadminPassword=${ADMIN_PASSWORD}  \
@@ -74,19 +81,21 @@ mvn gatling:execute \
 -DtokenType=${TOKEN_TYPE} \
 -DcreateOrg=${CREATE_ORG} \
 -DcreateApp=${CREATE_APP} \
--DloadEntities=${LOAD_ENTITIES} \
 -DsandboxCollection=${SANDBOX_COLLECTION} \
--DnumEntities=${NUM_ENTITIES} \
 -DskipSetup=${SKIP_SETUP} \
 -Dcollection=${COLLECTION} \
+-DentityType=${ENTITY_TYPE} \
 -DentityPrefix=${ENTITY_PREFIX} \
 -DentitySeed=${ENTITY_SEED} \
--DretryCount=${RETRY_COUNT}  \
+-DretryCount=${RETRY_COUNT} \
+-DentityProgressCount=${ENTITY_PROGRESS_COUNT} \
 -DconstantUsersPerSec=${CONSTANT_USERS_PER_SEC}    \
 -DconstantUsersDuration=${CONSTANT_USERS_DURATION}    \
 -DscenarioType=${SCENARIO_TYPE} \
+-DloadEntities=${LOAD_ENTITIES} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
+-DuuidFilename=${UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 
