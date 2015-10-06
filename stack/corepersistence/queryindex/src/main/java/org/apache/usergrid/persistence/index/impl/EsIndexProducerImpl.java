@@ -115,6 +115,7 @@ public class EsIndexProducerImpl implements IndexProducer {
         final Observable<IndexOperation> index = Observable.from(batch.getIndexRequests());
         final Observable<DeIndexOperation> deIndex = Observable.from(batch.getDeIndexRequests());
 
+        //TODO: look at indexing ordering
         final Observable<BatchOperation> batchOps = Observable.merge(index, deIndex);
 
         //buffer into the max size we can send ES and fire them all off until we're completed
@@ -207,9 +208,10 @@ public class EsIndexProducerImpl implements IndexProducer {
         if ( error ) {
             if(errorString.lastIndexOf("rejected execution (queue capacity")>=0){
                 try{
-                    log.warn("Encountered Queue Capacity Exception from ElasticSearch slowing by " +indexFig.getSleepTimeForQueueError());
+                    log.warn("Encountered Queue Capacity Exception from ElasticSearch slowing by "
+                        + indexFig.getSleepTimeForQueueError() );
                     Thread.sleep(indexFig.getSleepTimeForQueueError());
-                }catch (InterruptedException ie){
+                }catch (Exception e){
                     //move on
                 }
             }
