@@ -207,6 +207,7 @@ public class EsIndexProducerImpl implements IndexProducer {
         if ( error ) {
             if(errorString.lastIndexOf("rejected execution (queue capacity")>=0){
                 try{
+                    log.warn("Encountered Queue Capacity Exception from ElasticSearch slowing by " +indexFig.getSleepTimeForQueueError());
                     Thread.sleep(indexFig.getSleepTimeForQueueError());
                 }catch (InterruptedException ie){
                     //move on

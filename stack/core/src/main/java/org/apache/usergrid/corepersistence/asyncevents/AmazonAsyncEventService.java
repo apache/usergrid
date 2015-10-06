@@ -446,7 +446,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
             entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
 
 
-        final Observable<IndexOperationMessage> merged = entityDeleteResults.getEntitiesCompacted().flatMap(mvccLogEntries -> entityDeleteResults.getIndexObservable()) ;
+        final Observable<IndexOperationMessage> merged = entityDeleteResults
+            .getEntitiesCompacted()
+            .collect(() -> new ArrayList<>(),(list,item)-> list.add(item))
+            .flatMap(collected -> entityDeleteResults.getIndexObservable()) ;
         return merged;
     }
 
