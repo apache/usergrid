@@ -181,6 +181,11 @@ object Settings {
   private val queryParamConfig = initStrSetting(ConfigProperties.QueryParams)
   val queryParamMap: Map[String,String] = mapFromQueryParamConfigString(queryParamConfig)
   val csvFeedPattern = initStrSetting(ConfigProperties.CsvFeedPattern)
+  val flushCsv:Long = initLongSetting(ConfigProperties.FlushCsv)
+  val unlimitedFeed:Boolean = initBoolSetting(ConfigProperties.UnlimitedFeed)
+  // unlimited feed forces interleaved worker feed
+  val interleavedWorkerFeed:Boolean = if (unlimitedFeed) true else initBoolSetting(ConfigProperties.InterleavedWorkerFeed)
+  val newCsvOnFlush:Boolean = initBoolSetting(ConfigProperties.NewCsvOnFlush)
 
   val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
   val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
@@ -204,8 +209,9 @@ object Settings {
   private val leftOver:Int = totalNumEntities % entityWorkerCount  // will be 0 if only one worker
   private val extraEntity:Int = if (entityWorkerNum <= leftOver) 1 else 0
   private val zeroBasedWorkerNum:Int = entityWorkerNum - 1
-  val entitySeed:Int = overallEntitySeed + zeroBasedWorkerNum * entitiesPerWorkerFloor + (if (extraEntity == 1) zeroBasedWorkerNum else leftOver)
-  val numEntities:Int = entitiesPerWorkerFloor + extraEntity
+  val entitySeed:Int = if (unlimitedFeed) overallEntitySeed else overallEntitySeed + zeroBasedWorkerNum * entitiesPerWorkerFloor + (if (extraEntity == 1) zeroBasedWorkerNum else leftOver)
+  // numEntities is used for random name generation, must be >= 0 even if not used for entity counting (as in unlimitedFeed=true)
+  val numEntities:Int = if (unlimitedFeed) 1000000000 else entitiesPerWorkerFloor + extraEntity
 
   // UUID log file, have to go through this because creating a csv feeder with an invalid csv file fails at maven compile time
   private val dummyTestCsv = ConfigProperties.getDefault(ConfigProperties.UuidFilename).toString
@@ -281,17 +287,52 @@ object Settings {
 
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
 
-  private var uuidMap: Map[Int, String] = Map()
-  private var entityCounter: Long = 0
-  private var lastEntityCountPrinted: Long = 0
-  def addUuid(num: Int, uuid: String): Unit = {
+  val auditUuidsHeader = "collection,name,uuid,modified"
+  val uuidsHeader = "name,uuid"
+  case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long)
+
+  //private var uuidMap: Map[Int, String] = Map()
+  private var uuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
+  private var entityCounter: Long = 0L
+  private var lastEntityCountPrinted: Long = 0L
+  private var flushCounter: Long = 0L
+  private var firstFlush: Boolean = true
+  private var numberFlushes: Long = 0L
+  private var uuidWriter: PrintWriter = null
+  def addUuid(uuid: String, collection: String, entityName: String, modified: Long): Unit = {
     if (captureUuids) {
-      uuidMap.synchronized {
-        uuidMap += (num -> uuid)
-        entityCounter += 1
+      uuidList.synchronized {
+        uuidList += AuditList(collection, entityName, uuid, modified)
+        entityCounter += 1L
+        flushCounter += 1L
         if (logEntityProgress && (entityCounter >= lastEntityCountPrinted + entityProgressCount)) {
           println(s"Entity: $entityCounter")
           lastEntityCountPrinted = entityCounter
+        }
+        if (flushCsv > 0 && flushCounter >= flushCsv) {
+          if (uuidWriter == null) {
+            uuidWriter = {
+              val fileWithSuffix = f"$captureUuidFilename.$numberFlushes%04d"
+              val fos = new FileOutputStream(if (newCsvOnFlush) fileWithSuffix else captureUuidFilename)
+              new PrintWriter(fos, false)
+            }
+          }
+          if (newCsvOnFlush || firstFlush) {
+            uuidWriter.println(auditUuidsHeader)
+          }
+          val sortedUuidList: List[AuditList] = uuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
+          sortedUuidList.foreach { e =>
+            uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified}")
+          }
+          uuidWriter.flush()
+          if (newCsvOnFlush) {
+            uuidWriter.close()
+            uuidWriter = null
+          }
+          flushCounter = 0L
+          numberFlushes += 1L
+          uuidList.clear()
+          firstFlush = false
         }
       }
     }
@@ -300,34 +341,39 @@ object Settings {
 
   def writeUuidsToFile(): Unit = {
     if (captureUuids) {
-      val writer = {
-        val fos = new FileOutputStream(captureUuidFilename)
-        new PrintWriter(fos, false)
+      if (uuidWriter == null) {
+        uuidWriter = {
+          val fileWithSuffix = f"$captureUuidFilename.$numberFlushes%04d"
+          val fos = new FileOutputStream(if (newCsvOnFlush) fileWithSuffix else captureUuidFilename)
+          new PrintWriter(fos, false)
+        }
       }
-      writer.println("name,uuid")
-      val uuidList: List[(Int, String)] = uuidMap.toList.sortBy(l => l._1)
-      uuidList.foreach { l =>
-        writer.println(s"${Settings.entityPrefix}${l._1},${l._2}")
+      if (newCsvOnFlush || firstFlush) {
+        uuidWriter.println(auditUuidsHeader)
       }
-      writer.flush()
-      writer.close()
+      val sortedUuidList: List[AuditList] = uuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
+      sortedUuidList.foreach { e =>
+        uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified}")
+      }
+      uuidWriter.flush()
+      uuidWriter.close()
+      numberFlushes += 1L
+      uuidList.clear()
+      firstFlush = false
     }
   }
 
 
-  val auditUuidsHeader = "collection,name,uuid,modified"
-
-  case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long)
 
   // key: uuid, value: collection
-  private var auditEntityCounter: Long = 0
-  private var lastAuditEntityCountPrinted: Long = 0
+  private var auditEntityCounter: Long = 0L
+  private var lastAuditEntityCountPrinted: Long = 0L
   private var auditUuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
   def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long): Unit = {
     if (captureAuditUuids) {
       auditUuidList.synchronized {
         auditUuidList += AuditList(collection, entityName, uuid, modified)
-        auditEntityCounter += 1
+        auditEntityCounter += 1L
         if (logEntityProgress && (auditEntityCounter >= lastAuditEntityCountPrinted + entityProgressCount)) {
           println(s"Entity: $auditEntityCounter")
           lastAuditEntityCountPrinted = auditEntityCounter
