@@ -307,7 +307,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         //filter for success, send to the index(optional), ack
         return masterObservable
             //take the max
-            .buffer(250, TimeUnit.MILLISECONDS, bufferSize)
+            .buffer(indexProcessorFig.getBufferTime(), TimeUnit.MILLISECONDS, bufferSize)
             //map them to index results and return them
             .flatMap(indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
@@ -565,7 +565,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                 {
                                     final int bufferSize = messages.size();
                                     return handleMessages(messages)
-                                        .buffer(100, TimeUnit.MILLISECONDS, bufferSize) //TODO how to ack multiple messages via buffer
+                                        .buffer(indexProcessorFig.getBufferTime(), TimeUnit.MILLISECONDS, bufferSize) //TODO how to ack multiple messages via buffer
                                         .doOnNext(messagesToAck -> {
                                             if (messagesToAck.size() == 0) {
                                                 return;

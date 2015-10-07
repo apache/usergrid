@@ -90,6 +90,10 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key("elasticsearch.reindex.flush.interval")
     int getUpdateInterval();
 
+    @Default("100")
+    @Key("elasticsearch.buffer.time_ms")
+    int getBufferTime();
+
     @Default("1000")
     @Key( REINDEX_BUFFER_SIZE )
     int getReindexBufferSize();
