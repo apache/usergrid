@@ -255,6 +255,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             logger.debug("handleMessages with {} message", messages.size());
         }
 
+        final int bufferSize = messages.size();
         Observable<IndexEventResult> masterObservable = Observable.from(messages).flatMap(message -> {
             AsyncEvent event = null;
             try{
@@ -305,10 +306,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         //filter for success, send to the index(optional), ack
         return masterObservable
-            //remove unsuccessful
-            .filter(indexEventResult -> indexEventResult.getQueueMessage().isPresent())
             //take the max
-            .buffer( MAX_TAKE )
+            .buffer(250, TimeUnit.MILLISECONDS, bufferSize)
             //map them to index results and return them
             .flatMap(indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
@@ -322,8 +321,13 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
                 //ack after successful completion of the operation.
                 return indexProducer.put(combined)
+                    //change observable type
                     .flatMap(indexOperationMessage -> Observable.from(indexEventResults))
+                        //remove unsuccessful
+                    .filter(indexEventResult -> indexEventResult.getQueueMessage().isPresent())
+                    //measure
                     .doOnNext(indexEventResult -> messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime()))
+                    //return the queue messages to ack
                     .map(result -> result.getQueueMessage().get());
 
             });
