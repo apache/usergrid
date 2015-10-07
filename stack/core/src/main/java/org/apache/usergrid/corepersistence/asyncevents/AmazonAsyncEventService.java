@@ -558,9 +558,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
                     })
                             //this won't block our read loop, just reads and proceeds
                             .flatMap(messages ->
-                                    handleMessages(messages)
-                                        .buffer(MAX_TAKE)
+                                {
+                                    final int bufferSize = messages.size();
+                                    return handleMessages(messages)
+                                        .buffer(100, TimeUnit.MILLISECONDS, bufferSize) //TODO how to ack multiple messages via buffer
                                         .doOnNext(messagesToAck -> {
+                                            if (messagesToAck.size() == 0) {
+                                                return;
+                                            }
                                             try {
                                                 //ack each message, but only if we didn't error.
                                                 ack(messagesToAck);
@@ -569,7 +574,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                                 //do not rethrow so we can process all of them
                                             }
                                         })
-                                        .flatMap(messagesToAck -> Observable.from(messagesToAck))
+                                        .flatMap(messagesToAck -> Observable.from(messagesToAck));
+                                }
                             );
 
             //start in the background
