@@ -262,36 +262,44 @@ public class AmazonAsyncEventService implements AsyncEventService {
             }catch (ClassCastException cce){
                 logger.error("Failed to deserialize message body",cce);
             }
-            logger.debug("Processing {} event", event);
 
             if (event == null) {
                 logger.error("AsyncEvent type or event is null!");
-                return Observable.just(new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent()));
+                return Observable.just(new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent(),System.currentTimeMillis()));
             }
+
+            final AsyncEvent thisEvent = event;
+            if(logger.isDebugEnabled()) {
+                logger.debug("Processing {} event", event);
+            }
+
             try {
+                Observable<IndexOperationMessage> indexoperationObservable;
                 //merge each operation to a master observable;
                 if (event instanceof EdgeDeleteEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEdgeDelete(queueMessage));
+                    indexoperationObservable = handleEdgeDelete(message);
                 } else if (event instanceof EdgeIndexEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEdgeIndex(queueMessage));
+                    indexoperationObservable = handleEdgeIndex(message);
                 } else if (event instanceof EntityDeleteEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEntityDelete(queueMessage));
+                    indexoperationObservable = handleEntityDelete(message);
                 } else if (event instanceof EntityIndexEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEntityIndexUpdate(queueMessage));
+                    indexoperationObservable = handleEntityIndexUpdate(message);
                 } else if (event instanceof InitializeApplicationIndexEvent) {
                     //does not return observable
-                    handleInitializeApplicationIndex(message);
-                    return Observable.just(new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent()));
+                    handleInitializeApplicationIndex(event,message);
+                    indexoperationObservable = Observable.just(new IndexOperationMessage());
                 } else {
-                    logger.error("Unknown EventType: {}", event);//TODO: print json instead
-                    return Observable.just(new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent()));
+                    throw new Exception("Unknown EventType");//TODO: print json instead
                 }
-            } catch (Exception e) {
-                logger.error("Failed to index entity", e, message);
-                return Observable.just(new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent()));
-            } finally {
-                messageCycle.update(System.currentTimeMillis() - event.getCreationTime());
 
+                //return type that can be indexed and ack'd later
+                return indexoperationObservable
+                    .map(indexOperationMessage ->
+                            new IndexEventResult(Optional.fromNullable(message), Optional.fromNullable(indexOperationMessage),thisEvent.getCreationTime())
+                    );
+            } catch (Exception e) {
+                logger.error("Failed to index message: " + message.getMessageId(), e, message);
+                return Observable.just(new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(), event.getCreationTime()));
             }
         });
 
@@ -315,23 +323,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 //ack after successful completion of the operation.
                 return indexProducer.put(combined)
                     .flatMap(indexOperationMessage -> Observable.from(indexEventResults))
+                    .doOnNext(indexEventResult -> messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime()))
                     .map(result -> result.getQueueMessage().get());
 
             });
 
-    }
-
-    //transform index operation to
-    private Observable<IndexEventResult> handleIndexOperation(QueueMessage queueMessage,
-                                                              Func1<QueueMessage, Observable<IndexOperationMessage>> operation
-    ){
-        try{
-            return operation.call(queueMessage)
-                .map(indexOperationMessage -> new IndexEventResult(Optional.fromNullable(queueMessage), Optional.fromNullable(indexOperationMessage)));
-        }catch (Exception e){
-            logger.error("failed to run index",e);
-            return Observable.just( new IndexEventResult(Optional.fromNullable(queueMessage), Optional.<IndexOperationMessage>absent()));
-        }
     }
 
 
@@ -479,11 +475,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    public void handleInitializeApplicationIndex(final QueueMessage message) {
+    public void handleInitializeApplicationIndex(final AsyncEvent event, final QueueMessage message) {
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleInitializeApplicationIndex");
-
-        final AsyncEvent event = (AsyncEvent) message.getBody();
-        Preconditions.checkNotNull( message, "QueueMessage Body cannot be null for handleInitializeApplicationIndex" );
         Preconditions.checkArgument(event instanceof InitializeApplicationIndexEvent, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getClass()));
 
         final InitializeApplicationIndexEvent initializeApplicationIndexEvent =
@@ -492,7 +485,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final IndexLocationStrategy indexLocationStrategy = initializeApplicationIndexEvent.getIndexLocationStrategy();
         final EntityIndex index = entityIndexFactory.createEntityIndex( indexLocationStrategy );
         index.initialize();
-        ack( message );
     }
 
     /**
@@ -607,14 +599,17 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public class IndexEventResult{
         private final Optional<QueueMessage> queueMessage;
         private final Optional<IndexOperationMessage> indexOperationMessage;
+        private final long creationTime;
 
 
-        public IndexEventResult(Optional<QueueMessage> queueMessage, Optional<IndexOperationMessage> indexOperationMessage ){
+        public IndexEventResult(Optional<QueueMessage> queueMessage, Optional<IndexOperationMessage> indexOperationMessage, long creationTime){
 
             this.queueMessage = queueMessage;
             this.indexOperationMessage = indexOperationMessage;
 
+            this.creationTime = creationTime;
         }
+
 
         public Optional<QueueMessage> getQueueMessage() {
             return queueMessage;
@@ -622,6 +617,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         public Optional<IndexOperationMessage> getIndexOperationMessage() {
             return indexOperationMessage;
+        }
+
+        public long getCreationTime() {
+            return creationTime;
         }
     }
 }
