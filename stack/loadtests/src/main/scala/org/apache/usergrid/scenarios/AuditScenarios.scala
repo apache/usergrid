@@ -33,6 +33,7 @@ object AuditScenarios {
   //The value for the cursor
   val SessionVarCursor: String = "cursor"
   val SessionVarUuid: String = "entityUuid"
+  val SessionVarDeletedUuid: String = "deletedUuid"
   val SessionVarCollectionName: String = "collectionName"
   val SessionVarCollectionEntities: String = "collectionEntities"
 
@@ -112,6 +113,23 @@ object AuditScenarios {
       session
     }
 
+  val deleteAuditedEntity = exec(
+    http("DELETE audited entity")
+      .delete("/${collectionName}/${uuid}")
+      .headers(Headers.authToken)
+      .check(extractCreateUuid(SessionVarDeletedUuid)))
+      .exec(session => {
+        val uuid = session(SessionVarDeletedUuid).as[String]
+
+        if (uuid != null && uuid != "") {
+          // successful
+          Settings.incAuditEntryDeleteSuccess()
+        } else {
+          Settings.incAuditEntryDeleteFailure()
+        }
+
+        session
+      })
 
   val getCollectionEntity = exec(
     http("GET collection entity")
@@ -140,6 +158,11 @@ object AuditScenarios {
 
         session
       })
+      .doIf(session => Settings.deleteAfterSuccessfulAudit && session("count").as[String].toInt == 1) {
+        // tryMax(Settings.retryCount) {
+          exec(deleteAuditedEntity)
+        // }
+      }
 
   val verifyCollections = scenario("Verify collections")
     .exec(injectTokenIntoSession())

@@ -186,6 +186,7 @@ object Settings {
   // unlimited feed forces interleaved worker feed
   val interleavedWorkerFeed:Boolean = if (unlimitedFeed) true else initBoolSetting(ConfigProperties.InterleavedWorkerFeed)
   val newCsvOnFlush:Boolean = initBoolSetting(ConfigProperties.NewCsvOnFlush)
+  val deleteAfterSuccessfulAudit:Boolean = initBoolSetting(ConfigProperties.DeleteAfterSuccessfulAudit)
 
   val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
   val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
@@ -429,6 +430,8 @@ object Settings {
   private val countAuditSuccess = new AtomicInteger(0)
   private val countAuditNotFound = new AtomicInteger(0)
   private val countAuditBadResponse = new AtomicInteger(0)
+  private val countAuditEntryDeleteSuccess = new AtomicInteger(0)
+  private val countAuditEntryDeleteFailure = new AtomicInteger(0)
 
   def incAuditSuccess(): Unit = {
     countAuditSuccess.incrementAndGet()
@@ -442,11 +445,21 @@ object Settings {
     countAuditBadResponse.incrementAndGet()
   }
 
+  def incAuditEntryDeleteSuccess(): Unit = {
+    countAuditEntryDeleteSuccess.incrementAndGet()
+  }
+
+  def incAuditEntryDeleteFailure(): Unit = {
+    countAuditEntryDeleteFailure.incrementAndGet()
+  }
+
   def printAuditResults(): Unit = {
     if (scenarioType == ScenarioType.AuditVerifyCollectionEntities) {
       val countSuccess = countAuditSuccess.get
       val countNotFound = countAuditNotFound.get
       val countBadResponse = countAuditBadResponse.get
+      val countDeleteSuccess = countAuditEntryDeleteSuccess.get
+      val countDeleteFailure = countAuditEntryDeleteFailure.get
       val countTotal = countSuccess + countNotFound + countBadResponse
 
       val seconds = ((testEndTime - testStartTime) / 1000).toInt
@@ -463,6 +476,10 @@ object Settings {
       println(s"Successful:          $countSuccess")
       println(s"Not Found:           $countNotFound")
       println(s"Bad Response:        $countBadResponse")
+      if (deleteAfterSuccessfulAudit) {
+        println(s"Delete Successes:    $countDeleteSuccess")
+        println(s"Delete Failures:     $countDeleteFailure")
+      }
       println(s"Total:               $countTotal")
       println()
       println(s"Start Timestamp(ms): $testStartTime")
