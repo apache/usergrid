@@ -250,7 +250,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    private Observable<QueueMessage> handleMessages( final List<QueueMessage> messages ) {
+    private List<QueueMessage> handleMessages( final List<QueueMessage> messages ) {
         if (logger.isDebugEnabled()) {
             logger.debug("handleMessages with {} message", messages.size());
         }
@@ -305,9 +305,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
         });
 
         //filter for success, send to the index(optional), ack
-        return masterObservable
+        return (List<QueueMessage>) masterObservable
             //take the max
-            .buffer(indexProcessorFig.getBufferTime(), TimeUnit.MILLISECONDS, bufferSize)
+            .buffer(bufferSize)
             //map them to index results and return them
             .flatMap(indexEventResults -> {
                 IndexOperationMessage combined = new IndexOperationMessage();
@@ -330,7 +330,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
                     //return the queue messages to ack
                     .map(result -> result.getQueueMessage().get());
 
-            });
+            })
+            .doOnError(t -> logger.error("Failed to process queuemessages",t))
+            .toBlocking().lastOrDefault(null);
 
     }
 
@@ -520,7 +522,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private void startWorker() {
         synchronized (mutex) {
 
-            Observable<QueueMessage> consumer =
+            Observable<List<QueueMessage>> consumer =
                     Observable.create(new Observable.OnSubscribe<List<QueueMessage>>() {
                         @Override
                         public void call(final Subscriber<? super List<QueueMessage>> subscriber) {
@@ -561,26 +563,28 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         }
                     })
                             //this won't block our read loop, just reads and proceeds
-                            .flatMap(messages ->
-                                {
-                                    final int bufferSize = messages.size();
-                                    return handleMessages(messages)
-                                        .buffer(indexProcessorFig.getBufferTime(), TimeUnit.MILLISECONDS, bufferSize) //TODO how to ack multiple messages via buffer
-                                        .doOnNext(messagesToAck -> {
-                                            if (messagesToAck.size() == 0) {
-                                                return;
-                                            }
-                                            try {
-                                                //ack each message, but only if we didn't error.
-                                                ack(messagesToAck);
-                                            } catch (Exception e) {
-                                                logger.error("failed to ack messages to sqs", messagesToAck.get(0).getMessageId(), e);
-                                                //do not rethrow so we can process all of them
-                                            }
-                                        })
-                                        .flatMap(messagesToAck -> Observable.from(messagesToAck));
+                            .map(messages ->
+                            {
+                                if (messages == null || messages.size() == 0) {
+                                    return null;
                                 }
-                            );
+
+                                try {
+
+                                    List<QueueMessage> messagesToAck = handleMessages(messages);
+
+                                    if (messagesToAck == null || messagesToAck.size() == 0) {
+                                        return messagesToAck;
+                                    }
+                                    //ack each message, but only if we didn't error.
+                                    ack(messagesToAck);
+                                    return messagesToAck;
+                                } catch (Exception e) {
+                                    logger.error("failed to ack messages to sqs", messages.get(0).getMessageId(), e);
+                                    return null;
+                                    //do not rethrow so we can process all of them
+                                }
+                            });
 
             //start in the background
 
