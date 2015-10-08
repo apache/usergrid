@@ -305,7 +305,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         });
 
         //filter for success, send to the index(optional), ack
-        return (List<QueueMessage>) masterObservable
+        return masterObservable
             //take the max
             .buffer(bufferSize)
             //map them to index results and return them
@@ -328,12 +328,12 @@ public class AmazonAsyncEventService implements AsyncEventService {
                     //measure
                     .doOnNext(indexEventResult -> messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime()))
                     //return the queue messages to ack
-                    .map(result -> result.getQueueMessage().get());
+                    .map(result -> result.getQueueMessage().get())
+                    .toList();
 
             })
             .doOnError(t -> logger.error("Failed to process queuemessages",t))
             .toBlocking().lastOrDefault(null);
-
     }
 
 
