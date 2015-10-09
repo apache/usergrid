@@ -23,7 +23,6 @@ package org.apache.usergrid.corepersistence.asyncevents;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -73,7 +72,6 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 
@@ -251,9 +249,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    private List<QueueMessage> handleMessages( final List<QueueMessage> messages ) {
+    /**
+     * calls the event handlers and returns a result with information on whether it needs to be ack'd and whether it needs to be indexed
+     * @param messages
+     * @return
+     */
+    private List<IndexEventResult> callEventHandlers(final List<QueueMessage> messages) {
         if (logger.isDebugEnabled()) {
-            logger.debug("handleMessages with {} message", messages.size());
+            logger.debug("callEventHandlers with {} message", messages.size());
         }
 
         Observable<IndexEventResult> masterObservable = Observable.from(messages).map(message -> {
@@ -310,42 +313,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final List<IndexEventResult> indexEventResults = masterObservable
             .collect(() -> new ArrayList<IndexEventResult>(), (list,indexEventResult) -> list.add(indexEventResult) )
             .toBlocking().lastOrDefault(null);
-        //if nothing came back then return null
-        if(indexEventResults==null){
-            return null;
-        }
 
-        final IndexOperationMessage combined = new IndexOperationMessage();
 
-        //stream and filer the messages
-        List<QueueMessage> messagesToAck = indexEventResults.stream()
-            .map(indexEventResult -> {
-                //collect into the index submission
-                if (indexEventResult.getIndexOperationMessage().isPresent()) {
-                    combined.ingest(indexEventResult.getIndexOperationMessage().get());
-                }
-                return indexEventResult;
-            })
-            //filter out the ones that need to be ack'd
-            .filter(indexEventResult -> indexEventResult.getQueueMessage().isPresent())
-            .map(indexEventResult -> {
-                //record the cycle time
-                messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime());
-                return indexEventResult;
-            })
-                //ack after successful completion of the operation.
-            .map(result -> result.getQueueMessage().get())
-            .collect(Collectors.toList());
-
-        //send the batch
-        //TODO: should retry?
-        try {
-            indexProducer.put(combined).toBlocking().lastOrDefault(null);
-        }catch (Exception e){
-            logger.error("Failed to submit to index producer",messages,e);
-            throw e;
-        }
-        return messagesToAck;
+        return indexEventResults;
     }
 
 
@@ -582,9 +552,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                 }
 
                                 try {
-
-                                    List<QueueMessage> messagesToAck = handleMessages(messages);
-
+                                    List<IndexEventResult> indexEventResults = callEventHandlers(messages);
+                                    List<QueueMessage> messagesToAck = submitToIndex(indexEventResults);
                                     if (messagesToAck == null || messagesToAck.size() == 0) {
                                         logger.error("No messages came back from the queue operation",messages);
                                         return messagesToAck;
@@ -608,6 +577,50 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
             subscriptions.add(subscription);
         }
+    }
+
+    /**
+     * Submit results to index and return the queue messages to be ack'd
+     * @param indexEventResults
+     * @return
+     */
+    private List<QueueMessage> submitToIndex( List<IndexEventResult> indexEventResults) {
+        //if nothing came back then return null
+        if(indexEventResults==null){
+            return null;
+        }
+
+        final IndexOperationMessage combined = new IndexOperationMessage();
+
+        //stream and filer the messages
+        List<QueueMessage> messagesToAck = indexEventResults.stream()
+            .map(indexEventResult -> {
+                //collect into the index submission
+                if (indexEventResult.getIndexOperationMessage().isPresent()) {
+                    combined.ingest(indexEventResult.getIndexOperationMessage().get());
+                }
+                return indexEventResult;
+            })
+                //filter out the ones that need to be ack'd
+            .filter(indexEventResult -> indexEventResult.getQueueMessage().isPresent())
+            .map(indexEventResult -> {
+                //record the cycle time
+                messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime());
+                return indexEventResult;
+            })
+                //ack after successful completion of the operation.
+            .map(result -> result.getQueueMessage().get())
+            .collect(Collectors.toList());
+
+        //send the batch
+        //TODO: should retry?
+        try {
+            indexProducer.put(combined).toBlocking().lastOrDefault(null);
+        }catch (Exception e){
+            logger.error("Failed to submit to index producer",e);
+            throw e;
+        }
+        return messagesToAck;
     }
 
     public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
