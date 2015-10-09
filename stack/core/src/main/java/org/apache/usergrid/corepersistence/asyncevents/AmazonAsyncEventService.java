@@ -307,7 +307,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
             }
         });
         //resolve the list and return it.
-        final List<IndexEventResult> indexEventResults = masterObservable.toList().toBlocking().lastOrDefault(null);
+        final List<IndexEventResult> indexEventResults = masterObservable
+            .collect(() -> new ArrayList<IndexEventResult>(), (list,indexEventResult) -> list.add(indexEventResult) )
+            .toBlocking().lastOrDefault(null);
         //if nothing came back then return null
         if(indexEventResults==null){
             return null;
@@ -318,13 +320,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
         //stream and filer the messages
         List<QueueMessage> messagesToAck = indexEventResults.stream()
             .map(indexEventResult -> {
+                //collect into the index submission
                 if (indexEventResult.getIndexOperationMessage().isPresent()) {
                     combined.ingest(indexEventResult.getIndexOperationMessage().get());
                 }
                 return indexEventResult;
             })
+            //filter out the ones that need to be ack'd
             .filter(indexEventResult -> indexEventResult.getQueueMessage().isPresent())
             .map(indexEventResult -> {
+                //record the cycle time
                 messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime());
                 return indexEventResult;
             })
@@ -333,8 +338,13 @@ public class AmazonAsyncEventService implements AsyncEventService {
             .collect(Collectors.toList());
 
         //send the batch
-        indexProducer.put(combined).toBlocking().lastOrDefault(null);
-
+        //TODO: should retry?
+        try {
+            indexProducer.put(combined).toBlocking().lastOrDefault(null);
+        }catch (Exception e){
+            logger.error("Failed to submit to index producer",messages,e);
+            throw e;
+        }
         return messagesToAck;
     }
 
@@ -584,10 +594,9 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     }
                                     //ack each message, but only if we didn't error.
                                     ack(messagesToAck);
-                                    //messagesToAck.stream().forEach(message -> ack(message));
                                     return messagesToAck;
                                 } catch (Exception e) {
-                                    logger.error("failed to ack messages to sqs", messages.get(0).getMessageId(), e);
+                                    logger.error("failed to ack messages to sqs", messages, e);
                                     return null;
                                     //do not rethrow so we can process all of them
                                 }
