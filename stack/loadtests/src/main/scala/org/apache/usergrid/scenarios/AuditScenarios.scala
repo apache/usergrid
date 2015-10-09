@@ -135,6 +135,7 @@ object AuditScenarios {
     http("GET collection entity")
       .get("/${collectionName}?ql=uuid=${uuid}")
       .headers(Headers.authToken)
+      .headers(Headers.auditRegionHeaders)
       .check(status.is(200),jsonPath("$.count").optional.saveAs("count"),extractAuditEntities(SessionVarCollectionEntities)))
       .exec(session => {
         val count = session("count").as[String].toInt

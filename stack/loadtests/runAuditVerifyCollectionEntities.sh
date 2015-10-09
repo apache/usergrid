@@ -28,16 +28,18 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #RETRY_COUNT=
 
 DELETE_AFTER_SUCCESSFUL_AUDIT=false
+AUDIT_REGION=
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [FAILED_UUID_FILENAME [DELETE_AFTER_SUCCESSFUL_AUDIT(true/false)]]"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [FAILED_UUID_FILENAME [DELETE_AFTER_SUCCESSFUL_AUDIT(true/false)[AUDIT_REGION]]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
 AUDIT_UUID_FILENAME="$3"
 FAILED_UUID_FILENAME="$4"
 [ "$#" -ge 5 ] && DELETE_AFTER_SUCCESSFUL_AUDIT="$5"
+[ "$#" -ge 6 ] && AUDIT_REGION="$6"
 
 shift $#
 
@@ -63,5 +65,6 @@ mvn gatling:execute \
 -DfailedUuidFilename=${FAILED_UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -DdeleteAfterSuccessfulAudit=${DELETE_AFTER_SUCCESSFUL_AUDIT} \
+-DauditRegion=${AUDIT_REGION} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.AuditSimulation
 
