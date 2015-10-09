@@ -82,7 +82,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private static final Logger logger = LoggerFactory.getLogger(AmazonAsyncEventService.class);
 
     // SQS maximum receive messages is 10
-    private static final int MAX_TAKE = 10;
+    public static int MAX_TAKE = 10;
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
 
     private final QueueManager queue;
