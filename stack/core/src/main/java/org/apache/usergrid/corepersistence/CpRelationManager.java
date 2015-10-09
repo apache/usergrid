@@ -126,9 +126,10 @@ public class CpRelationManager implements RelationManager {
 
     public CpRelationManager( final ManagerCache managerCache,
                               final AsyncEventService indexService, final CollectionService collectionService,
-                              final ConnectionService connectionService, final EntityManager em,
+                              final ConnectionService connectionService,
+                              final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
-                              final EntityRef headEntity ) {
+                              final EntityRef headEntity) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -488,11 +489,9 @@ public class CpRelationManager implements RelationManager {
                 Entity itemEntity = em.get( itemRef );
                 if ( itemEntity != null ) {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole(roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                     return;
                 }
-                em.delete( itemEntity );
-                return;
             }
             em.delete( itemRef );
             return;
@@ -527,15 +526,11 @@ public class CpRelationManager implements RelationManager {
          *
          */
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        final EntityIndexBatch batch = ei.createBatch();
 
-        // remove item from collection index
-        SearchEdge indexScope = createCollectionSearchEdge( cpHeadEntity.getId(), collectionName );
+        //TODO: this should not happen here, needs to go to  SQS
+        //indexProducer.put(batch).subscribe();
+        indexService.queueEntityDelete(applicationScope,memberEntity.getId());
 
-        batch.deindex( indexScope, memberEntity );
-
-        managerCache.getIndexProducer().put( batch.build()).toBlocking().lastOrDefault(null); // this should throw an exception
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -549,7 +544,7 @@ public class CpRelationManager implements RelationManager {
                         em.get( new SimpleEntityRef( memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
 
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole( roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                 }
             }
         }

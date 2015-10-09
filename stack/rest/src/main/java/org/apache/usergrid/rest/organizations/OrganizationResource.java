@@ -19,22 +19,9 @@ package org.apache.usergrid.rest.organizations;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.ApplicationResource;
@@ -48,6 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.UUID;
 
 
 @Component("org.apache.usergrid.rest.organizations.OrganizationResource")
@@ -106,7 +99,7 @@ public class OrganizationResource extends AbstractContextResource {
         }
 
         // don't look up app if request is a PUT because a PUT can be used to restore a deleted app
-        if ( !hc.getRequest().getMethod().equalsIgnoreCase("PUT") ) {
+        if ( httpServletRequest.getMethod().equalsIgnoreCase("PUT") ) {
 
             BiMap<UUID, String> apps = management.getApplicationsForOrganization(organizationId);
             if (apps.get(applicationId) == null) {
@@ -184,11 +177,8 @@ public class OrganizationResource extends AbstractContextResource {
 
     @DELETE
     @RequireOrganizationAccess
-    public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
-
-
+    public void executeDelete(
+        @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
         throw new NotImplementedException( "Organization delete is not allowed yet" );
     }
 }

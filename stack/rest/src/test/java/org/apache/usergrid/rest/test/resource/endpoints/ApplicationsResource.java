@@ -50,8 +50,8 @@ public class ApplicationsResource extends NamedResource {
      * Delete this application.
      */
     public ApiResponse delete() {
-        return getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
+        return getTarget( true ).request()
+            //.type( MediaType.APPLICATION_JSON_TYPE )
             .accept( MediaType.APPLICATION_JSON )
             .delete( ApiResponse.class );
     }
@@ -65,8 +65,8 @@ public class ApplicationsResource extends NamedResource {
      * Used to get an application entity.
      */
     public ApiResponse get() {
-        return getResource(true)
-            .type(MediaType.APPLICATION_JSON_TYPE)
+        return getTarget(true).request()
+            //.type(MediaType.APPLICATION_JSON_TYPE)
             .accept( MediaType.APPLICATION_JSON )
             .get(ApiResponse.class);
     }

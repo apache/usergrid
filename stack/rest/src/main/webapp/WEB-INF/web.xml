@@ -40,7 +40,6 @@
         <filter-name>swaggerFilter</filter-name>
         <filter-class>org.apache.usergrid.rest.SwaggerServlet</filter-class>
     </filter>
-
     <filter-mapping>
         <filter-name>swaggerFilter</filter-name>
         <url-pattern>/resources.json</url-pattern>
@@ -79,43 +78,71 @@
 
     <filter>
         <filter-name>Usergrid REST API Server</filter-name>
-        <filter-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</filter-class>
+        <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
+
         <init-param>
-            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-name>jersey.config.servlet.filter.contextPath</param-name>
+            <param-value>/</param-value>
+        </init-param>
+
+        <!-- Look for resources, providers and other annotated JAX-RS things in rest package -->
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>org.apache.usergrid.rest</param-value>
         </init-param>
+
+        <!-- Look recursively in all packages -->
         <init-param>
-            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-name>jersey.config.server.provider.scanning.recursive</param-name>
             <param-value>true</param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-            <param-value>org.apache.usergrid.rest.filters.TracingFilter,org.apache.usergrid.rest.filters.MeteringFilter,org.apache.usergrid.rest.filters.JSONPCallbackFilter,org.apache.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.apache.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.apache.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter</param-value>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>
+
+                org.apache.usergrid.rest.security.SecuredResourceFilterFactory,
+                org.glassfish.jersey.server.mvc.jsp.JspMvcFeature,
+                org.glassfish.jersey.media.multipart.MultiPartFeature
+
+                <!-- Currently, we do not use the JAX-RS annotations @PermitAll, @DenyAll, @RolesAllowed -->
+                <!-- , org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature -->
+
+            </param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-            <param-value>org.apache.usergrid.rest.filters.TracingFilter,org.apache.usergrid.rest.security.CrossOriginRequestFilter,org.apache.usergrid.rest.filters.MeteringFilter</param-value>
-        </init-param>
-        <init-param>
-            <param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
-            <param-value>org.apache.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory</param-value>
-        </init-param>
-        <init-param>
-            <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
-            <param-value>true</param-value>
-        </init-param>
-        <init-param>
-            <param-name>com.sun.jersey.config.property.JSPTemplatesBasePath</param-name>
+            <param-name>jersey.config.server.mvc.templateBasePath.jsp</param-name>
             <param-value>/WEB-INF/jsp</param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
+            <param-name>jersey.config.server.wadl.disableWadl</param-name>
+            <param-value>true</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>jersey.config.servlet.filter.staticContentRegex</param-name>
             <param-value>/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\.ico))</param-value>
         </init-param>
+
         <init-param>
-            <param-name>com.sun.jersey.config.property.MediaTypeMappings</param-name>
-            <param-value>json:application/json,js:application/javascript<!-- Temporarily removed until more testing can occur,csv:text/csv --></param-value>
+            <param-name>jersey.config.server.mediaTypeMappings</param-name>
+            <param-value>json:application/json,js:application/javascript</param-value>
         </init-param>
+
+        <!-- Have not had success with this yet:
+        <init-param>
+            <param-name>jersey.config.server.tracing.threshold</param-name>
+            <param-value>TRACE</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>jersey.config.server.tracing.type</param-name>
+            <param-value>ALL</param-value>
+        </init-param>
+        -->
+
     </filter>
 
     <filter-mapping>

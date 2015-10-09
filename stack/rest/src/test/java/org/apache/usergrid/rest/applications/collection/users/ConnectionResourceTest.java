@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,8 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+
+import javax.ws.rs.NotFoundException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -82,9 +85,8 @@ public class ConnectionResourceTest extends AbstractRestIT {
                 .get();
             fail( "This should throw an exception" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
-            assertEquals( 404, uie.getResponse().getStatus() );
         }
     }
 
@@ -172,9 +174,8 @@ public class ConnectionResourceTest extends AbstractRestIT {
             thing2 = this.app().collection( "things" ).entity( thing2 ).get();
             fail( "This should throw an exception" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
-            assertEquals( 404, uie.getResponse().getStatus() );
         }
     }
 
@@ -208,9 +209,8 @@ public class ConnectionResourceTest extends AbstractRestIT {
             thing1 = this.app().collection( "things" ).entity( thing1 ).get();
             fail( "This should throw an exception" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
-            assertEquals( 404, uie.getResponse().getStatus() );
         }
     }
 

@@ -31,8 +31,10 @@ import org.apache.usergrid.cassandra.AvailablePortFinder;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import com.google.common.io.Files;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 
 
 /**
@@ -173,9 +175,9 @@ public class TomcatRuntime extends ExternalResource {
             while ( count++ < 30 ) {
                 try {
                     Thread.sleep( 1000 );
-                    Client c = Client.create();
-                    WebResource wr = c.resource( url );
-                    wr.get( String.class );
+                    Client c = ClientBuilder.newClient();
+                    WebTarget wr = c.target( url );
+                    wr.request().get( String.class );
                     log.info( "Tomcat is started." );
                     started = true;
                     break;

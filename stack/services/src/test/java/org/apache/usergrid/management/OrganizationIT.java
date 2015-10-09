@@ -62,12 +62,13 @@ public class OrganizationIT {
 
     @Test
     public void testCreateOrganization() throws Exception {
-//        UserInfo user =
-//                setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
-//        assertNotNull( user );
+//     UserInfo user =
+//     setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
+//     assertNotNull( user );
 
         final String orgName =  uniqueOrg();
-        OrganizationOwnerInfo organization = newOrgAppAdminRule.createOwnerAndOrganization( orgName, uniqueUsername(), uniqueEmail(),"Ed Anuff", "test" ); //setup.getMgmtSvc().getOrganizationsForAdminUser( organization.getOwner().getUuid() );
+        OrganizationOwnerInfo organization =
+            newOrgAppAdminRule.createOwnerAndOrganization( orgName, uniqueUsername(), uniqueEmail(),"Ed Anuff", "test" );             //setup.getMgmtSvc().getOrganizationsForAdminUser( organization.getOwner().getUuid() );
         //createOrganization( orgName, user, false );
         assertNotNull( organization );
 
@@ -80,13 +81,15 @@ public class OrganizationIT {
             organization.getOrganization().getUuid());
         assertEquals("wrong number of users", 1, users.size());
 
-        ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication(organization.getOrganization().getUuid(), "ed-application");
+        ApplicationInfo applicationInfo = setup.getMgmtSvc()
+            .createApplication(organization.getOrganization().getUuid(), "ed-application");
         assertNotNull(applicationInfo.getId());
 
 
         setup.getEntityIndex().refresh(applicationInfo.getId());
 
-        Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getOrganization().getUuid() );
+        Map<UUID, String> applications = setup.getMgmtSvc()
+            .getApplicationsForOrganization( organization.getOrganization().getUuid() );
         assertEquals( "wrong number of applications", 1, applications.size() );
 
         OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationInfo.getId() );
@@ -100,7 +103,8 @@ public class OrganizationIT {
 
         setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
-        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( organization.getOwner().getUuid().toString(), "test" );
+        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials(
+            organization.getOwner().getUuid().toString(), "test" );
         assertNotNull( u );
 
         String token = setup.getMgmtSvc().getAccessTokenForAdminUser( organization.getOwner().getUuid(), 0 );

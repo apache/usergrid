@@ -20,25 +20,22 @@
 
 package org.apache.usergrid.rest;
 
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 /**
@@ -65,12 +62,13 @@ public class IndexResourceIT extends AbstractRestIT {
         assertNotNull( collectionResponse );
 
         //try reindex endpoint with ALl mixed case characters
-        Token superUserToken = clientSetup.getRestClient().management().token().get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
+        Token superUserToken = clientSetup.getRestClient().management().token()
+            .get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
 
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "access_token",superUserToken.getAccessToken());
         ApiResponse result = clientSetup.getRestClient()
-            .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/StOrElaTloNs" )
+            .pathResource( "system/index/rebuild/" + clientSetup.getAppUuid() + "/StOrElaTloNs" )
             .post( false, ApiResponse.class, null, queryParameters, true );
 
         assertNotNull(result);
@@ -81,16 +79,20 @@ public class IndexResourceIT extends AbstractRestIT {
         result = clientSetup.getRestClient()
             .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/storelatlons" )
             .post( false, ApiResponse.class,null,queryParameters,true);
+        String status = result.getProperties().get("jobId").toString();
 
         assertNotNull( result );
 
-        WebResource res = clientSetup.getRestClient()
-            .pathResource( "system/index/rebuild/"+result.getProperties().get("jobId").toString() ).getResource();
-        String status = result.getProperties().get("jobId").toString();
-        //added httpBasicauth filter to all setup calls because they all do verification this way.
-        HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword() );
-        res.addFilter( httpBasicAuthFilter );
-        result = res.get(ApiResponse.class);
+        WebTarget res = clientSetup.getRestClient()
+            .pathResource( "system/index/rebuild/" + result.getProperties()
+                .get( "jobId" ).toString() )
+            .getTarget();
+
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+            .credentials( "superuser", "superpassword" ).build();
+
+        result = res.register( feature ).request().get( ApiResponse.class );
+
         assertNotNull( result );
         assertEquals(status,result.getProperties().get("jobId").toString());
 
@@ -113,14 +115,15 @@ public class IndexResourceIT extends AbstractRestIT {
         org.apache.usergrid.rest.test.resource.model.ApiResponse node = null;
         try {
 
-            WebResource resource = this.clientSetup.getRestClient().pathResource("/system/index/" + appId).getResource();
+            WebTarget resource = this.clientSetup.getRestClient().pathResource("/system/index/" + appId).getTarget();
 
-            //added httpBasicauth filter to all setup calls because they all do verification this way.
-            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword() );
-            resource.addFilter( httpBasicAuthFilter );
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+                .credentials( "superuser", "superpassword" ).build();
 
-            node = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+            node = resource.register( feature ).request()
+                .accept( MediaType.APPLICATION_JSON )
                 .get( org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+
         } catch (Exception e) {
             LOG.error("failed", e);
             fail(e.toString());

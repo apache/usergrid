@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 
 import javax.ws.rs.DefaultValue;
@@ -26,14 +26,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-
-import com.sun.jersey.api.json.JSONWithPadding;
 
 
 @Component
@@ -54,9 +55,10 @@ public class DatabaseResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @PUT
+    @JSONP
     @Path( "setup" )
-    public JSONWithPadding runDatabaseSetup( @Context UriInfo ui,
-                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public ApiResponse runDatabaseSetup( @Context UriInfo ui,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -70,15 +72,16 @@ public class DatabaseResource extends AbstractContextResource {
 
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireSystemAccess
     @PUT
+    @JSONP
     @Path( "bootstrap" )
-    public JSONWithPadding runSystemSetup( @Context UriInfo ui,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public ApiResponse runSystemSetup( @Context UriInfo ui,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -92,7 +95,7 @@ public class DatabaseResource extends AbstractContextResource {
 
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 }
 

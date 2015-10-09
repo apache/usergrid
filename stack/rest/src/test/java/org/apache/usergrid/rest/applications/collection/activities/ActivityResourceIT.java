@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications.collection.activities;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.persistence.index.utils.MapUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
@@ -28,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.utils.UUIDUtils;
+
+import javax.ws.rs.ClientErrorException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -87,7 +88,7 @@ public class ActivityResourceIT extends AbstractRestIT {
         // don't populate the user, it will use the currently authenticated user.
         try {
             groupActivityResource.post(activity);
-        }catch (UniformInterfaceException e)
+        }catch (ClientErrorException e)
         {
             throw e;
         }

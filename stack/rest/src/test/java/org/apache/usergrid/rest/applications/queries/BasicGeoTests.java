@@ -17,23 +17,18 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.junit.Test;
+
+import javax.ws.rs.ClientErrorException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.junit.Rule;
-import org.junit.Test;
-
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
-
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 /**
@@ -67,8 +62,8 @@ public class BasicGeoTests extends AbstractRestIT {
         try {
             node = this.app().collection( collectionType ).post( entityData ).getEntity();
         }
-        catch ( UniformInterfaceException e ) {
-            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+        catch ( ClientErrorException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().readEntity( String.class ) );
             fail( nodeError.get( "error" ).textValue() );
         }
 
@@ -105,8 +100,8 @@ public class BasicGeoTests extends AbstractRestIT {
         try {
             entity = this.app().collection( collectionType ).post( entityData ).getEntities().get(0);
         }
-        catch ( UniformInterfaceException e ) {
-            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+        catch ( ClientErrorException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().readEntity( String.class ) );
             fail( nodeError.get( "error" ).textValue() );
         }
 
@@ -121,7 +116,7 @@ public class BasicGeoTests extends AbstractRestIT {
         try {
             node = context.collection( collectionType ).get(entityName);
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
             fail( nodeError.get( "error" ).textValue() );
         }
@@ -139,7 +134,7 @@ public class BasicGeoTests extends AbstractRestIT {
             //entity.put(entityData);
 
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
             fail( nodeError.get( "error" ).textValue() );
         }
@@ -182,9 +177,9 @@ public class BasicGeoTests extends AbstractRestIT {
             node = this.app().collection( collectionType ).post( misspelledLatitudeEntityData ).getEntity();
             fail("System allowed misspelled location property - latitudee, which it should not");
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             //verify the correct error was returned
-            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode nodeError = mapper.readTree( e.getResponse().readEntity( String.class ) );
             assertEquals( "illegal_argument", nodeError.get( "error" ).textValue() );
         }
 
@@ -198,9 +193,9 @@ public class BasicGeoTests extends AbstractRestIT {
             node = this.app().collection( collectionType ).post( misspelledLongitudeEntityData ).getEntity();
             fail("System allowed misspelled location property - longitudee, which it should not");
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             //verify the correct error was returned
-            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode nodeError = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "illegal_argument", nodeError.get( "error" ).textValue() );
         }
 
@@ -229,9 +224,9 @@ public class BasicGeoTests extends AbstractRestIT {
             node = this.app().collection( collectionType ).post( latitudeOnlyEntityData ).getEntity();
             fail("System allowed location with only one point, latitude, which it should not");
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             //verify the correct error was returned
-            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode nodeError = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "illegal_argument", nodeError.get( "error" ).textValue() );
         }
 
@@ -245,9 +240,9 @@ public class BasicGeoTests extends AbstractRestIT {
             node = this.app().collection( collectionType ).post( notDoubleLatLonEntityData ).getEntity();
             fail("System allowed misspelled location values that are not doubles for latitude and longitude, which it should not");
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             //verify the correct error was returned
-            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode nodeError = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "illegal_argument", nodeError.get( "error" ).textValue() );
         }
 

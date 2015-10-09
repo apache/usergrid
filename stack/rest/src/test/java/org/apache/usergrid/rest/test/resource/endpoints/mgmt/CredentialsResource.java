@@ -19,7 +19,6 @@
  */
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
@@ -27,6 +26,7 @@ import org.apache.usergrid.rest.test.resource.model.Credentials;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -38,9 +38,10 @@ public class CredentialsResource extends NamedResource {
     }
 
     public Credentials get(final QueryParameters parameters, final boolean useToken) {
-        WebResource resource = getResource(useToken);
+        WebTarget resource = getTarget(useToken);
         resource = addParametersToResource(resource, parameters);
-        ApiResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+        ApiResponse response = resource.request()
+            .accept(MediaType.APPLICATION_JSON)
             .get(ApiResponse.class);
         return new Credentials(response);
     }

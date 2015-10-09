@@ -17,17 +17,21 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.representation.Form;
-import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
+
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -41,22 +45,22 @@ import java.util.Set;
  */
 public class NamedResource implements UrlResource {
 
-    public static String SLASH ="/" ;
+    public static String SLASH = "/";
 
     protected final String name;
     protected final ClientContext context;
-    /* Stores the path of the parent that called it.
-    i.e If we had a ApplicationResource ( an instance of a namedResource ) this would contain the OrganizationResource.
+
+    /**
+     * Stores the path of the parent that called it. i.e If we had a ApplicationResource
+     * (an instance of a namedResource) this would contain the OrganizationResource.
      */
     protected final UrlResource parent;
 
-
-    public NamedResource( final String name, final ClientContext context, final UrlResource parent ) {
+    public NamedResource(final String name, final ClientContext context, final UrlResource parent) {
         this.name = name;
         this.context = context;
         this.parent = parent;
     }
-
 
     @Override
     public String getPath() {
@@ -64,57 +68,64 @@ public class NamedResource implements UrlResource {
     }
 
     @Override
-    public WebResource getResource() {
-        return getResource(false);
+    public WebTarget getTarget() {
+        return getTarget(false);
     }
-    public WebResource getResource(boolean useToken) {
-        return getResource(useToken,null);
+
+    @Override
+    public ClientContext getContext() {
+        return context;
     }
-    public WebResource getResource(boolean useToken,Token token) {
-        WebResource resource = parent.getResource().path( getPath() );
-        token = token !=null ? token : this.context.getToken();
+
+    public WebTarget getTarget(boolean useToken) {
+        return getTarget(useToken, null);
+    }
+
+    public WebTarget getTarget(boolean useToken, Token token) {
+        WebTarget resource = parent.getTarget().path(getPath());
+        token = token != null ? token : this.context.getToken();
         //error checking
         if (token == null) {
             return resource;
         }
-        return  useToken    ? resource.queryParam("access_token",token.getAccessToken()) :  resource;
+        return useToken ? resource.queryParam("access_token", token.getAccessToken()) : resource;
     }
 
-    protected WebResource addParametersToResource(WebResource resource, final QueryParameters parameters){
+    protected WebTarget addParametersToResource(WebTarget resource, final QueryParameters parameters) {
 
-        if(parameters == null){
+        if (parameters == null) {
             return resource;
         }
-        if ( parameters.getQuery() != null ) {
-            resource = resource.queryParam( "ql", parameters.getQuery() );
+        if (parameters.getQuery() != null) {
+            resource = resource.queryParam("ql", parameters.getQuery());
         }
 
-        if ( parameters.getCursor() != null ) {
-           resource = resource.queryParam( "cursor", parameters.getCursor() );
+        if (parameters.getCursor() != null) {
+            resource = resource.queryParam("cursor", parameters.getCursor());
         }
 
-        if ( parameters.getStart() != null ) {
+        if (parameters.getStart() != null) {
             resource = resource.queryParam("start", parameters.getStart().toString());
         }
 
-        if ( parameters.getLimit() != null ) {
+        if (parameters.getLimit() != null) {
             resource = resource.queryParam("limit", parameters.getLimit().toString());
         }
 
-        if ( parameters.getConnections() != null ) {
+        if (parameters.getConnections() != null) {
             resource = resource.queryParam("connections", parameters.getConnections());
         }
         //We can also post the params as queries
-        if ( parameters.getFormPostData().size() > 0){
-            Map<String,String> formData = parameters.getFormPostData();
+        if (parameters.getFormPostData().size() > 0) {
+            Map<String, String> formData = parameters.getFormPostData();
             Set<String> keySet = formData.keySet();
             Iterator<String> keyIterator = keySet.iterator();
 
 
-            while(keyIterator.hasNext()){
+            while (keyIterator.hasNext()) {
                 String key = keyIterator.next();
-                String value = formData.get( key );
-                resource = resource.queryParam( key, value );
+                String value = formData.get(key);
+                resource = resource.queryParam(key, value);
             }
         }
         return resource;
@@ -164,6 +175,7 @@ public class NamedResource implements UrlResource {
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
+     *
      * @param map
      * @return
      */
@@ -175,112 +187,89 @@ public class NamedResource implements UrlResource {
 
     //For edge cases like Organizations and Tokens
     public ApiResponse post(boolean useToken, Map map, QueryParameters queryParameters) {
-        return post( useToken, ApiResponse.class, map, queryParameters, false );
+        return post(useToken, ApiResponse.class, map, queryParameters, false);
 
     }
 
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
-     * @param type
-     * @param <T>
-     * @return
+     * For edge cases like Organizations and Tokens
      */
-    //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type) {
-        return post(true,type,null,null,false);
+        return post(true, type, null, null, false);
 
     }
 
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
-     * @param type
-     * @param requestEntity
-     * @param <T>
-     * @return
+     * For edge cases like Organizations and Tokens.
      */
-    //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Entity requestEntity) {
-        return post(true,type,requestEntity,null,false);
+        return post(true, type, requestEntity, null, false);
 
     }
 
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
-     * @param type
-     * @param requestEntity
-     * @param <T>
-     * @return
+     * For edge cases like Organizations and Tokens
      */
-    //For edge cases like Organizations and Tokens
     public <T> T post(Class<T> type, Map requestEntity) {
-        return post(true,type,requestEntity,null,false);
+        return post(true, type, requestEntity, null, false);
 
     }
 
-    public <T> T post( boolean useToken, Class<T> type, Map requestEntity) {
+    public <T> T post(boolean useToken, Class<T> type, Map requestEntity) {
         return post(useToken, type, requestEntity, null, false);
 
     }
 
     /**
      * Used to test POST using form payloads.
-     * @param type
-     * @param requestEntity
-     * @param <T>
-     * @return
      */
-    public <T> T post(Class<T> type, Form requestEntity) {
+    public <T> T post(Class<T> type, Form form) {
         GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource()
+        return getTarget().request()
             .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-            .entity(requestEntity, MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-            .post(gt.getRawClass());
-
+            .post(javax.ws.rs.client.Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), gt);
     }
 
 
-    //Used for empty posts
-    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters) {
-        WebResource resource = getResource(useToken);
+    // Used for empty posts
+    public <T> T post(boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters) {
+        WebTarget resource = getTarget(useToken);
         resource = addParametersToResource(resource, queryParameters);
-        WebResource.Builder builder = resource
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .accept( MediaType.APPLICATION_JSON );
 
-        if(entity!=null){
-            builder.entity(entity);
-        }
+        Invocation.Builder builder = resource.request()
+            .accept(MediaType.APPLICATION_JSON);
+
+        // it's OK for the entity to be null
         GenericType<T> gt = new GenericType<>((Class) type);
-        return builder
-            .post(gt.getRawClass());
-
+        return builder.post(javax.ws.rs.client.Entity.json(entity), gt);
     }
 
-    //Used for empty posts
-    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters, boolean useBasicAuthentication ) {
-        WebResource resource = getResource(useToken);
+    // Used for empty posts
+    public <T> T post(boolean useToken, Class<T> type, Map entity,
+                      final QueryParameters queryParameters, boolean useBasicAuthentication) {
+
+        WebTarget resource = getTarget(useToken);
         resource = addParametersToResource(resource, queryParameters);
-        WebResource.Builder builder = resource
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .accept( MediaType.APPLICATION_JSON );
-
-        if(entity!=null){
-            builder.entity(entity);
-        }
-
-        if(useBasicAuthentication){
-            //added httpBasicauth filter to all setup calls because they all do verification this way.
-            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
-            resource.addFilter(httpBasicAuthFilter);
-        }
 
         GenericType<T> gt = new GenericType<>((Class) type);
-        return builder.post(gt.getRawClass());
 
+        if (useBasicAuthentication) {
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+                .credentials("superuser", "superpassword").build();
+            return resource.register(feature).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .post(javax.ws.rs.client.Entity.json(entity), gt);
+        }
+
+        return resource.request()
+            .accept(MediaType.APPLICATION_JSON)
+            .post(javax.ws.rs.client.Entity.json(entity), gt);
     }
 
     //For edge cases like Organizations and Tokens without any payload
@@ -291,80 +280,88 @@ public class NamedResource implements UrlResource {
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type, boolean useToken) {
-        return get( type, null, useToken );
+        return get(type, null, useToken);
     }
 
 
-
-    public <T> T get(Class<T> type,QueryParameters queryParameters) {
-        return get( type, queryParameters, true );
+    public <T> T get(Class<T> type, QueryParameters queryParameters) {
+        return get(type, queryParameters, true);
     }
 
-    public <T> T get(Class<T> type,QueryParameters queryParameters, boolean useToken) {
-        WebResource resource = getResource(useToken);
-        if(queryParameters!=null) {
+    public <T> T get(Class<T> type, QueryParameters queryParameters, boolean useToken) {
+
+        WebTarget resource = getTarget(useToken);
+        if (queryParameters != null) {
             resource = addParametersToResource(resource, queryParameters);
         }
-        GenericType<T> gt = new GenericType<>((Class) type);
-        return resource.type(MediaType.APPLICATION_JSON_TYPE)
-            .accept( MediaType.APPLICATION_JSON )
-            .get(gt.getRawClass());
 
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return resource.request()
+            .accept(MediaType.APPLICATION_JSON)
+            .get(gt);
     }
 
     public String getMatrix() {
         return "";
     }
 
-    public ApiResponse post( boolean useToken, FormDataMultiPart multiPartForm ) {
-        WebResource resource = getResource( useToken );
-        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).post( ApiResponse.class, multiPartForm );
+    public ApiResponse post(boolean useToken, MultiPart multiPartForm) {
+        WebTarget resource = getTarget(useToken);
+        return resource.request().post(
+            javax.ws.rs.client.Entity.entity(multiPartForm, multiPartForm.getMediaType()), ApiResponse.class);
     }
 
-    public ApiResponse post( FormDataMultiPart multiPartForm ) {
+    public ApiResponse post(MultiPart multiPartForm) {
         return post(true, multiPartForm);
     }
 
-    public ApiResponse put( boolean useToken, byte[] data, MediaType type ) {
-        WebResource resource = getResource(useToken);
-        return resource.type( type ).put(ApiResponse.class, data);
+    public ApiResponse put(boolean useToken, byte[] data, MediaType type) {
+        WebTarget resource = getTarget(useToken);
+        return resource.request().put(
+            javax.ws.rs.client.Entity.entity(data, type), ApiResponse.class);
     }
 
-    public ApiResponse put( byte[] data, MediaType type ) {
+    public ApiResponse put(byte[] data, MediaType type) {
         return put(true, data, type);
     }
 
-    public ApiResponse put( boolean useToken, FormDataMultiPart multiPartForm ) {
-        WebResource resource = getResource(useToken);
-        return resource.type( MediaType.MULTIPART_FORM_DATA_TYPE ).put(ApiResponse.class, multiPartForm);
+    public ApiResponse put(boolean useToken, FormDataMultiPart multiPartForm) {
+        WebTarget resource = getTarget(useToken);
+        return resource.request().put(
+            javax.ws.rs.client.Entity.entity(multiPartForm, multiPartForm.getMediaType()), ApiResponse.class);
     }
 
-    public ApiResponse put( FormDataMultiPart multiPartForm ) {
+    public ApiResponse put(FormDataMultiPart multiPartForm) {
         return put(true, multiPartForm);
     }
 
-    public InputStream getAssetAsStream( boolean useToken ) {
-        WebResource resource = getResource(useToken);
-        return resource.accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get(InputStream.class);
+    public InputStream getAssetAsStream(boolean useToken) {
+        WebTarget resource = getTarget(useToken);
+        return resource.request().accept(MediaType.APPLICATION_OCTET_STREAM_TYPE).get(InputStream.class);
     }
 
     public InputStream getAssetAsStream() {
         return getAssetAsStream(true);
     }
 
-    public ApiResponse delete( ) {
+    public ApiResponse delete() {
         return delete(true);
     }
 
-    public ApiResponse delete( boolean useToken ) {
-        return getResource(useToken).delete(ApiResponse.class);
+    public ApiResponse delete(boolean useToken) {
+        return getTarget(useToken).request().delete(ApiResponse.class);
     }
 
-    public ApiResponse delete( boolean useToken, QueryParameters queryParameters ) {
-        WebResource resource = getResource(useToken);
-        if(queryParameters!=null) {
+    public ApiResponse delete(boolean useToken, QueryParameters queryParameters) {
+        WebTarget resource = getTarget(useToken);
+
+        if (queryParameters != null) {
             resource = addParametersToResource(resource, queryParameters);
         }
-        return resource.delete( ApiResponse.class );
+        return resource.request().delete(ApiResponse.class);
+    }
+
+    public NamedResource getSubResource(String path) {
+        return new NamedResource(path,context,this);
     }
 }

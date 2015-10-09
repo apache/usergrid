@@ -67,7 +67,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                                     final EsProvider esProvider,
                                     final IndexProducer producer,
                                     final IndexFig indexFig,
-                                    final MetricsFactory metricsFactory,
+                     l               final MetricsFactory metricsFactory,
                                     final IndexCache indexCache ) {
 
 

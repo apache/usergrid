@@ -16,10 +16,11 @@
 
 package org.apache.usergrid.rest.applications.collection;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Test;
+
+import javax.ws.rs.ClientErrorException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -46,7 +47,7 @@ public class DuplicateNameIT extends AbstractRestIT {
             this.app().collection(collectionName).post(entity);
             // fail if the POST did not return an exception
             fail("Should not have created duplicate entity");
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             //Check for an exception
             assertEquals(400, uie.getResponse().getStatus());
         }

@@ -64,8 +64,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity ) {
-        IndexValidationUtils.validateIndexEdge( indexEdge );
-        ValidationUtils.verifyEntityWrite( entity );
+        IndexValidationUtils.validateIndexEdge(indexEdge);
+        ValidationUtils.verifyEntityWrite(entity);
         ValidationUtils.verifyVersion( entity.getVersion() );
 
         final String writeAlias = alias.getWriteAlias();
@@ -76,7 +76,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
         //add app id for indexing
-        container.addIndexRequest( new IndexOperation( writeAlias, applicationScope, indexEdge, entity ) );
+        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity));
         return this;
     }
 
@@ -113,17 +113,15 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     @Override
-    public EntityIndexBatch deindex( final SearchEdge searchEdge, final CandidateResult entity ) {
+    public EntityIndexBatch deindex(final SearchEdge searchEdge, final CandidateResult entity) {
 
         return deindex( searchEdge, entity.getId(), entity.getVersion() );
     }
-
 
     @Override
     public IndexOperationMessage build() {
         return container;
     }
-
 
     @Override
     public int size() {

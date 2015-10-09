@@ -19,66 +19,40 @@ package org.apache.usergrid.rest;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.UUID;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import com.google.common.collect.BiMap;
 import com.google.inject.Injector;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.*;
+import com.yammer.metrics.stats.Snapshot;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.queue.Queue;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueScope;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import org.apache.usergrid.rest.applications.ApplicationResource;
 import org.apache.usergrid.rest.exceptions.NoOpException;
 import org.apache.usergrid.rest.organizations.OrganizationResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.system.UsergridSystemMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.authz.UnauthorizedException;
-
-import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Gauge;
-import com.yammer.metrics.core.Histogram;
-import com.yammer.metrics.core.Metered;
-import com.yammer.metrics.core.Metric;
-import com.yammer.metrics.core.MetricName;
-import com.yammer.metrics.core.MetricProcessor;
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.core.Sampling;
-import com.yammer.metrics.core.Summarizable;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.stats.Snapshot;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.core.util.Health;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.UUID;
 
 
 /** @author ed@anuff.com */
@@ -121,7 +95,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @RequireSystemAccess
     @GET
     @Path("applications")
-    public JSONWithPadding getAllApplications(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getAllApplications(
         @Context UriInfo ui,
         @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws URISyntaxException {
@@ -146,14 +122,16 @@ public class RootResource extends AbstractContextResource implements MetricProce
             response.setError( "Unable to retrieve applications" );
         }
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireSystemAccess
     @GET
     @Path("apps")
-    public JSONWithPadding getAllApplications2( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getAllApplications2( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
             throws URISyntaxException {
         return getAllApplications( ui, false, callback );
@@ -186,7 +164,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
      */
     @GET
     @Path("status")
-    public JSONWithPadding getStatus(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getStatus(
             @QueryParam("ignore_error") @DefaultValue("true") Boolean ignoreError,
             @QueryParam("callback") @DefaultValue("callback") String callback ) {
 
@@ -225,12 +205,14 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         dumpMetrics(node);
         response.setProperty( "status", node );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @GET
     @Path("lb-status")
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public Response getLbStatus() {
         ResponseBuilder response;
         if ( usergridSystemMonitor.getIsCassandraAlive() ) {

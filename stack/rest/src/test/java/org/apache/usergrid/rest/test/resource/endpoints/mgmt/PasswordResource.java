@@ -17,18 +17,10 @@
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
 
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
-import com.sun.jersey.api.client.WebResource;
 
 
 /**

@@ -17,14 +17,14 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
-import com.sun.jersey.api.json.JSONWithPadding;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.usergrid.corepersistence.service.StatusService;
-import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,20 +56,20 @@ public class ApplicationsResource extends AbstractContextResource {
 
 
     public ApplicationsResource() {
-
         logger.info( "ApplicationsResource initialized" );
-    } {
-
     }
 
     @RequireSystemAccess
     @DELETE
+    @JSONP
     @Path( "{applicationId}" )
-    public JSONWithPadding clearApplication( @Context UriInfo ui,
-                                             @PathParam("applicationId") UUID applicationId,
-                                             @QueryParam( "confirmApplicationName" ) String confirmApplicationName,
-                                             @QueryParam( "limit" ) int limit,
-                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public ApiResponse clearApplication(
+        @Context UriInfo ui,
+        @PathParam("applicationId") UUID applicationId,
+        @QueryParam( "confirmApplicationName" ) String confirmApplicationName,
+        @QueryParam( "limit" ) int limit,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+
         throws Exception {
 
         if(confirmApplicationName == null){
@@ -81,7 +81,8 @@ public class ApplicationsResource extends AbstractContextResource {
         final EntityManager em =  emf.getEntityManager(applicationId);
         final String name =  em.getApplication().getApplicationName();
         if(!name.toLowerCase().equals(confirmApplicationName.toLowerCase())){
-            throw new IllegalArgumentException("confirmApplicationName: " + confirmApplicationName + " does not equal " + name);
+            throw new IllegalArgumentException(
+                "confirmApplicationName: " + confirmApplicationName + " does not equal " + name);
         }
         final StatusService statusService = injector.getInstance(StatusService.class);
 
@@ -90,7 +91,6 @@ public class ApplicationsResource extends AbstractContextResource {
         response.setAction( "clear application" );
 
         logger.info("clearing up application");
-
 
         final Thread delete = new Thread() {
 
@@ -146,16 +146,18 @@ public class ApplicationsResource extends AbstractContextResource {
         data.put("status",StatusService.Status.STARTED);
         response.setData(data);
         response.setSuccess();
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @RequireSystemAccess
     @GET
     @Path( "{applicationId}/job/{jobId}" )
-    public JSONWithPadding getStatus( @Context UriInfo ui,
-                                             @PathParam("applicationId") UUID applicationId,
-                                            @PathParam("jobId") UUID jobId,
-                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception{
+    public ApiResponse getStatus(
+        @Context UriInfo ui,
+        @PathParam("applicationId") UUID applicationId,
+        @PathParam("jobId") UUID jobId,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception{
+
         final StatusService statusService = injector.getInstance(StatusService.class);
 
         final ApiResponse response = createApiResponse();
@@ -170,9 +172,7 @@ public class ApplicationsResource extends AbstractContextResource {
         data.put( "metadata", jobStatus.getData() );
         response.setData(data);
         response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
-
+        return response;
     }
 
 }
