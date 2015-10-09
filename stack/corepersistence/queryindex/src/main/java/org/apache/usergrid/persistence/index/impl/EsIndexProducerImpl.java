@@ -27,6 +27,7 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,13 +193,17 @@ public class EsIndexProducerImpl implements IndexProducer {
 
         final StringBuilder errorString = new StringBuilder(  );
 
+        boolean hasTooManyRequests= false;
         for ( BulkItemResponse response : responses ) {
 
             if ( response.isFailed() ) {
                 // log error and continue processing
                 log.error( "Unable to index id={}, type={}, index={}, failureMessage={} ", response.getId(),
-                    response.getType(), response.getIndex(), response.getFailureMessage() );
-
+                    response.getType(), response.getIndex(),  response.getFailureMessage() );
+                //if index is overloaded on the queue fail.
+                if(response.getFailure()!=null && response.getFailure().getStatus() == RestStatus.TOO_MANY_REQUESTS){
+                    hasTooManyRequests =true;
+                }
                 error = true;
 
                 errorString.append( response.getFailureMessage() ).append( "\n" );
@@ -206,7 +211,7 @@ public class EsIndexProducerImpl implements IndexProducer {
         }
 
         if ( error ) {
-            if(errorString.lastIndexOf("rejected execution (queue capacity")>=0){
+            if(hasTooManyRequests){
                 try{
                     log.warn("Encountered Queue Capacity Exception from ElasticSearch slowing by "
                         + indexFig.getSleepTimeForQueueError() );
