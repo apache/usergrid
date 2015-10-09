@@ -321,8 +321,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         final EntityManager em = app.getEntityManager();
 
-        final int numEntities = 20;
-        final int numUpdates = 40;
+        final int numEntities = 5;
+        final int numUpdates = 5;
 
         // create lots of entities
         final List<Entity> things = new ArrayList<Entity>(numEntities);
@@ -348,7 +348,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
             for ( int j=0; j<numUpdates; j++) {
                 toUpdate = em.get( thing.getUuid() );
-                toUpdate.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
+                toUpdate.setProperty( "property"  + j, UUID.randomUUID().toString());
 
                 em.update(toUpdate);
 
@@ -367,9 +367,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
             if(numEntities * (numUpdates + 1) == crs.size()){
                 break;
             }
-            Thread.sleep(250);
             crs = queryCollectionCp("things", "thing", "select *");
-
         }
 
 //        Assert.assertEquals("Expect stale candidates", numEntities * (numUpdates + 1), crs.size());

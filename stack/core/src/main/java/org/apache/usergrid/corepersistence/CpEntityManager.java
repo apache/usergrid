@@ -41,6 +41,11 @@ import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.IndexRefreshCommand;
+import org.apache.usergrid.persistence.index.utils.*;
+import org.apache.usergrid.utils.*;
+import org.apache.usergrid.utils.ClassUtils;
+import org.apache.usergrid.utils.ConversionUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -102,11 +107,6 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.utils.ClassUtils;
-import org.apache.usergrid.utils.CompositeUtils;
-import org.apache.usergrid.utils.Inflector;
-import org.apache.usergrid.utils.StringUtils;
-import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
@@ -2874,13 +2874,36 @@ public class CpEntityManager implements EntityManager {
      * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
      */
     public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex() {
+        try {
+            long start = System.currentTimeMillis();
+            // refresh special indexes without calling EntityManager refresh because stack overflow
+            Map<String, Object> map = new org.apache.usergrid.persistence.index.utils.MapUtils.HashMapBuilder<>();
+            map.put("some prop", "test");
+            boolean hasFinished = false;
+            Entity refreshEntity = create("refresh", map);
+            try {
+                for (int i = 0; i < 10; i++) {
+                    if (searchCollection(
+                        new SimpleEntityRef(org.apache.usergrid.persistence.entities.Application.ENTITY_TYPE, getApplicationId()),
+                        InflectionUtils.pluralize("refresh"),
+                        Query.fromQL("select * where uuid='" + refreshEntity.getUuid() + "'")
+                    ).size() > 0
+                        ) {
+                        hasFinished = true;
+                        break;
+                    }
+                    Thread.sleep(250);
+                    return managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
+                }
+            }finally {
+                delete(refreshEntity);
+            }
+            return new IndexRefreshCommand.IndexRefreshCommandInfo(hasFinished,System.currentTimeMillis() - start);
+        } catch (Exception e) {
+            throw new RuntimeException("refresh failed",e);
+        }
 
-        // refresh special indexes without calling EntityManager refresh because stack overflow
-
-        return managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
     }
-
-
 }
 
 

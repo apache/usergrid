@@ -76,7 +76,6 @@ public class ApplicationServiceIT extends AbstractCoreIT {
         count = ids.count().toBlocking().last();
         Assert.assertEquals(count, 5);
         this.app.refreshIndex();
-        Thread.sleep(5000);
         Injector injector = SpringResource.getInstance().getBean(Injector.class);
         GraphManagerFactory factory = injector.getInstance(GraphManagerFactory.class);
         GraphManager graphManager = factory.createEdgeManager(appScope);
@@ -88,7 +87,13 @@ public class ApplicationServiceIT extends AbstractCoreIT {
 
         Iterator<Edge> results = graphManager.loadEdgesFromSource(simpleSearchByEdgeType).toBlocking().getIterator();
         if(results.hasNext()){
-            Assert.fail("should be empty");
+            int i = 0;
+
+            while(results.hasNext()){
+                results.next();
+                i++;
+            }
+            Assert.fail("should be empty but has "+i);
 
         }else{
             Results searchCollection = entityManager.searchCollection(entityManager.getApplication(), "tests", Query.all());
