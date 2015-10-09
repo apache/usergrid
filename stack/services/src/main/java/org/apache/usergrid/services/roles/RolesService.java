@@ -196,18 +196,6 @@ public class RolesService extends AbstractCollectionService {
     }
 
 
-    public ServiceResults newApplicationRole( String roleName, String roleTitle, long inactivity ) throws Exception {
-        em.createRole( roleName, roleTitle, inactivity );
-        return getApplicationRoles();
-    }
-
-
-    public ServiceResults deleteApplicationRole( String roleName ) throws Exception {
-        em.deleteRole( roleName );
-        return getApplicationRolePermissions( roleName );
-    }
-
-
     public ServiceResults getApplicationRolePermissions( String roleName ) throws Exception {
         Set<String> permissions = em.getRolePermissions( roleName );
         ServiceResults results = genericServiceResults().withData( permissions );

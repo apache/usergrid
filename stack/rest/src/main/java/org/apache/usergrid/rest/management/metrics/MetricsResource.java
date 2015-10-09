@@ -24,12 +24,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
-
-import com.sun.jersey.api.json.JSONWithPadding;
 
 
 /** @author zznate */
@@ -45,11 +44,13 @@ public class MetricsResource extends AbstractContextResource {
 
     @GET
     @Path("all")
-    public JSONWithPadding getDeveloperMetrics( @Context UriInfo ui ) {
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getDeveloperMetrics( @Context UriInfo ui ) {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get developer metrics" );
 
-        return new JSONWithPadding( response );
+        return response;
     }
 }

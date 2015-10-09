@@ -17,51 +17,30 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-
-import org.jclouds.blobstore.BlobStoreContext;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-
-
+import com.amazonaws.SDKGlobalConfiguration;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
-
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.rest.applications.assets.aws.NoAWSCredsRule;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.services.assets.data.AssetUtils;
-import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
-import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.amazonaws.SDKGlobalConfiguration;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.multipart.FormDataMultiPart;
-
-import net.jcip.annotations.NotThreadSafe;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 @NotThreadSafe
@@ -116,7 +95,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( UniformInterfaceException uie){
+        catch( ClientErrorException uie){
             assertEquals(500,uie.getResponse().getStatus());
         }
         finally{
@@ -150,7 +129,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( UniformInterfaceException uie){
+        catch( ClientErrorException uie){
             assertEquals( 500, uie.getResponse().getStatus() );
         }
         finally{
@@ -192,7 +171,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( UniformInterfaceException uie){
+        catch( ClientErrorException uie){
             assertEquals( 500, uie.getResponse().getStatus() );
         }
         finally{

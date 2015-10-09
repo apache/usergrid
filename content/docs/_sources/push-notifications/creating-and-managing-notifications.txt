@@ -189,6 +189,8 @@ Please note that if the expire property is not set and Apple APNS or Google GCM 
 Request body syntax
 
     '{"expire":<unix_timestamp>,"payloads":{"<notifier_name>":"<message>"}}'
+    
+NOTE: The timestamp is a UNIX timestamp and is specified in seconds.
 
 
 ## Getting notifications

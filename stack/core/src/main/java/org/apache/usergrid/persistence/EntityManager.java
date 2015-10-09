@@ -521,6 +521,8 @@ public interface EntityManager {
     public Set<String> getRolePermissions( String roleName ) throws Exception;
 
     public void deleteRole( String roleName ) throws Exception;
+    public void deleteRole( String roleName, final Optional<EntityRef> roleRef ) throws Exception;
+
 
     public EntityRef getGroupRoleRef( UUID ownerId, String roleName ) throws Exception;
 

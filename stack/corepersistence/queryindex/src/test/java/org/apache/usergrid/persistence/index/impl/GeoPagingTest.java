@@ -71,9 +71,6 @@ public class GeoPagingTest extends BaseIT {
     public EntityIndexFactory eif;
 
     @Inject
-    IndexProducer indexProducer;
-
-    @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
@@ -82,6 +79,9 @@ public class GeoPagingTest extends BaseIT {
 
     @Inject
     public CassandraFig cassandraFig;
+
+    @Inject
+    public IndexProducer indexProducer;
 
     @Inject
     @Rule

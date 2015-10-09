@@ -18,44 +18,37 @@ package org.apache.usergrid.rest.applications.users;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriInfo;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
-import static org.apache.usergrid.services.ServiceParameter.addParameter;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriInfo;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.usergrid.services.ServiceParameter.addParameter;
 
 
 @Component("org.apache.usergrid.rest.applications.users.UsersResource")
@@ -186,7 +179,9 @@ public class UsersResource extends ServiceResource {
     @PUT
     @Override
     @RequireApplicationAccess
-    public JSONWithPadding executePut( @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -208,7 +203,9 @@ public class UsersResource extends ServiceResource {
     @POST
     @Override
     @RequireApplicationAccess
-    public JSONWithPadding executePost( @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePost( @Context UriInfo ui, String body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -245,7 +242,7 @@ public class UsersResource extends ServiceResource {
             }
         }
 
-        ApiResponse response = ( ApiResponse ) super.executePostWithObject( ui, json, callback ).getJsonSource();
+        ApiResponse response = ( ApiResponse ) super.executePostWithObject( ui, json, callback );
 
         if ( ( response.getEntities() != null ) && ( response.getEntities().size() == 1 ) ) {
 
@@ -264,6 +261,6 @@ public class UsersResource extends ServiceResource {
                 management.startAppUserActivationFlow( getApplicationId(), user );
             }
         }
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 }

@@ -61,8 +61,7 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
     public CandidateIdFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
                               final EntityIndexFactory entityIndexFactory,
                               final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                              final IndexProducer indexProducer
-                              ) {
+                              final IndexProducer indexProducer) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;

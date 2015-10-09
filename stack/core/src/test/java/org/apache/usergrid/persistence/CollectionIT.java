@@ -443,10 +443,14 @@ public class CollectionIT extends AbstractCoreIT {
 
         Results r = em.searchCollectionConsistent( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ),1 );
 
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
-        assertEquals( 1, r.size() );
+        LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        assertEquals(1, r.size());
+        assertTrue(r.getEntities().get(0).getUuid().equals(user1.getUuid()));
 
-        em.removeFromCollection( user1, "groups", group );
+        em.removeFromCollection(user1, "groups", group);
+        r = em.searchCollection(user1,"groups",Query.all());
+        List<Entity> entities = r.getEntities();
+        assertTrue(entities.size()==0);
     }
 
 

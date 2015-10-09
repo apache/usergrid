@@ -136,7 +136,7 @@ public class EntityIndexTest extends BaseIT {
         entity1.setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID()));
         entity1.setField( new StringField( "testfield", "test" ) );
         entity1.setField(new IntegerField("ordinal", 0));
-        entity1.setField(new UUIDField("testuuid",uuid));
+        entity1.setField(new UUIDField("testuuid", uuid));
 
 
         batch.index( indexEdge, entity1 );
@@ -144,13 +144,13 @@ public class EntityIndexTest extends BaseIT {
 
 
         Entity entity2 = new Entity( entityType );
-        EntityUtils.setVersion( entity2, UUIDGenerator.newTimeUUID() );
+        EntityUtils.setVersion(entity2, UUIDGenerator.newTimeUUID());
 
 
         List<String> list = new ArrayList<>();
-        list.add( "test" );
-        entity2.setField( new ArrayField<>( "testfield", list ) );
-        entity2.setField( new IntegerField( "ordinal", 1 ) );
+        list.add("test");
+        entity2.setField(new ArrayField<>("testfield", list));
+        entity2.setField(new IntegerField("ordinal", 1));
 
 
         batch.index( indexEdge, entity2 );
@@ -166,14 +166,14 @@ public class EntityIndexTest extends BaseIT {
 
         timer.stop();
 
-        assertEquals( 2, candidateResults.size() );
-        log.debug( "Query time {}ms", timer.getTime() );
+        assertEquals(2, candidateResults.size());
+        log.debug("Query time {}ms", timer.getTime());
 
         final CandidateResult candidate1 = candidateResults.get(0);
 
         //check the id and version
         assertEquals( entity1.getId(), candidate1.getId() );
-        assertEquals( entity1.getVersion(), candidate1.getVersion() );
+        assertEquals(entity1.getVersion(), candidate1.getVersion());
 
 
         final CandidateResult candidate2 = candidateResults.get(1);
@@ -363,9 +363,9 @@ public class EntityIndexTest extends BaseIT {
 
 
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
-        EntityUtils.setId( entity, new SimpleId( "fastcar" ) );
-        EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
+        EntityUtils.setId(entity, new SimpleId( "fastcar" ) );
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID() );
+        entity.setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
 
         indexProducer.put(entityIndex.createBatch().index( searchEdge, entity ).build()).subscribe();
         entityIndex.refreshAsync().toBlocking().first();

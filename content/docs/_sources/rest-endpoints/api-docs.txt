@@ -4,16 +4,16 @@ Methods are organized by tag. Follow the methods are the [Model Definitions](#mo
 
 <h2>Table of Contents</h2>
 
-* [Access-Tokens](#Access-Tokens)
-* [Activities](#Activities)
-* [Admin-Users](#Admin-Users)
-* [App-Users](#App-Users)
-* [Entities-Collections](#Entities-Collections)
-* [Events](#Events)
-* [Groups](#Groups)
-* [Notifications](#Notifications)
-* [Organizations-Applications](#Organizations-Applications)
-* [Permissions-Roles](#Permissions-Roles)
+* [Access-Tokens](#access-tokens)
+* [Activities](#activities)
+* [Admin-Users](#admin-users)
+* [App-Users](#app-users)
+* [Entities-Collections](#entities-collections)
+* [Events](#events)
+* [Groups](#groups)
+* [Notifications](#notifications)
+* [Organizations-Applications](#organizations-applications)
+* [Permissions-Roles](#permissions-roles)
 
 <br>
 <br>
@@ -27,6 +27,8 @@ Methods are organized by tag. Follow the methods are the [Model Definitions](#mo
 
 <h2 class="usergrid-POST-heading">POST /management/token</h2>
 
+<a name="op-0bzf2cyzsh"></a>
+
 Login with Admin-User or Organization credentials.
 
 <h3>Parameters</h3>
@@ -39,15 +41,17 @@ Login credentials either username/password or id/secret. (Specified in body).
 __200__
 
 * Description: Object containing access_token.
-* Schema: [AccessTokenResponse](#AccessTokenResponse)
+* Schema: [AccessTokenResponse](#accesstokenresponse)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/token</h2>
+
+<a name="op-svs0512krj"></a>
 
 Login with App-User or Application credentials.
 
@@ -61,18 +65,20 @@ Login credentials either username/password or id/secret. (Specified in body).
 __200__
 
 * Description: Object containing access_token.
-* Schema: [AccessTokenResponse](#AccessTokenResponse)
+* Schema: [AccessTokenResponse](#accesstokenresponse)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Activities
 
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/groups/{groupId}/feed</h2>
+
+<a name="op-aektocz9dh"></a>
 
 Get a group&#39;s feed through providing all the identifications.
 
@@ -90,15 +96,17 @@ One of the group&#39;s identification which includes name or uuid. (Specified in
 __200__
 
 * Description: An array of group&#39;s activity.
-* Schema: [ActivityFeed](#ActivityFeed)
+* Schema: [ActivityFeed](#activityfeed)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users/{userId}/activities</h2>
+
+<a name="op-nxy02yvl0h"></a>
 
 Create an activity in the activities collection.
 
@@ -118,15 +126,17 @@ One or more sets of activity properties. (Specified in body).
 __200__
 
 * Description: An array of user&#39;s activity.
-* Schema: [ActivityFeed](#ActivityFeed)
+* Schema: [ActivityFeed](#activityfeed)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/feed</h2>
+
+<a name="op-o8teq5gp8a"></a>
 
 Retrieve a user&#39;s feed through providing all the identifications.
 
@@ -144,18 +154,20 @@ One of the user&#39;s identification which includes username or UUID. (Specified
 __200__
 
 * Description: An array of user&#39;s activity feed.
-* Schema: [ActivityFeed](#ActivityFeed)
+* Schema: [ActivityFeed](#activityfeed)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Admin-Users
 
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/users</h2>
+
+<a name="op-fihfmp3tme"></a>
 
 Retrieve details about the admin users in an organization.
 
@@ -169,15 +181,17 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of retrieved Admin user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /management/orgs/{orgId}/users/{userId}</h2>
+
+<a name="op-bsf4a7eiyt"></a>
 
 Remove an admin user from an organization through providing both Id of application and organization.
 
@@ -193,15 +207,17 @@ One of the user&#39;s identification which includes username, email address or U
 __200__
 
 * Description: An array of deleted Admin user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /management/users</h2>
+
+<a name="op-jkvb4rpfti"></a>
 
 Create a whole new admin user.
 
@@ -215,15 +231,17 @@ User entity with fields required for User creation. (Specified in body).
 __200__
 
 * Description: An API Response with a entities array containing the newly created Admin User.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/resetpw</h2>
+
+<a name="op-ivi39w3d6n"></a>
 
 Initiate the reset of an admin user&#39;s password.
 
@@ -235,15 +253,17 @@ Initiate the reset of an admin user&#39;s password.
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#Action)
+* Schema: [Action](#action)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /management/users/resetpw</h2>
+
+<a name="op-8iu1cdqxul"></a>
 
 Complete the password reset through getting the newpassword and the old one for identification.
 
@@ -262,10 +282,12 @@ __200__
 __default__
 
 * Description: 
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}</h2>
+
+<a name="op-ok1xm0q0no"></a>
 
 Retrieve details about an admin user.
 
@@ -279,15 +301,17 @@ One of the user&#39;s identification which includes username, real name, email a
 __200__
 
 * Description: An API Response with a entities array containing the Admin User.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-PUT-heading">PUT /management/users/{userId}</h2>
+
+<a name="op-ukwxjinvyf"></a>
 
 Update the info of an admin user.
 
@@ -301,15 +325,17 @@ One of the user&#39;s identification which includes username, real name, email a
 __200__
 
 * Description: An API Response with a entities array containing the updated Admin User
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/activate</h2>
+
+<a name="op-xxue8ovmq9"></a>
 
 Activate an admin user from a link provIded in an email notification.
 
@@ -327,15 +353,17 @@ Query statement of whether send confimation email or not. (Specified in query).
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#Action)
+* Schema: [Action](#action)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-PUT-heading">PUT /management/users/{userId}/password</h2>
+
+<a name="op-xpx6gbuzfw"></a>
 
 Update an admin user&#39;s password through getting the newpassword and the old one for identification.
 
@@ -351,15 +379,17 @@ The user&#39;s old and new password. (Specified in body).
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#Action)
+* Schema: [Action](#action)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/reactivate</h2>
+
+<a name="op-xzwpxdciff"></a>
 
 Reactivate an expired admin user.
 
@@ -373,18 +403,20 @@ One of the user&#39;s identification which includes username, real name, email a
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#Action)
+* Schema: [Action](#action)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### App-Users
 
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users</h2>
+
+<a name="op-jndyp0tykz"></a>
 
 Retrieve users though query statement.
 
@@ -402,15 +434,17 @@ The query statement of the User. (Specified in query).
 __200__
 
 * Description: An array of retrieved user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users</h2>
+
+<a name="op-aioxrj1eep"></a>
 
 Create a user in the users collection through providing all the identifications.
 
@@ -428,15 +462,17 @@ The properties of the user. (Specified in body).
 __200__
 
 * Description: An array of created user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}</h2>
+
+<a name="op-snzs7adf7o"></a>
 
 Retrieve a user through providing all the identifications.
 
@@ -454,15 +490,17 @@ One of the user&#39;s identification which includes username, email address or U
 __200__
 
 * Description: An array of retrieved user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/users/{userId}</h2>
+
+<a name="op-euchoncmpy"></a>
 
 Update a user through providing all the identifications.
 
@@ -480,15 +518,17 @@ One of the user&#39;s identification which includes username or UUID. (Specified
 __200__
 
 * Description: An array of updated user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/users/{userId}</h2>
+
+<a name="op-2vwm8uuxgr"></a>
 
 Remove a user through providing all the identifications.
 
@@ -506,15 +546,17 @@ One of the user&#39;s identification which includes username or UUID. (Specified
 __200__
 
 * Description: An array of deleted user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/users/{user}/password</h2>
+
+<a name="op-1vbgigzor7"></a>
 
 Set a user&#39;s password or reset the user&#39;s existing password.
 
@@ -534,18 +576,20 @@ The user&#39;s old and new password. (Specified in body).
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#Action)
+* Schema: [Action](#action)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Entities-Collections
 
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/users/{userId}/{relation}</h2>
+
+<a name="op-nsdxcm2w07"></a>
 
 Retrieve a user&#39;s collections or connections through query statement.
 
@@ -567,15 +611,17 @@ The query statement of the user. (Specified in query).
 __200__
 
 * Description: An array of user&#39;s collections info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/{collectionId}</h2>
+
+<a name="op-da7vw2iqa7"></a>
 
 Retrieve collection through query statement.
 
@@ -595,15 +641,17 @@ Any values specified in the query statement should be enclosed in single-quotes.
 __200__
 
 * Description: An array of retrieved collection&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/{collectionId}</h2>
+
+<a name="op-17qn0rvgpm"></a>
 
 Update collection through query statement.
 
@@ -623,15 +671,17 @@ Any values specified in the query statement should be enclosed in single-quotes.
 __200__
 
 * Description: An array of updated collection&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</h2>
+
+<a name="op-6dzb3xz0wq"></a>
 
 Add an entity to a collection through providing all the identifications.
 
@@ -655,15 +705,17 @@ The Id of the 2nd entity. (Specified in path).
 __200__
 
 * Description: An array of added entity&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</h2>
+
+<a name="op-inrrw1fqal"></a>
 
 Remove an entity from a collection through providing all the identifications.
 
@@ -687,15 +739,17 @@ The Id of the 2nd entity. (Specified in path).
 __200__
 
 * Description: An array of deleted entity&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/{collectionId}/{entityId}</h2>
+
+<a name="op-psiiivedhb"></a>
 
 Retrieve an entity through providing Id of application, organization, collection and entity.
 
@@ -715,15 +769,17 @@ One of the entity&#39;s identification which includes name or uuid. (Specified i
 __200__
 
 * Description: An array of retrieved entity&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{appId}/{collectionId}/{entityId}</h2>
+
+<a name="op-7fclidczs6"></a>
 
 One or more properties can be updated with a single request.
 
@@ -745,15 +801,17 @@ The properties of the entity. (Specified in body).
 __200__
 
 * Description: An array of updated entity&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/{collectionId}/{entityId}</h2>
+
+<a name="op-9n0wuse9mv"></a>
 
 Delete an entity from the collection.
 
@@ -773,15 +831,17 @@ One of the entity&#39;s identification which includes name or uuid. (Specified i
 __200__
 
 * Description: An array of deleted entity&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/{entitytype}</h2>
+
+<a name="op-rtg6radfaq"></a>
 
 When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type.
 
@@ -801,18 +861,20 @@ The properties of the entity. (Specified in body).
 __200__
 
 * Description: An array of created custom entity&#39;s info.
-* Schema: [Entity](#Entity)
+* Schema: [Entity](#entity)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Events
 
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/events</h2>
+
+<a name="op-z0n83adeua"></a>
 
 Create an event through providing both Id of organization and application.
 
@@ -830,18 +892,20 @@ The required property of the event. (Specified in body).
 __200__
 
 * Description: An array of created event&#39;s info.
-* Schema: [Event](#Event)
+* Schema: [Event](#event)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Groups
 
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups</h2>
+
+<a name="op-qvluwgdixe"></a>
 
 Create a new group through providing both Id of organization and application.
 
@@ -859,15 +923,17 @@ The property of the created group. (Specified in body).
 __200__
 
 * Description: An array of created group&#39;s info.
-* Schema: [Group](#Group)
+* Schema: [Group](#group)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups/{groupId}/activities</h2>
+
+<a name="op-kmrjsftwj3"></a>
 
 Create an activity to a specific group. In this case the activity is created in the activities collection and is accessible at the /activities endpoint to users who have the permission to read that endpoint. In addition, a relationship is established between the activity and the group, and because of that, the activity will appear in the group’s feed. The group &#39;owns&#39; the activity. Also, the activity will be published in the feed of all users that are members of the group.
 
@@ -887,15 +953,17 @@ One or more sets of activity properties. (Specified in body).
 __200__
 
 * Description: 
-* Schema: [ActivityFeed](#ActivityFeed)
+* Schema: [ActivityFeed](#activityfeed)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/groups/{groupId}/users/{userId}</h2>
+
+<a name="op-79bstryyph"></a>
 
 Add a user to a group through providing all the identifications.
 
@@ -915,15 +983,17 @@ One of the user&#39;s identification which includes username or UUID. (Specified
 __200__
 
 * Description: An array of added user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/groups/{groupId}/users/{userId}</h2>
+
+<a name="op-gvqutatb2n"></a>
 
 Delete user from a group through providing all the identifications.
 
@@ -943,15 +1013,17 @@ One of the user&#39;s identification which includes username or UUID. (Specified
 __200__
 
 * Description: An array of deleted user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{org_Id}/{app_Id}/groups/{groupId}</h2>
+
+<a name="op-tj3j6ygyhz"></a>
 
 Get a group through through providing all the identifications.
 
@@ -969,15 +1041,17 @@ One of the group&#39;s identification which includes name or uuid. (Specified in
 __200__
 
 * Description: An array of retrieved group&#39;s info.
-* Schema: [Group](#Group)
+* Schema: [Group](#group)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-PUT-heading">PUT /{org_Id}/{app_Id}/groups/{groupId}</h2>
+
+<a name="op-dxpamkwi1o"></a>
 
 Update a group through providing all the identifications.
 
@@ -995,18 +1069,20 @@ One of the group&#39;s identification which includes name or uuid. (Specified in
 __200__
 
 * Description: An array of updated group&#39;s info.
-* Schema: [Group](#Group)
+* Schema: [Group](#group)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Notifications
 
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices</h2>
+
+<a name="op-8xzbizak9m"></a>
 
 Create notifications for user through targeting by location and providing all the identifications.
 
@@ -1026,15 +1102,17 @@ The query statement of the location of the user. (Specified in query).
 __200__
 
 * Description: An array of created notification&#39;s info.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices/*/notifications</h2>
+
+<a name="op-ync3aqk68j"></a>
 
 Create notifications for all devices. This request will target all device entities.
 
@@ -1052,15 +1130,17 @@ These parameters are used when forming the notification portion of the request. 
 __200__
 
 * Description: An array of created notification&#39;s info.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/devices/{deviceId}/notifications</h2>
+
+<a name="op-ghzaijhfrd"></a>
 
 Create notifications for a single device. This request will target a specific device entity.
 
@@ -1080,15 +1160,17 @@ These parameters are used when forming the notification portion of the request. 
 __200__
 
 * Description: An array of created notification&#39;s info.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/groups/{path}/notifications</h2>
+
+<a name="op-scytqcmlbb"></a>
 
 Create notifications for a group. This request will target all users associated with a specific group entity.
 
@@ -1108,15 +1190,17 @@ These parameters are used when forming the notification portion of the request. 
 __200__
 
 * Description: An array of created notification&#39;s info.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/notifications</h2>
+
+<a name="op-wao4e4x2ax"></a>
 
 Retrieve one or more notifications through providing all the identifications.
 
@@ -1132,15 +1216,17 @@ One of the application&#39;s identification which includes name or uuid (same as
 __200__
 
 * Description: An array of retrieved notification&#39;s info.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-PUT-heading">PUT /{orgId}/{applicationId}/notifications/{notificationId}</h2>
+
+<a name="op-pfkq4xfvl4"></a>
 
 Update a Notification in order to cancel the notifcation or set a new expiration time.
 
@@ -1160,15 +1246,17 @@ Object with Notification fields to be updated. (Specified in body).
 __200__
 
 * Description: An API Response object containing an entity of type Notification.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{applicationId}/notifications/{notificationId}</h2>
+
+<a name="op-oajwu1ezyb"></a>
 
 Delete an unsent Notification from the system.
 
@@ -1186,15 +1274,17 @@ One of the notification&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: API Response containing Notification entity that was deleted.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/receipts</h2>
+
+<a name="op-bhxobegwk0"></a>
 
 Retrieve one or more receipts through providing all the identifications.
 
@@ -1210,15 +1300,17 @@ One of the application&#39;s identification which includes name or uuid (same as
 __200__
 
 * Description: An array of retrieved receipt&#39;s info.
-* Schema: [Receipt](#Receipt)
+* Schema: [Receipt](#receipt)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/users/{userId}/notifications</h2>
+
+<a name="op-uts7flpbdb"></a>
 
 Create notifications for a user. This request will target a specific user entity.
 
@@ -1238,15 +1330,17 @@ These parameters are used when forming the notification portion of the request. 
 __200__
 
 * Description: An array of created notification&#39;s info.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{deviceId}/*/receipts</h2>
+
+<a name="op-opyjl7eroi"></a>
 
 Retrieve receipts associated with one or more devices through providing all the identifications.
 
@@ -1264,15 +1358,17 @@ One of the device&#39;s identification which includes name or uuid. (Specified i
 __200__
 
 * Description: An array of retrieved receipt&#39;s info.
-* Schema: [Receipt](#Receipt)
+* Schema: [Receipt](#receipt)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{notificationId}/*/queue</h2>
+
+<a name="op-5iqasgv3sj"></a>
 
 Retrieve the list of devices associated with one or more notifications before the notifications are sent through providing all the identifications.
 
@@ -1290,15 +1386,17 @@ One of the notification&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of retrieved device&#39;s info.
-* Schema: [Device](#Device)
+* Schema: [Device](#device)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{notificationId}/*/receipts</h2>
+
+<a name="op-unjmumv5kh"></a>
 
 Retrieve receipts for one or more notifications through providing all the identifications.
 
@@ -1316,15 +1414,17 @@ One of the notification&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of retrieved receipt&#39;s info.
-* Schema: [Receipt](#Receipt)
+* Schema: [Receipt](#receipt)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/{receiptId}/*/notifications</h2>
+
+<a name="op-iejp0wlehp"></a>
 
 Retrieve notifications associated with one or more receipts through providing all the identifications.
 
@@ -1342,18 +1442,20 @@ One of the receipt&#39;s identification which includes name or uuid. (Specified 
 __200__
 
 * Description: An array of retrieved notification&#39;s info.
-* Schema: [Notification](#Notification)
+* Schema: [Notification](#notification)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Organizations-Applications
 
 
 <h2 class="usergrid-POST-heading">POST /management/orgs</h2>
+
+<a name="op-asuflut8jl"></a>
 
 Create an organization through a form post.
 
@@ -1367,15 +1469,17 @@ A set of organization properties supplied through a form. (Specified in body).
 __200__
 
 * Description: An array of created Organization.
-* Schema: [Organization](#Organization)
+* Schema: [Organization](#organization)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}</h2>
+
+<a name="op-brcy1p5pv6"></a>
 
 Retrieve an organization given a specified UUID or username.
 
@@ -1389,15 +1493,17 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of created Organization.
-* Schema: [Organization](#Organization)
+* Schema: [Organization](#organization)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/activate</h2>
+
+<a name="op-volzlcrizg"></a>
 
 Activate an organization from a link provIded in an email notification.
 
@@ -1415,15 +1521,17 @@ Send confirmation email or not. (Specified in query).
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#Action)
+* Schema: [Action](#action)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps</h2>
+
+<a name="op-jwpqgx4byw"></a>
 
 Retrieve the applications in an organization through providing both Id of application and organization.
 
@@ -1437,15 +1545,17 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of retrieved application data.
-* Schema: [AppData](#AppData)
+* Schema: [AppData](#appdata)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /management/orgs/{orgId}/apps/{appId}</h2>
+
+<a name="op-fzlitpxydy"></a>
 
 Remove an application from an organization through providing both Id of application and organization.
 
@@ -1461,15 +1571,17 @@ One of the application&#39;s identification which includes name or uuid. (Specif
 __200__
 
 * Description: An array of deleted application info.
-* Schema: [AppData](#AppData)
+* Schema: [AppData](#appdata)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/apps/{appId}/credentials</h2>
+
+<a name="op-k1cjl2fbfn"></a>
 
 Retrieve the client Id and client secret credentials for an application in an organization.
 
@@ -1485,15 +1597,17 @@ One of the application&#39;s identification which includes name or uuid. (Specif
 __200__
 
 * Description: An array of retrieved credentials info.
-* Schema: [Credential](#Credential)
+* Schema: [Credential](#credential)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /management/orgs/{orgId}/apps/{appId}/credentials</h2>
+
+<a name="op-kb4kkywf0c"></a>
 
 Generate the client Id and client secret credentials for an application in an organization.
 
@@ -1509,15 +1623,17 @@ One of the application&#39;s identification which includes name or uuid. (Specif
 __200__
 
 * Description: An array of generated credentials info.
-* Schema: [Credential](#Credential)
+* Schema: [Credential](#credential)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/credentials</h2>
+
+<a name="op-j6mwijxj8v"></a>
 
 Retrieve the credentials for an organization client.
 
@@ -1531,15 +1647,17 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of Credential
-* Schema: [Credential](#Credential)
+* Schema: [Credential](#credential)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /management/orgs/{orgId}/credentials</h2>
+
+<a name="op-btrg9is9ex"></a>
 
 Generate whole new credentials for an organization client.
 
@@ -1553,15 +1671,17 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of Credential
-* Schema: [Credential](#Credential)
+* Schema: [Credential](#credential)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/feed</h2>
+
+<a name="op-rxtw5leuxn"></a>
 
 Retrieve an organization&#39;s activity feed.
 
@@ -1575,15 +1695,17 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of the organization&#39;s ActivityFeed.
-* Schema: [ActivityFeed](#ActivityFeed)
+* Schema: [ActivityFeed](#activityfeed)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/orgs/{orgId}/reactivate</h2>
+
+<a name="op-2y9lik1je1"></a>
 
 Reactivate an expired organization.
 
@@ -1597,15 +1719,17 @@ One of the organization&#39;s identification which includes name or uuid. (Speci
 __200__
 
 * Description: An array of complete messages.
-* Schema: [Action](#Action)
+* Schema: [Action](#action)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /management/users/{userId}/feed</h2>
+
+<a name="op-07muhrw2rk"></a>
 
 Retrieve an admin user&#39;s activity feed.
 
@@ -1619,18 +1743,20 @@ One of the user&#39;s identification which includes username, real name, email a
 __200__
 
 * Description: An array of user&#39;s activity
-* Schema: [ActivityFeed](#ActivityFeed)
+* Schema: [ActivityFeed](#activityfeed)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ### Permissions-Roles
 
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles</h2>
+
+<a name="op-ehipmupci4"></a>
 
 Retrieve the roles in an application through providing all the identifications.
 
@@ -1646,15 +1772,17 @@ One of the application&#39;s identification which includes name or uuid. (Specif
 __200__
 
 * Description: An array of retrieved role&#39;s info.
-* Schema: [Role](#Role)
+* Schema: [Role](#role)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/roles</h2>
+
+<a name="op-rrdx4m4m0p"></a>
 
 Create a new role through providing all the identifications.
 
@@ -1672,15 +1800,17 @@ The required properties of the role. (Specified in body).
 __200__
 
 * Description: An array of created role&#39;s info.
-* Schema: [Role](#Role)
+* Schema: [Role](#role)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/permissions</h2>
+
+<a name="op-cwmnfuikul"></a>
 
 Remove permissions from a role.
 
@@ -1700,15 +1830,17 @@ The query statement of the url pattern. (Specified in body).
 __200__
 
 * Description: Permissions object with array of the deleated Usergrid Permission strings.
-* Schema: [Permissions](#Permissions)
+* Schema: [Permissions](#permissions)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{appId}/roles/{roleId}/users</h2>
+
+<a name="op-so5cnn3qsk"></a>
 
 Retrieve the users in a role through providing all the identifications.
 
@@ -1726,15 +1858,17 @@ One of the role&#39;s identification which includes name or uuid. (Specified in 
 __200__
 
 * Description: An API Response with a entities array of Users.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{appId}/roles/{roleId}/users/{userId}</h2>
+
+<a name="op-fo857v2csw"></a>
 
 Add a user to a role through providing all the identifications.
 
@@ -1754,15 +1888,17 @@ One of the user&#39;s identification which includes username or UUID. (Specified
 __200__
 
 * Description: An array of added user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{roleId}/users/{userId}</h2>
+
+<a name="op-3hxunwulpo"></a>
 
 Remove a user from a role through providing all the identifications.
 
@@ -1782,15 +1918,17 @@ One of the user&#39;s identification which includes username or UUID. (Specified
 __200__
 
 * Description: An array of deleted user&#39;s info.
-* Schema: [User](#User)
+* Schema: [User](#user)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-DELETE-heading">DELETE /{orgId}/{appId}/roles/{rolename}</h2>
+
+<a name="op-m9gq8yaswj"></a>
 
 Remove a role through providing all the identifications.
 
@@ -1808,15 +1946,17 @@ The name of the role. (Specified in path).
 __200__
 
 * Description: An array of deleted role&#39;s info.
-* Schema: [Role](#Role)
+* Schema: [Role](#role)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-GET-heading">GET /{orgId}/{applicationId}/roles/{roleId}/permissions</h2>
+
+<a name="op-8xgaadcvi8"></a>
 
 Retrieve permissions for a Role.
 
@@ -1834,15 +1974,17 @@ One of the role&#39;s identification which includes name or uuid. (Specified in 
 __200__
 
 * Description: Permissions object with array of Usergrid Permission strings.
-* Schema: [Permissions](#Permissions)
+* Schema: [Permissions](#permissions)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 <h2 class="usergrid-POST-heading">POST /{orgId}/{applicationId}/roles/{roleId}/permissions</h2>
+
+<a name="op-bgabubs4iw"></a>
 
 Add permissions to a role through providing all the identifications.
 
@@ -1862,12 +2004,12 @@ Permissions object with array of Usergrid Permission strings to be added. (Speci
 __200__
 
 * Description: Permissions object with array of Usergrid Permission strings.
-* Schema: [Permission](#Permission)
+* Schema: [Permission](#permission)
     
 __default__
 
 * Description: Unexpected error.
-* Schema: [Error](#Error)
+* Schema: [Error](#error)
     
 
 ## Models
@@ -1911,12 +2053,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/management/token](#op-MhD5hWgRwK)
-* [/{orgId}/{appId}/token](#op-9TDlDc0BL3)
-      
 
 
 ### Action
@@ -1973,17 +2109,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/management/users/resetpw](#op-AiNhPeeyiq)
-* [/{orgId}/{appId}/users/{user}/password](#op-d0NWF6YZuK)
-* [/management/orgs/{orgId}/activate](#op-5138i0P1q8)
-* [/management/users/{userId}/activate](#op-c9LsV7Ulbr)
-* [/management/orgs/{orgId}/reactivate](#op-RIuF55JkgX)
-* [/management/users/{userId}/reactivate](#op-jk8tbzHamj)
-* [/management/users/{userId}/password](#op-yjg1hntm4R)
-      
 
 __Referring Definitions__
   
@@ -2079,16 +2204,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/users/{userId}/activities](#op-SgbcdXdHSq)
-* [/{orgId}/{appId}/users/{userId}/feed](#op-JOpALhJR9x)
-* [/management/orgs/{orgId}/feed](#op-FsWAA6TQ6j)
-* [/{orgId}/{appId}/groups/{groupId}/feed](#op-vjWBovszxD)
-* [/management/users/{userId}/feed](#op-oyQqxIeMTj)
-* [/{orgId}/{appId}/groups/{groupId}/activities](#op-Y8sHuGSnUK)
-      
-
 
 ### AddRole
 
@@ -2120,11 +2235,6 @@ __Properties__
       <td>true</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/roles](#op-77UvdX1AKS)
-      
 
 
 ### AppData
@@ -2173,12 +2283,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/management/orgs/{orgId}/apps](#op-FxESea37Iw)
-* [/management/orgs/{orgId}/apps/{appId}](#op-dfDXMn6FHh)
-      
 
 __Referring Definitions__
   
@@ -2248,12 +2352,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/users/{userId}/activities](#op-SgbcdXdHSq)
-* [/{orgId}/{appId}/groups/{groupId}/activities](#op-Y8sHuGSnUK)
-      
-
 
 ### CreateAdminUser
 
@@ -2302,11 +2400,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/management/users](#op-OrsKI3OblZ)
-      
-
 
 ### CreateEntities
 
@@ -2322,12 +2415,6 @@ __Properties__
       <th>Required</th>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/{entitytype}](#op-vhYugcLtOU)
-* [/{orgId}/{appId}/{collectionId}/{entityId}](#op-rIFHtzBMnq)
-      
 
 
 ### CreateEvent
@@ -2352,11 +2439,6 @@ __Properties__
       <td>true</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/events](#op-tbL4sW2gO4)
-      
 
 
 ### CreateGroup
@@ -2390,11 +2472,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/groups](#op-cSFYOwc349)
-      
-
 
 ### CreateNotifications
 
@@ -2410,15 +2487,6 @@ __Properties__
       <th>Required</th>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{applicationId}/groups/{path}/notifications](#op-HcxsWWHJuW)
-* [/{orgId}/{applicationId}/devices](#op-tHQHlcVc6O)
-* [/{orgId}/{applicationId}/devices/{deviceId}/notifications](#op-DhaimEfP36)
-* [/{orgId}/{applicationId}/users/{userId}/notifications](#op-GqqUlXEpw0)
-* [/{orgId}/{applicationId}/devices/*/notifications](#op-9Av28Sb6xD)
-      
 
 
 ### CreateOrg
@@ -2476,11 +2544,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/management/orgs](#op-10Xly2uR81)
-      
-
 
 ### CreateUser
 
@@ -2504,11 +2567,6 @@ __Properties__
       <td>true</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/users](#op-B3JxnPdQnX)
-      
 
 
 ### Credential
@@ -2549,14 +2607,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/management/orgs/{orgId}/credentials](#op-yvf6XFwT9U)
-* [/management/orgs/{orgId}/apps/{appId}/credentials](#op-BQVtNYKbr6)
-* [/management/orgs/{orgId}/credentials](#op-x2rOvoWwdu)
-* [/management/orgs/{orgId}/apps/{appId}/credentials](#op-l2sf6CY3kb)
-      
 
 
 ### Device
@@ -2630,11 +2680,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{applicationId}/{notificationId}/*/queue](#op-813WAQfcPn)
-      
-
 
 ### Entity
 
@@ -2707,19 +2752,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/{collectionId}/{entityId}](#op-6bY9NIsNDh)
-* [/{orgId}/{appId}/{collectionId}](#op-uUIPNDp91Q)
-* [/{orgId}/{appId}/users/{userId}/{relation}](#op-p76OEoqzeq)
-* [/{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}](#op-fqEhlK2uYz)
-* [/{orgId}/{appId}/{collectionId}/{entityId}](#op-gMtdxV5Km7)
-* [/{orgId}/{appId}/{collectionId}](#op-JNUUZzf2XB)
-* [/{orgId}/{appId}/{entitytype}](#op-vhYugcLtOU)
-* [/{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}](#op-HEKlO2fyjg)
-* [/{orgId}/{appId}/{collectionId}/{entityId}](#op-rIFHtzBMnq)
-      
-
 __Referring Definitions__
   
 * [Role](#role)
@@ -2765,7 +2797,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
 
 
 ### Event
@@ -2838,11 +2869,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/events](#op-tbL4sW2gO4)
-      
 
 
 ### Group
@@ -2924,13 +2950,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/groups](#op-cSFYOwc349)
-* [/{org_Id}/{app_Id}/groups/{groupId}](#op-DN1sgDsfHL)
-* [/{org_Id}/{app_Id}/groups/{groupId}](#op-WJCUsLbpoy)
-      
-
 
 ### LoginCredentials
 
@@ -2986,12 +3005,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/management/token](#op-MhD5hWgRwK)
-* [/{orgId}/{appId}/token](#op-9TDlDc0BL3)
-      
 
 
 ### Notification
@@ -3089,19 +3102,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{applicationId}/notifications/{notificationId}](#op-xHUyW9SEKp)
-* [/{orgId}/{applicationId}/notifications/{notificationId}](#op-p1JCjxXaT6)
-* [/{orgId}/{applicationId}/{receiptId}/*/notifications](#op-tMb27wddix)
-* [/{orgId}/{applicationId}/groups/{path}/notifications](#op-HcxsWWHJuW)
-* [/{orgId}/{applicationId}/devices](#op-tHQHlcVc6O)
-* [/{orgId}/{applicationId}/notifications](#op-EVJZ1t5REk)
-* [/{orgId}/{applicationId}/devices/{deviceId}/notifications](#op-DhaimEfP36)
-* [/{orgId}/{applicationId}/users/{userId}/notifications](#op-GqqUlXEpw0)
-* [/{orgId}/{applicationId}/devices/*/notifications](#op-9Av28Sb6xD)
-      
-
 
 ### NotificationUpdate
 
@@ -3141,11 +3141,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{applicationId}/notifications/{notificationId}](#op-xHUyW9SEKp)
-      
 
 
 ### Organization
@@ -3275,12 +3270,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/management/orgs](#op-10Xly2uR81)
-* [/management/orgs/{orgId}](#op-fMZQcXXAv8)
-      
-
 
 ### Permissions
 
@@ -3328,13 +3317,6 @@ __Properties__
       <td>true</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{applicationId}/roles/{roleId}/permissions](#op-fB9nGqslMj)
-* [/{orgId}/{appId}/roles/{roleId}/permissions](#op-kaaoh5SC55)
-* [/{orgId}/{applicationId}/roles/{roleId}/permissions](#op-9VeULLNiHw)
-      
 
 
 ### Receipt
@@ -3432,13 +3414,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/{orgId}/{applicationId}/{notificationId}/*/receipts](#op-4ltskxwFlh)
-* [/{orgId}/{applicationId}/receipts](#op-Jrx6MJpfDT)
-* [/{orgId}/{applicationId}/{deviceId}/*/receipts](#op-dcBSAaCDdl)
-      
-
 
 ### ResetPW
 
@@ -3470,12 +3445,6 @@ __Properties__
       <td>true</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/users/{user}/password](#op-d0NWF6YZuK)
-* [/management/users/{userId}/password](#op-yjg1hntm4R)
-      
 
 
 ### ResetPWMsg
@@ -3516,11 +3485,6 @@ __Properties__
       <td>true</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/management/users/resetpw](#op-XfnvemSsD8)
-      
 
 
 ### Role
@@ -3609,13 +3573,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
-__Referring API Paths__
-  
-* [/{orgId}/{appId}/roles](#op-Xs9X9TSi8B)
-* [/{orgId}/{appId}/roles](#op-77UvdX1AKS)
-* [/{orgId}/{appId}/roles/{rolename}](#op-OVMDaZHUiZ)
-      
 
 
 ### User
@@ -3753,25 +3710,6 @@ __Properties__
   </tr>
 </table>
 
-__Referring API Paths__
-  
-* [/management/orgs/{orgId}/users](#op-z7AQVyIzPn)
-* [/{orgId}/{appId}/users](#op-Rq1TkYSvPN)
-* [/management/users/{userId}](#op-Vh6g9ZgYMh)
-* [/{orgId}/{appId}/groups/{groupId}/users/{userId}](#op-tTRCEhAz0z)
-* [/{orgId}/{appId}/roles/{roleId}/users/{userId}](#op-Hscxz1kxfu)
-* [/{orgId}/{appId}/groups/{groupId}/users/{userId}](#op-EeS4c1jZT1)
-* [/management/users/{userId}](#op-SrpcXlZC86)
-* [/{orgId}/{appId}/users/{userId}](#op-0bju5bw1ZH)
-* [/{orgId}/{appId}/users/{userId}](#op-tRnoDrscSy)
-* [/{orgId}/{appId}/roles/{roleId}/users/{userId}](#op-D4YceDJCBp)
-* [/{orgId}/{appId}/users](#op-B3JxnPdQnX)
-* [/management/orgs/{orgId}/users/{userId}](#op-XQZui6aKiZ)
-* [/{orgId}/{appId}/roles/{roleId}/users](#op-UG5vx2zh0S)
-* [/{orgId}/{appId}/users/{userId}](#op-RDt20tQoio)
-* [/management/users](#op-OrsKI3OblZ)
-      
-
 __Referring Definitions__
   
 * [AccessTokenResponse](#accesstokenresponse)
@@ -3826,7 +3764,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
 
 __Referring Definitions__
   
@@ -3888,7 +3825,6 @@ __Properties__
   </tr>
 </table>
 
-
 __Referring Definitions__
   
 * [CreateActivity](#createactivity)
@@ -3940,7 +3876,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
 
 __Referring Definitions__
   
@@ -4000,7 +3935,6 @@ __Properties__
   </tr>
 </table>
 
-
 __Referring Definitions__
   
 * [ActivityFeed](#activityfeed)
@@ -4036,7 +3970,6 @@ __Properties__
       <td>false</td>
   </tr>
 </table>
-
 
 __Referring Definitions__
   

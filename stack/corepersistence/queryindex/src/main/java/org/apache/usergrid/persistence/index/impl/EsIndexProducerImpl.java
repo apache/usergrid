@@ -22,6 +22,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
+
+
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -83,6 +86,11 @@ public class EsIndexProducerImpl implements IndexProducer {
 
         //batch up sets of some size and send them in batch
 
+    }
+
+    @Override
+    public Observable<IndexOperationMessage> put(EntityIndexBatch message) {
+        return put(message.build());
     }
 
     public Observable<IndexOperationMessage>  put( IndexOperationMessage message ) {
