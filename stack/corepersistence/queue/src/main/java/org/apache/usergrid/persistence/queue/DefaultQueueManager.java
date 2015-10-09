@@ -37,7 +37,7 @@ public class DefaultQueueManager implements QueueManager {
     @Override
     public synchronized Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
-        queue.drainTo(returnQueue);
+        queue.drainTo(returnQueue,1);
         return Observable.from( returnQueue);
     }
 
