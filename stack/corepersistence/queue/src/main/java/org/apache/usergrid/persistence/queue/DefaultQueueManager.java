@@ -32,17 +32,12 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Default queue manager implementation, uses in memory linked queue
  */
 public class DefaultQueueManager implements QueueManager {
-    public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
+    public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000000);
+
     @Override
     public synchronized Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
-        for(int i=0;i<limit;i++){
-            if(!queue.isEmpty()){
-                returnQueue.add( queue.remove());
-            }else{
-                break;
-            }
-        }
+        queue.drainTo(returnQueue);
         return Observable.from( returnQueue);
     }
 

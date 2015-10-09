@@ -238,6 +238,11 @@ public class CoreApplication implements Application, TestRule {
         if(!em.getApplicationId().equals(CpNamingUtils.getManagementApplicationId().getUuid())) {
             setup.getEmf().refreshIndex(em.getApplicationId());
         }
+        try {
+            Thread.sleep(2000);
+        }catch (Exception e){
+
+        }
     }
 
 
