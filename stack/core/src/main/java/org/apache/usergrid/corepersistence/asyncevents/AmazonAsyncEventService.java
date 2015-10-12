@@ -299,17 +299,18 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 //collect all of the
                 IndexOperationMessage indexOperationMessage =
                     indexoperationObservable
-                        .collect(() -> new IndexOperationMessage(), (collector, single ) -> collector.ingest(single))
+                        .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
                         .toBlocking().lastOrDefault(null);
 
-                if(indexOperationMessage == null){
-                    throw new IllegalArgumentException("Received null index operation.");
+                if (indexOperationMessage == null || indexOperationMessage.isEmpty()) {
+                    logger.info("Received empty index sequence message:({}), body:({}) ",
+                        message.getMessageId(),message.getStringBody());
                 }
 
                 //return type that can be indexed and ack'd later
                 return new IndexEventResult(Optional.fromNullable(message), Optional.fromNullable(indexOperationMessage), thisEvent.getCreationTime());
             } catch (Exception e) {
-                logger.error("Failed to index message: " + message.getMessageId(), e, message);
+                logger.error("Failed to index message: " + message.getMessageId(), message.getStringBody() ,e);
                 return new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(), event.getCreationTime());
             }
         });
@@ -559,7 +560,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     List<IndexEventResult> indexEventResults = callEventHandlers(messages);
                                     List<QueueMessage> messagesToAck = submitToIndex(indexEventResults);
                                     if (messagesToAck == null || messagesToAck.size() == 0) {
-                                        logger.error("No messages came back from the queue operation",messages);
+                                        logger.error("No messages came back from the queue operation should have seen "+messages.size(),messages);
                                         return messagesToAck;
                                     }
                                     if(messagesToAck.size()<messages.size()){
@@ -569,7 +570,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     ack(messagesToAck);
                                     return messagesToAck;
                                 } catch (Exception e) {
-                                    logger.error("failed to ack messages to sqs", messages, e);
+                                    logger.error("failed to ack messages to sqs", e);
                                     return null;
                                     //do not rethrow so we can process all of them
                                 }

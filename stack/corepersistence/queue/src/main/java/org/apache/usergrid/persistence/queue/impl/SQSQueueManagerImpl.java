@@ -196,6 +196,7 @@ public class SQSQueueManagerImpl implements QueueManager {
             }
 
             QueueMessage queueMessage = new QueueMessage(message.getMessageId(), message.getReceiptHandle(), body, message.getAttributes().get("type"));
+            queueMessage.setStringBody(message.getBody());
             queueMessages.add(queueMessage);
         }
 
