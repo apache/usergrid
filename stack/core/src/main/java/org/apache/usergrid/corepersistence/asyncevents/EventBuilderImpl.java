@@ -181,8 +181,9 @@ public class EventBuilderImpl implements EventBuilder {
                     return true;
                 }
 
+                //entityIndexOperation.getUpdatedSince will always be 0 except for reindexing the application
                 //only re-index if it has been updated and been updated after our timestamp
-                return  modified.getValue() >= entityIndexOperation.getUpdatedSince();
+                return modified.getValue() >= entityIndexOperation.getUpdatedSince();
             } )
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );
