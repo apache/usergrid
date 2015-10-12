@@ -302,6 +302,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         .collect(() -> new IndexOperationMessage(), (collector, single ) -> collector.ingest(single))
                         .toBlocking().lastOrDefault(null);
 
+                if(indexOperationMessage == null){
+                    throw new IllegalArgumentException("Received null index operation.");
+                }
+
                 //return type that can be indexed and ack'd later
                 return new IndexEventResult(Optional.fromNullable(message), Optional.fromNullable(indexOperationMessage), thisEvent.getCreationTime());
             } catch (Exception e) {
