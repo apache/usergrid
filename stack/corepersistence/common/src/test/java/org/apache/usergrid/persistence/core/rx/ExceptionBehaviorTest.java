@@ -27,6 +27,7 @@ import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -69,6 +70,31 @@ public class ExceptionBehaviorTest {
             }).toBlocking().lastOrDefault(null);
 
         Assert.assertEquals(listReturn,new ArrayList<Integer>());
+    }
+
+    @Test()
+    public void testSequence3(){
+        ArrayList listReturn =  Observable.range(0, 2)
+            .collect(()->new ArrayList(),(list,i) ->{
+                list.add(i);
+            }).toBlocking().first();
+
+        Assert.assertEquals(listReturn, Observable.range(0, 2).toList().toBlocking().last());
+    }
+
+    @Test(expected = TestException.class)
+    public void testStreamException(){
+        List<Integer> listReturn = new ArrayList<Integer>();
+        listReturn.add(0);
+        listReturn.add(1);
+        listReturn.add(2);
+        listReturn.stream().map(i->{
+            if(i%2 == 0){
+                throw new TestException("test");
+            }
+            return i * 2;
+        }).collect(Collectors.toList());
+       Assert.fail("test");
     }
 
 //
