@@ -259,65 +259,66 @@ public class AmazonAsyncEventService implements AsyncEventService {
             logger.debug("callEventHandlers with {} message", messages.size());
         }
 
-        Observable<IndexEventResult> masterObservable = Observable.from(messages).map(message -> {
-            AsyncEvent event = null;
-            try {
-                event = (AsyncEvent) message.getBody();
-            } catch (ClassCastException cce) {
-                logger.error("Failed to deserialize message body", cce);
-            }
-
-            if (event == null) {
-                logger.error("AsyncEvent type or event is null!");
-                return new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent(), System.currentTimeMillis());
-            }
-
-            final AsyncEvent thisEvent = event;
-            if (logger.isDebugEnabled()) {
-                logger.debug("Processing {} event", event);
-            }
-
-            try {
-                Observable<IndexOperationMessage> indexoperationObservable;
-                //merge each operation to a master observable;
-                if (event instanceof EdgeDeleteEvent) {
-                    indexoperationObservable = handleEdgeDelete(message);
-                } else if (event instanceof EdgeIndexEvent) {
-                    indexoperationObservable = handleEdgeIndex(message);
-                } else if (event instanceof EntityDeleteEvent) {
-                    indexoperationObservable = handleEntityDelete(message);
-                } else if (event instanceof EntityIndexEvent) {
-                    indexoperationObservable = handleEntityIndexUpdate(message);
-                } else if (event instanceof InitializeApplicationIndexEvent) {
-                    //does not return observable
-                    handleInitializeApplicationIndex(event, message);
-                    indexoperationObservable = Observable.just(new IndexOperationMessage());
-                } else {
-                    throw new Exception("Unknown EventType");//TODO: print json instead
+        List<IndexEventResult> indexEventResults = messages.stream()
+            .map(message -> {
+                AsyncEvent event = null;
+                try {
+                    event = (AsyncEvent) message.getBody();
+                } catch (ClassCastException cce) {
+                    logger.error("Failed to deserialize message body", cce);
                 }
 
-                //collect all of the
-                IndexOperationMessage indexOperationMessage =
-                    indexoperationObservable
-                        .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
-                        .toBlocking().lastOrDefault(null);
-
-                if (indexOperationMessage == null || indexOperationMessage.isEmpty()) {
-                    logger.info("Received empty index sequence message:({}), body:({}) ",
-                        message.getMessageId(),message.getStringBody());
+                if (event == null) {
+                    logger.error("AsyncEvent type or event is null!");
+                    return new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent(), System.currentTimeMillis());
                 }
 
-                //return type that can be indexed and ack'd later
-                return new IndexEventResult(Optional.fromNullable(message), Optional.fromNullable(indexOperationMessage), thisEvent.getCreationTime());
-            } catch (Exception e) {
-                logger.error("Failed to index message: " + message.getMessageId(), message.getStringBody() ,e);
-                return new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(), event.getCreationTime());
-            }
-        });
-        //resolve the list and return it.
-        final List<IndexEventResult> indexEventResults = masterObservable
-            .collect(() -> new ArrayList<IndexEventResult>(), (list,indexEventResult) -> list.add(indexEventResult) )
-            .toBlocking().lastOrDefault(null);
+                final AsyncEvent thisEvent = event;
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Processing {} event", event);
+                }
+
+                try {
+                    //check for empty sets
+                    boolean validateEmptySets = true;
+                    Observable<IndexOperationMessage> indexoperationObservable;
+                    //merge each operation to a master observable;
+                    if (event instanceof EdgeDeleteEvent) {
+                        indexoperationObservable = handleEdgeDelete(message);
+                    } else if (event instanceof EdgeIndexEvent) {
+                        indexoperationObservable = handleEdgeIndex(message);
+                    } else if (event instanceof EntityDeleteEvent) {
+                        indexoperationObservable = handleEntityDelete(message);
+                    } else if (event instanceof EntityIndexEvent) {
+                        indexoperationObservable = handleEntityIndexUpdate(message);
+                    } else if (event instanceof InitializeApplicationIndexEvent) {
+                        //does not return observable
+                        handleInitializeApplicationIndex(event, message);
+                        indexoperationObservable = Observable.just(new IndexOperationMessage());
+                        validateEmptySets = false;
+                    } else {
+                        throw new Exception("Unknown EventType");//TODO: print json instead
+                    }
+
+                    //collect all of the
+                    IndexOperationMessage indexOperationMessage =
+                        indexoperationObservable
+                            .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
+                            .toBlocking().lastOrDefault(null);
+
+                    if (validateEmptySets && (indexOperationMessage == null || indexOperationMessage.isEmpty())) {
+                        logger.error("Received empty index sequence message:({}), body:({}) ",
+                            message.getMessageId(), message.getStringBody());
+                    }
+
+                    //return type that can be indexed and ack'd later
+                    return new IndexEventResult(Optional.fromNullable(message), Optional.fromNullable(indexOperationMessage), thisEvent.getCreationTime());
+                } catch (Exception e) {
+                    logger.error("Failed to index message: " + message.getMessageId(), message.getStringBody(), e);
+                    return new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(), event.getCreationTime());
+                }
+            })
+            .collect(Collectors.toList());
 
 
         return indexEventResults;
