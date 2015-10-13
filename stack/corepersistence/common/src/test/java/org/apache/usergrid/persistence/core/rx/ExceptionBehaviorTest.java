@@ -18,11 +18,15 @@
 package org.apache.usergrid.persistence.core.rx;
 
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import rx.Observable;
 import rx.Observer;
 import rx.schedulers.Schedulers;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -45,6 +49,26 @@ public class ExceptionBehaviorTest {
         Observable.range( 0, 1 ).map( integer -> {
             throw new TestException( "I throw and exception" );
         } ).toBlocking().last();
+    }
+
+    @Test()
+    public void testSequence(){
+        ArrayList listReturn =  Observable.range(0, 1).flatMap(i -> Observable.empty())
+            .collect(()->new ArrayList(),(list,i) ->{
+                list.add(i);
+            }).toBlocking().lastOrDefault(null);
+
+        Assert.assertEquals(listReturn,new ArrayList<Integer>());
+    }
+
+    @Test()
+    public void testSequence2(){
+        ArrayList listReturn =  Observable.range(0, 2).buffer(2).flatMap(i -> Observable.empty())
+            .collect(()->new ArrayList(),(list,i) ->{
+                list.add(i);
+            }).toBlocking().lastOrDefault(null);
+
+        Assert.assertEquals(listReturn,new ArrayList<Integer>());
     }
 
 //
