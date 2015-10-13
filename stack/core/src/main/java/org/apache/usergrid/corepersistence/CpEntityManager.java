@@ -2885,6 +2885,8 @@ public class CpEntityManager implements EntityManager {
             map.put("some prop", "test");
             boolean hasFinished = false;
             Entity refreshEntity = create("refresh", map);
+            IndexRefreshCommand.IndexRefreshCommandInfo indexRefreshCommandInfo
+                = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
             try {
                 for (int i = 0; i < 10; i++) {
                     if (searchCollection(
@@ -2897,12 +2899,14 @@ public class CpEntityManager implements EntityManager {
                         break;
                     }
                     Thread.sleep(250);
-                    return managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
+                }
+                if(!hasFinished){
+                    logger.warn("Did not find entity {} during refresh.",refreshEntity.getUuid());
                 }
             }finally {
                 delete(refreshEntity);
             }
-            return new IndexRefreshCommand.IndexRefreshCommandInfo(hasFinished,System.currentTimeMillis() - start);
+            return indexRefreshCommandInfo;
         } catch (Exception e) {
             throw new RuntimeException("refresh failed",e);
         }
