@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
@@ -248,7 +249,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     }
 
-
     /**
      * calls the event handlers and returns a result with information on whether it needs to be ack'd and whether it needs to be indexed
      * @param messages
@@ -259,7 +259,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             logger.debug("callEventHandlers with {} message", messages.size());
         }
 
-        List<IndexEventResult> indexEventResults = messages.stream()
+        Stream<IndexEventResult> indexEventResults = messages.stream()
             .map(message -> {
                 AsyncEvent event = null;
                 try {
@@ -279,7 +279,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 }
 
                 try {
-                    //check for empty sets
+
+                    //check for empty sets if this is true
                     boolean validateEmptySets = true;
                     Observable<IndexOperationMessage> indexoperationObservable;
                     //merge each operation to a master observable;
@@ -295,7 +296,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         //does not return observable
                         handleInitializeApplicationIndex(event, message);
                         indexoperationObservable = Observable.just(new IndexOperationMessage());
-                        validateEmptySets = false;
+                        validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
                     } else {
                         throw new Exception("Unknown EventType");//TODO: print json instead
                     }
@@ -309,6 +310,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                     if (validateEmptySets && (indexOperationMessage == null || indexOperationMessage.isEmpty())) {
                         logger.error("Received empty index sequence message:({}), body:({}) ",
                             message.getMessageId(), message.getStringBody());
+                        throw new Exception("Received empty index sequence.");
                     }
 
                     //return type that can be indexed and ack'd later
@@ -317,13 +319,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
                     logger.error("Failed to index message: " + message.getMessageId(), message.getStringBody(), e);
                     return new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(), event.getCreationTime());
                 }
-            })
-            .collect(Collectors.toList());
+            });
 
 
-        return indexEventResults;
+        return indexEventResults.collect(Collectors.toList());
     }
-
 
     @Override
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
