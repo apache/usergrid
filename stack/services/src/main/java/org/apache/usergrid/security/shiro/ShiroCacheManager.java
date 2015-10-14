@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.security.shiro;
+package org.apache.usergrid.security.shiro;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Injector;
@@ -24,8 +24,6 @@ import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.usergrid.persistence.cache.CacheFactory;
-import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
-import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
