@@ -20,6 +20,7 @@ module.exports = {
     appName: "test-app", //must pre create app
     numberOfUsers: 5,
     numberOfEntities: 20,
+    numberOfEntitiesConsistency: 100,
     org: {
         clientId: "",
         clientSecret: ""

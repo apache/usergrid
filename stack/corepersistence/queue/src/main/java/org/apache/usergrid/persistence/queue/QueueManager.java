@@ -69,4 +69,9 @@ public interface QueueManager {
      * @throws IOException
      */
     void sendMessage(Object body)throws IOException;
+
+    /**
+     * purge messages
+     */
+    void deleteQueue();
 }
