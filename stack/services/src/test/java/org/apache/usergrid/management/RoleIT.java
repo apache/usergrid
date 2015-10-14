@@ -58,8 +58,7 @@ public class RoleIT {
     public void testRoleInactivity() throws Exception {
 
         OrganizationOwnerInfo ooi = setup.getMgmtSvc()
-                                         .createOwnerAndOrganization( "RoleIT", "edanuff5", "Ed Anuff", "ed@anuff.com5",
-                                                 "test", true, false );
+            .createOwnerAndOrganization( "RoleIT", "edanuff5", "Ed Anuff", "ed@anuff.com5", "test", true, false );
 
         OrganizationInfo organization = ooi.getOrganization();
 
@@ -74,7 +73,7 @@ public class RoleIT {
         properties.put( "activated", true );
         User user = em.create( User.ENTITY_TYPE, User.class, properties );
 
-        em.createRole( "logged-in", "Logged In", 1000 );
+        em.createRole( "logged-in", "Logged In", 2000 );
         setup.getEntityIndex().refresh(em.getApplicationId());
         em.addUserToRole( user.getUuid(), "logged-in" );
 
@@ -92,7 +91,7 @@ public class RoleIT {
 
         LOG.info( "Has role \"logged-in\"" );
 
-        Thread.sleep( 1000 );
+        Thread.sleep( 2100 );
 
         subject.login( token );
 

@@ -72,6 +72,9 @@ public abstract class PrincipalIdentifier {
         this.accessTokenCredentials = accessTokenCredentials;
     }
 
+    /** Return application UUID or null if none is associated with this prinicipal */
+
+    public abstract UUID getApplicationId();
 
     public abstract void grant(
         UsergridAuthorizationInfo info,

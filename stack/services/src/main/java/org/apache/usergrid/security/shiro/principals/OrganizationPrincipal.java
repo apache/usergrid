@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import com.google.common.collect.HashBiMap;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
@@ -60,13 +61,18 @@ public class OrganizationPrincipal extends PrincipalIdentifier {
     }
 
     @Override
+    public UUID getApplicationId() {
+        return CpNamingUtils.MANAGEMENT_APPLICATION_ID;
+    }
+
+    @Override
     public void grant(
         UsergridAuthorizationInfo info,
         EntityManagerFactory emf,
         ManagementService management,
         TokenService tokens) {
 
-        // OrganizationPricipals are usually only through OAuth
+        // OrganizationPrincipals are usually only through OAuth
         // They have access to a single organization
 
         Map<UUID, String> organizationSet = HashBiMap.create();

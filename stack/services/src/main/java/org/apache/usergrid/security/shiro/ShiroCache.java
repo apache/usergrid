@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.security.shiro;
+package org.apache.usergrid.security.shiro;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.shiro.cache.Cache;
@@ -25,8 +25,6 @@ import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
-import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
 import org.apache.usergrid.security.shiro.principals.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,8 +138,6 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     /** get cache for application scope */
     private ScopedCache<String, V> getCacheScope( K key ) {
 
-        // get the principal
-
         PrincipalIdentifier principal;
         if ( key instanceof SimplePrincipalCollection) {
             SimplePrincipalCollection spc = (SimplePrincipalCollection) key;
@@ -151,30 +147,7 @@ public class ShiroCache<K, V> implements Cache<K,V> {
             principal = (PrincipalIdentifier)key;
         }
 
-        // get the id for the scope
-
-        UUID applicationId;
-        if ( principal instanceof UserPrincipal ) {
-            UserPrincipal p = (UserPrincipal)principal;
-            applicationId = p.getApplicationId();
-
-        } else if ( principal instanceof ApplicationPrincipal ) {
-            ApplicationPrincipal p = (ApplicationPrincipal)principal;
-            applicationId = p.getApplicationId();
-
-        } else if ( principal instanceof OrganizationPrincipal ) {
-            applicationId = CpNamingUtils.MANAGEMENT_APPLICATION_ID;
-
-        } else if ( principal instanceof ApplicationGuestPrincipal) {
-            ApplicationGuestPrincipal p = (ApplicationGuestPrincipal)principal;
-            applicationId = p.getApplicationId();
-
-        } else {
-            logger.error("Unknown key type: " + key.getClass().getSimpleName());
-            throw new RuntimeException("Unknown key type: " + principal.getClass().getSimpleName());
-        }
-
-        CacheScope scope = new CacheScope(new SimpleId(applicationId, "application"));
+        CacheScope scope = new CacheScope(new SimpleId(principal.getApplicationId(), "application"));
         ScopedCache<String, V> scopedCache = cacheFactory.getScopedCache(scope);
         return scopedCache;
     }
