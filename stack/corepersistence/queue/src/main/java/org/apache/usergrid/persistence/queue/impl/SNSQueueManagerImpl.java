@@ -364,6 +364,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
             for (Message message : messages) {
                 Object body;
+                final String originalBody = message.getBody();
 
                 try {
                     final JsonNode bodyNode =  mapper.readTree(message.getBody());
@@ -375,6 +376,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                 }
 
                 QueueMessage queueMessage = new QueueMessage(message.getMessageId(), message.getReceiptHandle(), body, message.getAttributes().get("type"));
+                queueMessage.setStringBody(originalBody);
                 queueMessages.add(queueMessage);
             }
 
