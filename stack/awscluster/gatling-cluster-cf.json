@@ -77,7 +77,7 @@
         "Branch": {
             "Description": "The branch of usergrid to check out",
             "Type": "String",
-            "Default": "two-dot-o-dev"
+            "Default": "master"
         }
     },
 

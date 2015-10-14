@@ -77,7 +77,6 @@ public class ConnectionResourceTest extends AbstractRestIT {
         }
         catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
-            assertEquals( 404, uie.getResponse().getStatus() );
         }
     }
 
@@ -167,7 +166,6 @@ public class ConnectionResourceTest extends AbstractRestIT {
         }
         catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
-            assertEquals( 404, uie.getResponse().getStatus() );
         }
     }
 
@@ -203,7 +201,6 @@ public class ConnectionResourceTest extends AbstractRestIT {
         }
         catch ( NotFoundException uie ) {
             // Should return a 404 Not Found
-            assertEquals( 404, uie.getResponse().getStatus() );
         }
     }
 

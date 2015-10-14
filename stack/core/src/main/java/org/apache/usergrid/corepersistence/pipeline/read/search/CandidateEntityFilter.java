@@ -57,19 +57,19 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
-    private final IndexProducer producer;
+    private final IndexProducer indexProducer;
 
 
     @Inject
     public CandidateEntityFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
                                   final EntityIndexFactory entityIndexFactory,
                                   final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                                  final IndexProducer producer
+                                  final IndexProducer indexProducer
                                   ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.producer = producer;
+        this.indexProducer = indexProducer;
     }
 
 
@@ -111,8 +111,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                             .flatMap(idList -> entityCollectionManager.load(idList));
                         //now we have a collection, validate our canidate set is correct.
                         return entitySets.map(
-                            entitySet -> new EntityVerifier(producer,
-                                applicationIndex.createBatch(), entitySet, candidateResults)
+                            entitySet -> new EntityVerifier(
+                                applicationIndex.createBatch(), entitySet, candidateResults,indexProducer)
                         )
                             .doOnNext(entityCollector -> entityCollector.merge())
                             .flatMap(entityCollector -> Observable.from(entityCollector.getResults()))
@@ -152,18 +152,19 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         private static final Logger logger = LoggerFactory.getLogger( EntityVerifier.class );
         private List<FilterResult<Entity>> results = new ArrayList<>();
 
-        private final IndexProducer producer;
         private final EntityIndexBatch batch;
         private final List<FilterResult<Candidate>> candidateResults;
+        private final IndexProducer indexProducer;
         private final EntitySet entitySet;
 
 
-        public EntityVerifier( final IndexProducer producer, final EntityIndexBatch batch, final EntitySet entitySet,
-                               final List<FilterResult<Candidate>> candidateResults ) {
-            this.producer = producer;
+        public EntityVerifier( final EntityIndexBatch batch, final EntitySet entitySet,
+                               final List<FilterResult<Candidate>> candidateResults,
+                               final IndexProducer indexProducer) {
             this.batch = batch;
             this.entitySet = entitySet;
             this.candidateResults = candidateResults;
+            this.indexProducer = indexProducer;
             this.results = new ArrayList<>( entitySet.size() );
         }
 
@@ -177,7 +178,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                 validate( candidateResult );
             }
 
-            producer.put(batch).subscribe();
+            indexProducer.put(batch.build()).subscribe();
         }
 
 

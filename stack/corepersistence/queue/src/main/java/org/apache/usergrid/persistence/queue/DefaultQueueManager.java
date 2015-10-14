@@ -72,4 +72,9 @@ public class DefaultQueueManager implements QueueManager {
         String uuid = UUID.randomUUID().toString();
         queue.add(new QueueMessage(uuid,"handle_"+uuid,body,"put type here"));
     }
+
+    @Override
+    public void deleteQueue() {
+
+    }
 }

@@ -68,4 +68,9 @@ public class ImportQueueManager implements QueueManager {
     public void sendMessage( final Object body ) throws IOException {
 
     }
+
+    @Override
+    public void deleteQueue() {
+
+    }
 }

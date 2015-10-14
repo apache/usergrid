@@ -27,7 +27,7 @@
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>2.1.0-SNAPSHOT</version>
+  <version>2.1.1-SNAPSHOT</version>
   <name>Usergrid Parent</name>
   <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
@@ -97,7 +97,7 @@
       <!-- =================================================================== -->
 
       <amber-version>0.22-incubating</amber-version>
-      <aws.version>1.10.6</aws.version>
+      <aws.version>1.10.20</aws.version>
       <cassandra-version>1.2.18</cassandra-version>
       <guava.version>18.0</guava.version>
       <guice.version>4.0-beta5</guice.version>
