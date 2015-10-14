@@ -23,21 +23,24 @@ package org.apache.usergrid.persistence.queue;
 import rx.Observable;
 
 import java.io.IOException;
+import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  * Default queue manager implementation, uses in memory linked queue
  */
 public class DefaultQueueManager implements QueueManager {
-    public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000000);
+    public LinkedBlockingQueue<QueueMessage> queue = new LinkedBlockingQueue<>();
 
     @Override
     public synchronized Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
-        queue.drainTo(returnQueue,1);
+        queue.drainTo(returnQueue,10);
         return Observable.from( returnQueue);
     }
 
