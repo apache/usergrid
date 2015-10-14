@@ -64,6 +64,7 @@ public class AmazonNotificationUtils {
         final Map<String, String> queueAttributes = new HashMap<>( 2 );
         queueAttributes.put( "MessageRetentionPeriod", fig.getRetentionPeriod() );
         queueAttributes.put( "RedrivePolicy", redrivePolicy );
+        queueAttributes.put( "VisibilityTimeout", fig.getVisibilityTimeout()  );
 
         CreateQueueRequest createQueueRequest = new CreateQueueRequest().
                                                                             withQueueName( queueName )
