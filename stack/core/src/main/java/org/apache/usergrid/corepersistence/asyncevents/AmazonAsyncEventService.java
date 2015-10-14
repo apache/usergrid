@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
@@ -71,7 +73,6 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 
@@ -226,84 +227,102 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     }
 
+    /**
+     * Ack message in SQS
+     */
+    public void ack(final List<QueueMessage> messages) {
 
-    private void handleMessages( final List<QueueMessage> messages ) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("handleMessages with {} message", messages.size());
-        }
+        final Timer.Context timer = this.ackTimer.time();
 
-        Observable<IndexEventResult> masterObservable = Observable.from(messages).flatMap(message -> {
-            final AsyncEvent event = (AsyncEvent) message.getBody();
-
-            logger.debug("Processing {} event", event);
-
-            if (event == null) {
-                logger.error("AsyncEvent type or event is null!");
-                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
-            }
-            try {
-                //merge each operation to a master observable;
-                if (event instanceof EdgeDeleteEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEdgeDelete(queueMessage));
-                } else if (event instanceof EdgeIndexEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEdgeIndex(queueMessage));
-                } else if (event instanceof EntityDeleteEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEntityDelete(queueMessage));
-                } else if (event instanceof EntityIndexEvent) {
-                    return handleIndexOperation(message, queueMessage -> handleEntityIndexUpdate(queueMessage));
-                } else if (event instanceof InitializeApplicationIndexEvent) {
-                    //does not return observable
-                    handleInitializeApplicationIndex(message);
-                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), true));
-                } else {
-                    logger.error("Unknown EventType: {}", event);
-                    return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
-                }
-            }catch (Exception e){
-                logger.error("Failed to index entity", e,message);
-                return Observable.just(new IndexEventResult(message, Optional.<IndexOperationMessage>absent(), false));
-            }finally {
-                messageCycle.update(System.currentTimeMillis() - event.getCreationTime());
-
-            }
-        });
-
-        masterObservable
-            //remove unsuccessful
-            .filter(indexEventResult -> indexEventResult.success() && indexEventResult.getIndexOperationMessage().isPresent())
-            //take the max
-            .buffer(MAX_TAKE)
-            //map them to index results and return them
-            .map(indexEventResults -> {
-                IndexOperationMessage combined = new IndexOperationMessage();
-                indexEventResults.stream()
-                    .forEach(indexEventResult -> combined.ingest(indexEventResult.getIndexOperationMessage().get()));
-                indexProducer.put(combined).subscribe();//execute the index operation
-                return indexEventResults;
-            })
-                //flat map the ops so they are back to individual
-            .flatMap(indexEventResults -> Observable.from(indexEventResults))
-            //ack each message
-            .map(indexEventResult -> {
-                ack(indexEventResult.queueMessage);
-                return indexEventResult;
-            })
-            .subscribe();
-    }
-
-    //transform index operation to
-    private Observable<IndexEventResult> handleIndexOperation(QueueMessage queueMessage,
-                                                              Func1<QueueMessage, Observable<IndexOperationMessage>> operation
-    ){
         try{
-            return operation.call(queueMessage)
-                .map(indexOperationMessage -> new IndexEventResult(queueMessage, Optional.fromNullable(indexOperationMessage), true));
-        }catch (Exception e){
-            logger.error("failed to run index",e);
-            return Observable.just( new IndexEventResult(queueMessage, Optional.<IndexOperationMessage>absent(),false));
+            queue.commitMessages(messages);
+
+            //decrement our in-flight counter
+            inFlight.decrementAndGet();
+
+        }catch(Exception e){
+            throw new RuntimeException("Unable to ack messages", e);
+        }finally {
+            timer.stop();
         }
+
+
     }
 
+    /**
+     * calls the event handlers and returns a result with information on whether it needs to be ack'd and whether it needs to be indexed
+     * @param messages
+     * @return
+     */
+    private List<IndexEventResult> callEventHandlers(final List<QueueMessage> messages) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("callEventHandlers with {} message", messages.size());
+        }
+
+        Stream<IndexEventResult> indexEventResults = messages.stream()
+            .map(message -> {
+                AsyncEvent event = null;
+                try {
+                    event = (AsyncEvent) message.getBody();
+                } catch (ClassCastException cce) {
+                    logger.error("Failed to deserialize message body", cce);
+                }
+
+                if (event == null) {
+                    logger.error("AsyncEvent type or event is null!");
+                    return new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent(), System.currentTimeMillis());
+                }
+
+                final AsyncEvent thisEvent = event;
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Processing {} event", event);
+                }
+
+                try {
+                    //check for empty sets if this is true
+                    boolean validateEmptySets = true;
+                    Observable<IndexOperationMessage> indexoperationObservable;
+                    //merge each operation to a master observable;
+                    if (event instanceof EdgeDeleteEvent) {
+                        indexoperationObservable = handleEdgeDelete(message);
+                    } else if (event instanceof EdgeIndexEvent) {
+                        indexoperationObservable = handleEdgeIndex(message);
+                    } else if (event instanceof EntityDeleteEvent) {
+                        indexoperationObservable = handleEntityDelete(message);
+                    } else if (event instanceof EntityIndexEvent) {
+                        indexoperationObservable = handleEntityIndexUpdate(message);
+                    } else if (event instanceof InitializeApplicationIndexEvent) {
+                        //does not return observable
+                        handleInitializeApplicationIndex(event, message);
+                        indexoperationObservable = Observable.just(new IndexOperationMessage());
+                        validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
+                    } else {
+                        throw new Exception("Unknown EventType");//TODO: print json instead
+                    }
+
+                    //collect all of the
+                    IndexOperationMessage indexOperationMessage =
+                        indexoperationObservable
+                            .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
+                            .toBlocking().lastOrDefault(null);
+
+                    if (validateEmptySets && (indexOperationMessage == null || indexOperationMessage.isEmpty())) {
+                        logger.error("Received empty index sequence message:({}), body:({}) ",
+                            message.getMessageId(), message.getStringBody());
+                        throw new Exception("Received empty index sequence.");
+                    }
+
+                    //return type that can be indexed and ack'd later
+                    return new IndexEventResult(Optional.fromNullable(message), Optional.fromNullable(indexOperationMessage), thisEvent.getCreationTime());
+                } catch (Exception e) {
+                    logger.error("Failed to index message: " + message.getMessageId(), message.getStringBody(), e);
+                    return new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(), event.getCreationTime());
+                }
+            });
+
+
+        return indexEventResults.collect(Collectors.toList());
+    }
 
     @Override
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
@@ -359,7 +378,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     public Observable<IndexOperationMessage> handleEdgeIndex(final QueueMessage message) {
 
-        Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEdgeIndex");
+        Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEdgeIndex" );
 
         final AsyncEvent event = (AsyncEvent) message.getBody();
 
@@ -375,8 +394,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(edgeIndexEvent.getEntityId()).flatMap( entity -> eventBuilder.buildNewEdge(
-            applicationScope, entity, edge ) );
+        final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(edgeIndexEvent.getEntityId()).flatMap(entity -> eventBuilder.buildNewEdge(
+            applicationScope, entity, edge));
         return edgeIndexObservable;
     }
 
@@ -389,7 +408,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     public Observable<IndexOperationMessage> handleEdgeDelete(final QueueMessage message) {
 
-        Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEdgeDelete");
+        Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEdgeDelete" );
 
         final AsyncEvent event = (AsyncEvent) message.getBody();
 
@@ -441,17 +460,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
             entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
 
 
-        final Observable merged = Observable.merge( entityDeleteResults.getEntitiesCompacted(),
-            entityDeleteResults.getIndexObservable() );
-        return merged;
+        entityDeleteResults
+            .getEntitiesCompacted()
+            .collect(() -> new ArrayList<>(), (list, item) -> list.add(item)).toBlocking().lastOrDefault(null);
+
+        return entityDeleteResults.getIndexObservable();
     }
 
 
-    public void handleInitializeApplicationIndex(final QueueMessage message) {
+    public void handleInitializeApplicationIndex(final AsyncEvent event, final QueueMessage message) {
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleInitializeApplicationIndex");
-
-        final AsyncEvent event = (AsyncEvent) message.getBody();
-        Preconditions.checkNotNull( message, "QueueMessage Body cannot be null for handleInitializeApplicationIndex" );
         Preconditions.checkArgument(event instanceof InitializeApplicationIndexEvent, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getClass()));
 
         final InitializeApplicationIndexEvent initializeApplicationIndexEvent =
@@ -460,7 +478,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final IndexLocationStrategy indexLocationStrategy = initializeApplicationIndexEvent.getIndexLocationStrategy();
         final EntityIndex index = entityIndexFactory.createEntityIndex( indexLocationStrategy );
         index.initialize();
-        ack( message );
     }
 
     /**
@@ -533,19 +550,87 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         }
                     })
                             //this won't block our read loop, just reads and proceeds
-                            .doOnNext(this::handleMessages).subscribeOn(Schedulers.newThread());
+                            .map(messages ->
+                            {
+                                if (messages == null || messages.size() == 0) {
+                                    return null;
+                                }
+
+                                try {
+                                    List<IndexEventResult> indexEventResults = callEventHandlers(messages);
+                                    List<QueueMessage> messagesToAck = submitToIndex(indexEventResults);
+                                    if (messagesToAck == null || messagesToAck.size() == 0) {
+                                        logger.error("No messages came back from the queue operation should have seen "+messages.size(),messages);
+                                        return messagesToAck;
+                                    }
+                                    if(messagesToAck.size()<messages.size()){
+                                        logger.error("Missing messages from queue post operation",messages,messagesToAck);
+                                    }
+                                    //ack each message, but only if we didn't error.
+                                    ack(messagesToAck);
+                                    return messagesToAck;
+                                } catch (Exception e) {
+                                    logger.error("failed to ack messages to sqs", e);
+                                    return null;
+                                    //do not rethrow so we can process all of them
+                                }
+                            });
 
             //start in the background
 
-            final Subscription subscription = consumer.subscribe();
+            final Subscription subscription = consumer.subscribeOn(Schedulers.newThread()).subscribe();
 
             subscriptions.add(subscription);
         }
     }
 
+    /**
+     * Submit results to index and return the queue messages to be ack'd
+     * @param indexEventResults
+     * @return
+     */
+    private List<QueueMessage> submitToIndex( List<IndexEventResult> indexEventResults) {
+        //if nothing came back then return null
+        if(indexEventResults==null){
+            return null;
+        }
+
+        final IndexOperationMessage combined = new IndexOperationMessage();
+
+        //stream and filer the messages
+        List<QueueMessage> messagesToAck = indexEventResults.stream()
+            .map(indexEventResult -> {
+                //collect into the index submission
+                if (indexEventResult.getIndexOperationMessage().isPresent()) {
+                    combined.ingest(indexEventResult.getIndexOperationMessage().get());
+                }
+                return indexEventResult;
+            })
+                //filter out the ones that need to be ack'd
+            .filter(indexEventResult -> indexEventResult.getQueueMessage().isPresent())
+            .map(indexEventResult -> {
+                //record the cycle time
+                messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime());
+                return indexEventResult;
+            })
+                //ack after successful completion of the operation.
+            .map(result -> result.getQueueMessage().get())
+            .collect(Collectors.toList());
+
+        //send the batch
+        //TODO: should retry?
+        try {
+            indexProducer.put(combined).toBlocking().lastOrDefault(null);
+        }catch (Exception e){
+            logger.error("Failed to submit to index producer",e);
+            throw e;
+        }
+        return messagesToAck;
+    }
+
     public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
         //change to id scope to avoid serialization issues
-        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, id), updatedSince));
+        offer( new EntityIndexEvent( new EntityIdScope( applicationScope, id ), updatedSince ) );
     }
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
@@ -559,36 +644,31 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    /**
-     * Subscribes to the observable and acks the message via SQS on completion
-     * @param observable
-     * @param message
-     */
-    private void subscribeAndAck( final Observable<?> observable, final QueueMessage message ){
-       observable.doOnCompleted( ()-> ack(message)  ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
-    }
     public class IndexEventResult{
-        private final QueueMessage queueMessage;
+        private final Optional<QueueMessage> queueMessage;
         private final Optional<IndexOperationMessage> indexOperationMessage;
-        private final boolean success;
+        private final long creationTime;
 
-        public IndexEventResult(QueueMessage queueMessage, Optional<IndexOperationMessage> indexOperationMessage ,boolean success){
+
+        public IndexEventResult(Optional<QueueMessage> queueMessage, Optional<IndexOperationMessage> indexOperationMessage, long creationTime){
 
             this.queueMessage = queueMessage;
             this.indexOperationMessage = indexOperationMessage;
-            this.success = success;
+
+            this.creationTime = creationTime;
         }
 
-        public QueueMessage getQueueMessage() {
+
+        public Optional<QueueMessage> getQueueMessage() {
             return queueMessage;
-        }
-
-        public boolean success() {
-            return success;
         }
 
         public Optional<IndexOperationMessage> getIndexOperationMessage() {
             return indexOperationMessage;
+        }
+
+        public long getCreationTime() {
+            return creationTime;
         }
     }
 }
