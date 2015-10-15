@@ -145,7 +145,7 @@ object AuditScenarios {
         val reqName = session("name").as[String]
         val modified = session("modified").as[String].toLong
         val collectionName = session(SessionVarCollectionName).as[String]
-        val collectionEntities = session(SessionVarCollectionEntities).as[Seq[Any])
+        val collectionEntities = session(SessionVarCollectionEntities).as[Seq[Any]]
         val entityUuid = session(SessionVarEntityUuid).as[String]
         val entityName = session(SessionVarEntityName).as[String]
 
