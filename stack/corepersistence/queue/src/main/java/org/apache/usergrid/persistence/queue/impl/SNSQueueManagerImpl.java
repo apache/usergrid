@@ -351,7 +351,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(url);
         receiveMessageRequest.setMaxNumberOfMessages(limit);
-        receiveMessageRequest.setVisibilityTimeout(transactionTimeout / 1000);
+        receiveMessageRequest.setVisibilityTimeout(Math.max(1, transactionTimeout / 1000));
         receiveMessageRequest.setWaitTimeSeconds(waitTime / 1000);
 
         try {

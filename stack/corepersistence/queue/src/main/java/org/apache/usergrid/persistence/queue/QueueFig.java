@@ -76,10 +76,10 @@ public interface QueueFig extends GuicyFig {
     int getAsyncQueueSize();
 
     /**
-     * Set the visibility timeout for faster retries
+     * Set the visibility timeout (in milliseconds) for faster retries
      * @return
      */
     @Key( "usergrid.queue.visibilityTimeout" )
-    @Default("10")
-    String getVisibilityTimeout();
+    @Default("5000") // 5 seconds
+    int getVisibilityTimeout();
 }
