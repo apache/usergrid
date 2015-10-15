@@ -131,6 +131,38 @@ object AuditScenarios {
         session
       })
 
+  val getCollectionEntityDirect = exec(
+    http("GET collection entity direct")
+      .get("/${collectionName}/${uuid}")
+      .headers(Headers.authToken)
+      .headers(Headers.auditRegionHeaders)
+      .check(status.is(200),jsonPath("$.count").optional.saveAs("count"),extractAuditEntities(SessionVarCollectionEntities)))
+      .exec(session => {
+        val count = session("count").as[String].toInt
+        val uuid = session("uuid").as[String]
+        val entityName = session("name").as[String]
+        val modified = session("modified").as[String].toLong
+        val collectionName = session(SessionVarCollectionName).as[String]
+
+        if (count < 1) {
+          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
+          Settings.incAuditNotFoundAtAll()
+          println(s"NOT FOUND AT ALL: $collectionName.$entityName ($uuid)")
+        } else if (count == 1) {
+          // found via direct access but not query
+          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
+          Settings.incAuditNotFoundViaQuery()
+          println(s"NOT FOUND VIA QUERY: $collectionName.$entityName ($uuid)")
+        } else {
+          // count > 1 -> invalid
+          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
+          Settings.incAuditBadResponse()
+          println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName ($uuid)")
+        }
+
+        session
+      })
+
   val getCollectionEntity = exec(
     http("GET collection entity")
       .get("/${collectionName}?ql=uuid=${uuid}")
@@ -145,20 +177,22 @@ object AuditScenarios {
         val collectionName = session(SessionVarCollectionName).as[String]
 
         if (count < 1) {
-          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
-          Settings.incAuditNotFound()
-          println(s"NOT FOUND: $collectionName.$entityName ($uuid)")
+          // will check to see whether accessible directly
         } else if (count > 1) {
           Settings.addAuditUuid(uuid, collectionName, entityName, modified)
           Settings.incAuditBadResponse()
           println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName ($uuid)")
         } else {
+          // count == 1 -> success
           // println(s"FOUND: $collectionName.$entityName ($uuid)")
           Settings.incAuditSuccess()
         }
 
         session
       })
+      .doIf(session => session("count").as[String].toInt < 1) {
+        exec(getCollectionEntityDirect)
+      }
       .doIf(session => Settings.deleteAfterSuccessfulAudit && session("count").as[String].toInt == 1) {
         // tryMax(Settings.retryCount) {
           exec(deleteAuditedEntity)

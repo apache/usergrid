@@ -429,7 +429,8 @@ object Settings {
   }
 
   private val countAuditSuccess = new AtomicInteger(0)
-  private val countAuditNotFound = new AtomicInteger(0)
+  private val countAuditNotFoundViaQuery = new AtomicInteger(0)
+  private val countAuditNotFoundAtAll = new AtomicInteger(0)
   private val countAuditBadResponse = new AtomicInteger(0)
   private val countAuditEntryDeleteSuccess = new AtomicInteger(0)
   private val countAuditEntryDeleteFailure = new AtomicInteger(0)
@@ -438,8 +439,12 @@ object Settings {
     countAuditSuccess.incrementAndGet()
   }
 
-  def incAuditNotFound(): Unit = {
-    countAuditNotFound.incrementAndGet()
+  def incAuditNotFoundViaQuery(): Unit = {
+    countAuditNotFoundViaQuery.incrementAndGet()
+  }
+
+  def incAuditNotFoundAtAll(): Unit = {
+    countAuditNotFoundAtAll.incrementAndGet()
   }
 
   def incAuditBadResponse(): Unit = {
@@ -457,11 +462,12 @@ object Settings {
   def printAuditResults(): Unit = {
     if (scenarioType == ScenarioType.AuditVerifyCollectionEntities) {
       val countSuccess = countAuditSuccess.get
-      val countNotFound = countAuditNotFound.get
+      val countNotFoundViaQuery = countAuditNotFoundViaQuery.get
+      val countNotFoundAtAll = countAuditNotFoundAtAll.get
       val countBadResponse = countAuditBadResponse.get
       val countDeleteSuccess = countAuditEntryDeleteSuccess.get
       val countDeleteFailure = countAuditEntryDeleteFailure.get
-      val countTotal = countSuccess + countNotFound + countBadResponse
+      val countTotal = countSuccess + countNotFoundViaQuery + countBadResponse
 
       val seconds = ((testEndTime - testStartTime) / 1000).toInt
       val s:Int = seconds % 60
@@ -475,7 +481,8 @@ object Settings {
       println("-----------------------------------------------------------------------------")
       println()
       println(s"Successful:          $countSuccess")
-      println(s"Not Found:           $countNotFound")
+      println(s"Not Found via query: $countNotFoundViaQuery (found via direct access)")
+      println(s"Not Found at all:    $countNotFoundAtAll")
       println(s"Bad Response:        $countBadResponse")
       if (deleteAfterSuccessfulAudit) {
         println(s"Delete Successes:    $countDeleteSuccess")
