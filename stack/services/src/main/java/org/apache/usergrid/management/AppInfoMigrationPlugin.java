@@ -165,7 +165,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             .doOnCompleted( () -> {
                 migrationInfoSerialization.setVersion( getName(), getMaxVersion() );
                 observer.complete();
-            } ).subscribe();
+            } ).subscribe();//let this run through since it handles errors
     }
 
 

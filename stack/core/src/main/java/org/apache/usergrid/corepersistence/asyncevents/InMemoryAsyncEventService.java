@@ -137,7 +137,12 @@ public class InMemoryAsyncEventService implements AsyncEventService {
                 return Observable.just(message);
             }
         });
-        mapped.subscribe();
+        if(!resolveSynchronously){
+            mapped.subscribe(); //only subscribe for async
+        }else {
+            mapped.toBlocking().lastOrDefault(null);
+        }
+
     }
 
     @Override

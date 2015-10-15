@@ -460,7 +460,7 @@ public class AbstractConnectionsService extends AbstractService {
                         throw new RuntimeException( "Unable to save connection", e );
                     }
                 }).subscribeOn( Schedulers.io() );
-            }, 10).subscribe();
+            }, 10).toBlocking().lastOrDefault(null); //needs to rethrow
 
 
         }
