@@ -166,14 +166,14 @@ object AuditScenarios {
           if (entityUuid == null || entityUuid.isEmpty) {
             Settings.incAuditPayloadUuidError()
             println(s"PAYLOAD UUID MISSING (DIRECT): requestedUuid=$uuid")
-          } else if (uuid.equalsIgnoreCase(entityUuid)) {
+          } else if (!uuid.equalsIgnoreCase(entityUuid)) {
             Settings.incAuditPayloadUuidError()
             println(s"PAYLOAD UUID MISMATCH (DIRECT): requestedUuid=$uuid returnedUuid=$entityUuid")
           }
           if (entityName == null || entityName.isEmpty) {
             Settings.incAuditPayloadNameError()
             println(s"PAYLOAD NAME MISSING (DIRECT): requestedName=$reqName")
-          } else if (reqName.equalsIgnoreCase(entityName)) {
+          } else if (!reqName.equalsIgnoreCase(entityName)) {
             Settings.incAuditPayloadNameError()
             println(s"PAYLOAD NAME MISMATCH (DIRECT): requestedName=$reqName returnedName=$entityName")
           }
@@ -217,14 +217,14 @@ object AuditScenarios {
           if (entityUuid == null || entityUuid.isEmpty) {
             Settings.incAuditPayloadUuidError()
             println(s"PAYLOAD UUID MISSING (QUERY): requestedUuid=$uuid")
-          } else if (uuid.equalsIgnoreCase(entityUuid)) {
+          } else if (!uuid.equalsIgnoreCase(entityUuid)) {
             Settings.incAuditPayloadUuidError()
             println(s"PAYLOAD UUID MISMATCH (QUERY): requestedUuid=$uuid returnedUuid=$entityUuid")
           }
           if (entityName == null || entityName.isEmpty) {
             Settings.incAuditPayloadNameError()
             println(s"PAYLOAD NAME MISSING (QUERY): requestedName=$reqName")
-          } else if (reqName.equalsIgnoreCase(entityName)) {
+          } else if (!reqName.equalsIgnoreCase(entityName)) {
             Settings.incAuditPayloadNameError()
             println(s"PAYLOAD NAME MISMATCH (QUERY): requestedName=$reqName returnedName=$entityName")
           }
