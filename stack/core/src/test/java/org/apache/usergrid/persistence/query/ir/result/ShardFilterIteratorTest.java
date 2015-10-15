@@ -168,5 +168,10 @@ public class ShardFilterIteratorTest {
             completed = true;
             return scanColumns;
         }
+        
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not implemented");
+        }
     }
 }
