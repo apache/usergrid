@@ -209,7 +209,7 @@ object EntityCollectionScenarios {
         .headers(Headers.authToken)
         .body(StringBody("""${entity}"""))
         // 200 for success, 400 if already exists
-        .check(status.in(Seq(200)), extractCreateUuid(SessionVarUuid), extractCreateModified(SessionVarModified)))
+        .check(status.in(Seq(200)), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
           val uuid = session(SessionVarUuid).as[String]
           val entityName = session("entityName").as[String]
@@ -299,7 +299,7 @@ object EntityCollectionScenarios {
         .get("/" + Settings.collection + "/${entityName}")
         .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authAnonymous)
-        .check(status.is(200), extractCreateUuid(SessionVarUuid), extractCreateModified(SessionVarModified)))
+        .check(status.is(200), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
           val uuid = session(SessionVarUuid).as[String]
           val entityName = session("entityName").as[String]
@@ -317,7 +317,7 @@ object EntityCollectionScenarios {
         .get("/" + Settings.collection + "/${entityName}")
         .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authToken)
-        .check(status.is(200), extractCreateUuid(SessionVarUuid), extractCreateModified(SessionVarModified)))
+        .check(status.is(200), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
           val uuid = session(SessionVarUuid).as[String]
           val entityName = session("entityName").as[String]

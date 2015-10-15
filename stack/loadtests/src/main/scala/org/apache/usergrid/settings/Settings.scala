@@ -432,6 +432,8 @@ object Settings {
   private val countAuditNotFoundViaQuery = new AtomicInteger(0)
   private val countAuditNotFoundAtAll = new AtomicInteger(0)
   private val countAuditBadResponse = new AtomicInteger(0)
+  private val countAuditPayloadUuidError = new AtomicInteger(0)
+  private val countAuditPayloadNameError = new AtomicInteger(0)
   private val countAuditEntryDeleteSuccess = new AtomicInteger(0)
   private val countAuditEntryDeleteFailure = new AtomicInteger(0)
 
@@ -451,6 +453,14 @@ object Settings {
     countAuditBadResponse.incrementAndGet()
   }
 
+  def incAuditPayloadUuidError(): Unit = {
+    countAuditPayloadUuidError.incrementAndGet()
+  }
+
+  def incAuditPayloadNameError(): Unit = {
+    countAuditPayloadNameError.incrementAndGet()
+  }
+
   def incAuditEntryDeleteSuccess(): Unit = {
     countAuditEntryDeleteSuccess.incrementAndGet()
   }
@@ -465,6 +475,8 @@ object Settings {
       val countNotFoundViaQuery = countAuditNotFoundViaQuery.get
       val countNotFoundAtAll = countAuditNotFoundAtAll.get
       val countBadResponse = countAuditBadResponse.get
+      val countPayloadUuidErrors = countAuditPayloadUuidError.get
+      val countPayloadNameErrors = countAuditPayloadNameError.get
       val countDeleteSuccess = countAuditEntryDeleteSuccess.get
       val countDeleteFailure = countAuditEntryDeleteFailure.get
       val countTotal = countSuccess + countNotFoundViaQuery + countBadResponse
@@ -485,8 +497,15 @@ object Settings {
       println(s"Not Found at all:    $countNotFoundAtAll")
       println(s"Bad Response:        $countBadResponse")
       if (deleteAfterSuccessfulAudit) {
+        println()
         println(s"Delete Successes:    $countDeleteSuccess")
         println(s"Delete Failures:     $countDeleteFailure")
+      }
+      if (countPayloadUuidErrors > 0 || countPayloadNameErrors > 0) {
+        println()
+        println(s"Payload Mismatches/Errors")
+        println(s"  UUID:              $countPayloadUuidErrors")
+        println(s"  Name:              $countPayloadNameErrors")
       }
       println(s"Total:               $countTotal")
       println()
