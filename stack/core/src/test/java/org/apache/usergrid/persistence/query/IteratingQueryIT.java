@@ -299,6 +299,7 @@ public class IteratingQueryIT {
 
         }
         app.refreshIndex();
+        Thread.sleep(1000);
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
@@ -387,8 +388,7 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0 ; i< results.size(); i++) {
-                assertEquals( expected.get( count ), results.getEntities().get( i ).getName() );
-                count++;
+                assertEquals( expected.get( count++ ), results.getEntities().get( i ).getName() );
             }
 
             query.setCursor( results.getCursor() );

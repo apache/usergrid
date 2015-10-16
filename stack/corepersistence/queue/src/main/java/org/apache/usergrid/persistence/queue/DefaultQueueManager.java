@@ -38,9 +38,9 @@ public class DefaultQueueManager implements QueueManager {
     public LinkedBlockingQueue<QueueMessage> queue = new LinkedBlockingQueue<>();
 
     @Override
-    public synchronized Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+    public  Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
-        queue.drainTo(returnQueue,10);
+        queue.drainTo(returnQueue,1000);
         return Observable.from( returnQueue);
     }
 

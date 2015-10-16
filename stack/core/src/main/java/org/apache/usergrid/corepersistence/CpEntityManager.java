@@ -2898,14 +2898,17 @@ public class CpEntityManager implements EntityManager {
                         hasFinished = true;
                         break;
                     }
-                    Thread.sleep(250);
+                    Thread.sleep(200);
+                    indexRefreshCommandInfo
+                        = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
                 }
                 if(!hasFinished){
-                    logger.warn("Did not find entity {} during refresh.",refreshEntity.getUuid());
+                    throw new RuntimeException("Did not find entity {} during refresh. uuid->"+refreshEntity.getUuid());
                 }
             }finally {
                 delete(refreshEntity);
             }
+
             return indexRefreshCommandInfo;
         } catch (Exception e) {
             throw new RuntimeException("refresh failed",e);
