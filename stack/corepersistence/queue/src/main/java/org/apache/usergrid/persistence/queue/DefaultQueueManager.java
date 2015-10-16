@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  * Default queue manager implementation, uses in memory linked queue
  */
 public class DefaultQueueManager implements QueueManager {
-    public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(1000);
+    public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
 
     @Override
     public    Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
