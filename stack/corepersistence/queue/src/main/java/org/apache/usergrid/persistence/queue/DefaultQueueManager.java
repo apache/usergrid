@@ -43,13 +43,13 @@ public class DefaultQueueManager implements QueueManager {
         List<QueueMessage> returnQueue = new ArrayList<>();
         try {
             QueueMessage message=null;
-            int count = 10;
+            int count = 5;
             do {
                 message = queue.poll(100, TimeUnit.MILLISECONDS);
                 if (message != null) {
                     returnQueue.add(message);
                 }
-            }while(queue.size()>0 && count-->0);
+            }while(message!=null && count-->0);
         }catch (InterruptedException ie){
             throw new RuntimeException(ie);
         }
