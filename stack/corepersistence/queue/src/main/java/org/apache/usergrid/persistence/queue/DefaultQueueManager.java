@@ -49,7 +49,7 @@ public class DefaultQueueManager implements QueueManager {
                 if (message != null) {
                     returnQueue.add(message);
                 }
-            }while(message!=null && count-->0);
+            }while(queue.size()>0 && count-->0);
         }catch (InterruptedException ie){
             throw new RuntimeException(ie);
         }
