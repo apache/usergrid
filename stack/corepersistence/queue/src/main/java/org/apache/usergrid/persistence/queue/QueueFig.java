@@ -20,7 +20,7 @@ public interface QueueFig extends GuicyFig {
      */
     @Key( "usergrid.queue.region" )
     @Default("us-east-1")
-    String getRegion();
+    String getPrimaryRegion();
 
     /**
      * Flag to determine if Usergrid should use a multi-region Amazon queue
