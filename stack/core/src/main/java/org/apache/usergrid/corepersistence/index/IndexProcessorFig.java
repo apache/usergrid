@@ -62,11 +62,10 @@ public interface IndexProcessorFig extends GuicyFig {
 
     /**
      * Set the visibility timeout for messages received from the queue. (in milliseconds).
-     * AWS default is also currently 30 seconds.  Received messages will remain 'in flight' until
-     * they are ack'd(deleted) or this timeout occurs.  If the timeout occurs, the messages will become
-     * visible again for re-processing.
+     * Received messages will remain 'in flight' until they are ack'd(deleted) or this timeout occurs.
+     * If the timeout occurs, the messages will become visible again for re-processing.
      */
-    @Default( "30000" )
+    @Default( "5000" ) // 5 seconds
     @Key( INDEX_QUEUE_VISIBILITY_TIMEOUT )
     int getIndexQueueVisibilityTimeout();
 
