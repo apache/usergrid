@@ -63,7 +63,7 @@ public class AmazonNotificationUtils {
 
         final String visibilityTimeoutInSeconds = String.valueOf(Math.max(1, fig.getVisibilityTimeout() / 1000));
 
-        final Map<String, String> queueAttributes = new HashMap<>( 2 );
+        final Map<String, String> queueAttributes = new HashMap<>( 3 );
         queueAttributes.put( "MessageRetentionPeriod", fig.getRetentionPeriod() );
         queueAttributes.put( "RedrivePolicy", redrivePolicy );
         queueAttributes.put( "VisibilityTimeout", visibilityTimeoutInSeconds );
