@@ -375,10 +375,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // turn ON post processing stuff that cleans up stale entities
         System.setProperty(EVENTS_DISABLED, "false");
 
-        // delete all entities
-        for ( Entity thing : things ) {
-            em.delete( thing );
-        }
 
         Thread.sleep(250); // delete happens asynchronously, wait for some time
 
@@ -396,9 +392,19 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         do {
             //trigger the repair
             results = queryCollectionEm("things", "select *");
+            results.getEntities().stream().forEach(entity -> {
+               try {
+                   em.delete(entity);
+               }catch (Exception e){
+                   //
+               }
+            });
+            //refresh the app index
+            app.refreshIndex();
+
             crs = queryCollectionCp("things", "thing", "select *");
 
-        } while ((results.hasCursor() || crs.size() > 0) && count++ < 2000 );
+        } while ( crs.size() > 0 && count++ < 2000 );
 
         Assert.assertEquals( "Expect no candidates", 0, crs.size() );
     }
