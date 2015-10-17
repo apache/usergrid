@@ -32,50 +32,59 @@ public interface MapSerialization extends Migration {
     /**
      * Return the string, null if not found
      */
-    public String getString( final MapScope scope, final String key );
+    String getString( final MapScope scope, final String key );
+
+
+    /**
+     * Get the key from all regions with a high consistency
+     * @param scope
+     * @param key
+     * @return
+     */
+    String getStringHighConsistency( final MapScope scope, final String key );
 
     /**
      * Get strings from the map
      * @param keys
      * @return
      */
-    public Map<String, String> getStrings( final MapScope scope, final Collection<String> keys );
+    Map<String, String> getStrings( final MapScope scope, final Collection<String> keys );
 
     /**
      * Return the string, null if not found
      */
-    public void putString( final MapScope scope, final String key, final String value );
+    void putString( final MapScope scope, final String key, final String value );
 
     /**
      * Write the string
      */
-    public void putString( final MapScope scope, final String key, final String value, final int ttl );
+    void putString( final MapScope scope, final String key, final String value, final int ttl );
 
 
     /**
      * Return the uuid, null if not found
      */
-    public UUID getUuid( final MapScope scope, final String key );
+    UUID getUuid( final MapScope scope, final String key );
 
     /**
      * Return the uuid, null if not found
      */
-    public void putUuid( final MapScope scope, final String key, final UUID putUuid );
+    void putUuid( final MapScope scope, final String key, final UUID putUuid );
 
     /**
      * Return the long, null if not found
      */
-    public Long getLong( final MapScope scope, final String key );
+    Long getLong( final MapScope scope, final String key );
 
     /**
      * Return the long, null if not found
      */
-    public void putLong( final MapScope scope, final String key, final Long value );
+    void putLong( final MapScope scope, final String key, final Long value );
 
     /**
      * Delete the key
      *
      * @param key The key used to delete the entry
      */
-    public void delete( final MapScope scope, final String key );
+    void delete( final MapScope scope, final String key );
 }

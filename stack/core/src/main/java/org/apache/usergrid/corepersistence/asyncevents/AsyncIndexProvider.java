@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
@@ -51,20 +52,18 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final IndexProducer indexProducer;
+    private final MapManagerFactory mapManagerFactory;
 
     private AsyncEventService asyncEventService;
 
 
     @Inject
-    public AsyncIndexProvider(final IndexProcessorFig indexProcessorFig,
-                              final QueueManagerFactory queueManagerFactory,
-                              final MetricsFactory metricsFactory,
-                              final RxTaskScheduler rxTaskScheduler,
-                              final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                              final EventBuilder eventBuilder,
-                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                              final EntityIndexFactory entityIndexFactory,
-                              final IndexProducer indexProducer) {
+    public AsyncIndexProvider( final IndexProcessorFig indexProcessorFig, final QueueManagerFactory queueManagerFactory,
+                               final MetricsFactory metricsFactory, final RxTaskScheduler rxTaskScheduler, final
+                                   EntityCollectionManagerFactory entityCollectionManagerFactory,
+                               final EventBuilder eventBuilder, final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                               final EntityIndexFactory entityIndexFactory, final IndexProducer indexProducer,
+                               final MapManagerFactory mapManagerFactory ) {
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
@@ -75,6 +74,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.indexProducer = indexProducer;
+        this.mapManagerFactory = mapManagerFactory;
     }
 
 
@@ -99,10 +99,10 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
                 return new InMemoryAsyncEventService(eventBuilder, rxTaskScheduler, indexProducer,indexProcessorFig.resolveSynchronously());
             case SQS:
                 return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, rxTaskScheduler );
+                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, mapManagerFactory, rxTaskScheduler );
             case SNS:
                 return new AmazonAsyncEventService(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, rxTaskScheduler );
+                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, mapManagerFactory, rxTaskScheduler );
             default:
                 throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
         }

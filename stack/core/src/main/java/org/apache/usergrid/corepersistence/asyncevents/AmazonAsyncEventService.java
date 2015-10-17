@@ -21,13 +21,20 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Optional;
+
+import org.apache.usergrid.corepersistence.asyncevents.model.ElasticsearchIndexEvent;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.corepersistence.util.ObjectJsonSerializer;
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +61,13 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.map.MapScope;
+import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueMessage;
@@ -82,12 +94,13 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     private static final Logger logger = LoggerFactory.getLogger(AmazonAsyncEventService.class);
 
+    private static final ObjectJsonSerializer OBJECT_JSON_SERIALIZER = new ObjectJsonSerializer(  );
+
     // SQS maximum receive messages is 10
     private static final int MAX_TAKE = 10;
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
 
     private final QueueManager queue;
-    private final QueueScope queueScope;
     private final IndexProcessorFig indexProcessorFig;
     private final IndexProducer indexProducer;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
@@ -109,6 +122,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final AtomicLong counter = new AtomicLong();
     private final AtomicLong inFlight = new AtomicLong();
     private final Histogram messageCycle;
+    private final MapManager esMapPersistence;
 
     //the actively running subscription
     private List<Subscription> subscriptions = new ArrayList<>();
@@ -123,6 +137,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     final IndexLocationStrategyFactory indexLocationStrategyFactory,
                                     final EntityIndexFactory entityIndexFactory,
                                     final EventBuilder eventBuilder,
+                                    final MapManagerFactory mapManagerFactory,
                                     final RxTaskScheduler rxTaskScheduler ) {
         this.indexProducer = indexProducer;
 
@@ -130,10 +145,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.eventBuilder = eventBuilder;
+
+        final MapScope mapScope = new MapScopeImpl( CpNamingUtils.getManagementApplicationId(),  "indexEvents");
+
+        this.esMapPersistence = mapManagerFactory.createMapManager( mapScope );
+
         this.rxTaskScheduler = rxTaskScheduler;
 
-        this.queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALL);
+        QueueScope queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALL);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
+
         this.indexProcessorFig = indexProcessorFig;
 
         this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.write");
@@ -158,7 +179,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     /**
      * Offer the EntityIdScope to SQS
      */
-    private void offer(final Object operation) {
+    private void offer(final Serializable operation) {
         final Timer.Context timer = this.writeTimer.time();
 
         try {
@@ -213,7 +234,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final Timer.Context timer = this.ackTimer.time();
 
         try{
-            queue.commitMessage(message);
+            queue.commitMessage( message );
 
             //decrement our in-flight counter
             inFlight.decrementAndGet();
@@ -235,7 +256,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final Timer.Context timer = this.ackTimer.time();
 
         try{
-            queue.commitMessages(messages);
+            queue.commitMessages( messages );
 
             //decrement our in-flight counter
             inFlight.decrementAndGet();
@@ -296,7 +317,13 @@ public class AmazonAsyncEventService implements AsyncEventService {
                         handleInitializeApplicationIndex(event, message);
                         indexoperationObservable = Observable.just(new IndexOperationMessage());
                         validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
-                    } else {
+                    } else if (event instanceof ElasticsearchIndexEvent){
+                        handleIndexOperation( (ElasticsearchIndexEvent)event );
+                        indexoperationObservable = Observable.just( new IndexOperationMessage() );
+                        validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
+                    }
+
+                    else {
                         throw new Exception("Unknown EventType");//TODO: print json instead
                     }
 
@@ -434,6 +461,85 @@ public class AmazonAsyncEventService implements AsyncEventService {
         offer( new EntityDeleteEvent( new EntityIdScope( applicationScope, entityId ) ) );
     }
 
+
+    /**
+     * Queue up an indexOperationMessage for multi region execution
+     * @param indexOperationMessage
+     */
+    public void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage ) {
+
+        final String jsonValue = OBJECT_JSON_SERIALIZER.toByteBuffer( indexOperationMessage );
+
+        final UUID newMessageId = UUIDGenerator.newTimeUUID();
+
+        //write to the map in ES
+        esMapPersistence.putString( newMessageId.toString(), jsonValue, indexProcessorFig.getIndexMessageTtl() );
+
+
+
+        //now queue up the index message
+
+        final ElasticsearchIndexEvent elasticsearchIndexEvent = new ElasticsearchIndexEvent( newMessageId );
+
+        //send to the topic so all regions index the batch
+        try {
+            queue.sendMessageToTopic( elasticsearchIndexEvent );
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException( "Unable to pulish to topic", e );
+        }
+    }
+
+    public void handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent){
+         Preconditions.checkNotNull( elasticsearchIndexEvent, "elasticsearchIndexEvent cannot be null" );
+
+        final UUID messageId = elasticsearchIndexEvent.getIndexBatchId();
+
+        Preconditions.checkNotNull( messageId, "messageId must not be null" );
+
+
+        //load the entity
+
+        final String message = esMapPersistence.getString( messageId.toString() );
+
+        String highConsistency = null;
+
+        if(message == null){
+            logger.error( "Receive message with id {} to process, unable to find it, reading with higher consistency level" );
+
+            highConsistency =  esMapPersistence.getStringHighConsistency( messageId.toString() );
+
+        }
+
+        //read the value from the string
+
+        final IndexOperationMessage indexOperationMessage;
+
+        //our original local read has it, parse it.
+        if(message != null){
+             indexOperationMessage = OBJECT_JSON_SERIALIZER.fromString( message, IndexOperationMessage.class );
+        }
+        //we tried to read it at a higher consistency level and it works
+        else if (highConsistency != null){
+            indexOperationMessage = OBJECT_JSON_SERIALIZER.fromString( highConsistency, IndexOperationMessage.class );
+        }
+
+        //we couldn't find it, bail
+        else{
+            logger.error( "Unable to find the ES batch with id {} to process at a higher consistency level" );
+
+            throw new RuntimeException( "Unable to find the ES batch to process with message id " + messageId );
+        }
+
+
+
+        //now execute it
+        indexProducer.put(indexOperationMessage).toBlocking().last();
+
+    }
+
+
+
     @Override
     public long getQueueDepth() {
         return queue.getQueueDepth();
@@ -510,71 +616,75 @@ public class AmazonAsyncEventService implements AsyncEventService {
         synchronized (mutex) {
 
             Observable<List<QueueMessage>> consumer =
-                    Observable.create(new Observable.OnSubscribe<List<QueueMessage>>() {
+                    Observable.create( new Observable.OnSubscribe<List<QueueMessage>>() {
                         @Override
-                        public void call(final Subscriber<? super List<QueueMessage>> subscriber) {
+                        public void call( final Subscriber<? super List<QueueMessage>> subscriber ) {
 
                             //name our thread so it's easy to see
-                            Thread.currentThread().setName("QueueConsumer_" + counter.incrementAndGet());
+                            Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
 
                             List<QueueMessage> drainList = null;
 
                             do {
                                 try {
-                                    drainList = take().toList().toBlocking().lastOrDefault(null);
+                                    drainList = take().toList().toBlocking().lastOrDefault( null );
                                     //emit our list in it's entity to hand off to a worker pool
-                                    subscriber.onNext(drainList);
+                                    subscriber.onNext( drainList );
 
                                     //take since  we're in flight
-                                    inFlight.addAndGet(drainList.size());
-                                } catch (Throwable t) {
+                                    inFlight.addAndGet( drainList.size() );
+                                }
+                                catch ( Throwable t ) {
                                     final long sleepTime = indexProcessorFig.getFailureRetryTime();
 
-                                    logger.error("Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t);
+                                    logger.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t );
 
-                                    if (drainList != null) {
-                                        inFlight.addAndGet(-1 * drainList.size());
+                                    if ( drainList != null ) {
+                                        inFlight.addAndGet( -1 * drainList.size() );
                                     }
 
 
                                     try {
-                                        Thread.sleep(sleepTime);
-                                    } catch (InterruptedException ie) {
+                                        Thread.sleep( sleepTime );
+                                    }
+                                    catch ( InterruptedException ie ) {
                                         //swallow
                                     }
 
                                     indexErrorCounter.inc();
                                 }
                             }
-                            while (true);
+                            while ( true );
                         }
-                    })
+                    } )
                             //this won't block our read loop, just reads and proceeds
-                            .map(messages ->
-                            {
-                                if (messages == null || messages.size() == 0) {
+                            .map( messages -> {
+                                if ( messages == null || messages.size() == 0 ) {
                                     return null;
                                 }
 
                                 try {
-                                    List<IndexEventResult> indexEventResults = callEventHandlers(messages);
-                                    List<QueueMessage> messagesToAck = submitToIndex(indexEventResults);
-                                    if (messagesToAck == null || messagesToAck.size() == 0) {
-                                        logger.error("No messages came back from the queue operation should have seen "+messages.size(),messages);
+                                    List<IndexEventResult> indexEventResults = callEventHandlers( messages );
+                                    List<QueueMessage> messagesToAck = submitToIndex( indexEventResults );
+                                    if ( messagesToAck == null || messagesToAck.size() == 0 ) {
+                                        logger.error( "No messages came back from the queue operation should have seen "
+                                            + messages.size(), messages );
                                         return messagesToAck;
                                     }
-                                    if(messagesToAck.size()<messages.size()){
-                                        logger.error("Missing messages from queue post operation",messages,messagesToAck);
+                                    if ( messagesToAck.size() < messages.size() ) {
+                                        logger.error( "Missing messages from queue post operation", messages,
+                                            messagesToAck );
                                     }
                                     //ack each message, but only if we didn't error.
-                                    ack(messagesToAck);
+                                    ack( messagesToAck );
                                     return messagesToAck;
-                                } catch (Exception e) {
-                                    logger.error("failed to ack messages to sqs", e);
+                                }
+                                catch ( Exception e ) {
+                                    logger.error( "failed to ack messages to sqs", e );
                                     return null;
                                     //do not rethrow so we can process all of them
                                 }
-                            });
+                            } );
 
             //start in the background
 
@@ -619,12 +729,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         //send the batch
         //TODO: should retry?
-        try {
-            indexProducer.put(combined).toBlocking().lastOrDefault(null);
-        }catch (Exception e){
-            logger.error("Failed to submit to index producer",e);
-            throw e;
-        }
+        queueIndexOperationMessage( combined );
+
         return messagesToAck;
     }
 
@@ -671,4 +777,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
             return creationTime;
         }
     }
+
+
 }
