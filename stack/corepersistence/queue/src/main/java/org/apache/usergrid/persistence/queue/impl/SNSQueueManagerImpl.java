@@ -18,15 +18,55 @@
 package org.apache.usergrid.persistence.queue.impl;
 
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
+import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
+import org.apache.usergrid.persistence.queue.Queue;
+import org.apache.usergrid.persistence.queue.QueueFig;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueMessage;
+import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.util.AmazonNotificationUtils;
+
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.AmazonSNSClient;
-import com.amazonaws.services.sns.model.*;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
+import com.amazonaws.services.sns.model.SubscribeRequest;
+import com.amazonaws.services.sns.model.SubscribeResult;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.*;
+import com.amazonaws.services.sqs.model.BatchResultErrorEntry;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
+import com.amazonaws.services.sqs.model.DeleteMessageRequest;
+import com.amazonaws.services.sqs.model.DeleteQueueRequest;
+import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
+import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,20 +76,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
-import org.apache.usergrid.persistence.queue.*;
-import org.apache.usergrid.persistence.queue.Queue;
-import org.apache.usergrid.persistence.queue.util.AmazonNotificationUtils;
-import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
 public class SNSQueueManagerImpl implements QueueManager {
 
@@ -59,10 +85,10 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueFig fig;
     private final ClusterFig clusterFig;
     private final CassandraFig cassandraFig;
-    private final QueueFig queueFig;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
     private final AmazonSNSAsyncClient snsAsync;
+    private final AmazonSQSAsyncClient sqsAsync;
 
 
     private final JsonFactory JSON_FACTORY = new JsonFactory();
@@ -110,6 +136,7 @@ public class SNSQueueManagerImpl implements QueueManager {
         });
 
 
+
     @Inject
     public SNSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig, ClusterFig clusterFig,
                                CassandraFig cassandraFig, QueueFig queueFig) {
@@ -117,12 +144,21 @@ public class SNSQueueManagerImpl implements QueueManager {
         this.fig = fig;
         this.clusterFig = clusterFig;
         this.cassandraFig = cassandraFig;
-        this.queueFig = queueFig;
+
+
+        // create our own executor which has a bounded queue w/ caller runs policy for rejected tasks
+        final ExecutorService executor = TaskExecutorFactory
+            .createTaskExecutor("amazon-async-io", queueFig.getAsyncMaxThreads(), queueFig.getAsyncQueueSize(),
+                TaskExecutorFactory.RejectionAction.CALLERRUNS);
+
+
+        final Region region = getRegion();
 
         try {
-            sqs = createSQSClient(getRegion());
-            sns = createSNSClient(getRegion());
-            snsAsync = createAsyncSNSClient(getRegion());
+            sqs = createSQSClient(region);
+            sns = createSNSClient(region);
+            snsAsync = createAsyncSNSClient(region, executor);
+            sqsAsync = createAsyncSQSClient( region, executor );
 
         } catch (Exception e) {
             throw new RuntimeException("Error setting up mapper", e);
@@ -157,7 +193,7 @@ public class SNSQueueManagerImpl implements QueueManager {
         try {
 
             SubscribeRequest primarySubscribeRequest = new SubscribeRequest(primaryTopicArn, "sqs", primaryQueueArn);
-            sns.subscribe(primarySubscribeRequest);
+             sns.subscribe(primarySubscribeRequest);
 
             // ensure the SNS primary topic has permission to send to the primary SQS queue
             List<String> primaryTopicArnList = new ArrayList<>();
@@ -276,20 +312,33 @@ public class SNSQueueManagerImpl implements QueueManager {
      *
      */
 
-    private AmazonSNSAsyncClient createAsyncSNSClient(final Region region) {
+    private AmazonSNSAsyncClient createAsyncSNSClient(final Region region, final ExecutorService executor) {
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
 
 
-        // create our own executor which has a bounded queue w/ caller runs policy for rejected tasks
-        final Executor executor = TaskExecutorFactory
-            .createTaskExecutor("amazon-async-io", queueFig.getAsyncMaxThreads(), queueFig.getAsyncQueueSize(),
-                TaskExecutorFactory.RejectionAction.CALLERRUNS);
-
-        final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient(ugProvider.getCredentials(), (ExecutorService) executor);
+        final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient(ugProvider.getCredentials(), executor);
 
         sns.setRegion(region);
 
         return sns;
+    }
+
+
+    /**
+     * Create the async sqs client
+     * @param region
+     * @param executor
+     * @return
+     */
+    private AmazonSQSAsyncClient createAsyncSQSClient(final Region region, final ExecutorService executor){
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+
+        final AmazonSQSAsyncClient sqs = new AmazonSQSAsyncClient( ugProvider.getCredentials(), executor );
+
+        sqs.setRegion( region );
+
+        return sqs;
+
     }
 
     /**
@@ -369,7 +418,12 @@ public class SNSQueueManagerImpl implements QueueManager {
                 try {
                     final JsonNode bodyNode =  mapper.readTree(message.getBody());
                     JsonNode bodyObj = bodyNode.has("Message") ? bodyNode.get("Message") : bodyNode;
-                    body = fromString(bodyObj.textValue(), klass);
+
+
+
+                    final String bodyText = mapper.writeValueAsString( bodyObj );;
+
+                    body = fromString(bodyText, klass);
                 } catch (Exception e) {
                     logger.error(String.format("failed to deserialize message: %s", message.getBody()), e);
                     throw new RuntimeException(e);
@@ -405,6 +459,40 @@ public class SNSQueueManagerImpl implements QueueManager {
         }
     }
 
+
+    @Override
+    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
+        if (snsAsync == null) {
+                   logger.error("SNS client is null, perhaps it failed to initialize successfully");
+                   return;
+               }
+
+               final String stringBody = toString(body);
+
+               String topicArn = getWriteTopicArn();
+
+               if (logger.isDebugEnabled()) logger.debug("Publishing Message...{} to arn: {}", stringBody, topicArn);
+
+               PublishRequest publishRequest = new PublishRequest(topicArn, stringBody);
+
+               snsAsync.publishAsync( publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
+                   @Override
+                   public void onError( Exception e ) {
+                       logger.error( "Error publishing message... {}", e );
+                   }
+
+
+                   @Override
+                   public void onSuccess( PublishRequest request, PublishResult result ) {
+                       if ( logger.isDebugEnabled() ) logger
+                           .debug( "Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(),
+                               request.getTopicArn() );
+                   }
+               } );
+
+    }
+
+
     @Override
     public void sendMessages(final List bodies) throws IOException {
 
@@ -414,41 +502,47 @@ public class SNSQueueManagerImpl implements QueueManager {
         }
 
         for (Object body : bodies) {
-            sendMessage(body);
+            sendMessage((Serializable)body);
         }
 
     }
 
-    @Override
-    public void sendMessage(final Object body) throws IOException {
 
-        if (snsAsync == null) {
-            logger.error("SNS client is null, perhaps it failed to initialize successfully");
+    @Override
+    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
+
+        if ( snsAsync == null ) {
+            logger.error( "SNS client is null, perhaps it failed to initialize successfully" );
             return;
         }
 
-        final String stringBody = toString(body);
+        final String stringBody = toString( body );
 
-        String topicArn = getWriteTopicArn();
+        String url = getReadQueue().getUrl();
 
-        if (logger.isDebugEnabled()) logger.debug("Publishing Message...{} to arn: {}", stringBody, topicArn);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Publishing Message...{} to url: {}", stringBody, url );
+        }
 
-        PublishRequest publishRequest = new PublishRequest(topicArn, stringBody);
+        SendMessageRequest request = new SendMessageRequest( url, stringBody );
 
-        snsAsync.publishAsync(publishRequest, new AsyncHandler<PublishRequest, PublishResult>() {
-            @Override
-            public void onError(Exception e) {
-                logger.error("Error publishing message... {}", e);
-            }
+        sqsAsync.sendMessageAsync( request, new AsyncHandler<SendMessageRequest, SendMessageResult>() {
 
             @Override
-            public void onSuccess(PublishRequest request, PublishResult result) {
-                if (logger.isDebugEnabled())
-                    logger.debug("Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(), request.getTopicArn());
+            public void onError( final Exception e ) {
 
+                logger.error( "Error sending message... {}", e );
             }
-        });
 
+
+            @Override
+            public void onSuccess( final SendMessageRequest request, final SendMessageResult sendMessageResult ) {
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( "Successfully send... messageBody=[{}],  url=[{}]", request.getMessageBody(),
+                        request.getQueueUrl() );
+                }
+            }
+        } );
     }
 
     @Override

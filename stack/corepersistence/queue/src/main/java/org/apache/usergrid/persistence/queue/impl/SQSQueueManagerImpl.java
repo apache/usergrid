@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.queue.impl;
 
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -243,23 +244,32 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     }
 
+
     @Override
-    public void sendMessage(final Object body) throws IOException {
+    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
 
         if (sqs == null) {
-            logger.error("Sqs is null");
-            return;
-        }
+              logger.error("Sqs is null");
+              return;
+          }
 
-        String url = getQueue().getUrl();
+          String url = getQueue().getUrl();
 
-        if (logger.isDebugEnabled()) logger.debug("Sending Message...{} to {}", body.toString(), url);
+          if (logger.isDebugEnabled()) logger.debug("Sending Message...{} to {}", body.toString(), url);
 
-        final String stringBody = toString(body);
+          final String stringBody = toString(body);
 
-        SendMessageRequest request = new SendMessageRequest(url, stringBody);
-        sqs.sendMessage(request);
+          SendMessageRequest request = new SendMessageRequest(url, stringBody);
+          sqs.sendMessage(request);
+      }
+
+
+
+    @Override
+    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
+        sendMessage( body );
     }
+
 
 
     @Override
