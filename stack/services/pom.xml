@@ -94,7 +94,7 @@
                 <threadCount>${usergrid.it.threads}</threadCount>
                 <reuseForks>${usergrid.it.reuseForks}</reuseForks>
                 <useSystemClassLoader>false</useSystemClassLoader>
-                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
                 </argLine>
                 <includes>
                     <include>**/*IT.java</include>
@@ -105,6 +105,8 @@
                 <excludes>
                     <exclude>**/*Scheduler*IT.java</exclude>
                     <exclude>**/*Notification*IT.java</exclude>
+                    <exclude>**/ExportServiceIT.java</exclude>
+                    <exclude>**/ImportServiceIT.java</exclude>
                 </excludes>
             </configuration>
             <dependencies>
