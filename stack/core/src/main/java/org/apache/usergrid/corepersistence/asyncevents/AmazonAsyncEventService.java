@@ -29,6 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.queue.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +101,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     private final QueueManager queue;
     private final IndexProcessorFig indexProcessorFig;
+    private final QueueFig queueFig;
     private final IndexProducer indexProducer;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -134,6 +138,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     final EntityIndexFactory entityIndexFactory,
                                     final EventBuilder eventBuilder,
                                     final MapManagerFactory mapManagerFactory,
+                                    final QueueFig queueFig,
                                     final RxTaskScheduler rxTaskScheduler ) {
         this.indexProducer = indexProducer;
 
@@ -152,6 +157,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         this.queue = queueManagerFactory.getQueueManager(queueScope);
 
         this.indexProcessorFig = indexProcessorFig;
+        this.queueFig = queueFig;
 
         this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.write");
         this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.read");
@@ -271,70 +277,78 @@ public class AmazonAsyncEventService implements AsyncEventService {
             logger.debug("callEventHandlers with {} message", messages.size());
         }
 
-        Stream<IndexEventResult> indexEventResults = messages.stream()
-            .map(message -> {
-                AsyncEvent event = null;
-                try {
-                    event = (AsyncEvent) message.getBody();
-                } catch (ClassCastException cce) {
-                    logger.error("Failed to deserialize message body", cce);
+        Stream<IndexEventResult> indexEventResults = messages.stream().map( message -> {
+            AsyncEvent event = null;
+            try {
+                event = ( AsyncEvent ) message.getBody();
+            }
+            catch ( ClassCastException cce ) {
+                logger.error( "Failed to deserialize message body", cce );
+            }
+
+            if ( event == null ) {
+                logger.error( "AsyncEvent type or event is null!" );
+                return new IndexEventResult( Optional.fromNullable( message ), Optional.<IndexOperationMessage>absent(),
+                    System.currentTimeMillis() );
+            }
+
+            final AsyncEvent thisEvent = event;
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Processing {} event", event );
+            }
+
+            try {
+                //check for empty sets if this is true
+                boolean validateEmptySets = true;
+                Observable<IndexOperationMessage> indexoperationObservable;
+                //merge each operation to a master observable;
+                if ( event instanceof EdgeDeleteEvent ) {
+                    indexoperationObservable = handleEdgeDelete( message );
+                }
+                else if ( event instanceof EdgeIndexEvent ) {
+                    indexoperationObservable = handleEdgeIndex( message );
+                }
+                else if ( event instanceof EntityDeleteEvent ) {
+                    indexoperationObservable = handleEntityDelete( message );
+                }
+                else if ( event instanceof EntityIndexEvent ) {
+                    indexoperationObservable = handleEntityIndexUpdate( message );
+                }
+                else if ( event instanceof InitializeApplicationIndexEvent ) {
+                    //does not return observable
+                    handleInitializeApplicationIndex( event, message );
+                    indexoperationObservable = Observable.just( new IndexOperationMessage() );
+                    validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
+                }
+                else if ( event instanceof ElasticsearchIndexEvent ) {
+                    handleIndexOperation( ( ElasticsearchIndexEvent ) event );
+                    indexoperationObservable = Observable.just( new IndexOperationMessage() );
+                    validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
                 }
 
-                if (event == null) {
-                    logger.error("AsyncEvent type or event is null!");
-                    return new IndexEventResult(Optional.fromNullable(message), Optional.<IndexOperationMessage>absent(), System.currentTimeMillis());
+                else {
+                    throw new Exception( "Unknown EventType" );//TODO: print json instead
                 }
 
-                final AsyncEvent thisEvent = event;
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Processing {} event", event);
+                //collect all of the
+                IndexOperationMessage indexOperationMessage = indexoperationObservable
+                    .collect( () -> new IndexOperationMessage(), ( collector, single ) -> collector.ingest( single ) )
+                    .toBlocking().lastOrDefault( null );
+
+                if ( validateEmptySets && ( indexOperationMessage == null || indexOperationMessage.isEmpty() ) ) {
+                    logger.error( "Received empty index sequence message:({}), body:({}) ", message.getMessageId(),
+                        message.getStringBody() );
+                    throw new Exception( "Received empty index sequence." );
                 }
 
-                try {
-                    //check for empty sets if this is true
-                    boolean validateEmptySets = true;
-                    Observable<IndexOperationMessage> indexoperationObservable;
-                    //merge each operation to a master observable;
-                    if (event instanceof EdgeDeleteEvent) {
-                        indexoperationObservable = handleEdgeDelete(message);
-                    } else if (event instanceof EdgeIndexEvent) {
-                        indexoperationObservable = handleEdgeIndex(message);
-                    } else if (event instanceof EntityDeleteEvent) {
-                        indexoperationObservable = handleEntityDelete(message);
-                    } else if (event instanceof EntityIndexEvent) {
-                        indexoperationObservable = handleEntityIndexUpdate(message);
-                    } else if (event instanceof InitializeApplicationIndexEvent) {
-                        //does not return observable
-                        handleInitializeApplicationIndex(event, message);
-                        indexoperationObservable = Observable.just(new IndexOperationMessage());
-                        validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
-                    } else if (event instanceof ElasticsearchIndexEvent){
-                        handleIndexOperation( (ElasticsearchIndexEvent)event );
-                        indexoperationObservable = Observable.just( new IndexOperationMessage() );
-                        validateEmptySets = false; //do not check this one for an empty set b/c it will be empty.
-                    }
-
-                    else {
-                        throw new Exception("Unknown EventType");//TODO: print json instead
-                    }
-
-                    //collect all of the
-                    IndexOperationMessage indexOperationMessage =
-                        indexoperationObservable
-                            .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
-                            .toBlocking().lastOrDefault(null);
-
-                    if (validateEmptySets && (indexOperationMessage == null || indexOperationMessage.isEmpty())) {
-                        logger.error("Received empty index sequence message:({}), body:({}) ",
-                            message.getMessageId(), message.getStringBody());
-                        throw new Exception("Received empty index sequence.");
-                    }
-
-                    //return type that can be indexed and ack'd later
-                    return new IndexEventResult(Optional.fromNullable(message), Optional.fromNullable(indexOperationMessage), thisEvent.getCreationTime());
-                } catch (Exception e) {
-                    logger.error("Failed to index message: " + message.getMessageId(), message.getStringBody(), e);
-                    return new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(), event.getCreationTime());
+                //return type that can be indexed and ack'd later
+                return new IndexEventResult( Optional.fromNullable( message ),
+                    Optional.fromNullable( indexOperationMessage ), thisEvent.getCreationTime() );
+            }
+            catch ( Exception e ) {
+                logger.error( "Failed to index message: " + message.getMessageId(), message.getStringBody(), e );
+                return new IndexEventResult( Optional.absent(), Optional.<IndexOperationMessage>absent(),
+                    event.getCreationTime());
                 }
             });
 
@@ -346,8 +360,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(
             applicationScope );
-        offerTopic(
-            new InitializeApplicationIndexEvent( new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ) );
+        offerTopic(new InitializeApplicationIndexEvent(queueFig.getPrimaryRegion(), new ReplicatedIndexLocationStrategy(indexLocationStrategy)));
     }
 
 
@@ -355,7 +368,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
                                        final Entity entity) {
 
-        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, entity.getId()), 0));
+        offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),new EntityIdScope(applicationScope, entity.getId()), 0));
     }
 
 
@@ -390,7 +403,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                              final Entity entity,
                              final Edge newEdge) {
 
-        EdgeIndexEvent operation = new EdgeIndexEvent(applicationScope, entity.getId(), newEdge);
+        EdgeIndexEvent operation = new EdgeIndexEvent(queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge);
 
         offer( operation );
     }
@@ -413,8 +426,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load(edgeIndexEvent.getEntityId()).flatMap(entity -> eventBuilder.buildNewEdge(
-            applicationScope, entity, edge));
+        final Observable<IndexOperationMessage> edgeIndexObservable = ecm.load( edgeIndexEvent.getEntityId() ).flatMap(
+            entity -> eventBuilder.buildNewEdge( applicationScope, entity, edge));
         return edgeIndexObservable;
     }
 
@@ -422,7 +435,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueDeleteEdge(final ApplicationScope applicationScope,
                                 final Edge edge) {
 
-        offer( new EdgeDeleteEvent( applicationScope, edge ) );
+        offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ) );
     }
 
     public Observable<IndexOperationMessage> handleEdgeDelete(final QueueMessage message) {
@@ -450,7 +463,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
 
-        offer( new EntityDeleteEvent( new EntityIdScope( applicationScope, entityId ) ) );
+        offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
     }
 
 
@@ -724,7 +737,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
         //change to id scope to avoid serialization issues
-        offer( new EntityIndexEvent( new EntityIdScope( applicationScope, id ), updatedSince ) );
+        offer( new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, id ), updatedSince ) );
     }
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
@@ -732,7 +745,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         List batch = new ArrayList<EdgeScope>();
         for ( EdgeScope e : edges){
             //change to id scope to avoid serialization issues
-            batch.add(new EntityIndexEvent(new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
+            batch.add(new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
         }
         offerBatch( batch );
     }
