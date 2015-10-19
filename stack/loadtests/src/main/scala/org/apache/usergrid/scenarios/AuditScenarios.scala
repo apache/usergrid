@@ -58,6 +58,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(false))
       .headers(Headers.authToken)
+      .headers(Headers.auditRegionHeaders)
       .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
@@ -75,6 +76,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(true))
       .headers(Headers.authToken)
+      .headers(Headers.auditRegionHeaders)
       .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
@@ -118,6 +120,7 @@ object AuditScenarios {
     http("DELETE audited entity")
       .delete("/${collectionName}/${uuid}")
       .headers(Headers.authToken)
+      .headers(Headers.auditRegionHeaders)
       .check(extractEntityUuid(SessionVarDeletedUuid)))
       .exec(session => {
         val uuid = session(SessionVarDeletedUuid).as[String]
