@@ -100,7 +100,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
         switch (impl) {
             case LOCAL:
                 AmazonAsyncEventService eventService = new AmazonAsyncEventService(scope -> new LocalQueueManager(), indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, rxTaskScheduler);
+                    entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, rxTaskScheduler,queueFig);
                 eventService.MAX_TAKE = 1000;
                 return eventService;
             case SQS:
