@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -78,6 +79,7 @@ public class AdminPointerFix extends ExportingToolBase {
         startSpring();
 
         logger.info( "Starting crawl of all admins" );
+        System.out.println( "Starting crawl of all admins" );
 
         EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
         Application app = em.getApplication();
@@ -115,6 +117,8 @@ public class AdminPointerFix extends ExportingToolBase {
 
             if ( ids.size() > 1 ) {
                 logger.info( "Found multiple users with the username {}", username );
+                System.out.println("Found multiple users with the username"+ username+". Run DupAdmiRepair.");
+
             }
         }
 
@@ -123,6 +127,8 @@ public class AdminPointerFix extends ExportingToolBase {
 
             if ( ids.size() > 1 ) {
                 logger.info( "Found multiple users with the email {}", email );
+                System.out.println("Found multiple users with the username"+ email+". Run DupAdmiRepair.");
+
             }
 
 
@@ -136,13 +142,24 @@ public class AdminPointerFix extends ExportingToolBase {
                 UUID toLoad = tempIds.get( 0 );
 
                 logger.warn( "Could not load target user by email {}, loading by UUID {} instead", email, toLoad );
+                System.out.println("Could not load the target user by email: "+email+". Loading by the following uuid instead: "+toLoad.toString());
                 targetUser = managementService.getAdminUserByUuid( toLoad );
                 User targetUserEntity = em.get( targetUser.getUuid(), User.class );
-                em.update( targetUserEntity );
+                try {
+                    em.update( targetUserEntity );
+                }catch(DuplicateUniquePropertyExistsException dup){
+                    System.out.println("Found duplicate unique property: "+dup.getPropertyName()+ ". Duplicate property is: "+dup.getPropertyValue());
+                    if (dup.getPropertyName().equals( "username" )){
+                       targetUserEntity.setUsername( targetUserEntity.getEmail() );
+                    }
+                    else
+                        throw dup;
+                }
 
             }
         }
 
         logger.info( "Repair complete" );
+        System.out.println("Repair Complete");
     }
 }
