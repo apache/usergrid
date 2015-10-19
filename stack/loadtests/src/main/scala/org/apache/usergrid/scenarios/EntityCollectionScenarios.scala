@@ -73,7 +73,7 @@ object EntityCollectionScenarios {
     http("GET entities")
       .get(entityGetUrl(false))
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200), maybeExtractCursor(SessionVarCursor))
   )
 
@@ -81,7 +81,7 @@ object EntityCollectionScenarios {
     http("GET entities")
       .get(entityGetUrl(true))
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200), maybeExtractCursor(SessionVarCursor))
   )
 
@@ -112,7 +112,7 @@ object EntityCollectionScenarios {
     http("GET entity by name (anonymous)")
       .get(randomEntityNameUrl())
       .headers(Headers.authAnonymous)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -120,7 +120,7 @@ object EntityCollectionScenarios {
     http("GET entity by name (token)")
       .get(randomEntityNameUrl())
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -157,7 +157,7 @@ object EntityCollectionScenarios {
       .get("/" + Settings.collection + "/${uuid}")
       .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authAnonymous)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -166,7 +166,7 @@ object EntityCollectionScenarios {
       .get("/" + Settings.collection + "/${uuid}")
       .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -213,7 +213,7 @@ object EntityCollectionScenarios {
       exec(http("POST load entity")
         .post(_ => "/" + Settings.collection)
         .headers(Headers.authToken)
-        .headers(Headers.auditRegionHeaders)
+        .headers(Headers.usergridRegionHeaders)
         .body(StringBody("""${entity}"""))
         // 200 for success, 400 if already exists
         .check(status.in(Seq(200)), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
@@ -251,7 +251,7 @@ object EntityCollectionScenarios {
     http("DELETE entity")
       .delete("""${entityUrl}""")
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       // 200 for success, 404 if doesn't exist
       .check(status.in(Seq(200)))
   )
@@ -279,7 +279,7 @@ object EntityCollectionScenarios {
     http("UPDATE entity")
       .put("""${entityUrl}""")
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .body(StringBody(Settings.updateBody))
       // 200 for success, 404 if doesn't exist
       .check(status.in(Seq(200)))
@@ -308,7 +308,7 @@ object EntityCollectionScenarios {
         .get("/" + Settings.collection + "/${entityName}")
         .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authAnonymous)
-        .headers(Headers.auditRegionHeaders)
+        .headers(Headers.usergridRegionHeaders)
         .check(status.is(200), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
           val uuid = session(SessionVarUuid).as[String]
@@ -327,7 +327,7 @@ object EntityCollectionScenarios {
         .get("/" + Settings.collection + "/${entityName}")
         .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authToken)
-        .headers(Headers.auditRegionHeaders)
+        .headers(Headers.usergridRegionHeaders)
         .check(status.is(200), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
           val uuid = session(SessionVarUuid).as[String]

@@ -44,7 +44,7 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [UUID_FILENAME [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]"
+[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [UUID_FILENAME [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT [USERGRID_REGION]]]]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
@@ -52,6 +52,7 @@ RAMP_TIME="$2"
 [ "$#" -ge 4 ] && ENTITY_SEED="$4"
 [ "$#" -ge 5 ] && ENTITY_WORKER_NUM="$5"
 [ "$#" -ge 6 ] && ENTITY_WORKER_COUNT="$6"
+[ "$#" -ge 7 ] && USERGRID_REGION="$6"
 
 shift $#
 
@@ -97,5 +98,6 @@ mvn gatling:execute \
 -DrampTime=${RAMP_TIME}  \
 -DuuidFilename=${UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
+-DusergridRegion=${USERGRID_REGION} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 

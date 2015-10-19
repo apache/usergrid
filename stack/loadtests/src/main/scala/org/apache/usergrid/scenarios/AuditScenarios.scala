@@ -58,7 +58,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(false))
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
@@ -76,7 +76,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(true))
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
@@ -120,7 +120,7 @@ object AuditScenarios {
     http("DELETE audited entity")
       .delete("/${collectionName}/${uuid}")
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(extractEntityUuid(SessionVarDeletedUuid)))
       .exec(session => {
         val uuid = session(SessionVarDeletedUuid).as[String]
@@ -139,7 +139,7 @@ object AuditScenarios {
     http("GET collection entity direct")
       .get("/${collectionName}/${uuid}")
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check()
       .check(status.in(Seq(200,404)),extractAuditEntities(SessionVarCollectionEntities),
         extractEntityUuid(SessionVarEntityUuid),extractEntityName(SessionVarEntityName)))
@@ -193,7 +193,7 @@ object AuditScenarios {
     http("GET collection entity")
       .get("/${collectionName}?ql=uuid=${uuid}")
       .headers(Headers.authToken)
-      .headers(Headers.auditRegionHeaders)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200),jsonPath("$.count").optional.saveAs("count"),
         extractAuditEntities(SessionVarCollectionEntities),
         extractEntityUuid(SessionVarEntityUuid),extractEntityName(SessionVarEntityName)))

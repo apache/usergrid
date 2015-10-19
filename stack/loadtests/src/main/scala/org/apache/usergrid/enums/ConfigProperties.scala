@@ -86,7 +86,7 @@ object ConfigProperties {
   val InterleavedWorkerFeed = "interleavedWorkerFeed"
   val NewCsvOnFlush = "newCsvOnFlush"
   val DeleteAfterSuccessfulAudit = "deleteAfterSuccessfulAudit"
-  val AuditRegion = "auditRegion";
+  val UsergridRegion = "usergridRegion";
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
@@ -96,7 +96,7 @@ object ConfigProperties {
     UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
     EntityProgressCount,InjectionList,PrintFailedRequests,GetViaQuery,MultiPropertyPrefix,MultiPropertyCount,
     MultiPropertySizeInK,EntityNumberProperty,QueryParams,CsvFeedPattern,UnlimitedFeed,FlushCsv,InterleavedWorkerFeed,
-    NewCsvOnFlush,DeleteAfterSuccessfulAudit,AuditRegion)
+    NewCsvOnFlush,DeleteAfterSuccessfulAudit,UsergridRegion)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -170,7 +170,7 @@ object ConfigProperties {
         case InterleavedWorkerFeed => false
         case NewCsvOnFlush => false
         case DeleteAfterSuccessfulAudit => false
-        case AuditRegion => ""
+        case UsergridRegion => ""
       }
     } else {
       null
