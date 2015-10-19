@@ -62,8 +62,8 @@ object Headers {
   /**
   * Optional region header
   */
-  def auditRegionHeaders: Map[String, String] = {
-    if (Settings.auditRegion != "") Map( "UsergridRegion" -> Settings.auditRegion )
+  def usergridRegionHeaders: Map[String, String] = {
+    if (Settings.usergridRegion != "") Map( "UsergridRegion" -> Settings.usergridRegion )
     else Map()
   }
 

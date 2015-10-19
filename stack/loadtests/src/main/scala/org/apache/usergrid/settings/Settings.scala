@@ -187,7 +187,7 @@ object Settings {
   val interleavedWorkerFeed:Boolean = if (unlimitedFeed) true else initBoolSetting(ConfigProperties.InterleavedWorkerFeed)
   val newCsvOnFlush:Boolean = initBoolSetting(ConfigProperties.NewCsvOnFlush)
   val deleteAfterSuccessfulAudit:Boolean = initBoolSetting(ConfigProperties.DeleteAfterSuccessfulAudit)
-  val auditRegion = initStrSetting(ConfigProperties.AuditRegion)
+  val usergridRegion = initStrSetting(ConfigProperties.UsergridRegion)
 
   val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
   val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
