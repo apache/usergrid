@@ -89,6 +89,21 @@ import rx.Subscription;
 import rx.schedulers.Schedulers;
 
 
+/**
+ * TODO, this whole class is becoming a nightmare.  We need to remove all consume from this class and refactor it into the following manner.
+ *
+ * 1. Produce.  Keep the code in the handle as is
+ * 2. Consume:  Move the code into a refactored system
+ * 2.1 A central dispatcher
+ * 2.2 An interface that produces an observable of type BatchOperation.  Any handler will be refactored into it's own
+ *      impl that will then emit a stream of batch operations to perform
+ * 2.3 The central dispatcher will then subscribe to these events and merge them.  Handing them off to a batch handler
+ * 2.4 The batch handler will roll up the operations into a batch size, and then queue them
+ * 2.5 The receive batch handler will execute the batch operations
+ *
+ * TODO determine how we error handle?
+ *
+ */
 @Singleton
 public class AmazonAsyncEventService implements AsyncEventService {
 
@@ -360,7 +375,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(
             applicationScope );
-        offerTopic(new InitializeApplicationIndexEvent(queueFig.getPrimaryRegion(), new ReplicatedIndexLocationStrategy(indexLocationStrategy)));
+        offerTopic( new InitializeApplicationIndexEvent( queueFig.getPrimaryRegion(),
+            new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ) );
     }
 
 
@@ -503,35 +519,29 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final String message = esMapPersistence.getString( messageId.toString() );
 
-        String highConsistency = null;
+        final IndexOperationMessage indexOperationMessage;
 
         if(message == null){
             logger.error( "Received message with id {} to process, unable to find it, reading with higher consistency level" );
 
-            highConsistency =  esMapPersistence.getStringHighConsistency( messageId.toString() );
+            final String highConsistency =  esMapPersistence.getStringHighConsistency( messageId.toString() );
 
+            if(highConsistency == null){
+                logger.error( "Unable to find the ES batch with id {} to process at a higher consistency level" );
+
+                throw new RuntimeException( "Unable to find the ES batch to process with message id " + messageId );
+            }
+
+            indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( highConsistency, IndexOperationMessage.class );
+
+        } else{
+            indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
         }
 
         //read the value from the string
 
-        final IndexOperationMessage indexOperationMessage;
-
-        //our original local read has it, parse it.
-        if(message != null){
-             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
-        }
-        //we tried to read it at a higher consistency level and it works
-        else if (highConsistency != null){
-            indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( highConsistency, IndexOperationMessage.class );
-        }
-
-        //we couldn't find it, bail
-        else{
-            logger.error( "Unable to find the ES batch with id {} to process at a higher consistency level" );
-
-            throw new RuntimeException( "Unable to find the ES batch to process with message id " + messageId );
-        }
-
+        Preconditions.checkNotNull( indexOperationMessage, "indexOperationMessage cannot be null" );
+        Preconditions.checkArgument( !indexOperationMessage.isEmpty() , "queued indexOperationMessage messages should not be empty" );
 
 
         //now execute it
@@ -728,9 +738,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
             .map(result -> result.getQueueMessage().get())
             .collect(Collectors.toList());
 
-        //send the batch
-        //TODO: should retry?
-        queueIndexOperationMessage( combined );
+        //only Q it if it's empty
+        if(!combined.isEmpty()) {
+            queueIndexOperationMessage( combined );
+        }
 
         return messagesToAck;
     }
