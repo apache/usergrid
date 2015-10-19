@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.cache.CachedEntityCollectionManager;
 import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
@@ -91,11 +90,6 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 mvccLogEntrySerializationStrategy, keyspace,
                                 metricsFactory, serializationFig,
                                 rxTaskScheduler, scope );
-
-//  TODO temporarily removed  If we can avoid this, that would be great
-//                            final EntityCollectionManager proxy = new CachedEntityCollectionManager(entityCacheFig, target  );
-//
-//                            return proxy;
 
                             return target;
                         }
