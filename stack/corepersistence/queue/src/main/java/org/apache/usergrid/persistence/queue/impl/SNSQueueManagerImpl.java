@@ -235,8 +235,8 @@ public class SNSQueueManagerImpl implements QueueManager {
             final Map<String, String> arrQueueArns = new HashMap<>( regionNames.length + 1 );
             final Map<String, String> topicArns = new HashMap<>( regionNames.length + 1 );
 
-            arrQueueArns.put( primaryQueueArn, fig.getRegion() );
-            topicArns.put( primaryTopicArn, fig.getRegion() );
+            arrQueueArns.put(primaryQueueArn, fig.getPrimaryRegion());
+            topicArns.put(primaryTopicArn, fig.getPrimaryRegion());
 
             for ( String regionName : regionNames ) {
 
@@ -652,8 +652,8 @@ public class SNSQueueManagerImpl implements QueueManager {
      * Get the region
      */
     private Region getRegion() {
-        Regions regions = Regions.fromName( fig.getRegion() );
-        return Region.getRegion( regions );
+        Regions regions = Regions.fromName(fig.getPrimaryRegion());
+        return Region.getRegion(regions);
     }
 
 
