@@ -364,10 +364,13 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         // query Core Persistence directly for total number of result candidates
         for(int i = 0;i<10;i++){
+
+            crs = queryCollectionCp("things", "thing", "select *");
             if(numEntities * (numUpdates + 1) == crs.size()){
                 break;
+            }else{
+                Thread.sleep(1100);
             }
-            crs = queryCollectionCp("things", "thing", "select *");
         }
 
 //        Assert.assertEquals("Expect stale candidates", numEntities * (numUpdates + 1), crs.size());

@@ -40,7 +40,6 @@ import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.index.utils.*;
 import org.apache.usergrid.utils.*;
 import org.apache.usergrid.utils.ClassUtils;
@@ -2877,7 +2876,7 @@ public class CpEntityManager implements EntityManager {
     /**
      * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
      */
-    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex() {
+    public EntityIndex.IndexRefreshCommandInfo refreshIndex() {
         try {
             long start = System.currentTimeMillis();
             // refresh special indexes without calling EntityManager refresh because stack overflow
@@ -2885,7 +2884,7 @@ public class CpEntityManager implements EntityManager {
             map.put("some prop", "test");
             boolean hasFinished = false;
             Entity refreshEntity = create("refresh", map);
-            IndexRefreshCommand.IndexRefreshCommandInfo indexRefreshCommandInfo
+            EntityIndex.IndexRefreshCommandInfo indexRefreshCommandInfo
                 = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
             try {
                 for (int i = 0; i < 10; i++) {
@@ -2899,6 +2898,7 @@ public class CpEntityManager implements EntityManager {
                         break;
                     }
                     Thread.sleep(200);
+
                     indexRefreshCommandInfo
                         = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
                 }
@@ -2908,6 +2908,7 @@ public class CpEntityManager implements EntityManager {
             }finally {
                 delete(refreshEntity);
             }
+            Thread.sleep(200);
 
             return indexRefreshCommandInfo;
         } catch (Exception e) {

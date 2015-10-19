@@ -22,20 +22,17 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
-import org.apache.usergrid.persistence.queue.DefaultQueueManager;
-import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.LocalQueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import org.apache.usergrid.persistence.queue.QueueScope;
 
 
 /**
@@ -99,7 +96,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
         switch (impl) {
             case LOCAL:
-                AmazonAsyncEventService eventService = new AmazonAsyncEventService(scope -> new DefaultQueueManager(), indexProcessorFig, indexProducer, metricsFactory,
+                AmazonAsyncEventService eventService = new AmazonAsyncEventService(scope -> new LocalQueueManager(), indexProcessorFig, indexProducer, metricsFactory,
                     entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, rxTaskScheduler);
                 eventService.MAX_TAKE = 1000;
                 return eventService;
