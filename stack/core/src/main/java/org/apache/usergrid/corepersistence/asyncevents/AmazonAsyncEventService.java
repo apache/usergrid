@@ -29,19 +29,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.base.Optional;
-
-import org.apache.usergrid.corepersistence.asyncevents.model.ElasticsearchIndexEvent;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.corepersistence.util.ObjectJsonSerializer;
-import org.apache.usergrid.exception.NotImplementedException;
-import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.asyncevents.model.AsyncEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.EdgeDeleteEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.EdgeIndexEvent;
+import org.apache.usergrid.corepersistence.asyncevents.model.ElasticsearchIndexEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.EntityDeleteEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.EntityIndexEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.InitializeApplicationIndexEvent;
@@ -50,6 +44,8 @@ import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.index.ReplicatedIndexLocationStrategy;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.corepersistence.util.ObjectJsonSerializer;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
@@ -61,6 +57,7 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -78,6 +75,7 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -93,8 +91,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
     private static final Logger logger = LoggerFactory.getLogger(AmazonAsyncEventService.class);
-
-    private static final ObjectJsonSerializer OBJECT_JSON_SERIALIZER = new ObjectJsonSerializer(  );
 
     // SQS maximum receive messages is 10
     private static final int MAX_TAKE = 10;
@@ -192,6 +188,22 @@ public class AmazonAsyncEventService implements AsyncEventService {
         }
     }
 
+
+    private void offerTopic( final Serializable operation ) {
+        final Timer.Context timer = this.writeTimer.time();
+
+        try {
+            //signal to SQS
+            this.queue.sendMessageToTopic( operation );
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException( "Unable to queue message", e );
+        }
+        finally {
+            timer.stop();
+        }
+    }
+
     private void offerBatch(final List operations){
         final Timer.Context timer = this.writeTimer.time();
 
@@ -226,27 +238,6 @@ public class AmazonAsyncEventService implements AsyncEventService {
     }
 
 
-    /**
-     * Ack message in SQS
-     */
-    public void ack(final QueueMessage message) {
-
-        final Timer.Context timer = this.ackTimer.time();
-
-        try{
-            queue.commitMessage( message );
-
-            //decrement our in-flight counter
-            inFlight.decrementAndGet();
-
-        }catch(Exception e){
-            throw new RuntimeException("Unable to ack messages", e);
-        }finally {
-            timer.stop();
-        }
-
-
-    }
 
     /**
      * Ack message in SQS
@@ -355,7 +346,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(
             applicationScope );
-        offer(new InitializeApplicationIndexEvent(new ReplicatedIndexLocationStrategy(indexLocationStrategy)));
+        offerTopic(
+            new InitializeApplicationIndexEvent( new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ) );
     }
 
 
@@ -468,7 +460,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
      */
     public void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage ) {
 
-        final String jsonValue = OBJECT_JSON_SERIALIZER.toByteBuffer( indexOperationMessage );
+        final String jsonValue = ObjectJsonSerializer.INSTANCE.toString( indexOperationMessage );
 
         final UUID newMessageId = UUIDGenerator.newTimeUUID();
 
@@ -482,12 +474,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final ElasticsearchIndexEvent elasticsearchIndexEvent = new ElasticsearchIndexEvent( newMessageId );
 
         //send to the topic so all regions index the batch
-        try {
-            queue.sendMessageToTopic( elasticsearchIndexEvent );
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException( "Unable to pulish to topic", e );
-        }
+
+        offerTopic( elasticsearchIndexEvent );
     }
 
     public void handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent){
@@ -505,7 +493,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         String highConsistency = null;
 
         if(message == null){
-            logger.error( "Receive message with id {} to process, unable to find it, reading with higher consistency level" );
+            logger.error( "Received message with id {} to process, unable to find it, reading with higher consistency level" );
 
             highConsistency =  esMapPersistence.getStringHighConsistency( messageId.toString() );
 
@@ -517,11 +505,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         //our original local read has it, parse it.
         if(message != null){
-             indexOperationMessage = OBJECT_JSON_SERIALIZER.fromString( message, IndexOperationMessage.class );
+             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
         }
         //we tried to read it at a higher consistency level and it works
         else if (highConsistency != null){
-            indexOperationMessage = OBJECT_JSON_SERIALIZER.fromString( highConsistency, IndexOperationMessage.class );
+            indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( highConsistency, IndexOperationMessage.class );
         }
 
         //we couldn't find it, bail

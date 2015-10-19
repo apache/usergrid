@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -33,16 +34,33 @@ import com.google.common.base.Preconditions;
 public final class ObjectJsonSerializer {
 
 
-    private final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
-    private final ObjectMapper MAPPER = new ObjectMapper( JSON_FACTORY );
+    private static final ObjectMapper MAPPER = new ObjectMapper( JSON_FACTORY );
 
-    public ObjectJsonSerializer( ) {
-        MAPPER.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
+    static{
+
+           /**
+            * Because of the way SNS escapes all our json, we have to tell jackson to accept it.  See the documentation
+            * here for how SNS borks the message body
+            *
+            *  http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html
+            */
+            MAPPER.configure( JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true );
+       }
+
+    /**
+     * Singleton instance of our serializer, instantiating it and configuring the mapper is expensive.
+     */
+    public static final ObjectJsonSerializer INSTANCE = new ObjectJsonSerializer();
+
+
+    private ObjectJsonSerializer( ) {
+
     }
 
 
-    public <T extends Serializable> String toByteBuffer( final T toSerialize ) {
+    public <T extends Serializable> String toString( final T toSerialize ) {
 
         Preconditions.checkNotNull( toSerialize, "toSerialize must not be null" );
         final String stringValue;
