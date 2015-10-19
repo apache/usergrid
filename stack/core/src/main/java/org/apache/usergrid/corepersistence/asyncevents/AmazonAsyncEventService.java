@@ -536,6 +536,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
         }
 
+
+        //NOTE that we intentionally do NOT delete from the map.  We can't know when all regions have consumed the message
+        //so we'll let compaction on column expiration handle deletion
+
         //read the value from the string
 
         Preconditions.checkNotNull( indexOperationMessage, "indexOperationMessage cannot be null" );
