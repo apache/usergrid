@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 
@@ -33,9 +34,13 @@ import com.google.common.base.Optional;
  * Container for index operations.
  */
 public class IndexOperationMessage implements Serializable {
+    @JsonProperty
     private final Set<IndexOperation> indexRequests;
+
+    @JsonProperty
     private final Set<DeIndexOperation> deIndexRequests;
 
+    @JsonProperty
     private long creationTime;
 
 

@@ -89,4 +89,21 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key(REINDEX_BUFFER_SIZE)
     int getReindexBufferSize();
 
+    /**
+     * Flag to resolve the LOCAL queue implementation service synchronously.
+     */
+    @Default("false")
+    @Key("elasticsearch.queue_impl.resolution")
+    boolean resolveSynchronously();
+
+    /**
+     * Get the message TTL in milliseconds.  Defaults to 24 hours
+     *
+     * 24 * 60 * 60 * 1000
+     *
+     * @return
+     */
+    @Default("86400000")
+    @Key( "elasticsearch.message.ttl" )
+    int getIndexMessageTtl();
 }
