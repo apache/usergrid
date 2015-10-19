@@ -33,6 +33,8 @@ import org.apache.cassandra.db.marshal.UTF8Type;
 
 import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
@@ -105,14 +107,8 @@ public class MapSerializationImpl implements MapSerialization {
     /**
      * How to funnel keys for buckets
      */
-    private static final Funnel<String> MAP_KEY_FUNNEL = new Funnel<String>() {
+    private static final Funnel<String> MAP_KEY_FUNNEL = ( key, into ) -> into.putString( key, StringHashUtils.UTF8 );
 
-
-        @Override
-        public void funnel( final String key, final PrimitiveSink into ) {
-            into.putString( key, StringHashUtils.UTF8 );
-        }
-    };
 
     /**
      * Locator to get us all buckets
@@ -121,10 +117,14 @@ public class MapSerializationImpl implements MapSerialization {
         new ExpandingShardLocator<>( MAP_KEY_FUNNEL, NUM_BUCKETS );
 
     private final Keyspace keyspace;
+    private final CassandraConfig cassandraConfig;
 
 
     @Inject
-    public MapSerializationImpl( final Keyspace keyspace ) {this.keyspace = keyspace;}
+    public MapSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig ) {
+        this.keyspace = keyspace;
+        this.cassandraConfig = cassandraConfig;
+    }
 
 
     @Override
@@ -387,7 +387,7 @@ public class MapSerializationImpl implements MapSerialization {
         //now get all columns, including the "old row key value"
         try {
             final Column<Boolean> result =
-                keyspace.prepareQuery( MAP_ENTRIES ).setConsistencyLevel( ConsistencyLevel.CL_QUORUM )
+                keyspace.prepareQuery( MAP_ENTRIES ).setConsistencyLevel( cassandraConfig.getConsistentReadCL() )
                         .getKey( entryRowKey ).getColumn( true ).execute().getResult();
 
             return result;
@@ -421,7 +421,8 @@ public class MapSerializationImpl implements MapSerialization {
         //now get all columns, including the "old row key value"
         try {
             final Rows<ScopedRowKey<MapEntryKey>, Boolean> rows =
-                keyspace.prepareQuery( MAP_ENTRIES ).getKeySlice( rowKeys ).withColumnSlice( true ).execute()
+                keyspace.prepareQuery( MAP_ENTRIES ).setConsistencyLevel( cassandraConfig.getReadCL() ).getKeySlice(
+                    rowKeys ).withColumnSlice( true ).execute()
                         .getResult();
 
 
