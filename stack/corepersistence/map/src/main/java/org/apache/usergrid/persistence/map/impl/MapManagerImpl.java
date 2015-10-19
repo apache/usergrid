@@ -53,6 +53,12 @@ public class MapManagerImpl implements MapManager {
 
 
     @Override
+    public String getStringHighConsistency( final String key ) {
+        return mapSerialization.getStringHighConsistency(scope, key);
+    }
+
+
+    @Override
     public Map<String, String> getStrings( final Collection<String> keys ) {
         return mapSerialization.getStrings( scope, keys );
     }

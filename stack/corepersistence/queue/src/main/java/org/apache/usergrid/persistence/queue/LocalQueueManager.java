@@ -24,6 +24,7 @@ import rx.Observable;
 
 import java.io.IOException;
 import java.util.AbstractQueue;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -81,8 +82,9 @@ public class LocalQueueManager implements QueueManager {
         }
     }
 
+
     @Override
-    public  void sendMessage(Object body) throws IOException {
+    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
         String uuid = UUID.randomUUID().toString();
         try {
             queue.put(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"));
@@ -90,6 +92,14 @@ public class LocalQueueManager implements QueueManager {
             throw new RuntimeException(ie);
         }
     }
+
+
+
+    @Override
+    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
+       sendMessage( body );
+    }
+
 
     @Override
     public void deleteQueue() {
