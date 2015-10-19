@@ -926,6 +926,7 @@ public class IteratingQueryIT {
         }
         app.refreshIndex();
 
+        Thread.sleep(500);
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );

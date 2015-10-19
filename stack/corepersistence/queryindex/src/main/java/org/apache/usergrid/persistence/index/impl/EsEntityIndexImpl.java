@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder.SearchRequestBuilderStrategyV2;
@@ -50,6 +51,7 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -98,7 +100,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
      * We purposefully make this per instance. Some indexes may work, while others may fail
      */
     private final EsProvider esProvider;
-    private final IndexRefreshCommand indexRefreshCommand;
 
     //number of times to wait for the index to refresh properly.
     private static final int MAX_WAITS = 10;
@@ -118,6 +119,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private final long queryTimeout;
     private final FailureMonitorImpl failureMonitor;
     private final Timer aggregationTimer;
+    private final Timer refreshTimer;
 
     private IndexCache aliasCache;
     private Timer mappingTimer;
@@ -128,7 +130,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public EsEntityIndexImpl( final EsProvider provider,
                               final IndexCache indexCache,
                               final IndexFig indexFig,
-                              final IndexRefreshCommand indexRefreshCommand,
                               final MetricsFactory metricsFactory,
                               final IndexLocationStrategy indexLocationStrategy
     ) {
@@ -137,7 +138,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         this.indexLocationStrategy = indexLocationStrategy;
         this.failureMonitor = new FailureMonitorImpl( indexFig, provider );
         this.esProvider = provider;
-        this.indexRefreshCommand = indexRefreshCommand;
         this.alias = indexLocationStrategy.getAlias();
         this.aliasCache = indexCache;
         this.applicationScope = indexLocationStrategy.getApplicationScope();
@@ -153,6 +153,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class, "index.refresh_index");
         this.searchTimer = metricsFactory.getTimer(EsEntityIndexImpl.class, "search");
         this.aggregationTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "aggregations" );
+        this.refreshTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "index.refresh" );
 
     }
 
@@ -350,11 +351,34 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
 
-
-    public Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync() {
+    public Observable<IndexRefreshCommandInfo> refreshAsync() {
 
         refreshIndexMeter.mark();
-        return indexRefreshCommand.execute(alias, getIndexes());
+        final long start = System.currentTimeMillis();
+
+        String[] indexes = getIndexes();
+        if (indexes.length == 0) {
+            logger.debug("Not refreshing indexes. none found");
+        }
+        //Added For Graphite Metrics
+        RefreshResponse response =
+            esProvider.getClient().admin().indices().prepareRefresh(indexes).execute().actionGet();
+        int failedShards = response.getFailedShards();
+        int successfulShards = response.getSuccessfulShards();
+        ShardOperationFailedException[] sfes = response.getShardFailures();
+        if (sfes != null) {
+            for (ShardOperationFailedException sfe : sfes) {
+                logger.error("Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason());
+            }
+        }
+        logger.debug("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "),
+            successfulShards, failedShards);
+
+        IndexRefreshCommandInfo refreshResults = new IndexRefreshCommandInfo(failedShards == 0,
+            System.currentTimeMillis() - start);
+
+
+        return ObservableTimer.time(Observable.just(refreshResults), refreshTimer);
     }
 
 
@@ -780,6 +804,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
          */
         boolean doOp();
     }
+
+
 
 
 }
