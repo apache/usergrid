@@ -68,7 +68,7 @@ public interface QueueManager {
      * @param body
      * @throws IOException
      */
-    <T extends Serializable> void  sendMessage(T body)throws IOException;
+    <T extends Serializable> void sendMessage(T body)throws IOException;
 
     /**
      * Send a messae to the topic to be sent to other queues
