@@ -59,5 +59,12 @@ object Headers {
     else authAnonymous
   }
 
+  /**
+  * Optional region header
+  */
+  def usergridRegionHeaders: Map[String, String] = {
+    if (Settings.usergridRegion != "") Map( "UsergridRegion" -> Settings.usergridRegion )
+    else Map()
+  }
 
 }
