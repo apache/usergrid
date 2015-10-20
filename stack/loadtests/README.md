@@ -106,7 +106,7 @@ Defaults listed are those that are specified by the Usergrid Gatling code, not n
 * uuidFilename (no default) - UUID filename for non-audit tests
 * auditUuidFilename (no default) - UUID filename for audit tests
 * failedUuidFilename (no default) - UUID filename for failed entries while auditing
-* retryCount (**5**) - number of retries of operation before giving up
+* retryCount (**0**) - number of retries of operation before giving up
 * purgeUsers (**100**) - number of entities to create at a time during loadEntities (send this many requests, then wait for the responses)
 * laterThanTimestamp (**0**) - if specified for an audit, will only match entities modified >= this timestamp; can be used for incremental audits
 * entityProgressCount (**10000**) - print to console every time this many requests has been sent (if entityProgressCount = 10000, will print on the 1000th, 2000th, 3000th... request)
