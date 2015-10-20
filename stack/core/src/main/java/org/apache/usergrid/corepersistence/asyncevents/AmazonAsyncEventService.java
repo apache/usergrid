@@ -521,7 +521,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final IndexOperationMessage indexOperationMessage;
 
         if(message == null){
-            logger.error( "Received message with id {} to process, unable to find it, reading with higher consistency level",
+            logger.warn( "Received message with id {} to process, unable to find it, reading with higher consistency level",
                 messageId);
 
             final String highConsistency =  esMapPersistence.getStringHighConsistency( messageId.toString() );
