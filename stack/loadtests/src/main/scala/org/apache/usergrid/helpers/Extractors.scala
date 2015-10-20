@@ -41,12 +41,32 @@ object Extractors {
   }
 
   /**
-   * Will extract the uuid from the create response.  If the uuid is not present, an empty string will be set
+   * Will extract the uuid from the response.  If the uuid is not present, an empty string will be set
    */
-  def extractCreateUuid(saveAsName: String) = {
+  def extractEntityUuid(saveAsName: String) = {
     jsonPath("$.entities[0].uuid").transformOption(extract => {
       //it may or may not be present.  If it is, save it, otherwise save it as an empty string
       extract.orElse(Some(""))
+    }).saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the name from the response.  If the name is not present, an empty string will be set
+   */
+  def extractEntityName(saveAsName: String) = {
+    jsonPath("$.entities[0].name").transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as an empty string
+      extract.orElse(Some(""))
+    }).saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the modified date from the response.  If the modified field is not present, -1 will be set
+   */
+  def extractEntityModified(saveAsName: String) = {
+    jsonPath("$.entities[0].modified").ofType[Long].transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as -1
+      extract.orElse(Some(-1))
     }).saveAs(saveAsName)
   }
 
