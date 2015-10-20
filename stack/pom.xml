@@ -1568,7 +1568,8 @@
             </executions>
             <configuration>
                 <excludes>
-
+                    <exclude>**/Coverage.md</exclude>
+                    <exclude>**/jacoco/**</exclude>
                     <exclude>**/README.md</exclude>
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
