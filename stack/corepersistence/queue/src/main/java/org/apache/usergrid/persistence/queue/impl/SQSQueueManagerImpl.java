@@ -323,7 +323,7 @@ public class SQSQueueManagerImpl implements QueueManager {
      * @return
      */
     protected Region getRegion() {
-        Regions regions = Regions.fromName(fig.getRegion());
+        Regions regions = Regions.fromName(fig.getPrimaryRegion());
         Region region = Region.getRegion(regions);
         return region;
     }

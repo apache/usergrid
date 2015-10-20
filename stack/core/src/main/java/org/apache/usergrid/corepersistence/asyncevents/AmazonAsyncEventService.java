@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.queue.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,10 +57,6 @@ import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueMessage;
-import org.apache.usergrid.persistence.queue.QueueScope;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 
 import com.codahale.metrics.Counter;
@@ -89,6 +86,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     private final QueueManager queue;
     private final QueueScope queueScope;
     private final IndexProcessorFig indexProcessorFig;
+    private final QueueFig queueFig;
     private final IndexProducer indexProducer;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -115,15 +113,16 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
 
     @Inject
-    public AmazonAsyncEventService( final QueueManagerFactory queueManagerFactory,
-                                    final IndexProcessorFig indexProcessorFig,
-                                    final IndexProducer indexProducer,
-                                    final MetricsFactory metricsFactory,
-                                    final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                    final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                                    final EntityIndexFactory entityIndexFactory,
-                                    final EventBuilder eventBuilder,
-                                    final RxTaskScheduler rxTaskScheduler ) {
+    public AmazonAsyncEventService(final QueueManagerFactory queueManagerFactory,
+                                   final IndexProcessorFig indexProcessorFig,
+                                   final IndexProducer indexProducer,
+                                   final MetricsFactory metricsFactory,
+                                   final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                   final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                   final EntityIndexFactory entityIndexFactory,
+                                   final EventBuilder eventBuilder,
+                                   final RxTaskScheduler rxTaskScheduler,
+                                   QueueFig queueFig) {
         this.indexProducer = indexProducer;
 
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
@@ -135,6 +134,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         this.queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALL);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
         this.indexProcessorFig = indexProcessorFig;
+        this.queueFig = queueFig;
 
         this.writeTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.write");
         this.readTimer = metricsFactory.getTimer(AmazonAsyncEventService.class, "async_event.read");
@@ -328,7 +328,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(
             applicationScope );
-        offer(new InitializeApplicationIndexEvent(new ReplicatedIndexLocationStrategy(indexLocationStrategy)));
+        offer(new InitializeApplicationIndexEvent(queueFig.getPrimaryRegion(), new ReplicatedIndexLocationStrategy(indexLocationStrategy)));
     }
 
 
@@ -336,7 +336,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
                                        final Entity entity) {
 
-        offer(new EntityIndexEvent(new EntityIdScope(applicationScope, entity.getId()), 0));
+        offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),new EntityIdScope(applicationScope, entity.getId()), 0));
     }
 
 
@@ -371,7 +371,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                              final Entity entity,
                              final Edge newEdge) {
 
-        EdgeIndexEvent operation = new EdgeIndexEvent(applicationScope, entity.getId(), newEdge);
+        EdgeIndexEvent operation = new EdgeIndexEvent(queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge);
 
         offer( operation );
     }
@@ -403,7 +403,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     public void queueDeleteEdge(final ApplicationScope applicationScope,
                                 final Edge edge) {
 
-        offer( new EdgeDeleteEvent( applicationScope, edge ) );
+        offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ) );
     }
 
     public Observable<IndexOperationMessage> handleEdgeDelete(final QueueMessage message) {
@@ -431,7 +431,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
 
-        offer( new EntityDeleteEvent( new EntityIdScope( applicationScope, entityId ) ) );
+        offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
     }
 
     @Override
@@ -630,7 +630,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
         //change to id scope to avoid serialization issues
-        offer( new EntityIndexEvent( new EntityIdScope( applicationScope, id ), updatedSince ) );
+        offer( new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, id ), updatedSince ) );
     }
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
@@ -638,7 +638,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
         List batch = new ArrayList<EdgeScope>();
         for ( EdgeScope e : edges){
             //change to id scope to avoid serialization issues
-            batch.add(new EntityIndexEvent(new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
+            batch.add(new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
         }
         offerBatch( batch );
     }
