@@ -103,4 +103,15 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("false")
     @Key("elasticsearch.queue_impl.resolution")
     boolean resolveSynchronously();
+
+    /**
+     * Get the message TTL in milliseconds.  Defaults to 24 hours
+     *
+     * 24 * 60 * 60 * 1000
+     *
+     * @return
+     */
+    @Default("86400000")
+    @Key( "elasticsearch.message.ttl" )
+    int getIndexMessageTtl();
 }

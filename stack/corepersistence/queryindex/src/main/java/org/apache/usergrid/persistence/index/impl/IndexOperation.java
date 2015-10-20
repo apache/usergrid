@@ -30,6 +30,7 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 /**
@@ -37,9 +38,12 @@ import org.elasticsearch.client.Client;
  */
 public class IndexOperation implements BatchOperation {
 
+    @JsonProperty
     public String writeAlias;
+    @JsonProperty
     public String documentId;
 
+    @JsonProperty
     public Map<String, Object> data;
 
     public IndexOperation( final String writeAlias, final ApplicationScope applicationScope, IndexEdge indexEdge,
