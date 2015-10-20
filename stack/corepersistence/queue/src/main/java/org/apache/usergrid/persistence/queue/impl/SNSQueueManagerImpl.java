@@ -438,7 +438,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
                     /**
                      * When a message originates from SNS it has a "Message"  we have to extract
-                     * it and then process it seperately
+                     * it and then process it separately
                      */
 
 
@@ -546,7 +546,7 @@ public class SNSQueueManagerImpl implements QueueManager {
         if ( sqsAsync == null ) {
             logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
             return;
-        }   
+        }
 
         for ( Object body : bodies ) {
             sendMessage( ( Serializable ) body );
