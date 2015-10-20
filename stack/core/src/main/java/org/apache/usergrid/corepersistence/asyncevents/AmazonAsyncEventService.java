@@ -498,7 +498,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         //now queue up the index message
 
-        final ElasticsearchIndexEvent elasticsearchIndexEvent = new ElasticsearchIndexEvent( newMessageId );
+        final ElasticsearchIndexEvent elasticsearchIndexEvent =
+            new ElasticsearchIndexEvent(queueFig.getPrimaryRegion(), newMessageId );
 
         //send to the topic so all regions index the batch
 
@@ -520,12 +521,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final IndexOperationMessage indexOperationMessage;
 
         if(message == null){
-            logger.error( "Received message with id {} to process, unable to find it, reading with higher consistency level" );
+            logger.error( "Received message with id {} to process, unable to find it, reading with higher consistency level",
+                messageId);
 
             final String highConsistency =  esMapPersistence.getStringHighConsistency( messageId.toString() );
 
             if(highConsistency == null){
-                logger.error( "Unable to find the ES batch with id {} to process at a higher consistency level" );
+                logger.error( "Unable to find the ES batch with id {} to process at a higher consistency level",
+                    messageId);
 
                 throw new RuntimeException( "Unable to find the ES batch to process with message id " + messageId );
             }

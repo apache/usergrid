@@ -543,11 +543,6 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public void sendMessages( final List bodies ) throws IOException {
 
-        if ( snsAsync == null ) {
-            logger.error( "SNS client is null, perhaps it failed to initialize successfully" );
-            return;
-        }
-
         for ( Object body : bodies ) {
             sendMessage( ( Serializable ) body );
         }
@@ -557,8 +552,8 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public <T extends Serializable> void sendMessage( final T body ) throws IOException {
 
-        if ( snsAsync == null ) {
-            logger.error( "SNS client is null, perhaps it failed to initialize successfully" );
+        if ( sqsAsync == null ) {
+            logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
             return;
         }
 
