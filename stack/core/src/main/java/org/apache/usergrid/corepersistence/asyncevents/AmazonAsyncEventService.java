@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -491,8 +492,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final UUID newMessageId = UUIDGenerator.newTimeUUID();
 
+        final int expirationTimeInSeconds =
+            ( int ) TimeUnit.MILLISECONDS.toSeconds( indexProcessorFig.getIndexMessageTtl() );
+
         //write to the map in ES
-        esMapPersistence.putString( newMessageId.toString(), jsonValue, indexProcessorFig.getIndexMessageTtl() );
+        esMapPersistence.putString( newMessageId.toString(), jsonValue, expirationTimeInSeconds );
 
 
 
