@@ -26,12 +26,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.usergrid.persistence.queue.QueueFig;
 
 
 /**
  * Marker class for serialization
+ *
+ * Note that when you add a subtype, you will need to add it's serialization value below in the JsonSubTypes annotation.
+ *
+ * Each name must be unique, and must map to a subclass that is serialized
  */
-
 @JsonIgnoreProperties( ignoreUnknown = true )
 @JsonTypeInfo( use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT, property = "type" )
 @JsonSubTypes( {
@@ -39,7 +43,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type( value = EdgeIndexEvent.class, name = "edgeIndexEvent" ),
     @JsonSubTypes.Type( value = EntityDeleteEvent.class, name = "entityDeleteEvent" ),
     @JsonSubTypes.Type( value = EntityIndexEvent.class, name = "entityIndexEvent" ),
-    @JsonSubTypes.Type( value = InitializeApplicationIndexEvent.class, name = "initializeApplicationIndexEvent" )
+    @JsonSubTypes.Type( value = InitializeApplicationIndexEvent.class, name = "initializeApplicationIndexEvent" ),
+    @JsonSubTypes.Type( value = ElasticsearchIndexEvent.class, name = "elasticsearchIndexEvent" )
 } )
 
 public abstract class AsyncEvent implements Serializable {
@@ -47,10 +52,21 @@ public abstract class AsyncEvent implements Serializable {
     @JsonProperty
     protected long creationTime;
 
+    @JsonProperty
+    protected String sourceRegion;
+
+    // Needed for jackson, do not remove
+    protected AsyncEvent(){
+
+    }
 
     //set by default, will be overridden when de-serializing
-    protected AsyncEvent() {
+    protected AsyncEvent(String sourceRegion) {
+
+
         creationTime = System.currentTimeMillis();
+        this.sourceRegion = sourceRegion;
+
     }
 
 

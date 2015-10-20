@@ -220,16 +220,19 @@ object FeederGenerator {
 
    override def next(): Map[String, String] = {
      val i = counter.getAndIncrement()
-     val seededVal = i + seed
+     val seededVal = if (Settings.interleavedWorkerFeed) seed + (i * Settings.entityWorkerCount) + (Settings.entityWorkerNum - 1) else i + seed
      val noPrefix = prefix == null || prefix == ""
      val entityName = if (noPrefix) seededVal.toString else prefix.concat(seededVal.toString)
      val entity = EntityDataGenerator.generateEntity(entityType, if (noPrefix) null else entityName, seededVal)
+     //println(entity)
      val entityUrl = Settings.baseCollectionUrl + "/" + entityName
-     val validEntity = if (i >= numEntities) "no" else "yes"
+     val validEntity = if (!Settings.unlimitedFeed && i >= numEntities) "no" else "yes"
+     val collectionName = Settings.app + "/" + Settings.collection
 
      // println(entityName)
 
-     Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity, "entityNum" -> (i+1).toString, "seededEntityNum" -> seededVal.toString)
+     Map("entityName" -> entityName, "entity" -> entity, "entityUrl" -> entityUrl, "validEntity" -> validEntity, "entityNum" -> (i+1).toString, "seededEntityNum" -> seededVal.toString,
+         "collectionName" -> collectionName)
    }
  }
 

@@ -22,6 +22,7 @@ package org.apache.usergrid.services.queues;
 
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.usergrid.persistence.queue.QueueManager;
@@ -65,7 +66,13 @@ public class ImportQueueManager implements QueueManager {
 
 
     @Override
-    public void sendMessage( final Object body ) throws IOException {
+    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
+
+    }
+
+
+    @Override
+    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
 
     }
 

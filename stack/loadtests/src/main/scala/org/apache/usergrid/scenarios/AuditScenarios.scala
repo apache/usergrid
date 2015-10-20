@@ -32,7 +32,9 @@ object AuditScenarios {
 
   //The value for the cursor
   val SessionVarCursor: String = "cursor"
-  val SessionVarUuid: String = "entityUuid"
+  val SessionVarEntityUuid: String = "entityUuid"
+  val SessionVarEntityName: String = "entityName"
+  val SessionVarDeletedUuid: String = "deletedUuid"
   val SessionVarCollectionName: String = "collectionName"
   val SessionVarCollectionEntities: String = "collectionEntities"
 
@@ -56,6 +58,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(false))
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
@@ -73,6 +76,7 @@ object AuditScenarios {
     http("GET collections")
       .get(collectionGetUrl(true))
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200),extractAuditEntities(SessionVarCollectionEntities),maybeExtractCursor(SessionVarCursor)))
       .foreach("${" + SessionVarCollectionEntities + "}", "singleResult") {
         exec(session => {
@@ -112,34 +116,135 @@ object AuditScenarios {
       session
     }
 
+  val deleteAuditedEntity = exec(
+    http("DELETE audited entity")
+      .delete("/${collectionName}/${uuid}")
+      .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
+      .check(extractEntityUuid(SessionVarDeletedUuid)))
+      .exec(session => {
+        val uuid = session(SessionVarDeletedUuid).as[String]
+
+        if (uuid != null && uuid != "") {
+          // successful
+          Settings.incAuditEntryDeleteSuccess()
+        } else {
+          Settings.incAuditEntryDeleteFailure()
+        }
+
+        session
+      })
+
+  val getCollectionEntityDirect = exec(
+    http("GET collection entity direct")
+      .get("/${collectionName}/${uuid}")
+      .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
+      .check()
+      .check(status.in(Seq(200,404)),extractAuditEntities(SessionVarCollectionEntities),
+        extractEntityUuid(SessionVarEntityUuid),extractEntityName(SessionVarEntityName)))
+      .exec(session => {
+        val uuid = session("uuid").as[String]
+        val reqName = session("name").as[String]
+        val modified = session("modified").as[String].toLong
+        val collectionName = session(SessionVarCollectionName).as[String]
+        val collectionEntities = session(SessionVarCollectionEntities).as[Seq[Any]]
+        val entityUuid = session(SessionVarEntityUuid).as[String]
+        val entityName = session(SessionVarEntityName).as[String]
+
+        val count = collectionEntities.length
+        if (count < 1) {
+          Settings.addAuditUuid(uuid, collectionName, reqName, modified)
+          Settings.incAuditNotFoundAtAll()
+          println(s"NOT FOUND AT ALL: $collectionName.$reqName ($uuid)")
+        } else if (count > 1) {
+          // invalid
+          Settings.addAuditUuid(uuid, collectionName, reqName, modified)
+          Settings.incAuditBadResponse()
+          println(s"INVALID RESPONSE (count=$count): $collectionName.$reqName ($uuid)")
+        } else {
+          // count == 1 -> found via direct access but not query
+
+          // will count as found directly even if there is a uuid or name mismatch
+          if (entityUuid == null || entityUuid.isEmpty) {
+            Settings.incAuditPayloadUuidError()
+            println(s"PAYLOAD UUID MISSING (DIRECT): requestedUuid=$uuid")
+          } else if (!uuid.equalsIgnoreCase(entityUuid)) {
+            Settings.incAuditPayloadUuidError()
+            println(s"PAYLOAD UUID MISMATCH (DIRECT): requestedUuid=$uuid returnedUuid=$entityUuid")
+          }
+          if (entityName == null || entityName.isEmpty) {
+            Settings.incAuditPayloadNameError()
+            println(s"PAYLOAD NAME MISSING (DIRECT): requestedName=$reqName")
+          } else if (!reqName.equalsIgnoreCase(entityName)) {
+            Settings.incAuditPayloadNameError()
+            println(s"PAYLOAD NAME MISMATCH (DIRECT): requestedName=$reqName returnedName=$entityName")
+          }
+
+          Settings.addAuditUuid(uuid, collectionName, reqName, modified)
+          Settings.incAuditNotFoundViaQuery()
+          println(s"NOT FOUND VIA QUERY: $collectionName.$reqName ($uuid)")
+        }
+
+        session
+      })
 
   val getCollectionEntity = exec(
     http("GET collection entity")
       .get("/${collectionName}?ql=uuid=${uuid}")
       .headers(Headers.authToken)
-      .check(status.is(200),jsonPath("$.count").optional.saveAs("count"),extractAuditEntities(SessionVarCollectionEntities)))
+      .headers(Headers.usergridRegionHeaders)
+      .check(status.is(200),jsonPath("$.count").optional.saveAs("count"),
+        extractAuditEntities(SessionVarCollectionEntities),
+        extractEntityUuid(SessionVarEntityUuid),extractEntityName(SessionVarEntityName)))
       .exec(session => {
         val count = session("count").as[String].toInt
         val uuid = session("uuid").as[String]
-        val entityName = session("name").as[String]
+        val reqName = session("name").as[String]
         val modified = session("modified").as[String].toLong
         val collectionName = session(SessionVarCollectionName).as[String]
+        val entityUuid = session(SessionVarEntityUuid).as[String]
+        val entityName = session(SessionVarEntityName).as[String]
 
         if (count < 1) {
-          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
-          Settings.incAuditNotFound()
-          println(s"NOT FOUND: $collectionName.$entityName ($uuid)")
+          // will check to see whether accessible directly
         } else if (count > 1) {
-          Settings.addAuditUuid(uuid, collectionName, entityName, modified)
+          Settings.addAuditUuid(uuid, collectionName, reqName, modified)
           Settings.incAuditBadResponse()
-          println(s"INVALID RESPONSE (count=$count): $collectionName.$entityName ($uuid)")
+          println(s"INVALID RESPONSE (count=$count): $collectionName.$reqName ($uuid)")
         } else {
+          // count == 1 -> success
           // println(s"FOUND: $collectionName.$entityName ($uuid)")
+
+          // will count as success even if there is a uuid or name mismatch
+          if (entityUuid == null || entityUuid.isEmpty) {
+            Settings.incAuditPayloadUuidError()
+            println(s"PAYLOAD UUID MISSING (QUERY): requestedUuid=$uuid")
+          } else if (!uuid.equalsIgnoreCase(entityUuid)) {
+            Settings.incAuditPayloadUuidError()
+            println(s"PAYLOAD UUID MISMATCH (QUERY): requestedUuid=$uuid returnedUuid=$entityUuid")
+          }
+          if (entityName == null || entityName.isEmpty) {
+            Settings.incAuditPayloadNameError()
+            println(s"PAYLOAD NAME MISSING (QUERY): requestedName=$reqName")
+          } else if (!reqName.equalsIgnoreCase(entityName)) {
+            Settings.incAuditPayloadNameError()
+            println(s"PAYLOAD NAME MISMATCH (QUERY): requestedName=$reqName returnedName=$entityName")
+          }
+
           Settings.incAuditSuccess()
         }
 
         session
       })
+      .doIf(session => session("count").as[String].toInt < 1) {
+        exec(getCollectionEntityDirect)
+      }
+      .doIf(session => Settings.deleteAfterSuccessfulAudit && session("count").as[String].toInt == 1) {
+        // tryMax(Settings.retryCount) {
+          exec(deleteAuditedEntity)
+        // }
+      }
 
   val verifyCollections = scenario("Verify collections")
     .exec(injectTokenIntoSession())

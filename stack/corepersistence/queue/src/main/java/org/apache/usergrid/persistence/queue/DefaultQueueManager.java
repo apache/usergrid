@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.queue;
 import rx.Observable;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -67,11 +68,20 @@ public class DefaultQueueManager implements QueueManager {
         }
     }
 
+
     @Override
-    public synchronized void sendMessage(Object body) throws IOException {
+    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
         String uuid = UUID.randomUUID().toString();
         queue.add(new QueueMessage(uuid,"handle_"+uuid,body,"put type here"));
+
     }
+
+
+    @Override
+    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
+       sendMessage( body );
+    }
+
 
     @Override
     public void deleteQueue() {
