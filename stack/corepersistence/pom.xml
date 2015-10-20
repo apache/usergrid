@@ -75,6 +75,8 @@ limitations under the License.
         <surefire.version>2.16</surefire.version>
         <aws.version>1.10.6</aws.version>
         <metrics.version>3.0.0</metrics.version>
+        <surefire.plugin.version>2.18.1</surefire.plugin.version>
+        <jacoco.version>0.7.5.201505241946</jacoco.version>
 
     </properties>
 
@@ -129,6 +131,13 @@ limitations under the License.
                     </execution>
                 </executions>
             </plugin>
+
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+
         </plugins>
 
       <resources>
