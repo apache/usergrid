@@ -543,6 +543,11 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public void sendMessages( final List bodies ) throws IOException {
 
+        if ( sqsAsync == null ) {
+            logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
+            return;
+        }   
+
         for ( Object body : bodies ) {
             sendMessage( ( Serializable ) body );
         }
