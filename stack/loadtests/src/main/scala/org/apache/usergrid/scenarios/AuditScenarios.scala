@@ -100,10 +100,10 @@ object AuditScenarios {
           session
         }
         .doIf(session => session("validEntity").as[String] == "yes") {
-          tryMax(Settings.retryCount) {
+          tryMax(1+Settings.retryCount) {
             exec(getCollectionsWithoutCursor)
           }.asLongAs(stringParamExists(SessionVarCursor)) {
-            tryMax(Settings.retryCount) {
+            tryMax(1+Settings.retryCount) {
               exec(getCollectionsWithCursor)
             }
           }
@@ -252,7 +252,7 @@ object AuditScenarios {
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
     feed(FeederGenerator.collectionCsvFeeder)
       .doIf(session => session("validEntity").as[String] == "yes") {
-        tryMax(Settings.retryCount) {
+        tryMax(1+Settings.retryCount) {
           exec(getCollectionEntity)
         }
       }

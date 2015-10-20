@@ -153,7 +153,7 @@ object ConfigProperties {
         case FailedUuidFilename => "/tmp/dummyFailedUuid.csv"
         case SandboxCollection => false
         case PurgeUsers => 100
-        case RetryCount => 5
+        case RetryCount => 0
         case LaterThanTimestamp => 0L
         case EntityProgressCount => 10000L
         case InjectionList => "rampUsers(10,60)"
