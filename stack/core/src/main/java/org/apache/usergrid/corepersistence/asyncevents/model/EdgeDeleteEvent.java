@@ -24,8 +24,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 public final class EdgeDeleteEvent extends AsyncEvent {
@@ -39,10 +37,12 @@ public final class EdgeDeleteEvent extends AsyncEvent {
 
 
     public EdgeDeleteEvent() {
+        super();
     }
 
 
-    public EdgeDeleteEvent( ApplicationScope applicationScope, Edge edge ) {
+    public EdgeDeleteEvent( String sourceRegion, ApplicationScope applicationScope, Edge edge ) {
+        super(sourceRegion);
         this.applicationScope = applicationScope;
         this.edge = edge;
     }
