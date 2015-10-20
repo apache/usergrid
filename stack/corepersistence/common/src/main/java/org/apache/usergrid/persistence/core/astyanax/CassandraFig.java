@@ -79,15 +79,15 @@ public interface CassandraFig extends GuicyFig {
     String getDiscoveryType();
 
 
-    @Default("CL_LOCAL_ONE")
+    @Default("CL_LOCAL_QUORUM")
     @Key(READ_CL)
     String getReadCL();
 
-    @Default("CL_LOCAL_QUORUM")
+    @Default("CL_QUORUM")
     @Key(READ_CONSISTENT_CL)
     String getConsistentReadCL();
 
-    @Default("CL_QUORUM")
+    @Default("CL_LOCAL_QUORUM")
     @Key(WRITE_CL)
     String getWriteCL();
 

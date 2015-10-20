@@ -129,14 +129,14 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public String getString( final MapScope scope, final String key ) {
-        Column<Boolean> col = getValue( scope, key );
+        Column<Boolean> col = getValue( scope, key, cassandraConfig.getReadCL()  );
         return ( col != null ) ? col.getStringValue() : null;
     }
 
 
     @Override
     public String getStringHighConsistency( final MapScope scope, final String key ) {
-        Column<Boolean> col = getValueHighConsistency( scope, key ); // TODO: why boolean?
+        Column<Boolean> col = getValue( scope, key, cassandraConfig.getConsistentReadCL() ); // TODO: why boolean?
         return ( col != null ) ? col.getStringValue() : null;
     }
 
@@ -248,7 +248,7 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public UUID getUuid( final MapScope scope, final String key ) {
 
-        Column<Boolean> col = getValue( scope, key );
+        Column<Boolean> col = getValue( scope, key, cassandraConfig.getReadCL() );
         return ( col != null ) ? col.getUUIDValue() : null;
     }
 
@@ -283,7 +283,7 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public Long getLong( final MapScope scope, final String key ) {
-        Column<Boolean> col = getValue( scope, key );
+        Column<Boolean> col = getValue( scope, key, cassandraConfig.getReadCL() );
         return ( col != null ) ? col.getLongValue() : null;
     }
 
@@ -355,31 +355,7 @@ public class MapSerializationImpl implements MapSerialization {
     }
 
 
-    private Column<Boolean> getValue( MapScope scope, String key ) {
-
-
-        //add it to the entry
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
-
-        //now get all columns, including the "old row key value"
-        try {
-            final Column<Boolean> result =
-                keyspace.prepareQuery( MAP_ENTRIES ).getKey( entryRowKey ).getColumn( true ).execute().getResult();
-
-            return result;
-        }
-        catch ( NotFoundException nfe ) {
-            //nothing to return
-            return null;
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
-    }
-
-
-    private Column<Boolean> getValueHighConsistency( MapScope scope, String key ) {
-
+    private Column<Boolean> getValue( MapScope scope, String key, final ConsistencyLevel consistencyLevel ) {
 
         //add it to the entry
         final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
@@ -387,8 +363,7 @@ public class MapSerializationImpl implements MapSerialization {
         //now get all columns, including the "old row key value"
         try {
             final Column<Boolean> result =
-                keyspace.prepareQuery( MAP_ENTRIES ).setConsistencyLevel( cassandraConfig.getConsistentReadCL() )
-                        .getKey( entryRowKey ).getColumn( true ).execute().getResult();
+                keyspace.prepareQuery( MAP_ENTRIES ).setConsistencyLevel( consistencyLevel ).getKey( entryRowKey ).getColumn( true ).execute().getResult();
 
             return result;
         }
