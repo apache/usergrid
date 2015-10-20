@@ -20,7 +20,7 @@ public interface QueueFig extends GuicyFig {
      */
     @Key( "usergrid.queue.region" )
     @Default("us-east-1")
-    String getRegion();
+    String getPrimaryRegion();
 
     /**
      * Flag to determine if Usergrid should use a multi-region Amazon queue
@@ -76,10 +76,10 @@ public interface QueueFig extends GuicyFig {
     int getAsyncQueueSize();
 
     /**
-     * Set the visibility timeout for faster retries
+     * Set the visibility timeout (in milliseconds) for faster retries
      * @return
      */
     @Key( "usergrid.queue.visibilityTimeout" )
-    @Default("10")
-    String getVisibilityTimeout();
+    @Default("5000") // 5 seconds
+    int getVisibilityTimeout();
 }

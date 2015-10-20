@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.usergrid.persistence.queue.QueueFig;
 
 
 /**
@@ -47,10 +48,21 @@ public abstract class AsyncEvent implements Serializable {
     @JsonProperty
     protected long creationTime;
 
+    @JsonProperty
+    protected String sourceRegion;
+
+    // Needed for jackson, do not remove
+    protected AsyncEvent(){
+
+    }
 
     //set by default, will be overridden when de-serializing
-    protected AsyncEvent() {
+    protected AsyncEvent(String sourceRegion) {
+
+
         creationTime = System.currentTimeMillis();
+        this.sourceRegion = sourceRegion;
+
     }
 
 
