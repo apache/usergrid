@@ -35,7 +35,8 @@ public final class ElasticsearchIndexEvent extends AsyncEvent {
     public ElasticsearchIndexEvent() {
     }
 
-    public ElasticsearchIndexEvent(  UUID indexBatchId ) {
+    public ElasticsearchIndexEvent(String sourceRegion, UUID indexBatchId) {
+        super(sourceRegion);
         this.indexBatchId = indexBatchId;
     }
 

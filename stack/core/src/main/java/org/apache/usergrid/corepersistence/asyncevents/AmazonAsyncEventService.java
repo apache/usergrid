@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -491,14 +492,18 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
         final UUID newMessageId = UUIDGenerator.newTimeUUID();
 
+        final int expirationTimeInSeconds =
+            ( int ) TimeUnit.MILLISECONDS.toSeconds( indexProcessorFig.getIndexMessageTtl() );
+
         //write to the map in ES
-        esMapPersistence.putString( newMessageId.toString(), jsonValue, indexProcessorFig.getIndexMessageTtl() );
+        esMapPersistence.putString( newMessageId.toString(), jsonValue, expirationTimeInSeconds );
 
 
 
         //now queue up the index message
 
-        final ElasticsearchIndexEvent elasticsearchIndexEvent = new ElasticsearchIndexEvent( newMessageId );
+        final ElasticsearchIndexEvent elasticsearchIndexEvent =
+            new ElasticsearchIndexEvent(queueFig.getPrimaryRegion(), newMessageId );
 
         //send to the topic so all regions index the batch
 
@@ -520,12 +525,14 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final IndexOperationMessage indexOperationMessage;
 
         if(message == null){
-            logger.error( "Received message with id {} to process, unable to find it, reading with higher consistency level" );
+            logger.warn( "Received message with id {} to process, unable to find it, reading with higher consistency level",
+                messageId);
 
             final String highConsistency =  esMapPersistence.getStringHighConsistency( messageId.toString() );
 
             if(highConsistency == null){
-                logger.error( "Unable to find the ES batch with id {} to process at a higher consistency level" );
+                logger.error( "Unable to find the ES batch with id {} to process at a higher consistency level",
+                    messageId);
 
                 throw new RuntimeException( "Unable to find the ES batch to process with message id " + messageId );
             }

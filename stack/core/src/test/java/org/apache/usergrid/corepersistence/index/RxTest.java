@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test to test some assumptions about RX behaviors
  */
-public class PublishRxTest {
+public class RxTest {
 
     @Test
     public void testPublish() throws InterruptedException {
@@ -92,4 +92,17 @@ public class PublishRxTest {
 
         assertEquals( "Counts the same", count, returnedCount );
     }
+
+
+    /**
+     * Tests that reduce emits
+     */
+    @Test
+    public void testReduceEmpty(){
+       final int result =  Observable.range( 0, 100 ).filter( value -> value == -1 ).reduce( 0, ( integer, integer2 ) -> integer + 1 ).toBlocking().last();
+
+        assertEquals(0, result);
+    }
+
+
 }
