@@ -23,6 +23,7 @@ package org.apache.usergrid.services.queues;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.usergrid.persistence.queue.QueueManager;
@@ -36,9 +37,9 @@ import rx.Observable;
 public class ImportQueueManager implements QueueManager {
 
     @Override
-    public Observable<QueueMessage> getMessages( final int limit, final int transactionTimeout, final int waitTime,
+    public List<QueueMessage> getMessages( final int limit, final int transactionTimeout, final int waitTime,
                                            final Class klass ) {
-        return Observable.empty();
+        return new ArrayList<>();
     }
 
     @Override

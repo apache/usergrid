@@ -399,12 +399,12 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Override
-    public rx.Observable<QueueMessage> getMessages( final int limit, final int transactionTimeout, final int waitTime,
+    public List<QueueMessage> getMessages( final int limit, final int transactionTimeout, final int waitTime,
                                                     final Class klass ) {
 
         if ( sqs == null ) {
             logger.error( "SQS is null - was not initialized properly" );
-            return rx.Observable.empty();
+            return new ArrayList<>(0);
         }
 
         String url = getReadQueue().getUrl();
@@ -462,7 +462,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                 queueMessages.add( queueMessage );
             }
 
-            return rx.Observable.from( queueMessages );
+            return  queueMessages ;
         }
         catch ( com.amazonaws.services.sqs.model.QueueDoesNotExistException dne ) {
             logger.error( String.format( "Queue does not exist! [%s]", url ), dne );
@@ -471,7 +471,7 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error( String.format( "Programming error getting messages from queue=[%s] exist!", url ), e );
         }
 
-        return rx.Observable.from( new ArrayList<>( 0 ) );
+        return  new ArrayList<>( 0 ) ;
     }
 
 
