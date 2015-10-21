@@ -109,10 +109,12 @@ public class EventBuilderImpl implements EventBuilder {
         log.debug( "Deleting in app scope {} with edge {} }", applicationScope, edge );
 
         final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteIndexEdge( applicationScope, edge ).flatMap( batch -> {
-                final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
-                return gm.deleteEdge( edge ).map( deletedEdge -> batch );
-            } );
+            indexService.deleteIndexEdge( applicationScope, edge )
+                .map( batch -> {
+                    final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
+                    gm.deleteEdge(edge).toBlocking().lastOrDefault(null);
+                    return batch;
+                } );
 
         return edgeObservable;
     }

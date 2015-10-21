@@ -52,7 +52,7 @@ public class RxTest {
                       .subscribe();
 
 
-        final boolean completed = latch.await( 5, TimeUnit.SECONDS );
+        final boolean completed = latch.await( 3, TimeUnit.SECONDS );
 
         assertTrue( "publish1 behaves as expected", completed );
 
