@@ -28,6 +28,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiKeyColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
@@ -50,6 +53,8 @@ import com.netflix.astyanax.util.RangeBuilder;
  */
 public abstract class ShardGroupColumnIterator<T> implements Iterator<T> {
 
+
+    private static final Logger logger = LoggerFactory.getLogger( ShardGroupColumnIterator.class );
 
     private final Iterator<ShardEntryGroup> entryGroupIterator;
     private Iterator<T> elements;
@@ -108,9 +113,13 @@ public abstract class ShardGroupColumnIterator<T> implements Iterator<T> {
 
     public boolean advance(){
 
+        logger.trace( "Advancing from shard entry group iterator" );
+
         while(entryGroupIterator.hasNext()){
 
             final ShardEntryGroup group = entryGroupIterator.next();
+
+            logger.trace( "Shard entry group is {}.  Searching for edges in the shard", group );
 
             elements = getIterator( group.getReadShards() );
 
@@ -118,11 +127,13 @@ public abstract class ShardGroupColumnIterator<T> implements Iterator<T> {
              * We're done, we have some columns to return
              */
             if(elements.hasNext()){
+                logger.trace( "Found edges in shard entry group {}", group );
                 return true;
             }
 
         }
 
+        logger.trace( "Completed iterating shard group iterator" );
 
         return false;
 
