@@ -21,12 +21,10 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
-import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.Serializer;
@@ -97,9 +95,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
     private final Keyspace keyspace;
 
-    private final SmileFactory SMILE_FACTORY = new SmileFactory();
-
-    private final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
+    private final ObjectMapper MAPPER = new ObjectMapper();
 
 
     //------------------------------------------------------------------------------------------
@@ -294,27 +290,6 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     }
 
 
-    //------------------------------------------------------------------------------------------
-
-//    /**
-//     * Entries for serializing cache entries keys to a row
-//     */
-//    private static class CacheKey {
-//        public final String key;
-//
-//        private CacheKey( final String key ) {
-//            this.key = key;
-//        }
-//
-//        /**
-//         * Create a scoped row key from the key
-//         */
-//        public static ScopedRowKey<CacheKey> fromKey(
-//            final CacheScope cacheScope, final String key ) {
-//            return ScopedRowKey.fromKey( cacheScope.getApplication(), new CacheKey( key ) );
-//        }
-//    }
-
     /**
      * Inner class to serialize cache key
      */
@@ -332,54 +307,4 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         }
     }
 
-
-//    /**
-//     * Inner class to serialize cache value
-//     */
-//    private static class CacheEntitySerializer implements CompositeFieldSerializer {
-//
-//        @Override
-//        public void toComposite(CompositeBuilder builder, Object value) {
-//
-//        }
-//
-//        @Override
-//        public Object fromComposite( final CompositeParser composite ) {
-//            return null;
-//        }
-//    }
-
-
-//    /**
-//     * Build the results from the row keys
-//     */
-//    private static interface ResultsBuilder<T> {
-//
-//        public T buildResults(final  Rows<ScopedRowKey<CacheKey>, Boolean> rows);
-//    }
-//
-//    public static class StringResultsBuilder implements ResultsBuilder<Map<String, String>>{
-//
-//        @Override
-//        public Map<String, String> buildResults( final Rows<ScopedRowKey<CacheKey>, Boolean> rows ) {
-//            final int size = rows.size();
-//
-//            final Map<String, String> results = new HashMap<>(size);
-//
-//            for(int i = 0; i < size; i ++){
-//
-//                final Row<ScopedRowKey<CacheKey>, Boolean> row = rows.getRowByIndex( i );
-//
-//                final String value = row.getColumns().getStringValue( true, null );
-//
-//                if(value == null){
-//                    continue;
-//                }
-//
-//                results.put( row.getKey().getKey().key,  value );
-//            }
-//
-//            return results;
-//        }
-//    }
 }
