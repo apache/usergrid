@@ -23,26 +23,36 @@ package org.apache.usergrid.persistence.queue;
 import rx.Observable;
 
 import java.io.IOException;
+import java.util.AbstractQueue;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Default queue manager implementation, uses in memory linked queue
  */
-public class DefaultQueueManager implements QueueManager {
+public class LocalQueueManager implements QueueManager {
     public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
+
     @Override
-    public synchronized Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+    public    Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
-        for(int i=0;i<limit;i++){
-            if(!queue.isEmpty()){
-                returnQueue.add( queue.remove());
-            }else{
-                break;
-            }
+        try {
+            QueueMessage message=null;
+            int count = 5;
+            do {
+                message = queue.poll(100, TimeUnit.MILLISECONDS);
+                if (message != null) {
+                    returnQueue.add(message);
+                }
+            }while(message!=null && count-->0);
+        }catch (InterruptedException ie){
+            throw new RuntimeException(ie);
         }
         return Observable.from( returnQueue);
     }
@@ -61,10 +71,14 @@ public class DefaultQueueManager implements QueueManager {
     }
 
     @Override
-    public synchronized void sendMessages(List bodies) throws IOException {
+    public  void sendMessages(List bodies) throws IOException {
         for(Object body : bodies){
             String uuid = UUID.randomUUID().toString();
-            queue.add(new QueueMessage(uuid,"handle_"+uuid,body,"putappriate type here"));
+            try {
+                queue.put(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"));
+            }catch (InterruptedException ie){
+                throw new RuntimeException(ie);
+            }
         }
     }
 
@@ -72,9 +86,13 @@ public class DefaultQueueManager implements QueueManager {
     @Override
     public <T extends Serializable> void sendMessage( final T body ) throws IOException {
         String uuid = UUID.randomUUID().toString();
-        queue.add(new QueueMessage(uuid,"handle_"+uuid,body,"put type here"));
-
+        try {
+            queue.put(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"));
+        }catch (InterruptedException ie){
+            throw new RuntimeException(ie);
+        }
     }
+
 
 
     @Override

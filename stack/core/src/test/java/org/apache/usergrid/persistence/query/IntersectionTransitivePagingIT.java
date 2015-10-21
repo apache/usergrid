@@ -133,6 +133,7 @@ public class IntersectionTransitivePagingIT{
         }
         this.app.refreshIndex();
 
+        Thread.sleep(1000);
         return expected;
     }
 

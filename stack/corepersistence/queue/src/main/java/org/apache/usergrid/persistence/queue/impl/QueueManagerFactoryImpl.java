@@ -19,9 +19,7 @@
  */
 package org.apache.usergrid.persistence.queue.impl;
 
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.queue.*;
 
@@ -50,7 +48,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
         if(queueFig.overrideQueueForDefault()){
             QueueManager manager = defaultManager.get(scope.getName());
             if(manager==null){
-                manager = new DefaultQueueManager();
+                manager = new LocalQueueManager();
                 defaultManager.put(scope.getName(),manager);
             }
             return manager;
