@@ -36,7 +36,7 @@ public interface QueueManager {
      * @param klass class to cast the return from
      * @return List of Queue Messages
      */
-    Observable<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
+    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
 
     /**
      * get the queue depth
