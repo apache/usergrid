@@ -133,7 +133,7 @@ public interface GraphFig extends GuicyFig {
     int getShardCacheRefreshWorkerCount();
 
 
-    @Default( "10" )
+    @Default( "20" )
     @Key( SHARD_AUDIT_WORKERS )
     int getShardAuditWorkerCount();
 
