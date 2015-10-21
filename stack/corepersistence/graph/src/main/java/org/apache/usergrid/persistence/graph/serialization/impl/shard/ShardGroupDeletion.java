@@ -56,6 +56,11 @@ public interface ShardGroupDeletion {
         CONTAINS_EDGES,
 
         /**
+         * Compaction pending, we can't delete it
+         */
+        COMPACTION_PENDING,
+
+        /**
          * The shard is too new, and may not have been fully replicated, we can't delete it safely
          */
         TOO_NEW,

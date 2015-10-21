@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.AsyncTaskExecutor;
@@ -57,12 +58,15 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
     private final ListeningExecutorService asyncTaskExecutor;
     private final EdgeShardSerialization edgeShardSerialization;
+    private final TimeService timeService;
 
 
     @Inject
     public ShardGroupDeletionImpl( final AsyncTaskExecutor asyncTaskExecutor,
-                                   final EdgeShardSerialization edgeShardSerialization ) {
+                                   final EdgeShardSerialization edgeShardSerialization,
+                                   final TimeService timeService ) {
         this.edgeShardSerialization = edgeShardSerialization;
+        this.timeService = timeService;
         this.asyncTaskExecutor = asyncTaskExecutor.getExecutorService();
     }
 
@@ -125,17 +129,14 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
          * Compaction is pending, we cannot check it
          */
         if ( shardEntryGroup.isCompactionPending() ) {
-            return DeleteResult.NOT_CHECKED;
+            return DeleteResult.COMPACTION_PENDING;
         }
 
 
-        /**
-         * If any of the shards can't be deleted, then we can't delete it
-         */
-        for ( final Shard shard : shardEntryGroup.getReadShards() ) {
-            if ( !shardEntryGroup.canBeDeleted( shard ) ) {
-                return DeleteResult.TOO_NEW;
-            }
+        final long currentTime = timeService.getCurrentTime();
+
+        if ( shardEntryGroup.isNew( currentTime ) ) {
+            return DeleteResult.TOO_NEW;
         }
 
         /**
