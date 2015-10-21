@@ -40,7 +40,7 @@ public class LocalQueueManager implements QueueManager {
     public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
 
     @Override
-    public    Observable<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+    public    List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
         try {
             QueueMessage message=null;
@@ -54,7 +54,7 @@ public class LocalQueueManager implements QueueManager {
         }catch (InterruptedException ie){
             throw new RuntimeException(ie);
         }
-        return Observable.from( returnQueue);
+        return returnQueue;
     }
 
     @Override
@@ -87,7 +87,7 @@ public class LocalQueueManager implements QueueManager {
     public <T extends Serializable> void sendMessage( final T body ) throws IOException {
         String uuid = UUID.randomUUID().toString();
         try {
-            queue.put(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"));
+            queue.offer(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"),5000,TimeUnit.MILLISECONDS);
         }catch (InterruptedException ie){
             throw new RuntimeException(ie);
         }
