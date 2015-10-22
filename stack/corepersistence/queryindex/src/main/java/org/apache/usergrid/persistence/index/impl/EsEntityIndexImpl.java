@@ -460,7 +460,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             while(true){
                 //add search result hits to some sort of running tally of hits.
-                candidates = aggregateScrollResults( candidates, searchResponse );
+                candidates = aggregateScrollResults( candidates, searchResponse, null );
 
                 SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
                     .getScrollBuilder( searchResponse.getScrollId() )
@@ -510,11 +510,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         FilterBuilder entityIdFilter = FilterBuilders.termFilter(IndexingUtils.ENTITY_ID_FIELDNAME,
             IndexingUtils.entityId(entityId));
 
-        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte(markedVersion);
-
-        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter, entityVersionFilter);
-
-        srb.setPostFilter(andFilter);
+        srb.setPostFilter(entityIdFilter);
 
 
 
@@ -536,7 +532,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             while(true){
                 //add search result hits to some sort of running tally of hits.
-                candidates = aggregateScrollResults( candidates, searchResponse );
+                candidates = aggregateScrollResults( candidates, searchResponse, markedVersion);
 
                 SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
                     .getScrollBuilder( searchResponse.getScrollId() )
@@ -649,8 +645,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return candidateResults;
     }
 
-    private List<CandidateResult> aggregateScrollResults( List<CandidateResult> candidates,
-                                                          final SearchResponse searchResponse ){
+    private List<CandidateResult> aggregateScrollResults(List<CandidateResult> candidates,
+                                                         final SearchResponse searchResponse, final UUID markedVersion){
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
@@ -659,7 +655,36 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
 
-            candidates.add( candidateResult );
+            // if comparing against the latestVersion, make sure we only add the candidateResult if it's
+            // older than or equal to the latest marked version
+            if (markedVersion != null) {
+
+                if(candidateResult.getVersion().timestamp() <= markedVersion.timestamp()){
+
+                    if(logger.isDebugEnabled()){
+                        logger.debug("Candidate version {} is <= provided entity version {} for entityId {}",
+                            candidateResult.getVersion(),
+                            markedVersion,
+                            candidateResult.getId()
+                            );
+                    }
+
+                    candidates.add(candidateResult);
+
+                }else{
+                    if(logger.isDebugEnabled()){
+                        logger.debug("Candidate version {} is > provided entity version {} for entityId {}. Not" +
+                                "adding to candidate results",
+                            candidateResult.getVersion(),
+                            markedVersion,
+                            candidateResult.getId()
+                        );
+                    }
+                }
+
+            }else{
+                candidates.add(candidateResult);
+            }
         }
 
         logger.debug( "Aggregated {} out of {} hits ",candidates.size(),searchHits.getTotalHits() );

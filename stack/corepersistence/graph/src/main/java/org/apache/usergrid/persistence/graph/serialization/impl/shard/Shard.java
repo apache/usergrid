@@ -21,6 +21,12 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 public class Shard implements Comparable<Shard> {
 
+
+    /**
+     * The minimum shard a shardIndex can possibly be set to
+     */
+    public static final Shard MIN_SHARD = new Shard(0, 0, true);
+
     private final long shardIndex;
     private final long createdTime;
     private final boolean compacted;
@@ -54,6 +60,15 @@ public class Shard implements Comparable<Shard> {
      */
     public boolean isCompacted() {
         return compacted;
+    }
+
+
+    /**
+     * Returns true if this is the minimum shard
+     * @return
+     */
+    public boolean isMinShard(){
+        return shardIndex == MIN_SHARD.shardIndex;
     }
 
 
