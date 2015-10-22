@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 import org.apache.amber.oauth2.common.error.OAuthError;
@@ -47,6 +48,7 @@ import org.apache.usergrid.rest.exceptions.NotFoundExceptionMapper;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.slf4j.Logger;
@@ -601,4 +603,52 @@ public class ApplicationResource extends ServiceResource {
         }
         return new JSONWithPadding( value, callback );
     }
+
+    // Specifically require superuser access as this is setting app properties directly (only way to currently do this
+    // with Apigee's apigeeMobileConfig
+    @RequireSystemAccess
+    @POST
+    @Path("apm/apigeeMobileConfig")
+    @Consumes(APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public JSONWithPadding setAPMConfig( @Context UriInfo ui,
+                                         @QueryParam("callback") @DefaultValue("callback") String callback,
+                                         Map<String, Object> json) throws Exception {
+
+        if(json == null || json.size() < 1){
+            logger.error("Param {} cannot be null for POST apm/apigeeMobileConfig", APIGEE_MOBILE_APM_CONFIG_JSON_KEY);
+            throw new IllegalArgumentException("Request body cannot be empty and must include apigeeMobileConfig params");
+        }
+
+        final String requestAppUUID = (String) json.get("applicationUUID");
+        if(!requestAppUUID.equalsIgnoreCase(applicationId.toString())){
+            logger.error("Provided application UUID {} does not match actual application UUID {}",
+                requestAppUUID,
+                applicationId.toString());
+            throw new IllegalArgumentException(
+                String.format("Provided application UUID %s does not match actual application UUID %s",
+                requestAppUUID,
+                applicationId.toString())
+            );
+        }
+
+        final String apmConfig = new ObjectMapper().writeValueAsString(json);
+        if(logger.isDebugEnabled()){
+            logger.debug("Received request to set apigeeMobileConfig properties with: {}", apmConfig);
+        }
+
+
+        EntityManager em = emf.getEntityManager( applicationId );
+        em.setProperty(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId),
+            APIGEE_MOBILE_APM_CONFIG_JSON_KEY,
+            apmConfig
+        );
+
+        logger.info("Successfully set apigeeMobileConfig properties with: {}", apmConfig);
+
+        return new JSONWithPadding(apmConfig, callback);
+
+    }
+
+
 }
