@@ -129,7 +129,7 @@ object EntityCollectionScenarios {
     .exec(injectAuthType())
     .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
     asLongAs(_ => Settings.continueMinutesTest) {
-      tryMax(Settings.retryCount) {
+      tryMax(1+Settings.retryCount) {
         doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
           exec(getRandomEntityAnonymous)
         } {
@@ -139,7 +139,7 @@ object EntityCollectionScenarios {
     }
   } {
     repeat(_ => Settings.endRequestCount.toInt) {
-      tryMax(Settings.retryCount) {
+      tryMax(1+Settings.retryCount) {
         doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
           exec(getRandomEntityAnonymous)
         } {
@@ -180,7 +180,7 @@ object EntityCollectionScenarios {
             session => println(s"UUID: ${session("uuid").as[String]}")
             session
             }*/
-            .tryMax(Settings.retryCount) {
+            .tryMax(1+Settings.retryCount) {
             doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
               exec(getRandomEntityByUuidAnonymous)
             } {
@@ -195,7 +195,7 @@ object EntityCollectionScenarios {
             session => println(s"UUID: ${session("uuid").as[String]}")
             session
             }*/
-            .tryMax(Settings.retryCount) {
+            .tryMax(1+Settings.retryCount) {
               doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
                 exec(getRandomEntityByUuidAnonymous)
               } {
@@ -238,7 +238,7 @@ object EntityCollectionScenarios {
           session
         }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
-          tryMax(Settings.retryCount) {
+          tryMax(1+Settings.retryCount) {
             exec(loadEntity)
           }
         }
@@ -266,7 +266,7 @@ object EntityCollectionScenarios {
         session
       }*/
       .doIf(session => session("validEntity").as[String] == "yes") {
-        tryMax(Settings.retryCount) {
+        tryMax(1+Settings.retryCount) {
           exec(deleteEntity)
         }
       }
@@ -350,7 +350,7 @@ object EntityCollectionScenarios {
           session
         }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
-          tryMax(Settings.retryCount) {
+          tryMax(1+Settings.retryCount) {
             doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
               exec(getEntityByNameSequentialAnonymous)
             } {
