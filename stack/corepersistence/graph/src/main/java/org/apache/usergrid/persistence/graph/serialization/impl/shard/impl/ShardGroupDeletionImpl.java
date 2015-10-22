@@ -149,9 +149,18 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
         //now we can proceed based on the shard meta state and we don't have any edge
 
+        DeleteResult result = DeleteResult.NO_OP;
+
         MutationBatch rollup = null;
 
         for ( final Shard shard : shardEntryGroup.getReadShards() ) {
+
+            //skip the min shard
+            if(shard.isMinShard()){
+                continue;
+            }
+
+
             final MutationBatch shardRemovalMutation =
                 edgeShardSerialization.removeShardMeta( applicationScope, shard, directedEdgeMeta );
 
@@ -162,20 +171,23 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
             else {
                 rollup.mergeShallow( shardRemovalMutation );
             }
+
+            result = DeleteResult.DELETED;
         }
 
 
-        Preconditions.checkNotNull( rollup, "rollup should be assigned" );
+       if( rollup != null) {
 
-        try {
-            rollup.execute();
-        }
-        catch ( ConnectionException e ) {
-            logger.error( "Unable to execute shard deletion", e );
-            throw new RuntimeException( "Unable to execute shard deletion", e );
-        }
+           try {
+               rollup.execute();
+           }
+           catch ( ConnectionException e ) {
+               logger.error( "Unable to execute shard deletion", e );
+               throw new RuntimeException( "Unable to execute shard deletion", e );
+           }
+       }
 
-        return DeleteResult.DELETED;
+        return result;
     }
 
 

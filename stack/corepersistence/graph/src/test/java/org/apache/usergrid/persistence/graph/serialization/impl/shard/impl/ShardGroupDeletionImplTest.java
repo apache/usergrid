@@ -120,6 +120,46 @@ public class ShardGroupDeletionImplTest {
 
 
     @Test
+    public void shardIsMinShard() throws ExecutionException, InterruptedException {
+
+
+        final long currentTime = 1000;
+
+        final Shard shard0 = Shard.MIN_SHARD;
+
+
+        //set a 1 delta for testing
+        final ShardEntryGroup group = new ShardEntryGroup( 1 );
+
+        group.addShard( shard0 );
+
+        assertTrue( "this should return false for our test to succeed", shard0.isMinShard() );
+
+
+        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
+
+        final TimeService timeService = mock( TimeService.class );
+
+        when( timeService.getCurrentTime() ).thenReturn( currentTime );
+
+        initExecutor( 1, 1 );
+
+        final ShardGroupDeletionImpl shardGroupDeletion =
+            new ShardGroupDeletionImpl( asyncTaskExecutor, edgeShardSerialization, timeService );
+
+        final DirectedEdgeMeta directedEdgeMeta = getDirectedEdgeMeta();
+
+
+        final ListenableFuture<ShardGroupDeletion.DeleteResult> future =
+            shardGroupDeletion.maybeDeleteShard( this.scope, directedEdgeMeta, group, Collections.emptyIterator() );
+
+        final ShardGroupDeletion.DeleteResult result = future.get();
+
+        assertEquals( "should not delete min shard", ShardGroupDeletion.DeleteResult.NO_OP, result );
+    }
+
+
+    @Test
     public void shardTooNew() throws ExecutionException, InterruptedException {
 
         final long createTime = 10000;
@@ -232,7 +272,7 @@ public class ShardGroupDeletionImplTest {
 
         final long currentTime = createTime * 2;
 
-        final Shard shard0 = new Shard( 0, createTime, true );
+        final Shard shard0 = new Shard( 1000, createTime, true );
 
 
         ////set a delta for way in the future
@@ -245,15 +285,14 @@ public class ShardGroupDeletionImplTest {
         assertFalse( "this should return false for our test to succeed", group.isNew( currentTime ) );
 
 
-
         final DirectedEdgeMeta directedEdgeMeta = getDirectedEdgeMeta();
 
         //mock up returning a mutation
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
 
-        when(edgeShardSerialization.removeShardMeta( same(scope), same(shard0), same(directedEdgeMeta) )).thenReturn( mock(
-            MutationBatch.class) );
+        when( edgeShardSerialization.removeShardMeta( same( scope ), same( shard0 ), same( directedEdgeMeta ) ) )
+            .thenReturn( mock( MutationBatch.class ) );
 
         final TimeService timeService = mock( TimeService.class );
 
@@ -265,8 +304,6 @@ public class ShardGroupDeletionImplTest {
             new ShardGroupDeletionImpl( asyncTaskExecutor, edgeShardSerialization, timeService );
 
 
-
-
         final ListenableFuture<ShardGroupDeletion.DeleteResult> future =
             shardGroupDeletion.maybeDeleteShard( this.scope, directedEdgeMeta, group, Collections.emptyIterator() );
 
@@ -274,7 +311,6 @@ public class ShardGroupDeletionImplTest {
 
         assertEquals( "should  delete", ShardGroupDeletion.DeleteResult.DELETED, result );
     }
-
 
 
     private DirectedEdgeMeta getDirectedEdgeMeta() {
