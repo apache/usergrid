@@ -1610,7 +1610,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception {
 
-        return createApplication( organizationId, applicationName,null, null );
+        // DO NOT CHANGE THIS AS SOME EXTERNAL CLASSES MAY RELY ON THIS BEHAVIOR WHEN EXTENDING
+        return createApplication( organizationId, applicationName, null );
     }
 
 
