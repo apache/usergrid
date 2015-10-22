@@ -125,10 +125,13 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
                                                    final ShardEntryGroup shardEntryGroup,
                                                    final Iterator<MarkedEdge> edgeIterator ) {
 
+        logger.trace( "Beginning audit of shard group {}", shardEntryGroup );
+
         /**
          * Compaction is pending, we cannot check it
          */
         if ( shardEntryGroup.isCompactionPending() ) {
+            logger.trace( "Shard group {} is compacting, not auditing group", shardEntryGroup );
             return DeleteResult.COMPACTION_PENDING;
         }
 
@@ -136,6 +139,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
         final long currentTime = timeService.getCurrentTime();
 
         if ( shardEntryGroup.isNew( currentTime ) ) {
+            logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
             return DeleteResult.TOO_NEW;
         }
 
@@ -143,6 +147,8 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
          * We have edges, and therefore cannot delete them
          */
         if ( edgeIterator.hasNext() ) {
+            logger.trace( "Shard group {} has edges, not deleting", shardEntryGroup );
+
             return DeleteResult.CONTAINS_EDGES;
         }
 
@@ -157,6 +163,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
             //skip the min shard
             if(shard.isMinShard()){
+                logger.trace( "Shard {} in group {} is the minimum, not deleting", shard, shardEntryGroup );
                 continue;
             }
 
@@ -173,6 +180,8 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
             }
 
             result = DeleteResult.DELETED;
+
+            logger.trace( "Removing shard {} in group {}", shard, shardEntryGroup );
         }
 
 
@@ -186,6 +195,8 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
                throw new RuntimeException( "Unable to execute shard deletion", e );
            }
        }
+
+        logger.trace( "Completed auditing shard group {}", shardEntryGroup );
 
         return result;
     }
