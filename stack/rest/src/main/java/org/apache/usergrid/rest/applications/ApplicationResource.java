@@ -606,7 +606,7 @@ public class ApplicationResource extends ServiceResource {
 
     // Specifically require superuser access as this is setting app properties directly (only way to currently do this
     // with Apigee's apigeeMobileConfig
-    @RequireSystemAccess
+    @RequireOrganizationAccess
     @POST
     @Path("apm/apigeeMobileConfig")
     @Consumes(APPLICATION_JSON)
