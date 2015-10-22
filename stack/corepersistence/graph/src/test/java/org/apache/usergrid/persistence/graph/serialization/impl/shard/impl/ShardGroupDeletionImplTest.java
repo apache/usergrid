@@ -43,6 +43,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
@@ -50,6 +51,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -252,7 +254,7 @@ public class ShardGroupDeletionImplTest {
         //now check when marked we also retain them
 
         final Iterator<MarkedEdge> markedEdgeIterator = Collections.singleton(
-            ( MarkedEdge ) new SimpleMarkedEdge( createId( "source" ), "type", createId( "target" ), 1000, false ) )
+            ( MarkedEdge ) new SimpleMarkedEdge( createId( "source" ), "type", createId( "target" ), 1000, true ) )
                                                                    .iterator();
 
 
@@ -266,7 +268,7 @@ public class ShardGroupDeletionImplTest {
 
 
     @Test
-    public void testDeletion() throws ExecutionException, InterruptedException {
+    public void testDeletion() throws ExecutionException, InterruptedException, ConnectionException {
 
         final long createTime = 10000;
 
@@ -290,9 +292,10 @@ public class ShardGroupDeletionImplTest {
         //mock up returning a mutation
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
+        final MutationBatch batch = mock( MutationBatch.class );
 
         when( edgeShardSerialization.removeShardMeta( same( scope ), same( shard0 ), same( directedEdgeMeta ) ) )
-            .thenReturn( mock( MutationBatch.class ) );
+            .thenReturn( batch );
 
         final TimeService timeService = mock( TimeService.class );
 
@@ -310,6 +313,8 @@ public class ShardGroupDeletionImplTest {
         final ShardGroupDeletion.DeleteResult result = future.get();
 
         assertEquals( "should  delete", ShardGroupDeletion.DeleteResult.DELETED, result );
+
+        verify(batch).execute();
     }
 
 

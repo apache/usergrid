@@ -55,6 +55,7 @@ import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -595,7 +596,7 @@ public class GraphManagerShardConsistencyIT {
 
             while ( groups.hasNext() ) {
 
-                group = groups.next();;
+                group = groups.next();
 
                 log.info( "Shard size for group is {}", group.getReadShards() );
 
@@ -604,7 +605,7 @@ public class GraphManagerShardConsistencyIT {
 
 
             //we're done, 1 shard remains, we have a group, and it's our default shard
-            if ( shardCount == 1 && group != null &&  group.getMinShard().getShardIndex() == 0  ) {
+            if ( shardCount == 1 && group != null &&  group.getMinShard().getShardIndex() == Shard.MIN_SHARD.getShardIndex()  ) {
                 log.info( "All compactions complete," );
 
                 break;
