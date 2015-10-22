@@ -291,9 +291,18 @@ public class ShardEntryGroup {
                  * cache refresh, we can't compact yet.
                  */
 
-                && currentTime - delta > maxCreatedTime;
+                && !isNew( currentTime );
     }
 
+
+    /**
+     * Return true if our current time - delta is newer than our maxCreatedtime
+     * @param currentTime
+     * @return
+     */
+    public boolean isNew(final long currentTime){
+        return currentTime - delta <= maxCreatedTime;
+    }
 
     /**
      * Return true if this shard can be deleted AFTER all of the data in it has been moved
@@ -307,7 +316,7 @@ public class ShardEntryGroup {
         final Shard compactionTarget = getCompactionTarget();
 
 
-        return !shard.isCompacted() && ( compactionTarget != null && compactionTarget.getShardIndex() != shard
+        return !shard.isCompacted() && !shard.isMinShard() &&  ( compactionTarget != null && compactionTarget.getShardIndex() != shard
                 .getShardIndex() );
     }
 

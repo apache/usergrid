@@ -204,8 +204,9 @@ public class IndexServiceImpl implements IndexService {
 
         //If we get no search results, its possible that something was already deleted or
         //that it wasn't indexed yet. In either case we can't delete anything and return an empty observable..
-        if(crs.isEmpty())
+        if(crs.isEmpty()) {
             return Observable.empty();
+        }
 
         UUID timeUUID = UUIDUtils.isTimeBased(entityId.getUuid()) ? entityId.getUuid() : UUIDUtils.newTimeUUID();
         //not actually sure about the timestamp but ah well. works.
