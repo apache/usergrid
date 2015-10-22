@@ -68,6 +68,11 @@ public interface ShardGroupDeletion {
         /**
          * Our capacity was saturated, we didnt' check the shard
          */
-        NOT_CHECKED;
+        NOT_CHECKED,
+
+        /**
+         * We checked everything, but we didn't perform any operations.  Happens when only the min shard remains
+         */
+        NO_OP;
     }
 }

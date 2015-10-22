@@ -301,7 +301,7 @@ public class ShardEntryGroup {
      * @return
      */
     public boolean isNew(final long currentTime){
-        return currentTime - delta < maxCreatedTime;
+        return currentTime - delta <= maxCreatedTime;
     }
 
     /**
@@ -316,7 +316,7 @@ public class ShardEntryGroup {
         final Shard compactionTarget = getCompactionTarget();
 
 
-        return !shard.isCompacted() && ( compactionTarget != null && compactionTarget.getShardIndex() != shard
+        return !shard.isCompacted() && !shard.isMinShard() &&  ( compactionTarget != null && compactionTarget.getShardIndex() != shard
                 .getShardIndex() );
     }
 
