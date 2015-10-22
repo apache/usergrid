@@ -32,24 +32,13 @@
 
   <dependencies>
 
-<!--    <dependency>
-      <groupId>org.safehaus.chop</groupId>
-      <artifactId>chop-api</artifactId>
-      <version>${chop.version}</version>
-    </dependency>-->
-
     <!-- Google Guice Integration Test Injectors -->
-
 
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>common</artifactId>
       <version>${project.version}</version>
     </dependency>
-
-
-
-
 
     <!-- tests -->
 
@@ -61,14 +50,12 @@
       <scope>test</scope>
     </dependency>
 
-
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-
 
   </dependencies>
 </project>
