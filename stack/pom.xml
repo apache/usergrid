@@ -1536,14 +1536,13 @@
                     </goals>
                     <configuration>
                         <rules>
-                            <!--  implementation is needed only for Maven 2  -->
-                            <rule implementation="org.jacoco.maven.RuleConfiguration">
+                            <rule>
                                 <element>BUNDLE</element>
                                 <limits>
-                                    <!--  implementation is needed only for Maven 2  -->
-                                    <limit implementation="org.jacoco.report.check.Limit">
+                                    <limit>
                                         <counter>COMPLEXITY</counter>
                                         <value>COVEREDRATIO</value>
+                                        <!-- we should increase this as our coverage increases -->
                                         <minimum>0.30</minimum>
                                     </limit>
                                 </limits>
@@ -1552,6 +1551,17 @@
                     </configuration>
                 </execution>
             </executions>
+
+            <configuration>
+                <fileSets>
+                    <fileSet>
+                        <directory>${project.build.directory}</directory>
+                        <includes>
+                            <include>jacoco.exec</include>
+                        </includes>
+                    </fileSet>
+                </fileSets>
+            </configuration>
 
         </plugin>
 
@@ -1670,6 +1680,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.10</version>
         <configuration>
           <configLocation>usergrid/checkstyle.xml</configLocation>
         </configuration>
