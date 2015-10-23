@@ -36,34 +36,6 @@
         <catalina.jmx.port>8089</catalina.jmx.port>
     </properties>
 
-    <!-- profile that arquillian uses when it builds/starts tomcat -->
-    <profiles>
-
-        <!--
-        <profile>
-            <id>arquillian-tomcat</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.jboss.arquillian.container</groupId>
-                    <artifactId>arquillian-tomcat-remote-7</artifactId>
-                    <version>1.0.0.CR7</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.eu.ingwar.tools</groupId>
-                    <artifactId>arquillian-suite-extension</artifactId>
-                    <version>1.1.1</version>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        -->
-
-    </profiles>
-
     <build>
         <finalName>ROOT</finalName>
 
@@ -105,7 +77,7 @@
                     <threadCount>${usergrid.rest.threads}</threadCount>
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <reuseForks>true</reuseForks>
-                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}
+                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}
                     </argLine>
                     <includes>
                         <include>**/*IT.java</include>
@@ -423,5 +395,25 @@
         </dependency>
 
     </dependencies>
+
+<!--
+    <profiles>
+        <profile>
+            <id>jacoco</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <argLine>-javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline} -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+-->
 
 </project>

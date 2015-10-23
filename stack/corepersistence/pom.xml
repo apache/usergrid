@@ -29,6 +29,7 @@ limitations under the License.
     <version>2.1.1-SNAPSHOT</version>
 
   <profiles>
+
     <!-- better to have keep this sonar profile in your maven settings.xml -->
     <profile>
       <id>sonar</id>
@@ -42,6 +43,22 @@ limitations under the License.
         <sonar.jdbc.password>sonar</sonar.jdbc.password>
       </properties>
     </profile>
+
+      <profile>
+          <id>jacoco</id>
+          <build>
+              <plugins>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-surefire-plugin</artifactId>
+                      <version>${surefire.plugin.version}</version>
+                      <configuration>
+                          <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
+                      </configuration>
+                  </plugin>
+              </plugins>
+          </build>
+      </profile>
 
   </profiles>
 
