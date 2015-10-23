@@ -300,7 +300,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
         final Observable<Edge> edges =
-            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesFromSource" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesFromSource( scope, search );
@@ -315,7 +315,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
         final Observable<Edge> edges =
-            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesToTarget" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesToTarget( scope, search );
@@ -331,7 +331,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
         final Observable<Edge> edges =
-            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesFromSourceByType" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
@@ -346,7 +346,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
         final Observable<Edge> edges =
-            Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesToTargetByType" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
