@@ -2897,7 +2897,7 @@ public class CpEntityManager implements EntityManager {
                         hasFinished = true;
                         break;
                     }
-                    Thread.sleep(200);
+                    Thread.sleep(100);
 
                     indexRefreshCommandInfo
                         = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
@@ -2908,7 +2908,7 @@ public class CpEntityManager implements EntityManager {
             }finally {
                 delete(refreshEntity);
             }
-            Thread.sleep(200);
+            Thread.sleep(100);
 
             return indexRefreshCommandInfo;
         } catch (Exception e) {
