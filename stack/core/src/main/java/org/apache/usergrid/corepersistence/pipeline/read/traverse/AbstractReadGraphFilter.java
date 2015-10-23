@@ -20,6 +20,9 @@
 package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
@@ -40,6 +43,8 @@ import rx.Observable;
  * Command for reading graph edges
  */
 public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id, Edge> {
+
+    private static final Logger logger = LoggerFactory.getLogger( AbstractReadGraphFilter.class );
 
     private final GraphManagerFactory graphManagerFactory;
 
@@ -82,7 +87,10 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
              */
             return graphManager.loadEdgesFromSource( search )
                 //set the edge state for cursors
-                .doOnNext( edge -> edgeCursorState.update( edge ) )
+                .doOnNext( edge -> {
+                    logger.trace( "Seeking over edge {}", edge );
+                    edgeCursorState.update( edge );
+                } )
 
                     //map our id from the target edge  and set our cursor every edge we traverse
                 .map( edge -> createFilterResult( edge.getTargetNode(), edgeCursorState.getCursorEdge(),
