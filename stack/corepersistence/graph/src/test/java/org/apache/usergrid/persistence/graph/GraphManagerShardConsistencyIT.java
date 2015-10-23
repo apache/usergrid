@@ -176,7 +176,7 @@ public class GraphManagerShardConsistencyIT {
 
 
             @Override
-            public Observable<Edge> doSearch( final GraphManager manager ) {
+            public Observable<MarkedEdge> doSearch( final GraphManager manager ) {
                 return manager.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
                         Optional.<Edge>absent() ) );
@@ -409,7 +409,7 @@ public class GraphManagerShardConsistencyIT {
 
 
             @Override
-            public Observable<Edge> doSearch( final GraphManager manager ) {
+            public Observable<MarkedEdge> doSearch( final GraphManager manager ) {
                 return manager.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
                         Optional.<Edge>absent(), false ) );
@@ -729,7 +729,7 @@ public class GraphManagerShardConsistencyIT {
         /**
          * Perform the search returning an observable edge
          */
-        public Observable<Edge> doSearch( final GraphManager manager );
+        public Observable<MarkedEdge> doSearch( final GraphManager manager );
     }
 }
 

@@ -144,12 +144,12 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Edge> writeEdge( final Edge edge ) {
+    public Observable<MarkedEdge> writeEdge( final Edge edge ) {
         GraphValidation.validateEdge( edge );
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
 
-        final Observable<Edge> observable = Observable.just( markedEdge ).map( edge1 -> {
+        final Observable<MarkedEdge> observable = Observable.just( markedEdge ).map( edge1 -> {
 
             final UUID timestamp = UUIDGenerator.newTimeUUID();
 
@@ -175,12 +175,12 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Edge> markEdge( final Edge edge ) {
+    public Observable<MarkedEdge> markEdge( final Edge edge ) {
         GraphValidation.validateEdge( edge );
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 
-        final Observable<Edge> observable = Observable.just( markedEdge ).map( edge1 -> {
+        final Observable<MarkedEdge> observable = Observable.just( markedEdge ).map( edge1 -> {
 
             final UUID timestamp = UUIDGenerator.newTimeUUID();
 
@@ -282,9 +282,9 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
+    public Observable<MarkedEdge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
 
-        final Observable<Edge> edges =
+        final Observable<MarkedEdge> edges =
             Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
@@ -298,8 +298,8 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-        final Observable<Edge> edges =
+    public Observable<MarkedEdge> loadEdgesFromSource( final SearchByEdgeType search ) {
+        final Observable<MarkedEdge> edges =
             Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesFromSource" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
@@ -313,8 +313,8 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
-        final Observable<Edge> edges =
+    public Observable<MarkedEdge> loadEdgesToTarget( final SearchByEdgeType search ) {
+        final Observable<MarkedEdge> edges =
             Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesToTarget" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
@@ -329,8 +329,8 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        final Observable<Edge> edges =
+    public Observable<MarkedEdge> loadEdgesFromSourceByType( final SearchByIdType search ) {
+        final Observable<MarkedEdge> edges =
             Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesFromSourceByType" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
@@ -344,8 +344,8 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        final Observable<Edge> edges =
+    public Observable<MarkedEdge> loadEdgesToTargetByType( final SearchByIdType search ) {
+        final Observable<MarkedEdge> edges =
             Observable.create( new ObservableIterator<MarkedEdge>( "loadEdgesToTargetByType" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
@@ -480,7 +480,7 @@ public class GraphManagerImpl implements GraphManager {
                     }
 
                     //if any one of these is true, we filter it
-                    return !(simpleMarkedEdge.isDeleted() || simpleMarkedEdge.isSourceNodeDelete() || simpleMarkedEdge.isTargetNodeDeleted());
+                    return !simpleMarkedEdge.isDeleted() &&  !simpleMarkedEdge.isSourceNodeDelete() && !simpleMarkedEdge.isTargetNodeDeleted();
                 });
             } );
         }

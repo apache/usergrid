@@ -59,6 +59,7 @@ import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
@@ -227,14 +228,9 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edges =
             gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeType, null ) )
-              .flatMap( new Func1<String, Observable<Edge>>() {
-                  @Override
-                  public Observable<Edge> call( final String edgeType ) {
-                      return gm.loadEdgesToTarget(
-                          new SimpleSearchByEdgeType( cpHeadEntity.getId(), edgeType, Long.MAX_VALUE,
-                              SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
-                  }
-              } );
+              .flatMap( edgeType1 -> gm.loadEdgesToTarget(
+                  new SimpleSearchByEdgeType( cpHeadEntity.getId(), edgeType1, Long.MAX_VALUE,
+                      SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) ) );
 
         //if our limit is set, take them.  Note this logic is still borked, we can't possibly fit everything in memmory
         if ( limit > -1 ) {
@@ -268,7 +264,7 @@ public class CpRelationManager implements RelationManager {
         } );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        Observable<Edge> edges = gm.loadEdgeVersions( CpNamingUtils
+        Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
             .createEdgeFromConnectionType( new SimpleId( headEntity.getUuid(), headEntity.getType() ), connectionType,
                 entityId ) );
 
@@ -288,7 +284,7 @@ public class CpRelationManager implements RelationManager {
         } );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        Observable<Edge> edges = gm.loadEdgeVersions( CpNamingUtils
+        Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
             .createEdgeFromCollectionName( new SimpleId( headEntity.getUuid(), headEntity.getType() ), collectionName,
                 entityId ) );
 

@@ -63,6 +63,7 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -477,9 +478,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
             new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType(
-                managementId, edgeType, Long.MAX_VALUE,
-                SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ));
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource(
+            new SimpleSearchByEdgeType( managementId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                Optional.<Edge>absent() ) );
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( appScope );
 

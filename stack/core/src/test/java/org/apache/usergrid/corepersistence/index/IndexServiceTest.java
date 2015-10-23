@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.junit.Before;
 import org.junit.Test;
@@ -244,7 +245,7 @@ public class IndexServiceTest {
 //        final int edgeCount = indexFig.getIndexBatchSize()*2;
         final int edgeCount = 100;
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
             final Id connectingId = createId( "connecting" );
             final Edge edge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
 
@@ -377,7 +378,8 @@ public class IndexServiceTest {
         //Write multiple connection edges
         final int edgeCount = 5;
 
-        final List<Edge> connectionSearchEdges = createConnectionSearchEdges( testEntity, graphManager, edgeCount );
+        final List<MarkedEdge>
+            connectionSearchEdges = createConnectionSearchEdges( testEntity, graphManager, edgeCount );
 
         indexService.indexEntity( applicationScope, testEntity ).flatMap(mesage -> indexProducer.put(mesage)).toBlocking().getIterator();
 
@@ -485,10 +487,10 @@ public class IndexServiceTest {
     }
 
 
-    private List<Edge> createConnectionSearchEdges(
-        final Entity testEntity, final GraphManager graphManager, final int edgeCount ) {
+    private List<MarkedEdge> createConnectionSearchEdges( final Entity testEntity, final GraphManager graphManager,
+                                                          final int edgeCount ) {
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
 
             //create our connection edge.
             final Id connectingId = createId( "connecting" );
