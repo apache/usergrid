@@ -31,22 +31,6 @@ limitations under the License.
   <artifactId>map</artifactId>
   <name>Usergrid Map</name>
 
-
-    <build>
-
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire.plugin.version}</version>
-                <configuration>
-                    <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
-                </configuration>
-            </plugin>
-        </plugins>
-
-    </build>
-
   <dependencies>
 
 
@@ -77,8 +61,6 @@ limitations under the License.
     </dependency>
 
 
-
-
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>collection</artifactId>
@@ -87,5 +69,23 @@ limitations under the License.
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+    <profiles>
+        <profile>
+            <id>jacoco</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
