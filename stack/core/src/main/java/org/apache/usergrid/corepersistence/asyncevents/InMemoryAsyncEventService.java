@@ -22,8 +22,6 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
@@ -103,7 +101,8 @@ public class InMemoryAsyncEventService implements AsyncEventService {
             eventBuilder.buildEntityDelete( applicationScope, entityId );
 
         run( results.getIndexObservable() );
-        run( results.getEntitiesCompacted() );
+        run( results.getEntitiesDeleted() );
+        run( results.getCompactedNode() );
     }
 
 

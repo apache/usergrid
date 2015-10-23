@@ -128,8 +128,6 @@ public class EventBuilderImpl implements EventBuilder {
 
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-        //needs get versions here.
-
 
         //TODO: change this to be an observable
         //so we get these versions and loop through them until we find the MvccLogEntry that is marked as delete.
@@ -155,11 +153,14 @@ public class EventBuilderImpl implements EventBuilder {
         //observable of entries as the batches are deleted
         final Observable<List<MvccLogEntry>> entries =
             ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
-               .doOnNext( buffer -> ecm.delete( buffer ) ).doOnCompleted( () -> gm.compactNode( entityId ).toBlocking().lastOrDefault(null) );
+               .doOnNext( buffer -> ecm.delete( buffer ) );
 
 
+        // observable of the edge delete from graph
+        final Observable<Id> compactedNode = gm.compactNode(entityId);
 
-        return new EntityDeleteResults( edgeObservable, entries );
+
+        return new EntityDeleteResults( edgeObservable, entries, compactedNode );
     }
 
 
