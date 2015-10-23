@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
