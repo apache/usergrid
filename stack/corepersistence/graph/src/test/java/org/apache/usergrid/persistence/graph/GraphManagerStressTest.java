@@ -107,25 +107,25 @@ public class GraphManagerStressTest {
 
 
             @Override
-            public Observable<Edge> doSearch( final GraphManager manager ) {
+            public Observable<MarkedEdge> doSearch( final GraphManager manager ) {
 
 
                 final long timestamp = System.currentTimeMillis();
 
 
-                return Observable.create( new Observable.OnSubscribe<Edge>() {
+                return Observable.create( new Observable.OnSubscribe<MarkedEdge>() {
 
                     @Override
-                    public void call( final Subscriber<? super Edge> subscriber ) {
+                    public void call( final Subscriber<? super MarkedEdge> subscriber ) {
                         try {
                             for ( Id sourceId : sourceIds ) {
 
-                                final Iterable<Edge> edges = manager.loadEdgesFromSource(
+                                final Iterable<MarkedEdge> edges = manager.loadEdgesFromSource(
                                         new SimpleSearchByEdgeType( sourceId, "test", timestamp, SearchByEdgeType.Order.DESCENDING,  Optional
                                                                                     .<Edge>absent() ) )
                                                                     .toBlocking().toIterable();
 
-                                for ( Edge edge : edges ) {
+                                for ( MarkedEdge edge : edges ) {
                                     log.debug( "Firing on next for edge {}", edge );
 
                                     subscriber.onNext( edge );
@@ -195,7 +195,7 @@ public class GraphManagerStressTest {
 
 
             @Override
-            public Observable<Edge> doSearch( final GraphManager manager ) {
+            public Observable<MarkedEdge> doSearch( final GraphManager manager ) {
                 return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
             }
         };
@@ -222,7 +222,7 @@ public class GraphManagerStressTest {
 
 
             @Override
-            public Observable<Edge> doSearch( final GraphManager manager ) {
+            public Observable<MarkedEdge> doSearch( final GraphManager manager ) {
 
                 return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
             }
@@ -307,6 +307,6 @@ public class GraphManagerStressTest {
          */
         public Edge newEdge();
 
-        public Observable<Edge> doSearch( final GraphManager manager );
+        public Observable<MarkedEdge> doSearch( final GraphManager manager );
     }
 }

@@ -23,13 +23,16 @@ package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -42,18 +45,21 @@ import rx.Observable;
 /**
  * Command for reading graph edges
  */
-public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id, Edge> {
+public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id, MarkedEdge> {
 
     private static final Logger logger = LoggerFactory.getLogger( AbstractReadGraphFilter.class );
 
     private final GraphManagerFactory graphManagerFactory;
+    private final AsyncEventService asyncEventService;
 
 
     /**
      * Create a new instance of our command
      */
-    public AbstractReadGraphFilter( final GraphManagerFactory graphManagerFactory ) {
+    public AbstractReadGraphFilter( final GraphManagerFactory graphManagerFactory,
+                                    final AsyncEventService asyncEventService ) {
         this.graphManagerFactory = graphManagerFactory;
+        this.asyncEventService = asyncEventService;
     }
 
 
@@ -61,9 +67,11 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
     public Observable<FilterResult<Id>> call( final Observable<FilterResult<Id>> previousIds ) {
 
 
+        final ApplicationScope applicationScope = pipelineContext.getApplicationScope();
+
         //get the graph manager
         final GraphManager graphManager =
-            graphManagerFactory.createEdgeManager( pipelineContext.getApplicationScope() );
+            graphManagerFactory.createEdgeManager( applicationScope );
 
 
         final String edgeName = getEdgeTypeName();
@@ -74,18 +82,60 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
         return previousIds.flatMap( previousFilterValue -> {
 
             //set our our constant state
-            final Optional<Edge> startFromCursor = getSeekValue();
+            final Optional<MarkedEdge> startFromCursor = getSeekValue();
             final Id id = previousFilterValue.getValue();
 
 
+            final Optional<Edge> typeWrapper = Optional.fromNullable(startFromCursor.orNull());
+
+            /**
+             * We do not want to filter.  This is intentional DO NOT REMOVE!!!
+             *
+             * We want to fire events on these edges if they exist, the delete was missed.
+             */
             final SimpleSearchByEdgeType search =
                 new SimpleSearchByEdgeType( id, edgeName, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                    startFromCursor );
+                    typeWrapper, false );
 
             /**
              * TODO, pass a message with pointers to our cursor values to be generated later
              */
-            return graphManager.loadEdgesFromSource( search )
+            return graphManager.loadEdgesFromSource( search ).filter(markedEdge -> {
+
+                final boolean isDeleted = markedEdge.isDeleted();
+                final boolean isSourceNodeDeleted = markedEdge.isSourceNodeDelete();
+                final boolean isTargetNodeDelete = markedEdge.isTargetNodeDeleted();
+
+
+
+                if(isDeleted){
+                    logger.trace( "Edge {} is deleted, queueing the delete event", markedEdge );
+                    asyncEventService.queueDeleteEdge( applicationScope, markedEdge  );
+                }
+
+                if(isSourceNodeDeleted){
+                    final Id sourceNodeId = markedEdge.getSourceNode();
+
+                    logger.trace( "Edge {} has a deleted source node, queueing the delete entity event for id {}", markedEdge, sourceNodeId );
+
+                    asyncEventService.queueEntityDelete( applicationScope, sourceNodeId );
+                }
+
+                if(isTargetNodeDelete){
+
+                    final Id targetNodeId = markedEdge.getTargetNode();
+
+                    logger.trace( "Edge {} has a deleted target node, queueing the delete entity event for id {}", markedEdge, targetNodeId );
+
+                    asyncEventService.queueEntityDelete( applicationScope, targetNodeId );
+                }
+
+
+                //filter if any of them are marked
+                return !isDeleted && !isSourceNodeDeleted && !isTargetNodeDelete;
+
+
+            })
                 //set the edge state for cursors
                 .doOnNext( edge -> {
                     logger.trace( "Seeking over edge {}", edge );
@@ -100,7 +150,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
 
     @Override
-    protected FilterResult<Id> createFilterResult( final Id emit, final Edge cursorValue,
+    protected FilterResult<Id> createFilterResult( final Id emit, final MarkedEdge cursorValue,
                                                    final Optional<EdgePath> parent ) {
 
         //if it's our first pass, there's no cursor to generate
@@ -113,7 +163,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
 
     @Override
-    protected CursorSerializer<Edge> getCursorSerializer() {
+    protected CursorSerializer<MarkedEdge> getCursorSerializer() {
         return EdgeCursorSerializer.INSTANCE;
     }
 
@@ -131,14 +181,14 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
      */
     private final class EdgeState {
 
-        private Edge cursorEdge = null;
-        private Edge currentEdge = null;
+        private MarkedEdge cursorEdge = null;
+        private MarkedEdge currentEdge = null;
 
 
         /**
          * Update the pointers
          */
-        private void update( final Edge newEdge ) {
+        private void update( final MarkedEdge newEdge ) {
             cursorEdge = currentEdge;
             currentEdge = newEdge;
         }
@@ -147,7 +197,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
         /**
          * Get the edge to use in cursors for resume
          */
-        private Edge getCursorEdge() {
+        private MarkedEdge getCursorEdge() {
             return cursorEdge;
         }
     }

@@ -22,20 +22,22 @@ package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.AbstractCursorSerializer;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 
 
 /**
  * Edge cursor serializer
  */
-public class EdgeCursorSerializer extends AbstractCursorSerializer<Edge> {
+public class EdgeCursorSerializer extends AbstractCursorSerializer<MarkedEdge> {
 
 
     public static final EdgeCursorSerializer INSTANCE = new EdgeCursorSerializer();
 
     @Override
-    protected Class<SimpleEdge> getType() {
-        return SimpleEdge.class;
+    protected Class<SimpleMarkedEdge> getType() {
+        return SimpleMarkedEdge.class;
     }
 
 

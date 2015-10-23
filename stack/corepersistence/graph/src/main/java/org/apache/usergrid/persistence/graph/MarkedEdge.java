@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * An edge.  With the additional info of if it is marked for deletion
  *
  */
+@JsonDeserialize(as = SimpleMarkedEdge.class)
 public interface MarkedEdge extends Edge{
 
     /**

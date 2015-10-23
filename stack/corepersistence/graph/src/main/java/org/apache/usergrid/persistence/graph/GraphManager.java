@@ -59,7 +59,7 @@ public interface GraphManager extends CPManager {
      * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this
      * edge.
      */
-    Observable<Edge> writeEdge( Edge edge );
+    Observable<MarkedEdge> writeEdge( Edge edge );
 
 
     /**
@@ -68,7 +68,7 @@ public interface GraphManager extends CPManager {
      *
      * Implementation should also mark the incoming (reversed) edge. Only marks the specific version
      */
-    Observable<Edge> markEdge( Edge edge );
+    Observable<MarkedEdge> markEdge( Edge edge );
 
     /**
      * @param edge Remove the edge in the graph
@@ -98,7 +98,7 @@ public interface GraphManager extends CPManager {
     /**
      * Get all versions of this edge where versions <= max version
      */
-    Observable<Edge> loadEdgeVersions( SearchByEdge edge );
+    Observable<MarkedEdge> loadEdgeVersions( SearchByEdge edge );
 
     /**
      * Returns an observable that emits all edges where the specified node is the source node. The edges will match the
@@ -108,7 +108,7 @@ public interface GraphManager extends CPManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadEdgesFromSource( SearchByEdgeType search );
+    Observable<MarkedEdge> loadEdgesFromSource( SearchByEdgeType search );
 
     /**
      * Returns an observable that emits all edges where the specified node is the target node. The edges will match the
@@ -118,7 +118,7 @@ public interface GraphManager extends CPManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadEdgesToTarget( SearchByEdgeType search );
+    Observable<MarkedEdge> loadEdgesToTarget( SearchByEdgeType search );
 
 
     /**
@@ -129,7 +129,7 @@ public interface GraphManager extends CPManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadEdgesFromSourceByType( SearchByIdType search );
+    Observable<MarkedEdge> loadEdgesFromSourceByType( SearchByIdType search );
 
 
     /**
@@ -140,7 +140,7 @@ public interface GraphManager extends CPManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadEdgesToTargetByType( SearchByIdType search );
+    Observable<MarkedEdge> loadEdgesToTargetByType( SearchByIdType search );
 
     /**
      * Get all edge types to this node.  The node provided by search is the target node.

@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
@@ -118,7 +119,7 @@ public class ConnectionServiceImplTest {
             new SimpleSearchByEdge( source, connectionEdge.getType(), target, Long.MAX_VALUE,
                 SearchByEdgeType.Order.DESCENDING, Optional.absent() );
 
-        final List<Edge> edges = gm.loadEdgeVersions( simpleSearchByEdge ).toList().toBlocking().last();
+        final List<MarkedEdge> edges = gm.loadEdgeVersions( simpleSearchByEdge ).toList().toBlocking().last();
 
         assertEquals( 1, edges.size() );
 
@@ -209,7 +210,7 @@ public class ConnectionServiceImplTest {
                 SearchByEdgeType.Order.DESCENDING, Optional.absent() );
 
         //check only 1 exists
-        final List<Edge> edges = gm.loadEdgeVersions( simpleSearchByEdge ).toList().toBlocking().last();
+        final List<MarkedEdge> edges = gm.loadEdgeVersions( simpleSearchByEdge ).toList().toBlocking().last();
 
         assertEquals( 1, edges.size() );
 
