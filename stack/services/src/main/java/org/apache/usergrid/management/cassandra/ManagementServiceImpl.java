@@ -1728,7 +1728,9 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> restored an application named " + appInfo.getName(), null );
         }
 
-
+        ScopedCache scopedCache = cacheFactory.getScopedCache(
+            new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
+        scopedCache.invalidate();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
