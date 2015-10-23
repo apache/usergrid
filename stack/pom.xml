@@ -1474,7 +1474,8 @@
                           <threadCount>${usergrid.it.forkCount}</threadCount>
                           <!-- see this page for documentation on classloading issues http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
                           <useSystemClassLoader>false</useSystemClassLoader>
-                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+                          <!--<argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>-->
                           <testFailureIgnore>false</testFailureIgnore>
 
                           <systemPropertyVariables>
