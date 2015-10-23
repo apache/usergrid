@@ -291,7 +291,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgeVersions( scope, searchByEdge );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .compose( new EdgeBufferFilter( searchByEdge.getMaxTimestamp(), searchByEdge.filterMarked() ) );
+                      .compose( new EdgeBufferFilter( searchByEdge.filterMarked() ) );
 
         return ObservableTimer.time( edges, loadEdgesVersionsTimer );
     }
@@ -306,7 +306,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgesFromSource( scope, search );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                      .compose( new EdgeBufferFilter( search.filterMarked() ) );
 
         return ObservableTimer.time( edges, loadEdgesFromSourceTimer );
     }
@@ -321,7 +321,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgesToTarget( scope, search );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                      .compose( new EdgeBufferFilter( search.filterMarked() ) );
 
 
         return ObservableTimer.time( edges, loadEdgesToTargetTimer );
@@ -337,7 +337,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                      .compose( new EdgeBufferFilter( search.filterMarked() ) );
 
         return ObservableTimer.time( edges, loadEdgesFromSourceByTypeTimer );
     }
@@ -352,7 +352,7 @@ public class GraphManagerImpl implements GraphManager {
                     return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
                 }
             } ).buffer( graphFig.getScanPageSize() )
-                      .compose( new EdgeBufferFilter( search.getMaxTimestamp(), search.filterMarked() ) );
+                      .compose( new EdgeBufferFilter(  search.filterMarked() ) );
 
         return ObservableTimer.time( edges, loadEdgesToTargetByTypeTimer );
     }
@@ -420,12 +420,10 @@ public class GraphManagerImpl implements GraphManager {
         Observable.Transformer<List<MarkedEdge>, MarkedEdge> {//implements Func1<List<MarkedEdge>,
         // Observable<MarkedEdge>> {
 
-        private final long maxVersion;
         private final boolean filterMarked;
 
 
-        private EdgeBufferFilter( final long maxVersion, final boolean filterMarked ) {
-            this.maxVersion = maxVersion;
+        private EdgeBufferFilter( final boolean filterMarked ) {
             this.filterMarked = filterMarked;
         }
 
@@ -444,23 +442,16 @@ public class GraphManagerImpl implements GraphManager {
 
                 final Observable<MarkedEdge> markedEdgeObservable = Observable.from( markedEdges );
 
-                /**
-                 * We aren't going to filter anything, return exactly what we're passed
-                 */
-                if(!filterMarked){
-                    return markedEdgeObservable;
-                }
-
                 //We need to filter, perform that filter
                 final Map<Id, Long> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
 
-                return markedEdgeObservable.filter( edge -> {
-                    final long edgeTimestamp = edge.getTimestamp();
+                return markedEdgeObservable.map( edge -> {
 
-                    //our edge needs to not be deleted and have a version that's > max Version
-                    if ( edge.isDeleted() ) {
-                        return false;
-                    }
+                    /**
+                     * Make sure we mark source and target deleted nodes as such
+                     */
+
+                    final long edgeTimestamp = edge.getTimestamp();
 
 
                     final Long sourceTimestamp = markedVersions.get( edge.getSourceNode() );
@@ -468,22 +459,29 @@ public class GraphManagerImpl implements GraphManager {
                     //the source Id has been marked for deletion.  It's version is <= to the marked version for
                     // deletion,
                     // so we need to discard it
-                    if ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 ) {
-                        return false;
-                    }
+                    final boolean isSourceDeleted =  ( sourceTimestamp != null && Long.compare( edgeTimestamp, sourceTimestamp ) < 1 );
 
                     final Long targetTimestamp = markedVersions.get( edge.getTargetNode() );
 
                     //the target Id has been marked for deletion.  It's version is <= to the marked version for
                     // deletion,
                     // so we need to discard it
-                    if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
-                        return false;
+                    final  boolean isTargetDeleted = ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 );
+
+                    //one has been marked for deletion, return it
+                    if(isSourceDeleted || isTargetDeleted){
+                        return new SimpleMarkedEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(), edge.isDeleted(), isSourceDeleted, isTargetDeleted );
                     }
 
+                    return edge;
+                } ).filter( simpleMarkedEdge -> {
+                    if(!filterMarked){
+                        return true;
+                    }
 
-                    return true;
-                } );
+                    //if any one of these is true, we filter it
+                    return !(simpleMarkedEdge.isDeleted() || simpleMarkedEdge.isSourceNodeDelete() || simpleMarkedEdge.isTargetNodeDeleted());
+                });
             } );
         }
     }

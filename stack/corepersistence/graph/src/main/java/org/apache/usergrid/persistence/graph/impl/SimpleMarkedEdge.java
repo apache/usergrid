@@ -34,12 +34,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
 
     private final boolean deleted;
+    private final boolean isSourceNodeDeleted;
+    private final boolean isTargetNodeDeleted;
 
 
     public SimpleMarkedEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp, final boolean deleted) {
 
-        super(sourceNode, type, targetNode, timestamp);
+        this( sourceNode, type, targetNode, timestamp, deleted, false, false );
+    }
+
+
+    public SimpleMarkedEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp,
+                             final boolean deleted, final boolean isSourceNodeDeleted,
+                             final boolean isTargetNodeDeleted ) {
+        super( sourceNode, type, targetNode, timestamp );
         this.deleted = deleted;
+        this.isSourceNodeDeleted = isSourceNodeDeleted;
+        this.isTargetNodeDeleted = isTargetNodeDeleted;
     }
 
 
@@ -52,6 +63,18 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     @JsonIgnore
     public boolean isDeleted() {
         return deleted;
+    }
+
+
+    @Override
+    public boolean isSourceNodeDelete() {
+        return isSourceNodeDeleted;
+    }
+
+
+    @Override
+    public boolean isTargetNodeDeleted() {
+        return isTargetNodeDeleted;
     }
 
 
@@ -81,6 +104,8 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + ( deleted ? 1 : 0 );
+        result = 31 * result + ( isSourceNodeDeleted ? 1 : 0 );
+        result = 31 * result + ( isTargetNodeDeleted ? 1 : 0 );
         return result;
     }
 
@@ -88,8 +113,10 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     @Override
     public String toString() {
         return "SimpleMarkedEdge{" +
-                "deleted=" + deleted +
-                "} " + super.toString();
+            "deleted=" + deleted +
+            ", isSourceNodeDeleted=" + isSourceNodeDeleted +
+            ", isTargetNodeDeleted=" + isTargetNodeDeleted +
+            "} " + super.toString();
     }
 }
 
