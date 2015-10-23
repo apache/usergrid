@@ -38,4 +38,17 @@ public interface MarkedEdge extends Edge{
      */
     boolean isDeleted();
 
+    /**
+     * Return true if the source node is deleted
+     * @return
+     */
+    boolean isSourceNodeDelete();
+
+    /**
+     * Return true if the target node is deleted
+     * @return
+     */
+    boolean isTargetNodeDeleted();
+
+
 }
