@@ -142,7 +142,7 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
                 validate( candidateResult );
             }
 
-            indexProducer.put( batch.build()).subscribe();
+            indexProducer.put( batch.build()).toBlocking().lastOrDefault(null);//want to rethrow if batch fails
 
         }
 

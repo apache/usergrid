@@ -22,6 +22,7 @@ public class QueueMessage {
     private final String messageId;
     private final String handle;
     private final String type;
+    private String stringBody;
 
 
     public QueueMessage(String messageId, String handle, Object body,String type) {
@@ -29,6 +30,7 @@ public class QueueMessage {
         this.messageId = messageId;
         this.handle = handle;
         this.type = type;
+        this.stringBody = "";
     }
 
     public String getHandle() {
@@ -46,5 +48,13 @@ public class QueueMessage {
 
     public String getType() {
         return type;
+    }
+
+    public void setStringBody(String stringBody) {
+        this.stringBody = stringBody;
+    }
+
+    public String getStringBody() {
+        return stringBody;
     }
 }

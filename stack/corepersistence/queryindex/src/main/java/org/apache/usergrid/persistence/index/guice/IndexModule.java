@@ -50,7 +50,6 @@ public abstract class IndexModule extends AbstractModule {
 
         bind( EntityIndexFactory.class ).to( EsEntityIndexFactoryImpl.class );
         bind(IndexCache.class).to(EsIndexCacheImpl.class);
-        bind(IndexRefreshCommand.class).to(IndexRefreshCommandImpl.class);
 
         bind(IndexProducer.class).to(EsIndexProducerImpl.class).asEagerSingleton();
 

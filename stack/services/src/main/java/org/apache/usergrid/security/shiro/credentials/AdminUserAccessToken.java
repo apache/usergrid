@@ -19,6 +19,8 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public class AdminUserAccessToken extends AbstractAccessTokenCredentials implements AdminUserCredentials {
 
+    public AdminUserAccessToken() {}
+
     public AdminUserAccessToken( String token ) {
         super( token );
     }

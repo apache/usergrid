@@ -55,7 +55,7 @@ public interface EntityIndex extends CPManager {
     /**
      * Refresh the index.
      */
-    Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync();
+    Observable<IndexRefreshCommandInfo> refreshAsync();
 
 
     /**
@@ -71,6 +71,7 @@ public interface EntityIndex extends CPManager {
 
     /**
      * get total entity size by an edge ->   "term":{"edgeName":"zzzcollzzz|roles"}
+     *
      * @param edge
      * @return
      */
@@ -148,6 +149,23 @@ public interface EntityIndex extends CPManager {
      */
     enum AliasType {
         Read, Write
+    }
+    class IndexRefreshCommandInfo{
+        private final boolean hasFinished;
+        private final long executionTime;
+
+        public IndexRefreshCommandInfo(boolean hasFinished, long executionTime){
+            this.hasFinished = hasFinished;
+            this.executionTime = executionTime;
+        }
+
+        public boolean hasFinished() {
+            return hasFinished;
+        }
+
+        public long getExecutionTime() {
+            return executionTime;
+        }
     }
 
 }

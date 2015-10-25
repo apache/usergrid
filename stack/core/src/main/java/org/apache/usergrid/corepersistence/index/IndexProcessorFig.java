@@ -49,32 +49,31 @@ public interface IndexProcessorFig extends GuicyFig {
      * Set the amount of time to wait when Elasticsearch rejects a requests before
      * retrying.  This provides simple back pressure. (in milliseconds)
      */
-    @Default( "1000" )
-    @Key( FAILURE_REJECTED_RETRY_WAIT_TIME )
+    @Default("1000")
+    @Key(FAILURE_REJECTED_RETRY_WAIT_TIME)
     long getFailureRetryTime();
 
     /**
      * Set the read timeout for processing messages in the queue. (in milliseconds)
      */
-    @Default( "10000" )
-    @Key( INDEX_QUEUE_READ_TIMEOUT )
+    @Default("10000")
+    @Key(INDEX_QUEUE_READ_TIMEOUT)
     int getIndexQueueTimeout();
 
     /**
      * Set the visibility timeout for messages received from the queue. (in milliseconds).
-     * AWS default is also currently 30 seconds.  Received messages will remain 'in flight' until
-     * they are ack'd(deleted) or this timeout occurs.  If the timeout occurs, the messages will become
-     * visible again for re-processing.
+     * Received messages will remain 'in flight' until they are ack'd(deleted) or this timeout occurs.
+     * If the timeout occurs, the messages will become visible again for re-processing.
      */
-    @Default( "30000" )
-    @Key( INDEX_QUEUE_VISIBILITY_TIMEOUT )
+    @Default("5000") // 5 seconds
+    @Key(INDEX_QUEUE_VISIBILITY_TIMEOUT)
     int getIndexQueueVisibilityTimeout();
 
     /**
      * The number of worker threads used to read index write requests from the queue.
      */
-    @Default( "8" )
-    @Key( ELASTICSEARCH_WORKER_COUNT )
+    @Default("16")
+    @Key(ELASTICSEARCH_WORKER_COUNT)
     int getWorkerCount();
 
     /**
@@ -82,16 +81,12 @@ public interface IndexProcessorFig extends GuicyFig {
      * Valid values: TEST, LOCAL, SQS, SNS
      * NOTE: SQS and SNS equate to the same implementation of Amazon queue services.
      */
-    @Default( "LOCAL" )
-    @Key( ELASTICSEARCH_QUEUE_IMPL )
+    @Default("LOCAL")
+    @Key(ELASTICSEARCH_QUEUE_IMPL)
     String getQueueImplementation();
 
     @Default("1000")
-    @Key("elasticsearch.reindex.flush.interval")
-    int getUpdateInterval();
-
-    @Default("1000")
-    @Key( REINDEX_BUFFER_SIZE )
+    @Key(REINDEX_BUFFER_SIZE)
     int getReindexBufferSize();
 
     /**
@@ -100,4 +95,15 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("false")
     @Key("elasticsearch.queue_impl.resolution")
     boolean resolveSynchronously();
+
+    /**
+     * Get the message TTL in milliseconds.  Defaults to 24 hours
+     *
+     * 24 * 60 * 60 * 1000
+     *
+     * @return
+     */
+    @Default("86400000")
+    @Key( "elasticsearch.message.ttl" )
+    int getIndexMessageTtl();
 }

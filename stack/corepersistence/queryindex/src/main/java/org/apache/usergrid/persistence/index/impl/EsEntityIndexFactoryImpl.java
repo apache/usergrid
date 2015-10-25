@@ -38,7 +38,6 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     private final IndexCache indexCache;
     private final EsProvider provider;
     private final MetricsFactory metricsFactory;
-    private final IndexRefreshCommand refreshCommand;
 
     private LoadingCache<IndexLocationStrategy, EntityIndex> eiCache =
         CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<IndexLocationStrategy, EntityIndex>() {
@@ -47,7 +46,6 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
                     provider,
                     indexCache,
                     config,
-                    refreshCommand,
                     metricsFactory,
                     locationStrategy
                 );
@@ -60,15 +58,13 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     public EsEntityIndexFactoryImpl( final IndexFig indexFig,
                                      final IndexCache indexCache,
                                      final EsProvider provider,
-                                     final MetricsFactory metricsFactory,
-                                     final IndexRefreshCommand refreshCommand
+                                     final MetricsFactory metricsFactory
 
     ){
         this.config = indexFig;
         this.indexCache = indexCache;
         this.provider = provider;
         this.metricsFactory = metricsFactory;
-        this.refreshCommand = refreshCommand;
     }
 
 

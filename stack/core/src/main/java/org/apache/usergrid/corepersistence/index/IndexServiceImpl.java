@@ -114,7 +114,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.index( indexEdge, entity );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> Observable.just(batch.build()) ) );
+                .map( batch -> batch.build() ) );
 
         return ObservableTimer.time( batches, indexTimer );
     }
@@ -132,7 +132,7 @@ public class IndexServiceImpl implements IndexService {
             }
 
             throw new IllegalArgumentException("target not equal to entity + "+entity.getId());
-        } ).flatMap( indexEdge -> {
+        } ).map( indexEdge -> {
 
             final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
@@ -142,7 +142,7 @@ public class IndexServiceImpl implements IndexService {
 
             batch.index( indexEdge, entity );
 
-            return Observable.just(batch.build());
+            return batch.build();
         } );
 
         return ObservableTimer.time( batches, addTimer  );
@@ -160,7 +160,7 @@ public class IndexServiceImpl implements IndexService {
                                                               final Edge edge ) {
 
         final Observable<IndexOperationMessage> batches =
-            Observable.just( edge ).flatMap( edgeValue -> {
+            Observable.just( edge ).map( edgeValue -> {
                 final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
                 EntityIndexBatch batch = ei.createBatch();
 
@@ -185,7 +185,7 @@ public class IndexServiceImpl implements IndexService {
 
                 batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
 
-                return Observable.just(batch.build());
+                return batch.build();
             } );
 
         return ObservableTimer.time( batches, addTimer );
@@ -221,7 +221,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.deindex( searchEdge, candidateResult );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch ->Observable.just(batch.build()) );
+                .map( batch ->batch.build() );
 
         return ObservableTimer.time(batches, indexTimer);
     }

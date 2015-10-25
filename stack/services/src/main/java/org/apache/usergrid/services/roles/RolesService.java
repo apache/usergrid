@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
@@ -204,13 +206,17 @@ public class RolesService extends AbstractCollectionService {
 
 
     public ServiceResults grantApplicationRolePermission( String roleName, String permission ) throws Exception {
-        em.grantRolePermission( roleName, permission );
+        em.grantRolePermission(roleName, permission);
+        ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+        scopedCache.invalidate();
         return getApplicationRolePermissions( roleName );
     }
 
 
     public ServiceResults revokeApplicationRolePermission( String roleName, String permission ) throws Exception {
         em.revokeRolePermission( roleName, permission );
+        ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+        scopedCache.invalidate();
         return getApplicationRolePermissions( roleName );
     }
 

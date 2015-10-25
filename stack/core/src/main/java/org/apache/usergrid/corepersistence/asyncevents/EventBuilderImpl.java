@@ -109,10 +109,12 @@ public class EventBuilderImpl implements EventBuilder {
         log.debug( "Deleting in app scope {} with edge {} }", applicationScope, edge );
 
         final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteIndexEdge( applicationScope, edge ).flatMap( batch -> {
-                final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
-                return gm.deleteEdge( edge ).map( deletedEdge -> batch );
-            } );
+            indexService.deleteIndexEdge( applicationScope, edge )
+                .map( batch -> {
+                    final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
+                    gm.deleteEdge(edge).toBlocking().lastOrDefault(null);
+                    return batch;
+                } );
 
         return edgeObservable;
     }
@@ -187,8 +189,9 @@ public class EventBuilderImpl implements EventBuilder {
                     return true;
                 }
 
+                //entityIndexOperation.getUpdatedSince will always be 0 except for reindexing the application
                 //only re-index if it has been updated and been updated after our timestamp
-                return  modified.getValue() >= entityIndexOperation.getUpdatedSince();
+                return modified.getValue() >= entityIndexOperation.getUpdatedSince();
             } )
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );

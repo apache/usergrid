@@ -83,6 +83,7 @@ public class CassandraConfigImpl implements CassandraConfig {
     public ConsistencyLevel getConsistentReadCL() {
         return consistentCl;
     }
+
     @Override
     public ConsistencyLevel getWriteCL() {
         return writeCl;
