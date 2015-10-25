@@ -324,6 +324,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 }
                 else if ( event instanceof EntityDeleteEvent ) {
                     indexoperationObservable = handleEntityDelete( message );
+                    validateEmptySets = false; // do not check this one for an empty set b/c it can be empty
+
                 }
                 else if ( event instanceof EntityIndexEvent ) {
                     indexoperationObservable = handleEntityIndexUpdate( message );
