@@ -42,24 +42,27 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) [NUM_ENTITIES [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) ENTITY_PREFIX [NUM_ENTITIES [ENTITY_SEED [ENTITY_WORKER_NUM [ENTITY_WORKER_COUNT]]]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
-[ "$#" -ge 3 ] && NUM_ENTITIES="$3"
-[ "$#" -ge 4 ] && ENTITY_SEED="$4"
-[ "$#" -ge 5 ] && ENTITY_WORKER_NUM="$5"
-[ "$#" -ge 6 ] && ENTITY_WORKER_COUNT="$6"
+ENTITY_PREFIX="$3"
+[ "$#" -ge 4 ] && NUM_ENTITIES="$4"
+[ "$#" -ge 5 ] && ENTITY_SEED="$5"
+[ "$#" -ge 6 ] && ENTITY_WORKER_NUM="$6"
+[ "$#" -ge 7 ] && ENTITY_WORKER_COUNT="$7"
 
 shift $#
 
 SCENARIO_TYPE=deleteEntities
+INTERLEAVED_WORKER_FEED=true
 
 #Compile everything
 mvn compile
 
 #Execute the test
 mvn gatling:execute \
+-DinterleavedWorkerFeed=${INTERLEAVED_WORKER_FEED} \
 -DbaseUrl=${URL} \
 -DadminUser=${ADMIN_USER}  \
 -DadminPassword=${ADMIN_PASSWORD}  \

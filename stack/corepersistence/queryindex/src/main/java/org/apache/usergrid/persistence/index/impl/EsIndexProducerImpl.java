@@ -30,6 +30,7 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,6 +124,7 @@ public class EsIndexProducerImpl implements IndexProducer {
         final Observable<IndexOperation> index = Observable.from(batch.getIndexRequests());
         final Observable<DeIndexOperation> deIndex = Observable.from(batch.getDeIndexRequests());
 
+        //TODO: look at indexing ordering
         final Observable<BatchOperation> batchOps = Observable.merge(index, deIndex);
 
         //buffer into the max size we can send ES and fire them all off until we're completed
@@ -186,7 +188,7 @@ public class EsIndexProducerImpl implements IndexProducer {
         try {
             responses = bulkRequest.execute().actionGet( );
         } catch ( Throwable t ) {
-            log.error( "Unable to communicate with elasticsearch" );
+            log.error( "Unable to communicate with elasticsearch", t );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }finally{
@@ -197,21 +199,37 @@ public class EsIndexProducerImpl implements IndexProducer {
 
         boolean error = false;
 
+        final StringBuilder errorString = new StringBuilder(  );
+
+        boolean hasTooManyRequests= false;
         for ( BulkItemResponse response : responses ) {
 
             if ( response.isFailed() ) {
                 // log error and continue processing
                 log.error( "Unable to index id={}, type={}, index={}, failureMessage={} ", response.getId(),
-                    response.getType(), response.getIndex(), response.getFailureMessage() );
-
+                    response.getType(), response.getIndex(),  response.getFailureMessage() );
+                //if index is overloaded on the queue fail.
+                if(response.getFailure()!=null && response.getFailure().getStatus() == RestStatus.TOO_MANY_REQUESTS){
+                    hasTooManyRequests =true;
+                }
                 error = true;
+
+                errorString.append( response.getFailureMessage() ).append( "\n" );
             }
         }
 
         if ( error ) {
+            if(hasTooManyRequests){
+                try{
+                    log.warn("Encountered Queue Capacity Exception from ElasticSearch slowing by "
+                        + indexFig.getSleepTimeForQueueError() );
+                    Thread.sleep(indexFig.getSleepTimeForQueueError());
+                }catch (Exception e){
+                    //move on
+                }
+            }
             throw new RuntimeException(
-                "Error during processing of bulk index operations one of the responses failed.  Check previous log "
-                    + "entries" );
+                "Error during processing of bulk index operations one of the responses failed. \n" + errorString);
         }
     }
 }

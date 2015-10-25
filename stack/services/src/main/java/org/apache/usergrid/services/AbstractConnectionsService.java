@@ -285,7 +285,8 @@ public class AbstractConnectionsService extends AbstractService {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
             if (logger.isDebugEnabled()) {
-            	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" , count, level.name());
+            	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" ,
+                    count, level.name());
             }
         }
 
@@ -459,7 +460,7 @@ public class AbstractConnectionsService extends AbstractService {
                         throw new RuntimeException( "Unable to save connection", e );
                     }
                 }).subscribeOn( Schedulers.io() );
-            }, 10).subscribe();
+            }, 10).toBlocking().lastOrDefault(null); //needs to rethrow
 
 
         }

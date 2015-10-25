@@ -123,6 +123,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
             featureContext.register( ApplicationFilter.class );
         }
         else if ( am.isAnnotationPresent( RequireOrganizationAccess.class ) ) {
+
             featureContext.register( OrganizationFilter.class );
         }
         else if ( am.isAnnotationPresent( RequireSystemAccess.class ) ) {

@@ -40,9 +40,11 @@ public class InitializeApplicationIndexEvent extends AsyncEvent {
     @SuppressWarnings( "unused" )
     public InitializeApplicationIndexEvent(){
 
+        super();
     }
 
-    public InitializeApplicationIndexEvent(final IndexLocationStrategy indexLocationStrategy) {
+    public InitializeApplicationIndexEvent(String sourceRegion, final IndexLocationStrategy indexLocationStrategy) {
+        super(sourceRegion);
         this.indexLocationStrategy = indexLocationStrategy;
 
     }

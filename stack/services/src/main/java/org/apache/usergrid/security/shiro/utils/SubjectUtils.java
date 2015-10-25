@@ -17,9 +17,11 @@
 package org.apache.usergrid.security.shiro.utils;
 
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.collect.HashBiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.ApplicationInfo;
@@ -77,8 +79,9 @@ public class SubjectUtils {
             return null;
         }
         Session session = currentUser.getSession();
-        @SuppressWarnings( "unchecked" ) BiMap<UUID, String> organizations =
-                ( BiMap<UUID, String> ) session.getAttribute( "organizations" );
+        BiMap<UUID, String> organizations = HashBiMap.create();
+        Map map = (Map)session.getAttribute( "organizations" );
+        organizations.putAll(map);
         return organizations;
     }
 
@@ -272,7 +275,11 @@ public class SubjectUtils {
             return null;
         }
         Session session = currentUser.getSession();
-        return ( BiMap<UUID, String> ) session.getAttribute( "applications" );
+
+        BiMap<UUID, String> applications = HashBiMap.create();
+        Map map = (Map)session.getAttribute( "applications" );
+        applications.putAll(map);
+        return applications;
     }
 
 

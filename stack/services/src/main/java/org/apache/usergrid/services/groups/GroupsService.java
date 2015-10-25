@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
@@ -91,12 +93,16 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 
     public ServiceResults addGroupRole( UUID groupId, String roleName ) throws Exception {
         em.addGroupToRole( groupId, roleName );
+        ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+        scopedCache.invalidate();
         return getGroupRoles( groupId );
     }
 
 
     public ServiceResults deleteGroupRole( UUID groupId, String roleName ) throws Exception {
         em.removeGroupFromRole( groupId, roleName );
+        ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+        scopedCache.invalidate();
         return getGroupRoles( groupId );
     }
 
@@ -149,6 +155,8 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             }
 
             em.grantGroupPermission( entityRef.getUuid(), permission );
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
 
             return genericServiceResults().withData( em.getGroupPermissions( entityRef.getUuid() ) );
         }
@@ -216,6 +224,8 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             for ( String permission : permissions ) {
                 em.revokeGroupPermission( entityRef.getUuid(), permission );
             }
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
 
             return genericServiceResults().withData( em.getGroupPermissions( entityRef.getUuid() ) );
         }

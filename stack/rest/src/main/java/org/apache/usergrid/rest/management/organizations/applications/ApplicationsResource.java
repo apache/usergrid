@@ -22,6 +22,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;

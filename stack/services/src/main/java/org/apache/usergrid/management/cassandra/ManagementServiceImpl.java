@@ -35,6 +35,9 @@ import org.apache.usergrid.management.*;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.cache.CacheFactory;
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
@@ -44,6 +47,7 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.EncryptionService;
@@ -150,6 +154,8 @@ public class ManagementServiceImpl implements ManagementService {
     protected Injector injector;
 
     protected EncryptionService encryptionService;
+
+    protected CacheFactory cacheFactory;
 
 
 
@@ -1658,7 +1664,12 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> created a new application named " + applicationName, null );
         }
 
-
+        if ( cacheFactory == null ) {
+            cacheFactory = injector.getInstance( CacheFactory.class );
+        }
+        ScopedCache scopedCache = cacheFactory.getScopedCache(
+            new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
+        scopedCache.invalidate();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }

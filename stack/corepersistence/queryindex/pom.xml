@@ -47,24 +47,27 @@
 
 
             <plugin>
-                       <groupId>org.apache.maven.plugins</groupId>
-                       <artifactId>maven-surefire-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
 
-                       <configuration>
-                           <includes>
-                               <include>**/*IT.java</include>
-                               <include>**/*Test.java</include>
-                           </includes>
-                           <!-- run this one manually to stress test -->
-                           <excludes>
-                               <exclude>**/IndexLoadTestsIT.java</exclude>
-                           </excludes>
+                <configuration>
+                    <argLine>
+                        -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec
+                    </argLine>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <!-- run this one manually to stress test -->
+                    <excludes>
+                        <exclude>**/IndexLoadTestsIT.java</exclude>
+                    </excludes>
+                </configuration>
 
-                       </configuration>
-
-                   </plugin>
+            </plugin>
 
         </plugins>
+
     </build>
 
     <dependencies>

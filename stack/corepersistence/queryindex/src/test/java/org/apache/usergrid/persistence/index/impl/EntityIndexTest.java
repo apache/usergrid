@@ -310,7 +310,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         insertJsonBlob(sampleJson, batch, entityType, indexEdge, max, startIndex);
         indexProducer.put(batch.build()).subscribe();;
-        IndexRefreshCommandImpl.IndexRefreshCommandInfo info =  entityIndex.refreshAsync().toBlocking().first();
+        EntityIndex.IndexRefreshCommandInfo info =  entityIndex.refreshAsync().toBlocking().first();
         long time = info.getExecutionTime();
         log.info("refresh took ms:" + time);
     }
