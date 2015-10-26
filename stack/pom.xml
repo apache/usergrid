@@ -578,142 +578,6 @@
         </exclusions>
       </dependency>
 
-      <!-- Sun and Javax Package Dependencies -->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey</groupId>-->
-        <!--<artifactId>jersey-core</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey</groupId>-->
-        <!--<artifactId>jersey-json</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-        <!--<exclusions>-->
-          <!--<exclusion>-->
-            <!--<groupId>org.codehaus.jettison</groupId>-->
-            <!--<artifactId>jettison</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.codehaus.jackson</groupId>-->
-            <!--<artifactId>jackson-core-asl</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.codehaus.jackson</groupId>-->
-            <!--<artifactId>jackson-mapper-asl</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.codehaus.jackson</groupId>-->
-            <!--<artifactId>jackson-jaxrs</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.codehaus.jackson</groupId>-->
-            <!--<artifactId>jackson-xc</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>javax.activation</groupId>-->
-            <!--<artifactId>activation</artifactId>-->
-          <!--</exclusion>-->
-        <!--</exclusions>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey</groupId>-->
-        <!--<artifactId>jersey-client</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey</groupId>-->
-        <!--<artifactId>jersey-server</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey</groupId>-->
-        <!--<artifactId>jersey-grizzly2</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>org.glassfish.grizzly</groupId>-->
-        <!--<artifactId>grizzly-http-servlet-server</artifactId>-->
-        <!--<version>2.1.2</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey.contribs</groupId>-->
-        <!--<artifactId>jersey-spring</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-        <!--<exclusions>-->
-          <!--<exclusion>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring-aop</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring-core</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring-beans</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring-context</artifactId>-->
-          <!--</exclusion>-->
-
-          <!--<exclusion>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring-web</artifactId>-->
-          <!--</exclusion>-->
-        <!--</exclusions>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey.contribs</groupId>-->
-        <!--<artifactId>jersey-multipart</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>-->
-        <!--<artifactId>oauth-signature</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>-->
-        <!--<artifactId>oauth-server</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
-        <!--<artifactId>jersey-test-framework-external</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-        <!--<groupId>com.sun.jersey.jersey-test-framework</groupId>-->
-        <!--<artifactId>jersey-test-framework-core</artifactId>-->
-        <!--<version>${jersey-version}</version>-->
-      <!--</dependency>-->
-
       <dependency>
         <groupId>com.sun.mail</groupId>
         <artifactId>javax.mail</artifactId>
@@ -1436,15 +1300,13 @@
 
     <plugins>
 
-
                 <!--
-                        <plugin>
-                          <groupId>com.structure101.java</groupId>
-                          <artifactId>maven-structure101-plugin</artifactId>
-                          <version>1.1</version>
-                        </plugin>
+                <plugin>
+                   <groupId>com.structure101.java</groupId>
+                   <artifactId>maven-structure101-plugin</artifactId>
+                   <version>1.1</version>
+                </plugin>
                 -->
-
 
                 <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
@@ -1472,16 +1334,15 @@
                           <forkCount>${usergrid.it.forkCount}</forkCount>
                           <reuseForks>${usergrid.it.reuseForks}</reuseForks>
                           <threadCount>${usergrid.it.forkCount}</threadCount>
-                          <!-- see this page for documentation on classloading issues http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
-                          <useSystemClassLoader>false</useSystemClassLoader>
-                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-                          <!--<argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>-->
-                          <testFailureIgnore>false</testFailureIgnore>
 
+                          <!-- see this page for documentation on classloading issues
+                          http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
+                          <useSystemClassLoader>false</useSystemClassLoader>
+
+                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
                           <systemPropertyVariables>
                               <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
                           </systemPropertyVariables>
-
                       </configuration>
 
                       <!-- TODO, we may need an exclusion. Appears to be a classloader bug
@@ -1544,7 +1405,7 @@
                                         <counter>COMPLEXITY</counter>
                                         <value>COVEREDRATIO</value>
                                         <!-- we should increase this as our coverage increases -->
-                                        <minimum>0.30</minimum>
+                                        <minimum>0.15</minimum>
                                     </limit>
                                 </limits>
                             </rule>
