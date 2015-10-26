@@ -188,6 +188,7 @@ object Settings {
   val newCsvOnFlush:Boolean = initBoolSetting(ConfigProperties.NewCsvOnFlush)
   val deleteAfterSuccessfulAudit:Boolean = initBoolSetting(ConfigProperties.DeleteAfterSuccessfulAudit)
   val usergridRegion = initStrSetting(ConfigProperties.UsergridRegion)
+  val saveInvalidResponse = initBoolSetting(ConfigProperties.SaveInvalidResponse)
 
   val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
   val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
@@ -289,22 +290,31 @@ object Settings {
 
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
 
-  val auditUuidsHeader = "collection,name,uuid,modified"
-  val uuidsHeader = "name,uuid"
-  case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long)
+  val uuidsHeader = "collection,name,uuid,modified,status"
+  val uuidsFailHeader = "collection,name,uuid,modified,status,error"
+  case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long, var status: Int)
+  case class AuditFailList(var collection: String, var entityName: String, var uuid: String, var modified: Long, var status: Int, var error: String)
 
   //private var uuidMap: Map[Int, String] = Map()
   private var uuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
+  private val statusCounts: mutable.Map[Int,Long] = mutable.Map[Int,Long]().withDefaultValue(0L)
   private var entityCounter: Long = 0L
   private var lastEntityCountPrinted: Long = 0L
   private var flushCounter: Long = 0L
   private var firstFlush: Boolean = true
   private var numberFlushes: Long = 0L
   private var uuidWriter: PrintWriter = null
-  def addUuid(uuid: String, collection: String, entityName: String, modified: Long): Unit = {
+
+  def addStatus(status: Int): Unit = {
+    statusCounts.synchronized {
+      statusCounts(status) += 1L
+    }
+  }
+
+  def addUuid(uuid: String, collection: String, entityName: String, modified: Long, status: Int): Unit = {
     if (captureUuids) {
       uuidList.synchronized {
-        uuidList += AuditList(collection, entityName, uuid, modified)
+        uuidList += AuditList(collection, entityName, uuid, modified, status)
         entityCounter += 1L
         flushCounter += 1L
         if (logEntityProgress && (entityCounter >= lastEntityCountPrinted + entityProgressCount)) {
@@ -320,11 +330,11 @@ object Settings {
             }
           }
           if (newCsvOnFlush || firstFlush) {
-            uuidWriter.println(auditUuidsHeader)
+            uuidWriter.println(uuidsHeader)
           }
           val sortedUuidList: List[AuditList] = uuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
           sortedUuidList.foreach { e =>
-            uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified}")
+            uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status}")
           }
           uuidWriter.flush()
           if (newCsvOnFlush) {
@@ -351,11 +361,11 @@ object Settings {
         }
       }
       if (newCsvOnFlush || firstFlush) {
-        uuidWriter.println(auditUuidsHeader)
+        uuidWriter.println(uuidsHeader)
       }
       val sortedUuidList: List[AuditList] = uuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
       sortedUuidList.foreach { e =>
-        uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified}")
+        uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status}")
       }
       uuidWriter.flush()
       uuidWriter.close()
@@ -370,11 +380,11 @@ object Settings {
   // key: uuid, value: collection
   private var auditEntityCounter: Long = 0L
   private var lastAuditEntityCountPrinted: Long = 0L
-  private var auditUuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
-  def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long): Unit = {
+  private var auditUuidList: mutable.MutableList[AuditFailList] = mutable.MutableList[AuditFailList]()
+  def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long, status: Int, error: String): Unit = {
     if (captureAuditUuids) {
       auditUuidList.synchronized {
-        auditUuidList += AuditList(collection, entityName, uuid, modified)
+        auditUuidList += AuditFailList(collection, entityName, uuid, modified, status, error)
         auditEntityCounter += 1L
         if (logEntityProgress && (auditEntityCounter >= lastAuditEntityCountPrinted + entityProgressCount)) {
           println(s"Entity: $auditEntityCounter")
@@ -391,10 +401,10 @@ object Settings {
         val fos = new FileOutputStream(captureAuditUuidFilename)
         new PrintWriter(fos, false)
       }
-      writer.println(auditUuidsHeader)
-      val uuidList: List[AuditList] = auditUuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
+      writer.println(uuidsFailHeader)
+      val uuidList: List[AuditFailList] = auditUuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified, e.status))
       uuidList.foreach { e =>
-        writer.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified}")
+        writer.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status},${e.error}")
       }
       writer.flush()
       writer.close()

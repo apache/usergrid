@@ -264,7 +264,7 @@ object FeederGenerator {
         if (i >= csvLinesLen) return null
 
         val line = csvLines(i)
-        if (line != Settings.auditUuidsHeader) return line
+        if (line != Settings.uuidsHeader) return line
 
       } while (true)
 
