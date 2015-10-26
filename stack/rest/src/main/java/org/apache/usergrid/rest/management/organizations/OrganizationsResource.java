@@ -17,23 +17,14 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import java.util.*;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.management.ManagementResource;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,9 +37,7 @@ import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
-
 import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
 
@@ -73,6 +62,31 @@ public class OrganizationsResource extends AbstractContextResource {
     public OrganizationsResource() {
     }
 
+
+    @GET
+    @RequireSystemAccess
+    public JSONWithPadding getAllOrganizations() throws Exception{
+
+        ApiResponse response = createApiResponse();
+        List<OrganizationInfo> orgs = management.getOrganizations(null, 10000);
+        List<Object> jsonOrgList = new ArrayList<>();
+
+        for(OrganizationInfo org: orgs){
+
+
+            Map<String, Object> jsonOrg = new HashMap<>();
+            Map<String, UUID> apps = management.getApplicationsForOrganization(org.getUuid()).inverse();
+
+            jsonOrg.put("name", org.getName());
+            jsonOrg.put("uuid", org.getUuid());
+            jsonOrg.put("properties", org.getProperties());
+            jsonOrg.put("applications", apps);
+            jsonOrgList.add(jsonOrg);
+        }
+
+        response.setProperty("organizations", jsonOrgList);
+        return new JSONWithPadding(response);
+    }
 
     @Path(RootResource.ORGANIZATION_ID_PATH)
     @RequireOrganizationAccess
