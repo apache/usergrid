@@ -76,42 +76,9 @@
 
     <plugins>
 
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${surefire.plugin.version}</version>
-            <configuration>
-                <systemPropertyVariables>
-                    <storage-config>${basedir}/src/test/conf</storage-config>
-                    <target.directory>${project.build.directory}</target.directory>
-                </systemPropertyVariables>
-                <parallel>methods</parallel>
-                <forkCount>${usergrid.it.forkCount}</forkCount>
-                <threadCount>${usergrid.it.threads}</threadCount>
-                <reuseForks>true</reuseForks>
-                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-                <!-- see this page for documentation on classloading issues http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
-                <!--<useSystemClassLoader>false</useSystemClassLoader>-->
-                <!--<useManifestOnlyJar>false</useManifestOnlyJar>-->
-                <includes>
-                    <include>**/*IT.java</include>
-                    <include>**/*Test.java</include>
-                </includes>
-
-            </configuration>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.maven.surefire</groupId>
-                    <artifactId>${surefire.plugin.artifactName}</artifactId>
-                    <version>${surefire.plugin.version}</version>
-                </dependency>
-                <!--<dependency>-->
-                    <!--<groupId>org.codehaus.plexus</groupId>-->
-                    <!--<artifactId>plexus-utils</artifactId>-->
-                    <!--<version>3.0.21</version>-->
-                <!--</dependency>-->
-            </dependencies>
-        </plugin>
+      <!--
+      Do not need to configure surefire plugin here, parent POM configuration is sufficient.
+      -->
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -131,33 +98,6 @@
           </execution>
         </executions>
       </plugin>
-
-
-<!--            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.usergrid.chop</groupId>
-                <artifactId>chop-maven-plugin</artifactId>
-                <version>2.0.0-SNAPSHOT</version>
-                <configuration>
-                    <username>${chop.coordinator.username}</username>
-                    <password>${chop.coordinator.password}</password>
-                    <endpoint>https://${chop.coordinator.url}:8443</endpoint>
-                    <testPackageBase>ctest</testPackageBase>
-                    <runnerCount>1</runnerCount>
-                </configuration>
-            </plugin>-->
 
     </plugins>
   </build>
@@ -497,24 +437,8 @@
 
   </dependencies>
 
-<!--
-    <profiles>
-        <profile>
-            <id>jacoco</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>${surefire.plugin.version}</version>
-                        <configuration>
-                            <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline} -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
--->
+  <!--
+  Do not need jacoco profile here because we do not override the surefire plugin in this POM
+  -->
 
 </project>

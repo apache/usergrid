@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.apache.usergrid</groupId>
+    <artifactId>usergrid-coverage-report</artifactId>
+    <version>1.0</version>
+    <name>Usergrid Coverage Report</name>
+    <description>Merges module coverage reports into one aggregated file</description>
+    <packaging>pom</packaging>
+
+    <properties>
+        <jacoco.version>0.7.5.201505241946</jacoco.version>
+    </properties>
+
+    <build>
+
+        <plugins>
+
+            <!-- Jacoco Ant plugin > Jacoco Maven Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Execute an ant task within maven -->
+                                <echo message="Generating JaCoCo Reports" />
+                                <taskdef name="report" classname="org.jacoco.ant.ReportTask">
+                                    <classpath path="${basedir}/target/jacoco-jars/org.jacoco.ant.jar" />
+                                </taskdef>
+                                <mkdir dir="${basedir}/target/coverage-report" />
+                                <report>
+
+                                    <executiondata>
+                                        <fileset dir="corepersistence/collection/target">
+                                            <include name="jacoco.exec" />
+                                        </fileset>
+                                        <fileset dir="rest/target">
+                                            <include name="jacoco.exec" />
+                                        </fileset>
+                                    </executiondata>
+
+                                    <structure name="jacoco-multi Coverage Project">
+                                        <group name="jacoco-multi">
+                                            <classfiles>
+                                                <fileset dir="corepersistence/cache/target/classes" />
+                                                <fileset dir="corepersistence/collection/target/classes" />
+                                                <fileset dir="corepersistence/common/target/classes" />
+                                                <fileset dir="corepersistence/graph/target/classes" />
+
+                                                <fileset dir="corepersistence/map/target/classes" />
+                                                <fileset dir="corepersistence/model/target/classes" />
+                                                <fileset dir="corepersistence/queryindex/target/classes" />
+                                                <fileset dir="corepersistence/queue/target/classes" />
+
+                                                <fileset dir="core/target/classes" />
+                                                <fileset dir="services/target/classes" />
+                                                <fileset dir="rest/target/classes" />
+                                            </classfiles>
+                                            <sourcefiles encoding="UTF-8">
+                                                <fileset dir="corepersistence/cache/src" />
+                                                <fileset dir="corepersistence/collection/src" />
+                                                <fileset dir="corepersistence/common/src" />
+                                                <fileset dir="corepersistence/graph/src" />
+                                                <fileset dir="corepersistence/map/src" />
+                                                <fileset dir="corepersistence/model/src" />
+                                                <fileset dir="corepersistence/queryindex/src" />
+                                                <fileset dir="corepersistence/queue/src" />
+                                                <fileset dir="core/src" />
+                                                <fileset dir="services/src" />
+                                                <fileset dir="rest/src" />
+                                            </sourcefiles>
+                                        </group>
+
+                                    </structure>
+                                    <html destdir="${basedir}/target/coverage-report/html" />
+                                    <xml destfile="${basedir}/target/coverage-report/coverage-report.xml" />
+                                    <csv destfile="${basedir}/target/coverage-report/coverage-report.csv" />
+                                </report>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>org.jacoco.ant</artifactId>
+                        <version>${jacoco.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>
+

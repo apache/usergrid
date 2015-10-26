@@ -79,11 +79,14 @@
     </testResources>
 
     <plugins>
+
+        <!--
+        Need to override parent's surefire plugin here to set system properties.
+        -->
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <version>${surefire.plugin.version}</version>
-
             <configuration>
                 <systemPropertyVariables>
                     <storage-config>${basedir}/src/test/conf</storage-config>
@@ -100,8 +103,6 @@
                     <include>**/*IT.java</include>
                     <include>**/*Test.java</include>
                 </includes>
-
-                <!-- exclude our serial tests -->
                 <excludes>
                     <exclude>**/*Scheduler*IT.java</exclude>
                     <exclude>**/*Notification*IT.java</exclude>
@@ -123,6 +124,7 @@
             </dependencies>
 
         </plugin>
+
     </plugins>
   </build>
 
@@ -475,7 +477,9 @@
 
   </dependencies>
 
-<!--
+    <!--
+    Need jacoco profile here because we override the parent's surefire plugin settings above.
+    -->
     <profiles>
         <profile>
             <id>jacoco</id>
@@ -493,6 +497,5 @@
             </build>
         </profile>
     </profiles>
--->
 
 </project>
