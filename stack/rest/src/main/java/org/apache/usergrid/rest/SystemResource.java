@@ -100,4 +100,9 @@ public class SystemResource extends AbstractContextResource {
     public ApplicationsResource applications() {
         return getSubResource( ApplicationsResource.class );
     }
+
+
+    @Path( "connection" )
+    public ConnectionResource connection() { return getSubResource( ConnectionResource.class ); }
+
 }

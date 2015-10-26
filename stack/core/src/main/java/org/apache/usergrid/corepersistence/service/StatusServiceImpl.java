@@ -93,8 +93,9 @@ public class StatusServiceImpl implements StatusService {
             final MapManager mapManager = mapManagerFactory.createMapManager(new MapScopeImpl(appId, "status"));
             try {
                 String statusVal = mapManager.getString(jobString + statusKey);
+                //nothing to emit
                 if(statusVal==null){
-                    subscriber.onNext(null);
+                    subscriber.onCompleted();
                 }else {
                     final Map<String, Object> data = MAPPER.readValue(mapManager.getString(jobString + dataKey), Map.class);
                     final Status status = Status.valueOf(statusVal);
