@@ -99,5 +99,6 @@ mvn gatling:execute \
 -DuuidFilename=${UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
 -DusergridRegion=${USERGRID_REGION} \
+-DsaveInvalidResponse=true \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.ConfigurableSimulation
 
