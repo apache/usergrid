@@ -57,6 +57,10 @@ class AuditSimulation extends Simulation {
   }
 
   after {
+    endHandler
+  }
+
+  def endHandler: Unit = {
     Settings.setTestEndTime()
     if (Settings.captureAuditUuids) {
       val uuidDesc = Settings.scenarioType match {
@@ -68,6 +72,13 @@ class AuditSimulation extends Simulation {
     Settings.printSettingsSummary(true)
     Settings.printAuditResults()
   }
+
+  def abortedEarly: Unit = {
+    println(">>>>>>>>>>>>AUDIT ABORTED")
+    endHandler
+  }
+
+  sys addShutdownHook abortedEarly
 
 }
 
