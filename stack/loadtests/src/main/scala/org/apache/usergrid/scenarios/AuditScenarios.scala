@@ -157,8 +157,7 @@ object AuditScenarios {
         val modified = session("modified").as[String].toLong
         val uuid = session("uuid").as[String]
         val reqName = session("name").as[String]
-        val prevStatus = session("status").as[Int]
-        val prevError = session("error").as[String]
+        val lastStatus = session("lastStatus").as[String]
         if (status == 200 || status == 404) {
           val collectionEntities = session(SessionVarCollectionEntities).as[Seq[Any]]
           val entityUuid = session(SessionVarEntityUuid).as[String]
@@ -166,12 +165,12 @@ object AuditScenarios {
 
           val count = collectionEntities.length
           if (count < 1) {
-            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"NotFoundAtAll", prevStatus, prevError)
+            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"NotFoundAtAll", lastStatus)
             Settings.incAuditNotFoundAtAll()
             println(s"NOT FOUND AT ALL: $collectionName.$reqName ($uuid)")
           } else if (count > 1) {
             // invalid
-            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"QueryInvalidCount$count", prevStatus, prevError)
+            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"QueryInvalidCount$count", lastStatus)
             Settings.incAuditBadResponse()
             println(s"INVALID RESPONSE (count=$count): $collectionName.$reqName ($uuid)")
           } else {
@@ -199,13 +198,13 @@ object AuditScenarios {
               println(s"PAYLOAD NAME MISMATCH (DIRECT): requestedName=$reqName returnedName=$entityName")
             }
 
-            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, errorString, prevStatus, prevError)
+            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, errorString, lastStatus)
             Settings.incAuditNotFoundViaQuery()
             println(s"NOT FOUND VIA QUERY: $collectionName.$reqName ($uuid)")
           }
           session
         } else if (saveFailures) {
-          Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, "Failure", prevStatus, prevError)
+          Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, "Failure", lastStatus)
           session
         } else {
           session.markAsFailed
@@ -227,8 +226,7 @@ object AuditScenarios {
         val uuid = session("uuid").as[String]
         val reqName = session("name").as[String]
         val modified = session("modified").as[String].toLong
-        val prevStatus = session("status").as[Int]
-        val prevError = session("error").as[String]
+        val lastStatus = session("lastStatus").as[String]
         val collectionName = session(SessionVarCollectionName).as[String]
         val entityUuid = session(SessionVarEntityUuid).as[String]
         val entityName = session(SessionVarEntityName).as[String]
@@ -236,7 +234,7 @@ object AuditScenarios {
         if (count < 1) {
           // will check to see whether accessible directly
         } else if (count > 1) {
-          Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"QueryInvalidCount$count", prevStatus, prevError)
+          Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"QueryInvalidCount$count", lastStatus)
           Settings.incAuditBadResponse()
           println(s"INVALID RESPONSE (count=$count): $collectionName.$reqName ($uuid)")
         } else {
@@ -268,7 +266,7 @@ object AuditScenarios {
 
           // log even if technically successful -- we need to capture incorrect response
           if (errorString != errorPrefix) {
-            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, errorString, prevStatus, prevError)
+            Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, errorString, lastStatus)
           }
           Settings.incAuditSuccess()
         }
