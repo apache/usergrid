@@ -223,15 +223,10 @@ object EntityCollectionScenarios {
         .transformResponse {
           case response if response.isReceived =>
             new ResponseWrapper(response) {
-              override val body = {
-                val contentType = response.header("content-type").getOrElse("").toLowerCase
-                if (contentType.contains("json")) {
-                  StringResponseBody(response.body.string, response.charset)
-                } else {
-                  StringResponseBody("{}", StandardCharsets.UTF_8)
-                }
-              }
-          }
+              val contentType = response.header("content-type").getOrElse("").toLowerCase
+              val bodyStr = if (contentType.contains("json")) response.body.string else "[]"
+              override val body = StringResponseBody(bodyStr, response.charset)
+            }
         }
         // 200 for success, 400 if already exists
         .check(status.saveAs(SessionVarStatus), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
