@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 
 import java.util.Map;
@@ -35,6 +35,8 @@ import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

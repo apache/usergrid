@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 
 import java.util.HashMap;
@@ -46,6 +46,9 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.google.common.base.Preconditions;
