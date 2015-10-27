@@ -42,6 +42,7 @@ object EntityCollectionScenarios {
   val SessionVarStatus: String = "status"
   val SessionVarUuid: String = "createUuid"
   val SessionVarModified: String = "createModified"
+  val SessionVarBodyString: String = "bodyString"
 
   def entityGetUrl(useCursor: Boolean): String = {
     val url = s"/${Settings.collection}?" +
@@ -225,11 +226,12 @@ object EntityCollectionScenarios {
             new ResponseWrapper(response) {
               val contentType = response.header("content-type").getOrElse("").toLowerCase
               val bodyStr = if (contentType.contains("json")) response.body.string else "[]"
+              if (bodyStr == "[]") { println(">>>>>>>>>>> USING EMPTY BODY") }
               override val body = StringResponseBody(bodyStr, response.charset)
             }
         }
         // 200 for success, 400 if already exists
-        .check(status.saveAs(SessionVarStatus), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
+        .check(status.saveAs(SessionVarStatus), bodyString.saveAs(SessionVarBodyString), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
           val saveFailures = Settings.saveInvalidResponse
           val status = session(SessionVarStatus).as[Int]
@@ -239,6 +241,10 @@ object EntityCollectionScenarios {
             val entityName = session("entityName").as[String]
             val modified = if (status == 200) session(SessionVarModified).as[Long] else 0
             val collectionName = session("collectionName").as[String]
+            if (status != 200) {
+              val bodyString = session(SessionVarBodyString).as[String]
+              println(s">>>>>>>> LOAD ERROR - Status: $status\nBody:\n$bodyString")
+            }
             Settings.addUuid(uuid, collectionName, entityName, modified, status)
             session
           } else {
