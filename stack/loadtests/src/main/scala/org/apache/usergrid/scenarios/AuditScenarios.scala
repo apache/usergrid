@@ -144,7 +144,7 @@ object AuditScenarios {
 
   val getCollectionEntityDirect = exec(
     http("GET collection entity direct")
-      .get("/${collectionName}/${uuid}")
+      .get("/${collectionName}/${accessField}")
       .headers(Headers.authToken)
       .headers(Headers.usergridRegionHeaders)
       .check()
@@ -213,7 +213,7 @@ object AuditScenarios {
 
   val getCollectionEntity = exec(
     http("GET collection entity")
-      .get("/${collectionName}?ql=uuid=${uuid}")
+      .get("/${collectionName}?ql=${queryField}")
       .headers(Headers.authToken)
       .headers(Headers.usergridRegionHeaders)
       .check(status.is(200), status.saveAs(SessionVarStatus), jsonPath("$.count").optional.saveAs("count"),
