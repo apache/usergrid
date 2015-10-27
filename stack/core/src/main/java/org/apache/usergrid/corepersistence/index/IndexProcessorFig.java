@@ -36,6 +36,8 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
 
+    String EVENT_CONCURRENCY_FACTOR = "event.concurrency.factor";
+
     String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
 
     String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
@@ -70,9 +72,18 @@ public interface IndexProcessorFig extends GuicyFig {
     int getIndexQueueVisibilityTimeout();
 
     /**
+     * The number of worker threads used when handing off messages from the SQS thread
+     */
+    @Default( "20" )
+    @Key( EVENT_CONCURRENCY_FACTOR )
+    int getEventConcurrencyFactor();
+
+
+
+    /**
      * The number of worker threads used to read index write requests from the queue.
      */
-    @Default( "16" )
+    @Default( "8" )
     @Key( ELASTICSEARCH_WORKER_COUNT )
     int getWorkerCount();
 
