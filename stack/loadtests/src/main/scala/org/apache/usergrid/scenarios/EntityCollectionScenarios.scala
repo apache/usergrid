@@ -16,9 +16,13 @@
  */
 package org.apache.usergrid.scenarios
 
+import java.nio.charset.StandardCharsets
+
 import io.gatling.core.Predef._
 import io.gatling.core.feeder.RecordSeqFeederBuilder
 import io.gatling.http.Predef._
+import io.gatling.http.response.ResponseWrapper
+import io.gatling.http.response.StringResponseBody
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums.{CsvFeedPatternType, EndConditionType, AuthType}
 import org.apache.usergrid.helpers.Extractors._
@@ -216,6 +220,19 @@ object EntityCollectionScenarios {
         .headers(Headers.authToken)
         .headers(Headers.usergridRegionHeaders)
         .body(StringBody("""${entity}"""))
+        .transformResponse {
+          case response if response.isReceived =>
+            new ResponseWrapper(response) {
+              override val body = {
+                val contentType = response.header("content-type").getOrElse("").toLowerCase
+                if (contentType.contains("json")) {
+                  StringResponseBody(response.body.string, response.charset)
+                } else {
+                  StringResponseBody("{}", StandardCharsets.UTF_8)
+                }
+              }
+          }
+        }
         // 200 for success, 400 if already exists
         .check(status.saveAs(SessionVarStatus), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
