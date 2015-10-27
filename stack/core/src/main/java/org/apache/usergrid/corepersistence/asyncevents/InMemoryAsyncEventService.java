@@ -105,6 +105,11 @@ public class InMemoryAsyncEventService implements AsyncEventService {
         run( results.getCompactedNode() );
     }
 
+    @Override
+    public void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage){
+        //this is not used locally
+    }
+
 
     public void index( final ApplicationScope applicationScope, final Id id, final long updatedSince ) {
         final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, id, updatedSince );

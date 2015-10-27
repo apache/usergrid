@@ -157,26 +157,26 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
 
         //get all edges pointing to the target node and buffer then into groups for deletion
         Observable<MarkedEdge> targetEdges =
-                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null, null ) )
-                        .subscribeOn( Schedulers.io() ).flatMap( edgeType -> Observable.create( new ObservableIterator<MarkedEdge>( "getTargetEdges" ) {
+                getEdgesTypesToTarget(scope, new SimpleSearchEdgeType(node, null, null))
+                        .flatMap(edgeType -> Observable.create(new ObservableIterator<MarkedEdge>("getTargetEdges") {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
-                                return storageSerialization.getEdgesToTarget( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
+                                return storageSerialization.getEdgesToTarget(scope,
+                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
                             }
-                        } ) );
+                        }));
 
 
         //get all edges pointing to the source node and buffer them into groups for deletion
         Observable<MarkedEdge> sourceEdges =
-                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null, null ) )
-                        .subscribeOn( Schedulers.io() ).flatMap( edgeType -> Observable.create( new ObservableIterator<MarkedEdge>( "getSourceEdges" ) {
+                getEdgesTypesFromSource(scope, new SimpleSearchEdgeType(node, null, null))
+                        .flatMap(edgeType -> Observable.create(new ObservableIterator<MarkedEdge>("getSourceEdges") {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
-                                return storageSerialization.getEdgesFromSource( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
+                                return storageSerialization.getEdgesFromSource(scope,
+                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
                             }
-                        } ) );
+                        }));
 
         //merge both source and target into 1 observable.  We'll need to check them all regardless of order
         return Observable.merge( targetEdges, sourceEdges )
@@ -235,12 +235,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
 
                     //run both the source/target edge type cleanup, then proceed
                     return Observable.merge( sourceMetaCleanup, targetMetaCleanup ).lastOrDefault( null )
-                                     .flatMap( new Func1<Integer, Observable<MarkedEdge>>() {
-                                         @Override
-                                         public Observable<MarkedEdge> call( final Integer integer ) {
-                                             return Observable.from( markedEdges );
-                                         }
-                                     } );
+                                     .flatMap(integer -> Observable.from( markedEdges ));
                 } );
     }
 

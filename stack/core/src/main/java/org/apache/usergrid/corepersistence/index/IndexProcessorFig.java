@@ -36,6 +36,8 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
 
+    String EVENT_CONCURRENCY_FACTOR = "event.concurrency.factor";
+
     String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
 
     String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
@@ -65,9 +67,18 @@ public interface IndexProcessorFig extends GuicyFig {
      * Received messages will remain 'in flight' until they are ack'd(deleted) or this timeout occurs.
      * If the timeout occurs, the messages will become visible again for re-processing.
      */
-    @Default( "5000" ) // 5 seconds
+    @Default( "30000" ) // 30 seconds
     @Key( INDEX_QUEUE_VISIBILITY_TIMEOUT )
     int getIndexQueueVisibilityTimeout();
+
+    /**
+     * The number of worker threads used when handing off messages from the SQS thread
+     */
+    @Default( "20" )
+    @Key( EVENT_CONCURRENCY_FACTOR )
+    int getEventConcurrencyFactor();
+
+
 
     /**
      * The number of worker threads used to read index write requests from the queue.
