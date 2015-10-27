@@ -29,6 +29,9 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #ENTITY_TYPE=
 #ENTITY_PREFIX=
 #ENTITY_SEED=  #may be overridden on command line
+#ORG= #may be overridden on command line
+#APP= #may be overridden on command line
+#COLLECTION= #may be overridden on command line
 #RETRY_COUNT=
 #ENTITY_PROGRESS_COUNT=
 #CONSTANT_USERS_PER_SEC=
@@ -36,14 +39,14 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 2 ] || die "At least 2 arguments required, $# provided.  Example is $0 ORG APP [COLLECTION [SANDBOX_COLLECTION (true/false)]]"
+[ "$#" -ge 1 ] || die "At least 1 argument required, $# provided.  Example is $0 SANDBOX_COLLECTION(true/false) [ORG [APP [COLLECTION]]]"
 
-ORG="$1"
-APP="$2"
-COLLECTION="gatlingitems"
-[ "$#" -ge 3 ] && COLLECTION="$3"
-SANDBOX_COLLECTION=true
-[ "$#" -ge 4 ] && SANDBOX_COLLECTION="$4"
+
+SANDBOX_COLLECTION="$1"
+# org, app, and collection can come from testConfig.sh
+[ "$#" -ge 2 ] && ORG="$2"
+[ "$#" -ge 3 ] && APP="$3"
+[ "$#" -ge 4 ] && COLLECTION="$4"
 
 shift $#
 
