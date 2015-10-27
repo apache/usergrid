@@ -291,9 +291,10 @@ object Settings {
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
 
   val uuidsHeader = "collection,name,uuid,modified,status"
-  val uuidsFailHeader = "collection,name,uuid,modified,status,error"
+  val uuidsFailHeader = "collection,name,uuid,modified,status,error,prevStatus,prevError"
   case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long, var status: Int)
-  case class AuditFailList(var collection: String, var entityName: String, var uuid: String, var modified: Long, var status: Int, var error: String)
+  case class AuditFailList(var collection: String, var entityName: String, var uuid: String, var modified: Long,
+                           var status: Int, var error: String, var prevStatus: Int, var prevError: String)
 
   //private var uuidMap: Map[Int, String] = Map()
   private var uuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
@@ -381,10 +382,11 @@ object Settings {
   private var auditEntityCounter: Long = 0L
   private var lastAuditEntityCountPrinted: Long = 0L
   private var auditUuidList: mutable.MutableList[AuditFailList] = mutable.MutableList[AuditFailList]()
-  def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long, status: Int, error: String): Unit = {
+  def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long, status: Int, error: String,
+                    prevStatus: Int, prevError: String): Unit = {
     if (captureAuditUuids) {
       auditUuidList.synchronized {
-        auditUuidList += AuditFailList(collection, entityName, uuid, modified, status, error)
+        auditUuidList += AuditFailList(collection, entityName, uuid, modified, status, error, prevStatus, prevError)
         auditEntityCounter += 1L
         if (logEntityProgress && (auditEntityCounter >= lastAuditEntityCountPrinted + entityProgressCount)) {
           println(s"Entity: $auditEntityCounter")
@@ -404,7 +406,7 @@ object Settings {
       writer.println(uuidsFailHeader)
       val uuidList: List[AuditFailList] = auditUuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified, e.status))
       uuidList.foreach { e =>
-        writer.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status},${e.error}")
+        writer.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status},${e.error},${e.prevStatus},${e.prevError}")
       }
       writer.flush()
       writer.close()
