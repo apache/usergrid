@@ -43,6 +43,7 @@ import org.apache.usergrid.corepersistence.service.ConnectionServiceImpl;
 import org.apache.usergrid.corepersistence.service.StatusService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
@@ -92,7 +93,7 @@ public class ConnectionResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
-    @Path( "dedup/{jobId}" )
+    @Path( "dedup/{jobId: " + Identifier.UUID_REX + "}" )
     public JSONWithPadding rebuildIndexesGet( @PathParam( "jobId" ) String jobId,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
@@ -153,10 +154,10 @@ public class ConnectionResource extends AbstractContextResource {
                              }};
 
                              statusService.setStatus( CpNamingUtils.MANAGEMENT_APPLICATION_ID, jobId,
-                                 StatusService.Status.INPROGRESS, status );
+                                 StatusService.Status.INPROGRESS, status ).toBlocking().lastOrDefault( null );
                          } ).doOnSubscribe( () -> {
             statusService.setStatus( CpNamingUtils.MANAGEMENT_APPLICATION_ID, jobId, StatusService.Status.STARTED,
-                new HashMap<>() );
+                new HashMap<>() ).toBlocking().lastOrDefault( null );
         } ).doOnCompleted( () -> {
 
             final long runningTotal = count.get();
