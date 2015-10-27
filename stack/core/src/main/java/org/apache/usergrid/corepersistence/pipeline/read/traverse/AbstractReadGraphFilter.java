@@ -20,7 +20,11 @@
 package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +46,7 @@ import com.google.common.base.Optional;
 import rx.Observable;
 
 
+
 /**
  * Command for reading graph edges
  */
@@ -51,15 +56,21 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
     private final GraphManagerFactory graphManagerFactory;
     private final RxTaskScheduler rxTaskScheduler;
+    private final EventBuilder eventBuilder;
+    private final AsyncEventService asyncEventService;
 
 
     /**
      * Create a new instance of our command
      */
     public AbstractReadGraphFilter( final GraphManagerFactory graphManagerFactory,
-                                    final RxTaskScheduler rxTaskScheduler) {
+                                    final RxTaskScheduler rxTaskScheduler,
+                                    final EventBuilder eventBuilder,
+                                    final AsyncEventService asyncEventService ) {
         this.graphManagerFactory = graphManagerFactory;
         this.rxTaskScheduler = rxTaskScheduler;
+        this.eventBuilder = eventBuilder;
+        this.asyncEventService = asyncEventService;
     }
 
 
@@ -107,28 +118,56 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 final boolean isTargetNodeDelete = markedEdge.isTargetNodeDeleted();
 
 
+                if (isDeleted) {
 
-                if(isDeleted){
                     logger.trace("Edge {} is deleted, deleting the edge", markedEdge);
-                    graphManager.deleteEdge(markedEdge).subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
+                    final Observable<IndexOperationMessage> indexMessageObservable = eventBuilder.buildDeleteEdge(applicationScope, markedEdge);
+
+                    indexMessageObservable
+                        .compose(applyCollector())
+                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
                         .subscribe();
+
                 }
 
-                if(isSourceNodeDeleted){
+                if (isSourceNodeDeleted) {
+
                     final Id sourceNodeId = markedEdge.getSourceNode();
-
                     logger.trace("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
-                    graphManager.compactNode(sourceNodeId).subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
+
+                    final EventBuilderImpl.EntityDeleteResults
+                        entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, sourceNodeId);
+
+                    entityDeleteResults.getIndexObservable()
+                        .compose(applyCollector())
+                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
                         .subscribe();
+
+                    Observable.merge(entityDeleteResults.getEntitiesDeleted(),
+                        entityDeleteResults.getCompactedNode())
+                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler()).
+                        subscribe();
+
                 }
 
-                if(isTargetNodeDelete){
+                if (isTargetNodeDelete) {
 
                     final Id targetNodeId = markedEdge.getTargetNode();
+                    logger.trace("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId);
 
-                    logger.trace("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId );
-                    graphManager.compactNode(targetNodeId).subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
+                    final EventBuilderImpl.EntityDeleteResults
+                        entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, targetNodeId);
+
+                    entityDeleteResults.getIndexObservable()
+                        .compose(applyCollector())
+                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
                         .subscribe();
+
+                    Observable.merge(entityDeleteResults.getEntitiesDeleted(),
+                        entityDeleteResults.getCompactedNode())
+                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler()).
+                        subscribe();
+
                 }
 
 
@@ -202,4 +241,16 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
             return cursorEdge;
         }
     }
+
+    private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector() {
+
+        return observable -> observable
+            .filter((IndexOperationMessage msg) -> !msg.isEmpty())
+            .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
+            .doOnNext(indexOperation -> {
+                asyncEventService.queueIndexOperationMessage(indexOperation);
+            });
+
+    }
+
 }
