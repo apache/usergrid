@@ -85,7 +85,7 @@ object Extractors {
   def extractAuditEntity(saveAsName: String) = {
     jsonPath("$.entities[0]").ofType[Map[String,Any]].findAll.transformOption(extract => {
       extract.orElse(Some(Seq.empty))
-    }).optional.saveAs(saveAsName)
+    }).saveAs(saveAsName)
   }
 
   /**
