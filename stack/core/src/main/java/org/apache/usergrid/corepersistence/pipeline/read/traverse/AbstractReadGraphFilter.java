@@ -20,10 +20,10 @@
 package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.pipeline.cursor.CursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.AbstractPathFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
@@ -50,16 +50,16 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
     private static final Logger logger = LoggerFactory.getLogger( AbstractReadGraphFilter.class );
 
     private final GraphManagerFactory graphManagerFactory;
-    private final AsyncEventService asyncEventService;
+    private final RxTaskScheduler rxTaskScheduler;
 
 
     /**
      * Create a new instance of our command
      */
     public AbstractReadGraphFilter( final GraphManagerFactory graphManagerFactory,
-                                    final AsyncEventService asyncEventService ) {
+                                    final RxTaskScheduler rxTaskScheduler) {
         this.graphManagerFactory = graphManagerFactory;
-        this.asyncEventService = asyncEventService;
+        this.rxTaskScheduler = rxTaskScheduler;
     }
 
 
@@ -109,25 +109,26 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
 
                 if(isDeleted){
-                    logger.trace( "Edge {} is deleted, queueing the delete event", markedEdge );
-                    asyncEventService.queueDeleteEdge( applicationScope, markedEdge  );
+                    logger.trace("Edge {} is deleted, deleting the edge", markedEdge);
+                    graphManager.deleteEdge(markedEdge).subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
+                        .subscribe();
                 }
 
                 if(isSourceNodeDeleted){
                     final Id sourceNodeId = markedEdge.getSourceNode();
 
-                    logger.trace( "Edge {} has a deleted source node, queueing the delete entity event for id {}", markedEdge, sourceNodeId );
-
-                    asyncEventService.queueEntityDelete( applicationScope, sourceNodeId );
+                    logger.trace("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
+                    graphManager.compactNode(sourceNodeId).subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
+                        .subscribe();
                 }
 
                 if(isTargetNodeDelete){
 
                     final Id targetNodeId = markedEdge.getTargetNode();
 
-                    logger.trace( "Edge {} has a deleted target node, queueing the delete entity event for id {}", markedEdge, targetNodeId );
-
-                    asyncEventService.queueEntityDelete( applicationScope, targetNodeId );
+                    logger.trace("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId );
+                    graphManager.compactNode(targetNodeId).subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
+                        .subscribe();
                 }
 
 
