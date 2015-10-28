@@ -219,7 +219,7 @@ public class IndexServiceImpl implements IndexService {
                 //collect results into a single batch
                 .collect( () -> ei.createBatch(), ( batch, candidateResult ) -> {
                     logger.debug( "Deindexing on edge {} for entity {} added to batch",searchEdge , entityId );
-                    batch.deindex( searchEdge, candidateResult );
+                    batch.deindex( candidateResult );
                 } )
                     //return the future from the batch execution
                 .flatMap( batch ->Observable.just(batch.build()) );
