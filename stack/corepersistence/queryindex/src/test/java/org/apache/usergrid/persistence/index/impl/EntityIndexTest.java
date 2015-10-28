@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.model.field.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,10 +49,6 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -394,7 +391,6 @@ public class EntityIndexTest extends BaseIT {
         int numberOfEntities = 1000;
         int versionToSearchFor = numberOfEntities / 2;
 
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "mehCars", SearchEdge.NodeType.SOURCE, 1 );
 
         UUID entityUUID = UUID.randomUUID();
         Id entityId = new SimpleId( "mehCar" );
@@ -408,9 +404,11 @@ public class EntityIndexTest extends BaseIT {
         Entity[] entity = new Entity[numberOfEntities];
         for(int i = 0; i < numberOfEntities; i++) {
             entity[i] = EntityIndexMapUtils.fromMap( entityMap );
-            EntityUtils.setId( entity[i], entityId );
-            EntityUtils.setVersion( entity[i], UUIDGenerator.newTimeUUID() );
-            entity[i].setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, entityUUID ) );
+            EntityUtils.setId(entity[i], entityId);
+            EntityUtils.setVersion(entity[i], UUIDGenerator.newTimeUUID());
+            entity[i].setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, entityUUID));
+
+            IndexEdge searchEdge = new IndexEdgeImpl( appId, "mehCars", SearchEdge.NodeType.SOURCE, System.currentTimeMillis()*1000 );
 
             //index the new entity. This is where the loop will be set to create like 100 entities.
             indexProducer.put(entityIndex.createBatch().index( searchEdge, entity[i]  ).build()).subscribe();
