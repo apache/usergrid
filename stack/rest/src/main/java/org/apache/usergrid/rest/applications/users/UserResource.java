@@ -42,6 +42,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.EntityManager;
@@ -52,12 +57,9 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
-
-import org.apache.amber.oauth2.common.exception.OAuthProblemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
-import org.apache.commons.lang.StringUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
@@ -164,6 +166,41 @@ public class UserResource extends ServiceResource {
 
         return new JSONWithPadding( response, callback );
     }
+
+    @GET
+    @RequireSystemAccess
+    @Path("password")
+    public JSONWithPadding getUserPassword(@QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.info( "UserResource.setUserPassword" );
+
+
+        final ApiResponse response = createApiResponse();
+        response.setAction( "get user password" );
+
+        final UUID applicationId = getApplicationId();
+        final UUID targetUserId = getUserUuid();
+
+        if ( applicationId == null ) {
+            response.setError( "Application not found" );
+            return new JSONWithPadding( response, callback );
+        }
+
+        if ( targetUserId == null ) {
+            response.setError( "User not found" );
+            return new JSONWithPadding( response, callback );
+        }
+
+        final CredentialsInfo credentialsInfo = management.getAppUserPasswordRaw( applicationId, targetUserId );
+
+
+        response.setProperty( "credentials", credentialsInfo );
+
+
+        return new JSONWithPadding( response, callback );
+    }
+
 
 
     @PUT
