@@ -241,7 +241,7 @@ public class IndexingUtils {
 
         Id entityId = new SimpleId( UUID.fromString( entityUUID ), entityType );
 
-        return new CandidateResult( entityId, UUID.fromString( versionUUID ) );
+        return new CandidateResult( entityId, UUID.fromString( versionUUID ), documentId );
     }
 
 
