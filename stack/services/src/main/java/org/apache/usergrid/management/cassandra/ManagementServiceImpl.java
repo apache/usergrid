@@ -2825,6 +2825,25 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
+    public CredentialsInfo getAppUserPasswordRaw( final UUID applicationId, final UUID userId ) throws Exception {
+
+        final User user = emf.getEntityManager( applicationId ).get( userId, User.class );
+
+        if(user == null){
+            throw new EntityNotFoundException("Could not find user with id " + userId + " in application" + applicationId  );
+        }
+
+        final CredentialsInfo ci = readUserPasswordCredentials( applicationId, userId );
+
+        if ( ci == null ) {
+            throw new EntityNotFoundException("Could not find credentials for user with id " + userId + " in application" + applicationId );
+        }
+
+        return ci;
+    }
+
+
+    @Override
     public User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception {
 
         User user = findUserEntity( applicationId, name );
