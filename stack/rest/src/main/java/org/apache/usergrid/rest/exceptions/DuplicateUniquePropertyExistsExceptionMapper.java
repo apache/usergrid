@@ -29,6 +29,12 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 public class DuplicateUniquePropertyExistsExceptionMapper
         extends AbstractExceptionMapper<DuplicateUniquePropertyExistsException> {
 
+    //when you get this exception then fire a repair task that will grab a thread from a thread pool and async run the repair task
+    // That task will then go through and double checkk all the entities and verify that their ref's and entities match up.
+
+
+    //npe, delete entity ref
+    //mismatched pointers, update the entity ref with whatever is in the collection. ( retrieve via query ) .
     @Override
     public Response toResponse( DuplicateUniquePropertyExistsException e ) {
         return toResponse( BAD_REQUEST, e );
