@@ -202,15 +202,15 @@ object AuditScenarios {
             Settings.incAuditNotFoundViaQuery()
             println(s"NOT FOUND VIA QUERY: $collectionName.$reqName ($uuid)")
           }
-          session
+          session.markAsFailed
         } else if (saveFailures) {
           Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, "Failure", lastStatus)
-          session
+          session.markAsFailed
         } else {
           session.markAsFailed
         }
 
-      }).exitHereIfFailed
+      })
 
   val getCollectionEntity = exec(
     http("GET collection entity")

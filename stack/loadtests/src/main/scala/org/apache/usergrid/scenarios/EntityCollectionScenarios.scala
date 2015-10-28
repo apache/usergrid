@@ -241,16 +241,18 @@ object EntityCollectionScenarios {
             val entityName = session("entityName").as[String]
             val modified = if (status == 200) session(SessionVarModified).as[Long] else 0
             val collectionName = session("collectionName").as[String]
+            Settings.addUuid(uuid, collectionName, entityName, modified, status)
             if (status != 200) {
               val bodyString = session(SessionVarBodyString).as[String]
               println(s">>>>>>>> LOAD ERROR - Status: $status\nBody:\n$bodyString")
+              session.markAsFailed
+            } else {
+              session
             }
-            Settings.addUuid(uuid, collectionName, entityName, modified, status)
-            session
           } else {
             session.markAsFailed
           }
-        }).exitHereIfFailed
+        })
     }
   )
 
