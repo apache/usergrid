@@ -183,7 +183,7 @@ object AuditScenarios {
               errorString += "|NoUuidReturned"
               Settings.incAuditPayloadUuidError()
               println(s"PAYLOAD UUID MISSING (DIRECT): requestedUuid=$uuid")
-            } else if (!uuid.equalsIgnoreCase(entityUuid)) {
+            } else if (!uuid.isEmpty && !uuid.equalsIgnoreCase(entityUuid)) {
               errorString += "|ReturnedUuidMismatch"
               Settings.incAuditPayloadUuidError()
               println(s"PAYLOAD UUID MISMATCH (DIRECT): requestedUuid=$uuid returnedUuid=$entityUuid")
@@ -247,7 +247,7 @@ object AuditScenarios {
             errorString += "|NoUuidReturned"
             Settings.incAuditPayloadUuidError()
             println(s"PAYLOAD UUID MISSING (QUERY): requestedUuid=$uuid")
-          } else if (!uuid.equalsIgnoreCase(entityUuid)) {
+          } else if (!uuid.isEmpty && !uuid.equalsIgnoreCase(entityUuid)) {
             errorString += "|ReturnedUuidMismatch"
             Settings.incAuditPayloadUuidError()
             println(s"PAYLOAD UUID MISMATCH (QUERY): requestedUuid=$uuid returnedUuid=$entityUuid")
