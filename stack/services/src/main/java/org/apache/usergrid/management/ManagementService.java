@@ -283,6 +283,8 @@ public interface ManagementService {
     public void setAppUserPassword( UUID applicationId, UUID userId, String oldPassword, String newPassword )
             throws Exception;
 
+    CredentialsInfo getAppUserPasswordRaw( final UUID applicationId, final UUID userId ) throws Exception;
+
     public User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception;
 
     public UserInfo getAppUserFromAccessToken( String token ) throws Exception;
