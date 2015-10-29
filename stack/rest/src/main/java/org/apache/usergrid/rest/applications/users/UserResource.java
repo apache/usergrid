@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.management.ActivationState;
+import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.entities.User;
@@ -160,6 +161,43 @@ public class UserResource extends ServiceResource {
         else {
             management.setAppUserPassword( getApplicationId(), targetUserId, oldPassword, newPassword );
         }
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @PUT
+    @Path("credentials")
+    public JSONWithPadding setUserCredentials( @Context UriInfo ui, Map<String, Object> json,
+                                               @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.info( "UserResource.setUserPassword" );
+
+        if ( json == null ) {
+            return null;
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "set user credentials" );
+        Object credentials = json.get( "credentials" );
+
+
+        if ( credentials == null ) {
+            throw new IllegalArgumentException( "credentials sub object is required" );
+        }
+
+        UUID applicationId = getApplicationId();
+        UUID targetUserId = getUserUuid();
+
+        if ( targetUserId == null ) {
+            response.setError( "User not found" );
+            return new JSONWithPadding( response, callback );
+        }
+
+
+        management.setAppUserCredentialsInfo( applicationId, targetUserId, ( CredentialsInfo ) credentials );
+
 
         return new JSONWithPadding( response, callback );
     }
