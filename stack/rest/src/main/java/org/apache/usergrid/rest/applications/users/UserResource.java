@@ -169,7 +169,7 @@ public class UserResource extends ServiceResource {
 
     @GET
     @RequireSystemAccess
-    @Path("password")
+    @Path("credentials")
     public JSONWithPadding getUserPassword(@QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -192,7 +192,7 @@ public class UserResource extends ServiceResource {
             return new JSONWithPadding( response, callback );
         }
 
-        final CredentialsInfo credentialsInfo = management.getAppUserPasswordRaw( applicationId, targetUserId );
+        final CredentialsInfo credentialsInfo = management.getAppUserCredentialsInfo( applicationId, targetUserId );
 
 
         response.setProperty( "credentials", credentialsInfo );
