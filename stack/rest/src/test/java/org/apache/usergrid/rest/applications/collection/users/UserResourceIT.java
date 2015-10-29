@@ -37,8 +37,14 @@ import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+
 import java.io.IOException;
+
+import javax.ws.rs.core.MediaType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1102,5 +1108,108 @@ public class UserResourceIT extends AbstractRestIT {
         Collection response = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
 
         assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
+    }
+
+
+
+    @Test
+    public void testCredentialsTransfer() throws Exception {
+
+        usersResource.post(new User("test_1", "Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
+        refreshIndex();
+
+        //Entity appInfo = this.app().get().getResponse().getEntities().get(0);
+
+        Token token = this.app().token().post(new Token("test_1", "test123"));
+
+        assertNotNull(token.getAccessToken());
+
+        final String superUserName = this.clientSetup.getSuperuserName();
+        final String superUserPassword = this.clientSetup.getSuperuserPassword();
+
+
+        //get the credentials info
+        final CollectionEndpoint collection  = userResource.entity("test_1").collection( "credentials" );
+
+        final WebResource resource  = collection.getResource();
+
+        resource.addFilter( new HTTPBasicAuthFilter(superUserName, superUserPassword) );
+
+
+
+        final ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE)
+                                             .accept( MediaType.APPLICATION_JSON ).get( org.apache.usergrid.rest.test.resource.model.ApiResponse.class );
+
+
+        //now get the credentials sub object
+
+        final Map<String, Object> credentials = ( Map<String, Object> ) response.getProperties().get( "credentials" );
+
+
+
+        //get out the hash and change it so we can validate
+        final String originalSecret = ( String ) credentials.get( "secret" );
+
+
+        //here we modify the hash a little, this way we can break password validation, then re-set it to ensure we're actually updating the credentials info correctly.
+        final String borkedSecret = originalSecret.substring( 0, originalSecret.length() -1 );
+
+        credentials.put( "credentials", borkedSecret );
+        credentials.put( "secret", borkedSecret );
+
+        //now PUT it
+
+
+        final Map<String, Map<String, Object>> wrapper = new HashMap<>(  );
+        wrapper.put( "credentials", credentials );
+
+        final WebResource putResource  = collection.getResource();
+
+        putResource.addFilter( new HTTPBasicAuthFilter(superUserName, superUserPassword) );
+
+
+        putResource.type( MediaType.APPLICATION_JSON_TYPE)
+                   .accept( MediaType.APPLICATION_JSON ).put(
+            org.apache.usergrid.rest.test.resource.model.ApiResponse.class, wrapper );
+
+
+        //now try to get a password, it should fail because the hash is no longer correct
+
+        int status = 0;
+
+        // bad access token
+        try {
+            this.app().token().post(new Token("test_1", "test123"));
+            fail("Should have thrown an exception");
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
+            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
+        }
+
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), status);
+
+
+        //now put the correct one
+
+
+        credentials.put( "credentials", originalSecret );
+        credentials.put( "secret", originalSecret );
+
+
+        final WebResource putResource2  = collection.getResource();
+
+        putResource2.addFilter( new HTTPBasicAuthFilter( superUserName, superUserPassword ) );
+
+
+        putResource2.type( MediaType.APPLICATION_JSON_TYPE)
+                    .accept( MediaType.APPLICATION_JSON ).put(
+            org.apache.usergrid.rest.test.resource.model.ApiResponse.class, wrapper );
+
+
+        //now auth, should be good
+        final Token nextToken = this.app().token().post(new Token("test_1", "test123"));
+
+        assertNotNull( nextToken.getAccessToken() );
+
     }
 }
