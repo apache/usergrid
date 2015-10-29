@@ -55,6 +55,7 @@ import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 import rx.Observable;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 
@@ -146,36 +147,51 @@ public class ConnectionResource extends AbstractContextResource {
 
         //start de duping and run in the background
         connectionService.deDupeConnections( applicationScopeObservable ).buffer( 10, TimeUnit.SECONDS, 1000 )
-                         .doOnNext( buffer -> {
+                         .doOnNext(buffer -> {
 
 
-                             final long runningTotal = count.addAndGet( buffer.size() );
+                             final long runningTotal = count.addAndGet(buffer.size());
 
                              final Map<String, Object> status = new HashMap<String, Object>() {{
-                                 put( "countProcessed", runningTotal );
-                                 put( "updatedTimestamp", System.currentTimeMillis() );
+                                 put("countProcessed", runningTotal);
+                                 put("updatedTimestamp", System.currentTimeMillis());
                              }};
 
-                             statusService.setStatus( CpNamingUtils.MANAGEMENT_APPLICATION_ID, jobId,
-                                 StatusService.Status.INPROGRESS, status ).toBlocking().lastOrDefault( null );
-                         } ).doOnSubscribe( () -> {
-            statusService.setStatus( CpNamingUtils.MANAGEMENT_APPLICATION_ID, jobId, StatusService.Status.STARTED,
-                new HashMap<>() ).toBlocking().lastOrDefault( null );
-        } ).doOnCompleted( () -> {
+                             statusService.setStatus(CpNamingUtils.MANAGEMENT_APPLICATION_ID, jobId,
+                                 StatusService.Status.INPROGRESS, status).toBlocking().lastOrDefault(null);
+                         }).doOnSubscribe(() -> {
+
+            statusService.setStatus(CpNamingUtils.MANAGEMENT_APPLICATION_ID,
+                jobId, StatusService.Status.STARTED, new HashMap<>()).toBlocking().lastOrDefault(null);
+
+        }).doOnCompleted(() -> {
 
             final long runningTotal = count.get();
 
             final Map<String, Object> status = new HashMap<String, Object>() {{
-                put( "countProcessed", runningTotal );
-                put( "updatedTimestamp", System.currentTimeMillis() );
+                put("countProcessed", runningTotal);
+                put("updatedTimestamp", System.currentTimeMillis());
             }};
 
-            statusService
-                .setStatus( CpNamingUtils.MANAGEMENT_APPLICATION_ID, jobId, StatusService.Status.COMPLETE, status );
-        } ).subscribeOn( Schedulers.newThread() ).subscribe();
+            statusService.setStatus(CpNamingUtils.MANAGEMENT_APPLICATION_ID,
+                jobId, StatusService.Status.COMPLETE, status).toBlocking().lastOrDefault(null);
+
+        }).doOnError( (throwable) -> {
+            logger.error("Error deduping connections", throwable);
+
+            final Map<String, Object> status = new HashMap<String, Object>() {{
+                put("error", throwable.getMessage() );
+            }};
+
+            statusService.setStatus(CpNamingUtils.MANAGEMENT_APPLICATION_ID,
+                jobId, StatusService.Status.FAILED, status).toBlocking().lastOrDefault(null);;
+
+        } ).subscribeOn(Schedulers.newThread()).subscribe();
 
 
-        final StatusService.JobStatus status = new StatusService.JobStatus( jobId, StatusService.Status.STARTED, new HashMap<>(  ) );
+        final StatusService.JobStatus status =
+            new StatusService.JobStatus( jobId, StatusService.Status.STARTED, new HashMap<>(  ) );
+
         return createResult( status, callback );
     }
 
