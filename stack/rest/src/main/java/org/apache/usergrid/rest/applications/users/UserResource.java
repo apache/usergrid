@@ -170,7 +170,7 @@ public class UserResource extends ServiceResource {
     @GET
     @RequireSystemAccess
     @Path("credentials")
-    public JSONWithPadding getUserPassword(@QueryParam("callback") @DefaultValue("callback") String callback )
+    public JSONWithPadding getUserCredentials(@QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         logger.info( "UserResource.setUserPassword" );
@@ -204,6 +204,7 @@ public class UserResource extends ServiceResource {
 
 
     @PUT
+    @RequireSystemAccess
     @Path("credentials")
     public JSONWithPadding setUserCredentials( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
@@ -217,12 +218,14 @@ public class UserResource extends ServiceResource {
 
         ApiResponse response = createApiResponse();
         response.setAction( "set user credentials" );
-        Object credentials = json.get( "credentials" );
+        Map<String, Object> credentialsJson = ( Map<String, Object> ) json.get( "credentials" );
 
 
-        if ( credentials == null ) {
+        if ( credentialsJson == null ) {
             throw new IllegalArgumentException( "credentials sub object is required" );
         }
+
+        final CredentialsInfo credentials = CredentialsInfo.fromJson( credentialsJson );
 
         UUID applicationId = getApplicationId();
         UUID targetUserId = getUserUuid();
@@ -233,7 +236,7 @@ public class UserResource extends ServiceResource {
         }
 
 
-        management.setAppUserCredentialsInfo( applicationId, targetUserId, ( CredentialsInfo ) credentials );
+        management.setAppUserCredentialsInfo( applicationId, targetUserId, credentials );
 
 
         return new JSONWithPadding( response, callback );
