@@ -164,8 +164,8 @@ public class UserResource extends ServiceResource {
 
     @GET
     @RequireSystemAccess
-    @Path("password")
-    public JSONWithPadding getUserPassword(@QueryParam("callback") @DefaultValue("callback") String callback )
+    @Path("credentials")
+    public JSONWithPadding getUserCredentials(@QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         logger.info( "UserResource.setUserPassword" );
