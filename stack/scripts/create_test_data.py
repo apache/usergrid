@@ -27,11 +27,16 @@ import json
 # Caller must provide a "slug" string which will be used as a prefix for all names
 #
 # For example, if the slug is mytest then:
-#   Orgs will be named mytest_org0 and mytest_org1
-#   Apps will be named mytest_org0_app0 and so on
+#
+#   Orgs will be named        mytest_org0 and mytest_org1
+#   Org admins will be named  mytest_org0_admin and mytest_org1_admin (both with password test)
+#
+#   Apps will be named        mytest_org0_app0, mytest_org0_app1 and so on
 #   Collections will be named mytest_org0_app0_col0 and so on
-#   Entities will be named mytest_org0_app0_col0_entity and so on
-#   Org admins will be named mytest_org0_admin and mytest_org1_admin (both with password test) 
+#   Entities will be named    mytest_org0_app0_col0_entity and so on
+#
+# All entities in collection 0 will be connected to entities in collection 1.
+# All entities in collection 1 will be connected to entities in collection 2.
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Usergrid Test Data Creation Tool")
@@ -42,7 +47,7 @@ def parse_args():
                         default="http://localhost:8080")
 
     parser.add_argument("--user",
-                        help="System Admin Credentials used to authenticate with Usergrid  <user:pass>",
+                        help="Superuser credentials used to authenticate with Usergrid  <user:pass>",
                         type=str,
                         required=True)
 
@@ -56,7 +61,7 @@ def parse_args():
     arg_vars = vars(my_args)
     creds = arg_vars["user"].split(":")
     if len(creds) != 2:
-        print("Credentials not properly specified.  Must be '-u <user:pass>'. Exiting...")
+        print("Credentials not properly specified.  Must be '--user <user:pass>'. Exiting...")
         exit_on_error()
     else:
         arg_vars["user"] = creds[0]
@@ -100,7 +105,7 @@ class Creator:
             if ( r.status_code != 200 ):
                 print "Error logging into organization " + orgName + ": " + r.text
                 return
-            
+
             accessToken = r.json()["access_token"]
 
             for appIndex in range(2):
@@ -115,11 +120,11 @@ class Creator:
 
                 print "   Created app: " + orgName + "/" + appName
                 appUrl = self.endpoint + "/" + orgName + "/" + appName
-                time.sleep(2) 
+                time.sleep(2)
 
                 for userIndex in range(2):
                     userName = appName + "_user" + str(userIndex)
-                    email = userName + "@example.com" 
+                    email = userName + "@example.com"
 
                     url = appUrl + "/users?access_token=" + accessToken
                     body = json.dumps({"name":userName, "username":userName, "email":email, "password":"test"})
