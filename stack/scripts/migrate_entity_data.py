@@ -20,7 +20,9 @@
 #
 # STEP 1 - SETUP TENANT ONE TOMCAT RUNNING 2.1 NOT IN SERVICE AND INIT MIGRATION
 #
-#   python migrate_entity_data.py --org <org1name> --user <superuser>:<superpass> --init
+#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization admin creds:
+#
+#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --admin <user>:<pass> --init
 #
 #   This command will setup and bootstrap the database, setup the migration system and update index mappings:
 #   - /system/database/setup
@@ -31,24 +33,34 @@
 #   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app.
 #
+#   Write down the 'Re-index start' timestamp when this is finished.
+#
 # STEP 2 - PUT TENANT ONE TOMCATS IN SERVICE AND DO DELTA MIGRATION
 #
-#   python migrate_entity_data.py --org <org1name> --user <superuser>:<superpass> --date
+#   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
+#
+#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --admin <user>:<pass> --date <timestamp>
 #
 #   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app with a start-date specified so only data modified since
 #   STEP 1 will be re-indexed.
 #
-# STEP 3 - SETUP TENENT TWO TOMCAT RUNNING 2.1 NOT IN SERVICE
+# STEP 3 - SETUP TENANT TWO TOMCAT RUNNING 2.1 NOT IN SERVICE
 #
-#   python migrate_entity_data.py --org <org2name> --user <superuser>:<superpass> --date
+#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization admin creds:
+#
+#       python migrate_entity_data.py --org <org2name> --super <user>:<pass> --admin <user>:<pass>
 #
 #   This command will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app.
 #
+#   Write down the 'Re-index start' timestamp when this is finished.
+
 # STEP 4 - PUT TENANT TWO TOMCATS IN SERVICE AND DO DELTA MIGRATION
 #
-#   python migrate_entity_data.py --org <org2name> --user <superuser>:<superpass> --date
+#   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
+#
+#       python migrate_entity_data.py --org <org2name> --super <user>:<pass> --admin <user>:<pass> --date <timestamp>
 #
 #   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app with a start-date specified so only data modified since
@@ -56,7 +68,9 @@
 #
 # STEP 5 - FULL DATA MIGRATION
 #
-#   python migrate_entity_data.py --user <superuser>:<superpass> --full
+#   Login to any Tomcat instance in the cluster and run this command (admin user creds must be specificed but will be ignored):
+#
+#       python migrate_entity_data.py --super <user>:<pass> --admin <user>:<pass> --full
 #
 #   This command will run the full data migration.
 #
@@ -87,6 +101,8 @@ PLUGIN_ENTITYDATA = 'collections-entity-data'
 PLUGIN_INDEX_MAPPING = 'index_mapping_migration'
 PLUGIN_CORE_DATA = 'core-data'
 
+MANAGEMENT_APP_ID = 'b6768a08-b5d5-11e3-a495-11ddb1de66c8'
+
 
 
 def parse_args():
@@ -97,8 +113,13 @@ def parse_args():
                         type=str,
                         default='http://localhost:8080')
 
-    parser.add_argument('--user',
-                        help='System Admin Credentials used to authenticate with Usergrid  <user:pass>',
+    parser.add_argument('--super',
+                        help='Superuser username and creds <user:pass>',
+                        type=str,
+                        required=True)
+
+    parser.add_argument('--admin',
+                        help='Organization admin creds <user:pass>',
                         type=str,
                         required=True)
 
@@ -124,13 +145,22 @@ def parse_args():
     my_args = parser.parse_args(sys.argv[1:])
 
     arg_vars = vars(my_args)
-    creds = arg_vars['user'].split(':')
+
+    creds = arg_vars['super'].split(':')
     if len(creds) != 2:
-        print('Credentials not properly specified.  Must be "-u <user:pass>". Exiting...')
+        print('Superuser credentials not properly specified.  Must be "-u <user:pass>". Exiting...')
         exit_on_error()
     else:
-        arg_vars['user'] = creds[0]
-        arg_vars['pass'] = creds[1]
+        arg_vars['superuser'] = creds[0]
+        arg_vars['superpass'] = creds[1]
+
+    creds = arg_vars['super'].split(':')
+    if len(creds) != 2:
+        print('Org admin credentials not properly specified.  Must be "-u <user:pass>". Exiting...')
+        exit_on_error()
+    else:
+        arg_vars['adminuser'] = creds[0]
+        arg_vars['adminpass'] = creds[1]
 
     return arg_vars
 
@@ -148,8 +178,10 @@ class Migrate:
                         'full_data_migration_start': '',
                         'full_data_migration_end': ''}
         self.logger = init_logging(self.__class__.__name__)
-        self.admin_user = self.args['user']
-        self.admin_pass = self.args['pass']
+        self.super_user = self.args['superuser']
+        self.super_pass = self.args['superpass']
+        self.admin_user = self.args['adminuser']
+        self.admin_pass = self.args['adminpass']
         self.org = self.args['org']
         self.init = self.args['init']
         self.full = self.args['full']
@@ -241,7 +273,7 @@ class Migrate:
 
             # Reindex management app
 
-            job = self.start_reindex()
+            job = self.start_app_reindex(MANAGEMENT_APP_ID)
             self.metrics['reindex_start'] = get_current_time()
             self.logger.info('Started Re-index.  Job=[%s]', job)
             is_running = True
@@ -261,18 +293,18 @@ class Migrate:
             for app_id in app_ids:
 
                 # De-dep app
-                job = self.start_app_dedup(app_id)
-                self.metrics['dedup_start_' + app_id] = get_current_time()
-                self.logger.info('Started dedup.  App=[%s], Job=[%s]', app_id, job)
-                is_running = True
-                while is_running:
-                    time.sleep(STATUS_INTERVAL_SECONDS)
-                    is_running = self.is_reindex_running(job)
-                    if not is_running:
-                        break
-
-                self.logger.info("Finished dedup. App=[%s], Job=[%s]", app_id, job)
-                self.metrics['dedup_end_' + app_id] = get_current_time()
+                # job = self.start_dedup(app_id)
+                # self.metrics['dedup_start_' + app_id] = get_current_time()
+                # self.logger.info('Started dedup.  App=[%s], Job=[%s]', app_id, job)
+                # is_running = True
+                # while is_running:
+                #     time.sleep(STATUS_INTERVAL_SECONDS)
+                #     is_running = self.is_dedup_running(job)
+                #     if not is_running:
+                #         break
+                #
+                # self.logger.info("Finished dedup. App=[%s], Job=[%s]", app_id, job)
+                # self.metrics['dedup_end_' + app_id] = get_current_time()
 
                 # Re-index app
                 job = self.start_app_reindex(app_id)
@@ -330,7 +362,7 @@ class Migrate:
 
     def start_core_data_migration(self):
            try:
-               r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
+               r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.super_pass))
                response = r.json()
                return response
            except requests.exceptions.RequestException as e:
@@ -339,7 +371,7 @@ class Migrate:
 
     def start_fulldata_migration(self):
         try:
-            r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -350,7 +382,7 @@ class Migrate:
         try:
             # TODO fix this URL
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_MIGRATION_SYSTEM
-            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -360,7 +392,7 @@ class Migrate:
     def run_database_setup(self):
         try:
             setupUrl = self.get_database_setup_url()
-            r = requests.put(url=setupUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=setupUrl, auth=(self.super_user, self.super_pass))
             if r.status_code != 200:
                 exit_on_error('Database Setup Failed')
 
@@ -371,7 +403,7 @@ class Migrate:
     def run_database_bootstrap(self):
         try:
             setupUrl = self.get_database_bootstrap_url()
-            r = requests.put(url=setupUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=setupUrl, auth=(self.super_user, self.super_pass))
             if r.status_code != 200:
                 exit_on_error('Database Bootstrap Failed')
 
@@ -382,7 +414,7 @@ class Migrate:
     def start_index_mapping_migration(self):
         try:
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_INDEX_MAPPING
-            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=migrateUrl, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -403,7 +435,7 @@ class Migrate:
         version = TARGET_ENTITY_DATA_VERSION - 1
         body = json.dumps({PLUGIN_ENTITYDATA: version, PLUGIN_APPINFO: version})
         try:
-            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.super_user, self.super_pass))
             response = r.json()
             self.logger.info('Resetting data migration versions to %s=[%s] '
                              'and %s=[%s]', PLUGIN_ENTITYDATA, version, PLUGIN_APPINFO, version)
@@ -416,7 +448,7 @@ class Migrate:
         version = TARGET_APPINFO_VERSION - 1
         body = json.dumps({PLUGIN_APPINFO: version})
         try:
-            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.super_user, self.super_pass))
             response = r.json()
             self.logger.info('Resetting appinfo migration versions to %s=[%s]', PLUGIN_APPINFO, version)
             return response
@@ -495,7 +527,7 @@ class Migrate:
     def check_data_migration_status(self):
 
         try:
-            r = requests.get(url=self.get_migration_status_url(), auth=(self.admin_user, self.admin_pass))
+            r = requests.get(url=self.get_migration_status_url(), auth=(self.super_user, self.super_pass))
             if r.status_code == 200:
                 response = r.json()
                 return response
@@ -510,7 +542,7 @@ class Migrate:
         status_url = self.get_reindex_url()+'/' + job
 
         try:
-            r = requests.get(url=status_url, auth=(self.admin_user, self.admin_pass))
+            r = requests.get(url=status_url, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response['status']
         except requests.exceptions.RequestException as e:
@@ -523,7 +555,7 @@ class Migrate:
             body = json.dumps({'updated': self.start_date})
 
         try:
-            r = requests.post(url=self.get_reindex_url(), data=body, auth=(self.admin_user, self.admin_pass))
+            r = requests.post(url=self.get_reindex_url(), data=body, auth=(self.super_user, self.super_pass))
 
             if r.status_code == 200:
                 response = r.json()
@@ -546,7 +578,8 @@ class Migrate:
     def get_dedup_status(self, job):
         status_url = self.get_dedup_url()+'/' + job
         try:
-            r = requests.get(url=status_url, auth=(self.admin_user, self.admin_pass))
+            r = requests.get(url=status_url, auth=(self.super_user, self.super_pass))
+            print r.text
             response = r.json()
             return response['status']
         except requests.exceptions.RequestException as e:
@@ -556,10 +589,11 @@ class Migrate:
     def start_dedup(self, app_id):
         body = ""
         try:
-            r = requests.post(url=self.get_dedup_url() + "/" + app_id, data=body, auth=(self.admin_user, self.admin_pass))
+            r = requests.post(url=self.get_dedup_url() + "/" + app_id, data=body, auth=(self.super_user, self.super_pass))
             if r.status_code == 200:
                 response = r.json()
-                return response['jobId']
+                print r.text
+                return response['status']['jobStatusId']
             else:
                 self.logger.error('Failed to start dedup, %s', r)
                 exit_on_error(str(r))
@@ -606,10 +640,20 @@ class Migrate:
     def get_app_ids(self):
 
         try:
-            url = self.endpoint + "/management/orgs/" + self.org + "/apps"
+
+            url = self.endpoint + "/management/token"
+            body = json.dumps({"grant_type":"password","username":self.admin_user,"password":self.admin_pass})
+            r = requests.post(url=url, data=body)
+            if ( r.status_code != 200 ):
+                print "Error logging in: " + r.text
+                return
+
+            access_token = r.json()["access_token"]
+
+            url = self.endpoint + "/management/orgs/" + self.org + "/apps?access_token=" + access_token
             r = requests.get(url=url)
             if r.status_code != 200:
-                exit_on_error('Database Bootstrap Failed')
+                exit_on_error('Cannot get app ids: ' + r.text)
 
             apps = r.json()["data"]
             app_ids = []
