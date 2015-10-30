@@ -95,7 +95,7 @@ public class GraphManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().last();
@@ -127,7 +127,7 @@ public class GraphManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesToTarget( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().single();
@@ -161,7 +161,7 @@ public class GraphManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().single();
@@ -196,7 +196,7 @@ public class GraphManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesToTarget( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().single();
@@ -248,10 +248,10 @@ public class GraphManagerIT {
         SearchByEdgeType search =
             createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
-        Iterator<Edge> returned = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> returned = edges.toBlocking().getIterator();
 
         assertEquals( "Correct edge returned", edge3, returned.next() );
         assertEquals( "Correct edge returned", edge2, returned.next() );
@@ -321,10 +321,10 @@ public class GraphManagerIT {
         SearchByEdgeType search =
             createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesToTarget( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
-        Iterator<Edge> returned = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> returned = edges.toBlocking().getIterator();
 
         assertEquals( "Correct edge returned", edge3, returned.next() );
         assertEquals( "Correct edge returned", edge2, returned.next() );
@@ -387,10 +387,10 @@ public class GraphManagerIT {
         SearchByEdgeType search =
             createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
-        Iterator<Edge> returned = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> returned = edges.toBlocking().getIterator();
 
 
         //we have 3 edges, but we specified our first edge as the max, we shouldn't get any more results than the first
@@ -443,10 +443,10 @@ public class GraphManagerIT {
         SearchByEdgeType search =
             createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesToTarget( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
-        Iterator<Edge> returned = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> returned = edges.toBlocking().getIterator();
 
 
         //we have 3 edges, but we specified our first edge as the max, we shouldn't get any more results than the first
@@ -487,7 +487,7 @@ public class GraphManagerIT {
         SearchByIdType search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getTimestamp(),
             edge.getTargetNode().getType(), null );
 
-        Observable<Edge> edges = gm.loadEdgesFromSourceByType( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSourceByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().single();
@@ -524,7 +524,7 @@ public class GraphManagerIT {
         SearchByIdType search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getTimestamp(),
             edge.getSourceNode().getType(), null );
 
-        Observable<Edge> edges = gm.loadEdgesToTargetByType( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesToTargetByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().single();
@@ -560,7 +560,7 @@ public class GraphManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().single();
@@ -629,7 +629,7 @@ public class GraphManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getTimestamp(), null );
 
-        Observable<Edge> edges = gm.loadEdgesToTarget( search );
+        Observable<MarkedEdge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlocking().single();
@@ -988,11 +988,11 @@ public class GraphManagerIT {
 
 
         //get our 2 edges
-        Observable<Edge> edges =
+        Observable<MarkedEdge> edges =
             gm.loadEdgesFromSource( createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
 
 
-        Iterator<Edge> results = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> results = edges.toBlocking().getIterator();
 
 
         assertEquals( "Edges correct", edge2, results.next() );
@@ -1060,11 +1060,11 @@ public class GraphManagerIT {
 
 
         //get our 2 edges
-        Observable<Edge> edges =
+        Observable<MarkedEdge> edges =
             gm.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
 
 
-        Iterator<Edge> results = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> results = edges.toBlocking().getIterator();
 
 
         assertEquals( "Edges correct", edge2, results.next() );
@@ -1140,11 +1140,11 @@ public class GraphManagerIT {
 
 
         //get our 2 edges
-        Observable<Edge> edges = gm.loadEdgesFromSource(
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource(
             createSearchByEdgeUnfiltered( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
 
 
-        Iterator<Edge> results = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> results = edges.toBlocking().getIterator();
 
 
         assertEquals( "Edges correct", edge2.getTargetNode(), results.next().getTargetNode() );
@@ -1211,11 +1211,11 @@ public class GraphManagerIT {
         gm.markEdge( edge1 ).toBlocking().last();
 
         //get our 2 edges
-        Observable<Edge> edges = gm.loadEdgesToTarget(
+        Observable<MarkedEdge> edges = gm.loadEdgesToTarget(
             createSearchByEdgeUnfiltered( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
 
 
-        Iterator<Edge> results = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> results = edges.toBlocking().getIterator();
 
 
         assertEquals( "Edges correct", edge2.getSourceNode(), results.next().getSourceNode() );
@@ -1282,11 +1282,11 @@ public class GraphManagerIT {
 
 
         //get our 2 edges
-        Observable<Edge> edges = gm.loadEdgesFromSourceByType(
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSourceByType(
             createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) );
 
 
-        Iterator<Edge> results = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> results = edges.toBlocking().getIterator();
 
 
         assertEquals( "Edges correct", edge1, results.next() );
@@ -1359,11 +1359,11 @@ public class GraphManagerIT {
         final long maxVersion = System.currentTimeMillis();
 
         //get our 2 edges
-        Observable<Edge> edges = gm.loadEdgesToTargetByType(
+        Observable<MarkedEdge> edges = gm.loadEdgesToTargetByType(
             createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) );
 
 
-        Iterator<Edge> results = edges.toBlocking().getIterator();
+        Iterator<MarkedEdge> results = edges.toBlocking().getIterator();
 
 
         assertEquals( "Edges correct", edge1, results.next() );
@@ -1435,7 +1435,7 @@ public class GraphManagerIT {
 
         final long maxVersion = System.currentTimeMillis();
 
-        Iterator<Edge> results =
+        Iterator<MarkedEdge> results =
             gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) ).toBlocking()
               .getIterator();
 
@@ -1547,7 +1547,7 @@ public class GraphManagerIT {
 
         final long maxVersion = System.currentTimeMillis();
 
-        Iterator<Edge> results =
+        Iterator<MarkedEdge> results =
             gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) ).toBlocking()
               .getIterator();
 
@@ -1627,7 +1627,7 @@ public class GraphManagerIT {
 
         final long maxVersion = System.currentTimeMillis();
 
-        Iterator<Edge> results =
+        Iterator<MarkedEdge> results =
             gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) ).toBlocking()
               .getIterator();
 
@@ -1764,7 +1764,7 @@ public class GraphManagerIT {
 
         final long maxVersion = System.currentTimeMillis();
 
-        Iterator<Edge> results =
+        Iterator<MarkedEdge> results =
             gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) ).toBlocking()
               .getIterator();
 
@@ -1842,7 +1842,7 @@ public class GraphManagerIT {
 
         final long maxVersion = System.currentTimeMillis();
 
-        Iterator<Edge> results =
+        Iterator<MarkedEdge> results =
             gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) ).toBlocking()
               .getIterator();
 
@@ -1983,7 +1983,7 @@ public class GraphManagerIT {
 
         final long maxVersion = System.currentTimeMillis();
 
-        Iterator<Edge> results =
+        Iterator<MarkedEdge> results =
             gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) ).toBlocking()
               .getIterator();
 
@@ -2356,10 +2356,10 @@ public class GraphManagerIT {
             new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), Long.MAX_VALUE,
                 SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()   );
 
-        final Observable<Edge> edgesDescending = gm.loadEdgeVersions( searchDescending );
+        final Observable<MarkedEdge> edgesDescending = gm.loadEdgeVersions( searchDescending );
 
         //search descending
-        final List<Edge> descending = edgesDescending.toList().toBlocking().single();
+        final List<MarkedEdge> descending = edgesDescending.toList().toBlocking().single();
 
         assertEquals( "Correct size returned", 3, descending.size() );
 
@@ -2376,9 +2376,9 @@ public class GraphManagerIT {
                     new SimpleSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), 0,
                         SearchByEdgeType.Order.ASCENDING, Optional.<Edge>absent()   );
 
-        Observable<Edge> edgesAscending = gm.loadEdgeVersions( searchAscending );
+        Observable<MarkedEdge> edgesAscending = gm.loadEdgeVersions( searchAscending );
 
-        List<Edge> ascending = edgesAscending.toList().toBlocking().single();
+        List<MarkedEdge> ascending = edgesAscending.toList().toBlocking().single();
 
         assertEquals( "Correct size returned", 3, ascending.size() );
 

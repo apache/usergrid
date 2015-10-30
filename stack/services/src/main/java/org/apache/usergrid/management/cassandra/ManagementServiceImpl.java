@@ -18,6 +18,7 @@ package org.apache.usergrid.management.cassandra;
 
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Injector;
@@ -1616,7 +1617,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception {
 
-        return createApplication( organizationId, applicationName,null, null );
+        // DO NOT CHANGE THIS AS SOME EXTERNAL CLASSES MAY RELY ON THIS BEHAVIOR WHEN EXTENDING
+        return createApplication( organizationId, applicationName, null );
     }
 
 
@@ -2818,9 +2820,46 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
+    public void setAppUserCredentialsInfo( final UUID applicationId, final UUID userId,
+                                           final CredentialsInfo credentialsInfo ) throws Exception {
+
+        Preconditions.checkNotNull( applicationId, "applicationId is required" );
+        Preconditions.checkNotNull( userId, "userId is required" );
+        Preconditions.checkNotNull( credentialsInfo, "credentialsInfo is required" );
+
+        final User user = emf.getEntityManager( applicationId ).get(userId, User.class);
+
+        if(user == null){
+            throw new EntityNotFoundException( "User with id " + userId + " cannot be found" );
+        }
+
+        writeUserPassword(applicationId, user, credentialsInfo);
+    }
+
+
+    @Override
+    public CredentialsInfo getAppUserCredentialsInfo( final UUID applicationId, final UUID userId ) throws Exception {
+
+        final User user = emf.getEntityManager( applicationId ).get( userId, User.class );
+
+        if(user == null){
+            throw new EntityNotFoundException("Could not find user with id " + userId + " in application" + applicationId  );
+        }
+
+        final CredentialsInfo ci = readUserPasswordCredentials( applicationId, userId, User.ENTITY_TYPE );
+
+        if ( ci == null ) {
+            throw new EntityNotFoundException("Could not find credentials for user with id " + userId + " in application" + applicationId );
+        }
+
+        return ci;
+    }
+
+
+    @Override
     public User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception {
 
-        User user = findUserEntity(applicationId, name);
+        User user = findUserEntity( applicationId, name );
         if ( user == null ) {
             return null;
         }

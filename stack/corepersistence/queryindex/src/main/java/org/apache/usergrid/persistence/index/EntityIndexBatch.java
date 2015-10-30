@@ -63,7 +63,7 @@ public interface EntityIndexBatch {
     EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version );
 
 
-
+    EntityIndexBatch deindex( final CandidateResult candidateResult);
 
     /**
      * get the batches

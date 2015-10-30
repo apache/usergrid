@@ -45,6 +45,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.AsyncTaskExecutor;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
@@ -108,7 +109,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                                      final NodeShardAllocation nodeShardAllocation,
                                      final ShardedEdgeSerialization shardedEdgeSerialization,
                                      final EdgeColumnFamilies edgeColumnFamilies, final Keyspace keyspace,
-                                     final EdgeShardSerialization edgeShardSerialization) {
+                                     final EdgeShardSerialization edgeShardSerialization,
+                                     final AsyncTaskExecutor asyncTaskExecutor) {
 
         this.timeService = timeService;
         this.countAudits = new AtomicLong();
@@ -124,9 +126,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         this.shardAuditTaskTracker = new ShardAuditTaskTracker();
 
 
-        this.taskExecutor = MoreExecutors.listeningDecorator( TaskExecutorFactory
-            .createTaskExecutor( "ShardCompaction", graphFig.getShardAuditWorkerCount(),
-                graphFig.getShardAuditWorkerQueueSize(), TaskExecutorFactory.RejectionAction.ABORT ) );
+        this.taskExecutor = asyncTaskExecutor.getExecutorService();
     }
 
 
@@ -305,7 +305,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         }
 
         countAudits.getAndIncrement();
-        
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("Auditing shard group. count is {} ", countAudits.get());
         }

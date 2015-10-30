@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -30,6 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * An edge.  With the additional info of if it is marked for deletion
  *
  */
+@JsonDeserialize(as = SimpleMarkedEdge.class)
 public interface MarkedEdge extends Edge{
 
     /**
@@ -37,5 +37,18 @@ public interface MarkedEdge extends Edge{
      * @return True if this version is marked as deleted
      */
     boolean isDeleted();
+
+    /**
+     * Return true if the source node is deleted
+     * @return
+     */
+    boolean isSourceNodeDelete();
+
+    /**
+     * Return true if the target node is deleted
+     * @return
+     */
+    boolean isTargetNodeDeleted();
+
 
 }

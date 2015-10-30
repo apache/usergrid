@@ -61,6 +61,11 @@ public class DeIndexOperation implements BatchOperation {
         this.documentId = createIndexDocId( applicationScope, id, version, searchEdge );
     }
 
+    public DeIndexOperation( String[] indexes, String docId) {
+        this.indexes = indexes;
+        this.documentId = docId;
+    }
+
 
     @Override
     public void doOperation( final Client client, final BulkRequestBuilder bulkRequest ) {

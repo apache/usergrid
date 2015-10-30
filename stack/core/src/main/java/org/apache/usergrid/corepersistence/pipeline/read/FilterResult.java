@@ -53,4 +53,11 @@ public class FilterResult<T> {
     }
 
 
+    @Override
+    public String toString() {
+        return "FilterResult{" +
+            "path=" + path +
+            ", value=" + value +
+            '}';
+    }
 }
