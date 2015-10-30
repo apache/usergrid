@@ -155,6 +155,8 @@ class Creator:
                     targetType = appName + "_col1"
                     url = appUrl + "/" + sourceCollection + "/" + sourceName + "/has/" + targetType + "/" + targetName
                     r = requests.post(url=url + "?access_token=" + accessToken)
+                    r = requests.post(url=url + "?access_token=" + accessToken)
+                    r = requests.post(url=url + "?access_token=" + accessToken)
                     if ( r.status_code >= 400 ):
                         print "Error connecting entity " + sourceName + " to " + targetName + ": " + r.text
                         print "url is: " + url
@@ -167,6 +169,8 @@ class Creator:
                     targetName = appName + "_col2_entity" + str(entityIndex)
                     targetType = appName + "_col2"
                     url = appUrl + "/" + sourceCollection + "/" + sourceName + "/has/" + targetType + "/" + targetName
+                    r = requests.post(url=url + "?access_token=" + accessToken)
+                    r = requests.post(url=url + "?access_token=" + accessToken)
                     r = requests.post(url=url + "?access_token=" + accessToken)
                     if ( r.status_code >= 400 ):
                         print "Error connecting entity " + sourceName + " to " + targetName + ": " + r.text
