@@ -226,6 +226,7 @@ class Migrate:
                 # Init the migration system as this is the first migration done on the cluster
 
                 self.run_database_setup()
+                self.run_database_bootstrap()
 
                 migration_system_updated = self.is_migration_system_updated()
 
