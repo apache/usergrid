@@ -657,8 +657,6 @@ class Migrate:
             for appId in apps.values():
                 app_ids.append(appId)
 
-            print app_ids
-
             return app_ids
 
         except requests.exceptions.RequestException as e:
