@@ -173,11 +173,11 @@ public class UserResource extends ServiceResource {
     public JSONWithPadding getUserCredentials(@QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.setUserPassword" );
+        logger.info( "UserResource.getUserCredentials" );
 
 
         final ApiResponse response = createApiResponse();
-        response.setAction( "get user password" );
+        response.setAction( "get user credentials" );
 
         final UUID applicationId = getApplicationId();
         final UUID targetUserId = getUserUuid();
@@ -210,7 +210,7 @@ public class UserResource extends ServiceResource {
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.setUserPassword" );
+        logger.info( "UserResource.setUserCredentials" );
 
         if ( json == null ) {
             return null;
