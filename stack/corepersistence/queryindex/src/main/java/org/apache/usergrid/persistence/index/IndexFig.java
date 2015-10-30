@@ -60,6 +60,8 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
 
+    String ELASTICSEARCH_VERSION_QUERY_LIMIT = "elasticsearch.version_query_limit";
+
 
     /**
      * Comma-separated list of Elasticsearch hosts.
@@ -199,4 +201,8 @@ public interface IndexFig extends GuicyFig {
     @Default("1000")
     @Key( "elasticsearch_queue_error_sleep_ms" )
     long getSleepTimeForQueueError();
+
+    @Default("1000")
+    @Key( ELASTICSEARCH_VERSION_QUERY_LIMIT )
+    int getVersionQueryLimit();
 }
