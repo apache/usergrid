@@ -25,7 +25,7 @@ import com.google.common.base.Optional;
 
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import rx.Observable;
 
 
@@ -136,7 +136,17 @@ public interface EntityManagerFactory {
 
     public Map<String, UUID> getDeletedApplications() throws Exception;
 
+    /**
+     * Sets up core system resources
+     * @throws Exception
+     */
     void setup() throws Exception;
+
+    /**
+     * Boostraps system data so that we can operate usergrid
+     * @throws Exception
+     */
+    void boostrap() throws Exception;
 
     Map<String, String> getServiceProperties();
 
@@ -156,7 +166,7 @@ public interface EntityManagerFactory {
 
     public UUID getManagementAppId();
 
-    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex(UUID applicationId);
+    public EntityIndex.IndexRefreshCommandInfo refreshIndex(UUID applicationId);
 
     /**
      * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph

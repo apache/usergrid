@@ -27,7 +27,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.codahale.metrics.Timer;
+import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -106,6 +108,7 @@ public abstract class AbstractService implements Service {
     private Timer entitiesParallelGetTimer;
     private Timer invokeTimer;
 
+    protected CacheFactory cacheFactory;
 
     public AbstractService() {
 
@@ -123,6 +126,7 @@ public abstract class AbstractService implements Service {
         this.entitiesGetTimer = metricsFactory.getTimer(this.getClass(), "importEntities.get");
         this.entitiesParallelGetTimer = metricsFactory.getTimer( this.getClass(),"importEntitiesP.get" );
         this.invokeTimer = metricsFactory.getTimer( this.getClass(),"service.invoke" );
+        this.cacheFactory = injector.getInstance( CacheFactory.class );
     }
 
 
@@ -383,22 +387,26 @@ public abstract class AbstractService implements Service {
                 metadata.putAll(defaultEntityMetadata);
             }
 
-            Set<Object> connections = getConnectedTypesSet(entity);
-            if (connections != null) {
-                Map<String, Object> m = new LinkedHashMap<String, Object>();
-                for (Object n : connections) {
-                    m.put(n.toString(), path + "/" + n);
+            if (request.isReturnsOutboundConnections()) {
+                Set<Object> connections = getConnectedTypesSet(entity);
+                if (connections != null) {
+                    Map<String, Object> m = new LinkedHashMap<String, Object>();
+                    for (Object n : connections) {
+                        m.put(n.toString(), path + "/" + n);
+                    }
+                    metadata.put("connections", m);
                 }
-                metadata.put("connections", m);
             }
 
-            Set<Object> connecting = getConnectingTypesSet(entity);
-            if (connecting != null) {
-                Map<String, Object> m = new LinkedHashMap<String, Object>();
-                for (Object n : connecting) {
-                    m.put(n.toString(), path + "/connecting/" + n);
+            if (request.isReturnsInboundConnections()) {
+                Set<Object> connecting = getConnectingTypesSet(entity);
+                if (connecting != null) {
+                    Map<String, Object> m = new LinkedHashMap<String, Object>();
+                    for (Object n : connecting) {
+                        m.put(n.toString(), path + "/connecting/" + n);
+                    }
+                    metadata.put("connecting", m);
                 }
-                metadata.put("connecting", m);
             }
 
             Set<String> collections = getCollectionSet(entity);
@@ -447,45 +455,42 @@ public abstract class AbstractService implements Service {
      * @param results
      */
     private void importEntitiesParallel(final ServiceRequest request, final Results results ) {
-        Timer.Context timer = entitiesParallelGetTimer.time();
-        try {
-            //create our tuples
-            final Observable<EntityTuple> tuples = Observable.create(new Observable.OnSubscribe<EntityTuple>() {
-                @Override
-                public void call(final Subscriber<? super EntityTuple> subscriber) {
-                    subscriber.onStart();
 
-                    final List<Entity> entities = results.getEntities();
-                    final int size = entities.size();
-                    for (int i = 0; i < size && !subscriber.isUnsubscribed(); i++) {
-                        subscriber.onNext(new EntityTuple(i, entities.get(i)));
-                    }
+        //create our tuples
+        final Observable<EntityTuple> tuples = Observable.create(new Observable.OnSubscribe<EntityTuple>() {
+            @Override
+            public void call(final Subscriber<? super EntityTuple> subscriber) {
+                subscriber.onStart();
 
-                    subscriber.onCompleted();
+                final List<Entity> entities = results.getEntities();
+                final int size = entities.size();
+                for (int i = 0; i < size && !subscriber.isUnsubscribed(); i++) {
+                    subscriber.onNext(new EntityTuple(i, entities.get(i)));
                 }
-            });
+                subscriber.onCompleted();
+            }
+        });
 
-            //now process them in parallel up to 10 threads
+        //now process them in parallel up to 10 threads
 
-            tuples.flatMap(tuple -> {
-                //map the entity into the tuple
-                return Observable.just(tuple).doOnNext(parallelTuple -> {
-                    //import the entity and set it at index
-                    try {
+        Observable tuplesObservable = tuples.flatMap(tuple -> {
+            //map the entity into the tuple
+            return Observable.just(tuple).doOnNext(parallelTuple -> {
+                //import the entity and set it at index
+                try {
 
-                        final Entity imported = importEntity(request, parallelTuple.entity);
+                    final Entity imported = importEntity(request, parallelTuple.entity);
 
-                        if (imported != null) {
-                            results.setEntity(parallelTuple.index, imported);
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    if (imported != null) {
+                        results.setEntity(parallelTuple.index, imported);
                     }
-                }).subscribeOn(rxScheduler);
-            }, rxSchedulerFig.getImportThreads()).toBlocking().lastOrDefault(null);
-        } finally {
-            timer.stop();
-        }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).subscribeOn(rxScheduler);
+        }, rxSchedulerFig.getImportThreads());
+
+        ObservableTimer.time(tuplesObservable, entitiesParallelGetTimer).toBlocking().lastOrDefault(null);
     }
 
 

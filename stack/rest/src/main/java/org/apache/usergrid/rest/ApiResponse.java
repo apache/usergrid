@@ -34,6 +34,8 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.usergrid.management.OrganizationConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
@@ -95,6 +97,7 @@ public class ApiResponse {
     private Map<String, List<String>> params;
     private List<AggregateCounterSet> counters;
     private ClientCredentialsInfo credentials;
+    private OrganizationConfig organizationConfig;
 
     protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
@@ -575,6 +578,17 @@ public class ApiResponse {
     public ApiResponse withCredentials( ClientCredentialsInfo credentials ) {
         this.credentials = credentials;
         return this;
+    }
+
+
+    @JsonProperty("configuration")
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public OrganizationConfig getOrganizationConfig() {
+        return organizationConfig;
+    }
+
+    public void setOrganizationConfig(OrganizationConfig organizationConfig) {
+        this.organizationConfig = organizationConfig;
     }
 
 

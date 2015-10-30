@@ -131,7 +131,7 @@ public class JobSchedulerService extends AbstractScheduledService {
             }
         }
         catch ( Throwable t ) {
-            LOG.error( "Scheduler run failed, error is", t );
+            LOG.debug( "Scheduler run failed, error is", t );
         }
     }
 

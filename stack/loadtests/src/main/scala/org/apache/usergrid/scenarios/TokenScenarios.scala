@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.scenarios
+package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
- import io.gatling.http.Predef._
- import io.gatling.http.request.StringBody
- import org.apache.usergrid.settings.Headers
- import org.apache.usergrid.settings.Settings
+import io.gatling.http.Predef._
+import io.gatling.http.request.StringBody
+import org.apache.usergrid.helpers.Headers
+import org.apache.usergrid.settings.Settings
 
- import scala.concurrent.duration._
 
 /**
  * Class that will get the token and insert it into the test session.
@@ -40,10 +39,10 @@ import io.gatling.core.Predef._
 
 object TokenScenarios {
   val getManagementToken = exec(http("POST Org Token")
-    .post(Settings.baseUrl+"/management/token")
-    .headers(Headers.jsonAnonymous)
+    .post(_ => Settings.baseUrl + "/management/token")
+    .headers(Headers.authAnonymous)
     //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
-    .body(StringBody("{\"username\":\"" + Settings.admin + "\",\"password\":\""+Settings.password+"\",\"grant_type\":\"password\"}"))
+    .body(StringBody(_ => """{ "username": """" + Settings.adminUser + """", "password": """" + Settings.adminPassword + """", "grant_type": "password" }"""))
     .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
   )
 
@@ -51,7 +50,7 @@ object TokenScenarios {
     exec(
       http("POST user token")
         .post("/token")
-        .body(StringBody("{\"grant_type\":\"password\",\"username\":\"${username}\",\"password\":\"password\"}"))
+        .body(StringBody("""{ "grant_type": "password", "username": "${username}", "password": "password" }"""))
         .check(status.is(200),jsonPath("$..access_token").exists,jsonPath("$..access_token").saveAs("authToken"))
     )
 }

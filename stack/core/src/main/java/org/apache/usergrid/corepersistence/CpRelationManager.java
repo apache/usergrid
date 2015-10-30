@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
@@ -62,7 +61,7 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -127,9 +126,10 @@ public class CpRelationManager implements RelationManager {
 
     public CpRelationManager( final ManagerCache managerCache,
                               final AsyncEventService indexService, final CollectionService collectionService,
-                              final ConnectionService connectionService, final EntityManager em,
+                              final ConnectionService connectionService,
+                              final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
-                              final EntityRef headEntity ) {
+                              final EntityRef headEntity) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -489,11 +489,9 @@ public class CpRelationManager implements RelationManager {
                 Entity itemEntity = em.get( itemRef );
                 if ( itemEntity != null ) {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole(roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                     return;
                 }
-                em.delete( itemEntity );
-                return;
             }
             em.delete( itemRef );
             return;
@@ -519,8 +517,8 @@ public class CpRelationManager implements RelationManager {
         //run our delete
         gm.loadEdgeVersions(
             CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, memberEntity.getId() ) )
-          .flatMap( edge -> gm.markEdge( edge ) ).flatMap( edge -> gm.deleteEdge( edge ) ).toBlocking()
-          .lastOrDefault( null );
+          .flatMap(edge -> gm.markEdge(edge)).flatMap(edge -> gm.deleteEdge(edge)).toBlocking()
+          .lastOrDefault(null);
 
 
         /**
@@ -528,16 +526,10 @@ public class CpRelationManager implements RelationManager {
          *
          */
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        final EntityIndexBatch batch = ei.createBatch();
 
-        // remove item from collection index
-        SearchEdge indexScope = createCollectionSearchEdge( cpHeadEntity.getId(), collectionName );
-
-        batch.deindex( indexScope, memberEntity );
-
-
-        batch.execute();
+        //TODO: this should not happen here, needs to go to  SQS
+        //indexProducer.put(batch).subscribe();
+        indexService.queueEntityDelete(applicationScope,memberEntity.getId());
 
 
         // special handling for roles collection of a group
@@ -552,7 +544,7 @@ public class CpRelationManager implements RelationManager {
                         em.get( new SimpleEntityRef( memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
 
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole( roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                 }
             }
         }
@@ -694,9 +686,38 @@ public class CpRelationManager implements RelationManager {
         final Edge edge = createConnectionEdge( cpHeadEntity.getId(), connectionType, targetEntity.getId() );
 
         final GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlocking().last();
+
+
+        //write new edge
+
+        gm.writeEdge(edge).toBlocking().lastOrDefault(null); //throw an exception if this fails
 
         indexService.queueNewEdge( applicationScope, targetEntity, edge );
+
+
+        //now read all older versions of an edge, and remove them.  Finally calling delete
+        final SearchByEdge searchByEdge =
+            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+
+
+        //load our versions, only retain the most recent one
+        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Marking edge {} for deletion", edgeToDelete);
+            }
+            return gm.markEdge(edgeToDelete );
+        }).lastOrDefault(null).doOnNext(lastEdge -> {
+            //no op if we hit our default
+            if (lastEdge == null) {
+                return;
+            }
+
+            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
+
+            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
+        }).toBlocking().lastOrDefault(null);//this should throw an exception
+
 
         return connection;
     }
@@ -761,13 +782,7 @@ public class CpRelationManager implements RelationManager {
         Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
         org.apache.usergrid.persistence.model.entity.Entity targetEntity = ( ( CpEntityManager ) em ).load( entityId );
 
-        // Delete graph edge connection from head entity to member entity
-        Edge edge = new SimpleEdge( new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
-            connectionType, targetEntity.getId(), System.currentTimeMillis() );
-
-
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-
 
         final Id sourceId = new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() );
 

@@ -38,6 +38,6 @@ public interface MigrationDataProvider<T> {
      * Get data that can be used in the migration
      * @return
      */
-    public Observable<T> getData();
+    Observable<T> getData();
 
 }

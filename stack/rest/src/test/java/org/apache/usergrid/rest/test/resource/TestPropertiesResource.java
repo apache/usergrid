@@ -17,13 +17,13 @@
 package org.apache.usergrid.rest.test.resource;
 
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -36,12 +36,14 @@ public class TestPropertiesResource extends NamedResource {
 
     public ApiResponse post(Entity testProperties){
 
-        return getResource(true).type( MediaType.APPLICATION_JSON_TYPE )
-                            .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class, testProperties );
+        return getTarget( true ).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( javax.ws.rs.client.Entity.json( testProperties), ApiResponse.class);
     }
 
     public ApiResponse get(){
-        return getResource(true).type( MediaType.APPLICATION_JSON_TYPE )
-                       .accept( MediaType.APPLICATION_JSON ).get(ApiResponse.class );
+        return getTarget(true).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .get( ApiResponse.class );
     }
 }

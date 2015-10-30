@@ -18,11 +18,25 @@
 package org.apache.usergrid.corepersistence.service;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.corepersistence.pipeline.builder.EntityBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.IdBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.ConnectionRef;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -36,12 +50,21 @@ import rx.Observable;
 @Singleton
 public class ConnectionServiceImpl implements ConnectionService {
 
+
+    private static final Logger logger = LoggerFactory.getLogger( ConnectionServiceImpl.class );
+
     private final PipelineBuilderFactory pipelineBuilderFactory;
+    private final AllEntityIdsObservable allEntityIdsObservable;
+    private final GraphManagerFactory graphManagerFactory;
 
 
     @Inject
-    public ConnectionServiceImpl( final PipelineBuilderFactory pipelineBuilderFactory ) {
+    public ConnectionServiceImpl( final PipelineBuilderFactory pipelineBuilderFactory,
+                                  final AllEntityIdsObservable allEntityIdsObservable,
+                                  final GraphManagerFactory graphManagerFactory ) {
         this.pipelineBuilderFactory = pipelineBuilderFactory;
+        this.allEntityIdsObservable = allEntityIdsObservable;
+        this.graphManagerFactory = graphManagerFactory;
     }
 
 
@@ -116,5 +139,70 @@ public class ConnectionServiceImpl implements ConnectionService {
             traversedIds.loadConnectionRefs( sourceNodeId, connectionName ).build();
 
         return results;
+    }
+
+
+    @Override
+    public Observable<ConnectionScope> deDupeConnections(
+        final Observable<ApplicationScope> applicationScopeObservable ) {
+
+
+        final Observable<EntityIdScope> entityIds = allEntityIdsObservable.getEntities( applicationScopeObservable );
+        //now we have an observable of entityIds.  Walk each connection type
+
+        //get all edge types for connections
+        return entityIds.flatMap( entityIdScope -> {
+
+            final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
+            final Id entityId = entityIdScope.getId();
+
+            final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+
+            logger.debug( "Checking connections of id {} in application {}", entityId, applicationScope );
+
+            return gm.getEdgeTypesFromSource(
+                new SimpleSearchEdgeType( entityId, CpNamingUtils.EDGE_CONN_PREFIX, Optional.absent() ) )
+
+                //now load all edges from this node of this type
+                .flatMap( edgeType -> {
+
+                    logger.debug( "Found edge of types of {}, searching for edges", edgeType );
+
+                    final SearchByEdgeType searchByEdge =
+                        new SimpleSearchByEdgeType( entityId, edgeType, Long.MAX_VALUE,
+                            SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+
+                    //load edges from the source the with type specified
+                    return gm.loadEdgesFromSource( searchByEdge );
+                } )
+
+                    //now that we have a stream of edges, stream all versions
+                .flatMap( edge -> {
+
+                    logger.debug( "Found edge {}, searching for multiple versions of edge", edge );
+
+                    //keep only the most recent
+                    final SearchByEdge searchByEdge =
+                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                            SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+                    return gm.loadEdgeVersions( searchByEdge )
+                        //skip the first version since it's the one we want to retain
+                        .skip( 1 )
+                            //mark for deletion
+                        .flatMap( edgeToDelete -> {
+
+                            logger.debug( "Deleting edge {}", edgeToDelete );
+
+                            //mark the edge and ignore the cleanup result
+                            return gm.markEdge( edgeToDelete );
+                        } )
+                            //mark all versions, then on the last, delete them from cass
+                        .flatMap( lastMarkedEdge -> gm.deleteEdge( lastMarkedEdge ) );
+
+
+                    // validate there is only 1 version of it, delete anything > than the min
+
+                } ).map( deletedEdge -> new ConnectionScope( applicationScope, deletedEdge ) );
+        } );
     }
 }

@@ -18,16 +18,19 @@ package org.apache.usergrid.rest.applications.assets;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.multipart.FormDataParam;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Asset;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
 import org.apache.usergrid.services.assets.data.BinaryStore;
+import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
 import org.apache.usergrid.utils.StringUtils;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
+
 
 /** @deprecated  */
 @Component("org.apache.usergrid.rest.applications.assets.AssetsResource")
@@ -50,8 +55,15 @@ public class AssetsResource extends ServiceResource {
 
     private Logger logger = LoggerFactory.getLogger( AssetsResource.class );
 
-    @Autowired
+    //@Autowired
     private BinaryStore binaryStore;
+
+    @Autowired
+    private LocalFileBinaryStore localFileBinaryStore;
+
+    @Autowired
+    private AwsSdkS3BinaryStore awsSdkS3BinaryStore;
+
 
 
     @Override
@@ -69,7 +81,9 @@ public class AssetsResource extends ServiceResource {
     @Override
     @RequireApplicationAccess
     @GET
-    public JSONWithPadding executeGet( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         logger.info( "In AssetsResource.executeGet with ui: {} and callback: {}", ui, callback );
@@ -81,7 +95,9 @@ public class AssetsResource extends ServiceResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -99,7 +115,15 @@ public class AssetsResource extends ServiceResource {
     public Response uploadData( @FormDataParam("file") InputStream uploadedInputStream,
                                 // @FormDataParam("file") FormDataContentDisposition fileDetail,
                                 @PathParam("entityId") PathSegment entityId ) throws Exception {
-    	if (uploadedInputStream != null ) {
+
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
+
+        if (uploadedInputStream != null ) {
     		UUID assetId = UUID.fromString( entityId.getPath() );
     		logger.info( "In AssetsResource.uploadData with id: {}", assetId );
     		EntityManager em = emf.getEntityManager( getApplicationId() );
@@ -131,6 +155,13 @@ public class AssetsResource extends ServiceResource {
     public Response uploadDataStream( @PathParam("entityId") PathSegment entityId, InputStream uploadedInputStream )
             throws Exception {
 
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
+
         UUID assetId = UUID.fromString( entityId.getPath() );
         logger.info( "In AssetsResource.uploadDataStream with id: {}", assetId );
         EntityManager em = emf.getEntityManager( getApplicationId() );
@@ -148,6 +179,13 @@ public class AssetsResource extends ServiceResource {
     public Response findAsset( @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback,
                                @PathParam("entityId") PathSegment entityId, @HeaderParam("range") String range,
                                @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
+        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
+            this.binaryStore = localFileBinaryStore;
+        }
+        else{
+            this.binaryStore = awsSdkS3BinaryStore;
+        }
+
         UUID assetId = UUID.fromString( entityId.getPath() );
         logger.info( "In AssetsResource.findAsset with id: {}, range: {}, modifiedSince: {}",
                 new Object[] { assetId, range, modifiedSince } );

@@ -19,6 +19,11 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public class OrganizationClientCredentials extends AbstractClientCredentials implements OrganizationCredentials {
 
+    /** Needed for Jackson since this class is serialized to the Shiro Cache */
+    public OrganizationClientCredentials() {
+        super();
+    }
+
     public OrganizationClientCredentials( String key, String secret ) {
         super( key, secret );
     }

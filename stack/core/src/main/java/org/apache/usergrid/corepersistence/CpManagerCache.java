@@ -26,6 +26,7 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -43,6 +44,7 @@ public class CpManagerCache implements ManagerCache {
     private final GraphManagerFactory gmf;
     private final MapManagerFactory mmf;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final IndexProducer indexProducer;
 
     // TODO: consider making these cache sizes and timeouts configurable
 
@@ -52,13 +54,16 @@ public class CpManagerCache implements ManagerCache {
                            final EntityIndexFactory eif,
                            final GraphManagerFactory gmf,
                            final MapManagerFactory mmf,
-                           final IndexLocationStrategyFactory indexLocationStrategyFactory) {
+                           final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                           final IndexProducer indexProducer
+    ) {
 
         this.ecmf = ecmf;
         this.eif = eif;
         this.gmf = gmf;
         this.mmf = mmf;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.indexProducer = indexProducer;
     }
 
 
@@ -86,6 +91,11 @@ public class CpManagerCache implements ManagerCache {
     @Override
     public MapManager getMapManager( MapScope mapScope ) {
         return mmf.createMapManager( mapScope );
+    }
+
+    @Override
+    public IndexProducer getIndexProducer() {
+        return indexProducer;
     }
 
 

@@ -48,6 +48,13 @@ public class UsergridAwsCredentials implements AWSCredentials {
 
         return StringUtils.trim(secret);
     }
+
+
+    public String getBucketName(){
+        String bucketName = System.getProperty( "usergrid.binary.bucketname" );
+
+        return StringUtils.trim( bucketName );
+    }
     // do these methods in json.
     public String getAWSAccessKeyIdJson(Map<String,Object> jsonObject){
         String accessKey = (String) jsonObject.get( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );

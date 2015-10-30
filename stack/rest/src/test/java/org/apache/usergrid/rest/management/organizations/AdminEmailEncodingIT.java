@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Application;
 import org.apache.usergrid.rest.test.resource.model.Entity;
@@ -89,9 +88,9 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
      * the given string is a part of the admin email address
      *
      * @param symbol
-     * @throws UniformInterfaceException
+     * @throws Exception
      */
-    private void doTest(String symbol) throws UniformInterfaceException {
+    private void doTest(String symbol) throws Exception {
 
         String unique = UUID.randomUUID().toString();
         String org = "org_getTokenDash" + unique;

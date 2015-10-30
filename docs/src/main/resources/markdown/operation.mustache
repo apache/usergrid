@@ -1,0 +1,23 @@
+
+<h2 class="usergrid-{{method}}-heading">{{method}} {{url}}</h2>
+
+<a name="op-{{opId}}"></a>
+
+{{description}}
+
+<h3>Parameters</h3>
+
+{{#parameters}}
+* __{{name}}__ ({{#type}}{{type}}{{/type}}{{#schemaRef}}[{{schemaRef}}](#{{schemaAnchor}}){{/schemaRef}})
+{{description}} (Specified in {{in}}).
+{{/parameters}}
+
+<h3>Responses</h3>
+
+{{#responses}}
+__{{#status}}{{status}}{{/status}}{{^status}}Default{{/status}}__
+
+* Description: {{description}}
+* Schema: [{{schema}}](#{{schemaAnchor}})
+    
+{{/responses}}

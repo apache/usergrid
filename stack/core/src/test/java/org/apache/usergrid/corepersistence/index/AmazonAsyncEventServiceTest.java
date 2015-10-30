@@ -20,7 +20,10 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.queue.QueueFig;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
@@ -32,6 +35,7 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
@@ -61,19 +65,27 @@ public class AmazonAsyncEventServiceTest extends AsyncIndexServiceTest {
     @Inject
     public IndexProcessorFig indexProcessorFig;
 
+    @Inject
+    public QueueFig queueFig;
+
 
     @Inject
     public MetricsFactory metricsFactory;
 
     @Inject
-    public IndexService indexService;
-
-    @Inject
     public RxTaskScheduler rxTaskScheduler;
 
+    @Inject
+    public EventBuilder eventBuilder;
+
+    @Inject
+    public IndexProducer indexProducer;
 
     @Inject
     public IndexLocationStrategyFactory indexLocationStrategyFactory;
+
+    @Inject
+    public MapManagerFactory mapManagerFactory;
 
 
     @Inject
@@ -81,8 +93,7 @@ public class AmazonAsyncEventServiceTest extends AsyncIndexServiceTest {
 
     @Override
     protected AsyncEventService getAsyncEventService() {
-        return  new AmazonAsyncEventService( queueManagerFactory, indexProcessorFig, metricsFactory, indexService,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory );
+        return  new AmazonAsyncEventService( queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,  entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, mapManagerFactory, queueFig,  rxTaskScheduler );
     }
 
 

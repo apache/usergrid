@@ -17,19 +17,23 @@
 package org.apache.usergrid.rest.filters;
 
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Context;
+import java.io.IOException;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 
+@Resource
+@PreMatching
 @Component
 public class JSONPCallbackFilter implements ContainerRequestFilter {
 
@@ -45,23 +49,15 @@ public class JSONPCallbackFilter implements ContainerRequestFilter {
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request ) {
+    public void filter(ContainerRequestContext crc) throws IOException {
         String callback = null;
         try {
             callback = httpServletRequest.getParameter( "callback" );
         }
         catch ( IllegalStateException e ) {
         }
-        if ( callback == null ) {
-            try {
-                callback = request.getQueryParameters().getFirst( "callback" );
-            }
-            catch ( IllegalStateException e ) {
-            }
-        }
         if ( isNotBlank( callback ) ) {
-            request.getRequestHeaders().putSingle( "Accept", "application/javascript" );
+            crc.getHeaders().putSingle( "Accept", "application/javascript" );
         }
-        return request;
     }
 }

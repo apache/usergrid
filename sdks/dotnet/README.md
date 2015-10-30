@@ -11,7 +11,7 @@ Solution is composed of following projects:
 ## Comments and Questions
 Please feel free to send your comments/suggestions/questions one of the
 several communication platforms. 
-<http://usergrid.incubator.apache.org/community/>
+<http://usergrid.apache.org/community/>
     
 ## Overview
 We welcome your contributions and suggestions. The repository is located [here][RepositoryLocation].
@@ -56,7 +56,7 @@ In order to run the integration tests, do the following:
 * Tests have been implemented using NUnit, so you can use any NUnit runner to run the tests.
 
 ## Authentication
-Usergrid Authentication is explained in [Usergrid Documentation](http://usergrid.incubator.apache.org/docs/).
+Usergrid Authentication is explained in [Usergrid Documentation](http://usergrid.apache.org/docs/).
 
 You can access your Usergrid data using following credentials:
 

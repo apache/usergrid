@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.scenarios
+package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
- import org.apache.usergrid.datagenerators.FeederGenerator
- import org.apache.usergrid.settings.{Settings, Headers}
- import scala.concurrent.duration._
+import org.apache.usergrid.datagenerators.FeederGenerator
+import org.apache.usergrid.helpers.Headers
+import org.apache.usergrid.settings.Settings
 
 /**
  * Performs organization registration
@@ -37,10 +37,10 @@ object OrganizationScenarios {
   //register the org with the randomly generated org
   val createOrgAndAdmin =
     exec(http("Create Organization")
-      .post(Settings.baseUrl + "/management/organizations")
-      .headers(Headers.jsonAnonymous)
-      .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"" + Settings.password + "\"}"))
-      .check(status.in(200 to 400))
+      .post(_ => Settings.baseUrl + "/management/organizations")
+      .headers(Headers.authAnonymous)
+      .body(StringBody(session => """{ "organization": """" + Settings.org + """", "username": """" + Settings.adminUser + """", "name": "${entityName}", "email": "${entityName}@apigee.com", "password":"""" + Settings.adminPassword + """" }"""))
+      .check(status.in(Range(200,400)))
     )
   val createOrgBatch =
     feed(FeederGenerator.generateRandomEntityNameFeeder("org", 1))
@@ -50,7 +50,7 @@ object OrganizationScenarios {
       .exec(NotifierScenarios.createNotifier)
       .exec(session => {
       // print the Session for debugging, don't do that on real Simulations
-      println(session)
+      // println(session)
       session
     })
 

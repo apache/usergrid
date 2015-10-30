@@ -1,0 +1,2324 @@
+swagger: "2.0"
+info:
+  title: Usergrid API
+  description:  Usergrid API
+  version: 2.1.0
+host: api.usergrid.com
+schemes:
+  - https
+basePath: /
+produces:
+  - application/json
+paths:
+
+  /management/token:
+    post:
+      summary: Admin-User Login.
+      description: Login with Admin-User or Organization credentials.
+      parameters:
+        - name: login-credentials
+          in: body
+          description: Login credentials either username/password or id/secret.
+          required: true
+          schema:
+            $ref: LoginCredentials
+      tags:
+        - Access-Tokens
+      responses:
+        200:
+          description: Object containing access_token.
+          schema:
+            $ref: AccessTokenResponse
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{appId}/token:
+    post:
+      summary: App-User Login.
+      description: Login with App-User or Application credentials.
+      parameters:
+        - name: login-credentials
+          in: body
+          description: Login credentials either username/password or id/secret.
+          required: true
+          schema:
+            $ref: LoginCredentials
+      tags:
+        - Access-Tokens
+      responses:
+        200:
+          description: Object containing access_token.
+          schema:
+            $ref: AccessTokenResponse
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/users:
+    post:
+      summary: Creating an admin user.
+      description: Create a whole new admin user.
+      parameters:
+        - name: CreateAdminUser
+          in: body
+          description: User entity with fields required for User creation.
+          required: true
+          schema:
+            $ref: CreateAdminUser
+      tags:
+        - Admin-Users
+      responses:
+        200:
+          description: An API Response with a entities array containing the newly created Admin User.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/users/{userId}:     
+    put:
+      summary: Updating an admin user.
+      description: Update the info of an admin user.
+      parameters:
+        - $ref: "#/parameters/userId"
+      tags:
+        - Admin-Users
+      responses:
+        "200":
+          description: An API Response with a entities array containing the updated Admin User
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+    get:
+      summary: Getting an admin user.
+      description: Retrieve details about an admin user.
+      parameters:
+        - $ref: "#/parameters/userId"
+      tags:
+        - Admin-Users
+      responses:
+        "200":
+          description: An API Response with a entities array containing the Admin User.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/users/resetpw:
+    post:
+      summary: Completing a password reset.
+      description: Complete the password reset through getting the newpassword and the old one for identification.
+      parameters:
+        - name: ResetPWMsg
+          in: body
+          description: Parameters and value for the Captcha challenge, the admin user's response to the Captcha challenge, and the admin user's email address.
+          required: true
+          schema: 
+            $ref: ResetPWMsg
+      tags:
+        - Admin-Users
+      responses:
+        200:
+          description: An array of complete messages.
+          chema:
+            $ref: Action
+        default:
+          escription: Unexpected error.
+          schema:
+            $ref: Error
+    get:
+      summary: "Initiating a password reset."
+      description: Initiate the reset of an admin user's password.
+      tags:
+        - Admin-Users
+      responses:
+        200:
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/users/{userId}/password:
+    put:
+      summary: Setting an admin user's password.
+      description: Update an admin user's password through getting the newpassword and the old one for identification.
+      parameters:
+        - $ref: "#/parameters/userId"
+        - name: ResetPW
+          in: body
+          description: The user's old and new password.
+          required: true
+          schema:
+            $ref: ResetPW
+      tags:
+        - Admin-Users
+      responses:
+        200:
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/users/{userId}/activate:
+    get:
+      summary: Activating an admin user.
+      description: Activate an admin user from a link provIded in an email notification.
+      parameters:
+        - $ref: "#/parameters/userId"
+        - name: token
+          in: query
+          description: Activation token's query statement.
+          required: true
+          type: string
+        - name: confirm_email
+          in: query
+          description: Query statement of whether send confimation email or not.
+          required: true
+          type: boolean
+      tags:
+        - Admin-Users
+      responses:
+        200:
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/users/{userId}/reactivate:
+    get:
+      summary: Reactivating an admin user.
+      description: Reactivate an expired admin user.
+      parameters:
+        - $ref: "#/parameters/userId"
+      tags:
+        - Admin-Users
+      responses:
+        "200":
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/users/{userId}/feed:
+    get:
+      summary: Getting an admin user's activity feed.
+      description: Retrieve an admin user's activity feed.
+      parameters:
+        - $ref: "#/parameters/userId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of user's activity
+          schema:
+            $ref: ActivityFeed
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/users/{userId}/activities:
+    post:
+      summary: Posting a user activity.
+      description: Create an activity in the activities collection.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"
+        - $ref: "#/parameters/userId-3"
+        - name: CreateActivity
+          in: body
+          description: One or more sets of activity properties.
+          required: true
+          schema:
+            $ref: CreateActivity
+      tags:
+        - Activities
+      responses:
+        200:
+          description: An array of user's activity.
+          schema:
+            $ref: ActivityFeed
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/groups/{groupId}/activities:
+    post:
+      summary: Posting an activity to a group.
+      description: Create an activity to a specific group. In this case the activity is created in the activities collection and is accessible at the /activities endpoint to users who have the permission to read that endpoint. In addition, a relationship is established between the activity and the group, and because of that, the activity will appear in the group’s feed. The group 'owns' the activity. Also, the activity will be published in the feed of all users that are members of the group.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"
+        - $ref: "#/parameters/groupId" 
+        - name: CreateActivity
+          in: body
+          description:  One or more sets of activity properties.
+          required: true
+          schema:
+            $ref: CreateActivity
+      tags:
+        - Groups
+      responses:
+        200:
+          escription:  An array of user's activity.
+          schema:
+            $ref: ActivityFeed
+        default:
+          description:  Unexpected error.
+          schema:
+            $ref: Error 
+  /management/orgs:
+    post:
+      summary: "Creating an organization."
+      description: Create an organization through a form post.
+      parameters:
+        - name: CreateOrg
+          in: body
+          description: A set of organization properties supplied through a form.
+          required: true
+          schema:
+            $ref: CreateOrg
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of created Organization.
+          schema:
+            $ref: Organization
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /management/orgs/{orgId}:
+    get:
+      summary: "Getting an organization."
+      description: Retrieve an organization given a specified UUID or username.
+      parameters:
+        - $ref: "#/parameters/orgId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of created Organization.
+          schema:
+            $ref: Organization
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /management/orgs/{orgId}/activate:
+    get:
+      summary: "Activating an organization."
+      description: Activate an organization from a link provIded in an email notification.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - name: token
+          in: query
+          description: Activation token.
+          required: true
+          type: string          
+        - name: confirm_email
+          in: query
+          description: Send confirmation email or not.
+          required: true
+          type: boolean  
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error   
+  /management/orgs/{orgId}/reactivate:    
+    get:
+      summary: "Reactivating an organization"
+      description: Reactivate an expired organization.
+      parameters:   
+        - $ref: "#/parameters/orgId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /management/orgs/{orgId}/credentials:
+    post:
+      summary: "Generating organization client credentials."
+      description: Generate whole new credentials for an organization client.
+      parameters:
+        - $ref: "#/parameters/orgId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of Credential
+          schema:
+            $ref: Credential
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    get:
+      summary: "Retrieving organization client credentials."
+      description: Retrieve the credentials for an organization client.
+      parameters:
+        - $ref: "#/parameters/orgId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of Credential
+          schema:
+            $ref: Credential
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /management/orgs/{orgId}/feed:
+    get:
+      summary: "Getting an organization's activity feed."
+      description: Retrieve an organization's activity feed.
+      parameters:
+        - $ref: "#/parameters/orgId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of the organization's ActivityFeed.
+          schema:
+            $ref: ActivityFeed
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error   
+  /management/orgs/{orgId}/apps:
+    post:
+      summary: "Creating an organization application."
+      description: Create an application for an organization through a form post.
+      parameters:   
+        - $ref: "#/parameters/orgId"
+        - name: CreateApp
+          in: body
+          description: A set of organization properties supplied through a form.
+          required: true
+          schema:
+            $ref: CreateApp   
+      tags:
+        - Admin
+      responses:
+        "200":
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /management/orgs/{orgId}/apps/{appId}:
+    delete:
+      summary: "Removing an application from the organization."
+      description: Remove an application from an organization through providing both Id of application and organization.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of deleted application info.
+          schema:
+            $ref: AppData
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/orgs/{orgId}/apps/{appId}/credentials:
+    post:
+      summary: "Generating application credentials."
+      description: Generate the client Id and client secret credentials for an application in an organization.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of generated credentials info.
+          schema:
+            $ref: Credential
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+    get:
+      summary: "Getting application credentials."
+      description: Retrieve the client Id and client secret credentials for an application in an organization.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of retrieved credentials info.
+          schema:
+            $ref: Credential
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/orgs/{orgId}/apps:
+    get:
+      summary: "Getting the applications in an organization."
+      description: Retrieve the applications in an organization through providing both Id of application and organization.
+      parameters:
+        - $ref: "#/parameters/orgId"
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of retrieved application data.
+          schema:
+            $ref: AppData
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /management/orgs/{orgId}/users/{userId}:
+    put:
+      summary: "Adding an admin user to an organization."
+      description: Add an existing admin user to an organization.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/userId-2"     
+      tags:
+        - Organizations-Applications
+      responses:
+        "200":
+          description: An array of new added Admin user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/orgs/{orgId}/users:
+    get:
+      summary: "Getting the admin users in an organization."
+      description: Retrieve details about the admin users in an organization.
+      parameters:
+        - $ref: "#/parameters/orgId"
+      tags:
+        - Admin-Users
+      responses:
+        "200":
+          description: An array of retrieved Admin user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /management/orgs/{orgId}/users/{userId}:
+    delete:
+      summary: "Removing an admin user from an organization."
+      description: Remove an admin user from an organization through providing both Id of application and organization.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/userId-2" 
+      tags:
+        - Admin-Users 
+      responses:
+        "200":
+          description: An array of deleted Admin user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+
+  /{orgId}/{appId}/{collectionId}:
+    get:
+      summary: "Retrieving sets of entities from a collection."
+      description: Use the GET method to retrieve a set of entities from a collection.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"
+        - $ref: "#/parameters/collectionId"
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of retrieved collection's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{appId}/{entitytype}:
+    post:
+      summary: "Creating a custom entity."
+      description: When a new entity is created, Usergrid will automatically create a corresponding collection if one does not already exist. The collection will automatically be named with the plural form of the entity type. 
+      parameters: 
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - name: entitytype
+          in: path
+          description: The entity type to create.
+          required: true
+          type: string
+        - name: entityproperty
+          in: body
+          description: The properties of the entity.
+          required: true
+          schema:
+            $ref: CreateEntities  
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of created custom entity's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/{collectionId}/{entityId}:
+    get:
+      summary: "Retrieving an entity."
+      description: Retrieve an entity through providing Id of application, organization, collection and entity.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - $ref: "#/parameters/collectionId"
+        - $ref: "#/parameters/entityId"  
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of retrieved entity's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    put:
+      summary: "Updating an entity."
+      description: One or more properties can be updated with a single request.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - $ref: "#/parameters/collectionId"
+        - $ref: "#/parameters/entityId" 
+        - name: entityproperty
+          in: body
+          description: The properties of the entity.
+          required: true
+          schema:
+            $ref: CreateEntities 
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of updated entity's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error         
+    delete:
+      summary: "Deleting an entity."
+      description: Delete an entity from the collection.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - $ref: "#/parameters/collectionId"
+        - $ref: "#/parameters/entityId" 
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of deleted entity's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error   
+  /{orgId}/{appId}/{collectionId}:
+    get:
+      summary: "Query a collection。"
+      description: Retrieve collection through query statement.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - $ref: "#/parameters/collectionId"
+        - name: queryStatement
+          in: query
+          description: Any values specified in the query statement should be enclosed in single-quotes.
+          required: true
+          type: string
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of retrieved collection's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    put:
+      summary: "Update a collection by query"
+      description: Update collection through query statement.
+      parameters: 
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - $ref: "#/parameters/collectionId"
+        - name: queryStatement
+          in: query
+          description: Any values specified in the query statement should be enclosed in single-quotes.
+          required: true
+          type: string
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of updated collection's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}:
+    post:
+      summary: "Add an entity to a collection."
+      description: Add an entity to a collection through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - $ref: "#/parameters/collectionId"    
+        - name: entityId1
+          in: path
+          description: The Id of the 1st entity.
+          required: true
+          type: string 
+        - name: relation
+          in: path
+          description: The relation between 1st entity and 2nd entity.
+          required: true
+          type: string 
+        - name: entityId2
+          in: path
+          description: The Id of the 2nd entity.
+          required: true
+          type: string
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of added entity's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    delete:
+      summary: "Remove an entity from a collection."
+      description: Remove an entity from a collection through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - $ref: "#/parameters/collectionId"     
+        - name: entityId1
+          in: path
+          description: The Id of the 1st entity.
+          required: true
+          type: string 
+        - name: relation
+          in: path
+          description: The relation between 1st entity and 2nd entity.
+          required: true
+          type: string 
+        - name: entityId2
+          in: path
+          description: The Id of the 2nd entity.
+          required: true
+          type: string
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of deleted entity's info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/events:
+    post:
+      summary: "Create an event."
+      description: Create an event through providing both Id of organization and application.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - name: CreateEvent
+          in: body
+          description: The required property of the event.
+          required: true
+          schema:
+            $ref: CreateEvent        
+      tags:
+        - Events
+      responses:
+        "200":
+          description: An array of created event's info.
+          schema:
+            $ref: Event
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+  /{orgId}/{appId}/groups:
+    post:
+      summary: "Create a new group."
+      description: Create a new group through providing both Id of organization and application.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - name: groupproperty
+          in: body
+          description: The property of the created group.
+          required: true
+          schema:
+            $ref: CreateGroup
+      tags:
+        - Groups
+      responses:
+        "200":
+          description: An array of created group's info.
+          schema:
+            $ref: Group
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+            
+  /{orgId}/{appId}/groups/{groupId}/users/{userId}:
+    post:
+      summary: "Add a user to a group."
+      description: Add a user to a group through providing all the identifications.
+      parameters:        
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/groupId"
+        - $ref: "#/parameters/userId-3" 
+      tags:
+      - Groups
+      responses:
+        "200":
+          description: An array of added user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+    delete:
+      summary: "Delete user from a group."
+      description: Delete user from a group through providing all the identifications.
+      parameters:   
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/groupId"
+        - $ref: "#/parameters/userId-3" 
+      tags:
+        - Groups
+      responses:
+        "200":
+          description: An array of deleted user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{org_Id}/{app_Id}/groups/{groupId}:
+    get:
+      summary: "Get a group."
+      description: Get a group through through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/groupId"
+      tags:
+        - Groups
+      responses:
+        "200":
+          description: An array of retrieved group's info.
+          schema:
+            $ref: Group
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    put:
+      summary: "Update a group."
+      description: Update a group through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/groupId"
+      tags:
+        - Groups
+      responses:
+        "200":
+          description: An array of updated group's info.
+          schema:
+            $ref: Group
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/groups/{groupId}/feed:
+    get: 
+      summary: "Get a group's feed."
+      description: Get a group's feed through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/groupId" 
+      tags:
+        - Activities
+      responses:
+        "200":
+          description: An array of group's activity.
+          schema:
+            $ref: ActivityFeed
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/roles:
+    post:
+      summary: "Create a new role."
+      description: Create a new role through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - name: roleproperty
+          in: body
+          description: The required properties of the role.
+          required: true
+          schema:
+            $ref: AddRole      
+      tags:
+        - Permissions-Roles
+      responses:
+        "200":
+          description: An array of created role's info.
+          schema:
+            $ref: Role
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    get:
+      summary: "Get the roles in an application"
+      description: Retrieve the roles in an application through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+      tags:
+        - Permissions-Roles
+      responses:
+        "200":
+          description: An array of retrieved role's info.
+          schema:
+            $ref: Role
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+  /{orgId}/{appId}/roles/{rolename}:
+    delete:
+      summary: "Delete a role."
+      description: Remove a role through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - name: rolename
+          in: path
+          description: The name of the role.
+          required: true
+          type: string
+      tags:
+        - Permissions-Roles
+      responses:
+        "200":
+          description: An array of deleted role's info.
+          schema:
+            $ref: Role
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+  /{orgId}/{applicationId}/roles/{roleId}/permissions:
+    post:
+      summary: "Add permissions to a role."
+      description: Add permissions to a role through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/roleId"
+        - name: Permissions
+          in: body
+          description: Permissions object with array of Usergrid Permission strings to be added.
+          required: true
+          schema:
+            $ref: Permissions
+      tags:
+        - Permissions-Roles
+      responses:
+        "200":
+          description: Permissions object with array of Usergrid Permission strings.
+          schema:
+            $ref: Permission
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    get:
+      summary: "Get permissions for a role."
+      description: Retrieve permissions for a Role. 
+      parameters: 
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/roleId"
+      tags:
+        - Permissions-Roles
+      responses:
+        "200":
+          description: Permissions object with array of Usergrid Permission strings.
+          schema:
+            $ref: Permissions
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+  /{orgId}/{appId}/roles/{roleId}/permissions:
+    delete:
+      summary:  "Delete permissions from a role."
+      description:  Remove permissions from a role. 
+      parameters:      
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/roleId"
+        - name: Permissions
+          in: body
+          description: The query statement of the url pattern.
+          required: true
+          schema:
+            $ref: Permissions
+      tags:
+        - Permissions-Roles
+      responses:
+        "200":
+          description: Permissions object with array of the deleated Usergrid Permission strings.
+          schema:
+            $ref: Permissions
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/roles/{roleId}/users/{userId}:
+    post:
+      summary: "Add a user to a role."
+      description: Add a user to a role through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/roleId"
+        - $ref: "#/parameters/userId-3"
+      tags:
+      - Permissions-Roles
+      responses:
+        "200":
+          description: An array of added user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    delete:
+      summary: "Delete a user from a role."
+      description: Remove a user from a role through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/roleId"
+        - $ref: "#/parameters/userId-3" 
+      tags:
+      - Permissions-Roles
+      responses:
+        "200":
+          description: An array of deleted user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/roles/{roleId}/users:
+    get:
+      summary: "Get the users in a role."
+      description: Retrieve the users in a role through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/roleId"
+      tags:
+      - Permissions-Roles
+      responses:
+        "200":
+          description: An API Response with a entities array of Users.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{appId}/users:
+    post:
+      summary: "Create a user in the users collection."
+      description: Create a user in the users collection through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - name: CreateUser
+          in: body
+          description: The properties of the user.
+          required: true
+          schema:
+            $ref: CreateUser
+      tags:
+      - App-Users
+      responses:
+        "200":
+          description: An array of created user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+    get:
+      summary: "Query to get users."
+      description: Retrieve users though query statement.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - name: queryStatement
+          in: query
+          description: The query statement of the User.
+          required: true
+          type: string
+      tags:
+      - App-Users
+      responses:
+        "200":
+          description: An array of retrieved user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{appId}/users/{user}/password:
+    post:
+      summary: "Set a user's password or reset the user's existing password."
+      description: Set a user's password or reset the user's existing password.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId"  
+        - name: username
+          in: path
+          description: The username of the user.
+          required: true
+          type: string
+        - name: ResetPW
+          in: body
+          description: The user's old and new password.
+          required: true
+          schema:
+            $ref: ResetPW    
+      tags:
+      - App-Users
+      responses:
+        "200":
+          description: An array of complete messages.
+          schema:
+            $ref: Action
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error   
+  /{orgId}/{appId}/users/{userId}:
+    get:
+      summary:  "Retrieve a user."
+      description:  Retrieve a user through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/userId-2" 
+      tags:
+      - App-Users
+      responses:
+        "200":
+          description: An array of retrieved user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    put:
+      summary: "Update a user"
+      description: Update a user through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/userId-3" 
+      tags:
+      - App-Users
+      responses:
+        "200":
+          description: An array of updated user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+    delete:
+      summary: "Delete a user."
+      description: Remove a user through providing all the identifications.
+      parameters:    
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/userId-3" 
+      tags:
+      - App-Users
+      responses:
+        "200":
+          description: An array of deleted user's info.
+          schema:
+            $ref: User
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{appId}/users/{userId}/{relation}:
+    get:
+      summary: "Query a user's collections or connections."
+      description: Retrieve a user's collections or connections through query statement.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/userId-3"      
+        - name: relation
+          in: path
+          description:  The relation between user and collections.
+          required: true
+          type: string
+        - name: queryStatement
+          in: query
+          description:  The query statement of the user.
+          required: true
+          type: string
+      tags:
+        - Entities-Collections
+      responses:
+        "200":
+          description: An array of user's collections info.
+          schema:
+            $ref: Entity
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{appId}/users/{userId}/feed:
+    get:
+      summary: "Get a user's feed."
+      description: Retrieve a user's feed through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - $ref: "#/parameters/userId-3"         
+      tags:
+        - Activities
+      responses:
+        "200":
+          description: An array of user's activity feed.
+          schema:
+            $ref: ActivityFeed
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{applicationId}/devices/{deviceId}/notifications:
+    post:
+      summary: "Creating notifications for a single device."
+      description: Create notifications for a single device. This request will target a specific device entity.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/deviceId"
+        - $ref: "#/parameters/notification"
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of created notification's info.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{applicationId}/devices/*/notifications:
+    post:
+      summary: "Creating notifications for all devices."
+      description:  Create notifications for all devices. This request will target all device entities.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/notification"
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of created notification's info.
+          schema:
+            $ref: Notification
+        default:
+          description:  Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{applicationId}/users/{userId}/notifications:
+    post:
+      summary: "Creating notifications for a user."
+      description: Create notifications for a user. This request will target a specific user entity.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/userId-3" 
+        - $ref: "#/parameters/notification"
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of created notification's info.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error
+  /{orgId}/{applicationId}/groups/{path}/notifications:
+    post:
+      summary: "Creating notifications for a group."
+      description: Create notifications for a group. This request will target all users associated with a specific group entity.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/appId" 
+        - name: path
+          in: path
+          description:  The path of the group.
+          required: true
+          type: string
+        - $ref: "#/parameters/notification"
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of created notification's info.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error           
+  /{orgId}/{applicationId}/devices:
+    post:
+      summary: "Creating notifications for user through location."
+      description: Create notifications for user through targeting by location and providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/notification"
+        - name: queryStatement
+          in: query
+          description: The query statement of the location of the user.
+          required: true
+          type: string
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of created notification's info.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error       
+  /{orgId}/{applicationId}/notifications:
+    get:
+      summary: "Getting one or more notifications."
+      description: Retrieve one or more notifications through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId"    
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of retrieved notification's info.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error             
+  /{orgId}/{applicationId}/{receiptId}/*/notifications:
+    get:
+      summary: "Getting notifications associated with one or more receipts."
+      description: Retrieve notifications associated with one or more receipts through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/receiptId" 
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of retrieved notification's info.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{applicationId}/{notificationId}/*/queue:
+    get:
+      summary: "Getting the list of devices associated with one or more notifications before the notifications are sent"
+      description: Retrieve the list of devices associated with one or more notifications before the notifications are sent through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/notificationId" 
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of retrieved device's info.
+          schema:
+            $ref: Device
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  "/{orgId}/{applicationId}/notifications/{notificationId}":
+    put:
+      summary: "Update a Notification"
+      description: Update a Notification in order to cancel the notifcation or set a new expiration time.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId"
+        - $ref: "#/parameters/notificationId"
+        - name: notificationUpdate
+          in: body
+          description: Object with Notification fields to be updated.
+          required: true
+          schema:
+            $ref: NotificationUpdate
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An API Response object containing an entity of type Notification.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+    delete:
+      summary: "Deleting unsent notifications"
+      description: Delete an unsent Notification from the system.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/notificationId"
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: API Response containing Notification entity that was deleted.
+          schema:
+            $ref: Notification
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error  
+  /{orgId}/{applicationId}/receipts:
+    get:
+      summary: "Getting one or more receipts."
+      description: Retrieve one or more receipts through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId"        
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of retrieved receipt's info.
+          schema:
+            $ref: Receipt
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{applicationId}/{deviceId}/*/receipts:
+    get:
+      summary: "Getting receipts associated with one or more devices."
+      description: Retrieve receipts associated with one or more devices through providing all the identifications.
+      parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/deviceId"
+      tags:
+        - Notifications
+      responses:
+        "200":
+          description: An array of retrieved receipt's info.
+          schema:
+            $ref: "#/definitions/Receipt"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error 
+  /{orgId}/{applicationId}/{notificationId}/*/receipts:
+   get:
+     summary: Get receipts for one or more notifications."
+     description: Retrieve receipts for one or more notifications through providing all the identifications.
+     parameters:
+        - $ref: "#/parameters/orgId"
+        - $ref: "#/parameters/applicationId" 
+        - $ref: "#/parameters/notificationId"
+     tags:
+        - Notifications
+     responses:
+        "200":
+          description: An array of retrieved receipt's info.
+          schema:
+            $ref: "Receipt"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: Error       
+parameters:
+  userId:
+    name: userId
+    in: path
+    description: One of the user's identification which includes username, real name, email address or UUID.
+    required: true
+    type: string
+  userId-1:
+    name: userId-1
+    in: path
+    description: One of the user's identification which includes username, real name, email address or UUID.
+    required: true
+    type: string
+  userId-2:
+    name: userId-2
+    in: path
+    description: One of the user's identification which includes username, email address or UUID.
+    required: true
+    type: string
+  userId-3:
+    name: userId-3
+    in: path
+    description: One of the user's identification which includes username or UUID.
+    required: true
+    type: string
+  appId:
+    name: appId
+    in: path
+    description: One of the application's identification which includes name or uuid.
+    required: true
+    type: string 
+  applicationId:
+    name: applicationId
+    in: path
+    description: One of the application's identification which includes name or uuid (same as appId).
+    required: true
+    type: string 
+  orgId:
+    name: orgId
+    in: path
+    description: One of the organization's identification which includes name or uuid.
+    required: true
+    type: string 
+  groupId:
+    name: groupId
+    in: path
+    description: One of the group's identification which includes name or uuid.
+    required: true
+    type: string 
+  deviceId:
+    name: deviceId
+    in: path
+    description: One of the device's identification which includes name or uuid.
+    required: true
+    type: string  
+  notificationId:
+    name: notificationId
+    in: path
+    description: One of the notification's identification which includes name or uuid.
+    required: true
+    type: string        
+  receiptId:
+    name: receiptId
+    in: path
+    description: One of the receipt's identification which includes name or uuid.
+    required: true
+    type: string 
+  collectionId:
+    name: collectionId
+    in: path
+    description: One of the collection's identification which includes name or uuid.
+    required: true
+    type: string 
+  roleId:
+    name: roleId
+    in: path
+    description: One of the role's identification which includes name or uuid.
+    required: true
+    type: string 
+  entityId:
+    name: entityId
+    in: path
+    description: One of the entity's identification which includes name or uuid.
+    required: true
+    type: string 
+  notification:
+    name: notification
+    in: body
+    description: These parameters are used when forming the notification portion of the request.
+    required: true
+    schema:
+      $ref: CreateNotifications 
+      
+definitions:
+  NotificationUpdate:
+    description: Represents fields that may be updated on a Notification to cause changes in Push Notification processing.
+    properties:
+      canceled:
+        description: Setting this field to true will cancel a Notification, if it has not yet been sent.
+        type: boolean
+      deliver:
+        description: Specifies the UNIX timestamp time at which the Notification should be sent. 
+        type: number 
+      expired:
+        description: Specifies the UNIX timestamp time at which this Notification has expired.
+        type: number  
+  Receipt: 
+    description: Represents response received from Notification service indicating success or failure. 
+    properties:
+      uuid:
+        type: string
+        description:  Unique entity Id.
+      type:
+        type: string
+        description:  Type of entity.
+      created:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was created.
+      modified:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was last modified.
+      payloads:
+        type: string
+        description:  The push notifications to be delivered.
+      errorMessage:
+        type: string
+        description:  Error message returned by the notification service (APNs or GCM) if the notification fails entirely.
+      errorCode:
+        type: string
+        description:  Error code returned by the notification service.
+      sent: 
+        type: number
+        description:  UTC timestamp in milliseconds for when the notification was sent.
+      metadata:
+        $ref: Metadata   
+      completeMsg:
+        $ref: Action
+  Device:
+    description: Represents a single Device that is registered for recieving of Push Notifications.
+    properties:
+      uuid:
+        type: string
+        description:  Unique entity Id.
+      type:
+        type: string
+        description:  Type of entity.
+      name: 
+        type: string
+        description:  Notifier display name.
+      created:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was created.
+      modified:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was last modified.
+      metadata:
+        $ref: Metadata   
+      completeMsg:
+        $ref: Action
+  Notification:
+    description: Represents a Push Notification that is either scheduled, finished or cancelled.
+    required:
+      - payloads
+    properties:
+      uuid:
+        type: string
+        description:  Unique entity Id.
+      type:
+        type: string
+        description:  Type of entity.
+      created:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was created.
+      modified:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was last modified.
+      payloads:
+        type: string
+        description:  The push notifications to be delivered.
+      errorMessage:
+        type: string
+        description:  Error message returned by the notification service (APNs or GCM) if the notification fails entirely.
+      scheduled:
+        type: boolean
+        description:  Whether the notification is currently scheduled for delivery.
+      state:
+        type: string
+        description:  The current delivery status of the notification 'FINISHED', 'SCHEDULED' or 'CANCELED'.
+      metadata:
+        $ref: Metadata 
+      completeMsg:
+        $ref: Action
+  Notifier:
+    description: Represents an account that is registered with a Push provider (e.g. Apple or Google) for sending notifications.
+    required:
+      - provider
+      - environment
+    properties:
+      uuid:
+        type: string
+        description:  Unique entity Id.
+      type:
+        type: string
+        description:  Type of entity.
+      name: 
+        type: string
+        description:  Notifier display name.
+      created:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was created.
+      modified:
+        type: number
+        description:  UTC timestamp in milliseconds of when the entity was last modified.
+      provider:
+        type: string
+        description:  Push notification provider 'apple' or 'google'.
+      environment:
+        type: string
+        description:  The environment that corresponds to your app 'development' or 'production'.
+      metadata:
+        $ref: Metadata
+  CreateNotifications:
+    description: An array of Notifications to be created.
+    type: array
+    items:
+      $ref: CreateNotification
+  CreateNotification:
+    description: Represents just the Notification fields that are required for creating a new Notification.
+    required:
+      - notifier
+      - message
+    properties:
+      notifier:
+        $ref: Notifier
+      message:
+        type: string
+        description:  The push notitfication message that will be delivered to the user.
+  Permissions:
+    description: Represents a set of Permissions associated with a User or a Role, each being a Usergrid Permission String. 
+    required:
+       - data
+    properties:
+      application:
+        type: string
+        description:  The UUID of the associated application.
+      applicationName: 
+        type: string
+        description:  The name of the associated application.
+      organization:
+        type: string
+        description:  The name of the associated organization.
+      data:
+        type: array
+        description: Array of strings each being a Usergrid Permission String.
+        items:
+          type: string
+  Role:
+    properties:
+      applicationName:
+        type: string
+        description:  The application name of the event.
+      count:
+        type: number
+        description:  The numebr of the roles.
+      entity:
+        $ref: Entity
+      url:
+        type: string
+        description:  The url of the event.
+      applicationId:
+        type: string
+        description:  The application UUID of the event.
+      parameters:
+        type: string
+        description:  The parameters of the event.
+      organization:
+        type: string
+        description:  The title of the organization.
+      completeMsg:
+        $ref: Action    
+      path:
+        type: string  
+        description:  The path of the role.
+  AddRole:
+    required:
+      - title
+      - role name
+    properties:
+      title:
+        type: string
+        description:  The title of the role.
+      role name:
+        type: string
+        description:  The name of the role.
+  Event:
+    properties:
+      applicationName:
+        type: string
+        description:  The application name of the event.
+      entity:
+        $ref: Entity
+      url:
+        type: string
+        description:  The url of the event.
+      applicationId:
+        type: string
+        description:  The application UUID of the event.
+      parameters:
+        type: string
+        description:  The parameters of the event.
+      organization:
+        type: string
+        description:  The title of the organization.
+      completeMsg:
+        $ref: Action
+  CreateEvent:
+    # TODO should be a number and not a string
+    required:
+      - timestamp
+    properties:
+      timestamp:
+        type: string
+  Group:
+    properties:
+      uuid:
+        type: string
+        description:  The UUID of the group.
+      type:
+        type: string
+        description:  The type of the group.
+      created:
+        type: string
+        description:  The created Id for the group.
+      modified:
+        type: string
+        description:  The modified Id for the group.
+      path:
+        type: string
+        description:  The path of the group.
+      metadata:
+        $ref: Metadata
+      title:
+        type: string
+        description:  The title of the group.
+      completeMsg:
+        $ref: Action
+  CreateGroup:
+    required:
+      - title
+      - path
+    properties:
+      title: 
+        type: string
+        description:  The title of the group.
+      path:
+        type: string
+        description:  The path of the group.
+  CreateEntities:
+    type: array
+    items:
+      $ref: CreateEntity
+  CreateEntity:
+    properties:
+      property:
+        type: string
+        description:  The property of the entity.
+      value:
+        type: string
+        description:  The relevant value of the property.
+  Entity:
+    properties:
+      applicationId:
+        type: string
+        description:  The application Id of the entity.
+      parameters:
+        type: string
+        description:  The parameters of the entity.
+      path:
+        type: string
+        description:  The path of the entity.
+      url:
+        type: string
+        description:  The url of the entity.
+      entityproperty:
+        $ref: Entity
+      organization:
+        type: string
+        description:  The name of the organization.
+      applicationName:
+        type: string
+        description:  The name of the application.
+      count:
+        type: number
+        description:  The number of the entities retrieved.
+      completeMsg:
+        $ref: Action
+  CreateApp:
+    required:
+      - token
+      - name
+    properties:
+      token:
+        type: string        
+        description:  The OAuth2 access token.
+      name:
+        type: string
+        description:  The name of the application.
+  Credential:
+    properties:
+      client_Id:
+        type: string
+        description:  The Id of the client.
+      client_secret:
+        type: string
+        description:  The secret of the client.
+      completeMsg:
+        $ref: Action
+  LoginCredentials:
+    properties:
+      grant_type:
+          type: string
+          required: true
+          description:  Grant-type must be 'password' or 'client_credentials'.
+      username:
+          type: string
+          required: true
+          description:  Username of user attempting login, required only if grant_type is 'password'.
+      password:
+          type: string
+          required: true
+          description:  Password of user attempting login, required only if grant_type is 'password'.
+      client_id:
+          type: string
+          required: true
+          description:  Client-ID portion of credentials, required only if grant_type is 'client_credentials'.
+      client_secret:
+          type: string
+          required: true
+          description:  Client-Secret portion of credentials, required only if grant_type is 'client_credentials'.
+  AccessTokenResponse:
+    properties:
+      access_token:
+        type: string
+        description:  Access-token that may be used on subsequent requests.
+      expires_in:
+        type: number 
+        description:  Time (in milliseconds) until access-token expires.
+      user:
+        $ref: User
+        description: User object if login was done as a user.
+  Organization:
+    properties:
+      applicationId:
+        type: string
+        description:  The application Id of the owner.
+      username:
+        type: string
+        description:  The username of the owner.
+      name:
+        type: string
+        description:  The name of the owner.
+      email:
+        type: string
+        description:  The email of the owner.
+      activated:
+        type: boolean
+        description:  Indicate whether the account is activated or not.
+      disabled:
+        type: boolean
+        description:  Indicate whether the account is disabled or not.
+      uuid:
+        type: string
+        description:  The UUID of the owner.
+      adminUser:
+        type: boolean
+        description:  Indicate whether the use is a adminUser or not.
+      displayEmail:
+        type: string
+        description:  The display of the email of the owner.
+      htmldisplayEmail:
+        type: string
+        description:  The HTML display of the email of the owner.
+      orgname:
+        type: string
+        description:  The name of the organization.
+      orguuId: 
+        type: string
+        description:  The UUID of the organization.
+      applicationdata:
+        $ref: AppData
+      completeMsg:
+        $ref: Action
+  AppData:
+    properties:
+      tester/sandbox: 
+        type: string
+        description:  The UUID of tester/sandbox.
+      tester/app1:
+        type: string
+        description:  The UUID of tester/app1.
+      tester/app2:
+        type: string
+        description:  The UUID of tester/app2.
+      completeMsg:
+        $ref: Action
+  CreateOrg:
+    required:
+      - organization
+      - username
+      - name
+      - email
+      - password
+    properties:
+      organization:
+        type: string
+      username:
+        type: string
+      name:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+  CreateActivity:
+    required:
+      - displayName
+      - uuid
+      - username
+      - verb
+      - content
+    properties:
+      displayName:
+        type: string
+      uuid:
+        type: string
+      username:
+        type: string
+      image:
+        $ref: ImageModel
+      verb:
+        type: string
+      content:
+        type: string
+  ImageModel:
+    properties:
+      duration:
+        type: number
+      height:
+        type: number
+      url:
+        type: string
+      wIdth:
+        type: integer
+      email:
+        type: string
+  ResetPWMsg:
+    required:
+      - recaptcha_response
+      - recaptcha_challenge
+      - email
+    properties:
+      recaptcha_response:
+        type: string
+        description: Parameters and value for the Captcha challenge.
+      recaptcha_challenge:
+        type: string
+        description: The admin user's response to the Captcha challenge.
+      email:
+        type: string
+  ResetPW:
+    required:
+      - password
+      - newpassword
+    properties:
+      password:
+        type: string
+      newpassword:
+        type: string
+  CreateAdminUser:
+    required:
+      - username
+    properties:
+      username:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+  CreateUser:
+    required:
+      - username
+    properties:
+      username:
+        type: string
+  User:
+    description: Represents a User account which may be a user within an Application's User collection, or may be an Admin User.
+    properties:
+      applicationId:
+        type: string
+        description:  The application Id of a user.
+      username:
+        type: string
+        description:  The username of a user.
+        required: true
+      name:
+        type: string
+        description:  The name of a user.
+        required: true
+      email:
+        type: string
+        description:  The email of a user.
+        required: true
+      activated:
+        type: boolean
+        description:  Indicate whether the account is activated or not.
+      disabled:
+        type: boolean
+        description:  Indicate whether the account is disabled or not.
+      uuid:
+        type: string
+        description:  The UUID of a user.
+      adminUser:
+        type: boolean
+        description:  Indicate whether the use is a adminUser or not.
+      displayEmail:
+        type: string
+        description:  The display of the email of a user.
+      htmldisplayEmail:
+        type: string
+        description:  The HTML display of the email of a user.
+      organization:
+        type: string
+        description:  The organization of the user.
+      picture:
+        type: string
+        description:  The uri of the user's picture.
+      uri:
+        type: string
+        description:  The uri of the user.
+      path:
+        type: string
+        description:  The path of the user.
+      completeMsg:
+        $ref: Action
+  Action:
+    properties:
+      action:
+        type: string
+        description:  The requested action.
+      status:
+        type: string
+        description:  The status of the requested action.
+      timestamp:
+        type: number
+        description:  The timestamp of the requested action.
+      duration:
+        type: number
+        description:  The duration of the requested action.
+      token:
+        type: string 
+        description:  The token required for getting an AdminUser.
+  ActivityFeed:
+    properties:
+      entityproperty:
+        $ref: Entity
+      category:
+        type: string
+        description:  The category of the activity.
+      metadataproperty:
+        $ref: Metadata
+      objectproperty:
+        $ref: Object
+      title:
+        type: string
+        description:  The title of the activity.
+      verb:
+        type: string
+        description:  The verb of the activity.
+      published:
+        type: number
+        description:  UTC timestamp of the feed publish time.
+      verb:
+        type: string
+        description:  The verb of the activity.
+      completeMsg:
+        $ref: Action
+  Object:
+    properties:
+      displayname:
+        type: string
+        description:  The display of the name of the object.
+      objecttype:
+        type: string
+        description:  The type of the object.
+      objectuuId:
+        type: string
+        description:  The UUID of the object.
+      entitytype:
+        type: string
+        description:  The entitytype of the object.
+  Metadata:
+    properties:
+      cursor:
+        type: string
+        description:  The cursor of the metadata.
+      path:
+        type: string
+        description:  The path of the metadata.
+      sets:
+        $ref: Sets    
+      collections:
+        $ref: Collections
+  Collections:
+    properties:
+      activities:
+        type: string
+      feed:
+        type: string
+      roles:
+        type: string
+      users:
+        type: string 
+  Sets:
+    properties:
+      rolenames:
+        type: string
+      permissions:
+        type: string
+  Entity:
+    properties:
+      uuid:
+        type: string
+        description:  The UUID of the entity.
+      type:
+        type: string
+        description:  The type of the entity.
+      created:
+        type: number
+        description:  UTC timestamp of entity creation time.
+      modified:
+        type: number
+        description:  UTC timestamp of entity modified time.
+        $ref: Actor
+      metadata:
+        $ref: Metadata
+      name:
+        type: string
+        description:  The name of the entity.
+      message:
+        type: string
+  Error:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      fields:
+        type: object
+        
+        

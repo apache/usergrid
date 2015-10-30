@@ -33,6 +33,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +86,7 @@ public class SwaggerServlet extends HttpServlet implements Filter {
         if ( sc == null ) {
             return null;
         }
-        ApplicationContext appContext = 
+        ApplicationContext appContext =
                 WebApplicationContextUtils.getRequiredWebApplicationContext( sc );
         return appContext.getBean( beanName );
     }
@@ -162,7 +163,7 @@ public class SwaggerServlet extends HttpServlet implements Filter {
             if ( json != null ) {
                 allowAllOrigins( request, response );
                 if ( "get".equalsIgnoreCase( request.getMethod() ) ) {
-                    response.setContentType( "application/json" );
+                    response.setContentType( MediaType.APPLICATION_JSON );
                     response.getWriter().print( json );
                     return true;
                 }

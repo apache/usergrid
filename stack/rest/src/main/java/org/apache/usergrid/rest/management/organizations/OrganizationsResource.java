@@ -17,40 +17,34 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.management.ApplicationCreator;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.management.exceptions.ManagementException;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.management.ManagementResource;
+import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.management.ApplicationCreator;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.management.exceptions.ManagementException;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 
-import org.apache.commons.lang.StringUtils;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.Map;
+import java.util.UUID;
 
-import com.google.common.base.Preconditions;
-import com.sun.jersey.api.json.JSONWithPadding;
+import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isPermittedAccessToOrganization;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -64,6 +58,7 @@ public class OrganizationsResource extends AbstractContextResource {
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
 
     public static final String ORGANIZATION_PROPERTIES = "properties";
+    public static final String ORGANIZATION_CONFIGURATION = "configuration";
 
     @Autowired
     private ApplicationCreator applicationCreator;
@@ -72,9 +67,7 @@ public class OrganizationsResource extends AbstractContextResource {
     public OrganizationsResource() {
     }
 
-
     @Path(RootResource.ORGANIZATION_ID_PATH)
-    @RequireOrganizationAccess
     public OrganizationResource getOrganizationById( @Context UriInfo ui,
                                                      @PathParam( "organizationId" ) String organizationIdStr )
             throws Exception {
@@ -82,12 +75,13 @@ public class OrganizationsResource extends AbstractContextResource {
         if ( organization == null ) {
             throw new ManagementException( "Could not find organization for ID: " + organizationIdStr );
         }
+
+
+
         return getSubResource( OrganizationResource.class ).init( organization );
     }
 
-
     @Path( "{organizationName}" )
-    @RequireOrganizationAccess
     public OrganizationResource getOrganizationByName( @Context UriInfo ui,
                                                        @PathParam( "organizationName" ) String organizationName )
             throws Exception {
@@ -95,13 +89,16 @@ public class OrganizationsResource extends AbstractContextResource {
         if ( organization == null ) {
             throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
+
         return getSubResource( OrganizationResource.class ).init(organization);
     }
 
 
     @POST
     @Consumes( MediaType.APPLICATION_JSON )
-    public JSONWithPadding newOrganization( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newOrganization( @Context UriInfo ui, Map<String, Object> json,
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
@@ -126,7 +123,9 @@ public class OrganizationsResource extends AbstractContextResource {
 
     @POST
     @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
-    public JSONWithPadding newOrganizationFromForm( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse newOrganizationFromForm( @Context UriInfo ui,
                                                     @FormParam( "organization" ) String organizationNameForm,
                                                     @QueryParam( "organization" ) String organizationNameQuery,
                                                     @FormParam( "username" ) String usernameForm,
@@ -153,7 +152,9 @@ public class OrganizationsResource extends AbstractContextResource {
 
 
     /** Create a new organization */
-    private JSONWithPadding newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    private ApiResponse newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
@@ -191,7 +192,7 @@ public class OrganizationsResource extends AbstractContextResource {
         response.setSuccess();
 
         logger.info( "New organization complete: {}", organizationName );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     /*

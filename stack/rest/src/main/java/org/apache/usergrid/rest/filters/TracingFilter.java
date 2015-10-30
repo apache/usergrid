@@ -17,22 +17,19 @@
 package org.apache.usergrid.rest.filters;
 
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
 import org.apache.usergrid.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
-import com.sun.jersey.spi.container.ContainerResponse;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.*;
+import javax.ws.rs.core.Context;
 
 
 /**
@@ -40,6 +37,8 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
  *
  * @author zznate
  */
+@Resource
+@PreMatching
 @Component
 public class TracingFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
@@ -56,35 +55,33 @@ public class TracingFilter implements ContainerRequestFilter, ContainerResponseF
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request ) {
+    public void filter( ContainerRequestContext request ) {
         if ( !traceTagManager.getTraceEnabled() && !traceTagManager.getExplicitOnly() ) {
-            return request;
+            return;
         }
         String traceId;
         if ( traceTagManager.getExplicitOnly() ) {
             // if we are set in explicit mode and the header is not present, leave.
             String id = httpServletRequest.getHeader( "XX-TRACE-ID" );
             if ( StringUtils.isBlank( id ) ) {
-                return request;
+                return;
             }
-            traceId = id.concat( "-REST-" ).concat( request.getPath( true ) );
+            traceId = id.concat( "-REST-" ).concat( request.getUriInfo().getPath( true ) );
         }
         else {
-            traceId = "TRACE-".concat( request.getPath( true ) );
+            traceId = "TRACE-".concat( request.getUriInfo().getPath( true ) );
         }
         TraceTag traceTag = traceTagManager.create( traceId );
         traceTagManager.attach( traceTag );
-
-        return request;
     }
 
 
     @Override
-    public ContainerResponse filter( ContainerRequest request, ContainerResponse response ) {
+    public void filter( ContainerRequestContext request, ContainerResponseContext response ) {
         if ( traceTagManager.isActive() ) {
             TraceTag traceTag = traceTagManager.detach();
             traceTagReporter.report( traceTag );
         }
-        return response;
     }
+
 }

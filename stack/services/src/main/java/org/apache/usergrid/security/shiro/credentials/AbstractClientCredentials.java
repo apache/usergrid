@@ -23,6 +23,11 @@ import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 public class AbstractClientCredentials extends ClientCredentialsInfo
         implements ClientCredentials, PrincipalCredentials {
 
+    /** Needed for Jackson since this class is serialized to the Shiro Cache */
+    public AbstractClientCredentials() {
+        super();
+    }
+
     public AbstractClientCredentials( String key, String secret ) {
         super( key, secret );
     }

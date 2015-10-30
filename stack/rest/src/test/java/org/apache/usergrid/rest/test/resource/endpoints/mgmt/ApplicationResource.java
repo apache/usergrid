@@ -59,23 +59,29 @@ public class ApplicationResource extends NamedResource {
 
 
     public org.apache.usergrid.rest.test.resource.model.ApiResponse post(Application application) {
-        org.apache.usergrid.rest.test.resource.model.ApiResponse apiResponse =getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(org.apache.usergrid.rest.test.resource.model.ApiResponse.class, application);
+        org.apache.usergrid.rest.test.resource.model.ApiResponse apiResponse = getTarget(true)
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( javax.ws.rs.client.Entity.json(application),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         return apiResponse;
     }
 
-    public org.apache.usergrid.rest.test.resource.model.Entity post(org.apache.usergrid.rest.test.resource.model.Entity payload) {
+    public org.apache.usergrid.rest.test.resource.model.Entity post(
+        org.apache.usergrid.rest.test.resource.model.Entity payload) {
 
-        String responseString = getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
+        String responseString = getTarget( true )
+            .request()
             .accept(MediaType.APPLICATION_JSON)
-            .post(String.class, payload);
+            .post( javax.ws.rs.client.Entity.json(payload), String.class);
 
         logger.debug("Response from post: " + responseString);
 
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue(new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue(
+                new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -86,8 +92,8 @@ public class ApplicationResource extends NamedResource {
 
     public org.apache.usergrid.rest.test.resource.model.Entity get() {
 
-        String responseString = getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
+        String responseString = getTarget(true)
+            .request()
             .accept(MediaType.APPLICATION_JSON)
             .get(String.class);
 
@@ -95,7 +101,8 @@ public class ApplicationResource extends NamedResource {
 
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue(new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue(
+                new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }

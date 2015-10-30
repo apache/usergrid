@@ -158,7 +158,9 @@ public class Query {
 
         return query;
     }
-
+    public static Query all( ){
+        return fromQL("select *");
+    }
 
     /**
      * Create a query from a property equals
@@ -853,9 +855,11 @@ public class Query {
      * Return true if no query is present and we should perform a graph search
      * @return
      */
+    @JsonIgnore
     public boolean isGraphSearch(){
         return ql == null || ql.trim().toLowerCase().equals("select *");
     }
+
 
     public Query setQl( String ql ) {
         this.ql = ql;

@@ -54,7 +54,6 @@ public class MvccEntitySerializationStrategyV3ImplTest extends MvccEntitySeriali
     @Test( expected = UnsupportedOperationException.class )
     public void loadDescendingHistory() throws ConnectionException {
 
-
         final String name = "test";
 
         final Id applicationId = new SimpleId( "application" );

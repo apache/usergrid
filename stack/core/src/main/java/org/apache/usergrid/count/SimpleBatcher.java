@@ -24,7 +24,7 @@ import org.apache.usergrid.count.common.Count;
 
 
 /**
- * A simple Batcher implementation that keeps a sum of the number of {@link Count} operations which have been applied.
+ * A simple Batcher implementation that keeps a getSize of the number of {@link Count} operations which have been applied.
  * Counters are aggregated by name.
  *
  * @author zznate

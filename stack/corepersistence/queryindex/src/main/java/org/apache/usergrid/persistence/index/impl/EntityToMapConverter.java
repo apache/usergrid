@@ -35,6 +35,7 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.EDGE_SEAR
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.EDGE_TIMESTAMP_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_FIELDS;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_ID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_SIZE_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_TYPE_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_VERSION_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.applicationId;
@@ -71,7 +72,7 @@ public class EntityToMapConverter {
 
         outputEntity.put( ENTITY_VERSION_FIELDNAME, entity.getVersion() );
 
-        outputEntity.put( ENTITY_TYPE_FIELDNAME, getType( applicationScope, entityId ) );
+        outputEntity.put( ENTITY_TYPE_FIELDNAME, getType( applicationScope, entityId));
 
         outputEntity.put( APPLICATION_ID_FIELDNAME, applicationId( applicationScope.getApplication() ) );
 
@@ -82,6 +83,8 @@ public class EntityToMapConverter {
         outputEntity.put( EDGE_NAME_FIELDNAME, indexEdge.getEdgeName()  );
 
         outputEntity.put( EDGE_TIMESTAMP_FIELDNAME, indexEdge.getTimestamp()  );
+
+        outputEntity.put( ENTITY_SIZE_FIELDNAME, entity.getSize() );
 
         //add the context for filtering later
         outputEntity.put( EDGE_SEARCH_FIELDNAME, IndexingUtils.createContextName( applicationScope, indexEdge ) );

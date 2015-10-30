@@ -6,7 +6,7 @@
     <parent>
         <artifactId>persistence</artifactId>
         <groupId>org.apache.usergrid</groupId>
-        <version>2.1.0-SNAPSHOT</version>
+        <version>2.1.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -47,24 +47,24 @@
 
 
             <plugin>
-                       <groupId>org.apache.maven.plugins</groupId>
-                       <artifactId>maven-surefire-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
 
-                       <configuration>
-                           <includes>
-                               <include>**/*IT.java</include>
-                               <include>**/*Test.java</include>
-                           </includes>
-                           <!-- run this one manually to stress test -->
-                           <excludes>
-                               <exclude>**/IndexLoadTestsIT.java</exclude>
-                           </excludes>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <!-- run this one manually to stress test -->
+                    <excludes>
+                        <exclude>**/IndexLoadTestsIT.java</exclude>
+                    </excludes>
+                </configuration>
 
-                       </configuration>
-
-                   </plugin>
+            </plugin>
 
         </plugins>
+
     </build>
 
     <dependencies>
@@ -121,6 +121,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
@@ -158,5 +165,25 @@
       </dependency>
 
     </dependencies>
+
+<!--
+    <profiles>
+        <profile>
+            <id>jacoco</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+-->
 
 </project>

@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.security.shiro;
 
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -55,6 +56,6 @@ public class ShiroAuthenticationExceptionMapper implements ExceptionMapper<Authe
             type = BAD_ACCESS_TOKEN_ERROR.getType();
         }
         response.withError( type, message, e );
-        return Response.status( Status.UNAUTHORIZED ).type( "application/json" ).entity( response ).build();
+        return Response.status( Status.UNAUTHORIZED ).type( MediaType.APPLICATION_JSON ).entity( response ).build();
     }
 }

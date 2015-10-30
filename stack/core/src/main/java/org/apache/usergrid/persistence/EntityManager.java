@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -521,6 +521,8 @@ public interface EntityManager {
     public Set<String> getRolePermissions( String roleName ) throws Exception;
 
     public void deleteRole( String roleName ) throws Exception;
+    public void deleteRole( String roleName, final Optional<EntityRef> roleRef ) throws Exception;
+
 
     public EntityRef getGroupRoleRef( UUID ownerId, String roleName ) throws Exception;
 
@@ -728,5 +730,9 @@ public interface EntityManager {
      */
     void addIndex(final String newIndexName,final int shards,final int replicas, final String writeConsistency);
 
-    IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
+    /**
+     * init the index
+     */
+    void initializeIndex();
+    EntityIndex.IndexRefreshCommandInfo refreshIndex();
 }

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Apache Usergrid — </title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta name="keywords" content="Apache Usergrid, Usergrid, BaaS, Backend-as-a-Service">
+    <meta name="description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <meta property="og:title" content="Apache Usergrid" />
+    <meta property="og:description" content="An open-source Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs." />
+    <!-- Loading Typekit -->
+    <script type="text/javascript" src="//use.typekit.net/ddl7izx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <!-- Loading Bootstrap -->
+    <link href="/bootstrap/bootstrap.min.css" rel="stylesheet" type='text/css'>
+    <link href="/css/bootflat.css" rel="stylesheet" type='text/css'>
+    <link href="/css/usergrid-site.css" rel="stylesheet" type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:200,400,500,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+
+    
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYSxyIKS22zC4wSLFXZGR8QKXbGWLFwYw&sensor=false">
+    </script>
+    <script type="text/javascript">
+
+        var points = [
+                new google.maps.LatLng(-33.8674869,151.2069902),
+                new google.maps.LatLng(40.2338438,-111.6585337),
+                new google.maps.LatLng(37.6909682,-122.3107517),
+                new google.maps.LatLng(-37.6825027,176.1880232),
+                new google.maps.LatLng(-0.023559,37.906193),
+                new google.maps.LatLng(41.00527,28.97696),
+                new google.maps.LatLng(47.1569444,27.5902778),
+                new google.maps.LatLng(49.261226,-123.1139268),
+                new google.maps.LatLng(55.378051,-3.435973),
+                new google.maps.LatLng(30.3321838,-81.65565099999999),
+                new google.maps.LatLng(30.267153,-97.7430608),
+                new google.maps.LatLng(-14.235004,-51.92528),
+                new google.maps.LatLng(41.76371109999999,-72.6850932),
+                new google.maps.LatLng(53.3498053,-6.2603097),
+                new google.maps.LatLng(-37.814107,144.96328),
+                new google.maps.LatLng(26.820553,30.802498),
+                new google.maps.LatLng(34.0522342,-118.2436849),
+                new google.maps.LatLng(37.566535,126.9779692),
+                new google.maps.LatLng(7.873053999999999,80.77179699999999),
+                new google.maps.LatLng(39.737567,-104.9847179),
+                new google.maps.LatLng(52.9399159,-73.5491361),
+                new google.maps.LatLng(40.7143528,-74.00597309999999),
+                new google.maps.LatLng(44.9374831,-93.20099979999999),
+                new google.maps.LatLng(38.963745,35.243322),
+                new google.maps.LatLng(35.7795897,-78.6381787),
+                new google.maps.LatLng(35.907757,127.766922),
+                new google.maps.LatLng(-6.2689913,106.8060388),
+                new google.maps.LatLng(27.3364347,-82.53065269999999),
+                new google.maps.LatLng(44.494887,11.3426163),
+                new google.maps.LatLng(39.952335,-75.16378900000001),
+                new google.maps.LatLng(37.09024,-95.712891),
+                new google.maps.LatLng(40.5852602,-105.084423),
+                new google.maps.LatLng(43.653226,-79.3831843),
+                new google.maps.LatLng(47.6062095,-122.3320708),
+                new google.maps.LatLng(31.046051,34.851612),
+                new google.maps.LatLng(51.41233,-0.300689),
+                new google.maps.LatLng(39.4699075,-0.3762881),
+                new google.maps.LatLng(51.51121389999999,-0.1198244),
+                new google.maps.LatLng(42.3556899,-83.361853),
+                new google.maps.LatLng(33.4483771,-112.0740373),
+                new google.maps.LatLng(45.5234515,-122.6762071),
+                new google.maps.LatLng(43.0730517,-89.4012302),
+                new google.maps.LatLng(36.1031378,-80.202394),
+                new google.maps.LatLng(37.7749295,-122.4194155),
+                new google.maps.LatLng(5.263234100000001,100.4846227),
+                new google.maps.LatLng(35.5950581,-82.5514869),
+                new google.maps.LatLng(35.86166,104.195397),
+                new google.maps.LatLng(34.4208305,-119.6981901),
+                new google.maps.LatLng(1.352083,103.819836),
+                new google.maps.LatLng(36.8507689,-76.28587259999999),
+                new google.maps.LatLng(22.396428,114.109497),
+                new google.maps.LatLng(48.856614,2.3522219),
+                new google.maps.LatLng(40.4167754,-3.7037902),
+                new google.maps.LatLng(18.5204303,73.8567437),
+                new google.maps.LatLng(36.1666667,-86.7833333),
+                new google.maps.LatLng(53.3498053,-6.2603097),
+                new google.maps.LatLng(26.0993883,-80.1343301),
+                new google.maps.LatLng(42.331427,-83.0457538),
+                new google.maps.LatLng(37.82206000000001,-122.272437),
+                new google.maps.LatLng(30.42130899999999,-87.2169149),
+                new google.maps.LatLng(44.4325,26.1038889),
+                new google.maps.LatLng(41.0700485,-81.49516210000002),
+                new google.maps.LatLng(12.9715987,77.5945627),
+                new google.maps.LatLng(53.41291,-8.24389),
+                new google.maps.LatLng(34.0583995,-106.8914159),
+                new google.maps.LatLng(-9.189967,-75.015152),
+                new google.maps.LatLng(55.6760968,12.5683371),
+                new google.maps.LatLng(53.9807737,-6.7148821),
+                new google.maps.LatLng(31.230416,121.473701),
+                new google.maps.LatLng(33.7489954,-84.3879824),
+                new google.maps.LatLng(8.4874949,76.948623),
+                new google.maps.LatLng(13.0524139,80.25082460000002),
+                new google.maps.LatLng(28.0836269,-80.60810889999999),
+                new google.maps.LatLng(39.0457549,-76.64127119999999),
+                new google.maps.LatLng(17.385044,78.486671),
+                new google.maps.LatLng(-23.5489433,-46.6388182),
+                new google.maps.LatLng(52.09179,5.114569899999999),
+                new google.maps.LatLng(19.2667,76.7833),
+                new google.maps.LatLng(19.0759837,72.8776559),
+                new google.maps.LatLng(12.9715987,77.5945627),
+                new google.maps.LatLng(41.1566892,-8.6239254),
+                new google.maps.LatLng(39.90403,116.407526),
+                new google.maps.LatLng(42.3584308,-71.0597732),
+                new google.maps.LatLng(32.725409,-97.3208496),
+                new google.maps.LatLng(39.074208,21.824312),
+                new google.maps.LatLng(10.066049,123.538599),
+                new google.maps.LatLng(37.42410599999999,-122.1660756),
+                new google.maps.LatLng(36.204824,138.252924)
+              ];
+
+        var map;
+        var markers = [];
+        var iterator = 0;
+        var dropped = false;
+        var recentered = false;
+
+        function initialize() {
+            var mapOptions = {
+              center: new google.maps.LatLng(0,0),
+              //draggable: false,
+              //zoomControl: false,
+              scrollwheel: false,
+              streetViewControl: false,
+              mapTypeControl: false,
+              panControl: false,
+              //disableDoubleClickZoom: true,
+              zoom: 2,
+              //disableDefaultUI: true,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            map = new google.maps.Map(document.getElementById("map-canvas"),
+                mapOptions);
+
+            google.maps.event.addDomListener(map, 'idle', function() {
+                        if (recentered == false) {
+                            map.setCenter(new google.maps.LatLng(20,0));
+                            recentered = true;
+                        }
+                    });
+
+            var bounds = new google.maps.LatLngBounds();
+
+            // Extend bounds with each point
+            for (var i = 0; i < points.length; i++) {
+            bounds.extend(points[i]);
+            }
+            map.fitBounds(bounds);
+
+            if (document.hasFocus()) {
+                dropped = true;
+                drop();
+            }
+
+
+        }
+        function drop() {
+            dropped = true;
+            for (var i = 0; i < points.length; i++) {
+                setTimeout(function() {
+                    addMarker();
+                }, i * 50);
+            }
+        }
+
+        function addMarker() {
+            markers.push(new google.maps.Marker({
+                position: points[iterator],
+                map: map,
+                draggable: false,
+                animation: google.maps.Animation.DROP
+            }));
+            iterator++;
+        }
+        
+        google.maps.event.addDomListener(window, 'load', initialize);
+        
+        window.onfocus = function () { 
+            if (dropped == false) {
+                drop(); 
+            }
+        };
+    </script>
+    
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+    <header class="navbar navbar-inverse navbar-fixed-top bf-docs-nav secondary" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bf-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <a href="/" class="navbar-brand">
+                <img id="home-logo" src="/img/apache_usergrid_logo_white_small.png" />
+            </a>
+        <nav class="collapse navbar-collapse bf-navbar-collapse" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/community/"><span class="icns icon-group"></span></a></li>
+                <li><a href="/docs" target="_blank"><span class="icns icon-book"></span></a></li>
+                <li><a href="http://github.com/apache/usergrid" target="_blank"><span class="icns icon-github-sign"></span></a></li>
+                <!--<li><a href="https://trello.com/b/exQmJIOn/usergrid" target="_blank"><span class="icns icon-trello"></span></a></li>-->
+                <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" 
+                       target="_blank"><span class="icns icon-bug"></span></a></li>
+                <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank"><span class="icns icon-stackexchange"></span></a></li>
+                <li><a href="/community/#live"><span class="icns icon-comments"></span></a></li>
+                <!--<li><a href="https://groups.google.com/forum/#!forum/usergrid" target="_blank"><span class="icns icon-envelope"></span></a></li>-->
+                <li><a href="https://twitter.com/usergrid" target="_blank"><span class="icns icon-twitter"></span></a></li>
+                <li><a href="https://cwiki.apache.org/confluence/display/usergrid/" target="_blank"><span class="icns icon-wiki"></span></a></li>
+                <li><a href="/releases/"><span class="icns icon-releases"></span></a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+
+
+
+
+<div id="map-canvas" style="width: 100%;"></div>
+
+<section class="bf-tagline">
+    <div class="container">
+    	<div class="row">
+    	    <div class="col-md-12">
+    	    	<h2>The Apache Usergrid community has members in 170+ cities in 30 countries on 6 continents</h2>
+			</div>
+		</div>
+	</div>
+</section>
+
+
+<section class="bf-community">
+    <div class="container">
+    	<div class="row">
+    	    <div class="col-md-12" id="events">
+    	    	<h2 class="icns-calendar"><span>Events</span></h2>
+			</div>
+		</div>
+		<div class="row">
+    	<div class="col-md-3 done">
+    	    	<h3><a href=http://events.linuxfoundation.org/events/apachecon-north-america/">ApacheCon Denver</a><small>April 7-9</small></h3>
+    	    	<p>Featuring our very own Dave Johnson who will deliver a talk on <a href="http://www.slideshare.net/snoopdave/how-to-contribute-to-apache-usergrid">"How to contribute to Apache Usergrid"</a><p>
+			</div>
+      <div class="col-md-3 done">
+        <h3>Seoul Hack Day #1 <small>January 24</small></h3>
+        <p>KT is hosting a Usergrid evening in Gangnam, Seoul, South Korea! <a href="http://onoffmix.com/event/22000">Register on OnOffMix.com</a><p>
+      </div>
+			<div class="col-md-3 done">
+    	    	<h3>SF Bay Area Meetup #1 <small>January 23</small></h3>
+    	    	<p>Can’t join us for the afternoon hack day? We’ll host an evening meetup right afterwards! Or join us for both! <a href="http://www.meetup.com/apache-usergrid-bay-area/events/155130862/">Register on Meetup.com</a><p>
+			</div>
+			<div class="col-md-3">
+				<h3>&nbsp;</h3>
+    	    	<p><i>Want to organize a Usergrid event? <a href="mailto:snoopdave@apache.org">Contact us!</a></i><p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="bf-community">
+    <div class="container">
+    	<div class="row">
+    	    <div class="col-md-12" id="live">
+    	    	<h2 class="icns-chat"><span>Live Chat</span></h2>
+			</div>
+		</div>
+		<div class="row">
+    	<div class="col-md-3 done">
+    	    	<h3><a href="https://www.hipchat.com/gDDIQrdQa">HipChat</a></h3>
+    	    	<p>Some of the Usergrid team hangs around in this HipChat Room: <a href="https://www.hipchat.com/gDDIQrdQa" target="_blank">https://www.hipchat.com/gDDIQrdQa</a>. Come by and chat for a spell!<p>
+		</div>
+      	<div class="col-md-3 done">
+        	<h3>IRC</h3>
+        	<p>Another (less used) option is the Usergrid IRC chat channel <a href="http://webchat.freenode.net/?channels=%23usergrid&uio=d4" target="_blank">#usergrid</a>.<p>
+      </div>
+	</div>
+</section>
+
+<section class="bf-community">
+    <div class="container">
+    	<div class="row">
+    	    <div class="col-md-12">
+    	    	<h2 class="icns-envelope" id="mailing-lists"><span>Mailing-lists</span></h2>
+			</div>
+		</div>
+		<div class="row">
+	    	<div class="col-md-4">
+	    		<h3>Users</h3>
+	    		<p><em>Perfect if you build apps against Apache Usergrid or deploy Apache Usergrid.</em></p>
+	    		<p>To subscribe, send a blank email to<br/><a href="mailto:user-subscribe@usergrid.apache.org">user-subscribe@usergrid.apache.org</a>.</p>
+	    		<p>You can also <a href="https://mail-archives.apache.org/mod_mbox/usergrid-user/">read the archives</a>.</p>
+			</div>
+	    	<div class="col-md-4">
+	    		<h3>Dev</h3>
+	    		<p><em>If you are building contributions & modifications to Apache Usergrid’s stack, portal, cli and SDKs, this is the list for you.</em><p>
+	    		<p>To subscribe, send a blank email to<br/><a href="mailto:dev-subscribe@usergrid.apache.org">dev-subscribe@usergrid.apache.org</a>.</p>
+	    		<p>You can also <a href="https://mail-archives.apache.org/mod_mbox/usergrid-dev/">read the archives</a>.</p>
+			</div>
+	    	<div class="col-md-4">
+	    		<h3>Commits</h3>
+	    		<p><em>This list receives an email whenever new code is contributed to Apache Usergrid.</em><p>
+	    		<p>To subscribe, send a blank email to<br/><a href="mailto:commits-subscribe@usergrid.apache.org">commits-subscribe@usergrid.apache.org</a>.</p>
+	    		<p>You can also <a href="https://mail-archives.apache.org/mod_mbox/usergrid-commits/">read the archives</a>.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="bf-community">
+    <div class="container">
+    	<div class="row">
+    	    <div class="col-md-12">
+    	    	<h2 class="icns-briefcase" id="deployments"><span>Deployments</span></h2>
+			</div>
+		</div>
+		<div class="row">
+			<a href="http://baas.io">
+	    	    <div class="col-md-3">
+	    	    	<h3>baas.io (Korea Telecom)</h3>
+	    	    	<p>Korea Telecom uses Apache Usergrid as the core of its public mobile application development platform baas.io, in operation since 2012.<p>
+				</div>
+			</a>
+			<a href="http://globo.com">
+				<div class="col-md-3">
+	    	    	<h3>Globo.com</h3>
+	    	    	<p>Brazilian media conglomerate Globo uses Apache Usergrid as part of its internal publishing platform for globo.com<p>
+				</div>
+			</a>
+			<a href="http://developers.apigee.com">
+				<div class="col-md-3">
+					<h3>Apigee</h3>
+	    	    	<p>Californian startup Apigee uses Apache Usergrid as a component of its cloud developer platform<p>
+				</div>
+			</a>
+			<a href="http://easemob.com">
+			<h3>Easemob</h3>
+    	    	<p>Easemob uses Apache Usergrid as part of its <a href="http://easemob.com">IM Cloud development platform</a>, which provides cloud service for app developers to integrate IM service in munites.<p> 
+			</div>
+			</a>
+			<div class="col-md-3">
+				<h3>&nbsp;</h3>
+    	    	<p><i>Want to be added to this list? <a href="mailto:snoopdave@apache.org">Contact us!</a></i><p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="bf-community committers">
+    <div class="container">
+    	<div class="row">
+    	    <div class="col-md-12">
+    	    	<h2 class="icns-group" id="committers"><span>Committers</span></h2>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-2 text-center">
+				<img src="/img/alberto.jpg" />
+				<p>Alberto Leal</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/alex.png" />
+				<p>Alex Karasulu</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/github.png" />
+				<p>Askhat Asanaliev</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/dave.jpg" />
+				<p>Dave Johnson</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/ed.jpg" />
+				<p>Ed Anuff</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/github.png" />
+				<p>Furkan Bicak</p>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-2 text-center">
+				<img src="/img/grey.png" />
+				<p>George Reyes</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/mike_d.jpg" />
+				<p>Mike Dunker</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/michael_r.jpg" />
+				<p>Michael Russo</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/nate.jpg" />
+				<p>Nate McCall</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/rod.jpg" />
+				<p>Rod Simpson</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/scott.jpg" />
+				<p>Scott Ganyo</p>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-2 text-center">
+				<img src="/img/stliu.jpg" />
+				<p>Shaozhuang Liu</p>
+			</div>
+            <div class="col-md-2 text-center">
+				<img src="/img/shawn.jpg" />
+				<p>Shawn Feldman</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/sungju.jpg" />
+				<p>Sungju Jin</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/tim.jpg" />
+				<p>Tim Anglade</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/todd.jpg" />
+				<p>Todd Nine</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<img src="/img/github.png" />
+				<p>Yigit Sapli</p>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-2 text-center">
+				<img src="/img/jeff.jpg" />
+				<p>Jeff West</p>
+			</div>
+			<div class="col-md-2 text-center">
+			</div>
+			<div class="col-md-2 text-center">
+			</div>
+			<div class="col-md-2 text-center">
+			</div>
+			<div class="col-md-2 text-center">
+			</div>
+			<div class="col-md-2 text-center">
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="bf-community tools">
+    <div class="container">
+    	<div class="row">
+    	    <div class="col-md-12">
+    	    	<h2 class="icns-tools" id="tools"><span>Tools</span></h2>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-2 text-center">
+				<a href="http://www.jetbrains.com/idea/" target="_blank"><img src="/img/intellij.png" /></a>
+				<p>IntelliJ IDEA</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<a href="http://yourkit.com/" target="_blank"><img src="/img/yourkit.jpeg" /></a>
+				<p>YourKit Java Profiler</p>
+			</div>
+			<div class="col-md-2 text-center">
+				<a href="http://structure101.com/" target="_blank"><img src="/img/structure101.png" /></a>
+				<p>structure101</p>
+			</div>
+		</div>
+		These great companies have provided free product licenses to the Apache Usergrid team. We use these tools and love them.  Thank you!
+	</div>
+</section>
+
+
+
+
+<footer class="bf-footer" role="contentinfo">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="/">Home</a></li>
+                    <li class="nav-header"><a href="/community/">Community</a></li>
+                        <li><a href="/community/#events">Events</a></li>
+                        <li><a href="/community/#mailing-lists">Mailing Lists</a></li>
+                        <li><a href="/community/#deployments">Deployments</a></li>
+                        <li><a href="/community/#committers">Commiters</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header"><a href="https://github.com/apache/usergrid/" target="_blank">Code</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/stack" target="_blank">Server Stack</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/portal" target="_blank">Admin Portal</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/ugc" target="_blank">ugc command line</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/ios" target="_blank">iOS SDK</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/android" target="_blank">Android SDK</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/html5-javascript" target="_blank">HTML5/JS SDK</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/nodejs" target="_blank">node.js module</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/ruby-on-rails" target="_blank">Ruby on Rails gem</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/ruby" target="_blank">Ruby gem</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/php" target="_blank">PHP SDK</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/java" target="_blank">Java SDK</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/sdks/dotnet" target="_blank">.NET / Windows SDK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Resources</li>
+                    <li><a href="http://github.com/apache/usergrid" target="_blank">GitHub Code</a></li>
+                    <li><a href="docs" target="_blank">Docs</a></li>
+                    <li><a href="https://issues.apache.org/jira/secure/RapidBoard.jspa?rapidView=23&view=planning&selectedIssue=USERGRID-362&epics=visible" target="_blank">JIRA Bug Tracker</a></li>
+                    <li><a href="http://stackoverflow.com/search?q=usergrid" target="_blank">StackOverflow</a></li>
+                    <li><a href="/community/#live">Live Chat</a></li>
+                    <li><a href="https://twitter.com/usergrid" target="_blank">Twitter</a></li>
+                    <li><a href="https://github.com/apache/usergrid/blob/master/stack#requirements" target="_blank">Getting Started</a></li>
+                    <li><a href="https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow" target="_blank">Contribution Guidelines</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Apache</li>
+                    <li><a href="http://www.apache.org/licenses/" target="_blank">License</a></li>
+                    <li><a href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Sponsorship</a></li>
+                    <li><a href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a></li>
+                    <li><a href="http://www.apache.org/security/">Security</a></li>
+                    <li><a href="http://www.apache.org/" target="_blank">Apache Foundation</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <a class="twitter-timeline" href="https://twitter.com/search?q=%23usergrid" data-widget-id="401499136807038976"  data-related="usergrid" height="400px" style="overflow:hidden">Tweets about "usergrid"</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div> 
+        <!--
+            <div class="col-md-4">
+                <div class="input-group form-search">
+                    <input type="text" class="form-control search-query">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" data-type="last">Search</button>
+                    </span>
+                </div>
+            </div> -->
+        </div> 
+        <div class="row">
+            <div id="copyright">
+                <img src="/img/egg-logo.png" /><br/><br/>
+                <p>Copyright © 2013 The Apache Software Foundation, Licensed under the Apache License, Version 2.0.<br>
+                Apache and the Apache feather logos are trademarks of The Apache Software Foundation.</p>
+                <p class="credits">Site designed & assembled with love by <a href="https://github.com/ryuneeee">@ryuneeee</a> + <a href="https://github.com/realbeast">@realbeast</a> + <a href="https://twitter.com/timanglade">@timanglade</a> + <a href="https://twitter.com/snoopdave">@snoopdave</a> .</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="/js/head.js"></script>
+<script type="text/javascript">
+    head.js("/js/jquery-1.10.1.min.js", "/js/bootstrap.min.js", "/js/usergrid-site.js");
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45815079-1', 'apache.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</body>
+</html>

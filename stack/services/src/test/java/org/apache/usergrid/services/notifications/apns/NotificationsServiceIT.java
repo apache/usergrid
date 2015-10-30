@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.queue.DefaultQueueManager;
+import org.apache.usergrid.persistence.queue.LocalQueueManager;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -119,7 +119,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         ns = getNotificationService();
 
-        DefaultQueueManager qm = new DefaultQueueManager();
+        LocalQueueManager qm = new LocalQueueManager();
 
                 setup.getEntityIndex().refresh(app.getId());
 
@@ -153,6 +153,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
 
         // post notification to service manager
         Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();

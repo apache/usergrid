@@ -35,6 +35,7 @@ public interface MigrationManagerFig extends GuicyFig {
     String getStrategyClass();
 
     @Key( "collections.keyspace.strategy.options" )
+    @Default("replication_factor:1")
     String getStrategyOptions();
 
 }

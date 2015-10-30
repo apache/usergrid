@@ -65,7 +65,7 @@ import rx.schedulers.Schedulers;
  * Data migration strategy for entities
  */
 @Singleton
-public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope> {
+public class MvccEntityDataMigrationImpl implements DataMigration{
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger( MvccEntityDataMigrationImpl.class );
@@ -75,6 +75,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
     private final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
+    private final MigrationDataProvider<EntityIdScope> migrationDataProvider;
 
 
     @Inject
@@ -82,12 +83,14 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
                                         final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
                                         final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy ) {
+                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+                                        final MigrationDataProvider<EntityIdScope> migrationDataProvider ) {
         this.keyspace = keyspace;
         this.allVersions = allVersions;
         this.mvccEntitySerializationStrategyV3 = mvccEntitySerializationStrategyV3;
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
+        this.migrationDataProvider = migrationDataProvider;
     }
 
 
@@ -105,8 +108,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
 
 
     @Override
-    public int migrate( final int currentVersion, final MigrationDataProvider<EntityIdScope> migrationDataProvider,
-                        final ProgressObserver observer ) {
+    public int migrate( final int currentVersion,  final ProgressObserver observer ) {
 
         final AtomicLong atomicLong = new AtomicLong();
 
@@ -142,9 +144,13 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
                         EntityToSaveMessage> subscriber ) {
 
                         while ( allVersions.hasNext() ) {
-                            final EntityToSaveMessage message =
-                                new EntityToSaveMessage( currentScope, allVersions.next() );
-                            subscriber.onNext( message );
+                            try {
+                                final EntityToSaveMessage message =
+                                    new EntityToSaveMessage(currentScope, allVersions.next());
+                                subscriber.onNext(message);
+                            }catch (Exception e){
+                                LOGGER.error("Failed to load entity " +entityIdScope.getId(),e);
+                            }
                         }
 
                         subscriber.onCompleted();
@@ -159,62 +165,66 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
 
 
                         for ( EntityToSaveMessage message : entities ) {
-                            final MutationBatch entityRewrite = migration.to.write( message.scope, message.entity );
+                            try {
+                                final MutationBatch entityRewrite = migration.to.write(message.scope, message.entity);
 
-                            //add to
-                            // the
-                            // total
-                            // batch
-                            totalBatch.mergeShallow( entityRewrite );
-
-                            //write
-                            // the
-                            // unique values
-
-                            if ( !message.entity.getEntity().isPresent() ) {
-                                return;
-                            }
-
-                            final Entity entity = message.entity.getEntity().get();
-
-                            final Id entityId = entity.getId();
-
-                            final UUID version = message.entity.getVersion();
-
-
-                            toSaveIds.add( entityId );
-
-                            // re-write the unique
-                            // values
-                            // but this
-                            // time with
-                            // no TTL so that cleanup can clean up
-                            // older values
-                            for (final Field field : EntityUtils.getUniqueFields( message.entity.getEntity().get() ) ) {
-
-                                final UniqueValue written = new UniqueValueImpl( field, entityId, version );
-
-                                final MutationBatch mb = uniqueValueSerializationStrategy.write( message.scope, written );
-
-
-                                // merge into our
-                                // existing mutation
+                                //add to
+                                // the
+                                // total
                                 // batch
-                                totalBatch.mergeShallow( mb );
-                            }
+                                totalBatch.mergeShallow(entityRewrite);
+
+                                //write
+                                // the
+                                // unique values
+
+                                if (!message.entity.getEntity().isPresent()) {
+                                    return;
+                                }
+
+                                final Entity entity = message.entity.getEntity().get();
+
+                                final Id entityId = entity.getId();
+
+                                final UUID version = message.entity.getVersion();
 
 
-                            //add all our log entries
-                            final List<MvccLogEntry> logEntries = mvccLogEntrySerializationStrategy.load( message.scope,
-                                message.entity.getId(), version, 1000 );
+                                toSaveIds.add(entityId);
 
-                            /**
-                             * Migrate the log entry to the new format
-                             */
-                            for(final MvccLogEntry entry: logEntries){
-                                final MutationBatch mb = mvccLogEntrySerializationStrategy.write( message.scope, entry );
+                                // re-write the unique
+                                // values
+                                // but this
+                                // time with
+                                // no TTL so that cleanup can clean up
+                                // older values
+                                for (final Field field : EntityUtils.getUniqueFields(message.entity.getEntity().get())) {
 
-                                totalBatch.mergeShallow( mb );
+                                    final UniqueValue written = new UniqueValueImpl(field, entityId, version);
+
+                                    final MutationBatch mb = uniqueValueSerializationStrategy.write(message.scope, written);
+
+
+                                    // merge into our
+                                    // existing mutation
+                                    // batch
+                                    totalBatch.mergeShallow(mb);
+                                }
+
+
+                                //add all our log entries
+                                final List<MvccLogEntry> logEntries = mvccLogEntrySerializationStrategy.load(message.scope,
+                                    message.entity.getId(), version, 1000);
+
+                                /**
+                                 * Migrate the log entry to the new format
+                                 */
+                                for (final MvccLogEntry entry : logEntries) {
+                                    final MutationBatch mb = mvccLogEntrySerializationStrategy.write(message.scope, entry);
+
+                                    totalBatch.mergeShallow(mb);
+                                }
+                            }catch (Exception e){
+                                LOGGER.error("Failed to migrate entity "+ message.entity.getId().getUuid()+ " :: " + message.entity.getId().getType(),e);
                             }
 
 
@@ -232,7 +242,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
 
 
                         }
-                    } ).subscribeOn( Schedulers.io() );
+                    } ).subscribeOn(Schedulers.io());
 
             }, 10) );
 

@@ -24,6 +24,7 @@ import java.util.*;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +57,19 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final IndexProducer indexProducer;
 
 
     @Inject
     public CandidateEntityFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
                                   final EntityIndexFactory entityIndexFactory,
-                                  final IndexLocationStrategyFactory indexLocationStrategyFactory) {
+                                  final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                  final IndexProducer indexProducer
+                                  ) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.indexProducer = indexProducer;
     }
 
 
@@ -107,7 +112,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                         //now we have a collection, validate our canidate set is correct.
                         return entitySets.map(
                             entitySet -> new EntityVerifier(
-                                applicationIndex.createBatch(), entitySet, candidateResults)
+                                applicationIndex.createBatch(), entitySet, candidateResults,indexProducer)
                         )
                             .doOnNext(entityCollector -> entityCollector.merge())
                             .flatMap(entityCollector -> Observable.from(entityCollector.getResults()))
@@ -149,14 +154,17 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
         private final EntityIndexBatch batch;
         private final List<FilterResult<Candidate>> candidateResults;
+        private final IndexProducer indexProducer;
         private final EntitySet entitySet;
 
 
         public EntityVerifier( final EntityIndexBatch batch, final EntitySet entitySet,
-                               final List<FilterResult<Candidate>> candidateResults ) {
+                               final List<FilterResult<Candidate>> candidateResults,
+                               final IndexProducer indexProducer) {
             this.batch = batch;
             this.entitySet = entitySet;
             this.candidateResults = candidateResults;
+            this.indexProducer = indexProducer;
             this.results = new ArrayList<>( entitySet.size() );
         }
 
@@ -170,7 +178,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                 validate( candidateResult );
             }
 
-            batch.execute();
+            indexProducer.put(batch.build()).toBlocking().lastOrDefault(null); // want to rethrow if batch fails
+
         }
 
 

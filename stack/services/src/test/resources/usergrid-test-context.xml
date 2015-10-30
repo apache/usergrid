@@ -51,7 +51,7 @@
         <constructor-arg ref="cassandraCluster"/>
     </bean>
 
-    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
+    <bean id="localFileBinaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
         <property name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>
 

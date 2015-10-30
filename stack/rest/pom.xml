@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>2.1.0-SNAPSHOT</version>
+        <version>2.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>usergrid-rest</artifactId>
@@ -35,32 +35,6 @@
         <catalina.host>localhost</catalina.host>
         <catalina.jmx.port>8089</catalina.jmx.port>
     </properties>
-
-    <!-- profile that arquillian uses when it builds/starts tomcat -->
-    <profiles>
-
-        <!--<profile>-->
-            <!--<id>arquillian-tomcat</id>-->
-            <!--<activation>-->
-                <!--<activeByDefault>true</activeByDefault>-->
-            <!--</activation>-->
-            <!--<dependencies>-->
-                <!--<dependency>-->
-                    <!--<groupId>org.jboss.arquillian.container</groupId>-->
-                    <!--<artifactId>arquillian-tomcat-remote-7</artifactId>-->
-                    <!--<version>1.0.0.CR7</version>-->
-                    <!--<scope>test</scope>-->
-                <!--</dependency>-->
-                <!--<dependency>-->
-                    <!--<groupId>org.eu.ingwar.tools</groupId>-->
-                    <!--<artifactId>arquillian-suite-extension</artifactId>-->
-                    <!--<version>1.1.1</version>-->
-                    <!--<scope>test</scope>-->
-                <!--</dependency>-->
-            <!--</dependencies>-->
-        <!--</profile>-->
-
-    </profiles>
 
     <build>
         <finalName>ROOT</finalName>
@@ -88,12 +62,14 @@
 
         <plugins>
 
+            <!--
+            Need to override parent's surefire plugin here to set system properties.
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.plugin.version}</version>
                 <configuration>
-                    <!--<skipTests>true</skipTests>-->
                     <systemPropertyVariables>
                         <storage-config>${basedir}/src/test/conf</storage-config>
                         <target.directory>${project.build.directory}</target.directory>
@@ -103,7 +79,7 @@
                     <threadCount>${usergrid.rest.threads}</threadCount>
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <reuseForks>true</reuseForks>
-                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}
                     </argLine>
                     <includes>
                         <include>**/*IT.java</include>
@@ -128,6 +104,7 @@
                 <version>2.6</version>
             </plugin>
 
+            <!-- TODO: do we need this?
             <plugin>
                 <groupId>org.jasig.mojo.jspc</groupId>
                 <artifactId>jspc-maven-plugin</artifactId>
@@ -144,14 +121,7 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jasig.mojo.jspc</groupId>
-                        <artifactId>jspc-compiler-tomcat6</artifactId>
-                        <version>2.0.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
+            </plugin> -->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -213,11 +183,11 @@
             </exclusions>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>org.apache.usergrid</groupId>-->
-            <!--<artifactId>usergrid-mongo-emulator</artifactId>-->
-            <!--<version>${project.version}</version>-->
-        <!--</dependency>-->
+        <!-- <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-mongo-emulator</artifactId>
+            <version>${project.version}</version>
+        </dependency> -->
 
         <!-- Apache Dependencies -->
 
@@ -226,7 +196,7 @@
             <artifactId>commons-collections</artifactId>
         </dependency>
 
-        <!-- SUN, Javax Package, and Other Com Dependencies -->
+        <!-- Java EE and Jersey dependencies -->
 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -240,29 +210,58 @@
         </dependency>
 
         <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-multipart</artifactId>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-json</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
+            <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-apache-connector</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-mvc-jsp</artifactId>
+            <version>${jersey-version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>servlet-api</artifactId>
+                    <groupId>javax.servlet</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-spring3</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+
+        <!-- Jackson, Spring, and other dependencies -->
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
         </dependency>
 
         <dependency>
@@ -270,17 +269,6 @@
             <artifactId>recaptcha4j</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-server</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-spring</artifactId>
-        </dependency>
-
-        <!-- Codehaus, Spring, and Other Org Dependencies -->
 
         <dependency>
             <groupId>org.springframework</groupId>
@@ -353,6 +341,14 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-services</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
@@ -382,17 +378,16 @@
             <scope>test</scope>
         </dependency>
 
-        <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
         <dependency>
-            <groupId>com.sun.jersey.jersey-test-framework</groupId>
-            <artifactId>jersey-test-framework-external</artifactId>
-            <scope>test</scope>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-external</artifactId>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <groupId>org.glassfish.jersey.test-framework</groupId>
             <artifactId>jersey-test-framework-core</artifactId>
-            <scope>test</scope>
+            <version>${jersey-version}</version>
         </dependency>
 
         <dependency>
@@ -401,14 +396,27 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-services</artifactId>
-            <version>2.1.0-SNAPSHOT</version>
-            <scope>test</scope>
-            <classifier>tests</classifier>
-        </dependency>
-
     </dependencies>
+
+    <!--
+    Need jacoco profile here because we override the parent's surefire plugin settings above.
+    -->
+    <profiles>
+        <profile>
+            <id>jacoco</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec  -Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

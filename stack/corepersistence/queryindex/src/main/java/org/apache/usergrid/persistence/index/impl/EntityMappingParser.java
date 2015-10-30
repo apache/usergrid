@@ -1,35 +1,26 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  *
- *  * Licensed to the Apache Software Foundation (ASF) under one
- *  * or more contributor license agreements.  See the NOTICE file
- *  * distributed with this work for additional information
- *  * regarding copyright ownership.  The ASF licenses this file
- *  * to you under the Apache License, Version 2.0 (the
- *  * "License"); you may not use this file except in compliance
- *  * with the License.  You may obtain a copy of the License at
- *  *
- *  *    http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing,
- *  * software distributed under the License is distributed on an
- *  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *  * KIND, either express or implied.  See the License for the
- *  * specific language governing permissions and limitations
- *  * under the License.
- *  *
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +68,7 @@ public class EntityMappingParser implements FieldParser {
      * Visit al the primitive values
      */
     private void visit( final UUID value ) {
-        fields.add( EntityField.create( fieldStack.peek(), value ) );
+       visit(value.toString());
     }
 
 
@@ -116,7 +107,8 @@ public class EntityMappingParser implements FieldParser {
 
         //we don't support indexing 2 dimensional arrays.  Short circuit with a warning so we can track operationally
         if(!lastCollection.isEmpty() && lastCollection.peek() instanceof Collection){
-            log.warn( "Encountered 2 collections consecutively.  N+1 dimensional arrays are unsupported, only arrays of depth 1 are supported" );
+            log.warn( "Encountered 2 collections consecutively.  " +
+                "N+1 dimensional arrays are unsupported, only arrays of depth 1 are supported" );
             return;
         }
 
@@ -139,7 +131,12 @@ public class EntityMappingParser implements FieldParser {
         if ( value instanceof Map ) {
             //if it's a location, then create a location field.
             if ( EntityMap.isLocationField( (Map)value ) ) {
-                fields.add( EntityField.create( fieldStack.peek(), ( Map ) value ) );
+                Map<String,Object> map = ( Map ) value;
+                Map<String,Object> location = new HashMap<>(2);
+                //normalize location field to use lat/lon for es
+                location.put("lat",map.get("latitude"));
+                location.put("lon",map.get("longitude"));
+                fields.add( EntityField.create( fieldStack.peek(), location) );
                 return;
             }
 

@@ -31,8 +31,16 @@
 	<!--  scan for security -->
 	<context:component-scan base-package="org.apache.usergrid.security.crypto"  />
 
+    <!--
+    <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager"/>
+    -->
+    <bean id="cacheManager" class="org.apache.usergrid.security.shiro.ShiroCacheManager">
+        <property name="properties" ref="properties" />
+    </bean>
+
 	<bean id="realm" class="org.apache.usergrid.security.shiro.Realm">
-		<property name="name" value="realm" />
+        <property name="name" value="realm" />
+        <property name="cacheManager" ref="cacheManager" />
 	</bean>
 
 	<bean id="securityManager" class="org.apache.shiro.mgt.DefaultSecurityManager">
@@ -47,7 +55,6 @@
 			value="org.apache.shiro.SecurityUtils.setSecurityManager" />
 		<property name="arguments" ref="securityManager" />
 	</bean>
-
 
 	<bean id="taskExecutor" class="org.springframework.core.task.SyncTaskExecutor"/>
 

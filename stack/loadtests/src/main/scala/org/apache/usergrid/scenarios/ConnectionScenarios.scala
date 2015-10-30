@@ -14,19 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.scenarios
+package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
- import org.apache.usergrid.datagenerators.FeederGenerator
- import org.apache.usergrid.settings.{Settings, Headers}
+import org.apache.usergrid.datagenerators.FeederGenerator
+import org.apache.usergrid.helpers.Headers
+import org.apache.usergrid.settings.Settings
 
- object ConnectionScenarios {
+object ConnectionScenarios {
 
   val postUserConnection = exec(
     http("POST connection")
     .post("/users/${user1}/likes/users/${user2}")
-      .headers(Headers.jsonAuthorized)
+      .headers(Headers.authToken)
 
       .check(status.is(200))
   )
@@ -34,14 +35,14 @@ import io.gatling.http.Predef._
   val postUserToDeviceConnection = exec(
     http("Connect user with device")
     .post("/users/${username}/devices/${deviceId}")
-      .headers(Headers.jsonAuthorized)
+      .headers(Headers.authToken)
       .check(status.is(200))
   )
 
    val postConnection = exec(
      http("Connect user with device")
        .post("/${connectionName}/${entityId}/${connectionType}/${entityId}")
-       .headers(Headers.jsonAuthorized)
+       .headers(Headers.authToken)
        .check(status.is(200))
    )
 
@@ -52,7 +53,7 @@ import io.gatling.http.Predef._
      .exec( UserScenarios.getUserByUsername)
      .repeat(2){
        feed(entityNameFeeder)
-         .exec( DeviceScenarios.postDeviceWithNotifier)
+         .exec(DeviceScenarios.postDeviceWithNotifier)
          .exec(ConnectionScenarios.postUserToDeviceConnection)
      }
      .exec(session => {

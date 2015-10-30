@@ -17,15 +17,13 @@
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
-import com.sun.jersey.api.client.WebResource;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -37,10 +35,8 @@ public class ConfirmResource extends NamedResource {
     }
 
     public void get(QueryParameters queryParameters){
-        WebResource resource = getResource();
+        WebTarget resource = getTarget();
         resource = addParametersToResource( resource, queryParameters );
-        String obj = resource.type( MediaType.TEXT_HTML_TYPE )
-                                       .accept( MediaType.TEXT_HTML).get( String.class );
-
+        String obj = resource.request().accept( MediaType.TEXT_HTML).get( String.class );
     }
 }

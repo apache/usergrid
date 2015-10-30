@@ -20,19 +20,32 @@
 package org.apache.usergrid.corepersistence.index;
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 /**
  * configuration for index in core
  */
+@FigSingleton
 public interface CoreIndexFig extends GuicyFig {
 
     String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS = "elasticsearch.management_number_shards";
 
     String ELASTICSEARCH_MANAGEMENT_NUMBER_OF_REPLICAS = "elasticsearch.management_number_replicas";
 
-    @Default( "6" )
+
+    /**
+     * The number of primary shards to use for an index in Elasticsearch.  Typically 2x or 3x the ES nodes.
+     *
+     * Depending on the use case for Usergrid, these numbers may vary. Usergrid is defaulted
+     * to a higher number of shards based on typical Elasticsearch clusters being >= 6 nodes.
+     * You can choose how it's sharded in Elasticsearch to reach optimal indexing for your dataset.  For more
+     * info about sharding, here is a good starting point:
+     *  <https://www.elastic.co/guide/en/elasticsearch/guide/current/routing-value.html>
+     *
+     */
+    @Default( "18" )
     @Key( ELASTICSEARCH_MANAGEMENT_NUMBER_OF_SHARDS )
     int getManagementNumberOfShards();
 

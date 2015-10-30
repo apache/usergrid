@@ -1,0 +1,743 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Creating and managing notifications &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Troubleshooting" href="troubleshooting.html"/>
+        <link rel="prev" title="Managing users and devices" href="managing-users-and-devices.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Creating and managing notifications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-notifications">Creating notifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-notificastions-with-curl">Creating notificastions with cURL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#targeting-a-single-device">Targeting a single device</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#targeting-all-devices">Targeting all devices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#targeting-a-single-user">Targeting a single user</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#targeting-a-group">Targeting a group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#targeting-users-by-location">Targeting users by location</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#request-parameters">Request Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-notificastions-with-admin-portal">Creating notificastions with Admin portal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-notificastions-with-ios">Creating notificastions with iOS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scheduling-notifications">Scheduling notifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#curl">cURL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#targeting-multiple-notifiers-or-messages">Targeting multiple notifiers or messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-a-notification-expiration">Setting a notification expiration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-notifications">Getting notifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">cURL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#canceling-sent-notifications">Canceling sent notifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#admin-portal">Admin portal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#deleting-unsent-notifications">Deleting unsent notifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#deleting-unsent-notifications-with-curl">Deleting unsent notifications with cURL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deleting-unsent-notifications-with-admin-portal">Deleting unsent notifications with Admin Portal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-receipts">Getting receipts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notification-endpoints">Notification endpoints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Creating and managing notifications</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/push-notifications/creating-and-managing-notifications.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="creating-and-managing-notifications">
+<h1>Creating and managing notifications<a class="headerlink" href="#creating-and-managing-notifications" title="Permalink to this headline">¶</a></h1>
+<p>This topic provides information on setting up and sending push
+notifications with the Usergrid API backend as a service (BaaS). For
+high-level information, prerequisites, and tutorials, see <a class="reference external" href="overview.html">Push
+notifications overview</a>.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+Although not shown in many of the API examples below, you need to<p>provide a valid access token with each API call. See <a class="reference external" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating
+users and application
+clients</a>
+for details.</p>
+</p></div>
+
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+For an overview of how to set up push notifications, including<p>troubleshooting tips, see <a class="reference external" href="adding-push-support.html">Adding push notifications
+support</a>.</p>
+</p></div><div class="section" id="creating-notifications">
+<h2>Creating notifications<a class="headerlink" href="#creating-notifications" title="Permalink to this headline">¶</a></h2>
+<p>When you create a notification, it is scheduled to be delivered to all
+applicable devices immediately unless the deliver property has been set.
+A notification may contain multiple messages (payloads), and each
+payload must be associated with a notifier in order to deliver that
+message to the associated app. This allows a single notification to be
+delivered to multiple apps across various services, and is useful if you
+want to send messages to multiple notifiers, such as development and
+production versions of both Apple and Google simultaneously.</p>
+<p>Notification can be created via POST request to the BaaS API, or in the
+admin portal:</p>
+<div class="section" id="creating-notificastions-with-curl">
+<h3>Creating notificastions with cURL<a class="headerlink" href="#creating-notificastions-with-curl" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="targeting-a-single-device">
+<h4>Targeting a single device<a class="headerlink" href="#targeting-a-single-device" title="Permalink to this headline">¶</a></h4>
+<p>This request will target a specific device entity.</p>
+<p>Request Syntax</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/devices/&lt;device_ID&gt;/notifications -d &#39;{&quot;payloads&quot;:{&lt;notifier&gt;:&lt;message&gt;}}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="targeting-all-devices">
+<h4>Targeting all devices<a class="headerlink" href="#targeting-all-devices" title="Permalink to this headline">¶</a></h4>
+<p>This request will target all device entities.</p>
+<p>Request Syntax</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/devices/*/notifications -d &#39;{&quot;payloads&quot;:{&lt;notifier&gt;:&lt;message&gt;}}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="targeting-a-single-user">
+<h4>Targeting a single user<a class="headerlink" href="#targeting-a-single-user" title="Permalink to this headline">¶</a></h4>
+<p>This request will target a specific user entity.</p>
+<p>Request Syntax</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/users/&lt;username&gt;/notifications -d &#39;{&quot;payloads&quot;:{&lt;notifier&gt;:&lt;message&gt;}}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="targeting-a-group">
+<h4>Targeting a group<a class="headerlink" href="#targeting-a-group" title="Permalink to this headline">¶</a></h4>
+<p>This request will target all users associated with a specific group
+entity.</p>
+<p>Request Syntax</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/groups/&lt;group_path&gt;/notifications -d &#39;{&quot;payloads&quot;:{&lt;notifier&gt;:&lt;message&gt;}}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="targeting-users-by-location">
+<h4>Targeting users by location<a class="headerlink" href="#targeting-users-by-location" title="Permalink to this headline">¶</a></h4>
+<p>This request will target all device entities that are within a set
+radius of a latitude/longitude coordinate.</p>
+<p>Request Syntax</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/devices;ql=location within &lt;radius&gt; of &lt;lat&gt;,&lt;long&gt;/notifications -d &#39;{&quot;payloads&quot;:{&lt;notifier&gt;:&lt;message&gt;}}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="request-parameters">
+<h4>Request Parameters<a class="headerlink" href="#request-parameters" title="Permalink to this headline">¶</a></h4>
+<p>The following parameters can be specified when targeting push
+notifications.</p>
+<p>Base URL</p>
+<p>These parameters are used in forming the base URL of the request:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="76%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>org</td>
+<td>Organization UUID or organization name</td>
+</tr>
+<tr class="row-odd"><td>app</td>
+<td>Application UUID or application name</td>
+</tr>
+</tbody>
+</table>
+<p>Notification</p>
+<p>These parameters are used when forming the notification portion of the
+request:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="93%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>notifier</td>
+<td>The <code class="docutils literal"><span class="pre">notifier</span></code> entity you wish to associate with the notification (see <a class="reference external" href="creating-notifiers.html">Creating notifiers</a> for information on creating notifiers)</td>
+</tr>
+<tr class="row-odd"><td>message</td>
+<td>The push notification message that will be delivered to the user</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: If your message contains double-quotes (&#8220;&#8221;) you must escape
+them with a backslash</p>
+<p>Targets</p>
+<p>These parameters are used when specifying the notification target in the
+request.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="79%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>device</td>
+<td>UUID of a device entity.</td>
+</tr>
+<tr class="row-odd"><td>user</td>
+<td>UUID or username of a user entity.</td>
+</tr>
+<tr class="row-even"><td>phone_type</td>
+<td>Specified in a appended query string. The type property of a device entity.</td>
+</tr>
+<tr class="row-odd"><td>group</td>
+<td>UUID or name of the group entity.</td>
+</tr>
+<tr class="row-even"><td>latitude, longitude, radius</td>
+<td>Specified in a appended query string. The radius in meters of a user device from a latitude/longitude coordinate.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="creating-notificastions-with-admin-portal">
+<h3>Creating notificastions with Admin portal<a class="headerlink" href="#creating-notificastions-with-admin-portal" title="Permalink to this headline">¶</a></h3>
+<p>To create the new notification with the admin portal, do the following:</p>
+<ol class="arabic simple">
+<li>Log in to the admin portal.</li>
+<li>In the left nav, click <strong>Push &gt; Send Notification</strong>.</li>
+<li>From the <strong>Notifier</strong> drop-down, select the appropriate notifier.</li>
+<li>Under the notifier name, select one of the following to specify where
+your notification message should go:</li>
+</ol>
+<ul class="simple">
+<li><strong>All Devices</strong> to have the message sent to all devices.</li>
+<li><strong>Devices</strong> to have the message sent to a particular subset of
+devices. Enter a comma-separated list of device UUIDs in the box
+provided.</li>
+<li><strong>Users</strong> to have the message sent to a particular subset of users.
+Enter a comma-separated list of username values in the box provided.</li>
+<li><strong>Groups</strong> to have the message sent to a particular subset of user
+groups. Enter a comma-separated list of group paths in the box
+provided.</li>
+</ul>
+<ol class="arabic simple" start="5">
+<li>In the <strong>Notifier Message</strong> field, enter the message (payload) you
+want delivered.</li>
+<li>If double-quotes are included in your message, you must escape them
+with a backslash. 7, Under <strong>Delivery</strong>, select one of the following
+to specify when the notification should be delivered:</li>
+</ol>
+<ul class="simple">
+<li><strong>Now</strong> to have the message delivered immediately.</li>
+<li>Schedule for later to choose a date and time at which the message
+should be delivered.</li>
+</ul>
+<ol class="arabic simple" start="7">
+<li>Click <strong>Submit</strong>.</li>
+</ol>
+<p>To create a notification to send multiple messages or target multiple
+platforms, see the cURL syntax for creating notifications.</p>
+</div>
+<div class="section" id="creating-notificastions-with-ios">
+<h3>Creating notificastions with iOS<a class="headerlink" href="#creating-notificastions-with-ios" title="Permalink to this headline">¶</a></h3>
+<p>To send notifications from iOS app code, you use the
+11ApigeeAPSDestination11 and <code class="docutils literal"><span class="pre">ApigeeAPSPayload</span></code> classes.</p>
+<p>With <code class="docutils literal"><span class="pre">ApigeeAPSDestination</span></code>, you specify where the notification should
+go (a particular user or device or user group, for example). With
+<code class="docutils literal"><span class="pre">ApigeeAPSPayload</span></code>, you specify the contents of the message, including
+any alert text, sound, or badge (items specified by Apple as allowable
+notification content types). You then use <code class="docutils literal"><span class="pre">ApigeeDataClient</span></code> to send
+the message via Apigee and Apple APNs.</p>
+<p>The following code illustrates how to send a notification to a single
+user. Though this is the device on which the app itself is installed,
+you can imagine how you might send a notification to another device,
+such as one belonging to someone &#8220;following&#8221; this user. For more, see
+the iOS push sample application included with the <a class="reference external" href="../sdks/tbd.html">Apigee iOS
+SDK</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre>- (void)sendMyselfAPushNotification:(NSString *)message
+completionHandler:(ApigeeDataClientCompletionHandler)completionHandler
+{
+    // send to a single device -- our own device
+    NSString *deviceId = [ApigeeDataClient getUniqueDeviceID];
+    ApigeeAPSDestination* destination =
+        [ApigeeAPSDestination destinationSingleDevice:deviceId];
+
+    // set our APS payload
+    ApigeeAPSPayload* apsPayload = [[ApigeeAPSPayload alloc] init];
+    apsPayload.sound = kBundledSoundNameWithExt;
+    apsPayload.alertText = message;
+
+    // Example of what a custom payload might look like -- remember that
+    // APNS payloads are limited to a maximum of 256 bytes (for the entire
+    // payload -- including the &#39;aps&#39; part)
+    NSMutableDictionary* customPayload = [[NSMutableDictionary alloc] init];
+    [customPayload setValue:@&quot;72&quot; forKey:@&quot;degrees&quot;];
+    [customPayload setValue:@&quot;3&quot; forKey:@&quot;newOrders&quot;];
+
+    __weak AppDelegate* weakSelf = self;
+
+    // send the push notification
+    [dataClient pushAlert:apsPayload
+            customPayload:customPayload
+              destination:destination
+            usingNotifier:notifier
+        completionHandler:^(ApigeeClientResponse *response) {
+            if ( ! [response completedSuccessfully]) {
+                [weakSelf alert:response.rawResponse
+                          title: @&quot;Error&quot;];
+            }
+
+            if (completionHandler) {
+                completionHandler(response);
+            }
+        }];
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="scheduling-notifications">
+<h2>Scheduling notifications<a class="headerlink" href="#scheduling-notifications" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="curl">
+<h3>cURL<a class="headerlink" href="#curl" title="Permalink to this headline">¶</a></h3>
+<p>To schedule a notification for a later time, add the deliver parameter
+with a UNIX timestamp to the body of your request.</p>
+<p>Request body syntax</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;{&quot;deliver&quot;:&lt;unix_timestamp&gt;,&quot;payloads&quot;:{&lt;notifier&gt;:&lt;message&gt;}}&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="targeting-multiple-notifiers-or-messages">
+<h2>Targeting multiple notifiers or messages<a class="headerlink" href="#targeting-multiple-notifiers-or-messages" title="Permalink to this headline">¶</a></h2>
+<p>To send multiple messages or target multiple platforms with a single
+notification entity, include multiple notifier-message pairs as a
+comma-separated list in the payloads object of the request body:</p>
+<p>Request body syntax</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;{&quot;payloads&quot;:{&lt;notifier&gt;:&lt;message&gt;, &lt;notifier&gt;:&lt;message&gt;, ...}}&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setting-a-notification-expiration">
+<h2>Setting a notification expiration<a class="headerlink" href="#setting-a-notification-expiration" title="Permalink to this headline">¶</a></h2>
+<p>If a push service can&#8217;t deliver a message to a device and needs to
+resend it (for example, if the device is turned off), you can set a
+notification to expire after a certain date/time.</p>
+<p>To do this, adding the expire parameter with a UNIX timestamp to your
+request body. This specifies when the service should stop trying to send
+the notification.</p>
+<div class="admonition warning"> <p class="first admonition-title"><p>Warning</p>
+  </p> <p class="last">
+
+
+Please note that if the expire property is not set and Apple APNS or<p>Google GCM are not able to immediately deliver your push notification,
+delivery will not be retried. This means your notification will not be
+delivered. As a best practice, you should always set an expire timestamp
+to ensure your notification is delivered in the event the delivery
+initially fails.</p>
+</p></div><p>Request body syntax</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;{&quot;expire&quot;:&lt;unix_timestamp&gt;,&quot;payloads&quot;:{&quot;&lt;notifier_name&gt;&quot;:&quot;&lt;message&gt;&quot;}}&#39;</span>
+</pre></div>
+</div>
+<p>NOTE: The timestamp is a UNIX timestamp and is specified in seconds.</p>
+</div>
+<div class="section" id="getting-notifications">
+<h2>Getting notifications<a class="headerlink" href="#getting-notifications" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>cURL<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>The following are endpoints can be used to get notifications. For
+details on the notification properties you can get, see Notifier,
+Receipt, and Notification.</p>
+<p>Getting one or more notifications:</p>
+<div class="highlight-python"><div class="highlight"><pre>/notifications
+</pre></div>
+</div>
+<p>Getting notifications associated with one or more receipts:</p>
+<div class="highlight-python"><div class="highlight"><pre>/receipts/*/notification
+</pre></div>
+</div>
+<p>Getting the list of devices associated with one or more notifications
+before the notifications are sent:</p>
+<div class="highlight-python"><div class="highlight"><pre>/notifications/*/queue
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="canceling-sent-notifications">
+<h2>Canceling sent notifications<a class="headerlink" href="#canceling-sent-notifications" title="Permalink to this headline">¶</a></h2>
+<p>You can cancel a notification that&#8217;s already in progress by doing the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT &quot;https://api.usergrid.com/my-org/sandbox/notifications/&lt;notification-uuid&gt;&quot; -d &#39;{&quot;canceled&quot;: true}&#39;
+</pre></div>
+</div>
+<div class="section" id="admin-portal">
+<h3>Admin portal<a class="headerlink" href="#admin-portal" title="Permalink to this headline">¶</a></h3>
+<p>You can view JSON for notifications by viewing their entity entries in
+the Data section of your application.</p>
+<p>In the admin portal, click Data, then click the <strong>/notifications</strong>
+collection. You can also view notification data in the message history.</p>
+<p>In the admin portal, click Push, then click Message History. Locate the
+notification for which you want to view data, then click its view
+details link.</p>
+</div>
+</div>
+<div class="section" id="deleting-unsent-notifications">
+<h2>Deleting unsent notifications<a class="headerlink" href="#deleting-unsent-notifications" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="deleting-unsent-notifications-with-curl">
+<h3>Deleting unsent notifications with cURL<a class="headerlink" href="#deleting-unsent-notifications-with-curl" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X DELETE &quot;https://api.usergrid.com/&lt;you-org&gt;/&lt;app&gt;/notifications/&lt;notification-uuid&gt;&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="deleting-unsent-notifications-with-admin-portal">
+<h3>Deleting unsent notifications with Admin Portal<a class="headerlink" href="#deleting-unsent-notifications-with-admin-portal" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>In the admin portal, click Push, then Message History.</li>
+<li>On the Message History page, click Scheduled.</li>
+<li>In the list of scheduled messages, locate the message you want to
+delete.</li>
+<li>In the top area of the message item, click the delete link.</li>
+</ol>
+</div>
+</div>
+<div class="section" id="getting-receipts">
+<h2>Getting receipts<a class="headerlink" href="#getting-receipts" title="Permalink to this headline">¶</a></h2>
+<p>After sending a notification, the BaaS generates a receipt entity that
+contains details about the notification. Receipts show details such as
+timestamps, payloads sent, and the receipt endpoints.</p>
+<p>For information about what&#8217;s contained in a receipt, see
+<a class="reference external" href="..//rest-endpoints/api-docs.html#notifier">Notifier</a>,
+<a class="reference external" href="..//rest-endpoints/api-docs.html#receipt">Receipt</a>, and
+<a class="reference external" href="..//rest-endpoints/api-docs.html#notification">Notification</a>. Use
+the following endpoints to get receipts.</p>
+<p>To get one or more receipts:</p>
+<div class="highlight-python"><div class="highlight"><pre>/receipts
+</pre></div>
+</div>
+<p>To get receipts associated with one or more devices:</p>
+<div class="highlight-python"><div class="highlight"><pre>/devices/*/receipts
+</pre></div>
+</div>
+<p>To get receipts for one or more notifications. For example, get receipts
+for notifications that had errors.</p>
+<div class="highlight-python"><div class="highlight"><pre>/notifications/*/receipts
+</pre></div>
+</div>
+</div>
+<div class="section" id="notification-endpoints">
+<h2>Notification endpoints<a class="headerlink" href="#notification-endpoints" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">/notifications</span></code> endpoints let you create, schedule, cancel, and
+delete notifications. You can also use the following endpoints to
+accomplish the same actions for specific groups, users, devices, or any
+combination thereof.</p>
+<p>Base URL: <code class="docutils literal"><span class="pre">https://api.usergrid.com/my-org/my-app</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre>/groups/*/notifications
+/groups/*/users/*/notifications
+/groups/*/users/*/devices/*/notifications
+/users/*/notifications
+/users/*/devices/*/notifications
+/devices/*/notifications
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="managing-users-and-devices.html" class="btn btn-neutral" title="Managing users and devices" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

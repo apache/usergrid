@@ -17,18 +17,18 @@
 package org.apache.usergrid;
 
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.utils.MapUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -234,9 +234,11 @@ public class CoreApplication implements Application, TestRule {
         //Insert test entity and find it
         setup.getEmf().refreshIndex(CpNamingUtils.getManagementApplicationId().getUuid());
 
-        if(!em.getApplicationId().equals(CpNamingUtils.getManagementApplicationId().getUuid())) {
+        if (!em.getApplicationId().equals(CpNamingUtils.getManagementApplicationId().getUuid())) {
             setup.getEmf().refreshIndex(em.getApplicationId());
         }
+
+        em.refreshIndex();
     }
 
 
@@ -244,4 +246,7 @@ public class CoreApplication implements Application, TestRule {
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @Override
+    public ApplicationService getApplicationService(){ return setup.getApplicationService();}
 }

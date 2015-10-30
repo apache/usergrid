@@ -29,6 +29,7 @@ public enum FieldTypeName {
     ARRAY,
     BOOLEAN,
     BYTE_ARRAY,
+    SERIALIZED_OBJECT,
     DOUBLE,
     OBJECT,
     FLOAT,

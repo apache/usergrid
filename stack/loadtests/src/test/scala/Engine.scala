@@ -20,13 +20,10 @@ import io.gatling.core.config.GatlingPropertiesBuilder
 object Engine extends App {
 
 	val props = new GatlingPropertiesBuilder
-	props.disableCompiler
 	props.dataDirectory(IDEPathHelper.dataDirectory.toString)
 	props.resultsDirectory(IDEPathHelper.resultsDirectory.toString)
-	props.requestBodiesDirectory(IDEPathHelper.requestBodiesDirectory.toString)
+	props.bodiesDirectory(IDEPathHelper.bodiesDirectory.toString)
 	props.binariesDirectory(IDEPathHelper.mavenBinariesDirectory.toString)
-  val simName = if(System.getProperty("gatling.simulationClass")!=null) System.getProperty("gatling.simulationClass") else "org.apache.usergrid.simulations.AppSimulation";
-  props.simulationClass(simName)
 
 	Gatling.fromMap(props.build)
 }

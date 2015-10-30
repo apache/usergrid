@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -54,6 +55,8 @@ public interface AsyncEventService extends ReIndexAction {
     /**
      * Fired when a new edge is added to an entity. Such as initial entity creation, adding to a collection, or creating a connection
      *
+     * TODO: We shouldn't take an entity here, only the id.  It doesn't make sense in a distributed context to pass the entity
+     *
      * @param applicationScope
      * @param entity
      * @param newEdge
@@ -73,6 +76,13 @@ public interface AsyncEventService extends ReIndexAction {
      * @param entityId
      */
     void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId);
+
+
+    /**
+     * current queue depth
+     * @return
+     */
+    long getQueueDepth();
 
 
 

@@ -19,34 +19,26 @@
 package org.apache.usergrid.rest;
 
 
-import java.util.Map;
-import java.util.Set;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import com.google.common.base.Preconditions;
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Preconditions;
-import com.google.inject.Injector;
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.Map;
+import java.util.Set;
 
 
 @Component
@@ -73,7 +65,9 @@ public class MigrateResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "run" )
-    public JSONWithPadding migrateData( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse migrateData( @Context UriInfo ui,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
@@ -113,14 +107,60 @@ public class MigrateResource extends AbstractContextResource {
 
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
+    @RequireSystemAccess
+    @PUT
+    @Path( "run/{pluginName}" )
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse migrateData(@PathParam("pluginName") String pluginName ,  @Context UriInfo ui,
+                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+        throws Exception {
+
+        if(!getDataMigrationManager().pluginExists(pluginName)){
+            throw new IllegalArgumentException("Plugin doesn't exits name:"+pluginName);
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "Migrate Data: "+ pluginName );
+        //TODO make this use the task scheduler
+
+
+
+
+        final Thread migrate = new Thread() {
+
+            @Override
+            public void run() {
+
+                logger.info( "Migrating Data for plugin: " + pluginName );
+
+                try {
+                    getDataMigrationManager().migrate(pluginName);
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to migrate data for plugin: " + pluginName, e );
+                }
+            }
+        };
+
+        migrate.setName( "Index migrate data formats: "+pluginName );
+        migrate.setDaemon( true );
+        migrate.start();
+
+        response.setSuccess();
+
+        return response;
+    }
 
     @RequireSystemAccess
     @PUT
     @Path( "set" )
-    public JSONWithPadding setMigrationVersion(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse setMigrationVersion(
         @Context UriInfo ui, Map<String, Object> json,
         @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
         throws Exception {
@@ -160,14 +200,16 @@ public class MigrateResource extends AbstractContextResource {
         response.setData( node );
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireSystemAccess
     @GET
     @Path( "status" )
-    public JSONWithPadding migrateStatus(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse migrateStatus(
         @Context UriInfo ui,
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
@@ -191,14 +233,16 @@ public class MigrateResource extends AbstractContextResource {
 
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireSystemAccess
     @GET
     @Path( "count" )
-    public JSONWithPadding migrateCount(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse migrateCount(
         @Context UriInfo ui,
         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
@@ -210,7 +254,7 @@ public class MigrateResource extends AbstractContextResource {
 
         response.setSuccess();
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 

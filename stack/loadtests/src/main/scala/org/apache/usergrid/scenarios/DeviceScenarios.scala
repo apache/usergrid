@@ -19,7 +19,8 @@ package org.apache.usergrid.scenarios
 import io.gatling.core.Predef._
 import io.gatling.http.Predef.StringBody
 import io.gatling.http.Predef._
-import org.apache.usergrid.settings.{Headers, Settings}
+import org.apache.usergrid.helpers.Headers
+import org.apache.usergrid.settings.Settings
 
 /**
  *
@@ -46,21 +47,16 @@ object DeviceScenarios {
    */
   val postDeviceWithNotifier = exec(http("Create device with notifier")
     .post("/devices")
-    .headers(Headers.jsonAuthorized)
-    .body(StringBody("""{"deviceModel":"Fake Device",
-    "deviceOSVerion":"Negative Version",
-    """" + notifier + """.notifier.id":"${entityName}"}"""))
+    .headers(Headers.authToken)
+    .body(StringBody(session => """{ "deviceModel": "Fake Device", "deviceOSVersion": "Negative Version", """" + notifier + """.notifier.id": "${entityName}" }"""))
     .check(status.is(200),  jsonPath("$..entities[0]").exists , jsonPath("$..entities[0].uuid").exists , jsonPath("$..entities[0].uuid").saveAs("deviceId")))
 
 
   val postDeviceWithNotifier400ok = exec(http("Create device with notifier")
     .post("/devices")
-    .headers(Headers.jsonAuthorized)
-    .body(StringBody("""{"name":"${entityName}",
-    "deviceModel":"Fake Device",
-    "deviceOSVerion":"Negative Version",
-    "${notifier}.notifier.id":"${entityName}"}"""))
-    .check(status.in(200 to 400), jsonPath("$.entities[0].uuid").saveAs("deviceId")))
+    .headers(Headers.authToken)
+    .body(StringBody(session => """{ "name":"${entityName}", "deviceModel":"Fake Device", "deviceOSVersion":"Negative Version", """" + notifier + """.notifier.id":"${entityName}" }"""))
+    .check(status.in(Range(200, 400)), jsonPath("$.entities[0].uuid").saveAs("deviceId")))
 
 
   /**
@@ -70,7 +66,7 @@ object DeviceScenarios {
     //try to do a GET on device name, if it 404's create it
     http("Check and create device")
       .get("/users/${username}/devices")
-      .headers(Headers.jsonAuthorized)
+      .headers(Headers.authToken)
       .check(jsonPath("$.entities").exists, jsonPath("$.entities").saveAs("devices"))
       )
       .exec(session =>{
@@ -79,11 +75,11 @@ object DeviceScenarios {
       } )
     //create the device if we got a 404
     .doIf("${devices}","[]") {
-      exec(session =>{
+      /*exec(session =>{
         println("adding devices")
         session
-      } )
-      .exec(postDeviceWithNotifier)
+      } )*/
+      exec(postDeviceWithNotifier)
       .exec(ConnectionScenarios.postUserToDeviceConnection)
     }
 }
