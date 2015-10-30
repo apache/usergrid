@@ -45,10 +45,10 @@ public class RxTest {
 
         final int count = 10;
 
-        final CountDownLatch latch = new CountDownLatch( count );
+        final CountDownLatch latch = new CountDownLatch( count+1 );
 
         final Subscription connectedObservable =
-            Observable.range( 0, count ).doOnNext( integer -> latch.countDown() ).subscribeOn( Schedulers.io() )
+            Observable.range( 0, count ).doOnNext( integer -> latch.countDown() ).doOnCompleted( () -> latch.countDown() ).subscribeOn( Schedulers.io() )
                       .subscribe();
 
 
