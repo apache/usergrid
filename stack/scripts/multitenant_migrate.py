@@ -20,9 +20,9 @@
 #
 # STEP 1 - SETUP TENANT ONE TOMCAT RUNNING 2.1 NOT IN SERVICE AND INIT MIGRATION
 #
-#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization admin creds:
+#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization:
 #
-#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --admin <user>:<pass> --init
+#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --init
 #
 #   This command will setup and bootstrap the database, setup the migration system and update index mappings:
 #   - /system/database/setup
@@ -39,7 +39,7 @@
 #
 #   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
 #
-#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --admin <user>:<pass> --date <timestamp>
+#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --date <timestamp>
 #
 #   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app with a start-date specified so only data modified since
@@ -47,9 +47,9 @@
 #
 # STEP 3 - SETUP TENANT TWO TOMCAT RUNNING 2.1 NOT IN SERVICE
 #
-#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization admin creds:
+#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization:
 #
-#       python migrate_entity_data.py --org <org2name> --super <user>:<pass> --admin <user>:<pass>
+#       python migrate_entity_data.py --org <org2name> --super <user>:<pass>
 #
 #   This command will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app.
@@ -60,17 +60,17 @@
 #
 #   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
 #
-#       python migrate_entity_data.py --org <org2name> --super <user>:<pass> --admin <user>:<pass> --date <timestamp>
+#       python migrate_entity_data.py --org <org2name> --super <user>:<pass> --date <timestamp>
 #
 #   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app with a start-date specified so only data modified since
 #   STEP 1 will be re-indexed.
 #
-# STEP 5 - FULL DATA MIGRATION
+# STEP 5 - FULL DATA MIGRATION (migrates entity data to new format)
 #
-#   Login to any Tomcat instance in the cluster and run this command (admin user creds must be specificed but will be ignored):
+#   Login to any Tomcat instance in the cluster and run this command:
 #
-#       python migrate_entity_data.py --super <user>:<pass> --admin <user>:<pass> --full
+#       python migrate_entity_data.py --super <user>:<pass> --full
 #
 #   This command will run the full data migration.
 #
@@ -118,11 +118,6 @@ def parse_args():
                         type=str,
                         required=True)
 
-    parser.add_argument('--admin',
-                        help='Organization admin creds <user:pass>',
-                        type=str,
-                        required=True)
-
     parser.add_argument('--init',
                         help='Init system and start first migration.',
                         action='store_true',
@@ -154,14 +149,6 @@ def parse_args():
         arg_vars['superuser'] = creds[0]
         arg_vars['superpass'] = creds[1]
 
-    creds = arg_vars['super'].split(':')
-    if len(creds) != 2:
-        print('Org admin credentials not properly specified.  Must be "-u <user:pass>". Exiting...')
-        exit_on_error()
-    else:
-        arg_vars['adminuser'] = creds[0]
-        arg_vars['adminpass'] = creds[1]
-
     return arg_vars
 
 
@@ -180,8 +167,6 @@ class Migrate:
         self.logger = init_logging(self.__class__.__name__)
         self.super_user = self.args['superuser']
         self.super_pass = self.args['superpass']
-        self.admin_user = self.args['adminuser']
-        self.admin_pass = self.args['adminpass']
         self.org = self.args['org']
         self.init = self.args['init']
         self.full = self.args['full']
@@ -220,7 +205,6 @@ class Migrate:
 
                 return
 
-
             if self.init:
 
                 # Init the migration system as this is the first migration done on the cluster
@@ -250,7 +234,6 @@ class Migrate:
                         if index_mapping_updated:
                             break
 
-
             # Migrate app info
 
             if self.is_appinfo_migrated():
@@ -271,7 +254,6 @@ class Migrate:
                     break
             self.logger.info('AppInfo Migration Ended.')
 
-
             # Reindex management app
 
             job = self.start_app_reindex(MANAGEMENT_APP_ID)
@@ -286,7 +268,6 @@ class Migrate:
 
             self.logger.info("Finished Re-index. Job=[%s]", job)
             self.metrics['reindex_end'] = get_current_time()
-
 
             # Dedup and re-index all of organization's apps
 
@@ -322,7 +303,6 @@ class Migrate:
 
             self.log_metrics()
             self.logger.info("Finished...")
-
 
         except KeyboardInterrupt:
             self.log_metrics()
@@ -362,7 +342,7 @@ class Migrate:
 
     def start_core_data_migration(self):
            try:
-               r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.super_pass))
+               r = requests.put(url=self.get_migration_url(), auth=(self.super_user, self.super_pass))
                response = r.json()
                return response
            except requests.exceptions.RequestException as e:
@@ -371,7 +351,7 @@ class Migrate:
 
     def start_fulldata_migration(self):
         try:
-            r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.super_pass))
+            r = requests.put(url=self.get_migration_url(), auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -382,7 +362,7 @@ class Migrate:
         try:
             # TODO fix this URL
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_MIGRATION_SYSTEM
-            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.super_pass))
+            r = requests.put(url=migrateUrl, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -424,7 +404,7 @@ class Migrate:
     def start_appinfo_migration(self):
         try:
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_APPINFO
-            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=migrateUrl, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -639,24 +619,25 @@ class Migrate:
 
         try:
 
-            url = self.endpoint + "/management/token"
-            body = json.dumps({"grant_type":"password","username":self.admin_user,"password":self.admin_pass})
-            r = requests.post(url=url, data=body)
-            if ( r.status_code != 200 ):
-                print "Error logging in: " + r.text
-                return
+            url = self.endpoint + "/management/organizations"
+            r = requests.get(url=url, auth=(self.super_user, self.super_pass))
 
-            access_token = r.json()["access_token"]
-
-            url = self.endpoint + "/management/orgs/" + self.org + "/apps?access_token=" + access_token
-            r = requests.get(url=url)
             if r.status_code != 200:
                 exit_on_error('Cannot get app ids: ' + r.text)
 
-            apps = r.json()["data"]
+            response_json = r.json()
+
             app_ids = []
-            for appId in apps.values():
-                app_ids.append(appId)
+            orgs = response_json["organizations"]
+            if orgs is not None:
+                for org in orgs:
+                    if org["name"] == self.org:
+                        for app in org["applications"]:
+                            app_ids.append(org["applications"][app])
+            else:
+                e = 'No Orgs in this system'
+                self.logger.error(e)
+                exit_on_error(e)
 
             return app_ids
 
