@@ -1154,7 +1154,6 @@ public class UserResourceIT extends AbstractRestIT {
         //here we modify the hash a little, this way we can break password validation, then re-set it to ensure we're actually updating the credentials info correctly.
         final String borkedSecret = originalSecret.substring( 0, originalSecret.length() -1 );
 
-        credentials.put( "credentials", borkedSecret );
         credentials.put( "secret", borkedSecret );
 
         //now PUT it
@@ -1192,7 +1191,6 @@ public class UserResourceIT extends AbstractRestIT {
         //now put the correct one
 
 
-        credentials.put( "credentials", originalSecret );
         credentials.put( "secret", originalSecret );
 
 
