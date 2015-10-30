@@ -22,11 +22,10 @@
 #
 #   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization:
 #
-#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --init
+#       python multitenant_migrate.py --org <org1name> --super <user>:<pass> --init
 #
-#   This command will setup and bootstrap the database, setup the migration system and update index mappings:
+#   This command will setup the database, setup the migration system and update index mappings:
 #   - /system/database/setup
-#   - /system/database/bootstrap
 #   - /system/migrate/run/migration-system
 #   - /system/migrate/run/index_mapping_migration
 #
@@ -39,7 +38,7 @@
 #
 #   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
 #
-#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --date <timestamp>
+#       python multitenant_migrate.py --org <org1name> --super <user>:<pass> --date <timestamp>
 #
 #   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app with a start-date specified so only data modified since
@@ -49,7 +48,7 @@
 #
 #   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization:
 #
-#       python migrate_entity_data.py --org <org2name> --super <user>:<pass>
+#       python multitenant_migrate.py --org <org2name> --super <user>:<pass>
 #
 #   This command will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app.
@@ -60,7 +59,7 @@
 #
 #   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
 #
-#       python migrate_entity_data.py --org <org2name> --super <user>:<pass> --date <timestamp>
+#       python multitenant_migrate.py --org <org2name> --super <user>:<pass> --date <timestamp>
 #
 #   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
 #   it will de-dup connections and re-index the app with a start-date specified so only data modified since
@@ -208,9 +207,7 @@ class Migrate:
             if self.init:
 
                 # Init the migration system as this is the first migration done on the cluster
-
                 self.run_database_setup()
-                self.run_database_bootstrap()
 
                 migration_system_updated = self.is_migration_system_updated()
 
@@ -312,10 +309,6 @@ class Migrate:
         url = self.endpoint + '/system/database/setup'
         return url
 
-    def get_database_bootstrap_url(self):
-        url = self.endpoint + '/system/database/bootstrap'
-        return url
-
     def get_migration_url(self):
         url = self.endpoint + '/system/migrate/run'
         return url
@@ -378,17 +371,6 @@ class Migrate:
 
         except requests.exceptions.RequestException as e:
             self.logger.error('Failed to run database setup, %s', e)
-            exit_on_error(str(e))
-
-    def run_database_bootstrap(self):
-        try:
-            setupUrl = self.get_database_bootstrap_url()
-            r = requests.put(url=setupUrl, auth=(self.super_user, self.super_pass))
-            if r.status_code != 200:
-                exit_on_error('Database Bootstrap Failed')
-
-        except requests.exceptions.RequestException as e:
-            self.logger.error('Failed to run database bootstrap, %s', e)
             exit_on_error(str(e))
 
     def start_index_mapping_migration(self):
