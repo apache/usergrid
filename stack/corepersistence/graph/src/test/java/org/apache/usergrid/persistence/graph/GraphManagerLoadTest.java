@@ -113,7 +113,7 @@ public class GraphManagerLoadTest {
 
 
             @Override
-            public Observable<Edge> doSearch( final GraphManager manager ) {
+            public Observable<MarkedEdge> doSearch( final GraphManager manager ) {
                  return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional
                                       .<Edge>absent()) );
             }
@@ -141,7 +141,7 @@ public class GraphManagerLoadTest {
 
 
             @Override
-            public Observable<Edge> doSearch( final GraphManager manager ) {
+            public Observable<MarkedEdge> doSearch( final GraphManager manager ) {
                 return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
             }
         };
@@ -220,7 +220,7 @@ public class GraphManagerLoadTest {
             final CountDownLatch latch = new CountDownLatch( 1 );
 
 
-            generator.doSearch( manager ).take( readCount ).buffer( 1000 ).subscribe( new Subscriber<List<Edge>>() {
+            generator.doSearch( manager ).take( readCount ).buffer( 1000 ).subscribe( new Subscriber<List<MarkedEdge>>() {
                 @Override
                 public void onCompleted() {
                     timer.stop();
@@ -235,7 +235,7 @@ public class GraphManagerLoadTest {
 
 
                 @Override
-                public void onNext( final List<Edge> edges ) {
+                public void onNext( final List<MarkedEdge> edges ) {
                     log.info("Read {} edges", edges.size());
                 }
             } );
@@ -263,6 +263,6 @@ public class GraphManagerLoadTest {
          * @param manager
          * @return
          */
-        public Observable<Edge> doSearch( final GraphManager manager );
+        public Observable<MarkedEdge> doSearch( final GraphManager manager );
     }
 }

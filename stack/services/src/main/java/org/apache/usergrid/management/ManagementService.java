@@ -288,6 +288,18 @@ public interface ManagementService {
     public void setAppUserPassword( UUID applicationId, UUID userId, String oldPassword, String newPassword )
             throws Exception;
 
+    CredentialsInfo getAppUserCredentialsInfo( final UUID applicationId, final UUID userId ) throws Exception;
+
+    /**
+     * Set the credentials info into the
+     * @param applicationId
+     * @param userId
+     * @param credentialsInfo
+     * @throws Exception
+     */
+    void  setAppUserCredentialsInfo( final UUID applicationId, final UUID userId, final CredentialsInfo credentialsInfo ) throws Exception;
+
+
     public User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception;
 
     public UserInfo getAppUserFromAccessToken( String token ) throws Exception;
@@ -350,7 +362,7 @@ public interface ManagementService {
     public OrganizationConfig getOrganizationConfigForApplication( UUID applicationId ) throws Exception;
 
     public void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception;
-    
+
     /**
      * will delete all entities
      * @param applicationId
