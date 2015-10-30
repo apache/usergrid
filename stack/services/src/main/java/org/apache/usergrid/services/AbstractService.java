@@ -657,7 +657,7 @@ public abstract class AbstractService implements Service {
 
         EntityRef owner = request.getOwner();
         String collectionName =
-            "application".equals( owner.getType() ) ? pluralize( info.getItemType() ) : info.getCollectionName();
+                "application".equals( owner.getType() ) ? pluralize( info.getItemType() ) : info.getCollectionName();
         List<ServiceParameter> parameters = filter(request.getParameters(), replaceParameters);
 
         ServiceParameter first_parameter = null;
@@ -669,11 +669,11 @@ public abstract class AbstractService implements Service {
         if ( first_parameter instanceof NameParameter ) {
             if ( hasServiceMetadata( first_parameter.getName() ) ) {
                 return new ServiceContext( this, action, request, previousResults, owner, collectionName, parameters,
-                    payload ).withServiceMetadata( first_parameter.getName() );
+                        payload ).withServiceMetadata( first_parameter.getName() );
             }
             else if ( hasServiceCommand( first_parameter.getName() ) ) {
                 return new ServiceContext( this, action, request, previousResults, owner, collectionName, parameters,
-                    payload ).withServiceCommand( first_parameter.getName() );
+                        payload ).withServiceCommand( first_parameter.getName() );
             }
         }
 
@@ -686,20 +686,20 @@ public abstract class AbstractService implements Service {
         if ( first_parameter instanceof IdParameter ) {
             UUID id = first_parameter.getId();
             return new ServiceContext( this, action, request, previousResults, owner, collectionName,
-                Query.fromUUID( id ), parameters, payload );
+                    Query.fromUUID( id ), parameters, payload );
         }
         else if ( first_parameter instanceof NameParameter ) {
             String name = first_parameter.getName();
             return new ServiceContext( this, action, request, previousResults, owner, collectionName,
-                Query.fromIdentifier( name ), parameters, payload );
+                    Query.fromIdentifier( name ), parameters, payload );
         }
         else if ( query != null ) {
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, query, parameters,
-                payload );
+                    payload );
         }
         else if ( first_parameter == null ) {
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, null, null,
-                payload );
+                    payload );
         }
 
         return null;
@@ -985,13 +985,13 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults putServiceCommand( ServiceContext context, String command, ServicePayload payload )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults postServiceCommand( ServiceContext context, String command, ServicePayload payload )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
@@ -1112,14 +1112,14 @@ public abstract class AbstractService implements Service {
 
     public ServiceResults putEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                EntityDictionaryEntry dictionary, ServicePayload payload )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults postEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                 EntityDictionaryEntry dictionary, ServicePayload payload )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
@@ -1163,7 +1163,7 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults handleEntityCommand( ServiceContext context, ServiceResults results, String command )
-        throws Exception {
+            throws Exception {
         if ( command != null ) {
             if ( results.size() == 1 ) {
                 results = handleEntityCommand( context, results.getRef(), command );
@@ -1177,7 +1177,7 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults handleEntityCommand( ServiceContext context, EntityRef ref, String command )
-        throws Exception {
+            throws Exception {
         if ( ref == null ) {
             throw new UnsupportedServiceOperationException( context );
         }
@@ -1188,7 +1188,7 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults handleEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-        throws Exception {
+            throws Exception {
         if ( ( refs == null ) || ( refs.size() == 0 ) ) {
             throw new UnsupportedServiceOperationException( context );
         }
@@ -1214,7 +1214,7 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults getEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-        throws Exception {
+            throws Exception {
 
         throw new UnsupportedServiceOperationException( context );
     }
@@ -1233,13 +1233,13 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults deleteEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults headEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
@@ -1300,13 +1300,13 @@ public abstract class AbstractService implements Service {
 
 
     public ServiceResults putServiceMetadata( ServiceContext context, String metadataType, ServicePayload payload )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults postServiceMetadata( ServiceContext context, String metadataType, ServicePayload payload )
-        throws Exception {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
@@ -1357,8 +1357,8 @@ public abstract class AbstractService implements Service {
             return;
         }
         String perm =
-            getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
-                path );
+                getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
+                        path );
         boolean permitted = currentUser.isPermitted( perm );
         if ( logger.isDebugEnabled() ) {
             logger.debug( PATH_MSG, new Object[] { path, context.getAction(), perm, permitted } );
@@ -1371,8 +1371,8 @@ public abstract class AbstractService implements Service {
 
 
     private static final String PATH_MSG =
-        "---- Checked permissions for path --------------------------------------------\n" + "Requested path: {} \n"
-            + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n";
+            "---- Checked permissions for path --------------------------------------------\n" + "Requested path: {} \n"
+                    + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n";
 
 
     /** Purpose is to enable entity dictionary entries to have name not equal to path segment. */
