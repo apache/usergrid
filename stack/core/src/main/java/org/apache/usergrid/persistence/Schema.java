@@ -41,6 +41,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.usergrid.persistence.model.collection.SchemaManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -95,7 +96,7 @@ import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
  *
  * @author edanuff
  */
-public class Schema {
+public class Schema implements SchemaManager {
 
     private static final Logger logger = LoggerFactory.getLogger( Schema.class );
 
@@ -697,7 +698,8 @@ public class Schema {
 
 
     /** @return value */
-    public boolean isPropertyMutable( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyMutable(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity != null && entity.isPropertyMutable(propertyName);
@@ -705,7 +707,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyUnique( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyUnique(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity != null && entity.isPropertyUnique(propertyName);
@@ -713,7 +716,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyIndexed( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyIndexed(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity == null || !entity.hasProperty(propertyName) || entity.isPropertyIndexed(propertyName);
@@ -721,7 +725,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyFulltextIndexed( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyFulltextIndexed(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity == null || !entity.hasProperty(propertyName) || entity.isPropertyFulltextIndexed(propertyName);
@@ -729,7 +734,8 @@ public class Schema {
     }
 
 
-    public boolean isPropertyTimestamp( String entityType, String propertyName ) {
+    @Override
+    public boolean isPropertyTimestamp(String entityType, String propertyName) {
 
         EntityInfo entity = getEntityInfo( entityType );
         return entity != null && entity.isPropertyTimestamp(propertyName);

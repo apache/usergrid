@@ -1,0 +1,522 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Facebook sign in &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Security best practices" href="securing-your-app.html"/>
+        <link rel="prev" title="Revoking tokens (logout)" href="revoking-tokens-logout.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Facebook sign in</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#facebook-login-example">Facebook login example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-1-create-a-facebook-app">Step 1: Create a Facebook app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2-invoke-the-facebook-oauth-dialog">Step 2: Invoke the Facebook OAuth dialog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3-add-the-javascript-sdk-for-facebook">Step 3: Add the JavaScript SDK for Facebook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-4-setup-fb-login">Step 4. Setup FB.login</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Facebook sign in</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/security-and-auth/facebook-sign.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="facebook-sign-in">
+<h1>Facebook sign in<a class="headerlink" href="#facebook-sign-in" title="Permalink to this headline">¶</a></h1>
+<p>You can authenticate your Usergrid requests by logging into Facebook. To
+access Usergrid resources, you need to provide an access token with each
+request (unless you use the sandbox app). You can get an access token by
+connecting to an appropriate web service endpoint and providing the
+correct client credentials — this is further described in Authenticating
+users and application clients. However, you can also obtain an access
+token by logging into Facebook.</p>
+<p>To enable authentication to Usergrid through Facebook, do the following
+in your app:</p>
+<ol class="arabic simple">
+<li>Make a login call to the Facebook API (do this using the Facebook SDK
+or API). If the login succeeds, a Facebook access token is returned.</li>
+<li>Send the Facebook access token to Usergrid. If the Facebook access
+token is valid and the user does not already exist in Usergrid,
+Usergrid provisions a new Usergrid user. It also returns an Usergrid
+access token, which you can use for subsequent Usergrid API calls.
+Behind the scenes, Usergrid uses the Facebook access token to
+retrieve the user&#8217;s profile information from Facebook.</li>
+<li>If the Facebook access token is invalid, Facebook returns an OAuth
+authentication error, and the login does not succeed.</li>
+</ol>
+<p>The request to authenticate to Usergrid using a Facebook access token
+is:</p>
+<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/{my_org}/{my_app}/auth/facebook?fb_access_token={fb_access_token}
+</pre></div>
+</div>
+<p>where:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">{my_org}</span></code> is the organization UUID or organization name.</li>
+<li><code class="docutils literal"><span class="pre">{my_app}</span></code> is the application UUID or application name.</li>
+<li><code class="docutils literal"><span class="pre">{fb_access_token}</span></code> is the Facebook access token.</li>
+</ul>
+<div class="section" id="facebook-login-example">
+<h2>Facebook login example<a class="headerlink" href="#facebook-login-example" title="Permalink to this headline">¶</a></h2>
+<p>The Facebook technical guides for login present detailed information on
+how to add Facebook login to your app. Instructions are provided for
+JavaScript, iOS, and Android.</p>
+<p>In brief, here are the steps for JavaScript. You can see these steps
+implemented in the Facebook login example packaged with the JavaScript
+SDK for Usergrid (which you can download in ZIP format or tar.gz
+format). The Facebook login example is in the <code class="docutils literal"><span class="pre">/examples/facebook</span></code>
+directory of the extracted download. The code example snippets shown
+below are taken from the Facebook login example.</p>
+<div class="section" id="step-1-create-a-facebook-app">
+<h3>Step 1: Create a Facebook app<a class="headerlink" href="#step-1-create-a-facebook-app" title="Permalink to this headline">¶</a></h3>
+<p>Create a new app on the Facebook App Dashboard. Enter your app&#8217;s basic
+information. Once created, note the app ID shown at the top of the
+dashboard page.</p>
+</div>
+<div class="section" id="step-2-invoke-the-facebook-oauth-dialog">
+<h3>Step 2: Invoke the Facebook OAuth dialog<a class="headerlink" href="#step-2-invoke-the-facebook-oauth-dialog" title="Permalink to this headline">¶</a></h3>
+<p>Invoke the Facebook OAuth Dialog. To do that, redirect the user&#8217;s
+browser to a URL by inserting the following Javascript code after the
+opening</p>
+<body><p>tag in your app’s HTML file:</p>
+<div class="highlight-python"><div class="highlight"><pre>https://www.facebook.com/dialog/oauth/?
+    client_id={YOUR_APP_ID}
+    &amp;redirect_uri={YOUR_REDIRECT_URL}
+    &amp;state={YOUR_STATE_VALUE}
+    &amp;scope={COMMA_SEPARATED_LIST_OF_PERMISSION_NAMES}
+    &amp;response_type={YOUR_RESPONSE_TYPE}
+</pre></div>
+</div>
+<p>where:</p>
+<p><code class="docutils literal"><span class="pre">{YOUR_APP_ID}</span></code> is the app ID. <code class="docutils literal"><span class="pre">{YOUR_REDIRECT_URL}</span></code> is the
+application UUID or application name. <code class="docutils literal"><span class="pre">{YOUR_STATE_VALUE}</span></code> is a unique
+string used to maintain application state between the request and
+callback. <code class="docutils literal"><span class="pre">{COMMA_SEPARATED_LIST_OF_PERMISSION_NAMES}</span></code> is a comma
+separated list of permission names which you would like the user to
+grant your application. <code class="docutils literal"><span class="pre">{YOUR_RESPONSE_TYPE}</span></code>is the requested
+response type, either code or token. Defaults to code. Set the response
+type to token. With the response type set to token, the Dialog&#8217;s
+response will include an OAuth user access token in the fragment of the
+URL the user is redirected to, as per the client-side authentication
+flow.</p>
+<p>Here is how it’s done in the Facebook login example:</p>
+<div class="highlight-python"><div class="highlight"><pre>var apiKey = $(&quot;#api-key&quot;).val();
+var location = window.location.protocol + &#39;//&#39; + window.location.host;
+var path = window.location.pathname;
+
+var link = &quot;https://www.facebook.com/dialog/oauth?client_id=&quot;;
+link += apiKey;
+link += &quot;&amp;redirect_uri=&quot;;
+link += location+path
+link += &quot;&amp;scope&amp;COMMA_SEPARATED_LIST_OF_PERMISSION_NAMES&amp;response_type=token&quot;;
+
+//now forward the user to facebook
+window.location = link;
+</pre></div>
+</div>
+<p>Notice that the response type is set to token. As a result, a Facebook
+access token will be appended to the URL to which the user is
+redirected.</p>
+</div>
+<div class="section" id="step-3-add-the-javascript-sdk-for-facebook">
+<h3>Step 3: Add the JavaScript SDK for Facebook<a class="headerlink" href="#step-3-add-the-javascript-sdk-for-facebook" title="Permalink to this headline">¶</a></h3>
+<p>Add the following Javascript SDK initialization code after the code that
+invokes the Facebook OAuth Dialog. The code will load and initialize the
+JavaScript SDK in your HTML page. Replace <code class="docutils literal"><span class="pre">YOUR_APP_ID</span></code> with the App
+ID noted in Step 1, and WWW.YOUR_DOMAIN.COM with your own domain.</p>
+<div class="highlight-python"><div class="highlight"><pre>window.fbAsyncInit = function() {
+    FB.init({
+      appId      : &#39;YOUR_APP_ID&#39;, // App ID
+      channelUrl : &#39;//WWW.YOUR_DOMAIN.COM/channel.html&#39;, // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+</pre></div>
+</div>
+<p>Here is how the window.fbAsynchInit() function is implemented in the
+Facebook login example:</p>
+<div class="highlight-python"><div class="highlight"><pre>//load up the facebook api sdk
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : &#39;308790195893570&#39;, // App ID
+      channelUrl : &#39;//usergridsdk.dev//examples/channel.html&#39;, // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+  };
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-4-setup-fb-login">
+<h3>Step 4. Setup FB.login<a class="headerlink" href="#step-4-setup-fb-login" title="Permalink to this headline">¶</a></h3>
+<p>Whenever a user is either not logged into Facebook or not authorized for
+an app, it is useful to prompt them with the relevant dialog. The
+<code class="docutils literal"><span class="pre">FB.login()</span></code> Javascript SDK function automatically displays the
+correct one to the user.</p>
+<p>To integrate <code class="docutils literal"><span class="pre">FB.login()</span></code> function in your existing code:</p>
+<div class="highlight-python"><div class="highlight"><pre>function login() {
+    FB.login(function(response) {
+        if (response.authResponse) {
+            // connected
+        } else {
+            // cancelled
+        }
+    });
+}
+</pre></div>
+</div>
+<p>Here is how <code class="docutils literal"><span class="pre">FB.login()</span></code> is implemented in the Facebook login example:</p>
+<div class="highlight-python"><div class="highlight"><pre>function login(facebookAccessToken) {
+    client.loginFacebook(facebookAccessToken, function(err, response){
+      var output = JSON.stringify(response, null, 2);
+      if (err) {
+        var html = &#39;&lt;pre&gt;Oops!  There was an error logging you in. \r\n\r\n&#39;;
+        html += &#39;Error: \r\n&#39; + output+&#39;&lt;/pre&gt;&#39;;
+      } else {
+        var html = &#39;&lt;pre&gt;Hurray!  You have been logged in. \r\n\r\n&#39;;
+        html += &#39;Facebook Token: &#39; + &#39;\r\n&#39; + facebookAccessToken + &#39;\r\n\r\n&#39;;
+        html += &#39;Facebook Profile data stored in Usergrid: \r\n&#39; + output+&#39;&lt;/pre&gt;&#39;;
+      }
+      $(&#39;#facebook-status&#39;).html(html);
+    })
+  }
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">client.loginFacebook()</span></code> function is provided by the Usergrid
+JavaScript SDK. It uses the Facebook auth token to obtain an Usergrid
+auth token. If the Facebook access token is valid and the user does not
+already exist in Usergrid, the function creates a user entity for the
+user. It also uses the Facebook access token to retrieve the user&#8217;s
+profile information from Facebook.</p>
+<p>Here is what the <code class="docutils literal"><span class="pre">client.loginFacebook()</span></code> function looks like:</p>
+<div class="highlight-python"><div class="highlight"><pre>Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
+  var self = this;
+  var options = {
+    method:&#39;GET&#39;,
+    endpoint:&#39;auth/facebook&#39;,
+    qs:{
+      fb_access_token: facebookToken
+    }
+  };
+  this.request(options, function(err, data) {
+    var user = {};
+    if (err &amp;&amp; self.logging) {
+      console.log(&#39;error trying to log user in&#39;);
+    } else {
+      user = new Usergrid.Entity(&#39;users&#39;, data.user);
+      self.setToken(data.access_token);
+    }
+    if (typeof(callback) === &#39;function&#39;) {
+      callback(err, data, user);
+    }
+  });
+}
+</pre></div>
+</div>
+<p>Notice that the function also returns an Usergrid access token, which
+you can use for subsequent Usergrid API calls.</p>
+<p>Remember to create a client for your app, which is the main entry point
+to the JavaScript SDK for Usergrid. You need to do this before you can
+use the SDK. Here’s the code to create a client:</p>
+<div class="highlight-python"><div class="highlight"><pre>var client = new Usergrid.Client({
+    orgName:&#39;yourorgname&#39;,
+    appName:&#39;yourappname&#39;,
+    logging: true, //optional - turn on logging, off by default
+    buildCurl: true //optional - turn on curl commands, off by default
+});
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="securing-your-app.html" class="btn btn-neutral float-right" title="Security best practices" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="revoking-tokens-logout.html" class="btn btn-neutral" title="Revoking tokens (logout)" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

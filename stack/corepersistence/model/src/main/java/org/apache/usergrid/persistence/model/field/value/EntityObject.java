@@ -38,6 +38,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityObject implements Serializable {
 
+    @JsonIgnore
+    private long size;
+
     /**
      * Fields the users can set
      */
@@ -98,5 +101,12 @@ public class EntityObject implements Serializable {
     public void setFieldMap( Map<String, Field> fieldMap ) {
         fields.clear();
         fields.putAll( fieldMap );
+    }
+
+    public long getSize() {
+        return this.size;
+    }
+    public void setSize(long size) {
+        this.size = size;
     }
 }

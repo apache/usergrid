@@ -17,23 +17,16 @@
 package org.apache.usergrid.rest;
 
 
-import java.io.IOException;
-
-import javax.ws.rs.core.MediaType;
-
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-
-import org.junit.Ignore;
+import javax.ws.rs.ClientErrorException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -82,8 +75,9 @@ public class BasicIT extends AbstractRestIT {
             try {
                 clientSetup.getRestClient().pathResource( getOrgAppPath( "users/JOE" ) ).get( ApiResponse.class );
                 fail("A get on a nonexistant object should fail");
-            }catch ( UniformInterfaceException e ) {
-                    assertEquals( "Guests should not be able to get a 404", 404, e.getResponse().getStatus() );
+            } catch ( ClientErrorException e ) {
+                assertEquals( "Guests should not be able to get a 404", 404,
+                    e.getResponse().getStatusInfo().getStatusCode() );
             }
     }
 }

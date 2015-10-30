@@ -20,7 +20,6 @@ package org.apache.usergrid.rest.applications.collection.users;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.*;
@@ -30,6 +29,8 @@ import org.junit.Test;
 
 
 import org.apache.usergrid.utils.MapUtils;
+
+import javax.ws.rs.ClientErrorException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -151,7 +152,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         int status = 0;
         try {
             data = devices.entity("device2").get();
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );
@@ -175,7 +176,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         status = 0;
         try{
         data = devices.entity("device1").get();
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );
@@ -282,7 +283,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         int status = 200;
         try {
             likeRestaurants.entity("arrogantbutcher").get();
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals(status, 404);
@@ -290,7 +291,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         status = 200;
         try {
             likeRestaurants.entity( arrogantButcherId ).get();
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals(status, 404);
@@ -319,7 +320,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
          status = 200;
         try {
             data = likeRestaurants.entity( "4peaks" ).get();
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );
@@ -330,7 +331,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         try {
             likeRestaurants.entity( peaksId ).get();
 
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
         assertEquals( status,404 );

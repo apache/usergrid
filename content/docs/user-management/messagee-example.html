@@ -1,0 +1,499 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>App Example - Messagee &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Geolocating your Entities" href="../geolocation/geolocation.html"/>
+        <link rel="prev" title="Social Graph Connections" href="user-connections.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">App Example - Messagee</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-user-account-in-usergrid">Creating a user account in Usergrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-an-app-and-users">Creating an app and users</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-1">STEP 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2">STEP 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3">STEP 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-4">STEP 4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-5">STEP 5</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ios-client">iOS client</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-6">STEP 6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-7">STEP 7</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-8">STEP 8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-9">STEP 9</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-10">STEP 10</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-11">STEP 11</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-12">STEP 12</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">STEP 6</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ios-sdk">iOS SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#android-client-and-sdk">Android client and SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#javascript-html5-client-and-sdk">Javascript/HTML5 client and SDK</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>App Example - Messagee</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/user-management/messagee-example.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="app-example-messagee">
+<h1>App Example - Messagee<a class="headerlink" href="#app-example-messagee" title="Permalink to this headline">¶</a></h1>
+<p>Messagee is a simple Twitter-style messaging application that leverages
+the extensive functionality of Usergrid. This section describes some of
+the features of Messagee.</p>
+<p>There are three client versions of Messagee:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/apigee/usergrid-sample-ios-messagee">An iOS client
+version</a></li>
+<li><a class="reference external" href="https://github.com/apigee/usergrid-sample-android-messagee">An Android client
+version</a></li>
+<li><a class="reference external" href="https://github.com/apigee/usergrid-sample-html5-messagee">An HTML5
+client</a></li>
+</ul>
+<p>The sections below describe how to create a new app, enter some test
+users, and run the app. You also learn how to use the Usergrid admin
+portal, a user interface that streamlines data and application
+management in the Usergrid system. The portal is also a reference
+application that shows how to incorporate Usergrid APIs with JavaScript.</p>
+<div class="section" id="creating-a-user-account-in-usergrid">
+<h2>Creating a user account in Usergrid<a class="headerlink" href="#creating-a-user-account-in-usergrid" title="Permalink to this headline">¶</a></h2>
+<p>Go to the Usergrid portal and login. If you are new to Usergrid, sign up
+for an account, specifying an organization (e.g., the name of your
+company or project team) and a username and password that you can use to
+authenticate. Because Usergrid are designed for use by development
+teams, the same username can be associated with one or more
+organizations.</p>
+<p>If you create a new account, you receive a confirmation email that
+contains a URL that you must click to activate the account. After this,
+simply log in to the portal with your username and password.</p>
+<img alt="../_images/login.png" src="../_images/login.png" />
+</div>
+<div class="section" id="creating-an-app-and-users">
+<h2>Creating an app and users<a class="headerlink" href="#creating-an-app-and-users" title="Permalink to this headline">¶</a></h2>
+<p>When you have logged in, you need to create a new application.</p>
+<img alt="../_images/portal1.png" src="../_images/portal1.png" />
+<div class="section" id="step-1">
+<h3>STEP 1<a class="headerlink" href="#step-1" title="Permalink to this headline">¶</a></h3>
+<p>Enter a unique application name. The name must be unique to avoid a
+conflict with another user running the same application.</p>
+<img alt="../_images/portal2.png" src="../_images/portal2.png" />
+</div>
+<div class="section" id="step-2">
+<h3>STEP 2<a class="headerlink" href="#step-2" title="Permalink to this headline">¶</a></h3>
+<p>Make sure that the portal shows the application name you entered as the
+active application beneath the Applications menu (1).</p>
+<p>If the correct name is not displayed, click the menu and select your
+application. Next, you need to populate a test user user-test-1 that is
+going to log in to your copy of the server-side Messagee app.</p>
+</div>
+<div class="section" id="step-3">
+<h3>STEP 3<a class="headerlink" href="#step-3" title="Permalink to this headline">¶</a></h3>
+<p>Click the Users box on the left side of the console (2).</p>
+<img alt="../_images/portal3.png" src="../_images/portal3.png" />
+</div>
+<div class="section" id="step-4">
+<h3>STEP 4<a class="headerlink" href="#step-4" title="Permalink to this headline">¶</a></h3>
+<p>Click the Add button and enter the user information for your application
+in the pop-up window (be sure to create a password you can remember),
+and then click the Create button. Repeat these steps to create a second
+username test-user-2.</p>
+<img alt="../_images/portal4.png" src="../_images/portal4.png" />
+</div>
+<div class="section" id="step-5">
+<h3>STEP 5<a class="headerlink" href="#step-5" title="Permalink to this headline">¶</a></h3>
+<p>When you have finished all these steps, you have a new application and
+two new users.</p>
+<img alt="../_images/portal5.png" src="../_images/portal5.png" />
+<p>Now that you have created a uniquely named copy of the Messagee
+application as well as two user accounts (test-user-1 and test-user-2),
+you are ready to test out the Messagee app. Use test-user-1 to log in to
+the app, and test-user-2 as the user to follow.</p>
+<p>To continue with the example, follow the instructions for a client app
+(iOS client, Android client, or HTML5 client).</p>
+</div>
+</div>
+<div class="section" id="ios-client">
+<h2>iOS client<a class="headerlink" href="#ios-client" title="Permalink to this headline">¶</a></h2>
+<p>Messagee is available as an iPhone app that uses Usergrid and RestKit.
+The source for the iOS version of Messagee is available in the
+/samples/messagee directory of the Usergrid iOS SDK</p>
+<p>Here are the steps to run the Messagee app on iOS:</p>
+<div class="section" id="step-6">
+<h3>STEP 6<a class="headerlink" href="#step-6" title="Permalink to this headline">¶</a></h3>
+<p>Run Steps 1-5 under Creating an app and users. These steps create a
+unique instance of the Messagee app on the server and two test users,
+test-user-1 and test-user-2.</p>
+</div>
+<div class="section" id="step-7">
+<h3>STEP 7<a class="headerlink" href="#step-7" title="Permalink to this headline">¶</a></h3>
+<p>Access the Messagee server app by typing a URL similar to the following
+into your iOS mobile client (replace with the unique name of your
+application): <a class="reference external" href="https://api.usergrid.com//index.html">https://api.usergrid.com//index.html</a></p>
+<img alt="../_images/iOS1chooseapp.jpg" src="../_images/iOS1chooseapp.jpg" />
+</div>
+<div class="section" id="step-8">
+<h3>STEP 8<a class="headerlink" href="#step-8" title="Permalink to this headline">¶</a></h3>
+<p>On the mobile client, complete the registration information and click
+Register.</p>
+<img alt="../_images/iOS2register.jpg" src="../_images/iOS2register.jpg" />
+</div>
+<div class="section" id="step-9">
+<h3>STEP 9<a class="headerlink" href="#step-9" title="Permalink to this headline">¶</a></h3>
+<p>Log in to the Messagee app by entering the test-user-1 account
+information created previously, and click the Sign in button.</p>
+<img alt="user-management/iOS3signin.jpg" src="user-management/iOS3signin.jpg" />
+</div>
+<div class="section" id="step-10">
+<h3>STEP 10<a class="headerlink" href="#step-10" title="Permalink to this headline">¶</a></h3>
+<p>At this point, the message board is empty:</p>
+<img alt="../_images/iOS5emptyfeed.jpg" src="../_images/iOS5emptyfeed.jpg" />
+</div>
+<div class="section" id="step-11">
+<h3>STEP 11<a class="headerlink" href="#step-11" title="Permalink to this headline">¶</a></h3>
+<p>To post a message using the app, click the top-right icon in the message
+board to create a message, write the message text, and send it by
+clicking Post.</p>
+<img alt="../_images/iOS6newmsg.jpg" src="../_images/iOS6newmsg.jpg" />
+<p>Note: The posted message should appear in the message board within few
+seconds.</p>
+<img alt="../_images/iOS7feed1msg.jpg" src="../_images/iOS7feed1msg.jpg" />
+</div>
+<div class="section" id="step-12">
+<h3>STEP 12<a class="headerlink" href="#step-12" title="Permalink to this headline">¶</a></h3>
+<p>For your instance of the Messagee application to act like Twitter, you
+need to &#8220;follow&#8221; another user.</p>
+<p>In the message board, click Add People and add test-user-2 as a person
+that test-user-1 follows.</p>
+<img alt="user-management/iOS9followme.jpg" src="user-management/iOS9followme.jpg" />
+</div>
+<div class="section" id="id1">
+<h3>STEP 6<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Log in as test-user-2 and post a message as this user to the message
+board.</p>
+<p>Go back and log in as user test-user-1. Because test-user-1 follows
+test-user-2, you should see the message sent by test-user-2 in the
+message board.</p>
+<img alt="../_images/iOS10seeusermsg.jpg" src="../_images/iOS10seeusermsg.jpg" />
+</div>
+</div>
+<div class="section" id="ios-sdk">
+<h2>iOS SDK<a class="headerlink" href="#ios-sdk" title="Permalink to this headline">¶</a></h2>
+<p>If you want to write iOS applications that connect to Usergrid,
+<a class="reference external" href="https://github.com/apache/usergrid/tree/master/sdks/ios">download the Usergrid iOS
+SDK</a>.</p>
+<p><strong>Note</strong>: The Messagee iOS application uses RestKit, a popular REST
+framework for iOS, to communicate with Usergrid. Because Usergrid use a
+REST API, you can use any REST framework to talk with the service.
+However, the official Usergrid iOS SDK provides a more convenient
+communication mechanism that you should use unless you&#8217;re already using
+RestKit or some other framework in your project.</p>
+</div>
+<div class="section" id="android-client-and-sdk">
+<h2>Android client and SDK<a class="headerlink" href="#android-client-and-sdk" title="Permalink to this headline">¶</a></h2>
+<p>Messagee is available as a sample Android app that acts as a Usergrid
+client. The source for the Android version is packaged with the Usergrid
+Android SDK in the /samples/messagee directory.</p>
+<p><a class="reference external" href="https://github.com/apache/usergrid/tree/master/sdks/android">Download the Usergrid Android
+SDK</a></p>
+</div>
+<div class="section" id="javascript-html5-client-and-sdk">
+<h2>Javascript/HTML5 client and SDK<a class="headerlink" href="#javascript-html5-client-and-sdk" title="Permalink to this headline">¶</a></h2>
+<p>Messagee is also available as a sample HTML5 app that behaves in much
+the same way as the two previous examples. The source for the HTML5
+version is packaged with the Usergrid Javascript/HTML5 SDK in the
+/samples/messagee directory.</p>
+<p><a class="reference external" href="https://github.com/apache/usergrid/tree/master/sdks/html5-javascript">Download the Usergrid Javascript/HTML5
+SDK</a></p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../geolocation/geolocation.html" class="btn btn-neutral float-right" title="Geolocating your Entities" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="user-connections.html" class="btn btn-neutral" title="Social Graph Connections" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

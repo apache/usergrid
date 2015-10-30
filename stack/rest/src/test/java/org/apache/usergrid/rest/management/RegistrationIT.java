@@ -17,13 +17,12 @@
 package org.apache.usergrid.rest.management;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.*;
-
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.User;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
@@ -31,9 +30,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
 import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.junit.Assert.*;
@@ -42,33 +45,6 @@ import static org.junit.Assert.*;
 public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(RegistrationIT.class);
-
-    public Map<String, Object> getRemoteTestProperties() {
-        return clientSetup.getRestClient().testPropertiesResource().get().getProperties();
-    }
-
-    /**
-     * Sets a management service property locally and remotely.
-     */
-    public void setTestProperty(String key, Object value) {
-        // set the value remotely (in the Usergrid instance running in Tomcat classloader)
-        Entity props = new Entity();
-        props.put(key, value);
-        clientSetup.getRestClient().testPropertiesResource().post(props);
-
-    }
-
-    public void setTestProperties(Map<String, Object> props) {
-        Entity properties = new Entity();
-        // set the values locally (in the Usergrid instance here in the JUnit classloader
-        for (String key : props.keySet()) {
-            properties.put(key, props.get(key));
-
-        }
-
-        // set the values remotely (in the Usergrid instance running in Tomcat classloader)
-        clientSetup.getRestClient().testPropertiesResource().post(properties);
-    }
 
     public String getTokenFromMessage(Message msg) throws IOException, MessagingException {
         String body = ((MimeMultipart) msg.getContent()).getBodyPart(0).getContent().toString();
@@ -122,16 +98,18 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             String t = this.getAdminToken().getAccessToken();
             Form form = new Form();
-            form.add("foo", "bar");
+            form.param( "foo", "bar" );
             try {
-                this.org().getResource(false).path("/users/test-admin-null@mockserver.com")
-                    .queryParam("access_token", t).accept(MediaType.APPLICATION_JSON)
-                    .type(MediaType.APPLICATION_FORM_URLENCODED).put(String.class, form);
-            } catch (UniformInterfaceException e) {
+                this.org().getTarget(false).path("/users/test-admin-null@mockserver.com")
+                    .queryParam("access_token", t)
+                    .request()
+                    .accept(MediaType.APPLICATION_JSON)
+                    .put( javax.ws.rs.client.Entity.form(form) );
+            } catch (ClientErrorException e) {
                 assertEquals("Should receive a 404 Not Found", 404, e.getResponse().getStatus());
             }
         } finally {
@@ -149,7 +127,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             postAddAdminToOrg(this.clientSetup.getOrganizationName(), UUIDGenerator.newTimeUUID()+"@email.com", "password");
         } finally {
@@ -172,7 +150,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             // this should send resetpwd  link in email to newly added org admin user(that did not exist
             ///in usergrid) and "User Invited To Organization" email
@@ -203,13 +181,9 @@ public class RegistrationIT extends AbstractRestIT {
 
             //reset token
             String token = getTokenFromMessage(msgs[0]);
-            this
-                .management()
-                .orgs()
-                .org( this.clientSetup.getOrganizationName() )
-                .users()
-                .getResource( false )
+            this.management().orgs().org( this.clientSetup.getOrganizationName() ).users().getTarget( false )
                 .queryParam( "access_token", token )
+                .request()
                 .get( String.class );
 
             //There is nothing in this test that should indicate why an admin access wouldn't be allowed.
@@ -234,7 +208,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             // svcSetup an admin user
             String adminUserName = "AdminUserFromOtherOrg";
@@ -242,10 +216,10 @@ public class RegistrationIT extends AbstractRestIT {
 
             //A form is REQUIRED to post a user to a management application
             Form userForm = new Form();
-            userForm.add( "username", adminUserEmail );
-            userForm.add( "name", adminUserEmail );
-            userForm.add( "email", adminUserEmail );
-            userForm.add( "password", "password1" );
+            userForm.param( "username", adminUserEmail );
+            userForm.param( "name", adminUserEmail );
+            userForm.param( "email", adminUserEmail );
+            userForm.param( "password", "password1" );
 
             //Disgusting data manipulation to parse the form response.
             Map adminUserPostResponse = (management().users().post( User.class, userForm ));

@@ -1,0 +1,546 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Authenticating users &amp; app clients &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Authentication levels" href="user-authentication-types.html"/>
+        <link rel="prev" title="Using roles" href="using-roles.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-roles.html">Using roles</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Authenticating users &amp; app clients</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#authentication-levels">Authentication levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#application-user-authentication-user-login">Application user authentication (user login)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-the-sdks">Using the SDKs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#request-syntax">Request syntax</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-request">Example request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-response">Example response</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#application-client-authentication">Application client authentication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Request syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Example request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Example response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#admin-user-authentication">Admin user authentication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Request syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Example Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Example response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#organization-client-authentication">Organization client authentication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Request syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Example request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Example response</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Authenticating users &amp; app clients</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/security-and-auth/authenticating-users-and-application-clients.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="authenticating-users-app-clients">
+<h1>Authenticating users &amp; app clients<a class="headerlink" href="#authenticating-users-app-clients" title="Permalink to this headline">¶</a></h1>
+<p>To protect your Usergrid application data, one of the steps you&#8217;ll take
+is to authenticate your app&#8217;s users. By ensuring that they are who they
+say they are, you can help ensure that your application&#8217;s data is
+available in secure ways. After you&#8217;ve created permission rules that
+define access to your application and have associated these rules with
+users, you&#8217;ll want to add code that authenticates your user, as
+described in this topic.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+You manage access to your application's data by creating permission<p>rules that govern which users can do what. Users authenticated as
+Application User have access according to these rules. For more about
+managing permissions, see <a class="reference external" href="using-permissions.html">Using
+Permissions</a>.</p>
+</p></div><div class="section" id="authentication-levels">
+<h2>Authentication levels<a class="headerlink" href="#authentication-levels" title="Permalink to this headline">¶</a></h2>
+<p>Usergrid supports four levels of authentication:</p>
+<ul class="simple">
+<li><strong>Application user</strong>: Grant&#8217;s user access to an API Services
+application, based on the roles and permissions assigned to the user.</li>
+<li><strong>Application client</strong>: Grants full access to perform API requests
+against an API Services application.</li>
+<li><strong>Organization client</strong>: Grants full access to perform API requests
+against an API Services organization.</li>
+<li><strong>Admin user</strong>: Grants full access to perform API requests against
+any API Services organization that the user is an admin of.</li>
+</ul>
+<p>Because the scope of access provided by the application client,
+organization client, and admin user authentication levels is so broad
+(and as a result, so powerful), it&#8217;s a bad practice to use them from a
+mobile app or any client-side code. Instead, they&#8217;re better suited to
+server-side implementations, such as web applications.</p>
+<p>For a more detailed description of available authentication levels, see
+<a class="reference external" href="user-authentication-types.html">Authentication levels</a>.</p>
+</div>
+<div class="section" id="application-user-authentication-user-login">
+<h2>Application user authentication (user login)<a class="headerlink" href="#application-user-authentication-user-login" title="Permalink to this headline">¶</a></h2>
+<p>Using the username and password values specified when the user entity
+was created, your app can connect to the Usergrid application endpoint
+to request an access token. It&#8217;s also acceptable to use the user&#8217;s email
+address in place of the username.</p>
+<div class="section" id="using-the-sdks">
+<h3>Using the SDKs<a class="headerlink" href="#using-the-sdks" title="Permalink to this headline">¶</a></h3>
+<p>When a user is logged in using the Usergrid iOS, JavaScript, node.JS and
+Android SDKs, the returned token is automatically stored in the
+UsergridDataClient (iOS), DataClient (Android), or Usergrid.Client
+(JavaScript/node.JS) class instance, and will be sent to the API with
+all subsequent method calls.</p>
+<div class="section" id="request-syntax">
+<h4>Request syntax<a class="headerlink" href="#request-syntax" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/&lt;orgName&gt;/&lt;appName&gt;/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;password&quot;, &quot;username&quot;:&lt;username&gt;, &quot;password&quot;:&lt;password&gt;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-request">
+<h4>Example request<a class="headerlink" href="#example-request" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/my-org/my-app/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;password&quot;, &quot;username&quot;:&quot;john.doe&quot;, &quot;password&quot;:&quot;testpw&quot;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-response">
+<h4>Example response<a class="headerlink" href="#example-response" title="Permalink to this headline">¶</a></h4>
+<p>The results include the access token needed to make subsequent API
+requests on behalf of the application user:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+<span class="s">&quot;access_token&quot;</span><span class="p">:</span> <span class="s">&quot;5wuGd-lcEeCUBwBQVsAACA:F8zeMOlcEeCUBwBQVsAACA:YXU6AAABMq0hdy4&quot;</span><span class="p">,</span>
+<span class="s">&quot;expires_in&quot;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
+    <span class="s">&quot;user&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="application-client-authentication">
+<h2>Application client authentication<a class="headerlink" href="#application-client-authentication" title="Permalink to this headline">¶</a></h2>
+<p>Using your app’s client id and client secret values, your app can
+connect to the Usergrid application endpoint to request an access token.
+The client ID and secret for your app can be found in &#8216;Getting Started&#8217;
+section of the API Services admin portal, under &#8216;Server App
+Credentials&#8217;.</p>
+<div class="admonition warning"> <p class="first admonition-title"><p>WARNING</p>
+  </p> <p class="last">
+
+
+Warning: You should never authenticate this way from a client-side app<p>such as a mobile app. A hacker could analyze your app and extract the
+credentials for malicious use even if those credentials are compiled and
+in binary format. See <a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
+Practices</a> for
+additional considerations in keeping access to your app and its data
+secure.</p>
+</p></div><div class="section" id="id1">
+<h3>Request syntax<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/&lt;orgName&gt;/&lt;appName&gt;/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;client_credentials&quot;, &quot;client_id&quot;:&lt;application_clientID&gt;, &quot;client_secret&quot;:&quot;&lt;application_client_secret&gt;&quot;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>Example request<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/my-org/my-app/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;client_credentials&quot;, &quot;client_id&quot;:&quot;YXB7NAD7EM0MEeJ989xIxPRxEkQ&quot;, &quot;client_secret&quot;:&quot;YXB7NAUtV9krhhMr8YCw0QbOZH2pxEf&quot;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h3>Example response<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>The results include the access token needed to make subsequent API
+requests on behalf of the application:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;access_token&quot;</span><span class="p">:</span> <span class="s">&quot;F8zeMOlcEeCUBwBQVsAACA:YXA6AAABMq0d4Mep_UgbZA0-sOJRe5yWlkq7JrDCkA&quot;</span><span class="p">,</span>
+    <span class="s">&quot;expires_in&quot;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
+    <span class="s">&quot;application&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="admin-user-authentication">
+<h2>Admin user authentication<a class="headerlink" href="#admin-user-authentication" title="Permalink to this headline">¶</a></h2>
+<p>If you do require admin user access, your app can connect to the
+Usergrid management endpoint to request an access token. Your app
+supplies the username and password of an admin user in the request.</p>
+<div class="admonition warning"> <p class="first admonition-title"><p>WARNING</p>
+  </p> <p class="last">
+
+
+Warning: Authenticating as an admin user grants full access to one or<p>more organizations and all of the applications contained in those
+organizations. Due to this, be cautious when implementing this type of
+authentication in client-side code. Instead, consider implementing admin
+user access in server-side code only. See <a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
+Practices</a> for
+additional considerations in keeping access to your app and its data
+secure.</p>
+</p></div><div class="section" id="id4">
+<h3>Request syntax<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/management/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;password&quot;, &quot;username&quot;:&lt;admin_username&gt;, &quot;password&quot;:&lt;admin_password&gt;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h3>Example Request<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/management/token&quot;  -d &#39;{&quot;grant_type&quot;:&quot;password&quot;, &quot;username&quot;:&quot;testadmin&quot;, &quot;password&quot;:&quot;testadminpw&quot;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h3>Example response<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p>The results include the access token needed to make subsequent API
+requests on behalf of the admin user:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;access_token&quot;</span><span class="p">:</span> <span class="s">&quot;f_GUbelXEeCfRgBQVsAACA:YWQ6AAABMqz_xUyYeErOkKjnzN7YQXXlpgmL69fvaA&quot;</span><span class="p">,</span>
+    <span class="s">&quot;expires_in&quot;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
+    <span class="s">&quot;user&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="organization-client-authentication">
+<h2>Organization client authentication<a class="headerlink" href="#organization-client-authentication" title="Permalink to this headline">¶</a></h2>
+<p>If you do require organization level access, your app can connect to the
+Usergrid management endpoint to request an access token. Access to an
+organization requires the client id and client secret credentials. The
+client ID and secret for your organization can be found on the &#8216;Org
+Administration&#8217; page of the API Services admin console under
+&#8216;Organization API Credentials&#8217;.</p>
+<div class="admonition warning"> <p class="first admonition-title"><p>WARNING</p>
+  </p> <p class="last">
+
+
+Warning: You should never authenticate this way from a client-side app<p>such as a mobile app. A hacker could analyze your app and extract the
+credentials for malicious use even if those credentials are compiled and
+in binary format. See <a class="reference external" href="../security-and-auth/securing-your-app.html">Security Best
+Practices</a> for
+additional considerations in keeping access to your app and its data
+secure.</p>
+</p></div><div class="section" id="id7">
+<h3>Request syntax<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/management/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;client_credentials&quot;, &quot;client_id&quot;:&lt;org_clientID&gt;, &quot;client_secret&quot;:&lt;org_client_secret&gt;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id8">
+<h3>Example request<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/management/token&quot; -d &#39;{&quot;grant_type&quot;:&quot;client_credentials&quot;, &quot;client_id&quot;:&quot;YXB7NAD7EM0MEeJ989xIxPRxEkQ&quot;, &quot;client_secret&quot;:&quot;YXB7NAUtV9krhhMr8YCw0QbOZH2pxEf&quot;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id9">
+<h3>Example response<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<p>The results include the access token needed to make subsequent API
+requests to the organization:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;access_token&quot;</span><span class="p">:</span> <span class="s">&quot;gAuFEOlXEeCfRgBQVsAACA:b3U6AAABMqz-Cn0wtDxxkxmQLgZvTMubcP20FulCZQ&quot;</span><span class="p">,</span>
+    <span class="s">&quot;expires_in&quot;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
+    <span class="s">&quot;organization&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="user-authentication-types.html" class="btn btn-neutral float-right" title="Authentication levels" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="using-roles.html" class="btn btn-neutral" title="Using roles" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

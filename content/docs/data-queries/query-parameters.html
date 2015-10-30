@@ -1,0 +1,528 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Query parameters &amp; clauses &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Query operators &amp; data types" href="operators-and-types.html"/>
+        <link rel="prev" title="Querying your data" href="querying-your-data.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Query parameters &amp; clauses</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#contains">Contains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#location">Location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#order-by">Order by</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#limit">Limit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cursor">Cursor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Query parameters &amp; clauses</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/data-queries/query-parameters.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="query-parameters-clauses">
+<h1>Query parameters &amp; clauses<a class="headerlink" href="#query-parameters-clauses" title="Permalink to this headline">¶</a></h1>
+<p>When querying your data, you can use your query string to get the data,
+then sort and manage it on the client. This topic describes a few
+techniques.</p>
+<p>Query examples in this content are shown unencoded to make them easier
+to read. Keep in mind that you might need to encode query strings if
+you&#8217;re sending them as part of URLs, such as when you&#8217;re executing them
+with the cURL tool.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+Optimizing queries. As a best practice, you should include no more<p>than 3 parameters in your queries. The API will not prevent you from
+submitting a query with more than 3 parameters; however, due to the
+nature of NoSQL, queries with many parameters can quickly become very
+inefficient.</p>
+</p></div><p>For more information, see our <a class="reference external" href="../data-store/data-storage-dbms.html">Usergrid DBMS
+overview</a> and <a class="reference external" href="../data-storage/optimizing-access">Data store best
+practices</a>.</p>
+<div class="section" id="contains">
+<h2>Contains<a class="headerlink" href="#contains" title="Permalink to this headline">¶</a></h2>
+<p>Your query can search the text of entity values of the string data type.
+For example, you can search a postal code field for values that start
+with a specific three numbers.</p>
+<p>For example, the following query selects all restaurants with the word
+diner in the name:</p>
+<div class="highlight-python"><div class="highlight"><pre>/restaurants?ql=select * where restaurants contains &#39;diner&#39;
+</pre></div>
+</div>
+<p><strong>Note</strong>: Not all string properties of the default entities are indexed
+for searching. This includes the User entity&#8217;s username property.</p>
+<p>The following table lists a few examples of the kind of searches you can
+do in queries.</p>
+<table class="usergrid-table">
+    <tr>
+        <td><p>Goal</p>
+</td>
+        <td><p>Example</p>
+</td>
+        <td><p>Notes</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>Find books whose &#8216;title&#8217; property contains the full word &#8220;tale&#8221;.</p>
+</td>
+        <td><pre>/books?ql=select * where title contains 'tale'</pre></td>
+        <td><p>containslooks for the occurrence of a full word anywhere in the searched
+property. Note that contains will not work on the &#8216;name&#8217; property, since
+it is not full-text indexed in the database.</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>Find books whose &#8216;title&#8217; property contains a word that starts with &#8220;ta&#8221;.</p>
+</td>
+        <td><pre>/books?ql=select * where title contains 'ta*'</pre></td>
+        <td><p>containswill look for partial words if you include a wildcard.</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>Find books whose title property is exactly and only &#8220;A Tale of Two
+Cities&#8221;.</p>
+</td>
+        <td><pre>/books?ql=select * where title = 'A Tale of Two Cities'</pre></td>
+        <td><p>The = operator is looking for a match in the entire searched property
+value. Use a * wildcard to look for some set of the first characters
+only.</p>
+</td>
+    </tr>
+</table></div>
+<div class="section" id="location">
+<h2>Location<a class="headerlink" href="#location" title="Permalink to this headline">¶</a></h2>
+<p>If you&#8217;ve stored location data with your entities, you can query for the
+proximity of the geographical locations those entities represent. For
+more information on geolocation, see
+<a class="reference external" href="../geolocation/geolocation.html">Geolocation</a>.</p>
+<table class="usergrid-table">
+    <tr>
+        <td><p>Goal</p>
+</td>
+        <td><p>Example</p>
+</td>
+        <td><p>Notes</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>Find stores whose locations are within the specified longitude and
+latitude.</p>
+</td>
+        <td><pre>/stores?ql=location within 500 of 40.042016, -86.900749</pre></td>
+        <td><p>within will test for values within the value you specify. The within
+value is expressed as a number of meters.The return results are sorted
+in order of nearest to furthest. If there are multiple entries at the
+same location, they&#8217;re returned in the order they were added to the
+database. For more on geolocation queries, see Geolocation.</p>
+</td>
+    </tr>
+</table></div>
+<div class="section" id="order-by">
+<h2>Order by<a class="headerlink" href="#order-by" title="Permalink to this headline">¶</a></h2>
+<p>You can return query results that are sorted in the order you specify.
+Use the order by clause to specify the property to sort by, along with
+the order in which results should be sorted. The syntax for the clause
+is as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>order by &lt;property_name&gt; asc | desc
+</pre></div>
+</div>
+<p>The following table includes a few examples:</p>
+<table class="usergrid-table">
+    <tr>
+        <td><p>Goal</p>
+</td>
+        <td><p>Example</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>Sort by first name in ascending order</p>
+</td>
+        <td><p>/users?ql=select * where lastname = &#8216;Smith&#8217; order by firstname asc</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>Sort by first name in descending order</p>
+</td>
+        <td><p>/users?ql=select * where lastname = &#8216;Smith&#8217; order by firstname desc</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>Sort by last name, then first name in ascending orderl</p>
+</td>
+        <td><p>/users?ql=select * where lastname contains &#8216;Sm*&#8217; order by lastname
+asc, firstname asc</p>
+</td>
+    </tr>
+<table></div>
+<div class="section" id="limit">
+<h2>Limit<a class="headerlink" href="#limit" title="Permalink to this headline">¶</a></h2>
+<p>When your query might return more results than you want to display to
+the user at once, you can use the limit parameter with cursors or API
+methods to manage the display of results. By default, query results are
+limited to 10 at a time. You can adjust this by setting the limit
+parameter to a value you prefer.</p>
+<p>For example, you might execute a query that could potentially return
+hundreds of results, but you want to display 20 of those at a time to
+users. To do this, your code sets the limit parameter to 20 when
+querying for data, then provides a way for the user to request more of
+the results when they&#8217;re ready.</p>
+<p>You would use the following parameters in your query:</p>
+<table class="usergrid-table">
+    <tr>
+        <td><p>Parameter</p>
+</td>
+        <td><p>Type</p>
+</td>
+        <td><p>Description</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>limit</p>
+</td>
+        <td><p>integer</p>
+</td>
+        <td><p><p>Number of results to return. The maximum number of results is 1,000.
+Specifying a limit greater than 1,000 will result in a limit of 1,000.</p>
+</p>
+            <p><p>You can also use the limit parameter on a request without a query
+string. The following example is shorthand for selecting all books and
+limiting by 100 at a time:</p>
+</p>
+            <pre>/books?limit=100</pre>
+            <p><p>Using a limit on a DELETE can help you manage the amount of time it
+takes to delete data. For example you can delete all of the books, 1000
+at a time, with the following:</p>
+</p>
+            <pre>DELETE /books?limit=1000</pre>
+            <p><p>Keep in mind that DELETE operations can take longer to execute. Yet even
+though the DELETE query call might time out (such as with a very large
+limit), the operation will continue on the server even if the client
+stops waiting for the result.</p>
+</p>
+        </td>
+    </tr>
+</table><p>For example:</p>
+<p>Select all users whose name starts with fred, and returns the first 50
+results:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = &#39;fred*&#39;&amp;limit=50
+</pre></div>
+</div>
+</div>
+<div class="section" id="cursor">
+<h2>Cursor<a class="headerlink" href="#cursor" title="Permalink to this headline">¶</a></h2>
+<table class="usergrid-table">
+    <tr>
+        <td><p>Parameter</p>
+</td>
+        <td><p>Type</p>
+</td>
+        <td><p>Description</p>
+</td>
+    </tr>
+    <tr>
+        <td><p>cursor</p>
+</td>
+        <td><p>string</p>
+</td>
+        <td><p>An encoded representation of the query position pointing to a set of
+results. To retrieve the next set of results, pass the cursor with your
+next call for most results./td&gt;</p>
+</tr>
+</table><p>Retrieve the next batch of users whose name is &#8220;fred&#8221;, passing the
+cursor received from the last request to specify where the next set of
+results should begin:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = &#39;fred*&#39;&amp;limit=50&amp;cursor=LTIxNDg0NDUxNDpVdjb0JwREVlS1VCd0xvR3NWT0JRQQ
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="operators-and-types.html" class="btn btn-neutral float-right" title="Query operators &amp; data types" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="querying-your-data.html" class="btn btn-neutral" title="Querying your data" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

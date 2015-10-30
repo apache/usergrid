@@ -108,15 +108,15 @@ public class ApplicationCreateIT extends AbstractRestIT {
 
             final String entityName = "entity" + i;
             Entity entity = new Entity();
-            entity.setProperties(new HashMap<String, Object>() {{
-                put("name", entityName );
-            }});
+            entity.setProperties( new HashMap<String, Object>() {{
+                put( "name", entityName );
+            }} );
 
             ApiResponse createResponse = clientSetup.getRestClient()
-                .org(orgName).app( appName ).collection("things").getResource()
-                .queryParam("access_token", orgAdminToken.getAccessToken())
-                .type(MediaType.APPLICATION_JSON)
-                .post( ApiResponse.class, entity );
+                .org( orgName ).app( appName ).collection( "things" ).getTarget()
+                .queryParam( "access_token", orgAdminToken.getAccessToken() )
+                .request()
+                .post( javax.ws.rs.client.Entity.entity(entity, MediaType.APPLICATION_JSON_TYPE ), ApiResponse.class);
 
             entities.add( createResponse.getEntities().get(0) );
         }

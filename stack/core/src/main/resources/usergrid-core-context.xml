@@ -53,8 +53,8 @@
 	<bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
 		<constructor-arg value="${cassandra.url}" />
         <!-- set the pool size if it's available.  If not go with 50 -->
-        <property name="maxActive" value="${cassandra.connections:20}"/>
-        <property name="cassandraThriftSocketTimeout" value="${cassandra.thriftSocketTimeout:0}" />
+        <property name="maxActive" value="${cassandra.connections:15}"/>
+        <property name="cassandraThriftSocketTimeout" value="${cassandra.thriftSocketTimeout:5000}" />
         <property name="useSocketKeepalive" value="${cassandra.useSocketKeepalive:false}" />
         <!-- Fails on Java 8: <property name="clockResolution" ref="microsecondsTimeResolution" />-->
         <property name="opTimer" ref="taggedOpTimer"/>
@@ -138,6 +138,7 @@
 
     <bean id="simpleBatcher" class="org.apache.usergrid.count.SimpleBatcher">
         <property name="batchSubmitter" ref="batchSubmitter"/>
+        <property name="batchInterval" value="${usergrid.counter.batch.interval}"/>
         <property name="batchSize" value="${usergrid.counter.batch.size}"/>
     </bean>
 
@@ -165,7 +166,7 @@
     </bean>
 
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
-    
+
     <!-- ============================================================== -->
     <!-- Scheduler Settings from removed Scheduler Module's app context -->
     <!-- ============================================================== -->

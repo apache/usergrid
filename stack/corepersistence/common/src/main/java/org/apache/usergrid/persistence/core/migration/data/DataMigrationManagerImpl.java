@@ -93,7 +93,25 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
     }
+    @Override
+    public boolean pluginExists(final String name) {
+        return migrationPlugins.containsKey(name);
+    }
 
+    @Override
+    public void migrate(final String name) throws MigrationException {
+        /**
+         * Invoke each plugin to attempt a migration
+         */
+        final MigrationPlugin plugin = migrationPlugins.get( name );
+        if(plugin != null){
+            final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
+            plugin.run(observer);
+            migrationInfoCache.invalidateAll();
+        }else {
+            throw new IllegalArgumentException(name + " does not match a current plugin.");
+        }
+    }
 
     @Override
     public void migrate() throws MigrationException {
@@ -148,6 +166,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         Preconditions.checkArgument( version >= 0, "You must specify a version of 0 or greater" );
 
         migrationInfoSerialization.setVersion( pluginName, version );
+        migrationInfoCache.invalidateAll();
     }
 
 

@@ -60,6 +60,8 @@ public class Entity extends EntityObject {
     private UUID version;
 
 
+
+
     /**
      * Create an entity with the given type and id.  Should be used for all update operations to an existing entity
      */
@@ -154,5 +156,6 @@ public class Entity extends EntityObject {
     public boolean hasVersion(){
         return getVersion() != null;
     }
+
 
 }

@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Querying your data &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Query parameters &amp; clauses" href="query-parameters.html"/>
+        <link rel="prev" title="Entities" href="../data-storage/entities.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Querying your data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-query-usage">Basic query usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#request-syntax">Request Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#retrieving-values-for-multiple-properties">Retrieving values for multiple properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#response-syntax">Response syntax</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Querying your data</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/data-queries/querying-your-data.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="querying-your-data">
+<h1>Querying your data<a class="headerlink" href="#querying-your-data" title="Permalink to this headline">¶</a></h1>
+<p>This article describes how to use queries to filter data retrieved from
+your backend data store. Queries allow you to work with only the data
+you need, making your app more efficient and manageable by reducing the
+number of entities returned or acted on by the API. A query can be sent
+with any GET, PUT or DELETE request. For example, you might query the
+API to retrieve only the user entities with the property status:&#8217;active&#8217;
+to get a list of your users that have active accounts.</p>
+<p>For information on more advanced query usage and syntax, see <a class="reference external" href="query-parameters.html">Query
+parameters &amp; clauses</a>.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+Query examples in this content are shown unencoded to make them easier<p>to read. Keep in mind that you might need to encode query strings if
+you&#8217;re sending them as part of URLs, such as when you&#8217;re executing them
+with the cURL tool.</p>
+</p></div><div class="section" id="basic-query-usage">
+<h2>Basic query usage<a class="headerlink" href="#basic-query-usage" title="Permalink to this headline">¶</a></h2>
+<p>The following examples show how to query the Usergrid API to return the
+first 5 entities in the users collection that contain the property
+status:&#8217;active&#8217;.</p>
+<div class="admonition note"> <p class="first admonition-title"><p>Note</p>
+  </p> <p class="last">
+
+
+Optimizing queries: As a best practice, you should include no more<p>than 3 parameters in your queries. The API will not prevent you from
+submitting a query with more than 3 parameters; however, due to the
+nature of NoSQL, queries with many parameters can quickly become very
+inefficient.</p>
+</p></div><p>For more information, see our <a class="reference external" href="../data-store/data-storage-dbms.html">Usergrid DBMS
+overview</a> and <a class="reference external" href="../data-storage/optimizing-access">Data store best
+practices</a>.</p>
+<div class="section" id="request-syntax">
+<h3>Request Syntax<a class="headerlink" href="#request-syntax" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;collection&gt;?ql=&lt;query_statement&gt;
+</pre></div>
+</div>
+<p>Note: Any values specified in the query statement should be enclosed in
+single-quotes.</p>
+<div class="highlight-python"><div class="highlight"><pre>https://api.usergrid.com/your-org/your-app/users?limit=5&amp;ql=select * where status = &#39;active&#39;
+</pre></div>
+</div>
+<p>Alternatively, when you use a statement that starts select * where you
+can omit the first part of the statement and abbreviate it this way:</p>
+<div class="highlight-python"><div class="highlight"><pre>https://api.usergrid.com/your-org/your-app/users?limit=5&amp;ql=status = &#39;active&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="retrieving-values-for-multiple-properties">
+<h3>Retrieving values for multiple properties<a class="headerlink" href="#retrieving-values-for-multiple-properties" title="Permalink to this headline">¶</a></h3>
+<p>Your query can return multiple kinds of values &#8211; such as the values of
+multiple properties &#8211; by specifying the property names in your select
+statement as a comma-separated list.</p>
+<p>For example, the following request returns the address and phone number
+of users whose name is Gladys Kravitz:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select address,phone_number where name = &#39;Gladys Kravitz&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="response-syntax">
+<h3>Response syntax<a class="headerlink" href="#response-syntax" title="Permalink to this headline">¶</a></h3>
+<p>When you query your data, the API response is formatted in JavaScript
+Object Notation (JSON). This is a common format used for parameter and
+return values in REST web services.</p>
+<p>Data corresponding to the response is captured in the response’s
+entities array. The array will include one JSON-object for each entity
+returned for the query. Each returned entity will include a number of
+default properties, including the UUID of the entity, the entity type,
+and values for properties such as name, username, email, and so on. For
+a complete list of default properties by entity type, see <a class="reference external" href="../rest-endpoints/api-doc.html#models">Default Data
+Entities</a>.</p>
+<p>For example, the following query for all entities of type user where the
+name property equals &#8216;Gladys Kravitz&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select * where name = ‘Gladys Kravitz’
+</pre></div>
+</div>
+<p>will return the following response:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span> <span class="p">:</span> <span class="s">&quot;get&quot;</span><span class="p">,</span>
+  <span class="s">&quot;application&quot;</span> <span class="p">:</span> <span class="s">&quot;8272c9b0-d86a-11e2-92e2-cdf1ce04c1c0&quot;</span><span class="p">,</span>
+  <span class="s">&quot;params&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;ql&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s">&quot;select * where name = &#39;Gladys Kravitz&#39;&quot;</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;uri&quot;</span> <span class="p">:</span> <span class="s">&quot;http://api.usergrid.com/myorg/myapp/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;entities&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="p">{</span>
+    <span class="s">&quot;uuid&quot;</span> <span class="p">:</span> <span class="s">&quot;d0d7d0ba-e97b-11e2-8cef-411c466c4f2c&quot;</span><span class="p">,</span>
+    <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;user&quot;</span><span class="p">,</span>
+    <span class="s">&quot;name&quot;</span> <span class="p">:</span> <span class="s">&quot;Gladys Kravitz&quot;</span><span class="p">,</span>
+    <span class="s">&quot;created&quot;</span> <span class="p">:</span> <span class="mi">1373472876859</span><span class="p">,</span>
+    <span class="s">&quot;modified&quot;</span> <span class="p">:</span> <span class="mi">1373472876859</span><span class="p">,</span>
+    <span class="s">&quot;username&quot;</span> <span class="p">:</span> <span class="s">&quot;gladys&quot;</span><span class="p">,</span>
+    <span class="s">&quot;email&quot;</span> <span class="p">:</span> <span class="s">&quot;gladys@example.com&quot;</span><span class="p">,</span>
+    <span class="s">&quot;activated&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s">&quot;picture&quot;</span> <span class="p">:</span> <span class="s">&quot;http://www.gravatar.com/avatar/20c57d4f41cf51f2db44165eb058b3b2&quot;</span><span class="p">,</span>
+    <span class="s">&quot;metadata&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c&quot;</span><span class="p">,</span>
+      <span class="s">&quot;sets&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;rolenames&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/rolenames&quot;</span><span class="p">,</span>
+        <span class="s">&quot;permissions&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/permissions&quot;</span>
+      <span class="p">},</span>
+      <span class="s">&quot;connections&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;firstname&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/firstname&quot;</span><span class="p">,</span>
+        <span class="s">&quot;lastname&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/lastname&quot;</span>
+      <span class="p">},</span>
+      <span class="s">&quot;collections&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s">&quot;activities&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/activities&quot;</span><span class="p">,</span>
+        <span class="s">&quot;users&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/users&quot;</span><span class="p">,</span>
+        <span class="s">&quot;feed&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/feed&quot;</span><span class="p">,</span>
+        <span class="s">&quot;groups&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/groups&quot;</span><span class="p">,</span>
+        <span class="s">&quot;roles&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/roles&quot;</span><span class="p">,</span>
+        <span class="s">&quot;following&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/following&quot;</span><span class="p">,</span>
+        <span class="s">&quot;followers&quot;</span> <span class="p">:</span> <span class="s">&quot;/users/d0d7d0ba-e97b-11e2-8cef-411c466c4f2c/followers&quot;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="p">],</span>
+  <span class="s">&quot;timestamp&quot;</span> <span class="p">:</span> <span class="mi">1374694196061</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">48</span><span class="p">,</span>
+  <span class="s">&quot;organization&quot;</span> <span class="p">:</span> <span class="s">&quot;myorg&quot;</span><span class="p">,</span>
+  <span class="s">&quot;applicationName&quot;</span> <span class="p">:</span> <span class="s">&quot;myapp&quot;</span><span class="p">,</span>
+  <span class="s">&quot;count&quot;</span> <span class="p">:</span> <span class="mi">1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Compare the preceding example with the following for another kind of
+query. Imagine the following request string, where the query string is
+asking for only the values of two of the entity’s properties (username
+and name):</p>
+<div class="highlight-python"><div class="highlight"><pre>/users?ql=select username,name where name=’Gladys Kravitz’
+</pre></div>
+</div>
+<p>In the response JSON from this query, the return value is specified as
+the property of the list item &#8211; here, an array containing only the
+values of the properties the query asked for, in the order they were
+requested (username first, then name).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span> <span class="p">:</span> <span class="s">&quot;get&quot;</span><span class="p">,</span>
+  <span class="s">&quot;application&quot;</span> <span class="p">:</span> <span class="s">&quot;8272c9b0-d86a-11e2-92e2-cdf1ce04c1c0&quot;</span><span class="p">,</span>
+  <span class="s">&quot;params&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;ql&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s">&quot;select username,name where name=&#39;Gladys Kravitz&#39;&quot;</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="s">&quot;path&quot;</span> <span class="p">:</span> <span class="s">&quot;/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;uri&quot;</span> <span class="p">:</span> <span class="s">&quot;http://api.usergrid.com/myorg/myapp/users&quot;</span><span class="p">,</span>
+  <span class="s">&quot;list&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="p">[</span> <span class="s">&quot;gladys&quot;</span><span class="p">,</span> <span class="s">&quot;Gladys Kravitz&quot;</span> <span class="p">]</span> <span class="p">],</span>
+  <span class="s">&quot;timestamp&quot;</span> <span class="p">:</span> <span class="mi">1374697463190</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+  <span class="s">&quot;organization&quot;</span> <span class="p">:</span> <span class="s">&quot;myorg&quot;</span><span class="p">,</span>
+  <span class="s">&quot;applicationName&quot;</span> <span class="p">:</span> <span class="s">&quot;myapp&quot;</span><span class="p">,</span>
+  <span class="s">&quot;count&quot;</span> <span class="p">:</span> <span class="mi">1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="query-parameters.html" class="btn btn-neutral float-right" title="Query parameters &amp; clauses" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../data-storage/entities.html" class="btn btn-neutral" title="Entities" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

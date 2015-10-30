@@ -17,23 +17,19 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import java.io.IOException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Collection;
-
-import org.apache.usergrid.rest.test.resource.model.Credentials;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
-
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mortbay.jetty.security.Credential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.ClientErrorException;
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
@@ -66,9 +62,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         try {
             this.clientSetup.getRestClient().org(org).app(app).collection("cities").get();
             fail("Call to bad path exists, but it should not");
-        } catch (UniformInterfaceException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
@@ -79,9 +75,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         try {
             this.clientSetup.getRestClient().org(org).app(app).collection("cities").post(payload);
             fail("Call to bad path exists, but it should not");
-        } catch (UniformInterfaceException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
@@ -89,9 +85,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         try {
             this.clientSetup.getRestClient().org(org).app(app).collection("cities").entity(entity).put(payload);
             fail("Call to bad path exists, but it should not");
-        } catch (UniformInterfaceException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
@@ -99,9 +95,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         try {
             this.clientSetup.getRestClient().org(org).app(app).collection("cities").entity(entity).delete();
             fail("Call to bad path exists, but it should not");
-        } catch (UniformInterfaceException e) {
+        } catch (ClientErrorException e) {
             //verify the correct error was returned
-            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            JsonNode node = mapper.readTree( e.getResponse().readEntity( String.class ));
             assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 

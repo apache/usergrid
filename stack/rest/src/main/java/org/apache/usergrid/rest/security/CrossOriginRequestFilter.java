@@ -17,23 +17,23 @@
 package org.apache.usergrid.rest.security;
 
 
+import org.apache.usergrid.rest.utils.CORSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.rest.utils.CORSUtils;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerResponse;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
+import javax.annotation.Resource;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import java.io.IOException;
 
 
+@Resource
 public class CrossOriginRequestFilter implements ContainerResponseFilter {
-
     public static final Logger logger = LoggerFactory.getLogger( CrossOriginRequestFilter.class );
 
-
     @Override
-    public ContainerResponse filter( ContainerRequest request, ContainerResponse response ) {
-
-        return CORSUtils.allowAllOrigins( request, response );
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) throws IOException {
+        CORSUtils.allowAllOrigins( request, response );
     }
 }

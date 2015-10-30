@@ -1,4 +1,4 @@
-# Usergrid_iron
+# Ruby SDK
 
 Usergrid_iron enables simple, low-level Ruby access to Apigee's App Services (aka Usergrid)
 REST API with minimal dependencies.

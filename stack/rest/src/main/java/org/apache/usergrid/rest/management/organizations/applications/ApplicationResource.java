@@ -17,16 +17,17 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
-import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
@@ -38,7 +39,6 @@ import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.providers.SignInAsProvider;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.services.ServiceManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,14 +55,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.core.util.Health;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.applications.ApplicationResource")
@@ -112,7 +106,9 @@ public class ApplicationResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getApplication(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getApplication(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -122,33 +118,37 @@ public class ApplicationResource extends AbstractContextResource {
         response.setApplication( sm.getApplication() );
         response.setParams( ui.getQueryParameters() );
         response.setResults( management.getApplicationMetadata( applicationId ) );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @GET
     @Path("credentials")
-    public JSONWithPadding getCredentials(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getCredentials(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
         ApiResponse response = createApiResponse();
-        response.setAction( "get application client credentials" );
+        response.setAction("get application client credentials");
 
         ClientCredentialsInfo credentials =
                 new ClientCredentialsInfo( management.getClientIdForApplication( applicationId ),
                         management.getClientSecretForApplication( applicationId ) );
 
         response.setCredentials( credentials );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @RequireOrganizationAccess
     @POST
     @Path("credentials")
-    public JSONWithPadding generateCredentials( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse generateCredentials( @Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -157,18 +157,81 @@ public class ApplicationResource extends AbstractContextResource {
 
         ClientCredentialsInfo credentials =
                 new ClientCredentialsInfo( management.getClientIdForApplication( applicationId ),
-                        management.newClientSecretForApplication( applicationId ) );
+                        management.newClientSecretForApplication(applicationId) );
 
         response.setCredentials( credentials );
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
+    @RequireOrganizationAccess
+    @GET
+    @JSONP
+    @Path("_size")
+    public ApiResponse getApplicationSize(
+        @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "get application size for all entities" );
+        long size = management.getApplicationSize(this.applicationId);
+        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> innerMap = new HashMap<>();
+        Map<String,Object> sumMap = new HashMap<>();
+        innerMap.put("application",size);
+        sumMap.put("size",innerMap);
+        map.put("aggregation", sumMap);
+        response.setMetadata(map);
+        return response;
+    }
+
+    @RequireOrganizationAccess
+    @GET
+    @JSONP
+    @Path("{collection_name}/_size")
+    public ApiResponse getCollectionSize(
+        @Context UriInfo ui,
+        @PathParam( "collection_name" ) String collection_name,
+        @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+        ApiResponse response = createApiResponse();
+        response.setAction("get collection size for all entities");
+        long size = management.getCollectionSize(this.applicationId, collection_name);
+        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> sumMap = new HashMap<>();
+        Map<String,Object> innerMap = new HashMap<>();
+        innerMap.put(collection_name,size);
+        sumMap.put("size",innerMap);
+        map.put("aggregation",sumMap);
+        response.setMetadata(map);
+        return response;
+    }
+
+    @RequireOrganizationAccess
+    @GET
+    @JSONP
+    @Path("collections/_size")
+    public ApiResponse getEachCollectionSize(
+        @Context UriInfo ui,
+        @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+        ApiResponse response = createApiResponse();
+        response.setAction("get collection size for all entities");
+        Map<String,Long> sizes = management.getEachCollectionSize(this.applicationId);
+        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> sumMap = new HashMap<>();
+        sumMap.put("size",sizes);
+        map.put("aggregation",sumMap);
+        response.setMetadata(map);
+        return response;
+    }
 
     @POST
     @Path("sia-provider")
     @Consumes(APPLICATION_JSON)
     @RequireOrganizationAccess
-    public JSONWithPadding configureProvider(
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse configureProvider(
             @Context UriInfo ui,
             @QueryParam("provider_key") String siaProvider,
             Map<String, Object> json,
@@ -200,7 +263,7 @@ public class ApplicationResource extends AbstractContextResource {
 
         signInAsProvider.saveToConfiguration( json );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
     @POST
@@ -351,7 +414,6 @@ public class ApplicationResource extends AbstractContextResource {
 
 
     @Path( "imports" )
-    @RequireOrganizationAccess
     public ImportsResource importGetJson( @Context UriInfo ui,
                                           @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
         throws Exception {
@@ -393,7 +455,9 @@ public class ApplicationResource extends AbstractContextResource {
      */
     @PUT
     @RequireOrganizationAccess
-    public JSONWithPadding executePut(  @Context UriInfo ui, String body,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executePut(  @Context UriInfo ui, String body,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         if ( applicationId == null ) {
@@ -407,13 +471,15 @@ public class ApplicationResource extends AbstractContextResource {
         response.setApplication( emf.getEntityManager( applicationId ).getApplication() );
         response.setParams( ui.getQueryParameters() );
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 
     @DELETE
     @RequireOrganizationAccess
-    public JSONWithPadding executeDelete(  @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse executeDelete(  @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,
         @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
 
@@ -445,7 +511,7 @@ public class ApplicationResource extends AbstractContextResource {
 
         logger.debug( "ApplicationResource.delete() sending response ");
 
-        return new JSONWithPadding( response, callback );
+        return response;
     }
 
 }

@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
@@ -381,7 +381,8 @@ public class UserResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("username = '%s'", username)));
+        Collection results = usersResource.get(
+            new QueryParameters().setQuery(String.format("username = '%s'", username)));
         assertEquals(0, results.getResponse().getEntities().size());
 
         // now create that same user again, it should work
@@ -422,14 +423,16 @@ public class UserResourceIT extends AbstractRestIT {
 
         // plural collection name
 
-        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1").entity(secondCreatedId.toString()).post();
+        Entity conn1 = usersResource.entity(
+            firstCreatedId.toString()).connection("conn1").entity(secondCreatedId.toString()).post();
 
         assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
         refreshIndex();
 
 
-        Entity conn2 = usersResource.entity(firstCreatedId.toString()).connection("conn2").entity(secondCreatedId.toString()).post();
+        Entity conn2 = usersResource.entity(
+            firstCreatedId.toString()).connection("conn2").entity(secondCreatedId.toString()).post();
 
         assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
 
@@ -437,19 +440,23 @@ public class UserResourceIT extends AbstractRestIT {
 
         Collection conn1Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         conn1Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         Collection conn2Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         conn2Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
     }
 
 
@@ -482,7 +489,8 @@ public class UserResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // named entity in collection name
-        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1", "users").entity(secondCreatedId.toString()).post();
+        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1", "users")
+            .entity(secondCreatedId.toString()).post();
 
         assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
@@ -523,7 +531,8 @@ public class UserResourceIT extends AbstractRestIT {
         perms.put("permission", "get:/stuff/**");
 
 
-        Entity perms1 = this.app().collection("roles").entity(roleId1.toString()).connection("permissions").post(new Entity(perms));
+        Entity perms1 = this.app().collection("roles").entity(roleId1.toString()).connection("permissions")
+            .post(new Entity(perms));
 
 
         //Create the second role
@@ -538,10 +547,12 @@ public class UserResourceIT extends AbstractRestIT {
 
         perms = new HashMap<>();
         perms.put("permission", "get:/stuff/**");
-        Entity perms2 = this.app().collection("roles").entity(roleId2.toString()).connection("permissions").post(new Entity(perms));
+        Entity perms2 = this.app().collection("roles").entity(roleId2.toString()).connection("permissions")
+            .post(new Entity(perms));
         refreshIndex();
         //connect the entities where role is the root
-        Entity perms3 = this.app().collection("roles").entity(roleId1.toString()).connection("users").entity(userId.toString()).post();
+        Entity perms3 = this.app().collection("roles").entity(roleId1.toString()).connection("users")
+            .entity(userId.toString()).post();
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
@@ -557,12 +568,14 @@ public class UserResourceIT extends AbstractRestIT {
 
         refreshIndex();
         //query the second role, it should work
-        Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users")
+            .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
         assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
         //query the first role, it should work
-        userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        userRoles = this.app().collection("roles").entity(roleId1).connection("users")
+            .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
         assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
@@ -572,14 +585,16 @@ public class UserResourceIT extends AbstractRestIT {
 
         //query the first role, it should 404
         try {
-            userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+            userRoles = this.app().collection("roles").entity(roleId1).connection("users")
+                .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
             assertNull(userRoles);
-        } catch (UniformInterfaceException e) {
-            assertEquals(Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
+        } catch (ClientErrorException e) {
+            assertEquals( Response.Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
         }
 
         //query the second role, it should work
-        userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        userRoles = this.app().collection("roles").entity(roleId2).connection("users")
+            .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
 
         assertEquals(userId.toString(), userRoles.getResponse().getEntities().get(0).getUuid().toString());
     }
@@ -613,7 +628,8 @@ public class UserResourceIT extends AbstractRestIT {
         // second using pluralized form
 
         // named entity in collection name
-        Entity conn1 = usersResource.entity(firstCreatedId).connection("conn1").collection("pizzas").entity(secondCreatedId).post();
+        Entity conn1 = usersResource.entity(firstCreatedId).connection("conn1").collection("pizzas")
+            .entity(secondCreatedId).post();
 
         assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
@@ -706,7 +722,8 @@ public class UserResourceIT extends AbstractRestIT {
         String userName = String.format("test%s", newUserUuid);
 
         User entity =
-                (User) new User(userName, "Ed Anuff", String.format("%s@anuff.com", newUserUuid), "sesame").chainPut("pin", "1234");
+                (User) new User(userName, "Ed Anuff", String.format("%s@anuff.com", newUserUuid), "sesame")
+                    .chainPut("pin", "1234");
 
         usersResource.post(entity);
         refreshIndex();
@@ -728,7 +745,8 @@ public class UserResourceIT extends AbstractRestIT {
         refreshIndex();
         boolean fail = false;
         try {
-            Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("foo", "bar"));
+            Entity changeResponse = usersResource.entity("edanuff").collection("password")
+                .post(new ChangePasswordEntity("foo", "bar"));
         } catch (Exception e) {
             fail = true;
         }
@@ -762,7 +780,8 @@ public class UserResourceIT extends AbstractRestIT {
 
         // if this was successful, we need to re-set the password for other
         // tests
-        Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("sesame1", "sesame"));
+        Entity changeResponse = usersResource.entity("edanuff").collection("password")
+            .post(new ChangePasswordEntity("sesame1", "sesame"));
         refreshIndex();
         assertNotNull(changeResponse);
 
@@ -776,7 +795,8 @@ public class UserResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // change the password as admin. The old password isn't required
-        Entity node = usersResource.entity("edanuff").connection("password").post(new ChangePasswordEntity(newPassword));
+        Entity node = usersResource.entity("edanuff").connection("password")
+            .post(new ChangePasswordEntity(newPassword));
         assertNotNull(node);
 
         refreshIndex();
@@ -797,7 +817,7 @@ public class UserResourceIT extends AbstractRestIT {
         int responseStatus = 0;
         try {
             usersResource.entity("edanuff").connection("password").post(data);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = uie.getResponse().getStatus();
         }
 
@@ -849,8 +869,8 @@ public class UserResourceIT extends AbstractRestIT {
             role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
             assertNull(role);
-        } catch (UniformInterfaceException e) {
-            assertEquals(e.getResponse().getStatus(), Status.NOT_FOUND.getStatusCode());
+        } catch (ClientErrorException e) {
+            assertEquals(e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode());
         }
     }
 
@@ -871,7 +891,8 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity1);
 
         assertNotNull(entity2);
-        Token adminToken = this.clientSetup.getRestClient().management().token().post(false,Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()),null);
+        Token adminToken = this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, new Token( clientSetup.getUsername(), clientSetup.getUsername() ), null );
         // now revoke the tokens
         this.app().token().setToken(adminToken);
 
@@ -886,11 +907,11 @@ public class UserResourceIT extends AbstractRestIT {
 
             usersResource.entity("edanuff").get();
             assertFalse(true);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         status = 0;
 
@@ -898,11 +919,11 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token2);
 
             usersResource.entity("edanuff").get();
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         Token token3 = this.app().token().post(new Token("edanuff", "sesame"));
         Token token4 = this.app().token().post(new Token("edanuff", "sesame"));
@@ -919,7 +940,8 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity2);
 
         // now revoke the token3
-        adminToken = this.clientSetup.getRestClient().management().token().post(false,Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()),null);
+        adminToken = this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, new Token( clientSetup.getUsername(), clientSetup.getUsername() ), null );
         // now revoke the tokens
         this.app().token().setToken(adminToken);
         usersResource.entity("edanuff").connection("revoketokens").post();
@@ -933,11 +955,11 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token3);
             usersResource.entity("edanuff").get();
 
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         status = 0;
 
@@ -946,12 +968,12 @@ public class UserResourceIT extends AbstractRestIT {
             usersResource.entity("edanuff").get();
 
 
-            status = Status.OK.getStatusCode();
-        } catch (UniformInterfaceException uie) {
+            status = Response.Status.OK.getStatusCode();
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
     }
 
 
@@ -977,33 +999,37 @@ public class UserResourceIT extends AbstractRestIT {
 
         // bad access token
         try {
-            userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", "blah"), false);
+            userResource.entity("test_1").connection("token").get(
+                new QueryParameters().addParam("access_token", "blah"), false);
             assertTrue(false);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
+            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         try {
-            userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", token.getAccessToken()), false);
+            userResource.entity("test_2").connection("token").get(
+                new QueryParameters().addParam("access_token", token.getAccessToken()), false);
             assertTrue(false);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
+            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
-        assertEquals(Status.FORBIDDEN.getStatusCode(), status);
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), status);
 
 
         String adminToken = this.getAdminToken().getAccessToken();
-        Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
+        Collection tokens = userResource.entity("test_1").connection("token").get(
+            new QueryParameters().addParam("access_token", adminToken), false);
 
 
         assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
-        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
+        tokens = userResource.entity("test_1").connection("token").get(
+            new QueryParameters().addParam("access_token", adminToken), false);
 
         assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
@@ -1015,9 +1041,9 @@ public class UserResourceIT extends AbstractRestIT {
         try {
             this.app().token().post(new Token("test_1", "test123"));
             fail("request for deactivated user should fail");
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            JsonNode body = mapper.readTree(uie.getResponse().getEntity(String.class));
+            JsonNode body = mapper.readTree(uie.getResponse().readEntity(String.class));
             assertEquals("user not activated", body.findPath("error_description").textValue());
         }
     }
@@ -1070,8 +1096,7 @@ public class UserResourceIT extends AbstractRestIT {
 
             assertNotNull("List must exist", response.getResponse().getEntities());
             assertTrue("Must be some list items", response.getResponse().getEntities().size() > 0);
-
-            assertTrue("Must be some list items", response.getResponse().getEntities().get(0).keySet().size() == 3);
+            assertTrue("Should have 4 items - [metadata, type, uuid]", response.getResponse().getEntities().get(0).keySet().size() == 3);
 
         }
     }

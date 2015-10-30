@@ -37,13 +37,14 @@ import rx.Observable;
  * Interface for constructing an observable stream to perform asynchonous events
  */
 public interface EventBuilder {
+
     /**
      * Return the cold observable of entity index update operations
      * @param applicationScope
      * @param entity
      * @return
      */
-    Observable<IndexOperationMessage> queueEntityIndexUpdate( ApplicationScope applicationScope, Entity entity );
+    Observable<IndexOperationMessage> buildEntityIndexUpdate( ApplicationScope applicationScope, Entity entity );
 
     /**
      * Return the cold observable of the new edge operation
@@ -52,7 +53,7 @@ public interface EventBuilder {
      * @param newEdge
      * @return
      */
-    Observable<IndexOperationMessage> queueNewEdge( ApplicationScope applicationScope, Entity entity, Edge newEdge );
+    Observable<IndexOperationMessage> buildNewEdge( ApplicationScope applicationScope, Entity entity, Edge newEdge );
 
     /**
      * Return the cold observable of the deleted edge operations
@@ -60,7 +61,7 @@ public interface EventBuilder {
      * @param edge
      * @return
      */
-    Observable<IndexOperationMessage> queueDeleteEdge( ApplicationScope applicationScope, Edge edge );
+    Observable<IndexOperationMessage> buildDeleteEdge( ApplicationScope applicationScope, Edge edge );
 
     /**
      * Return a ben with 2 obervable streams for entity delete.
@@ -68,14 +69,14 @@ public interface EventBuilder {
      * @param entityId
      * @return
      */
-    EventBuilderImpl.EntityDeleteResults queueEntityDelete( ApplicationScope applicationScope, Id entityId );
+    EventBuilderImpl.EntityDeleteResults buildEntityDelete( ApplicationScope applicationScope, Id entityId );
 
     /**
      * Re-index an entity in the scope provided
      * @param entityIndexOperation
      * @return
      */
-    Observable<IndexOperationMessage> index( EntityIndexOperation entityIndexOperation );
+    Observable<IndexOperationMessage> buildEntityIndex( EntityIndexOperation entityIndexOperation );
 
     /**
      * A bean to hold both our observables so the caller can choose the subscription mechanism.  Note that

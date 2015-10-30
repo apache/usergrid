@@ -71,10 +71,8 @@ public interface AccountCreationProps {
 
     public static final String PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS =
             "usergrid.sysadmin.approve.users";
-            //"usergrid.management.admin_users_require_activation";
     public static final String PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS =
             "usergrid.sysadmin.approve.organizations";
-            //"usergrid.management.organizations_require_activation";
     public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ORGANIZATIONS =
             "usergrid.management.notify_sysadmin_of_new_organizations";
     public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ADMIN_USERS =
@@ -85,7 +83,9 @@ public interface AccountCreationProps {
     public static final String PROPERTIES_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
     public static final String PROPERTIES_SYSADMIN_LOGIN_ALLOWED = "usergrid.sysadmin.login.allowed";
 
-    public static final String PROPERTIES_SYSADMIN_EMAIL = "usergrid.sysadmin.email";
+    public static final String PROPERTIES_ADMIN_SYSADMIN_EMAIL = "usergrid.admin.sysadmin.email";
+    public static final String PROPERTIES_ORG_SYSADMIN_EMAIL = "usergrid.org.sysadmin.email";
+    public static final String PROPERTIES_DEFAULT_SYSADMIN_EMAIL = "usergrid.sysadmin.email";
 
     public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD =
             "usergrid.test-account.admin-user.password";
@@ -96,6 +96,8 @@ public interface AccountCreationProps {
     public static final String PROPERTIES_TEST_ACCOUNT_ORGANIZATION = "usergrid.test-account.organization";
     public static final String PROPERTIES_TEST_ACCOUNT_APP = "usergrid.test-account.app";
     public static final String PROPERTIES_SETUP_TEST_ACCOUNT = "usergrid.setup-test-account";
+
+    public static final String PROPERTIES_USERGRID_BINARY_UPLOADER="usergrid.binary.uploader";
 
     public boolean newOrganizationsNeedSysAdminApproval();
 
@@ -114,8 +116,6 @@ public interface AccountCreationProps {
     /**
      * Retrieves the maximum number of organizations to show when the admin logs in.
      * Default is 10
-     *
-     * @return
      */
     public int getMaxOrganizationsForSuperUserLogin();
 

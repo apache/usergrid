@@ -19,7 +19,7 @@ package org.apache.usergrid.rest.exceptions;
 
 import org.apache.usergrid.rest.ApiResponse;
 
-import com.sun.jersey.api.container.MappableContainerException;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 
@@ -36,12 +36,14 @@ public class SecurityException extends RuntimeException {
 
     private String realm = null;
     private String type = null;
+    private Exception root = null;
 
 
-    private SecurityException( String type, String message, String realm ) {
+    private SecurityException( String type, String message, String realm, Exception root ) {
         super( message );
         this.type = type;
         this.realm = realm;
+        this.root = root;
     }
 
 
@@ -54,6 +56,9 @@ public class SecurityException extends RuntimeException {
         return type;
     }
 
+    public Exception getRoot() {
+        return root;
+    }
 
     public String getJsonResponse() {
         ApiResponse response = new ApiResponse();
@@ -62,28 +67,28 @@ public class SecurityException extends RuntimeException {
     }
 
 
-    public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo ) {
+    public static RuntimeException mappableSecurityException( AuthErrorInfo errorInfo ) {
         return mappableSecurityException( errorInfo.getType(), errorInfo.getMessage() );
     }
 
-
-    public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo, String message ) {
+    public static RuntimeException mappableSecurityException( AuthErrorInfo errorInfo, String message ) {
         return mappableSecurityException( errorInfo.getType(), message );
     }
 
-
-    public static MappableContainerException mappableSecurityException( String type, String message ) {
-        return new MappableContainerException( new SecurityException( type, message, null ) );
+    public static RuntimeException mappableSecurityException( String type, String message ) {
+        return new SecurityException( type, message, null, null );
     }
 
-
-    public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo, String message,
-                                                                        String realm ) {
+    public static RuntimeException mappableSecurityException( AuthErrorInfo errorInfo, String message, String realm ) {
         return mappableSecurityException( errorInfo.getType(), message, realm );
     }
 
-
-    public static MappableContainerException mappableSecurityException( String type, String message, String realm ) {
-        return new MappableContainerException( new SecurityException( type, message, realm ) );
+    public static RuntimeException mappableSecurityException( String type, String message, String realm ) {
+        return new SecurityException( type, message, realm, null );
     }
+
+    public static RuntimeException mappableSecurityException( Exception e, AuthErrorInfo errorInfo ) {
+        return new SecurityException( errorInfo.getType(), e.getMessage(), null, e );
+    }
+
 }

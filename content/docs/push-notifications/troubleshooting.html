@@ -1,0 +1,466 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Troubleshooting &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Security &amp; token authentication" href="../security-and-auth/app-security.html"/>
+        <link rel="prev" title="Creating and managing notifications" href="creating-and-managing-notifications.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-android">Working with Android</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app-fails-to-install-on-the-emulator">App fails to install on the emulator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#push-errors">Push errors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mismatchsenderid-error-message-from-the-server-when-it-tries-to-send-a-message-to-your-app">MismatchSenderId error message from the server when it tries to send a message to your app.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#invalid-sender-error-message">INVALID_SENDER error message</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-phonegap-android">Working with PhoneGap Android</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">App fails to install on the emulator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Push errors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">MismatchSenderId error message from the server when it tries to send a message to your app.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">INVALID_SENDER error message</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Troubleshooting</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/push-notifications/troubleshooting.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="working-with-android">
+<h2>Working with Android<a class="headerlink" href="#working-with-android" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="app-fails-to-install-on-the-emulator">
+<h3>App fails to install on the emulator<a class="headerlink" href="#app-fails-to-install-on-the-emulator" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>When using the emulator, be sure to note the setup steps in <a class="reference external" href="getting-started.html#prerequisites">Push
+notifications prerequisites</a>.</li>
+<li>Sometimes installation fails while the emulator is still being
+launched. Wait until the emulator is up and running (so that you can
+unlock and interact with the UI), then run the project again.</li>
+<li>Make sure that the order of your Java Build Path matches the order
+shown in <a class="reference external" href="tutorial.html">Tutorial: Push notifications sample app</a>.</li>
+</ul>
+</div>
+<div class="section" id="push-errors">
+<h3>Push errors<a class="headerlink" href="#push-errors" title="Permalink to this headline">¶</a></h3>
+<p>If pressing the button to send yourself a push throws an exception or
+doesn&#8217;t respond:</p>
+<ul class="simple">
+<li>Make sure the emulator&#8217;s target matches the Google API version used
+in the project.</li>
+<li>In the IDE log, wait until you see that the device has been
+registered before sending yourself a push. Sometimes waiting for the
+code to run and trying another click gets the push message to you.</li>
+<li>If you successfully send yourself a push message once but fail to
+again, try one of the following:</li>
+</ul>
+<p>Go to the apps list on the device and launch the app from there.</p>
+<p>OR</p>
+<p>Uninstall the app from the device, delete the device in the admin
+portal, and run the project again.</p>
+</div>
+<div class="section" id="mismatchsenderid-error-message-from-the-server-when-it-tries-to-send-a-message-to-your-app">
+<h3>MismatchSenderId error message from the server when it tries to send a message to your app.<a class="headerlink" href="#mismatchsenderid-error-message-from-the-server-when-it-tries-to-send-a-message-to-your-app" title="Permalink to this headline">¶</a></h3>
+<p>The sender ID is a number you send to GCM from app code when registering
+with GCM for notifications. The error might be occurring because the
+sender ID with which your app is registering at GCM for notifications
+does not correlate to the API project whose API key was used to create
+your notifier. First, confirm the following:</p>
+<ul class="simple">
+<li>The sender ID in your app code (used when registering with GCM) is
+the same as your Goole API project number.</li>
+<li>The API key used to create your notifier is the same as the API key
+in your Google API project.</li>
+<li>The notifier name used in your app code is the same as for the
+notifier you created in the Usergrid.</li>
+</ul>
+<p>It can be possible to make a fix (such as by correcting the sender ID in
+your app code) and still see this error. If you&#8217;re still seeing the
+error, consider create a new API project and notifier, then use their
+new values in your code:</p>
+<ol class="arabic simple">
+<li>Recreate (or create anew) the Google API project. This will generate
+a new API key and project number. See Registering with a notification
+service.</li>
+<li>Create a new notifier for GCM using the API key you generated with
+the new API project. See Creating notifiers.</li>
+<li>Use the new notifier name in your code, along with a new sender ID
+that is that same value as the Google API project number.</li>
+</ol>
+</div>
+<div class="section" id="invalid-sender-error-message">
+<h3>INVALID_SENDER error message<a class="headerlink" href="#invalid-sender-error-message" title="Permalink to this headline">¶</a></h3>
+<p>The sender ID is a number you send to GCM from app code when registering
+with GCM for notifications. The &#8220;sender&#8221; in this case is the Google API
+project you created to send notification messages. Confirm that the
+sender ID you&#8217;re using in code is the same value as the API project
+number generated when you created your Google API project. See
+Registering with a notification service.</p>
+</div>
+</div>
+<div class="section" id="working-with-phonegap-android">
+<h2>Working with PhoneGap Android<a class="headerlink" href="#working-with-phonegap-android" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>App fails to install on the emulator<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>When using the emulator, be sure to note the setup steps in
+<a class="reference external" href="tutorial.html">Tutorial: Push notifications sample app</a>.</li>
+<li>Sometimes installation fails while the emulator is still being
+launched. Wait until the emulator is up and running (so that you can
+unlock and interact with the UI), then run the project again.</li>
+<li>Make sure that the order of your Java Build Path matches the order
+shown in <a class="reference external" href="tutorial.html">Tutorial: Push notifications sample app</a>.</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h3>Push errors<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>If pressing the button to send yourself a push throws an exception or
+doesn&#8217;t respond:</p>
+<ul class="simple">
+<li>Make sure the emulator&#8217;s target matches the Google API version used
+in the project.</li>
+<li>In the IDE log, wait until you see that the device has been
+registered before sending yourself a push. Sometimes waiting for the
+code to run and trying another click gets the push message to you.</li>
+<li>If you successfully send yourself a push message once but fail to
+again, try one of the following:</li>
+</ul>
+<p>Go to the apps list on the device and launch the app from there.</p>
+<p>OR</p>
+<p>Uninstall the app from the device, delete the device using the admin
+portal, then run the project again.</p>
+</div>
+<div class="section" id="id3">
+<h3>MismatchSenderId error message from the server when it tries to send a message to your app.<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>The sender ID is a number you send to GCM from app code when registering
+with GCM for notifications. The error might be occurring because the
+sender ID with which your app is registering at GCM for notifications
+does not correlate to the API project whose API key was used to create
+your notifier. First, confirm the following:</p>
+<ul class="simple">
+<li>The sender ID in your app code (used when registering with GCM) is
+the same as your Google API project number.</li>
+<li>The API key used to create your notifier is the same as the API key
+in your Google API project.</li>
+<li>The notifier name used in your app code is the same as for the
+notifier you created in the Usergrid.</li>
+</ul>
+<p>It can be possible to make a fix (such as by correcting the sender ID in
+your app code) and still see this error. If you&#8217;re still seeing the
+error, consider create a new API project and notifier, then use their
+new values in your code:</p>
+<ol class="arabic simple">
+<li>Recreate (or create anew) the Google API project. This will generate
+a new API key and project number. See <a class="reference external" href="registration.html">Registering with a
+notification service</a>.</li>
+<li>Create a new notifier for GCM using the API key you generated with
+the new API project. See <a class="reference external" href="creating-notifiers.html">Creating
+notifiers</a>.</li>
+<li>Use the new notifier name in your code, along with a new sender ID
+that is that same value as the Google API project number.</li>
+</ol>
+</div>
+<div class="section" id="id4">
+<h3>INVALID_SENDER error message<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>The sender ID is a number you send to GCM from app code when registering
+with GCM for notifications. The &#8220;sender&#8221; in this case is the Google API
+project you created to send notification messages. Confirm that the
+sender ID you&#8217;re using in code is the same value as the API project
+number generated when you created your Google API project. See
+<a class="reference external" href="registration.html">Registering with a notification service</a>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../security-and-auth/app-security.html" class="btn btn-neutral float-right" title="Security &amp; token authentication" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="creating-and-managing-notifications.html" class="btn btn-neutral" title="Creating and managing notifications" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

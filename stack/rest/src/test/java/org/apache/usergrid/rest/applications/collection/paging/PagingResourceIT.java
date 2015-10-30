@@ -18,10 +18,7 @@ package org.apache.usergrid.rest.applications.collection.paging;
 
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -68,15 +65,46 @@ public class PagingResourceIT extends AbstractRestIT {
 
         Thread.sleep(2000);
         //verifies that we can't get anymore entities from the collection
-        Collection getCollection = this.app().collection( collectionName ).get();
+        Collection getCollection = this.app().collection(collectionName).get();
+
+        assertFalse("All entities should have been removed", getCollection.hasNext());
+
+        //now do 1 more delete, we shouldn't get any results
+        ApiResponse response = this.app().collection( collectionName ).delete( queryParameters );
+        assertEquals("No more entities deleted", 0, response.getEntityCount());
+    }
+
+    @Test
+    public void collectionBatchDeletingWithQuery() throws Exception {
+
+
+        String collectionName = "testCollectionBatchDeleting";
+
+        int numOfEntities = 40;
+
+        //Creates 40 entities by posting to collection
+        createEntities(collectionName, numOfEntities);
+
+        //sets the number of entities we want to delete per call.
+        int deletePageSize = 10;
+        int totalNumOfPages = numOfEntities/deletePageSize;
+        QueryParameters queryParameters = new QueryParameters().setLimit(deletePageSize);
+        queryParameters.addParam("ql", "select * where city='Denver'");
+
+        //deletes the entities using the above set value. Then verifies that those entities were deleted.
+        deleteByPage(deletePageSize, totalNumOfPages, collectionName, queryParameters, false);
+
+
+        Thread.sleep(2000);
+        //verifies that we can't get anymore entities from the collection
+        Collection getCollection = this.app().collection( collectionName ).get(queryParameters);
 
         assertFalse( "All entities should have been removed", getCollection.hasNext());
 
         //now do 1 more delete, we shouldn't get any results
-        ApiResponse response = this.app().collection( collectionName ).delete( queryParameters );
-        assertEquals( "No more entities deleted", 0, response.getEntityCount() );
+        Collection response = this.app().collection( collectionName ).get(queryParameters);
+        assertEquals("No more entities deleted", 0, response.getNumOfEntities());
     }
-
 
     /**
      * Deletes entities from collectionName collection by deleting the number of entities specified in
@@ -88,14 +116,19 @@ public class PagingResourceIT extends AbstractRestIT {
      * @param collectionName
      * @param queryParameters
      */
-    public void deleteByPage(int deletePageSize,int totalPages,String collectionName, QueryParameters queryParameters){
+    public void deleteByPage(int deletePageSize,int totalPages,String collectionName, QueryParameters queryParameters) {
+        deleteByPage(deletePageSize, totalPages, collectionName, queryParameters, true);
+    }
+
+    public void deleteByPage(int deletePageSize,int totalPages,String collectionName, QueryParameters queryParameters, boolean validate){
         for ( int i = 0; i < totalPages; i++ ) {
 
             ApiResponse response = this.app().collection( collectionName ).delete( queryParameters );
 
             this.refreshIndex();
 
-            assertEquals("Entities should have been deleted", deletePageSize,response.getEntityCount() );
+            if(validate)
+                assertEquals("Entities should have been deleted", deletePageSize,response.getEntityCount() );
             try{Thread.sleep(100);}catch (InterruptedException ie){
 
             }
@@ -177,12 +210,12 @@ public class PagingResourceIT extends AbstractRestIT {
         String collectionName = "testPagingEntities" ;
 
         //creates entities
-        createEntities( collectionName,numOfEntities );
+        createEntities(collectionName, numOfEntities);
 
         //pages through entities and verifies that they are correct.
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.setQuery( "select * ORDER BY created" );
-        pageAndVerifyEntities( collectionName, queryParameters, numOfPages, numOfEntities );
+        pageAndVerifyEntities(collectionName, queryParameters, numOfPages, numOfEntities);
     }
 
 
@@ -349,10 +382,20 @@ public class PagingResourceIT extends AbstractRestIT {
      */
     public List<Entity> createEntities(String collectionName ,int numOfEntities ){
         List<Entity> entities = new LinkedList<>(  );
+        Random random = new Random();
+        List<String> cities = new ArrayList<String>();
+        cities.add("Denver");
+        cities.add("New York");
+        cities.add("Los Angeles");
+        cities.add("Los");
+        cities.add("Boulder");
+
 
         for ( int i = 1; i <= numOfEntities; i++ ) {
             Map<String, Object> entityPayload = new HashMap<String, Object>();
             entityPayload.put( "name", String.valueOf( i ) );
+            entityPayload.put( "city", cities.get(random.nextInt(5)) );
+
             Entity entity = new Entity( entityPayload );
 
             entities.add( entity );

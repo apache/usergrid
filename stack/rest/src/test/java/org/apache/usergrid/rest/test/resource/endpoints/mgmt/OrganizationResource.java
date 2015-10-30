@@ -42,9 +42,14 @@ public class OrganizationResource extends NamedResource {
         return new UsersResource(context, this);
     }
 
+    public ApplicationsResource applications() {
+        return new ApplicationsResource(context, this);
+    }
+
     public Organization get() {
-        ApiResponse rep = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).get(ApiResponse.class);
+        ApiResponse rep = getTarget( true ).request()
+            .accept(MediaType.APPLICATION_JSON)
+            .get(ApiResponse.class);
 
         //TODO: not sure if this will work for multiple users.
         Organization org = new Organization(rep);
@@ -54,9 +59,9 @@ public class OrganizationResource extends NamedResource {
 
     // Doesn't return anything useful server side so this was made as a void. .
     public void put(Organization organization) {
-        Map<String, Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).put(Organization.class,
-                organization);
+        Map<String, Object> response = getTarget(true).request()
+            .accept(MediaType.APPLICATION_JSON)
+            .put( javax.ws.rs.client.Entity.json(organization), Organization.class);
 
     }
 

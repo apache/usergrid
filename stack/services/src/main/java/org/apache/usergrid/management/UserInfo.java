@@ -39,17 +39,18 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 @XmlRootElement
 public class UserInfo {
 
-    private final UUID applicationId;
-    private final UUID id;
-    private final String username;
-    private final String name;
-    private final String email;
-    private final boolean activated;
-    private final boolean confirmed;
-    private final boolean disabled;
-    private final Map<String, Object> properties;
-    private final boolean admin;
+    private UUID applicationId;
+    private UUID id;
+    private String username;
+    private String name;
+    private String email;
+    private boolean activated;
+    private boolean confirmed;
+    private boolean disabled;
+    private Map<String, Object> properties;
+    private boolean admin;
 
+    public UserInfo() {}
 
     public UserInfo( UUID applicationId, UUID id, String username, String name, String email, boolean confirmed,
                      boolean activated, boolean disabled, Map<String, Object> properties, boolean admin ) {
@@ -150,4 +151,6 @@ public class UserInfo {
     public boolean isConfirmed() {
         return confirmed;
     }
+
+
 }

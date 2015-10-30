@@ -17,41 +17,32 @@
 package org.apache.usergrid.rest;
 
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.springframework.beans.factory.annotation.Autowired;
+import net.tanesha.recaptcha.ReCaptcha;
+import net.tanesha.recaptcha.ReCaptchaFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.core.HttpContext;
-import com.sun.jersey.api.core.ResourceContext;
-import com.sun.jersey.api.view.Viewable;
-import com.sun.jersey.spi.CloseableService;
-
-import net.tanesha.recaptcha.ReCaptcha;
-import net.tanesha.recaptcha.ReCaptchaFactory;
-
-import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.server.CloseableService;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ResourceContext;
+import javax.ws.rs.core.*;
+import javax.xml.ws.spi.http.HttpContext;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 
 public abstract class AbstractContextResource {
@@ -187,7 +178,7 @@ public abstract class AbstractContextResource {
         logger.debug("Dispatching to viewable with template: {}",
             template, template_property);
 
-        Viewable viewable = new Viewable(template, model, this.getClass());
+        Viewable viewable = new Viewable(template, model);
         return viewable;
     }
 

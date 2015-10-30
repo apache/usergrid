@@ -20,6 +20,7 @@ package org.apache.usergrid;
 import java.util.UUID;
 
 import com.google.inject.Injector;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.junit.rules.TestRule;
 
@@ -44,4 +45,6 @@ public interface CoreITSetup extends TestRule {
     Injector getInjector();
 
     TestEntityIndex getEntityIndex();
+
+    ApplicationService getApplicationService();
 }

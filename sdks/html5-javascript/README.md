@@ -1,3 +1,5 @@
+# HTML5-JavaScript SDK
+
 ##Quickstart
 Detailed instructions follow but if you just want a quick example of how to get started with this SDK, here’s a minimal HTML5 file that shows you how to include & initialize the SDK, as well as how to read & write data from Usergrid with it.
 
@@ -82,11 +84,11 @@ The Javascript SDK is in the sdks/html5-javascript folder.
 
 To find out more about Usergrid, see:
 
-<http://usergrid.incubator.apache.org>
+<http://usergrid.apache.org>
 
 To view the Usergrid documentation, see:
 
-<http://usergrid.incubator.apache.org/docs/>
+<http://usergrid.apache.org/docs/>
 
 
 ##Node.js
@@ -403,7 +405,7 @@ You can also limit the results returned such that only the fields you specify ar
 
 You can find more information on custom queries here:
 
-<http://usergrid.incubator.apache.org/docs/query-language/>
+<http://usergrid.apache.org/docs/query-language/>
 ##Counters
 Counters can be used by an application to create custom statistics, such as how many times an a file has been downloaded or how many instances of an application are in use.
 
@@ -658,7 +660,7 @@ This creates a one-way connection between marty and einstein, where marty "likes
 
 Complete documentation on the entity relationships API can be found here:
 
-<http://usergrid.incubator.apache.org/docs/relationships/>
+<http://usergrid.apache.org/docs/relationships/>
 
 For example, say we have a new dog named einstein:
 
@@ -860,7 +862,7 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Ja
 usergrid.js and usergrid.min.js are built from modular components using Grunt. If you want to contribute updates to these files, please commit your changes to the modules in /lib/modules. Do not contribute directly to usergrid.js or your changes could get overwritten in a future build.
 
 ##More information
-For more information on Usergrid, visit <http://usergrid.incubator.apache.org/>.
+For more information on Usergrid, visit <http://usergrid.apache.org/>.
 For more information on Apigee App Services, visit <http://developers.apigee.com>.
 
 ## Copyright

@@ -141,7 +141,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         runningReIndex.collect(() -> new FlushingCollector(jobId),
             ((flushingCollector, edgeScopes) -> flushingCollector.flushBuffer(edgeScopes))).doOnNext( flushingCollector-> flushingCollector.complete() )
                 //subscribe on our I/O scheduler and run the task
-            .subscribeOn( Schedulers.io() ).subscribe();
+            .subscribeOn( Schedulers.io() ).subscribe(); //want reindex to continually run so leave subscribe.
 
 
         return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );

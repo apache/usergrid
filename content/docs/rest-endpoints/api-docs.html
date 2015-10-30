@@ -1,0 +1,4218 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Methods &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="COMING SOON..." href="../sdks/tbd.html"/>
+        <link rel="prev" title="Admin user" href="../orgs-and-apps/admin-user.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#access-tokens">Access-Tokens</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activities">Activities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#admin-users">Admin-Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#app-users">App-Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entities-collections">Entities-Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#events">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#groups">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notifications">Notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#organizations-applications">Organizations-Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#permissions-roles">Permissions-Roles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#models">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#accesstokenresponse">AccessTokenResponse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#action">Action</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activityfeed">ActivityFeed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#addrole">AddRole</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#appdata">AppData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#createactivity">CreateActivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#createadminuser">CreateAdminUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#createentities">CreateEntities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#createevent">CreateEvent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creategroup">CreateGroup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#createnotifications">CreateNotifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#createorg">CreateOrg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#createuser">CreateUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#credential">Credential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#device">Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entity">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error">Error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#event">Event</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#group">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logincredentials">LoginCredentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notification">Notification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notificationupdate">NotificationUpdate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#organization">Organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#permissions">Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#receipt">Receipt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resetpw">ResetPW</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resetpwmsg">ResetPWMsg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#role">Role</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user">User</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#sub-types">Sub-Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#collections">Collections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#imagemodel">ImageModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metadata">Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#object">Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sets">Sets</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Methods</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/rest-endpoints/api-docs.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1><p>Usergrid API Reference</p>
+</h1><p>Methods are organized by tag. Follow the methods are the <a class="reference external" href="#models">Model
+Definitions</a>.</p>
+<h2><p>Table of Contents</p>
+</h2><ul class="simple">
+<li><a class="reference external" href="#access-tokens">Access-Tokens</a></li>
+<li><a class="reference external" href="#activities">Activities</a></li>
+<li><a class="reference external" href="#admin-users">Admin-Users</a></li>
+<li><a class="reference external" href="#app-users">App-Users</a></li>
+<li><a class="reference external" href="#entities-collections">Entities-Collections</a></li>
+<li><a class="reference external" href="#events">Events</a></li>
+<li><a class="reference external" href="#groups">Groups</a></li>
+<li><a class="reference external" href="#notifications">Notifications</a></li>
+<li><a class="reference external" href="#organizations-applications">Organizations-Applications</a></li>
+<li><a class="reference external" href="#permissions-roles">Permissions-Roles</a></li>
+</ul>
+<div class="section" id="methods">
+<h1>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="access-tokens">
+<h2>Access-Tokens<a class="headerlink" href="#access-tokens" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-POST-heading"><p>POST /management/token</p>
+</h2><p>Login with Admin-User or Organization credentials.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>login-credentials</strong> (<a class="reference external" href="#logincredentials">LoginCredentials</a>)
+Login credentials either username/password or id/secret. (Specified
+in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: Object containing access_token.</li>
+<li>Schema: <a class="reference external" href="#accesstokenresponse">AccessTokenResponse</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/token</p>
+</h2><p>Login with App-User or Application credentials.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>login-credentials</strong> (<a class="reference external" href="#logincredentials">LoginCredentials</a>)
+Login credentials either username/password or id/secret. (Specified
+in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: Object containing access_token.</li>
+<li>Schema: <a class="reference external" href="#accesstokenresponse">AccessTokenResponse</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="activities">
+<h2>Activities<a class="headerlink" href="#activities" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/groups/{groupId}/feed</p>
+</h2><p>Get a group&#8217;s feed through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>groupId</strong> (string) One of the group&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of group&#8217;s activity.</li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/users/{userId}/activities</p>
+</h2><p>Create an activity in the activities collection.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+<li><strong>CreateActivity</strong> (<a class="reference external" href="#createactivity">CreateActivity</a>) One or more
+sets of activity properties. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of user&#8217;s activity.</li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/users/{userId}/feed</p>
+</h2><p>Retrieve a user&#8217;s feed through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of user&#8217;s activity feed.</li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="admin-users">
+<h2>Admin-Users<a class="headerlink" href="#admin-users" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/users</p>
+</h2><p>Retrieve details about the admin users in an organization.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved Admin user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /management/orgs/{orgId}/users/{userId}</p>
+</h2><p>Remove an admin user from an organization through providing both Id of
+application and organization.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>userId-2</strong> (string) One of the user&#8217;s identification which includes
+username, email address or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted Admin user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /management/users</p>
+</h2><p>Create a whole new admin user.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>CreateAdminUser</strong> (<a class="reference external" href="#createadminuser">CreateAdminUser</a>) User
+entity with fields required for User creation. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An API Response with a entities array containing the
+newly created Admin User.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/users/resetpw</p>
+</h2><p>Initiate the reset of an admin user&#8217;s password.</p>
+<h3><p>Parameters</p>
+</h3>
+
+
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /management/users/resetpw</p>
+</h2><p>Complete the password reset through getting the newpassword and the old
+one for identification.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>ResetPWMsg</strong> (<a class="reference external" href="#resetpwmsg">ResetPWMsg</a>) Parameters and value
+for the Captcha challenge, the admin user&#8217;s response to the Captcha
+challenge, and the admin user&#8217;s email address. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: ` &lt;#&gt;`__</li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description:</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}</p>
+</h2><p>Retrieve details about an admin user.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>userId</strong> (string) One of the user&#8217;s identification which includes
+username, real name, email address or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An API Response with a entities array containing the
+Admin User.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-PUT-heading"><p>PUT /management/users/{userId}</p>
+</h2><p>Update the info of an admin user.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>userId</strong> (string) One of the user&#8217;s identification which includes
+username, real name, email address or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An API Response with a entities array containing the
+updated Admin User</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}/activate</p>
+</h2><p>Activate an admin user from a link provIded in an email notification.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>userId</strong> (string) One of the user&#8217;s identification which includes
+username, real name, email address or UUID. (Specified in path).</li>
+<li><strong>token</strong> (string) Activation token&#8217;s query statement. (Specified in
+query).</li>
+<li><strong>confirm_email</strong> (boolean) Query statement of whether send
+confimation email or not. (Specified in query).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-PUT-heading"><p>PUT /management/users/{userId}/password</p>
+</h2><p>Update an admin user&#8217;s password through getting the newpassword and the
+old one for identification.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>userId</strong> (string) One of the user&#8217;s identification which includes
+username, real name, email address or UUID. (Specified in path).</li>
+<li><strong>ResetPW</strong> (<a class="reference external" href="#resetpw">ResetPW</a>) The user&#8217;s old and new password.
+(Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}/reactivate</p>
+</h2><p>Reactivate an expired admin user.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>userId</strong> (string) One of the user&#8217;s identification which includes
+username, real name, email address or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="app-users">
+<h2>App-Users<a class="headerlink" href="#app-users" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/users</p>
+</h2><p>Retrieve users though query statement.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>queryStatement</strong> (string) The query statement of the User.
+(Specified in query).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/users</p>
+</h2><p>Create a user in the users collection through providing all the
+identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>CreateUser</strong> (<a class="reference external" href="#createuser">CreateUser</a>) The properties of the
+user. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/users/{userId}</p>
+</h2><p>Retrieve a user through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>userId-2</strong> (string) One of the user&#8217;s identification which includes
+username, email address or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{appId}/users/{userId}</p>
+</h2><p>Update a user through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of updated user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/users/{userId}</p>
+</h2><p>Remove a user through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/users/{user}/password</p>
+</h2><p>Set a user&#8217;s password or reset the user&#8217;s existing password.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>username</strong> (string) The username of the user. (Specified in path).</li>
+<li><strong>ResetPW</strong> (<a class="reference external" href="#resetpw">ResetPW</a>) The user&#8217;s old and new password.
+(Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="entities-collections">
+<h2>Entities-Collections<a class="headerlink" href="#entities-collections" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/users/{userId}/{relation}</p>
+</h2><p>Retrieve a user&#8217;s collections or connections through query statement.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+<li><strong>relation</strong> (string) The relation between user and collections.
+(Specified in path).</li>
+<li><strong>queryStatement</strong> (string) The query statement of the user.
+(Specified in query).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of user&#8217;s collections info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/{collectionId}</p>
+</h2><p>Retrieve collection through query statement.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>collectionId</strong> (string) One of the collection&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>queryStatement</strong> (string) Any values specified in the query
+statement should be enclosed in single-quotes. (Specified in query).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved collection&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{appId}/{collectionId}</p>
+</h2><p>Update collection through query statement.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>collectionId</strong> (string) One of the collection&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>queryStatement</strong> (string) Any values specified in the query
+statement should be enclosed in single-quotes. (Specified in query).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of updated collection&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</p>
+</h2><p>Add an entity to a collection through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>collectionId</strong> (string) One of the collection&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>entityId1</strong> (string) The Id of the 1st entity. (Specified in path).</li>
+<li><strong>relation</strong> (string) The relation between 1st entity and 2nd entity.
+(Specified in path).</li>
+<li><strong>entityId2</strong> (string) The Id of the 2nd entity. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of added entity&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE
+/{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</p>
+</h2><p>Remove an entity from a collection through providing all the
+identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>collectionId</strong> (string) One of the collection&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>entityId1</strong> (string) The Id of the 1st entity. (Specified in path).</li>
+<li><strong>relation</strong> (string) The relation between 1st entity and 2nd entity.
+(Specified in path).</li>
+<li><strong>entityId2</strong> (string) The Id of the 2nd entity. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted entity&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/{collectionId}/{entityId}</p>
+</h2><p>Retrieve an entity through providing Id of application, organization,
+collection and entity.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>collectionId</strong> (string) One of the collection&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>entityId</strong> (string) One of the entity&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved entity&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{appId}/{collectionId}/{entityId}</p>
+</h2><p>One or more properties can be updated with a single request.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>collectionId</strong> (string) One of the collection&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>entityId</strong> (string) One of the entity&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>entityproperty</strong> (<a class="reference external" href="#createentities">CreateEntities</a>) The
+properties of the entity. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of updated entity&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/{collectionId}/{entityId}</p>
+</h2><p>Delete an entity from the collection.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>collectionId</strong> (string) One of the collection&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>entityId</strong> (string) One of the entity&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted entity&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/{entitytype}</p>
+</h2><p>When a new entity is created, Usergrid will automatically create a
+corresponding collection if one does not already exist. The collection
+will automatically be named with the plural form of the entity type.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>entitytype</strong> (string) The entity type to create. (Specified in
+path).</li>
+<li><strong>entityproperty</strong> (<a class="reference external" href="#createentities">CreateEntities</a>) The
+properties of the entity. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created custom entity&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="events">
+<h2>Events<a class="headerlink" href="#events" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/events</p>
+</h2><p>Create an event through providing both Id of organization and
+application.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>CreateEvent</strong> (<a class="reference external" href="#createevent">CreateEvent</a>) The required
+property of the event. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created event&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#event">Event</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="groups">
+<h2>Groups<a class="headerlink" href="#groups" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/groups</p>
+</h2><p>Create a new group through providing both Id of organization and
+application.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>groupproperty</strong> (<a class="reference external" href="#creategroup">CreateGroup</a>) The property of
+the created group. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created group&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#group">Group</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/groups/{groupId}/activities</p>
+</h2><p>Create an activity to a specific group. In this case the activity is
+created in the activities collection and is accessible at the
+/activities endpoint to users who have the permission to read that
+endpoint. In addition, a relationship is established between the
+activity and the group, and because of that, the activity will appear in
+the group’s feed. The group &#8216;owns&#8217; the activity. Also, the activity will
+be published in the feed of all users that are members of the group.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>groupId</strong> (string) One of the group&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+<li><strong>CreateActivity</strong> (<a class="reference external" href="#createactivity">CreateActivity</a>) One or more
+sets of activity properties. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description:</li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/groups/{groupId}/users/{userId}</p>
+</h2><p>Add a user to a group through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>groupId</strong> (string) One of the group&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of added user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/groups/{groupId}/users/{userId}</p>
+</h2><p>Delete user from a group through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>groupId</strong> (string) One of the group&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{org_Id}/{app_Id}/groups/{groupId}</p>
+</h2><p>Get a group through through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>groupId</strong> (string) One of the group&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved group&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#group">Group</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-PUT-heading"><p>PUT /{org_Id}/{app_Id}/groups/{groupId}</p>
+</h2><p>Update a group through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>groupId</strong> (string) One of the group&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of updated group&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#group">Group</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="notifications">
+<h2>Notifications<a class="headerlink" href="#notifications" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/devices</p>
+</h2><p>Create notifications for user through targeting by location and
+providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>notification</strong> (<a class="reference external" href="#createnotifications">CreateNotifications</a>)
+These parameters are used when forming the notification portion of
+the request. (Specified in body).</li>
+<li><strong>queryStatement</strong> (string) The query statement of the location of
+the user. (Specified in query).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created notification&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/devices/*/notifications</p>
+</h2><p>Create notifications for all devices. This request will target all
+device entities.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>notification</strong> (<a class="reference external" href="#createnotifications">CreateNotifications</a>)
+These parameters are used when forming the notification portion of
+the request. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created notification&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/devices/{deviceId}/notifications</p>
+</h2><p>Create notifications for a single device. This request will target a
+specific device entity.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>deviceId</strong> (string) One of the device&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>notification</strong> (<a class="reference external" href="#createnotifications">CreateNotifications</a>)
+These parameters are used when forming the notification portion of
+the request. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created notification&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/groups/{path}/notifications</p>
+</h2><p>Create notifications for a group. This request will target all users
+associated with a specific group entity.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>path</strong> (string) The path of the group. (Specified in path).</li>
+<li><strong>notification</strong> (<a class="reference external" href="#createnotifications">CreateNotifications</a>)
+These parameters are used when forming the notification portion of
+the request. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created notification&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/notifications</p>
+</h2><p>Retrieve one or more notifications through providing all the
+identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved notification&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{applicationId}/notifications/{notificationId}</p>
+</h2><p>Update a Notification in order to cancel the notifcation or set a new
+expiration time.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>notificationId</strong> (string) One of the notification&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+<li><strong>notificationUpdate</strong> (<a class="reference external" href="#notificationupdate">NotificationUpdate</a>)
+Object with Notification fields to be updated. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An API Response object containing an entity of type
+Notification.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{applicationId}/notifications/{notificationId}</p>
+</h2><p>Delete an unsent Notification from the system.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>notificationId</strong> (string) One of the notification&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: API Response containing Notification entity that was
+deleted.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/receipts</p>
+</h2><p>Retrieve one or more receipts through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved receipt&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#receipt">Receipt</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/users/{userId}/notifications</p>
+</h2><p>Create notifications for a user. This request will target a specific
+user entity.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+<li><strong>notification</strong> (<a class="reference external" href="#createnotifications">CreateNotifications</a>)
+These parameters are used when forming the notification portion of
+the request. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created notification&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{deviceId}/*/receipts</p>
+</h2><p>Retrieve receipts associated with one or more devices through providing
+all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>deviceId</strong> (string) One of the device&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved receipt&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#receipt">Receipt</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{notificationId}/*/queue</p>
+</h2><p>Retrieve the list of devices associated with one or more notifications
+before the notifications are sent through providing all the
+identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>notificationId</strong> (string) One of the notification&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved device&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#device">Device</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{notificationId}/*/receipts</p>
+</h2><p>Retrieve receipts for one or more notifications through providing all
+the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>notificationId</strong> (string) One of the notification&#8217;s identification
+which includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved receipt&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#receipt">Receipt</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{receiptId}/*/notifications</p>
+</h2><p>Retrieve notifications associated with one or more receipts through
+providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>applicationId</strong> (string) One of the application&#8217;s identification
+which includes name or uuid (same as appId). (Specified in path).</li>
+<li><strong>receiptId</strong> (string) One of the receipt&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved notification&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="organizations-applications">
+<h2>Organizations-Applications<a class="headerlink" href="#organizations-applications" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-POST-heading"><p>POST /management/orgs</p>
+</h2><p>Create an organization through a form post.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>CreateOrg</strong> (<a class="reference external" href="#createorg">CreateOrg</a>) A set of organization
+properties supplied through a form. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created Organization.</li>
+<li>Schema: <a class="reference external" href="#organization">Organization</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}</p>
+</h2><p>Retrieve an organization given a specified UUID or username.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created Organization.</li>
+<li>Schema: <a class="reference external" href="#organization">Organization</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/activate</p>
+</h2><p>Activate an organization from a link provIded in an email notification.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>token</strong> (string) Activation token. (Specified in query).</li>
+<li><strong>confirm_email</strong> (boolean) Send confirmation email or not.
+(Specified in query).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/apps</p>
+</h2><p>Retrieve the applications in an organization through providing both Id
+of application and organization.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved application data.</li>
+<li>Schema: <a class="reference external" href="#appdata">AppData</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /management/orgs/{orgId}/apps/{appId}</p>
+</h2><p>Remove an application from an organization through providing both Id of
+application and organization.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted application info.</li>
+<li>Schema: <a class="reference external" href="#appdata">AppData</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/apps/{appId}/credentials</p>
+</h2><p>Retrieve the client Id and client secret credentials for an application
+in an organization.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved credentials info.</li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /management/orgs/{orgId}/apps/{appId}/credentials</p>
+</h2><p>Generate the client Id and client secret credentials for an application
+in an organization.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of generated credentials info.</li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/credentials</p>
+</h2><p>Retrieve the credentials for an organization client.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of Credential</li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /management/orgs/{orgId}/credentials</p>
+</h2><p>Generate whole new credentials for an organization client.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of Credential</li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/feed</p>
+</h2><p>Retrieve an organization&#8217;s activity feed.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of the organization&#8217;s ActivityFeed.</li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/reactivate</p>
+</h2><p>Reactivate an expired organization.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of complete messages.</li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}/feed</p>
+</h2><p>Retrieve an admin user&#8217;s activity feed.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>userId</strong> (string) One of the user&#8217;s identification which includes
+username, real name, email address or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of user&#8217;s activity</li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+<div class="section" id="permissions-roles">
+<h2>Permissions-Roles<a class="headerlink" href="#permissions-roles" title="Permalink to this headline">¶</a></h2>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/roles</p>
+</h2><p>Retrieve the roles in an application through providing all the
+identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of retrieved role&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#role">Role</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/roles</p>
+</h2><p>Create a new role through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>roleproperty</strong> (<a class="reference external" href="#addrole">AddRole</a>) The required properties of
+the role. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of created role&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#role">Role</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/roles/{roleId}/permissions</p>
+</h2><p>Remove permissions from a role.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>roleId</strong> (string) One of the role&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+<li><strong>Permissions</strong> (<a class="reference external" href="#permissions">Permissions</a>) The query statement
+of the url pattern. (Specified in body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: Permissions object with array of the deleated Usergrid
+Permission strings.</li>
+<li>Schema: <a class="reference external" href="#permissions">Permissions</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/roles/{roleId}/users</p>
+</h2><p>Retrieve the users in a role through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>roleId</strong> (string) One of the role&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An API Response with a entities array of Users.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/roles/{roleId}/users/{userId}</p>
+</h2><p>Add a user to a role through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>roleId</strong> (string) One of the role&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of added user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/roles/{roleId}/users/{userId}</p>
+</h2><p>Remove a user from a role through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>roleId</strong> (string) One of the role&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+<li><strong>userId-3</strong> (string) One of the user&#8217;s identification which includes
+username or UUID. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted user&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/roles/{rolename}</p>
+</h2><p>Remove a role through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>rolename</strong> (string) The name of the role. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: An array of deleted role&#8217;s info.</li>
+<li>Schema: <a class="reference external" href="#role">Role</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/roles/{roleId}/permissions</p>
+</h2><p>Retrieve permissions for a Role.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>roleId</strong> (string) One of the role&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: Permissions object with array of Usergrid Permission
+strings.</li>
+<li>Schema: <a class="reference external" href="#permissions">Permissions</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+<h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/roles/{roleId}/permissions</p>
+</h2><p>Add permissions to a role through providing all the identifications.</p>
+<h3><p>Parameters</p>
+</h3><ul class="simple">
+<li><strong>orgId</strong> (string) One of the organization&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>appId</strong> (string) One of the application&#8217;s identification which
+includes name or uuid. (Specified in path).</li>
+<li><strong>roleId</strong> (string) One of the role&#8217;s identification which includes
+name or uuid. (Specified in path).</li>
+<li><strong>Permissions</strong> (<a class="reference external" href="#permissions">Permissions</a>) Permissions object
+with array of Usergrid Permission strings to be added. (Specified in
+body).</li>
+</ul>
+<h3><p>Responses</p>
+</h3><p><strong>200</strong></p>
+<ul class="simple">
+<li>Description: Permissions object with array of Usergrid Permission
+strings.</li>
+<li>Schema: <a class="reference external" href="#permission">Permission</a></li>
+</ul>
+<p><strong>default</strong></p>
+<ul class="simple">
+<li>Description: Unexpected error.</li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<p>This section lists the properties for the Usergrid Default Entities:</p>
+<div class="section" id="accesstokenresponse">
+<h2>AccessTokenResponse<a class="headerlink" href="#accesstokenresponse" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>access_token</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Access-token that may be used on subsequent requests.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>expires_in</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>Time (in milliseconds) until access-token expires.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>user</p>
+</td>
+      <td><p><a class="reference external" href="#user">User</a></p>
+</td>
+      <td><p>User object if login was done as a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="action">
+<h2>Action<a class="headerlink" href="#action" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>action</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The requested action.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>status</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The status of the requested action.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>timestamp</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>The timestamp of the requested action.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>duration</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>The duration of the requested action.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>token</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The token required for getting an AdminUser.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#receipt">Receipt</a></li>
+<li><a class="reference external" href="#device">Device</a></li>
+<li><a class="reference external" href="#notification">Notification</a></li>
+<li><a class="reference external" href="#role">Role</a></li>
+<li><a class="reference external" href="#event">Event</a></li>
+<li><a class="reference external" href="#group">Group</a></li>
+<li><a class="reference external" href="#credential">Credential</a></li>
+<li><a class="reference external" href="#organization">Organization</a></li>
+<li><a class="reference external" href="#appdata">AppData</a></li>
+<li><a class="reference external" href="#user">User</a></li>
+<li><a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+</div>
+<div class="section" id="activityfeed">
+<h2>ActivityFeed<a class="headerlink" href="#activityfeed" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>entityproperty</p>
+</td>
+      <td><p><a class="reference external" href="#entity">Entity</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>category</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The category of the activity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>metadataproperty</p>
+</td>
+      <td><p><a class="reference external" href="#metadata">Metadata</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>objectproperty</p>
+</td>
+      <td><p><a class="reference external" href="#object">Object</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>title</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The title of the activity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>verb</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The verb of the activity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>published</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp of the feed publish time.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="addrole">
+<h2>AddRole<a class="headerlink" href="#addrole" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>title</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The title of the role.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>role name</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The name of the role.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="appdata">
+<h2>AppData<a class="headerlink" href="#appdata" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>tester/sandbox</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of tester/sandbox.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>tester/app1</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of tester/app1.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>tester/app2</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of tester/app2.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#organization">Organization</a></li>
+</ul>
+</div>
+<div class="section" id="createactivity">
+<h2>CreateActivity<a class="headerlink" href="#createactivity" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>displayName</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>username</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>image</p>
+</td>
+      <td><p><a class="reference external" href="#imagemodel">ImageModel</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>verb</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>content</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="createadminuser">
+<h2>CreateAdminUser<a class="headerlink" href="#createadminuser" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>username</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>email</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>name</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>password</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="createentities">
+<h2>CreateEntities<a class="headerlink" href="#createentities" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+</table></div>
+<div class="section" id="createevent">
+<h2>CreateEvent<a class="headerlink" href="#createevent" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>timestamp</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="creategroup">
+<h2>CreateGroup<a class="headerlink" href="#creategroup" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>title</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The title of the group.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>path</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The path of the group.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="createnotifications">
+<h2>CreateNotifications<a class="headerlink" href="#createnotifications" title="Permalink to this headline">¶</a></h2>
+<p>An array of Notifications to be created.</p>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+</table></div>
+<div class="section" id="createorg">
+<h2>CreateOrg<a class="headerlink" href="#createorg" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>organization</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>username</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>name</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>email</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>password</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="createuser">
+<h2>CreateUser<a class="headerlink" href="#createuser" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>username</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="credential">
+<h2>Credential<a class="headerlink" href="#credential" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>client_Id</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The Id of the client.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>client_secret</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The secret of the client.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="device">
+<h2>Device<a class="headerlink" href="#device" title="Permalink to this headline">¶</a></h2>
+<p>Represents a single Device that is registered for recieving of Push
+Notifications.</p>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Unique entity Id.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>type</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Type of entity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>name</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Notifier display name.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>created</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp in milliseconds of when the entity was created.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>modified</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp in milliseconds of when the entity was last modified.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>metadata</p>
+</td>
+      <td><p><a class="reference external" href="#metadata">Metadata</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="entity">
+<h2>Entity<a class="headerlink" href="#entity" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of the entity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>type</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The type of the entity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>created</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp of entity creation time.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>modified</p>
+</td>
+      <td><p><a class="reference external" href="#actor">Actor</a></p>
+</td>
+      <td><p>UTC timestamp of entity modified time.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>metadata</p>
+</td>
+      <td><p><a class="reference external" href="#metadata">Metadata</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>name</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The name of the entity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>message</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#role">Role</a></li>
+<li><a class="reference external" href="#event">Event</a></li>
+<li><a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+</div>
+<div class="section" id="error">
+<h2>Error<a class="headerlink" href="#error" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>code</p>
+</td>
+      <td><p>integer</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>message</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>fields</p>
+</td>
+      <td><p>object</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="event">
+<h2>Event<a class="headerlink" href="#event" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>applicationName</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The application name of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>entity</p>
+</td>
+      <td><p><a class="reference external" href="#entity">Entity</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>url</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The url of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>applicationId</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The application UUID of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>parameters</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The parameters of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>organization</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The title of the organization.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="group">
+<h2>Group<a class="headerlink" href="#group" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of the group.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>type</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The type of the group.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>created</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The created Id for the group.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>modified</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The modified Id for the group.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>path</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The path of the group.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>metadata</p>
+</td>
+      <td><p><a class="reference external" href="#metadata">Metadata</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>title</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The title of the group.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="logincredentials">
+<h2>LoginCredentials<a class="headerlink" href="#logincredentials" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>grant_type</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Grant-type must be &#8216;password&#8217; or &#8216;client_credentials&#8217;.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>username</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Username of user attempting login, required only if grant_type is
+&#8216;password&#8217;.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>password</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Password of user attempting login, required only if grant_type is
+&#8216;password&#8217;.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>client_id</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Client-ID portion of credentials, required only if grant_type is
+&#8216;client_credentials&#8217;.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>client_secret</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Client-Secret portion of credentials, required only if grant_type is
+&#8216;client_credentials&#8217;.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="notification">
+<h2>Notification<a class="headerlink" href="#notification" title="Permalink to this headline">¶</a></h2>
+<p>Represents a Push Notification that is either scheduled, finished or
+cancelled.</p>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Unique entity Id.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>type</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Type of entity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>created</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp in milliseconds of when the entity was created.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>modified</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp in milliseconds of when the entity was last modified.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>payloads</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The push notifications to be delivered.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>errorMessage</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Error message returned by the notification service (APNs or GCM) if the
+notification fails entirely.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>scheduled</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Whether the notification is currently scheduled for delivery.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>state</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The current delivery status of the notification &#8216;FINISHED&#8217;, &#8216;SCHEDULED&#8217;
+or &#8216;CANCELED&#8217;.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>metadata</p>
+</td>
+      <td><p><a class="reference external" href="#metadata">Metadata</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="notificationupdate">
+<h2>NotificationUpdate<a class="headerlink" href="#notificationupdate" title="Permalink to this headline">¶</a></h2>
+<p>Represents fields that may be updated on a Notification to cause changes
+in Push Notification processing.</p>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>canceled</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Setting this field to true will cancel a Notification, if it has not yet
+been sent.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>deliver</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>Specifies the UNIX timestamp time at which the Notification should be
+sent.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>expired</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>Specifies the UNIX timestamp time at which this Notification has
+expired.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="organization">
+<h2>Organization<a class="headerlink" href="#organization" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>applicationId</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The application Id of the owner.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>username</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The username of the owner.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>name</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The name of the owner.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>email</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The email of the owner.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>activated</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Indicate whether the account is activated or not.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>disabled</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Indicate whether the account is disabled or not.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of the owner.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>adminUser</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Indicate whether the use is a adminUser or not.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>displayEmail</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The display of the email of the owner.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>htmldisplayEmail</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The HTML display of the email of the owner.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>orgname</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The name of the organization.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>orguuId</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of the organization.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>applicationdata</p>
+</td>
+      <td><p><a class="reference external" href="#appdata">AppData</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="permissions">
+<h2>Permissions<a class="headerlink" href="#permissions" title="Permalink to this headline">¶</a></h2>
+<p>Represents a set of Permissions associated with a User or a Role, each
+being a Usergrid Permission String.</p>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>application</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of the associated application.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>applicationName</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The name of the associated application.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>organization</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The name of the associated organization.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>data</p>
+</td>
+      <td><p>array</p>
+</td>
+      <td><p>Array of strings each being a Usergrid Permission String.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="receipt">
+<h2>Receipt<a class="headerlink" href="#receipt" title="Permalink to this headline">¶</a></h2>
+<p>Represents response received from Notification service indicating
+success or failure.</p>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Unique entity Id.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>type</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Type of entity.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>created</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp in milliseconds of when the entity was created.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>modified</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp in milliseconds of when the entity was last modified.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>payloads</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The push notifications to be delivered.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>errorMessage</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Error message returned by the notification service (APNs or GCM) if the
+notification fails entirely.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>errorCode</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Error code returned by the notification service.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>sent</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>UTC timestamp in milliseconds for when the notification was sent.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>metadata</p>
+</td>
+      <td><p><a class="reference external" href="#metadata">Metadata</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="resetpw">
+<h2>ResetPW<a class="headerlink" href="#resetpw" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>password</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>newpassword</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="resetpwmsg">
+<h2>ResetPWMsg<a class="headerlink" href="#resetpwmsg" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>recaptcha_response</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>Parameters and value for the Captcha challenge.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>recaptcha_challenge</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The admin user&#8217;s response to the Captcha challenge.</p>
+</td>
+      <td><p>true</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>email</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>true</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="role">
+<h2>Role<a class="headerlink" href="#role" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>applicationName</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The application name of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>count</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td><p>The numebr of the roles.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>entity</p>
+</td>
+      <td><p><a class="reference external" href="#entity">Entity</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>url</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The url of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>applicationId</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The application UUID of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>parameters</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The parameters of the event.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>organization</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The title of the organization.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>path</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The path of the role.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table></div>
+<div class="section" id="user">
+<h2>User<a class="headerlink" href="#user" title="Permalink to this headline">¶</a></h2>
+<p>Represents a User account which may be a user within an Application&#8217;s
+User collection, or may be an Admin User.</p>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>applicationId</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The application Id of a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>username</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The username of a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>name</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The name of a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>email</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The email of a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>activated</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Indicate whether the account is activated or not.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>disabled</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Indicate whether the account is disabled or not.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>uuid</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>adminUser</p>
+</td>
+      <td><p>boolean</p>
+</td>
+      <td><p>Indicate whether the use is a adminUser or not.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>displayEmail</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The display of the email of a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>htmldisplayEmail</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The HTML display of the email of a user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>organization</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The organization of the user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>picture</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The uri of the user&#8217;s picture.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>uri</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The uri of the user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>path</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The path of the user.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>completeMsg</p>
+</td>
+      <td><p><a class="reference external" href="#action">Action</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#accesstokenresponse">AccessTokenResponse</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="sub-types">
+<h1>Sub-Types<a class="headerlink" href="#sub-types" title="Permalink to this headline">¶</a></h1>
+<p>This section lists the properties for sub-types used in Usergrid Default
+Entities.</p>
+<div class="section" id="collections">
+<h2>Collections<a class="headerlink" href="#collections" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>activities</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>feed</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>roles</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>users</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#metadata">Metadata</a></li>
+</ul>
+</div>
+<div class="section" id="imagemodel">
+<h2>ImageModel<a class="headerlink" href="#imagemodel" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>duration</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>height</p>
+</td>
+      <td><p>number</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>url</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>wIdth</p>
+</td>
+      <td><p>integer</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>email</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#createactivity">CreateActivity</a></li>
+</ul>
+</div>
+<div class="section" id="metadata">
+<h2>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>cursor</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The cursor of the metadata.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>path</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The path of the metadata.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>sets</p>
+</td>
+      <td><p><a class="reference external" href="#sets">Sets</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>collections</p>
+</td>
+      <td><p><a class="reference external" href="#collections">Collections</a></p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#receipt">Receipt</a></li>
+<li><a class="reference external" href="#device">Device</a></li>
+<li><a class="reference external" href="#notification">Notification</a></li>
+<li><a class="reference external" href="#notifier">Notifier</a></li>
+<li><a class="reference external" href="#group">Group</a></li>
+<li><a class="reference external" href="#entity">Entity</a></li>
+<li><a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+</div>
+<div class="section" id="object">
+<h2>Object<a class="headerlink" href="#object" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>displayname</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The display of the name of the object.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>objecttype</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The type of the object.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>objectuuId</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The UUID of the object.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>entitytype</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td><p>The entitytype of the object.</p>
+</td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#activityfeed">ActivityFeed</a></li>
+</ul>
+</div>
+<div class="section" id="sets">
+<h2>Sets<a class="headerlink" href="#sets" title="Permalink to this headline">¶</a></h2>
+<p><strong>Properties</strong></p>
+<table width="80%" class="usergrid-table">
+  <tr>
+      <th><p>Name</p>
+</th>
+      <th><p>Type</p>
+</th>
+      <th><p>Description</p>
+</th>
+      <th><p>Required</p>
+</th>
+  </tr>
+  <tr>
+      <td><p>rolenames</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+  <tr>
+      <td><p>permissions</p>
+</td>
+      <td><p>string</p>
+</td>
+      <td></td>
+      <td><p>false</p>
+</td>
+  </tr>
+</table><p><strong>Referring Definitions</strong></p>
+<ul class="simple">
+<li><a class="reference external" href="#metadata">Metadata</a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../sdks/tbd.html" class="btn btn-neutral float-right" title="COMING SOON..." accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../orgs-and-apps/admin-user.html" class="btn btn-neutral" title="Admin user" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

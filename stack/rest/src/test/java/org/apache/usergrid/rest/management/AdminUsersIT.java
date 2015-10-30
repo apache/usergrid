@@ -17,46 +17,32 @@
 
 package org.apache.usergrid.rest.management;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMultipart;
-
+import org.apache.usergrid.management.MockImapClient;
+import org.apache.usergrid.persistence.core.util.StringUtils;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-
-import org.apache.usergrid.management.MockImapClient;
-import org.apache.usergrid.persistence.core.util.StringUtils;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
-
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.apache.usergrid.management.AccountCreationProps.*;
+import static org.junit.Assert.*;
 
 
 /**
@@ -98,7 +84,7 @@ public class AdminUsersIT extends AbstractRestIT {
         try {
             management.token().post(false, Token.class, new Token( username, password ),null);
             fail( "We shouldn't be able to get a token using the old password" );
-        }catch(UniformInterfaceException uie) {
+        }catch(ClientErrorException uie) {
             errorParse( 400,"invalid_grant",uie );
         }
     }
@@ -135,8 +121,8 @@ public class AdminUsersIT extends AbstractRestIT {
             management.users().user( username ).password().post( Entity.class ,passwordPayload );
             fail("We shouldn't be able to change the password with the same payload");
         }
-        catch ( UniformInterfaceException uie ) {
-            errorParse( ClientResponse.Status.BAD_REQUEST.getStatusCode(),"auth_invalid_username_or_password",uie );
+        catch ( ClientErrorException uie ) {
+            errorParse( Response.Status.BAD_REQUEST.getStatusCode(),"auth_invalid_username_or_password",uie );
         }
 
     }
@@ -161,14 +147,14 @@ public class AdminUsersIT extends AbstractRestIT {
 
         this.refreshIndex();
 
-        assertNotNull(management.token().post( false,Token.class, new Token( username, "testPassword" ) ,null ));
+        assertNotNull( management.token().post( false, Token.class, new Token(username, "testPassword"), null ));
 
 
-        //Check that we cannot get the token using the old password
+        // Check that we cannot get the token using the old password
         try {
             management.token().post( false,Token.class, new Token( username, password) ,null);
             fail( "We shouldn't be able to get a token using the old password" );
-        }catch(UniformInterfaceException uie) {
+        } catch(ClientErrorException uie) {
             errorParse( 400,"invalid_grant",uie );
         }
     }
@@ -216,7 +202,7 @@ public class AdminUsersIT extends AbstractRestIT {
             testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             //Requires admins to do email confirmation before they can log in.
             testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-            testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+            testPropertiesMap.put( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
 
             Entity testPropertiesPayload = new Entity( testPropertiesMap );
 
@@ -251,7 +237,7 @@ public class AdminUsersIT extends AbstractRestIT {
                 management().token().get( queryParameters );
                 fail( "Admin user should not be able to log in." );
             }
-            catch ( UniformInterfaceException uie ) {
+            catch ( ClientErrorException uie ) {
                 assertEquals( "Admin user should have failed with 403", 403, uie.getResponse().getStatus() );
             }
 
@@ -432,11 +418,12 @@ public class AdminUsersIT extends AbstractRestIT {
         String token = getTokenFromMessage( confirmation );
 
         Form formData = new Form();
-        formData.add( "token", token );
-        formData.add( "password1", "sesame" );
-        formData.add( "password2", "sesame" );
+        formData.param( "token", token );
+        formData.param( "password1", "sesame" );
+        formData.param( "password2", "sesame" );
 
-        String html = management().users().user( clientSetup.getUsername() ).resetpw().post( formData );
+        String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
+            .post( javax.ws.rs.client.Entity.form(formData), String.class );
 
         assertTrue( html.contains( "password set" ) );
 
@@ -508,7 +495,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
             fail( "should fail with conflict" );
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             assertEquals( 409, e.getResponse().getStatus() );
         }
 
@@ -527,7 +514,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
             fail( "should fail with conflict" );
         }
-        catch ( UniformInterfaceException e ) {
+        catch ( ClientErrorException e ) {
             assertEquals( 409, e.getResponse().getStatus() );
         }
     }
@@ -631,20 +618,24 @@ public class AdminUsersIT extends AbstractRestIT {
      * Makes sure you can't create a already existing organization from a user connection.
      * @throws Exception
      */
-    //TODO: figure out what is the expected behavior from this test. While it fails it is not sure what it should return
+    // TODO: figure out what is the expected behavior from this test.
+    // While it fails it is not sure what it should return
     @Test
     public void createOrgFromUserConnectionFail() throws Exception {
 
-        Token token = management().token().post(Token.class ,new Token( clientSetup.getUsername(),clientSetup.getPassword() ) );
+        Token token = management().token()
+            .post( Token.class, new Token( clientSetup.getUsername(), clientSetup.getPassword() ) );
         management().token().setToken( token );
+
         // try to create the same org again off the connection
         try {
-            management().users().user( clientSetup.getUsername() ).organizations().post( clientSetup.getOrganization(),token );
+            management().users().user( clientSetup.getUsername() ).organizations()
+                .post( clientSetup.getOrganization(), token );
 
             fail( "Should have thrown unique exception on org name" );
         }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals(500,uie.getResponse().getStatus());
+        catch ( InternalServerErrorException ise ) {
+            assertEquals(500, ise.getResponse().getStatus());
         }
     }
 
@@ -661,7 +652,7 @@ public class AdminUsersIT extends AbstractRestIT {
             testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             //Requires admins to do email confirmation before they can log in.
             testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-            testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+            testPropertiesMap.put( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
 
             Entity testPropertiesPayload = new Entity( testPropertiesMap );
 
@@ -673,7 +664,7 @@ public class AdminUsersIT extends AbstractRestIT {
             //Retrieve properties and ensure that they are set correctly.
             ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();
 
-            assertEquals( "sysadmin-1@mockserver.com", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_EMAIL ) );
+            assertEquals( "sysadmin-1@mockserver.com", apiResponse.getProperties().get( PROPERTIES_DEFAULT_SYSADMIN_EMAIL ) );
             assertEquals( "true", apiResponse.getProperties().get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) );
             assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS ) );
             assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS ) );

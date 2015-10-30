@@ -21,8 +21,6 @@ package org.apache.usergrid.corepersistence.util;
 
 import java.util.UUID;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
@@ -42,7 +40,8 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.utils.UUIDUtils;
+
+import com.google.common.base.Optional;
 
 
 /**
@@ -78,6 +77,9 @@ public class CpNamingUtils {
     public static final String DELETED_APPLICATION_INFO = "deleted_org_application";
     public static final String DELETED_APPLICATION_INFOS = "deleted_org_applications";
 
+    public static final String ORG_CONFIG = "org_config";
+    public static final String ORG_CONFIGS = "org_configs";
+
     /**
      * The name of the map that holds our entity id->type mapping
      */
@@ -110,7 +112,7 @@ public class CpNamingUtils {
      * To be used only for searching DO NOT use for creation. Use the createCollectionEdge instead.
      */
     public static String getEdgeTypeFromCollectionName( String collectionName ) {
-        return ( EDGE_COLL_PREFIX + "|" + collectionName ).toLowerCase();
+        return ((collectionName.startsWith(EDGE_COLL_PREFIX) ? collectionName  : EDGE_COLL_PREFIX + "|" + collectionName) ).toLowerCase();
     }
 
     /**
@@ -254,6 +256,7 @@ public class CpNamingUtils {
     }
 
 
+
     /**
      * Get the application scope from the given uuid
      *
@@ -306,6 +309,8 @@ public class CpNamingUtils {
     }
 
 
+
+
     private static boolean isCollectionEdgeType( String type ) {
         return type.startsWith( EDGE_COLL_PREFIX );
     }
@@ -323,8 +328,5 @@ public class CpNamingUtils {
     }
 
 
-    public static boolean isApplication(Id id) {
-        Preconditions.checkNotNull(id);
-        return id.getType().equals("application");
-    }
+
 }

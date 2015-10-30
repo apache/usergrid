@@ -19,8 +19,10 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public abstract class AbstractAccessTokenCredentials implements AccessTokenCredentials {
 
-    private final String token;
+   private String token;
 
+
+    public AbstractAccessTokenCredentials() {}
 
     public AbstractAccessTokenCredentials( String token ) {
         this.token = token;
@@ -31,4 +33,9 @@ public abstract class AbstractAccessTokenCredentials implements AccessTokenCrede
     public String getToken() {
         return token;
     }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
 }

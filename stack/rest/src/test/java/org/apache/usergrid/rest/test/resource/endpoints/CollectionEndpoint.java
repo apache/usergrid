@@ -17,19 +17,20 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.WebResource;
-import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
-import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 
 /**
@@ -114,20 +115,22 @@ public class CollectionEndpoint extends NamedResource {
         return get(parameters, true);
     }
 
-    public Collection get(final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters, final boolean useToken){
+    public Collection get(
+        final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters,
+        final boolean useToken){
 
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
 
-        WebResource resource  = getResource(useToken);
+        WebTarget resource  = getTarget( useToken );
         resource = addParametersToResource(resource, parameters);
 
-        logger.info("PATH is "+ resource.getURI().getRawPath()+"?"+resource.getURI().getRawQuery());
+        logger.info("PATH is "+ resource.getUri().getRawPath()+"?"+resource.getUri().getRawQuery());
         // use string type so we can log actual response from server
-        String responseString = resource.type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(acceptHeader)
+        String responseString = resource.request()
+            .accept( acceptHeader )
             .get(String.class);
 
         logger.debug("Response from get: " + responseString);
@@ -135,7 +138,8 @@ public class CollectionEndpoint extends NamedResource {
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue( new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue(
+                new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -157,13 +161,16 @@ public class CollectionEndpoint extends NamedResource {
      * </pre>
      */
     //TODO: add queryParameters here
-    public Collection getNextPage(Collection collection, org.apache.usergrid.rest.test.resource.model.QueryParameters passedParameters ,final boolean useToken) {
+    public Collection getNextPage(Collection collection,
+             org.apache.usergrid.rest.test.resource.model.QueryParameters passedParameters ,
+             final boolean useToken) {
+
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
 
-        WebResource resource = getResource(useToken);
+        WebTarget resource = getTarget( useToken );
         org.apache.usergrid.rest.test.resource.model.QueryParameters queryParameters = passedParameters;
         if( queryParameters == null){
             queryParameters = new org.apache.usergrid.rest.test.resource.model.QueryParameters();
@@ -172,8 +179,10 @@ public class CollectionEndpoint extends NamedResource {
         queryParameters.setCursor(collection.getCursor());
         resource = addParametersToResource(resource, queryParameters);
 
-        org.apache.usergrid.rest.test.resource.model.ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
-                .get(org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+        org.apache.usergrid.rest.test.resource.model.ApiResponse response =
+            resource.request()
+            .accept( acceptHeader )
+            .get(org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
 
         return new Collection(response);
     }
@@ -194,11 +203,13 @@ public class CollectionEndpoint extends NamedResource {
      * DELETE /users
      * </pre>
      */
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete( final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters ){
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete(
+        final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters ){
         return delete(parameters, true);
     }
 
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete(final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters, final boolean useToken) {
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse delete(
+        final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters, final boolean useToken) {
 
         String acceptHeader = MediaType.APPLICATION_JSON;
 
@@ -206,10 +217,10 @@ public class CollectionEndpoint extends NamedResource {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
 
-        WebResource resource  = getResource(useToken);
+        WebTarget resource  = getTarget( useToken );
         resource = addParametersToResource(resource, parameters);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(acceptHeader)
+        return resource.request()
+            .accept( acceptHeader )
             .delete(org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
     }
 
@@ -221,7 +232,8 @@ public class CollectionEndpoint extends NamedResource {
      * POST /users {"color","red"}
      * </pre>
      */
-    public org.apache.usergrid.rest.test.resource.model.Entity post(org.apache.usergrid.rest.test.resource.model.Entity payload){
+    public org.apache.usergrid.rest.test.resource.model.Entity post(
+        org.apache.usergrid.rest.test.resource.model.Entity payload){
 
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
@@ -229,17 +241,18 @@ public class CollectionEndpoint extends NamedResource {
         }
 
         // use string type so we can log actual response from server
-        String responseString = getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
+        String responseString = getTarget( true )
+            .request()
             .accept(acceptHeader)
-            .post(String.class, payload);
+            .post( javax.ws.rs.client.Entity.json( payload ), String.class);
 
         logger.debug("Response from post: " + responseString);
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue( new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -256,17 +269,18 @@ public class CollectionEndpoint extends NamedResource {
         }
 
         // use string type so we can log actual response from server
-        String responseString = getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(acceptHeader)
-            .post(String.class);
+        String responseString = getTarget( true )
+            .request()
+            .accept( acceptHeader )
+            .post( javax.ws.rs.client.Entity.json( null ), String.class);
 
         logger.debug("Response from post: " + responseString);
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue( new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -274,7 +288,8 @@ public class CollectionEndpoint extends NamedResource {
         return new org.apache.usergrid.rest.test.resource.model.Entity(response);
     }
 
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse post(List<org.apache.usergrid.rest.test.resource.model.Entity> entityList) {
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse post(
+        List<org.apache.usergrid.rest.test.resource.model.Entity> entityList) {
 
         String acceptHeader = MediaType.APPLICATION_JSON;
 
@@ -283,17 +298,18 @@ public class CollectionEndpoint extends NamedResource {
         }
 
         // use string type so we can log actual response from server
-        String responseString = getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(acceptHeader)
-            .post(String.class, entityList );
+        String responseString = getTarget( true )
+            .request()
+            .accept( acceptHeader )
+            .post( javax.ws.rs.client.Entity.json( entityList ), String.class);
 
         logger.debug("Response from post: " + responseString);
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue( new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -312,31 +328,37 @@ public class CollectionEndpoint extends NamedResource {
      * PUT /users?ql=select * where created > 0
      * </pre>
      */
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse put( final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters, org.apache.usergrid.rest.test.resource.model.Entity entity ){
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse put(
+        final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters,
+        org.apache.usergrid.rest.test.resource.model.Entity entity ){
         return put(parameters, true, entity);
     }
 
-    public org.apache.usergrid.rest.test.resource.model.ApiResponse put(final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters, final boolean useToken, org.apache.usergrid.rest.test.resource.model.Entity entity) {
+    public org.apache.usergrid.rest.test.resource.model.ApiResponse put(
+        final org.apache.usergrid.rest.test.resource.model.QueryParameters parameters,
+        final boolean useToken,
+        org.apache.usergrid.rest.test.resource.model.Entity entity) {
 
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
 
-        WebResource resource  = getResource(useToken);
-        addParametersToResource(getResource(), parameters);
+        WebTarget resource  = getTarget( useToken );
+        addParametersToResource(getTarget(), parameters);
 
         // use string type so we can log actual response from server
-        String responseString = resource.type(MediaType.APPLICATION_JSON_TYPE)
+        String responseString = resource.request()
             .accept(acceptHeader)
-            .post(String.class, entity);
+            .post( javax.ws.rs.client.Entity.json( entity ), String.class);
 
         logger.debug("Response from put: " + responseString);
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
-            response = mapper.readValue( new StringReader(responseString), org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
+            response = mapper.readValue( new StringReader(responseString),
+                org.apache.usergrid.rest.test.resource.model.ApiResponse.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
@@ -344,7 +366,8 @@ public class CollectionEndpoint extends NamedResource {
         return response;
     }
 
-    public CollectionEndpoint matrix(org.apache.usergrid.rest.test.resource.model.QueryParameters parameters) {
+    public CollectionEndpoint matrix(
+        org.apache.usergrid.rest.test.resource.model.QueryParameters parameters) {
         this.matrix = getMatrixValue(parameters);
         return this;
     }

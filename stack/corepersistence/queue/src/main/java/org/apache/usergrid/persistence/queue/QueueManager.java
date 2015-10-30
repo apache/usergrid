@@ -36,7 +36,13 @@ public interface QueueManager {
      * @param klass class to cast the return from
      * @return List of Queue Messages
      */
-    Observable<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
+    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
+
+    /**
+     * get the queue depth
+     * @return
+     */
+    long getQueueDepth();
 
     /**
      * Commit the transaction
@@ -62,5 +68,16 @@ public interface QueueManager {
      * @param body
      * @throws IOException
      */
-    void sendMessage(Object body)throws IOException;
+    <T extends Serializable> void sendMessage(T body)throws IOException;
+
+    /**
+     * Send a messae to the topic to be sent to other queues
+     * @param body
+     */
+    <T extends Serializable> void sendMessageToTopic(T body) throws IOException;
+
+    /**
+     * purge messages
+     */
+    void deleteQueue();
 }

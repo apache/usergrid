@@ -51,7 +51,7 @@ public interface SerializationFig extends GuicyFig {
      * (15mb thrift buffer * .9) / 100 (default max load size)
      */
     @Key( COLLECTION_MAX_ENTITY_SIZE )
-    @Default( "141557" )
+    @Default( "5000000" )
     int getMaxEntitySize();
 
 }

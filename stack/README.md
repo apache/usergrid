@@ -1,8 +1,8 @@
 # Usergrid
 A highly-scalable data platform for mobile applications.
 
-* **Documentation**: http://usergrid.incubator.apache.org/docs/
-* **Homepage**: http://http://usergrid.incubator.apache.org/
+* **Documentation**: http://usergrid.apache.org/docs/
+* **Homepage**: http://http://usergrid.apache.org/
 
 ## Requirements
 

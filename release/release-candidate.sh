@@ -27,8 +27,8 @@ set -o errexit
 set -o nounset
 
 rc_tag_version=0
-usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=incubator-usergrid.git'
-usergrid_svn_dist_url='https://dist.apache.org/repos/dist/dev/incubator/usergrid'
+usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=usergrid.git'
+usergrid_svn_dist_url='https://dist.apache.org/repos/dist/dev/usergrid'
 
 function print_help_and_exit {
 cat <<EOF
@@ -177,7 +177,7 @@ git commit -m "Updating .usergridversion to ${current_version_tag}."
 
 echo "Building the source distribution"
 dist_dir=${base_dir}/dist
-dist_name="apache-usergrid-${current_version_tag}-incubating"
+dist_name="apache-usergrid-${current_version_tag}"
 
 mkdir -p ${dist_dir}
 git archive --prefix=${dist_name}/ -o ${dist_dir}/${dist_name}.tar.gz HEAD
@@ -213,7 +213,7 @@ cd ${base_dir}
 current_commit_id=`git rev-parse HEAD`
 
 echo "Done creating the release candidate. The following draft email has been created"
-echo "to send to the dev@usergrid.incubator.apache.org mailing list"
+echo "to send to the dev@usergrid.apache.org mailing list"
 echo
 
 # Create the email template for the release candidate to be sent to the mailing lists.
@@ -224,8 +224,8 @@ else
 fi
 
 MESSAGE=$(cat <<__EOF__
-To: dev@usergrid.incubator.apache.org
-Subject: [VOTE] Release Apache Usergrid ${current_version} (incubating) RC${rc_tag_version}
+To: dev@usergrid.apache.org
+Subject: [VOTE] Release Apache Usergrid ${current_version} RC${rc_tag_version}
 
 All,
 

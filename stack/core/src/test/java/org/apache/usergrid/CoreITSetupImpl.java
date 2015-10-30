@@ -19,6 +19,7 @@ package org.apache.usergrid;
 
 import com.google.inject.Injector;
 import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -111,6 +112,11 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     @Override
     public QueueManagerFactory getQmf() {
          return qmf;
+    }
+
+    @Override
+    public ApplicationService getApplicationService(){
+        return injector.getInstance(ApplicationService.class);
     }
 
 

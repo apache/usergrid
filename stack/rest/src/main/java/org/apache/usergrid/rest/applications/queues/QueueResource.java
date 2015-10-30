@@ -17,39 +17,23 @@
 package org.apache.usergrid.rest.applications.queues;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.exception.NotImplementedException;
+import org.apache.usergrid.mq.*;
+import org.apache.usergrid.rest.AbstractContextResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.exception.NotImplementedException;
-import org.apache.usergrid.mq.Message;
-import org.apache.usergrid.mq.QueueManager;
-import org.apache.usergrid.mq.QueueQuery;
-import org.apache.usergrid.mq.QueueResults;
-import org.apache.usergrid.rest.AbstractContextResource;
 
-import org.apache.commons.lang.StringUtils;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.core.provider.EntityHolder;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @Component
@@ -106,31 +90,37 @@ public class QueueResource extends AbstractContextResource {
 
     @Path("properties")
     @GET
-    public JSONWithPadding getProperties( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Queue getProperties( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         logger.info( "QueueResource.getProperties" );
 
-        return new JSONWithPadding( mq.getQueue( queuePath ), callback );
+        return mq.getQueue( queuePath );
     }
 
 
     @Path("properties")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding putProperties( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Queue putProperties( @Context UriInfo ui, Map<String, Object> json,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         logger.info( "QueueResource.putProperties" );
 
-        return new JSONWithPadding( mq.updateQueue( queuePath, json ), callback );
+        return mq.updateQueue( queuePath, json );
     }
 
 
     @GET
-    public JSONWithPadding executeGet( @Context UriInfo ui, @QueryParam("start") String firstQueuePath,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Object executeGet( @Context UriInfo ui, @QueryParam("start") String firstQueuePath,
                                        @QueryParam("limit") @DefaultValue("10") int limit,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -140,33 +130,32 @@ public class QueueResource extends AbstractContextResource {
 
             QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
             QueueResults results = mq.getFromQueue( queuePath, query );
-            return new JSONWithPadding( results, callback );
+            return results;
         }
 
         logger.info( "QueueResource.executeGet" );
 
-        return new JSONWithPadding( mq.getQueues( firstQueuePath, limit ), callback );
+        return  mq.getQueues( firstQueuePath, limit );
     }
 
 
     @SuppressWarnings("unchecked")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Object> body,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public QueueResults executePost( @Context UriInfo ui, Object body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         logger.info( "QueueResource.executePost: " + queuePath );
-        Object json = body.getEntity();
+        Object json = body;
 
         if ( json instanceof Map ) {
-            return new JSONWithPadding(
-                    new QueueResults( mq.postToQueue( queuePath, new Message( ( Map<String, Object> ) json ) ) ),
-                    callback );
+            return new QueueResults( mq.postToQueue( queuePath, new Message( ( Map<String, Object> ) json ) ));
         }
         else if ( json instanceof List ) {
-            return new JSONWithPadding( new QueueResults(
-                    mq.postToQueue( queuePath, Message.fromList( ( List<Map<String, Object>> ) json ) ) ), callback );
+            return new QueueResults( mq.postToQueue( queuePath, Message.fromList( ( List<Map<String, Object>> ) json ) ) );
         }
 
         return null;
@@ -175,7 +164,9 @@ public class QueueResource extends AbstractContextResource {
 
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Map<String, Object> executePut( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -183,14 +174,15 @@ public class QueueResource extends AbstractContextResource {
 
         Map<String, Object> results = new HashMap<String, Object>();
 
-        return new JSONWithPadding( results, callback );
+        return results;
     }
 
 
     @DELETE
-    public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Queue executeDelete(
+            @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
         throw new NotImplementedException( "Queue delete is not implemented yet" );
     }
 

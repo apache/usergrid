@@ -20,12 +20,14 @@
 package org.apache.usergrid.corepersistence;
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 /**
- * Classy class class.
+ * em fig
  */
+@FigSingleton
 public interface EntityManagerFig extends GuicyFig {
 
     @Key( "usergrid.entitymanager_poll_timeout_ms" )

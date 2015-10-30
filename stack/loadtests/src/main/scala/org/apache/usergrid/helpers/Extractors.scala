@@ -22,6 +22,8 @@ package org.apache.usergrid.helpers
 import io.gatling.core.Predef._
 import io.gatling.core.session._
 import io.gatling.http.Predef._
+import org.apache.usergrid.enums._
+import org.apache.usergrid.settings.Settings
 
 /**
  * Helper object that will perform extractions
@@ -32,12 +34,55 @@ object Extractors {
    * Will extract the cursor from the response.  If the cursor is not present, an empty string will be set
    */
   def maybeExtractCursor(saveAsName: String) = {
-    jsonPath("$..cursor").transformOption(extract => {
+    jsonPath("$.cursor").transformOption(extract => {
       //it may or may not be present.  If it is, save it, otherwise save it as an empty string
       extract.orElse(Some(""))
     }).saveAs(saveAsName)
   }
 
+  /**
+   * Will extract the uuid from the response.  If the uuid is not present, an empty string will be set
+   */
+  def extractEntityUuid(saveAsName: String) = {
+    jsonPath("$.entities[0].uuid").transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as an empty string
+      extract.orElse(Some(""))
+    }).saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the name from the response.  If the name is not present, an empty string will be set
+   */
+  def extractEntityName(saveAsName: String) = {
+    jsonPath("$.entities[0].name").transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as an empty string
+      extract.orElse(Some(""))
+    }).saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the modified date from the response.  If the modified field is not present, -1 will be set
+   */
+  def extractEntityModified(saveAsName: String) = {
+    jsonPath("$.entities[0].modified").ofType[Long].transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as -1
+      extract.orElse(Some(-1))
+    }).saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the audit entities from the get collection response.
+   */
+  def extractAuditEntities(saveAsName: String) = {
+    jsonPath("$.entities[*]").ofType[Map[String,Any]].findAll.transformOption(extract => { extract.orElse(Some(Seq.empty)) }).saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the audit entities from the get collection response.
+   */
+  def extractAuditEntity(saveAsName: String) = {
+    jsonPath("$.entities[0]").ofType[Map[String,Any]].findAll.transformOption(extract => { extract.orElse(Some(Seq.empty)) }).saveAs(saveAsName)
+  }
 
   /**
    * tries to extract the cursor from the session, if it exists, it returns true. if it's the default, returns false
@@ -53,8 +98,8 @@ object Extractors {
    * @param saveAsName The name to use when saving to the session
    */
   def maybeExtractEntities(saveAsName: String) = {
-    jsonPath("$..entities").ofType[Seq[Any]].transformOption(extract => {
-      extract.orElse(Some(Seq()));
+    jsonPath("$.entities").ofType[Seq[Any]].transformOption(extract => {
+      extract.orElse(Some(Seq()))
     }).saveAs(saveAsName)
   }
 
@@ -64,21 +109,42 @@ object Extractors {
    * @return
    */
   def sequenceHasElements(nameInSession: String): Expression[Boolean] = {
-    session => session(nameInSession) != null && session(nameInSession).as[Seq[Any]].length > 0
+    session => session(nameInSession) != null && session(nameInSession).as[Seq[Any]].nonEmpty
   }
-
-
-  val ManagementToken: String = Setup.getManagementToken()
-
 
   /**
    * Get the management token for the admin username and password in settings, then inject it into the session
    * under the variable "authToken"
    * @return
    */
-  def injectStaticTokenToSession(): Expression[Session] = {
-    session => session.set("authToken", ManagementToken)
+  def injectManagementTokenIntoSession: Expression[Session] = {
+    session => session.set("authToken", Setup.getManagementToken)
   }
 
+  def injectUserTokenIntoSession(): Expression[Session] = {
+    session => session.set("authToken", Setup.getUserToken)
+  }
+
+  // handles different types of tokens
+  def injectTokenIntoSession(): Expression[Session] = {
+    session => session.set("authToken", Setup.getToken)
+  }
+
+  def injectAnonymousAuth(): Expression[Session] = {
+    session => session.set("authType", AuthType.Anonymous)
+  }
+
+  def injectBasicAuth(): Expression[Session] = {
+    session => session.set("authType", AuthType.Basic)
+  }
+
+  def injectTokenAuth(): Expression[Session] = {
+    session => session.set("authType", AuthType.Token)
+  }
+
+  // handles different types of auth
+  def injectAuthType(): Expression[Session] = {
+    session => session.set("authType", Settings.authType)
+  }
 
 }

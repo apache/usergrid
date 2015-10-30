@@ -21,11 +21,12 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -43,9 +44,10 @@ public class TokenResource extends NamedResource {
      * @return
      */
     public Token post(QueryParameters params) {
-        WebResource resource = getResource(false);
+        WebTarget resource = getTarget( false );
         resource = addParametersToResource(resource, params);
-        Token token = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+        Token token = resource.request()
+            .accept( MediaType.APPLICATION_JSON )
             .get(Token.class);
 
         this.context.setToken(token);
@@ -58,7 +60,7 @@ public class TokenResource extends NamedResource {
      * @return
      */
     public Token post() {
-        Token token = getResource().accept(MediaType.APPLICATION_JSON).post(Token.class);
+        Token token = getTarget().request().accept( MediaType.APPLICATION_JSON ).post( Entity.json(null), Token.class );
         this.context.setToken(token);
         return token;
     }
@@ -70,8 +72,9 @@ public class TokenResource extends NamedResource {
      * @return
      */
     public Token post(Token token) {
-        token = getResource(false).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
+        token = getTarget(false).request()
+            .accept(MediaType.APPLICATION_JSON)
+            .post( Entity.json( token ), Token.class);
         this.context.setToken(token);
         return token;
     }

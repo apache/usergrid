@@ -33,7 +33,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
-import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -67,7 +66,6 @@ import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -207,7 +205,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2(organizationName, name, null, null);
+        return createApplicationV2( organizationName, name, null, null );
     }
 
 
@@ -229,7 +227,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         logger.debug( "New application orgName {} orgAppName {} id {} ",
             new Object[] { orgName, name, applicationId.toString() } );
 
-        return initializeApplicationV2(orgName, applicationId, appName, properties);
+        return initializeApplicationV2( orgName, applicationId, appName, properties );
     }
 
 
@@ -250,8 +248,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         init();
 
         EntityManager managementEm = getEntityManager( getManagementAppId() );
+        EntityManager appEm = getEntityManager(applicationId);
 
-        final String appName = buildAppName( organizationName, name );
+        final String appName = buildAppName(organizationName, name);
 
         // check for pre-existing application
 
@@ -260,13 +259,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
+        appEm.initializeIndex();
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(applicationId));
-
         if ( properties == null ) {
             properties = new TreeMap<>( CASE_INSENSITIVE_ORDER);
         }
         properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager(applicationId);
         appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
 
@@ -449,7 +447,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Map<String, UUID> getApplications() throws Exception {
-        return getApplications(CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS ));
+        return getApplications( CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS ) );
     }
 
 
@@ -511,7 +509,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void setup() throws Exception {
-        getSetup().init();
+        getSetup().initSubsystems();
+    }
+
+
+    @Override
+    public void boostrap() throws Exception {
+
+        //we want to make sure our keyspaces exist
+        setup();
+        //create the defautl applications
+        getSetup().createDefaultApplications();
+        //init any other data we need
         init();
     }
 
@@ -679,7 +688,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     /**
      * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
      */
-    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex(UUID applicationId) {
+    public EntityIndex.IndexRefreshCommandInfo refreshIndex(UUID applicationId) {
         return getEntityManager(applicationId).refreshIndex();
     }
 

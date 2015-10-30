@@ -1,0 +1,1033 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Organization &mdash; Apache Usergrid 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Application" href="application.html"/>
+        <link rel="prev" title="Organization &amp; application management" href="managing.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              1.0
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Organization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-an-organization">Creating an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#request-uri">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-request">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-response">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-an-organization">Getting an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#activating-an-organization">Activating an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#request-url">Request URL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#reactivating-an-organization">Reactivating an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#generating-organization-client-credentials">Generating organization client credentials</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#retrieving-organization-client-credentials">Retrieving organization client credentials</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Request URL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-an-organization-s-activity-feed">Getting an organization&#8217;s activity feed</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id15">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id16">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id17">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-the-applications-in-an-organization">Getting the applications in an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id18">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id19">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id20">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-an-admin-user-to-an-organization">Adding an admin user to an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id21">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id22">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id23">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-the-admin-users-in-an-organization">Getting the admin users in an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id24">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id25">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id26">Example - Response</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#removing-an-admin-user-from-an-organization">Removing an admin user from an organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id27">Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id28">Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id29">Example - Response</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Organization</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/orgs-and-apps/organization.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="organization">
+<h1>Organization<a class="headerlink" href="#organization" title="Permalink to this headline">¶</a></h1>
+<p>An organization represents the highest level of the API Services BaaS
+data hierarchy. It contains applications (and the entities and
+collections they contain) and is associated with one or more
+administrators. An organization can be representative of a company,
+team, or project. It allows multiple applications to be shared within
+the organization with other administrators.</p>
+<div class="section" id="creating-an-organization">
+<h2>Creating an organization<a class="headerlink" href="#creating-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the POST method to create an organization through a form post.</p>
+<div class="section" id="request-uri">
+<h3>Request URI<a class="headerlink" href="#request-uri" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>POST /organizations|orgs {request body}
+</pre></div>
+</div>
+<p>Parameters</p>
+<p>Expected to be sent form data in the body of the request.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="63%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>organization (string)</td>
+<td>The name of the organization.</td>
+</tr>
+<tr class="row-odd"><td>username (string)</td>
+<td>The username of the administrator.</td>
+</tr>
+<tr class="row-even"><td>name (string)</td>
+<td>The name of the administrator.</td>
+</tr>
+<tr class="row-odd"><td>email (string)</td>
+<td>The email address of the administrator.</td>
+</tr>
+<tr class="row-even"><td>password (string)</td>
+<td>The password of the administrator.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="example-request">
+<h3>Example - Request<a class="headerlink" href="#example-request" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X -i POST &quot;https://api.usergrid.com/management/orgs&quot; -d &#39;{&quot;password&quot;:&quot;test12345&quot;,&quot;email&quot;:&quot;tester123@hotmail.com&quot;,&quot;name&quot;:&quot;test&quot;,&quot;username&quot;:&quot;test123&quot;,&quot;organization&quot;:&quot;testorg&quot;}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-response">
+<h3>Example - Response<a class="headerlink" href="#example-response" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;action&quot;: &quot;new organization&quot;,
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;data&quot;:  {
+    &quot;owner&quot;:  {
+      &quot;applicationId&quot;: &quot;00000000-0000-0000-0000-000000000001&quot;,
+      &quot;username&quot;: &quot;tester123&quot;,
+      &quot;name&quot;: &quot;test&quot;,
+      &quot;email&quot;: &quot;tester123@hotmail.com&quot;,
+      &quot;activated&quot;: false,
+      &quot;disabled&quot;: false,
+      &quot;uuid&quot;: &quot;48c92c73-0d7e-11e2-98b9-12313d288ee0&quot;,
+      &quot;adminUser&quot;: true,
+      &quot;displayEmailAddress&quot;: &quot;tester123 &lt;tester123@hotmail.com&gt;&quot;,
+      &quot;htmldisplayEmailAddress&quot;: &quot;tester123 &lt;&lt;a href=&quot;mailto:tester123@hotmail.com&quot;&gt;tester123@hotmail.com&lt;/a&gt;&gt;&quot;
+    },
+    &quot;organization&quot;:  {
+      &quot;name&quot;: &quot;testorg&quot;,
+      &quot;uuid&quot;: &quot;5de0bb69-0d7f-11e2-87b9-12313d288ff0&quot;
+    }
+  },
+  &quot;timestamp&quot;: 1349284674173,
+  &quot;duration&quot;: 21376
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-an-organization">
+<h2>Getting an organization<a class="headerlink" href="#getting-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve an organization given a specified UUID or
+username.</p>
+<div class="section" id="id1">
+<h3>Request URI<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">GET</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">uuid</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>org_name|arg uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+</tbody>
+</table>
+<p>Note: You also need to provide a valid access token with the API call.
+See <a class="reference external" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>
+for details.</p>
+</div>
+<div class="section" id="id2">
+<h3>Example - Request<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/management/orgs/testorg&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h3>Example - Response<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;timestamp&quot;: 1349286861746,
+  &quot;duration&quot;: 18,
+  &quot;organization&quot;:  {
+    &quot;users&quot;:  {
+      &quot;tester123&quot;:  {
+        &quot;applicationId&quot;: &quot;00000000-0000-0000-0000-000000000001&quot;,
+        &quot;username&quot;: &quot;tester123&quot;,
+        &quot;name&quot;: &quot;test&quot;,
+        &quot;email&quot;: &quot;tester123@hotmail.com&quot;,
+        &quot;activated&quot;: true,
+        &quot;disabled&quot;: false,
+        &quot;uuid&quot;: &quot;327b527f-cd0c-11e1-bcf7-12313d1c4491&quot;,
+        &quot;adminUser&quot;: true,
+        &quot;displayEmailAddress&quot;: &quot;tester123 &lt;tester123@hotmail.com&gt;&quot;,
+        &quot;htmldisplayEmailAddress&quot;: &quot;tester123 &lt;&lt;a href=&quot;mailto:tester123@hotmail.com&quot;&gt;tester123@hotmail.com&lt;/a&gt;&gt;&quot;
+      }
+    },
+    &quot;name&quot;: &quot;testorg&quot;,
+    &quot;applications&quot;:  {
+      &quot;tester123/sandbox&quot;: &quot;3400ba10-cd0c-11e1-bcf7-12313d1c4491&quot;,
+      &quot;tester123/testapp1&quot;: &quot;be08a5f9-fdd3-11e1-beca-12313d027471&quot;,
+      &quot;tester123/testapp2&quot;: &quot;cede5b7e-fe90-11e1-95c8-12313b122c56&quot;
+    },
+    &quot;uuid&quot;: &quot;33dd0563-cd0c-11e1-bcf7-12313d1c4491&quot;
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="activating-an-organization">
+<h2>Activating an organization<a class="headerlink" href="#activating-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to activate an organization from a link provided in
+an email notification.</p>
+<div class="section" id="request-url">
+<h3>Request URL<a class="headerlink" href="#request-url" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>GET /organizations|orgs/{org_name}|{uuid}/activate?token={token}&amp;confirm={confirm_email}
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="73%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>org_name|arg uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+<tr class="row-odd"><td>token</td>
+<td>Activation token (supplied via email).</td>
+</tr>
+<tr class="row-even"><td>confirm_email</td>
+<td>(boolean) Send confirmation email (false is the default).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id4">
+<h3>Example - Request<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/management/orgs/testorg/activate?token=33dd0563-cd0c-11e1-bcf7-12313d1c4491&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h3>Example - Response<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span><span class="p">:</span> <span class="s">&quot;activate organization&quot;</span><span class="p">,</span>
+  <span class="s">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1337928462810</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span><span class="p">:</span> <span class="mi">3342</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="reactivating-an-organization">
+<h2>Reactivating an organization<a class="headerlink" href="#reactivating-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to reactivate an organization.</p>
+<div class="section" id="id6">
+<h3>Request URI<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">GET</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">uuid</span><span class="p">}</span><span class="o">/</span><span class="n">reactivate</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>string org_name|arg uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id7">
+<h3>Example - Request<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/management/orgs/testorg/reactivate&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id8">
+<h3>Example - Response<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span><span class="p">:</span> <span class="s">&quot;reactivate organization&quot;</span><span class="p">,</span>
+  <span class="s">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1349385280891</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span><span class="p">:</span> <span class="mi">3612</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="generating-organization-client-credentials">
+<h2>Generating organization client credentials<a class="headerlink" href="#generating-organization-client-credentials" title="Permalink to this headline">¶</a></h2>
+<p>Use the POST method to generate new credentials for an organization
+client.</p>
+<div class="section" id="id9">
+<h3>Request URI<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">POST</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">uuid</span><span class="p">}</span><span class="o">/</span><span class="n">credentials</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>string org_name|arg uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: You also need to provide a valid access token with the API
+call. <a class="reference external" href="../security_and_auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>
+for details.</p>
+</div>
+<div class="section" id="id10">
+<h3>Example - Request<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X POST &quot;https://api.usergrid.com/management/orgs/credentials&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id11">
+<h3>Example - Response<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span><span class="p">:</span> <span class="s">&quot;generate organization client credentials&quot;</span><span class="p">,</span>
+  <span class="s">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1349385795647</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s">&quot;credentials&quot;</span><span class="p">:</span>  <span class="p">{</span>
+    <span class="s">&quot;client_id&quot;</span><span class="p">:</span> <span class="s">&quot;c2V7N61DY90MCdG78xIxPRxFdQ&quot;</span><span class="p">,</span>
+    <span class="s">&quot;client_secret&quot;</span><span class="p">:</span> <span class="s">&quot;c2V7WEdXIutZWEkWdySLCt_lYDFVMMN&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="retrieving-organization-client-credentials">
+<h2>Retrieving organization client credentials<a class="headerlink" href="#retrieving-organization-client-credentials" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve the credentials for an organization
+client.</p>
+<div class="section" id="id12">
+<h3>Request URL<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">GET</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">uuid</span><span class="p">}</span><span class="o">/</span><span class="n">credentials</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>string org_name|arg uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: You also need to provide a valid access token with the API
+call. See <a class="reference external" href="../security_and_auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>
+for details.</p>
+</div>
+<div class="section" id="id13">
+<h3>Example - Request<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/management/orgs/testorg/credentials&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id14">
+<h3>Example - Response<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span><span class="p">:</span> <span class="s">&quot;get organization client credentials&quot;</span><span class="p">,</span>
+  <span class="s">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1349386672984</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span><span class="p">:</span> <span class="mi">690</span><span class="p">,</span>
+  <span class="s">&quot;credentials&quot;</span><span class="p">:</span>  <span class="p">{</span>
+    <span class="s">&quot;client_id&quot;</span><span class="p">:</span> <span class="s">&quot;c2V7N61DY90MCdG78xIxPRxFdQ&quot;</span><span class="p">,</span>
+    <span class="s">&quot;client_secret&quot;</span><span class="p">:</span> <span class="s">&quot;c2V7WEdXIutZWEkWdySLCt_lYDFVMMN&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-an-organization-s-activity-feed">
+<h2>Getting an organization&#8217;s activity feed<a class="headerlink" href="#getting-an-organization-s-activity-feed" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to get an organization&#8217;s activity feed.</p>
+<div class="section" id="id15">
+<h3>Request URI<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">GET</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">uuid</span><span class="p">}</span><span class="o">/</span><span class="n">feed</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>string org_name|arg uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: You also need to provide a valid access token with the API
+call. See <a class="reference external" href="../security_and_auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>
+for details.</p>
+</div>
+<div class="section" id="id16">
+<h3>Example - Request<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/management/orgs/testorg/feed&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id17">
+<h3>Example - Response<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+ {
+  &quot;action&quot;: &quot;get organization feed&quot;,
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;entities&quot;:  [
+     {
+      &quot;uuid&quot;: &quot;cf4d981c-fe90-11e1-95c8-12313b122c56&quot;,
+      &quot;type&quot;: &quot;activity&quot;,
+      &quot;created&quot;: 1347643370454,
+      &quot;modified&quot;: 1347643370454,
+      &quot;actor&quot;:  {
+        &quot;displayName&quot;: &quot;tester123&quot;,
+        &quot;objectType&quot;: &quot;person&quot;,
+        &quot;uuid&quot;: &quot;327b527f-cd0c-11e1-bcf7-12313d1c4491&quot;,
+        &quot;entityType&quot;: &quot;user&quot;
+      },
+      &quot;category&quot;: &quot;admin&quot;,
+      &quot;metadata&quot;:  {
+        &quot;cursor&quot;: &quot;gGkAAQMAgGkABgE5xc3r1gCAdQAQz02YHP6QEeGVyBIxOxIsVgCAdQAQz3SoH_6QEeGVyBIxOxIsVgA&quot;,
+        &quot;path&quot;: &quot;/groups/33dd0563-cd0c-11e1-bcf7-12313d1c4491/feed/cf4d981c-fe90-11e1-95c8-12313b122c56&quot;
+      },
+&quot;object&quot;:  {
+        &quot;displayName&quot;: &quot;testapp2&quot;,
+        &quot;objectType&quot;: &quot;Application&quot;,
+        &quot;uuid&quot;: &quot;cede5b7e-fe90-11e1-95c8-12313b122c56&quot;,
+        &quot;entityType&quot;: &quot;application_info&quot;
+      },
+      &quot;published&quot;: 1347643370454,
+      &quot;title&quot;: &quot;&lt;a mailto=&quot;mailto:tester123@hotmail.com&quot;&gt;tester123 (tester123@hotmail.com)&lt;/a&gt; created a new application named testapp2&quot;,
+      &quot;verb&quot;: &quot;create&quot;
+    },...
+,
+  &quot;timestamp&quot;: 1349387253811
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-the-applications-in-an-organization">
+<h2>Getting the applications in an organization<a class="headerlink" href="#getting-the-applications-in-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve the applications in an organization.</p>
+<div class="section" id="id18">
+<h3>Request URI<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">GET</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">uuid</span><span class="p">}</span><span class="o">/</span><span class="n">applications</span><span class="o">|</span><span class="n">apps</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>string org_name|arg uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: You also need to provide a valid access token with the API
+call. See <a class="reference external" href="../security_and_auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>
+for details.</p>
+</div>
+<div class="section" id="id19">
+<h3>Example - Request<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/management/orgs/testorg/apps&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id20">
+<h3>Example - Response<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;action&quot;</span><span class="p">:</span> <span class="s">&quot;get organization application&quot;</span><span class="p">,</span>
+  <span class="s">&quot;data&quot;</span><span class="p">:</span>  <span class="p">{</span>
+    <span class="s">&quot;testorg/sandbox&quot;</span><span class="p">:</span> <span class="s">&quot;3500ba10-cd0c-11e1-bcf8-12313d1c5591&quot;</span><span class="p">,</span>
+    <span class="s">&quot;testorg/testapp1&quot;</span><span class="p">:</span> <span class="s">&quot;be09a5f9-fdd3-11e1-beca-12313d027361&quot;</span><span class="p">,</span>
+    <span class="s">&quot;testorg/testapp2&quot;</span><span class="p">:</span> <span class="s">&quot;cede5b8e-fe90-11e1-65c8-12313b111c56&quot;</span>
+  <span class="p">},</span>
+  <span class="s">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1349815338635</span><span class="p">,</span>
+  <span class="s">&quot;duration&quot;</span><span class="p">:</span> <span class="mi">22</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="adding-an-admin-user-to-an-organization">
+<h2>Adding an admin user to an organization<a class="headerlink" href="#adding-an-admin-user-to-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the PUT method to add an existing admin user to an organization.</p>
+<div class="section" id="id21">
+<h3>Request URI<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">PUT</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">org_uuid</span><span class="p">}</span><span class="o">/</span><span class="n">users</span><span class="o">/</span><span class="p">{</span><span class="n">username</span><span class="o">|</span><span class="n">email</span><span class="o">|</span><span class="n">uuid</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="47%" />
+<col width="53%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>string org_name|arg org_uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+<tr class="row-odd"><td>string username|string email|arg uuid</td>
+<td>User name, user email address, or user UUID.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id22">
+<h3>Example - Request<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT &quot;https://api.usergrid.com/management/orgs/testorg/users/test123&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id23">
+<h3>Example - Response<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;action&quot;: &quot;add user to organization&quot;,
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;data&quot;:  {
+    &quot;user&quot;:  {
+      &quot;applicationId&quot;: &quot;00000000-0000-0000-0000-000000000001&quot;,
+      &quot;username&quot;: &quot;tester123&quot;,
+      &quot;name&quot;: &quot;test&quot;,
+      &quot;email&quot;: &quot;tester123@hotmail.com&quot;,
+      &quot;activated&quot;: true,
+      &quot;disabled&quot;: false,
+      &quot;uuid&quot;: &quot;335b527f-cd0d-11e1-bef8-12331d1c5591&quot;,
+      &quot;adminUser&quot;: true,
+      &quot;displayEmailAddress&quot;: &quot;tester123 &lt;tester123@hotmail.com&gt;&quot;,
+      &quot;htmldisplayEmailAddress&quot;: &quot;tester123 &lt;&lt;a href=&quot;mailto:tester123@hotmail.com&quot;&gt;tester123@hotmail.com&lt;/a&gt;&gt;&quot;
+    }
+  },
+  &quot;timestamp&quot;: 1349390189106,
+  &quot;duration&quot;: 11808
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-the-admin-users-in-an-organization">
+<h2>Getting the admin users in an organization<a class="headerlink" href="#getting-the-admin-users-in-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the GET method to retrieve details about the admin users in an
+organization.</p>
+<div class="section" id="id24">
+<h3>Request URI<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">GET</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">org_uuid</span><span class="p">}</span><span class="o">/</span><span class="n">users</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="39%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>org_name|arg org_uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id25">
+<h3>Example - Request<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/management/orgs/testorg/users&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id26">
+<h3>Example - Response<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;action&quot;: &quot;get organization users&quot;,
+  &quot;data&quot;:  {
+    &quot;user&quot;:  {
+      &quot;applicationId&quot;: &quot;00000000-0000-0000-0000-000000000001&quot;,
+      &quot;username&quot;: &quot;tester123&quot;,
+      &quot;name&quot;: &quot;test&quot;,
+      &quot;email&quot;: &quot;tester123@hotmail.com&quot;,
+      &quot;activated&quot;: true,
+      &quot;disabled&quot;: false,
+      &quot;uuid&quot;: &quot;335b527f-cd0d-11e1-bef8-12331d1c5591&quot;,
+      &quot;adminUser&quot;: true,
+      &quot;displayEmailAddress&quot;: &quot;tester123 &lt;tester123@hotmail.com&gt;&quot;,
+      &quot;htmldisplayEmailAddress&quot;: &quot;tester123 &lt;&lt;a href=&quot;mailto:tester123@hotmail.com&quot;&gt;tester123@hotmail.com&lt;/a&gt;&gt;&quot;
+    }
+  },
+  &quot;timestamp&quot;: 13494542201685,
+  &quot;duration&quot;: 10
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="removing-an-admin-user-from-an-organization">
+<h2>Removing an admin user from an organization<a class="headerlink" href="#removing-an-admin-user-from-an-organization" title="Permalink to this headline">¶</a></h2>
+<p>Use the DELETE method to remove an admin user from an organization. All
+organizations must have a minimum of one user with org admin privileges.
+If you attempt to delete the last org admin in an organization, the API
+will return a 400 Bad Request error.</p>
+<div class="section" id="id27">
+<h3>Request URI<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DELETE</span> <span class="o">/</span><span class="n">organizations</span><span class="o">|</span><span class="n">orgs</span><span class="o">/</span><span class="p">{</span><span class="n">org_name</span><span class="p">}</span><span class="o">|</span><span class="p">{</span><span class="n">org_uuid</span><span class="p">}</span><span class="o">/</span><span class="n">users</span><span class="o">/</span><span class="p">{</span><span class="n">username</span><span class="o">|</span><span class="n">email</span><span class="o">|</span><span class="n">uuid</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>org_name|arg org_uuid</td>
+<td>Organization name or organization UUID.</td>
+</tr>
+<tr class="row-odd"><td>username|string email|arg uuid</td>
+<td>User name, user email address, or user UUID.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id28">
+<h3>Example - Request<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>curl -X DELETE &quot;https://api.usergrid.com/management/orgs/testorg/users/test123&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id29">
+<h3>Example - Response<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;action&quot;: &quot;remove user from organization&quot;,
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;data&quot;:  {
+    &quot;user&quot;:  {
+      &quot;applicationId&quot;: &quot;00000000-0000-0000-0000-000000000001&quot;,
+      &quot;username&quot;: &quot;tester123&quot;,
+      &quot;name&quot;: &quot;test&quot;,
+      &quot;email&quot;: &quot;tester123@hotmail.com&quot;,
+      &quot;activated&quot;: true,
+      &quot;disabled&quot;: false,
+      &quot;uuid&quot;: &quot;335b527f-cd0d-11e1-bef8-12331d1c5591&quot;,
+      &quot;adminUser&quot;: true,
+      &quot;displayEmailAddress&quot;: &quot;tester123 &lt;tester123@hotmail.com&gt;&quot;,
+      &quot;htmldisplayEmailAddress&quot;: &quot;tester123 &lt;&lt;a href=&quot;mailto:tester123@hotmail.com&quot;&gt;tester123@hotmail.com&lt;/a&gt;&gt;&quot;
+    }
+  },
+  &quot;timestamp&quot;: 1349453590005,
+  &quot;duration&quot;: 727
+}
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="application.html" class="btn btn-neutral float-right" title="Application" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="managing.html" class="btn btn-neutral" title="Organization &amp; application management" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

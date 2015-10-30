@@ -17,12 +17,18 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
-import com.sun.jersey.multipart.FormDataMultiPart;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,18 +42,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USERGRID_BINARY_UPLOADER;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
-
+@NotThreadSafe
 public class AssetResourceIT extends AbstractRestIT {
 
     private String access_token;
     private Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
+    private Map<String, Object> originalProperties;
+
+
 
     @Before
     public void setup(){
+        originalProperties = getRemoteTestProperties();
+        setTestProperty(PROPERTIES_USERGRID_BINARY_UPLOADER, "local");
+
+
         access_token = this.getAdminToken().getAccessToken();
+
+    }
+
+    @After
+    public void teardown(){
+        setTestProperties(originalProperties);
     }
 
 
@@ -224,9 +244,11 @@ public class AssetResourceIT extends AbstractRestIT {
 
             // upload a file larger than 6mb
 
-            byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ) );
-            FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
-            ApiResponse postResponse = pathResource( getOrgAppPath( "bars" ) ).post( form );
+            final StreamDataBodyPart part = new StreamDataBodyPart(
+                "file", getClass().getResourceAsStream( "/ship-larger-than-6mb.gif" ), "ship");
+            final MultiPart multipart = new FormDataMultiPart().bodyPart( part );
+
+            ApiResponse postResponse = pathResource( getOrgAppPath( "bars" ) ).post( multipart );
             UUID assetId = postResponse.getEntities().get(0).getUuid();
 
             String errorMessage = null;
