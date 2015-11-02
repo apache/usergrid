@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -54,6 +55,7 @@ import com.google.common.collect.Multimap;
  * the error "Could not find organization for email" because the user can't be found but when the org is queried the
  * user shows up there. If you see that then run this tool.
  */
+//If index corruptions show up then the tool won't complete.
 public class CollectionUserFix extends ExportingToolBase {
     private static final int PAGE_SIZE = 1000;
 
@@ -160,6 +162,8 @@ public class CollectionUserFix extends ExportingToolBase {
         Results r = null;
         EntityManager em = null;
         int numberOfUsers = 0;
+        Identifier identifier = new Identifier();
+
 
         for ( Application application : app ) {
             //This will hold all of the applications users. This will be stored in memory to do a simple check to see if
@@ -174,28 +178,56 @@ public class CollectionUserFix extends ExportingToolBase {
             else {
                 em = entityManager;
             }
+//
+//            do {
+//                Multimap<String, UUID> usernames = HashMultimap.create();
+//
+//
+//                //get all users in the management app and page for each set of a PAGE_SIZE
+//                r = em.searchCollection( application, "users", query );
+//                numberOfUsers+=r.size();
+//                System.out.println("found "+numberOfUsers+" users");
+//
+//                for ( Entity entity : r.getEntities() ) {
+//                    //grab all usernames returned.
+//                    usernames.put( entity.getProperty( "username" ).toString().toLowerCase(), entity.getUuid() );
+//                }
+//
+//                query.setCursor( r.getCursor() );
+//
+//                System.out.println("Starting username crawl of "+usernames.size()+" number of usernames");
+//                usernameVerificationFix( em, usernames );
+//
+//
+//            }
+//            while ( r != null && r.size() == PAGE_SIZE);
 
-            do {
-                Multimap<String, UUID> usernames = HashMultimap.create();
+            r = em.searchCollection( application, "users", query );
+            PagingResultsIterator pagingResultsIterator = new PagingResultsIterator( r );
 
-                //get all users in the management app and page for each set of a PAGE_SIZE
-                r = em.searchCollection( application, "users", query );
-                numberOfUsers+=r.size();
-                System.out.println("found "+numberOfUsers+" users");
-
-                for ( Entity entity : r.getEntities() ) {
-                    //grab all usernames returned.
-                    usernames.put( entity.getProperty( "username" ).toString().toLowerCase(), entity.getUuid() );
-                }
-
-                query.setCursor( r.getCursor() );
-
-                System.out.println("Starting username crawl of "+usernames.size()+" number of usernames");
-                usernameVerificationFix( em, usernames );
-
+            while(pagingResultsIterator.hasNext()){
+                Entity entity = ( Entity ) pagingResultsIterator.next();
+                String username =  entity.getProperty( "username" ).toString().toLowerCase();
+                em.getUserByIdentifier( identifier.fromName( username ) );
 
             }
-            while ( r != null && r.size() >0);
+//
+//            for ( Entity entity : r.getEntities() ) {
+//                //grab all usernames returned.
+//                usernames.put( entity.getProperty( "username" ).toString().toLowerCase(), entity.getUuid() );
+//            }
+//
+//            query.setCursor( r.getCursor() );
+//
+//            System.out.println("Starting username crawl of "+usernames.size()+" number of usernames");
+//            usernameVerificationFix( em,  entity.getProperty( "username" ).toString().toLowerCase());
+
+
+
+
+
+
+
             System.out.println("Repair Complete");
             //do  a get on a specific username, if it shows up more than once then remove it
         }
